@@ -1,0 +1,39 @@
+have a, b R, c Z
+
+a $in R
+b $in R
+c $in Z
+
+1 $in N
+1 $in N_pos
+1 $in Z
+1 $in Q
+1 $in R
+
+1 $in Q_pos
+1 $in R_pos
+-1 $in R_neg
+-1.1 $in Q_neg
+-1 $in Z_neg
+1 $in Q_nz
+
+1 + 1 $in N
+
+-1 + 32.123 $in Q
+
+2 - 9.5 + 10.5 $in Z
+
+1 - 5 $in Z_neg
+2 + 3 $in N_pos
+4 - 1 $in N
+
+-0.5 * 6 $in Q_neg
+1 - 2.25 $in Q_neg
+0 - 3 $in R_neg
+
+-2 * 2.5 $in R_neg
+7 - 3 $in Q_nz
+10 - 10 + 1 $in Q_nz
+
+3 - 1 $in Q_pos
+1 + 0.5 $in Q_pos

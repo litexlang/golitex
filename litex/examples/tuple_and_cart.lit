@@ -1,0 +1,20 @@
+let a set:
+    a = (2, 3)
+
+$is_tuple(a)
+tuple_dim(a) = 2
+a[1] = 2
+a[2] = 3
+
+let b set:
+    b = cart(R, Q)
+
+$is_cart(b)
+cart_dim(b) = 2
+proj(b, 1) = R
+proj(b, 2) = Q
+
+forall a set:
+    $is_cart(a)
+    =>:
+        cart_dim(a) = cart_dim(a)

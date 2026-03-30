@@ -1,23 +1,27 @@
+use crate::prelude::*;
 use std::fmt;
-use crate::common::keywords::{CLEAR, DO_NOTHING, IMPORT, DOUBLE_QUOTE, AS};
 
+#[derive(Clone)]
 pub enum ImportStmt {
     ImportRelativePath(ImportRelativePathStmt),
     ImportGlobalModule(ImportGlobalModuleStmt),
 }
 
+#[derive(Clone)]
 pub struct ImportRelativePathStmt {
     pub path: String,
     pub as_mod_name: Option<String>,
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct ImportGlobalModuleStmt {
     pub mod_name: String,
     pub as_mod_name: Option<String>,
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct RunFileStmt {
     pub file_path: String,
     pub line_file: (usize, usize),
@@ -25,11 +29,10 @@ pub struct RunFileStmt {
 
 impl RunFileStmt {
     pub fn new(file_path: String, line_file: (usize, usize)) -> Self {
-        RunFileStmt { file_path, line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "RunFileStmt".to_string()
+        RunFileStmt {
+            file_path,
+            line_file,
+        }
     }
 }
 
@@ -42,7 +45,9 @@ impl fmt::Display for RunFileStmt {
 impl fmt::Display for ImportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ImportStmt::ImportRelativePath(import_relative_path) => write!(f, "{}", import_relative_path),
+            ImportStmt::ImportRelativePath(import_relative_path) => {
+                write!(f, "{}", import_relative_path)
+            }
             ImportStmt::ImportGlobalModule(import_global_mod) => write!(f, "{}", import_global_mod),
         }
     }
@@ -50,29 +55,37 @@ impl fmt::Display for ImportStmt {
 
 impl ImportRelativePathStmt {
     pub fn new(path: String, as_mod_name: Option<String>, line_file: (usize, usize)) -> Self {
-        ImportRelativePathStmt { path, as_mod_name, line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ImportRelativePathStmt".to_string()
+        ImportRelativePathStmt {
+            path,
+            as_mod_name,
+            line_file,
+        }
     }
 }
 
 impl ImportGlobalModuleStmt {
     pub fn new(mod_name: String, as_mod_name: Option<String>, line_file: (usize, usize)) -> Self {
-        ImportGlobalModuleStmt { mod_name, as_mod_name, line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ImportGlobalModuleStmt".to_string()
+        ImportGlobalModuleStmt {
+            mod_name,
+            as_mod_name,
+            line_file,
+        }
     }
 }
 
 impl fmt::Display for ImportRelativePathStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.as_mod_name {
-            Some(name) => write!(f, "{} {}{}{} {} {}", IMPORT, DOUBLE_QUOTE, self.path, DOUBLE_QUOTE, AS, name),
-            None => write!(f, "{} {}{}{}", IMPORT, DOUBLE_QUOTE, self.path, DOUBLE_QUOTE),
+            Some(name) => write!(
+                f,
+                "{} {}{}{} {} {}",
+                IMPORT, DOUBLE_QUOTE, self.path, DOUBLE_QUOTE, AS, name
+            ),
+            None => write!(
+                f,
+                "{} {}{}{}",
+                IMPORT, DOUBLE_QUOTE, self.path, DOUBLE_QUOTE
+            ),
         }
     }
 }
@@ -93,37 +106,11 @@ impl ImportStmt {
             ImportStmt::ImportGlobalModule(import_global_mod) => import_global_mod.line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        match self {
-            ImportStmt::ImportRelativePath(stmt) => stmt.stmt_type_name(),
-            ImportStmt::ImportGlobalModule(stmt) => stmt.stmt_type_name(),
-        }
-    }
 }
 
+#[derive(Clone)]
 pub struct DoNothingStmt {
     pub line_file: (usize, usize),
-}
-
-pub struct ClearStmt {
-    pub line_file: (usize, usize),
-}
-
-impl ClearStmt {
-    pub fn new(line_file: (usize, usize)) -> Self {
-        ClearStmt { line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ClearStmt".to_string()
-    }
-}
-
-impl fmt::Display for ClearStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", CLEAR)
-    }
 }
 
 impl DoNothingStmt {

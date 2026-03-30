@@ -1,3 +1,7 @@
 mod error;
 
-pub use error::{StmtError, ArithmeticError, NewAtomicFactError, StoreFactError, ParseBlockError, ParsingError, ExecStmtError, UnknownError, WellDefinedError, VerifyError, InferError, duplicate_used_name_error_message};
+pub use error::{
+    duplicate_used_name_error_msg_without_line_file, DefineParamsError, ExecStmtError, InferError,
+    NameAlreadyUsedError, ParseBlockError, ParsingError, RuntimeError, RuntimeErrorStruct,
+    UnknownError, VerifyError, WellDefinedError,
+};

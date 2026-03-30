@@ -1,12 +1,5 @@
+use crate::prelude::*;
 use std::collections::HashMap;
-use crate::stmt::parameter_def::ParamDefWithParamSet;
-use super::atom::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod};
-use super::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetWithParams,
-    FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj, NPosObj, Number, Obj,
-    ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, Range, RNeg, RNz, RObj, RPos, SetBuilder,
-    SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZNeg, ZNz,     ZObj,
-};
 
 impl Obj {
     fn remove_param_names_from_param_to_arg_map(
@@ -89,8 +82,8 @@ impl FieldAccessWithMod {
 impl Atom {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Atom {
         match self {
-            Atom::IdentifierAtom(identifier) => match identifier.instantiate(param_to_arg_map) {
-                Obj::Identifier(new_identifier) => Atom::IdentifierAtom(new_identifier),
+            Atom::Identifier(identifier) => match identifier.instantiate(param_to_arg_map) {
+                Obj::Identifier(new_identifier) => Atom::Identifier(new_identifier),
                 Obj::IdentifierWithMod(new_identifier_with_mod) => {
                     Atom::IdentifierWithMod(new_identifier_with_mod)
                 }
@@ -98,13 +91,13 @@ impl Atom {
                 Obj::FieldAccessWithMod(new_field_access_with_mod) => {
                     Atom::FieldAccessWithMod(new_field_access_with_mod)
                 }
-                _ => Atom::IdentifierAtom(identifier.clone()),
+                _ => Atom::Identifier(identifier.clone()),
             },
             Atom::IdentifierWithMod(identifier_with_mod) => {
                 Atom::IdentifierWithMod(identifier_with_mod.clone())
             }
             Atom::FieldAccess(field_access) => match field_access.instantiate(param_to_arg_map) {
-                Obj::Identifier(new_identifier) => Atom::IdentifierAtom(new_identifier),
+                Obj::Identifier(new_identifier) => Atom::Identifier(new_identifier),
                 Obj::IdentifierWithMod(new_identifier_with_mod) => {
                     Atom::IdentifierWithMod(new_identifier_with_mod)
                 }
@@ -147,31 +140,25 @@ impl Number {
 
 impl Add {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Add(Add {
-            left: Box::new(self.left.instantiate(param_to_arg_map)),
-            right: Box::new(self.right.instantiate(param_to_arg_map)),
-            can_be_calculated: self.can_be_calculated,
-        })
+        let instantiated_left_obj = self.left.instantiate(param_to_arg_map);
+        let instantiated_right_obj = self.right.instantiate(param_to_arg_map);
+        Obj::Add(Add::new(instantiated_left_obj, instantiated_right_obj))
     }
 }
 
 impl Sub {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Sub(Sub {
-            left: Box::new(self.left.instantiate(param_to_arg_map)),
-            right: Box::new(self.right.instantiate(param_to_arg_map)),
-            can_be_calculated: self.can_be_calculated,
-        })
+        let instantiated_left_obj = self.left.instantiate(param_to_arg_map);
+        let instantiated_right_obj = self.right.instantiate(param_to_arg_map);
+        Obj::Sub(Sub::new(instantiated_left_obj, instantiated_right_obj))
     }
 }
 
 impl Mul {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Mul(Mul {
-            left: Box::new(self.left.instantiate(param_to_arg_map)),
-            right: Box::new(self.right.instantiate(param_to_arg_map)),
-            can_be_calculated: self.can_be_calculated,
-        })
+        let instantiated_left_obj = self.left.instantiate(param_to_arg_map);
+        let instantiated_right_obj = self.right.instantiate(param_to_arg_map);
+        Obj::Mul(Mul::new(instantiated_left_obj, instantiated_right_obj))
     }
 }
 
@@ -186,21 +173,17 @@ impl Div {
 
 impl Mod {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Mod(Mod {
-            left: Box::new(self.left.instantiate(param_to_arg_map)),
-            right: Box::new(self.right.instantiate(param_to_arg_map)),
-            can_be_calculated: self.can_be_calculated,
-        })
+        let instantiated_left_obj = self.left.instantiate(param_to_arg_map);
+        let instantiated_right_obj = self.right.instantiate(param_to_arg_map);
+        Obj::Mod(Mod::new(instantiated_left_obj, instantiated_right_obj))
     }
 }
 
 impl Pow {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Pow(Pow {
-            base: Box::new(self.base.instantiate(param_to_arg_map)),
-            exponent: Box::new(self.exponent.instantiate(param_to_arg_map)),
-            can_be_calculated: self.can_be_calculated,
-        })
+        let instantiated_base_obj = self.base.instantiate(param_to_arg_map);
+        let instantiated_exponent_obj = self.exponent.instantiate(param_to_arg_map);
+        Obj::Pow(Pow::new(instantiated_base_obj, instantiated_exponent_obj))
     }
 }
 
@@ -320,54 +303,6 @@ impl FnSetWithParams {
     }
 }
 
-impl NPosObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::NPosObj(self.clone())
-    }
-}
-
-impl NObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::NObj(self.clone())
-    }
-}
-
-impl QObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::QObj(self.clone())
-    }
-}
-
-impl ZObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::ZObj(self.clone())
-    }
-}
-
-impl RObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::RObj(self.clone())
-    }
-}
-
-impl InstStructObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        let mut args = Vec::with_capacity(self.args.len());
-        for arg in self.args.iter() {
-            args.push(Box::new(arg.instantiate(param_to_arg_map)));
-        }
-        Obj::InstSetStructObj(InstStructObj {
-            struct_name: self.struct_name.clone(),
-            args,
-        })
-    }
-}
-
 impl Cart {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let mut args = Vec::with_capacity(self.args.len());
@@ -395,21 +330,21 @@ impl Proj {
     }
 }
 
-impl Dim {
+impl TupleDim {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Dim(Dim {
-            dim: Box::new(self.dim.instantiate(param_to_arg_map)),
+        Obj::TupleDim(TupleDim {
+            arg: Box::new(self.arg.instantiate(param_to_arg_map)),
         })
     }
 }
 
 impl Tuple {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        let mut elements = Vec::with_capacity(self.elements.len());
-        for element in self.elements.iter() {
+        let mut elements = Vec::with_capacity(self.args.len());
+        for element in self.args.iter() {
             elements.push(Box::new(element.instantiate(param_to_arg_map)));
         }
-        Obj::Tuple(Tuple { elements })
+        Obj::Tuple(Tuple { args: elements })
     }
 }
 
@@ -439,14 +374,6 @@ impl ClosedRange {
     }
 }
 
-impl Val {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Val(Val {
-            value: Box::new(self.value.instantiate(param_to_arg_map)),
-        })
-    }
-}
-
 impl PowerSet {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         Obj::PowerSet(PowerSet {
@@ -463,75 +390,11 @@ impl Choose {
     }
 }
 
-impl TupleDimObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::TupleDimObj(TupleDimObj {
-            obj: Box::new(self.obj.instantiate(param_to_arg_map)),
-        })
-    }
-}
-
 impl ObjAtIndex {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         Obj::ObjAtIndex(ObjAtIndex {
             obj: Box::new(self.obj.instantiate(param_to_arg_map)),
             index: Box::new(self.index.instantiate(param_to_arg_map)),
         })
-    }
-}
-
-impl QPos {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::QPos(self.clone())
-    }
-}
-
-impl RPos {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::RPos(self.clone())
-    }
-}
-
-impl QNeg {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::QNeg(self.clone())
-    }
-}
-
-impl ZNeg {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::ZNeg(self.clone())
-    }
-}
-
-impl RNeg {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::RNeg(self.clone())
-    }
-}
-
-impl QNz {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::QNz(self.clone())
-    }
-}
-
-impl ZNz {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::ZNz(self.clone())
-    }
-}
-
-impl RNz {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::RNz(self.clone())
     }
 }

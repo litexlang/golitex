@@ -1,8 +1,12 @@
+use crate::prelude::*;
 use std::collections::HashMap;
-use std::fmt;
-use crate::runtime_context::RuntimeContext;
 
-pub struct ModuleManager<'a> {
+pub struct ImportedModuleEnvironment {
+    pub environment: Environment,
+    pub name_scope: HashMap<String, (usize, usize)>,
+}
+
+pub struct ModuleManager {
     pub run_file_paths: Vec<String>,
     pub module_name_and_path_map: HashMap<String, String>,
     pub module_path_and_names_map: HashMap<String, Vec<String>>,
@@ -10,10 +14,10 @@ pub struct ModuleManager<'a> {
     pub current_module_name: String,
     pub current_file_index: usize,
     pub entrance_path: String,
-    pub imported_module_environments: HashMap<String, Box<RuntimeContext<'a>>>,
+    pub imported_module_environments: HashMap<String, Box<ImportedModuleEnvironment>>,
 }
 
-impl<'a> ModuleManager<'a> {
+impl ModuleManager {
     pub fn new_empty_module_manager(entrance_file_path: &str) -> Self {
         ModuleManager {
             run_file_paths: vec![entrance_file_path.to_string()],
@@ -21,24 +25,9 @@ impl<'a> ModuleManager<'a> {
             module_path_and_names_map: HashMap::new(),
             current_module_path: String::new(),
             current_module_name: String::new(),
-            current_file_index: 0,
+            current_file_index: FILE_INDEX_FOR_BUILTIN,
             entrance_path: entrance_file_path.to_string(),
             imported_module_environments: HashMap::new(),
         }
-    }
-}
-
-impl<'a>  fmt::Display for ModuleManager<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ModuleManager {{")?;
-        write!(f, "run_file_paths: {:?}", self.run_file_paths)?;
-        write!(f, "module_name_and_path_map: {:?}", self.module_name_and_path_map)?;
-        write!(f, "module_path_and_names_map: {:?}", self.module_path_and_names_map)?;
-        write!(f, "current_module_path: {}", self.current_module_path)?;
-        write!(f, "current_module_name: {}", self.current_module_name)?;
-        write!(f, "entrance_path: {}", self.entrance_path)?;
-        write!(f, "imported_module_environments: {:?}", self.imported_module_environments.keys().collect::<Vec<&String>>())?;
-        write!(f, "current_file_index: {}", self.current_file_index)?;
-        write!(f, "}}")
     }
 }

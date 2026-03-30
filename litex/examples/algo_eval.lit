@@ -1,0 +1,24 @@
+let f set
+know f $in Fn(R, R) R
+
+know:
+    forall x, y R:
+        x < 0
+        =>:
+            f(x, y) = f(x + 1, y)
+
+    forall x, y R:
+        x = 0
+        =>:
+            f(x, y) = y
+
+    forall x, y R:
+        x > 0
+        =>:
+            f(x, y) = f(x - 1, y)
+
+algo f(x, y):
+    case x < 0: f(x + 1, y)
+    case x = 0: y
+    case x > 0: f(x - 1, y)
+

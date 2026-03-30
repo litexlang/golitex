@@ -1,54 +1,96 @@
-use crate::error::StmtError;
-use crate::infer::InferResult;
-use crate::fact::Fact;
-use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
-use crate::verify::VerifyState;
+use crate::prelude::*;
 use std::result::Result;
-use crate::error::VerifyError;
-use crate::execute::Executor;
 
-impl<'a> Executor<'a> {
-    pub fn verify_fact(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(cached_result) = self.verify_fact_from_cache(fact) {
-            return Ok(cached_result);
-        }
-        
-        if !verify_state.well_defined_already_verified {
-            if let Err(e) = self.verify_fact_well_defined(fact, verify_state) {
-                return Err(VerifyError::new(fact.to_string(), Some(StmtError::WellDefinedError(e)), fact.line_file()));
-            }
-        }
-
-        let next_verify_state = verify_state.new_state_with_req_ok_set_to_true();
-
+impl Runtime {
+    pub fn verify_fact_return_err_if_not_true(
+        &mut self,
+        fact: &Fact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
         let result = match fact {
-            Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, &next_verify_state),
-            Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, &next_verify_state),
-            Fact::ChainFact(chain_fact) => self.verify_chain_fact(chain_fact, &next_verify_state),
-            Fact::ForallFact(forall_fact) => self.verify_forall_fact(forall_fact, &next_verify_state),
-            Fact::ForallFactWithIff(forall_fact_with_iff) => self.verify_forall_fact_with_iff(forall_fact_with_iff, &next_verify_state),
-            Fact::ExistFact(exists_fact) => self.verify_exist_fact(exists_fact, &next_verify_state),
-            Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, &next_verify_state),
+            Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
+            Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
+            Fact::ChainFact(chain_fact) => self.verify_chain_fact(chain_fact, verify_state),
+            Fact::ForallFact(forall_fact) => self.verify_forall_fact(forall_fact, verify_state),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => {
+                self.verify_forall_fact_with_iff(forall_fact_with_iff, verify_state)
+            }
+            Fact::ExistFact(exists_fact) => self.verify_exist_fact(exists_fact, verify_state),
+            Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
         }?;
 
-        Ok(result)
-    }
-
-    fn verify_fact_from_cache(&self, fact: &Fact) -> Option<NonErrStmtExecResult> {
-        let key = fact.to_string();
-        let (cache_ok, cache_line_file) = self.runtime_context.cache_known_facts_contains(&key);
-        if cache_ok {
-            let fact_line_file = fact.line_file();
-            Some(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
-                key,
-                fact.to_string(),
-                InferResult::new(),
-                fact_line_file,
-                cache_line_file,
-            )))
+        if result.is_unknown() {
+            let fact_owned = fact.clone();
+            let line_file = fact_owned.line_file();
+            return Err(VerifyError::new(
+                fact_owned.clone(),
+                String::new(),
+                line_file,
+                Some(RuntimeError::UnknownError(
+                    UnknownError::verify_result_unknown(fact_owned, None),
+                )),
+            ));
         } else {
-            None
+            Ok(result)
         }
     }
-    
+}
+
+impl Runtime {
+    pub fn verify_exist_or_and_chain_atomic_fact(
+        &mut self,
+        exist_or_and_chain_atomic_fact: &ExistOrAndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match exist_or_and_chain_atomic_fact {
+            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact(atomic_fact, verify_state)
+            }
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => {
+                self.verify_and_fact(and_fact, verify_state)
+            }
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.verify_chain_fact(chain_fact, verify_state)
+            }
+            ExistOrAndChainAtomicFact::OrFact(or_fact) => {
+                self.verify_or_fact(or_fact, verify_state)
+            }
+            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
+                self.verify_exist_fact(exist_fact, verify_state)
+            }
+        }
+    }
+
+    pub fn verify_or_and_chain_atomic_fact(
+        &mut self,
+        or_and_chain_atomic_fact: &OrAndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match or_and_chain_atomic_fact {
+            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact(atomic_fact, verify_state)
+            }
+            OrAndChainAtomicFact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
+            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.verify_chain_fact(chain_fact, verify_state)
+            }
+            OrAndChainAtomicFact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
+        }
+    }
+
+    pub fn verify_and_chain_atomic_fact(
+        &mut self,
+        and_chain_atomic_fact: &AndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match and_chain_atomic_fact {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact(atomic_fact, verify_state)
+            }
+            AndChainAtomicFact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                self.verify_chain_fact(chain_fact, verify_state)
+            }
+        }
+    }
 }

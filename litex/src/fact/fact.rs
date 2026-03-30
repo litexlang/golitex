@@ -1,11 +1,5 @@
+use crate::prelude::*;
 use std::fmt;
-use super::or_fact::OrFact;
-use super::forall_fact::ForallFact;
-use super::forall_fact_with_iff::ForallFactWithIff;
-use super::atomic_fact::AtomicFact;
-use super::exist_fact::ExistFact;
-use super::matchable_fact_with_atomic_fact_inside::AndFact;
-use super::matchable_fact_with_atomic_fact_inside::ChainFact;
 #[derive(Clone)]
 pub enum Fact {
     AtomicFact(AtomicFact),
@@ -15,6 +9,26 @@ pub enum Fact {
     ChainFact(ChainFact),
     ForallFact(ForallFact),
     ForallFactWithIff(ForallFactWithIff),
+}
+
+impl fmt::Debug for Fact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl Fact {
+    pub fn fact_type_string(&self) -> String {
+        match self {
+            Fact::AtomicFact(_) => "AtomicFact".to_string(),
+            Fact::ExistFact(_) => "ExistFact".to_string(),
+            Fact::OrFact(_) => "OrFact".to_string(),
+            Fact::AndFact(_) => "AndFact".to_string(),
+            Fact::ChainFact(_) => "ChainFact".to_string(),
+            Fact::ForallFact(_) => "ForallFact".to_string(),
+            Fact::ForallFactWithIff(_) => "ForallFactWithIff".to_string(),
+        }
+    }
 }
 
 impl fmt::Display for Fact {
@@ -48,7 +62,9 @@ impl Fact {
 impl Fact {
     pub fn with_new_line_file(self, line_file: (usize, usize)) -> Fact {
         match self {
-            Fact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.with_new_line_file(line_file)),
+            Fact::AtomicFact(atomic_fact) => {
+                Fact::AtomicFact(atomic_fact.with_new_line_file(line_file))
+            }
             Fact::ExistFact(e) => Fact::ExistFact(ExistFact {
                 params_def_with_type: e.params_def_with_type,
                 facts: e.facts,
@@ -56,7 +72,11 @@ impl Fact {
             }),
             Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(or_fact.facts, line_file)),
             Fact::AndFact(and_fact) => Fact::AndFact(AndFact::new(and_fact.facts, line_file)),
-            Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(chain_fact.objs, chain_fact.prop_names, line_file)),
+            Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(
+                chain_fact.objs,
+                chain_fact.prop_names,
+                line_file,
+            )),
             Fact::ForallFact(f) => Fact::ForallFact(ForallFact {
                 params_def_with_type: f.params_def_with_type,
                 dom_facts: f.dom_facts,

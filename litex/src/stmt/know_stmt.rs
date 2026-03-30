@@ -1,6 +1,7 @@
+use crate::prelude::*;
 use std::fmt;
-use crate::fact::Fact;
 
+#[derive(Clone)]
 pub struct KnowStmt {
     pub facts: Vec<Fact>,
     pub line_file: (usize, usize),
@@ -10,14 +11,20 @@ impl KnowStmt {
     pub fn new(facts: Vec<Fact>, line_file: (usize, usize)) -> Self {
         KnowStmt { facts, line_file }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "KnowStmt".to_string()
-    }
 }
 
 impl fmt::Display for KnowStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "know {}", self.facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>().join(", "))
+        if self.facts.len() == 1 {
+            write!(f, "know {}", self.facts[0])
+        } else {
+            write!(
+                f,
+                "{}{}\n{}",
+                KNOW,
+                COLON,
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1),
+            )
+        }
     }
 }

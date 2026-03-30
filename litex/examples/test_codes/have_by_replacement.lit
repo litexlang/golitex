@@ -1,0 +1,31 @@
+prove:
+    have A set, B set
+    prop P(x A, y B)
+
+    know forall x A, y1, y2 B: $P(x, y1), $P(x, y2) => $last_two_objects_are_equal(x, y1, y2)
+
+    have s set = set_defined_by_replacement(A, B, P)
+    forall x set_defined_by_replacement(A, B, P):
+        $obj_exist_as_preimage_of_prop(A, B, P, x)
+
+    let y set_defined_by_replacement(A, B, P) # set_defined_by_replacement 像1,2,3一样，有内置的一些功能；比如这里一旦知道 y $in set_defined_by_replacement(A, B, P)，那么 y $in B 就自动成立
+    y $in B
+
+    have x st $obj_exist_as_preimage_of_prop(A, B, P, y) # y $in set_defined_by_replacement(A, B, P) 等价于 exist x $in A st $P(x, y) 成立
+
+    x $in A
+    $P(x, y)
+
+
+
+prove:
+
+    let A set, B set
+    prop P(x A, y B)
+
+    know forall x A, y1, y2 B: $P(x, y1), $P(x, y2) => $last_two_objects_are_equal(x, y1, y2)
+
+    have y set = set_defined_by_replacement(A, B, P)
+
+    forall x y:
+        x $in B

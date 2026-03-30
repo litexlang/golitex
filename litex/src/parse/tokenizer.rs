@@ -1,15 +1,14 @@
-use crate::common::keywords::key_symbols_sorted_by_len_desc;
-
+use crate::prelude::*;
 pub fn tokenize_line(line: &str) -> Vec<String> {
     let symbols = key_symbols_sorted_by_len_desc();
-    let mut tokens = Vec::new();
+    let mut tokens = Vec::with_capacity(line.len());
     let mut i = 0;
     let line = line.trim_end();
     let bytes = line.as_bytes();
 
     while i < bytes.len() {
         // Ensure `i` is always on a UTF-8 char boundary before slicing `line[i..]`.
-        // Otherwise Rust will panic when `&line[i..j]` is evaluated.
+        // Otherwise Rust will unreachable when `&line[i..j]` is evaluated.
         if !line.is_char_boundary(i) {
             let mut char_start = i;
             while char_start > 0 && !line.is_char_boundary(char_start) {

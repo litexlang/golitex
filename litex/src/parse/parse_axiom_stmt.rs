@@ -1,142 +1,256 @@
-use crate::error::ParsingError;
-use crate::fact::{Fact, AndChainAtomicFact, ExistOrAndChainAtomicFact};
-use crate::common::keywords::{
-    CASE, BY_CASES, COLON, COMMA, BY_CONTRA, ENUMERATE, EQUAL, BY_EXTENSION, FOR, FROM, IMPOSSIBLE, BY_INDUC, PROVE,
-    RIGHT_ARROW, BY_FN_DEF, BY_CART_DEF,
-};
-use crate::execute::Executor;
-use crate::obj::Obj;
-use crate::stmt::axiom_stmt::{
-    ClosedRangeOrRange, ByContraAxiomStmt, EnumerateAxiomStmt, ByExtensionAxiomStmt,
-    ByInducAxiomStmt, ByCasesAxiomStmt, ForAxiomStmt, ByFnDefAxiomStmt, ByCartDefAxiomStmt,
-};
-use crate::stmt::Stmt;
-use super::TokenBlock;
+use crate::prelude::*;
 
-impl<'a> Executor<'a> {
+impl Runtime {
+    pub fn parse_by_prefixed_axiom_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
+        tb.skip_token(BY)?;
+        let second_keyword = tb.current()?;
+        match second_keyword {
+            CASES => self.parse_by_cases_axiom_stmt(tb),
+            CONTRA => self.parse_by_contra_axiom_stmt(tb),
+            ENUMERATE => self.parse_enumerate_axiom_stmt(tb),
+            INDUC => self.parse_by_induc_axiom_stmt(tb),
+            FOR => self.parse_for_axiom_stmt(tb),
+            EXTENSION => self.parse_by_extension_axiom_stmt(tb),
+            FN_DEF => self.parse_by_fn_def_axiom_stmt(tb),
+            CART_DEF => self.parse_by_cart_def_axiom_stmt(tb),
+            _ => Err(ParsingError::new(
+                format!(
+                    "by: expected cases, contra, enumerate, induc, for, extension, fn_def, or cart_def after `by`, got `{}`",
+                    second_keyword
+                ),
+                tb.line_file,
+                None,
+            )),
+        }
+    }
+
     pub fn parse_by_cases_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(BY_CASES)?;
+        tb.skip_token(CASES)?;
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
-            return Err(ParsingError::new("cases: expects at least one body block".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "cases: expects at least one body block".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
         let then_facts: Vec<Fact> = {
-            let first = tb.body.get_mut(0).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
-            first.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
-            first.body.iter_mut().map(|b| self.parse_fact(b)).collect::<Result<_, _>>()?
+            let first = tb.body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+            })?;
+            first.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+            first
+                .body
+                .iter_mut()
+                .map(|b| self.parse_fact(b))
+                .collect::<Result<_, _>>()?
         };
-        let mut cases: Vec<AndChainAtomicFact> = vec![];
-        let mut proofs: Vec<Vec<Stmt>> = vec![];
-        let mut impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>> = vec![];
+        let case_block_count = tb.body.len().saturating_sub(1);
+        let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
+        let mut proofs: Vec<Vec<Stmt>> = Vec::with_capacity(case_block_count);
+        let mut impossible_facts: Vec<Option<AtomicFact>> = Vec::with_capacity(case_block_count);
         for block in tb.body.iter_mut().skip(1) {
             block.skip_token(CASE)?;
             let case = self.parse_and_chain_atomic_fact(block)?;
             block.skip_token(COLON)?;
             if !block.exceed_end_of_head() {
-                return Err(ParsingError::new("case: expected end of head after condition".to_string(), block.line_file, None));
+                return Err(ParsingError::new(
+                    "case: expected end of head after condition".to_string(),
+                    block.line_file,
+                    None,
+                ));
             }
             cases.push(case);
             let n = block.body.len();
-            if n == 0 {
+            if block.body.is_empty() {
                 proofs.push(vec![]);
                 impossible_facts.push(None);
                 continue;
             }
-            let (proof_stmts, impossible) = if block.body[n - 1].header.get(0).map(|s| s.as_str()) == Some(IMPOSSIBLE) {
-                let proof: Vec<Stmt> = block.body[0..n - 1].iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-                let last_block = block.body.get_mut(n - 1).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
-                last_block.skip_token(IMPOSSIBLE)?;
-                let imp = self.parse_exist_or_and_chain_atomic_fact(last_block)?;
-                (proof, Some(imp))
-            } else {
-                let proof: Vec<Stmt> = block.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-                (proof, None)
-            };
+            let (proof_stmts, impossible) =
+                if block.body[n - 1].header.get(0).map(|s| s.as_str()) == Some(IMPOSSIBLE) {
+                    let proof: Vec<Stmt> = block.body[0..n - 1]
+                        .iter_mut()
+                        .map(|b| self.parse_stmt(b))
+                        .collect::<Result<_, _>>()?;
+                    let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
+                        ParsingError::new("Expected body".to_string(), tb.line_file, None)
+                    })?;
+                    last_block.skip_token(IMPOSSIBLE)?;
+                    let imp = self.parse_atomic_fact(last_block, true)?;
+                    (proof, Some(imp))
+                } else {
+                    let proof: Vec<Stmt> = block
+                        .body
+                        .iter_mut()
+                        .map(|b| self.parse_stmt(b))
+                        .collect::<Result<_, _>>()?;
+                    (proof, None)
+                };
             proofs.push(proof_stmts);
             impossible_facts.push(impossible);
         }
-        Ok(Stmt::ByCasesAxiomStmt(
-            ByCasesAxiomStmt::new(cases, then_facts, proofs, impossible_facts, tb.line_file),
-        ))
+        Ok(Stmt::ByCasesAxiomStmt(ByCasesAxiomStmt::new(
+            cases,
+            then_facts,
+            proofs,
+            impossible_facts,
+            tb.line_file,
+        )))
     }
 
-    pub fn parse_by_contra_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(BY_CONTRA)?;
-        let to_prove = self.parse_exist_or_and_chain_atomic_fact(tb)?.to_fact();
+    /// `by contra:` then `prove:` block with exactly one atomic fact, optional proof statements, then `impossible` atomic fact.
+    pub fn parse_by_contra_axiom_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
+        tb.skip_token(CONTRA)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
-            return Err(ParsingError::new("contra: expected end of head after to_prove".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "by contra: expected end of head after by contra:".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
-        if tb.body.len() < 1 {
-            return Err(ParsingError::new("contra: expects at least one body block (impossible fact)".to_string(), tb.line_file, None));
+        if tb.body.len() < 2 {
+            return Err(ParsingError::new(
+                "by contra: expects prove: block and impossible ... tail".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
+        let to_prove = {
+            let prove_block = tb.body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+            })?;
+            prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+            if prove_block.body.len() != 1 {
+                return Err(ParsingError::new(
+                    "by contra: prove: expects exactly one atomic fact block".to_string(),
+                    prove_block.line_file,
+                    None,
+                ));
+            }
+            let atomic_fact_block = prove_block.body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), prove_block.line_file, None)
+            })?;
+            self.parse_atomic_fact(atomic_fact_block, true)?
+        };
         let n = tb.body.len();
-        let mut proof = vec![];
-        for block in tb.body[0..n - 1].iter_mut() {
+        let proof_stmt_block_count = n.saturating_sub(2);
+        let mut proof = Vec::with_capacity(proof_stmt_block_count);
+        for block in tb.body[1..n - 1].iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
-        let mut last_block = tb.body.last_mut().ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
+        let mut last_block = tb
+            .body
+            .last_mut()
+            .ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
         last_block.skip_token(IMPOSSIBLE)?;
-        let impossible_fact = self.parse_exist_or_and_chain_atomic_fact(&mut last_block)?;
-        Ok(Stmt::ByContraAxiomStmt(
-            ByContraAxiomStmt::new(to_prove, proof, impossible_fact, tb.line_file),
-        ))
+        let impossible_fact = self.parse_atomic_fact(&mut last_block, true)?;
+        Ok(Stmt::ByContraAxiomStmt(ByContraAxiomStmt::new(
+            to_prove,
+            proof,
+            impossible_fact,
+            tb.line_file,
+        )))
     }
 
-    pub fn parse_enumerate_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_enumerate_axiom_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
         tb.skip_token(ENUMERATE)?;
         let mut params: Vec<String> = vec![];
-        let mut param_sets: Vec<crate::obj::Obj> = vec![];
+        let mut param_sets: Vec<ListSet> = vec![];
         if tb.current_token_is_equal_to(COLON) {
-            return Err(ParsingError::new("enum: expects at least one (param, set) pair".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "by enumerate: expects at least one (param, set) pair".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
         while tb.current()? != COLON {
             params.push(tb.advance()?);
-            param_sets.push(self.parse_obj(tb)?);
+            param_sets.push(self.parse_list_set_obj(tb)?);
             if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
             }
         }
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
-            return Err(ParsingError::new("enum: expected end of head after params".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "by enumerate: expected end of head after params".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
-        let prove_idx = tb.body.iter().position(|b| b.header.get(0).map(|s| s.as_str()) == Some(PROVE));
-        let (to_prove, proof) = if let Some(i) = prove_idx {
-            let to_prove: Vec<Fact> = tb.body[0..i].iter_mut().map(|b| self.parse_fact(b)).collect::<Result<_, _>>()?;
-            let prove_block = tb.body.get_mut(i).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
-            prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-            let proof: Vec<Stmt> = prove_block.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-            (to_prove, proof)
-        } else {
-            (vec![], tb.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?)
-        };
-        Ok(Stmt::EnumerateAxiomStmt(
-            EnumerateAxiomStmt::new(params, param_sets, to_prove, proof, tb.line_file),
-        ))
+        if tb.body.is_empty() {
+            return Err(ParsingError::new(
+                "by enumerate: expects prove: block and at least one fact to prove".to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+
+        if tb.body.is_empty() {
+            return Err(ParsingError::new(
+                "by enumerate: expects at least one body block".to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+
+        tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+
+        let mut to_prove: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        for block in tb.body[0].body.iter_mut() {
+            to_prove.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
+        }
+
+        let mut proof: Vec<Stmt> = vec![];
+        for block in tb.body[1..].iter_mut() {
+            proof.push(self.parse_stmt(block)?);
+        }
+
+        Ok(Stmt::EnumerateAxiomStmt(EnumerateAxiomStmt::new(
+            params,
+            param_sets,
+            to_prove,
+            proof,
+            tb.line_file,
+        )))
     }
 
     pub fn parse_by_induc_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(BY_INDUC)?;
+        tb.skip_token(INDUC)?;
         let param = tb.advance()?;
         tb.skip_token(FROM)?;
         let induc_from = self.parse_obj(tb)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
-            return Err(ParsingError::new("induc: expected end of head".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "by induc: expected end of head".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
-        if tb.body.is_empty() {
-            return Err(ParsingError::new("induc: expects at least one body block".to_string(), tb.line_file, None));
+
+        let mut to_prove: Vec<ExistOrAndChainAtomicFact> = vec![];
+        for block in tb.body.iter_mut() {
+            to_prove.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
         }
-        let fact: Vec<ExistOrAndChainAtomicFact> = {
-            let then_block = tb.body.get_mut(0).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
-            then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
-            then_block.body.iter_mut().map(|b| self.parse_exist_or_and_chain_atomic_fact(b)).collect::<Result<_, _>>()?
-        };
-        let proof: Vec<Stmt> = tb.body.iter_mut().skip(1).map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-        Ok(Stmt::ByInducAxiomStmt(
-            ByInducAxiomStmt::new(fact, param, proof, induc_from, tb.line_file),
-        ))
+
+        Ok(Stmt::ByInducAxiomStmt(ByInducAxiomStmt::new(
+            to_prove,
+            param,
+            induc_from,
+            tb.line_file,
+        )))
     }
 
     pub fn parse_for_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -151,7 +265,7 @@ impl<'a> Executor<'a> {
                 crate::obj::Obj::ClosedRange(c) => ClosedRangeOrRange::ClosedRange(c),
                 _ => {
                     return Err(ParsingError::new(
-                        "for: param set must be range or closed_range".to_string(),
+                        "by for: param set must be range or closed_range".to_string(),
                         tb.line_file,
                         None,
                     ));
@@ -164,55 +278,76 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
-            return Err(ParsingError::new("for: expected end of head after params".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "by for: expected end of head after params".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
         if tb.body.is_empty() {
-            return Err(ParsingError::new("for: expects at least one body block".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "by for: expects at least one body block".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
 
-        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
-        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
-        let mut proof: Vec<Stmt> = vec![];
+        let first_is_prove = tb.body[0].header.get(0).map(|s| s.as_str()) == Some(PROVE);
 
-        let first_is_arrow = tb.body[0].header.get(0).map(|s| s.as_str()) == Some(RIGHT_ARROW);
-
-        if first_is_arrow {
+        let (dom_facts, then_facts, proof) = if first_is_prove {
             // body[0] 是 =>:，其 body 是 then_facts；后面全是 proof
-            let then_block = tb.body.get_mut(0).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
-            then_block.parse_index = 0;
-            then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
+            let then_block = tb.body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+            })?;
+            let then_fact_count_upper_bound = then_block.body.len();
+            then_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+            let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
+                Vec::with_capacity(then_fact_count_upper_bound);
             for b in then_block.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(b)?);
             }
+            let proof_block_count_upper_bound = tb.body.len().saturating_sub(1);
+            let mut proof: Vec<Stmt> = Vec::with_capacity(proof_block_count_upper_bound);
             for b in tb.body.iter_mut().skip(1) {
                 proof.push(self.parse_stmt(b)?);
             }
+            (Vec::new(), then_facts, proof)
         } else {
             // 前面若干 block 是 dom，直到 =>:；=>: 的 body 是 then_facts；再后面是 proof
             let mut arrow_idx = None;
             for (i, b) in tb.body.iter().enumerate() {
-                if b.header.get(0).map(|s| s.as_str()) == Some(RIGHT_ARROW) {
+                if b.header.get(0).map(|s| s.as_str()) == Some(PROVE) {
                     arrow_idx = Some(i);
                     break;
                 }
             }
-            let arrow_idx = arrow_idx.ok_or_else(|| ParsingError::new("for: expects a =>: block".to_string(), tb.line_file, None))?;
+            let arrow_idx = arrow_idx.ok_or_else(|| {
+                ParsingError::new("by for: expects a =>: block".to_string(), tb.line_file, None)
+            })?;
 
+            let mut dom_facts: Vec<AtomicFact> = Vec::with_capacity(arrow_idx);
             for b in tb.body[0..arrow_idx].iter_mut() {
-                dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(b)?);
+                dom_facts.push(self.parse_atomic_fact(b, true)?);
             }
 
-            let then_block = tb.body.get_mut(arrow_idx).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
-            then_block.parse_index = 0;
-            then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
+            let then_block = tb.body.get_mut(arrow_idx).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+            })?;
+            let then_fact_count_upper_bound = then_block.body.len();
+            then_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+            let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
+                Vec::with_capacity(then_fact_count_upper_bound);
             for b in then_block.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(b)?);
             }
 
+            let proof_block_count_upper_bound = tb.body.len().saturating_sub(arrow_idx + 1);
+            let mut proof: Vec<Stmt> = Vec::with_capacity(proof_block_count_upper_bound);
             for b in tb.body.iter_mut().skip(arrow_idx + 1) {
                 proof.push(self.parse_stmt(b)?);
             }
-        }
+            (dom_facts, then_facts, proof)
+        };
 
         Ok(Stmt::ForAxiomStmt(ForAxiomStmt::new(
             params,
@@ -224,20 +359,66 @@ impl<'a> Executor<'a> {
         )))
     }
 
-    pub fn parse_by_extension_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(BY_EXTENSION)?;
-        let left = self.parse_obj(tb)?;
-        tb.skip_token(EQUAL)?;
-        let right = self.parse_obj(tb)?;
-        tb.skip_token(COLON)?;
-        let proof: Vec<Stmt> = tb.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-        Ok(Stmt::ByExtensionAxiomStmt(
-            ByExtensionAxiomStmt::new(left, right, proof, tb.line_file),
-        ))
+    pub fn parse_by_extension_axiom_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
+        tb.skip_token_and_colon_and_exceed_end_of_head(EXTENSION)?;
+
+        if tb.body.is_empty() {
+            return Err(ParsingError::new(
+                "by extension: expects at least one body block".to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+
+        tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+
+        if tb.body[0].body.len() != 1 {
+            return Err(ParsingError::new(
+                "by extension: prove: expects exactly one atomic fact block".to_string(),
+                tb.body[0].line_file,
+                None,
+            ));
+        }
+
+        let to_prove_equal_fact = self.parse_atomic_fact(
+            tb.body[0].body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+            })?,
+            true,
+        )?;
+
+        let (left, right) = match to_prove_equal_fact {
+            AtomicFact::EqualFact(equal_fact) => (equal_fact.left, equal_fact.right),
+            _ => {
+                return Err(ParsingError::new(
+                    "by extension: prove: expects equal fact".to_string(),
+                    tb.line_file,
+                    None,
+                ));
+            }
+        };
+
+        let mut proof: Vec<Stmt> = vec![];
+        for block in tb.body[1..].iter_mut() {
+            proof.push(self.parse_stmt(block)?);
+        }
+
+        Ok(Stmt::ByExtensionAxiomStmt(ByExtensionAxiomStmt::new(
+            left,
+            right,
+            proof,
+            tb.line_file,
+        )))
     }
 
-    pub fn parse_by_fn_def_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(BY_FN_DEF)?;
+    pub fn parse_by_fn_def_axiom_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
+        tb.skip_token(FN_DEF)?;
         let function = self.parse_obj(tb)?;
         Ok(Stmt::ByFnDefAxiomStmt(ByFnDefAxiomStmt::new(
             function,
@@ -245,14 +426,17 @@ impl<'a> Executor<'a> {
         )))
     }
 
-    pub fn parse_by_cart_def_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(BY_CART_DEF)?;
+    pub fn parse_by_cart_def_axiom_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
+        tb.skip_token(CART_DEF)?;
         let obj = self.parse_obj(tb)?;
         let cart = match obj {
             Obj::Cart(cart_value) => cart_value,
             _ => {
                 return Err(ParsingError::new(
-                    "by_cart_def: expected cart(...) object".to_string(),
+                    "by cart_def: expected cart(...) object".to_string(),
                     tb.line_file,
                     None,
                 ));

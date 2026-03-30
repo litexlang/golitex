@@ -1,0 +1,3 @@
+run_file "./examples/runfile2.lit"
+
+$p(1, 2)

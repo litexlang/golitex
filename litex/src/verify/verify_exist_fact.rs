@@ -1,16 +1,30 @@
-use crate::error::VerifyError;
-use crate::environment::Environment;
-use crate::execute::Executor;
-use crate::fact::ExistFact;
-use crate::obj::{Identifier, Obj};
-use crate::stmt::parameter_def::ParamDefWithParamType;
+use crate::prelude::*;
 use std::collections::HashMap;
-use crate::result::{NonErrStmtExecResult, StmtUnknown};
-use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
-    pub fn verify_exist_fact(&mut self, exist_fact: &ExistFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+impl Runtime {
+    pub fn verify_exist_fact(
+        &mut self,
+        exist_fact: &ExistFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&Fact::ExistFact(exist_fact.clone()))
+        {
+            return Ok(cached_result);
+        }
+
+        if !verify_state.well_defined_already_verified {
+            if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
+                return Err(VerifyError::new(
+                    Fact::ExistFact(exist_fact.clone()),
+                    String::new(),
+                    exist_fact.line_file(),
+                    Some(RuntimeError::WellDefinedError(e)),
+                ));
+            }
+        }
+
         let result = self.verify_exist_fact_with_known_exist_fact(exist_fact, exist_fact)?;
         if result.is_true() {
             return Ok(result);
@@ -24,34 +38,41 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    pub fn verify_exist_fact_with_known_exist_fact(&mut self, exist_fact: &ExistFact, known_exist_fact: &ExistFact) -> Result<NonErrStmtExecResult, VerifyError> {
-        for environment in self.runtime_context.iter_environments_from_top() {
-            let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(environment, exist_fact, known_exist_fact)?;
+    pub fn verify_exist_fact_with_known_exist_fact(
+        &mut self,
+        exist_fact: &ExistFact,
+        known_exist_fact: &ExistFact,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        for environment in self.iter_environments_from_top() {
+            let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
+                environment,
+                exist_fact,
+                known_exist_fact,
+            )?;
             if result.is_true() {
                 return Ok(result);
             }
         }
 
-        let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(&self.runtime_context.builtin_environment, exist_fact, known_exist_fact)?;
-        if result.is_true() {
-            return Ok(result);
-        }
-
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    pub fn verify_exist_fact_with_known_exist_fact_with_facts_in_environment(environment: &Environment, exist_fact: &ExistFact, known_exist_fact: &ExistFact) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key()) {
+    pub fn verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
+        environment: &Environment,
+        exist_fact: &ExistFact,
+        known_exist_fact: &ExistFact,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key())
+        {
             let target_string = Self::exist_fact_normalized_string(exist_fact);
             for known_fact in known_exist_facts.iter() {
                 let known_string = Self::exist_fact_normalized_string(known_fact);
                 if target_string == known_string {
                     return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                         crate::result::FactVerifiedByFact::new(
-                            exist_fact.to_string(),
+                            Fact::ExistFact(exist_fact.clone()),
                             known_fact.to_string(),
                             crate::infer::InferResult::new(),
-                            exist_fact.line_file(),
                             known_fact.line_file(),
                         ),
                     ));
@@ -73,12 +94,18 @@ impl<'a> Executor<'a> {
                 let normalized_name = format!("#{}", param_index);
                 param_index += 1;
 
-                param_to_arg_map.insert(original_name.clone(), Obj::Identifier(Identifier::new(normalized_name.clone())));
+                param_to_arg_map.insert(
+                    original_name.clone(),
+                    Obj::Identifier(Identifier::new(normalized_name.clone())),
+                );
                 new_param_names.push(normalized_name);
             }
 
             let instantiated_param_type = param_def_with_type.1.instantiate(&param_to_arg_map);
-            normalized_params.push(ParamDefWithParamType(new_param_names, instantiated_param_type));
+            normalized_params.push(ParamDefWithParamType(
+                new_param_names,
+                instantiated_param_type,
+            ));
         }
 
         let instantiated_exist_fact = exist_fact.instantiate(&param_to_arg_map);
@@ -91,12 +118,15 @@ impl<'a> Executor<'a> {
 
         let mut params_string_parts: Vec<String> = Vec::new();
         for param_def_with_type in normalized_params.iter() {
-            params_string_parts.push(format!("{} {}", param_def_with_type.0.join(","), param_def_with_type.1));
+            params_string_parts.push(format!(
+                "{} {}",
+                param_def_with_type.0.join(","),
+                param_def_with_type.1
+            ));
         }
         let params_string = params_string_parts.join("; ");
         let facts_string = fact_strings.join("; ");
 
         format!("{} || {}", params_string, facts_string)
     }
-    
 }

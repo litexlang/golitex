@@ -2,3 +2,7 @@ let a R:
     a $in {1, 2}
 
 a = 1 or a = 2
+
+by enumerate a {1, 2, 3}:
+    prove:
+        a < 4

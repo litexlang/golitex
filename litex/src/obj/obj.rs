@@ -1,12 +1,7 @@
+use super::standard_set::StandardSet;
+use crate::prelude::*;
 use std::collections::HashMap;
-use crate::stmt::parameter_def::ParamDefWithParamSet;
-use crate::fact::OrAndChainAtomicFact;
-use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN_FOR_FN_WITH_PARAMS, FN_FOR_FN_WITHOUT_PARAMS, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ
-};
 use std::fmt;
-use crate::common::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma, brace_vec_colon_vec_to_string};
-use super::atom::{Atom, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod, FieldAccess, FieldAccessWithMod};
 
 #[derive(Clone)]
 pub enum Obj {
@@ -28,47 +23,27 @@ pub enum Obj {
     SetDiff(SetDiff),
     Cup(Cup),
     Cap(Cap),
+    PowerSet(PowerSet),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
     FnSetWithoutParams(FnSetWithoutParams),
     FnSetWithParams(FnSetWithParams),
-    NPosObj(NPosObj),
-    NObj(NObj),
-    QObj(QObj),
-    ZObj(ZObj),
-    RObj(RObj),
-    InstSetStructObj(InstStructObj),
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
-    Dim(Dim),
+    TupleDim(TupleDim),
     Tuple(Tuple),
     Count(Count),
     Range(Range),
     ClosedRange(ClosedRange),
-    Val(Val),
-    PowerSet(PowerSet),
     Choose(Choose),
-    TupleDimObj(TupleDimObj),
     ObjAtIndex(ObjAtIndex),
-    QPos(QPos),
-    RPos(RPos),
-    QNeg(QNeg),
-    ZNeg(ZNeg),
-    RNeg(RNeg),
-    QNz(QNz),
-    ZNz(ZNz),
-    RNz(RNz),
-}
-
-#[derive(Clone)]
-pub struct TupleDimObj {
-    pub obj: Box<Obj>,
+    StandardSet(StandardSet),
 }
 
 #[derive(Clone)]
 pub enum FnSetObj {
-    FnSetWithoutDom(FnSetWithoutParams),
+    FnSetWithoutParams(FnSetWithoutParams),
     FnSetWithDom(FnSetWithParams),
 }
 
@@ -86,11 +61,6 @@ pub struct Choose {
 #[derive(Clone)]
 pub struct PowerSet {
     pub set: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct Val {
-    pub value: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -112,12 +82,12 @@ pub struct Count {
 
 #[derive(Clone)]
 pub struct Tuple {
-    pub elements: Vec<Box<Obj>>,
+    pub args: Vec<Box<Obj>>,
 }
 
 #[derive(Clone)]
-pub struct Dim {
-    pub dim: Box<Obj>,
+pub struct TupleDim {
+    pub arg: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -137,32 +107,27 @@ pub struct FnObj {
     pub body: Vec<Vec<Box<Obj>>>,
 }
 
-
 #[derive(Clone)]
 pub struct Number {
-    pub value: String,
+    pub normalized_value: String,
 }
-
 
 #[derive(Clone)]
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
 pub struct Mul {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
@@ -175,14 +140,12 @@ pub struct Div {
 pub struct Mod {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
 pub struct Pow {
     pub base: Box<Obj>,
     pub exponent: Box<Obj>,
-    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
@@ -239,7 +202,9 @@ pub struct FnSetWithoutParams {
 
 impl FnSetWithParams {
     pub fn params(&self) -> Vec<String> {
-        let mut ret = vec![];
+        let mut ret = Vec::with_capacity(ParamDefWithParamSet::number_of_params(
+            &self.params_def_with_set,
+        ));
         for param_def_with_set in &self.params_def_with_set {
             ret.extend(param_def_with_set.0.iter().cloned());
         }
@@ -253,50 +218,6 @@ pub struct FnSetWithParams {
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Box<Obj>,
 }
-
-#[derive(Clone)]
-pub struct NPosObj {
-}
-
-#[derive(Clone)]
-pub struct NObj {
-}
-
-#[derive(Clone)]
-pub struct QObj {
-}
-
-#[derive(Clone)]
-pub struct ZObj {
-}
-
-#[derive(Clone)]
-pub struct RObj {
-}
-
-#[derive(Clone)]
-pub struct QPos {}
-
-#[derive(Clone)]
-pub struct RPos {}
-
-#[derive(Clone)]
-pub struct QNeg {}
-
-#[derive(Clone)]
-pub struct ZNeg {}
-
-#[derive(Clone)]
-pub struct RNeg {}
-
-#[derive(Clone)]
-pub struct QNz {}
-
-#[derive(Clone)]
-pub struct ZNz {}
-
-#[derive(Clone)]
-pub struct RNz {}
 
 #[derive(Clone)]
 pub struct InstStructObj {
@@ -329,36 +250,35 @@ impl FnObj {
 
 impl Number {
     pub fn new(value: String) -> Self {
-        Number { value }
+        Number {
+            normalized_value: normalize_decimal_number_string(&value),
+        }
     }
 }
 
 impl Add {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
         Add {
             left: Box::new(left),
             right: Box::new(right),
-            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
 
 impl Sub {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
         Sub {
             left: Box::new(left),
             right: Box::new(right),
-            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
 
 impl Mul {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
         Mul {
             left: Box::new(left),
             right: Box::new(right),
-            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
@@ -373,21 +293,19 @@ impl Div {
 }
 
 impl Mod {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
         Mod {
             left: Box::new(left),
             right: Box::new(right),
-            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
 
 impl Pow {
-    pub fn new(base: Obj, exponent: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(base: Obj, exponent: Obj) -> Self {
         Pow {
             base: Box::new(base),
             exponent: Box::new(exponent),
-            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
@@ -430,13 +348,17 @@ impl SetDiff {
 
 impl Cup {
     pub fn new(left: Obj) -> Self {
-        Cup { left: Box::new(left) }
+        Cup {
+            left: Box::new(left),
+        }
     }
 }
 
 impl Cap {
     pub fn new(left: Obj) -> Self {
-        Cap { left: Box::new(left) }
+        Cap {
+            left: Box::new(left),
+        }
     }
 }
 
@@ -468,75 +390,17 @@ impl FnSetWithoutParams {
 }
 
 impl FnSetWithParams {
-    pub fn new(params_and_their_sets: Vec<ParamDefWithParamSet>, dom_facts: Vec<OrAndChainAtomicFact>, ret_set: Obj) -> Self {
+    pub fn new(
+        params_and_their_sets: Vec<ParamDefWithParamSet>,
+        dom_facts: Vec<OrAndChainAtomicFact>,
+        ret_set: Obj,
+    ) -> Self {
         FnSetWithParams {
             params_def_with_set: params_and_their_sets,
             dom_facts,
             ret_set: Box::new(ret_set),
         }
     }
-}
-
-impl NPosObj {
-    pub fn new() -> Self {
-        NPosObj { }
-    }
-}
-
-impl NObj {
-    pub fn new() -> Self {
-        NObj { }
-    }
-}
-
-impl QObj {
-    pub fn new() -> Self {
-        QObj { }
-    }
-}
-
-impl ZObj {
-    pub fn new() -> Self {
-        ZObj { }
-    }
-}
-
-impl RObj {
-    pub fn new() -> Self {
-        RObj { }
-    }
-}
-
-impl QPos {
-    pub fn new() -> Self { QPos {} }
-}
-
-impl RPos {
-    pub fn new() -> Self { RPos {} }
-}
-
-impl QNeg {
-    pub fn new() -> Self { QNeg {} }
-}
-
-impl ZNeg {
-    pub fn new() -> Self { ZNeg {} }
-}
-
-impl RNeg {
-    pub fn new() -> Self { RNeg {} }
-}
-
-impl QNz {
-    pub fn new() -> Self { QNz {} }
-}
-
-impl ZNz {
-    pub fn new() -> Self { ZNz {} }
-}
-
-impl RNz {
-    pub fn new() -> Self { RNz {} }
 }
 
 impl InstStructObj {
@@ -556,15 +420,7 @@ impl PowerSet {
 
 impl Choose {
     pub fn new(set: Obj) -> Self {
-        Choose {
-            set: Box::new(set),
-        }
-    }
-}
-
-impl TupleDimObj {
-    pub fn new(obj: Obj) -> Self {
-        TupleDimObj { obj: Box::new(obj) }
+        Choose { set: Box::new(set) }
     }
 }
 
@@ -583,9 +439,9 @@ impl Proj {
     }
 }
 
-impl Dim {
+impl TupleDim {
     pub fn new(dim: Obj) -> Self {
-        Dim { dim: Box::new(dim) }
+        TupleDim { arg: Box::new(dim) }
     }
 }
 
@@ -600,7 +456,7 @@ impl Cart {
 impl Tuple {
     pub fn new(elements: Vec<Obj>) -> Self {
         Tuple {
-            elements: elements.into_iter().map(Box::new).collect(),
+            args: elements.into_iter().map(Box::new).collect(),
         }
     }
 }
@@ -629,14 +485,6 @@ impl ClosedRange {
     }
 }
 
-impl Val {
-    pub fn new(value: Obj) -> Self {
-        Val {
-            value: Box::new(value),
-        }
-    }
-}
-
 /// 算术运算符优先级：数值越小绑定越紧。^=1, * / %=2, + -=3；非算术=0 不参与括号。
 fn precedence(o: &Obj) -> u8 {
     match o {
@@ -655,7 +503,11 @@ impl fmt::Display for Obj {
 
 impl Obj {
     /// 按优先级输出：当子表达式优先级低于父节点时自动加括号，例如 ^ 下出现 + 则写成 (a + b)。
-    pub fn fmt_with_precedence(&self, f: &mut fmt::Formatter<'_>, parent_precedent: u8) -> fmt::Result {
+    pub fn fmt_with_precedence(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+        parent_precedent: u8,
+    ) -> fmt::Result {
         let precedent = precedence(self);
         let need_parens = parent_precedent != 0 && precedent != 0 && precedent > parent_precedent;
         if need_parens {
@@ -708,33 +560,18 @@ impl Obj {
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
             Obj::FnSetWithoutParams(x) => write!(f, "{}", x)?,
             Obj::FnSetWithParams(x) => write!(f, "{}", x)?,
-            Obj::NPosObj(x) => write!(f, "{}", x)?,
-            Obj::NObj(x) => write!(f, "{}", x)?,
-            Obj::QObj(x) => write!(f, "{}", x)?,
-            Obj::ZObj(x) => write!(f, "{}", x)?,
-            Obj::RObj(x) => write!(f, "{}", x)?,
-            Obj::InstSetStructObj(x) => write!(f, "{}", x)?,
+            Obj::StandardSet(standard_set) => write!(f, "{}", standard_set)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
             Obj::Proj(x) => write!(f, "{}", x)?,
-            Obj::Dim(x) => write!(f, "{}", x)?,
+            Obj::TupleDim(x) => write!(f, "{}", x)?,
             Obj::Tuple(x) => write!(f, "{}", x)?,
             Obj::Count(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
-            Obj::Val(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
-            Obj::TupleDimObj(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
-            Obj::QPos(x) => write!(f, "{}", x)?,
-            Obj::RPos(x) => write!(f, "{}", x)?,
-            Obj::QNeg(x) => write!(f, "{}", x)?,
-            Obj::ZNeg(x) => write!(f, "{}", x)?,
-            Obj::RNeg(x) => write!(f, "{}", x)?,
-            Obj::QNz(x) => write!(f, "{}", x)?,
-            Obj::ZNz(x) => write!(f, "{}", x)?,
-            Obj::RNz(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -745,61 +582,94 @@ impl Obj {
 
 impl fmt::Display for ObjAtIndex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}", self.obj, LEFT_BRACKET, self.index, RIGHT_BRACKET)
+        write!(
+            f,
+            "{}{}{}{}",
+            self.obj, LEFT_BRACKET, self.index, RIGHT_BRACKET
+        )
     }
 }
 
 impl fmt::Display for Choose {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CHOOSE, braced_vec_to_string(&vec![self.set.as_ref()]))
-    }
-}
-
-impl fmt::Display for TupleDimObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", TUPLE_DIM, braced_vec_to_string(&vec![self.obj.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            CHOOSE,
+            braced_vec_to_string(&vec![self.set.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for Range {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", RANGE, braced_vec_to_string(&vec![self.start.as_ref(), self.end.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            RANGE,
+            braced_vec_to_string(&vec![self.start.as_ref(), self.end.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for ClosedRange {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CLOSED_RANGE, braced_vec_to_string(&vec![self.start.as_ref(), self.end.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            CLOSED_RANGE,
+            braced_vec_to_string(&vec![self.start.as_ref(), self.end.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for Count {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", COUNT, braced_vec_to_string(&vec![self.set.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            COUNT,
+            braced_vec_to_string(&vec![self.set.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for Tuple {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", braced_vec_to_string(&self.elements))
+        write!(f, "{}", braced_vec_to_string(&self.args))
     }
 }
 
 impl fmt::Display for CartDim {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CART_DIM, braced_vec_to_string(&vec![self.set.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            CART_DIM,
+            braced_vec_to_string(&vec![self.set.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for Proj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", PROJ, braced_vec_to_string(&vec![self.set.as_ref(), self.dim.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            PROJ,
+            braced_vec_to_string(&vec![self.set.as_ref(), self.dim.as_ref()])
+        )
     }
 }
 
-impl fmt::Display for Dim {
+impl fmt::Display for TupleDim {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CART_DIM, braced_vec_to_string(&vec![self.dim.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            TUPLE_DIM,
+            braced_vec_to_string(&vec![self.arg.as_ref()])
+        )
     }
 }
 
@@ -811,17 +681,21 @@ impl fmt::Display for Identifier {
 
 impl fmt::Display for FnObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.head)?;
-        for group in &self.body {
-            write!(f, "{}", braced_vec_to_string(group))?;
-        }
-        Ok(())
+        write!(f, "{}", fn_obj_to_string(self.head.as_ref(), &self.body))
     }
+}
+
+pub fn fn_obj_to_string(head: &Atom, body: &Vec<Vec<Box<Obj>>>) -> String {
+    let mut fn_obj_string = head.to_string();
+    for group in body.iter() {
+        fn_obj_string = format!("{}{}", fn_obj_string, braced_vec_to_string(group));
+    }
+    fn_obj_string
 }
 
 impl fmt::Display for Number {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.value)
+        write!(f, "{}", self.normalized_value)
     }
 }
 
@@ -863,37 +737,67 @@ impl fmt::Display for Pow {
 
 impl fmt::Display for Union {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", UNION, braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            UNION,
+            braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for Intersect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", INTERSECT, braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            INTERSECT,
+            braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for SetMinus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", SET_MINUS, braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            SET_MINUS,
+            braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for SetDiff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", SET_DIFF, braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            SET_DIFF,
+            braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for Cup {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CUP, braced_vec_to_string(&vec![self.left.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            CUP,
+            braced_vec_to_string(&vec![self.left.as_ref()])
+        )
     }
 }
 
 impl fmt::Display for Cap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CAP, braced_vec_to_string(&vec![self.left.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            CAP,
+            braced_vec_to_string(&vec![self.left.as_ref()])
+        )
     }
 }
 
@@ -911,13 +815,28 @@ impl fmt::Display for ListSet {
 
 impl fmt::Display for SetBuilder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{} {}{} {}{}", LEFT_CURLY_BRACE, self.param, self.param_set, COLON, vec_to_string_join_by_comma(&self.facts), RIGHT_CURLY_BRACE)
+        write!(
+            f,
+            "{}{} {}{} {}{}",
+            LEFT_CURLY_BRACE,
+            self.param,
+            self.param_set,
+            COLON,
+            vec_to_string_join_by_comma(&self.facts),
+            RIGHT_CURLY_BRACE
+        )
     }
 }
 
 impl fmt::Display for FnSetWithoutParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", FN_FOR_FN_WITHOUT_PARAMS, braced_vec_to_string(&self.param_sets), self.ret_set)
+        write!(
+            f,
+            "{}{}{}",
+            FN_FOR_FN_WITHOUT_PARAMS,
+            braced_vec_to_string(&self.param_sets),
+            self.ret_set
+        )
     }
 }
 
@@ -933,91 +852,14 @@ impl fmt::Display for FnSetWithParams {
     }
 }
 
-impl fmt::Display for NPosObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", N_POS)
-    }
-}
-
-impl fmt::Display for NObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", N)
-    }
-}
-
-impl fmt::Display for QObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q)
-    }
-}
-
-impl fmt::Display for ZObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Z)
-    }
-}
-
-impl fmt::Display for RObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R)
-    }
-}
-
-impl fmt::Display for QPos {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q_POS)
-    }
-}
-
-impl fmt::Display for RPos {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R_POS)
-    }
-}
-
-impl fmt::Display for QNeg {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q_NEG)
-    }
-}
-
-impl fmt::Display for ZNeg {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Z_NEG)
-    }
-}
-
-impl fmt::Display for RNeg {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R_NEG)
-    }
-}
-
-
-impl fmt::Display for QNz {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q_NZ)
-    }
-}
-
-impl fmt::Display for ZNz {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Z_NZ)
-    }
-}
-
-impl fmt::Display for RNz {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R_NZ)
-    }
-}
-
 impl fmt::Display for InstStructObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", INST_STRUCT_OBJ_SIGN)?;
         match &self.struct_name {
             IdentifierOrIdentifierWithMod::Identifier(identifier) => write!(f, "{}", identifier)?,
-            IdentifierOrIdentifierWithMod::IdentifierWithMod(identifier_with_mod) => write!(f, "{}", identifier_with_mod)?,
+            IdentifierOrIdentifierWithMod::IdentifierWithMod(identifier_with_mod) => {
+                write!(f, "{}", identifier_with_mod)?
+            }
         };
         write!(f, "{}", braced_vec_to_string(&self.args))
     }
@@ -1025,27 +867,25 @@ impl fmt::Display for InstStructObj {
 
 impl fmt::Display for Cart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CART,  braced_vec_to_string(&self.args))
-    }
-}
-
-impl fmt::Display for Val {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", VAL, braced_vec_to_string(&vec![self.value.as_ref()]))
+        write!(f, "{}{}", CART, braced_vec_to_string(&self.args))
     }
 }
 
 impl fmt::Display for PowerSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", POWER_SET, braced_vec_to_string(&vec![self.set.as_ref()]))
+        write!(
+            f,
+            "{}{}",
+            POWER_SET,
+            braced_vec_to_string(&vec![self.set.as_ref()])
+        )
     }
 }
-
 
 impl From<Atom> for Obj {
     fn from(atom: Atom) -> Self {
         match atom {
-            Atom::IdentifierAtom(a) => Obj::Identifier(a),
+            Atom::Identifier(a) => Obj::Identifier(a),
             Atom::IdentifierWithMod(a) => Obj::IdentifierWithMod(a),
             Atom::FieldAccess(a) => Obj::FieldAccess(a),
             Atom::FieldAccessWithMod(a) => Obj::FieldAccessWithMod(a),
@@ -1063,14 +903,14 @@ impl Identifier {
 impl fmt::Display for FnSetObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            FnSetObj::FnSetWithoutDom(fn_set_without_dom) => write!(f, "{}", fn_set_without_dom),
+            FnSetObj::FnSetWithoutParams(fn_set_without_dom) => write!(f, "{}", fn_set_without_dom),
             FnSetObj::FnSetWithDom(fn_set_with_dom) => write!(f, "{}", fn_set_with_dom),
         }
     }
 }
 
 impl Obj {
-    pub fn instantiate(&self,param_to_arg_map: &HashMap<String, Obj>) -> Obj {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         match self {
             Obj::Identifier(inner) => inner.instantiate(param_to_arg_map),
             Obj::IdentifierWithMod(inner) => inner.instantiate(param_to_arg_map),
@@ -1094,33 +934,18 @@ impl Obj {
             Obj::SetBuilder(inner) => inner.instantiate(param_to_arg_map),
             Obj::FnSetWithoutParams(inner) => inner.instantiate(param_to_arg_map),
             Obj::FnSetWithParams(inner) => inner.instantiate(param_to_arg_map),
-            Obj::NPosObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::NObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::QObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ZObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::RObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::InstSetStructObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::StandardSet(standard_set) => Obj::StandardSet(standard_set.clone()),
             Obj::Cart(inner) => inner.instantiate(param_to_arg_map),
             Obj::CartDim(inner) => inner.instantiate(param_to_arg_map),
             Obj::Proj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Dim(inner) => inner.instantiate(param_to_arg_map),
+            Obj::TupleDim(inner) => inner.instantiate(param_to_arg_map),
             Obj::Tuple(inner) => inner.instantiate(param_to_arg_map),
             Obj::Count(inner) => inner.instantiate(param_to_arg_map),
             Obj::Range(inner) => inner.instantiate(param_to_arg_map),
             Obj::ClosedRange(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Val(inner) => inner.instantiate(param_to_arg_map),
             Obj::PowerSet(inner) => inner.instantiate(param_to_arg_map),
             Obj::Choose(inner) => inner.instantiate(param_to_arg_map),
-            Obj::TupleDimObj(inner) => inner.instantiate(param_to_arg_map),
             Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
-            Obj::QPos(inner) => inner.instantiate(param_to_arg_map),
-            Obj::RPos(inner) => inner.instantiate(param_to_arg_map),
-            Obj::QNeg(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ZNeg(inner) => inner.instantiate(param_to_arg_map),
-            Obj::RNeg(inner) => inner.instantiate(param_to_arg_map),
-            Obj::QNz(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ZNz(inner) => inner.instantiate(param_to_arg_map),
-            Obj::RNz(inner) => inner.instantiate(param_to_arg_map),
         }
     }
 }
@@ -1129,7 +954,7 @@ impl FnSetObj {
     pub fn ret_set(&self) -> Box<Obj> {
         match self {
             FnSetObj::FnSetWithDom(e) => e.ret_set.clone(),
-            FnSetObj::FnSetWithoutDom(e) => e.ret_set.clone(),
+            FnSetObj::FnSetWithoutParams(e) => e.ret_set.clone(),
         }
     }
 }

@@ -50,11 +50,11 @@ pub const Z: &str = "Z";
 pub const R: &str = "R";
 pub const CART: &str = "cart";
 pub const CART_DIM: &str = "cart_dim";
+pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
-pub const VAL: &str = "val";
 pub const EXIST: &str = "exist";
 pub const ST: &str = "st";
 pub const FORALL: &str = "forall";
@@ -76,14 +76,15 @@ pub const PROP: &str = "prop";
 pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
 
-pub const BY_CONTRA: &str = "by_contra";
+pub const BY: &str = "by";
+pub const CASES: &str = "cases";
+pub const CONTRA: &str = "contra";
 pub const ENUMERATE: &str = "enumerate";
-pub const BY_CASES: &str = "by_cases";
-pub const BY_INDUC: &str = "by_induc";
+pub const INDUC: &str = "induc";
 pub const FOR: &str = "for";
-pub const BY_FN_DEF: &str = "by_fn_def";
-pub const BY_EXTENSION: &str = "by_extension";
-pub const BY_CART_DEF: &str = "by_cart_def";
+pub const EXTENSION: &str = "extension";
+pub const FN_DEF: &str = "fn_def";
+pub const CART_DEF: &str = "cart_def";
 
 pub const CASE: &str = "case";
 pub const IMPORT: &str = "import";
@@ -109,16 +110,38 @@ pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
 pub const RESTRICT: &str = "restrict";
 
-pub const TUPLE_DIM: &str = "tuple_dim";
+pub const BUILTIN_CODE: &str = "builtin_code";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let symbols = [
-        EQUIVALENT_SIGN, NOT_EQUAL, LESS_EQUAL, GREATER_EQUAL, RIGHT_ARROW,
-        FACT_PREFIX, DOT_AKA_FIELD_ACCESS_SIGN, MOD_SIGN, ADD, SUB, MUL, DIV, MOD, POW,
-        LEFT_BRACE, RIGHT_BRACE, COMMA, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE,
-        INST_STRUCT_OBJ_SIGN, EQUAL, LESS, GREATER,
-        LEFT_BRACKET, RIGHT_BRACKET, DOUBLE_QUOTE, COLON,
+        EQUIVALENT_SIGN,
+        NOT_EQUAL,
+        LESS_EQUAL,
+        GREATER_EQUAL,
+        RIGHT_ARROW,
+        FACT_PREFIX,
+        DOT_AKA_FIELD_ACCESS_SIGN,
+        MOD_SIGN,
+        ADD,
+        SUB,
+        MUL,
+        DIV,
+        MOD,
+        POW,
+        LEFT_BRACE,
+        RIGHT_BRACE,
+        COMMA,
+        LEFT_CURLY_BRACE,
+        RIGHT_CURLY_BRACE,
+        INST_STRUCT_OBJ_SIGN,
+        EQUAL,
+        LESS,
+        GREATER,
+        LEFT_BRACKET,
+        RIGHT_BRACKET,
+        DOUBLE_QUOTE,
+        COLON,
         INFIX_FN_NAME_SIGN,
     ];
     for &s in &symbols {
@@ -130,17 +153,84 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
 fn build_keywords_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let words = [
-        UNION, INTERSECT, SET_MINUS, SET_DIFF, CUP, CAP, POWER_SET, CHOOSE,
-        FN_FOR_FN_WITH_PARAMS, SET, NONEMPTY_SET, FINITE_SET, N_POS, N, Q, Z, R,
-        CART, CART_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
-        EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
-        IN, OR, AND, SUBSET, SUPERSET, SUCCESS_COLON, UNKNOWN_COLON, LET, PROP,
-        CLAIM, PROVE, BY_CONTRA, CASE, BY_CASES, IMPORT, AS, ENUMERATE, HAVE, KNOW,
-        CLEAR, DO_NOTHING, BY_INDUC, FROM, EVAL, FOR, WITNESS,
-        BY_EXTENSION, IMPOSSIBLE, BY_FN_DEF, BY_CART_DEF, ALGO,
-        Q_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
-        STRUCT, RESTRICT,
-        TUPLE_DIM, FN_FOR_FN_WITHOUT_PARAMS,
+        UNION,
+        INTERSECT,
+        SET_MINUS,
+        SET_DIFF,
+        CUP,
+        CAP,
+        POWER_SET,
+        CHOOSE,
+        FN_FOR_FN_WITH_PARAMS,
+        SET,
+        NONEMPTY_SET,
+        FINITE_SET,
+        N_POS,
+        N,
+        Q,
+        Z,
+        R,
+        CART,
+        CART_DIM,
+        TUPLE_DIM,
+        PROJ,
+        COUNT,
+        RANGE,
+        CLOSED_RANGE,
+        EXIST,
+        ST,
+        FORALL,
+        NOT,
+        IS_SET,
+        IS_NONEMPTY_SET,
+        IS_FINITE_SET,
+        IS_CART,
+        IS_TUPLE,
+        IN,
+        OR,
+        AND,
+        SUBSET,
+        SUPERSET,
+        SUCCESS_COLON,
+        UNKNOWN_COLON,
+        LET,
+        PROP,
+        CLAIM,
+        PROVE,
+        BY,
+        CASES,
+        CONTRA,
+        CASE,
+        IMPORT,
+        AS,
+        ENUMERATE,
+        HAVE,
+        KNOW,
+        CLEAR,
+        DO_NOTHING,
+        RUN_FILE,
+        INDUC,
+        FROM,
+        EVAL,
+        FOR,
+        WITNESS,
+        EXTENSION,
+        IMPOSSIBLE,
+        FN_DEF,
+        CART_DEF,
+        ALGO,
+        Q_POS,
+        R_POS,
+        Q_NEG,
+        Z_NEG,
+        R_NEG,
+        Q_NZ,
+        Z_NZ,
+        R_NZ,
+        STRUCT,
+        RESTRICT,
+        FN_FOR_FN_WITHOUT_PARAMS,
+        BUILTIN_CODE,
     ];
     for &s in &words {
         m.insert(s, s);
@@ -178,13 +268,50 @@ pub fn is_key_symbol_or_keyword(atom_name: &str) -> bool {
 }
 
 pub fn is_comparison_str(atom_name: &str) -> bool {
-    atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL
+    atom_name == EQUAL
+        || atom_name == NOT_EQUAL
+        || atom_name == LESS
+        || atom_name == GREATER
+        || atom_name == LESS_EQUAL
+        || atom_name == GREATER_EQUAL
 }
 
 pub fn is_builtin_predicate(atom_name: &str) -> bool {
-    atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL || atom_name == IS_SET || atom_name == IS_NONEMPTY_SET || atom_name == IS_FINITE_SET || atom_name == IS_CART || atom_name == IS_TUPLE || atom_name == SUBSET || atom_name == SUPERSET || atom_name == IN || atom_name == RESTRICT
+    atom_name == EQUAL
+        || atom_name == NOT_EQUAL
+        || atom_name == LESS
+        || atom_name == GREATER
+        || atom_name == LESS_EQUAL
+        || atom_name == GREATER_EQUAL
+        || atom_name == IS_SET
+        || atom_name == IS_NONEMPTY_SET
+        || atom_name == IS_FINITE_SET
+        || atom_name == IS_CART
+        || atom_name == IS_TUPLE
+        || atom_name == SUBSET
+        || atom_name == SUPERSET
+        || atom_name == IN
+        || atom_name == RESTRICT
 }
 
 pub fn is_builtin_identifier_obj(atom_name: &str) -> bool {
-    atom_name == ADD || atom_name == SUB || atom_name == MUL || atom_name == DIV || atom_name == MOD || atom_name == POW || atom_name == Q_POS || atom_name == R_POS || atom_name == Q_NEG || atom_name == Z_NEG || atom_name == R_NEG || atom_name == Q_NZ || atom_name == Z_NZ || atom_name == R_NZ || atom_name == N_POS || atom_name == N || atom_name == Q || atom_name == Z || atom_name == R
+    atom_name == ADD
+        || atom_name == SUB
+        || atom_name == MUL
+        || atom_name == DIV
+        || atom_name == MOD
+        || atom_name == POW
+        || atom_name == Q_POS
+        || atom_name == R_POS
+        || atom_name == Q_NEG
+        || atom_name == Z_NEG
+        || atom_name == R_NEG
+        || atom_name == Q_NZ
+        || atom_name == Z_NZ
+        || atom_name == R_NZ
+        || atom_name == N_POS
+        || atom_name == N
+        || atom_name == Q
+        || atom_name == Z
+        || atom_name == R
 }

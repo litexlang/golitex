@@ -1,11 +1,6 @@
-use std::fmt;
+use crate::prelude::*;
 use std::collections::HashMap;
-use crate::error::{ExecStmtError, StmtError};
-use crate::fact::{AtomicFact, Fact, InFact, IsSetFact, IsNonemptySetFact, IsFiniteSetFact};
-use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::common::helper::vec_to_string_join_by_comma;
-use crate::obj::{Identifier, Obj};
-use crate::common::keywords::{FINITE_SET, NONEMPTY_SET, SET};
+use std::fmt;
 
 /// 参数名列表（长度 1 表示单参数）与对应的 Obj（set）
 #[derive(Clone)]
@@ -21,6 +16,13 @@ pub enum ParamType {
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
     Obj(Obj),
+    InstantiatedStruct(InstantiatedStruct),
+}
+
+#[derive(Clone)]
+pub struct InstantiatedStruct {
+    pub name: IdentifierOrIdentifierWithMod,
+    pub params: Vec<Obj>,
 }
 
 #[derive(Clone)]
@@ -57,6 +59,15 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
+            ParamType::InstantiatedStruct(instantiated_struct) => {
+                write!(
+                    f,
+                    "{}{}({})",
+                    INST_STRUCT_OBJ_SIGN,
+                    instantiated_struct.name,
+                    vec_to_string_join_by_comma(&instantiated_struct.params)
+                )
+            }
         }
     }
 }
@@ -92,6 +103,16 @@ impl fmt::Display for ParamDefWithParamType {
 }
 
 impl ParamType {
+    pub fn get_all_param_names(param_def: &Vec<ParamDefWithParamType>) -> Vec<String> {
+        let mut names = vec![];
+        for param_def in param_def.iter() {
+            for name in param_def.0.iter() {
+                names.push(name.clone());
+            }
+        }
+        names
+    }
+
     /// Builds the fact that an identifier with the given name satisfies this param type.
     pub fn param_satisfy_param_type_fact(param_name: &str, param_type: &ParamType) -> Fact {
         match param_type {
@@ -104,37 +125,43 @@ impl ParamType {
                 Obj::Identifier(Identifier::new(param_name.to_string())),
                 DEFAULT_LINE_FILE.clone(),
             ))),
-            ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                Obj::Identifier(Identifier::new(param_name.to_string())),
-                DEFAULT_LINE_FILE.clone(),
-            ))),
-            ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                Obj::Identifier(Identifier::new(param_name.to_string())),
-                DEFAULT_LINE_FILE.clone(),
-            ))),
+            ParamType::NonemptySet(_) => {
+                Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                    Obj::Identifier(Identifier::new(param_name.to_string())),
+                    DEFAULT_LINE_FILE.clone(),
+                )))
+            }
+            ParamType::FiniteSet(_) => {
+                Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+                    Obj::Identifier(Identifier::new(param_name.to_string())),
+                    DEFAULT_LINE_FILE.clone(),
+                )))
+            }
+            ParamType::InstantiatedStruct(_) => {
+                unimplemented!("instantiated struct param type is not supported yet");
+            }
         }
     }
 
     /// Builds the fact that the given object satisfies this param type.
-    pub fn fact_for_obj(obj: Obj, param_type: &ParamType) -> Fact {
+    pub fn fact_for_obj(obj: Obj, param_type: &ParamType) -> AtomicFact {
         match param_type {
-            ParamType::Obj(set_obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                obj,
-                set_obj.clone(),
-                DEFAULT_LINE_FILE.clone(),
-            ))),
-            ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-                obj,
-                DEFAULT_LINE_FILE.clone(),
-            ))),
-            ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+            ParamType::Obj(set_obj) => {
+                AtomicFact::InFact(InFact::new(obj, set_obj.clone(), DEFAULT_LINE_FILE.clone()))
+            }
+            ParamType::Set(_) => {
+                AtomicFact::IsSetFact(IsSetFact::new(obj, DEFAULT_LINE_FILE.clone()))
+            }
+            ParamType::NonemptySet(_) => AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                 obj,
                 DEFAULT_LINE_FILE.clone(),
-            ))),
-            ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                obj,
-                DEFAULT_LINE_FILE.clone(),
-            ))),
+            )),
+            ParamType::FiniteSet(_) => {
+                AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(obj, DEFAULT_LINE_FILE.clone()))
+            }
+            ParamType::InstantiatedStruct(_) => {
+                unimplemented!("instantiated struct param type is not supported yet");
+            }
         }
     }
 }
@@ -145,7 +172,7 @@ impl ParamDefWithParamType {
         for p in defs.iter() {
             total_param_count += p.0.len();
         }
-        return total_param_count
+        return total_param_count;
     }
 }
 
@@ -162,9 +189,6 @@ impl ParamDefWithParamSet {
         }
         facts
     }
-
-
-
 }
 
 impl ParamDefWithParamSet {
@@ -172,31 +196,29 @@ impl ParamDefWithParamSet {
         ParamDefWithParamSet(param, param_set)
     }
 
-    pub fn fact_for_obj(obj: Obj, param_set: &Obj) -> Fact {
-        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+    pub fn fact_for_obj(obj: Obj, param_set: &Obj) -> AtomicFact {
+        AtomicFact::InFact(InFact::new(
             obj,
             param_set.clone(),
             DEFAULT_LINE_FILE.clone(),
-        )))
+        ))
     }
 
-    pub fn facts_for_boxed_args_satisfy_param_def_with_set_vec(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
-        let instantiated_param_sets = Self::instantiate_param_def_with_set_one_by_one_boxed(param_defs, args)?;
-        let flat_param_sets = Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
+    // Example: given fn(x R, y Q), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q.
+    // Unlike facts_for_args_satisfy_param_def_with_type_vec, this function requires each later parameter to belong to a concrete, fixed set (not syntactic sugar like set/nonempty_set/finite_set), and that set must not depend on earlier parameters. For example, in a ParamSet definition, `x R, y f(x)` is not allowed: mathematically, y's set membership must be specified in advance, rather than chosen only after x is determined.
+    pub fn facts_for_args_satisfy_param_def_with_set_vec(
+        param_defs: &Vec<ParamDefWithParamSet>,
+        args: &Vec<Obj>,
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
+        let instantiated_param_sets =
+            Self::instantiate_param_def_with_set_one_by_one(param_defs, args)?;
+        let flat_param_sets =
+            Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
         let mut facts = Vec::with_capacity(args.len());
         for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
-            let arg_obj = (**arg).clone();
-            facts.push(Self::fact_for_obj(arg_obj, param_set));
+            facts.push(Self::fact_for_obj(arg.clone(), param_set));
         }
         Ok(facts)
-    }
-
-    pub fn facts_for_args_satisfy_param_def_with_set_vec(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Obj>) -> Result<Vec<Fact>, StmtError> {
-        let mut args_as_boxed_obj: Vec<Box<Obj>> = Vec::with_capacity(args.len());
-        for arg in args.iter() {
-            args_as_boxed_obj.push(Box::new(arg.clone()));
-        }
-        Self::facts_for_boxed_args_satisfy_param_def_with_set_vec(param_defs, &args_as_boxed_obj)
     }
 
     fn number_of_params_in_param_def_with_set_def(param_defs: &Vec<ParamDefWithParamSet>) -> usize {
@@ -207,8 +229,12 @@ impl ParamDefWithParamSet {
         total_param_count
     }
 
-    fn flat_instantiated_param_sets_for_args(param_defs: &Vec<ParamDefWithParamSet>, instantiated_param_sets: &Vec<Obj>) -> Vec<Obj> {
-        let mut result = Vec::with_capacity(Self::number_of_params_in_param_def_with_set_def(param_defs));
+    fn flat_instantiated_param_sets_for_args(
+        param_defs: &Vec<ParamDefWithParamSet>,
+        instantiated_param_sets: &Vec<Obj>,
+    ) -> Vec<Obj> {
+        let mut result =
+            Vec::with_capacity(Self::number_of_params_in_param_def_with_set_def(param_defs));
         for (param_def, param_set) in param_defs.iter().zip(instantiated_param_sets.iter()) {
             for _ in param_def.0.iter() {
                 result.push(param_set.clone());
@@ -217,24 +243,27 @@ impl ParamDefWithParamSet {
         result
     }
 
-    fn instantiate_param_def_with_set_one_by_one(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Obj>) -> Result<Vec<Obj>, StmtError> {
+    fn instantiate_param_def_with_set_one_by_one(
+        param_defs: &Vec<ParamDefWithParamSet>,
+        args: &Vec<Obj>,
+    ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = Self::number_of_params_in_param_def_with_set_def(param_defs);
         if total_param_count != args.len() {
-            return Err(StmtError::ExecError(ExecStmtError::new(
-                "".to_string(),
+            return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
                 ),
-                None,
                 DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
             )));
         }
 
-        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
-        let mut instantiated_param_sets: Vec<Obj> = vec![];
+        let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
             let instantiated_param_set = if arg_index != 0 {
                 param_def.1.instantiate(&param_to_arg_map)
@@ -251,20 +280,22 @@ impl ParamDefWithParamSet {
 
         Ok(instantiated_param_sets)
     }
-
-    fn instantiate_param_def_with_set_one_by_one_boxed(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Box<Obj>>) -> Result<Vec<Obj>, StmtError> {
-        let mut args_as_obj: Vec<Obj> = Vec::with_capacity(args.len());
-        for arg in args.iter() {
-            args_as_obj.push((**arg).clone());
-        }
-        Self::instantiate_param_def_with_set_one_by_one(param_defs, &args_as_obj)
-    }
 }
 
 impl ParamDefWithParamType {
-    pub fn facts_for_boxed_args_satisfy_param_def_with_type_vec(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
-        let instantiated_types = ParamDefWithParamType::instantiate_param_def_with_type_one_by_one_boxed(param_defs, args)?;
-        let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(param_defs, &instantiated_types);
+    // Example: given forall x, y R, z f(x, y), s set. We want to verify when "x" = obj1, "y" = obj2, "z" = obj3, "s" = obj4, they satisfy definition requirement or not. This function returns the facts that obj1 $in R, obj2 $in R, obj3 = f(obj1, obj2), obj4 $in set.
+    pub fn boxed_args_satisfy_param_def_facts(
+        param_defs: &Vec<ParamDefWithParamType>,
+        args: &Vec<Box<Obj>>,
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
+        let instantiated_types =
+            ParamDefWithParamType::instantiate_param_def_with_type_one_by_one_boxed(
+                param_defs, args,
+            )?;
+        let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
+            param_defs,
+            &instantiated_types,
+        );
         let mut facts = Vec::with_capacity(args.len());
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let arg_obj = (**arg).clone();
@@ -273,22 +304,40 @@ impl ParamDefWithParamType {
         Ok(facts)
     }
 
-    pub fn facts_for_args_satisfy_param_def_with_type_vec(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Obj>) -> Result<Vec<Fact>, StmtError> {
-        let args_vec: Vec<Box<Obj>> = args.iter().map(|arg| Box::new(arg.clone())).collect();
-        Self::facts_for_boxed_args_satisfy_param_def_with_type_vec(param_defs, &args_vec)
+    pub fn facts_for_args_satisfy_param_def_with_type_vec(
+        param_defs: &Vec<ParamDefWithParamType>,
+        args: &Vec<Obj>,
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
+        let instantiated_types =
+            ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
+        let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
+            param_defs,
+            &instantiated_types,
+        );
+        let mut facts = Vec::with_capacity(args.len());
+        for (arg, param_type) in args.iter().zip(flat_types.iter()) {
+            facts.push(ParamType::fact_for_obj(arg.clone(), param_type));
+        }
+        Ok(facts)
     }
 
-    
-    fn number_of_params_in_param_def_with_type_def(param_defs: &Vec<ParamDefWithParamType>) -> usize {
+    fn number_of_params_in_param_def_with_type_def(
+        param_defs: &Vec<ParamDefWithParamType>,
+    ) -> usize {
         let mut total_param_count: usize = 0;
         for p in param_defs.iter() {
             total_param_count += p.0.len();
         }
-        return total_param_count
+        return total_param_count;
     }
 
-    pub fn flat_instantiated_types_for_args(param_defs: &Vec<ParamDefWithParamType>, instantiated_types: &Vec<ParamType>) -> Vec<ParamType> {
-        let mut result = Vec::with_capacity(Self::number_of_params_in_param_def_with_type_def(param_defs));
+    pub fn flat_instantiated_types_for_args(
+        param_defs: &Vec<ParamDefWithParamType>,
+        instantiated_types: &Vec<ParamType>,
+    ) -> Vec<ParamType> {
+        let mut result = Vec::with_capacity(Self::number_of_params_in_param_def_with_type_def(
+            param_defs,
+        ));
         for (param_def, param_type) in param_defs.iter().zip(instantiated_types.iter()) {
             for _ in param_def.0.iter() {
                 result.push(param_type.clone());
@@ -297,45 +346,92 @@ impl ParamDefWithParamType {
         result
     }
 
-    
-    fn instantiate_param_def_with_type_one_by_one(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Obj>) -> Result<Vec<ParamType>, StmtError> {
+    fn instantiate_param_def_with_type_one_by_one(
+        param_defs: &Vec<ParamDefWithParamType>,
+        args: &Vec<Obj>,
+    ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
-            return Err(StmtError::ExecError(ExecStmtError::new(
-                "".to_string(),
+            return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
                 ),
-                None,
                 DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
             )));
         }
 
-        let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
+        let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
-        let mut new_types: Vec<ParamType> = vec![];
+        let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
-            let new_type =  if arg_index != 0 {
+            let new_type = if arg_index != 0 {
                 param_def.1.instantiate(&param_arg_map)
             } else {
                 param_def.1.clone()
             };
             new_types.push(new_type);
-            
+
             for param_name in param_def.0.iter() {
                 param_arg_map.insert(param_name.clone(), args[arg_index].clone());
                 arg_index += 1;
             }
         }
-        
+
         Ok(new_types)
     }
 
-    fn instantiate_param_def_with_type_one_by_one_boxed(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<ParamType>, StmtError> {
-        let args_as_obj: Vec<Obj> = args.iter().map(|b| (**b).clone()).collect();
-        Self::instantiate_param_def_with_type_one_by_one(param_defs, &args_as_obj)
+    fn instantiate_param_def_with_type_one_by_one_boxed(
+        param_defs: &Vec<ParamDefWithParamType>,
+        args: &Vec<Box<Obj>>,
+    ) -> Result<Vec<ParamType>, RuntimeError> {
+        let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
+        if total_param_count != args.len() {
+            return Err(RuntimeError::UnknownError(UnknownError::new(
+                format!(
+                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
+                    total_param_count,
+                    args.len()
+                ),
+                DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
+            )));
+        }
+
+        let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
+        let mut arg_index: usize = 0;
+        let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.len());
+        for param_def in param_defs.iter() {
+            let new_type = if arg_index != 0 {
+                param_def.1.instantiate(&param_arg_map)
+            } else {
+                param_def.1.clone()
+            };
+            new_types.push(new_type);
+
+            for param_name in param_def.0.iter() {
+                let arg_obj = match args.get(arg_index) {
+                    Some(boxed_arg) => (**boxed_arg).clone(),
+                    None => {
+                        return Err(RuntimeError::UnknownError(UnknownError::new(
+                            "internal error: argument index out of range for boxed args"
+                                .to_string(),
+                            DEFAULT_LINE_FILE.clone(),
+                            None,
+                            None,
+                        )));
+                    }
+                };
+                param_arg_map.insert(param_name.clone(), arg_obj);
+                arg_index += 1;
+            }
+        }
+
+        Ok(new_types)
     }
 }
 
@@ -345,7 +441,17 @@ impl ParamType {
             ParamType::Set(_) => self.clone(),
             ParamType::FiniteSet(_) => self.clone(),
             ParamType::NonemptySet(_) => self.clone(),
-            ParamType::Obj(obj) => ParamType::Obj(obj.instantiate(param_to_arg_map))
+            ParamType::Obj(obj) => ParamType::Obj(obj.instantiate(param_to_arg_map)),
+            ParamType::InstantiatedStruct(instantiated_struct) => {
+                let mut params = Vec::with_capacity(instantiated_struct.params.len());
+                for param in instantiated_struct.params.iter() {
+                    params.push(param.instantiate(param_to_arg_map));
+                }
+                ParamType::InstantiatedStruct(InstantiatedStruct {
+                    name: instantiated_struct.name.clone(),
+                    params,
+                })
+            }
         }
     }
 }
@@ -356,7 +462,9 @@ impl ParamDefWithParamType {
     }
 
     pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamType>) -> Vec<String> {
-        let mut names: Vec<String> = vec![];
+        let mut names: Vec<String> = Vec::with_capacity(
+            Self::number_of_params_in_param_def_with_type_def(param_defs),
+        );
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
                 names.push(name.clone());
@@ -364,7 +472,7 @@ impl ParamDefWithParamType {
         }
         names
     }
-    
+
     pub fn param_def_params_to_arg_map(
         param_defs: &Vec<ParamDefWithParamType>,
         arg_map: &HashMap<String, Obj>,
@@ -409,7 +517,7 @@ impl ParamDefWithParamSet {
     }
 
     pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamSet>) -> Vec<String> {
-        let mut names: Vec<String> = vec![];
+        let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
                 names.push(name.clone());
@@ -423,7 +531,7 @@ impl ParamDefWithParamSet {
         for p in param_defs.iter() {
             total_param_count += p.0.len();
         }
-        return total_param_count
+        return total_param_count;
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(

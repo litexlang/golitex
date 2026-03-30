@@ -1,13 +1,7 @@
-use crate::common::keywords::{DOUBLE_QUOTE, IMPORT, AS, CLEAR, DO_NOTHING, RUN_FILE};
-use crate::stmt::tooling_stmt::{ClearStmt, DoNothingStmt, RunFileStmt};
-use crate::execute::Executor;
-use super::TokenBlock;
-use crate::error::ParsingError;
-use crate::stmt::Stmt;
-use crate::stmt::tooling_stmt::{ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt};
+use crate::prelude::*;
 
-impl<'a> Executor<'a> {
-    pub fn import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+impl Runtime {
+    pub fn parse_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(IMPORT)?;
         if tb.current_token_is_equal_to(DOUBLE_QUOTE) {
             tb.skip_token(DOUBLE_QUOTE)?;
@@ -48,21 +42,14 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn clear_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(CLEAR)?;
-        Ok(Stmt::ClearStmt(ClearStmt {
-            line_file: tb.line_file,
-        }))
-    }
-
-    pub fn do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(DO_NOTHING)?;
         Ok(Stmt::DoNothingStmt(DoNothingStmt {
             line_file: tb.line_file,
         }))
     }
 
-    pub fn run_file_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_run_file_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(RUN_FILE)?;
         tb.skip_token(DOUBLE_QUOTE)?;
         let mut path_parts: Vec<String> = vec![];
