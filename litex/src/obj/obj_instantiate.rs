@@ -303,19 +303,6 @@ impl FnSetWithParams {
     }
 }
 
-impl InstStructObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        let mut args = Vec::with_capacity(self.args.len());
-        for arg in self.args.iter() {
-            args.push(Box::new(arg.instantiate(param_to_arg_map)));
-        }
-        Obj::InstSetStructObj(InstStructObj {
-            struct_name: self.struct_name.clone(),
-            args,
-        })
-    }
-}
-
 impl Cart {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let mut args = Vec::with_capacity(self.args.len());
@@ -411,4 +398,3 @@ impl ObjAtIndex {
         })
     }
 }
-

@@ -266,16 +266,21 @@ impl Runtime {
                 given_arg,
             ),
             Obj::FnSetWithParams(_) => Self::match_arg_when_left_is_fn_set_with_dom(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::NPos } => Self::match_arg_when_left_is_n_pos_obj(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::N } => Self::match_arg_when_left_is_n_obj(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::Q } => Self::match_arg_when_left_is_q_obj(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::Z } => Self::match_arg_when_left_is_z_obj(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::R } => Self::match_arg_when_left_is_r_obj(given_arg),
-            Obj::InstSetStructObj(ref left) => Self::match_arg_when_left_is_inst_set_struct_obj(
-                &left.struct_name,
-                &left.args,
-                given_arg,
-            ),
+            Obj::StandardSet {
+                standard_set: StandardSet::NPos,
+            } => Self::match_arg_when_left_is_n_pos_obj(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::N,
+            } => Self::match_arg_when_left_is_n_obj(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::Q,
+            } => Self::match_arg_when_left_is_q_obj(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::Z,
+            } => Self::match_arg_when_left_is_z_obj(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::R,
+            } => Self::match_arg_when_left_is_r_obj(given_arg),
             Obj::Cart(ref left) => Self::match_arg_when_left_is_cart(&left.args, given_arg),
             Obj::CartDim(ref left) => {
                 Self::match_arg_when_left_is_cart_dim(left.set.as_ref(), given_arg)
@@ -311,14 +316,30 @@ impl Runtime {
                 left.index.as_ref(),
                 given_arg,
             ),
-            Obj::StandardSet { standard_set: StandardSet::QPos } => Self::match_arg_when_left_is_q_pos(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::RPos } => Self::match_arg_when_left_is_r_pos(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::QNeg } => Self::match_arg_when_left_is_q_neg(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::ZNeg } => Self::match_arg_when_left_is_z_neg(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::RNeg } => Self::match_arg_when_left_is_r_neg(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::QNz } => Self::match_arg_when_left_is_q_nz(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::ZNz } => Self::match_arg_when_left_is_z_nz(given_arg),
-            Obj::StandardSet { standard_set: StandardSet::RNz } => Self::match_arg_when_left_is_r_nz(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::QPos,
+            } => Self::match_arg_when_left_is_q_pos(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::RPos,
+            } => Self::match_arg_when_left_is_r_pos(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::QNeg,
+            } => Self::match_arg_when_left_is_q_neg(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::ZNeg,
+            } => Self::match_arg_when_left_is_z_neg(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::RNeg,
+            } => Self::match_arg_when_left_is_r_neg(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::QNz,
+            } => Self::match_arg_when_left_is_q_nz(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::ZNz,
+            } => Self::match_arg_when_left_is_z_nz(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::RNz,
+            } => Self::match_arg_when_left_is_r_nz(given_arg),
         }
     }
 
@@ -707,7 +728,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::NPos } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::NPos,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -716,7 +739,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::N } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::N,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -725,7 +750,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::Q } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::Q,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -734,7 +761,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::Z } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::Z,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -743,23 +772,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::R } => Self::match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_inst_set_struct_obj(
-        left_struct_name: &IdentifierOrIdentifierWithMod,
-        left_args: &[Box<Obj>],
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
-        match given_arg {
-            Obj::InstSetStructObj(ref given) => {
-                if !left_struct_name.literally_the_same_as(&given.struct_name) {
-                    return Ok(None);
-                }
-                Self::match_arg_vec_then_merge(left_args, &given.args)
-            }
+            Obj::StandardSet {
+                standard_set: StandardSet::R,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -925,7 +940,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::QPos } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::QPos,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -934,7 +951,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::RPos } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::RPos,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -943,7 +962,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::QNeg } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::QNeg,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -952,7 +973,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::ZNeg } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::ZNeg,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -961,7 +984,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::RNeg } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::RNeg,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -970,7 +995,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::QNz } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::QNz,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -979,7 +1006,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::ZNz } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::ZNz,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -988,7 +1017,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::StandardSet { standard_set: StandardSet::RNz } => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet {
+                standard_set: StandardSet::RNz,
+            } => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
