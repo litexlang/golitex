@@ -1194,6 +1194,9 @@ impl Runtime {
             ParamType::NonemptySet(_) => Ok(()),
             ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(obj) => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
+            ParamType::InstantiatedStruct(_) => {
+                unimplemented!("instantiated struct param type is not supported yet");
+            }
         }
     }
 }
