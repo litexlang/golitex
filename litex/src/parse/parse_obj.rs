@@ -352,81 +352,55 @@ impl Runtime {
         // 单符号集合（无参）
         if tok == N_POS {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::NPos,
-            });
+            return Ok(Obj::StandardSet(StandardSet::NPos));
         }
         if tok == N {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::N,
-            });
+            return Ok(Obj::StandardSet(StandardSet::N));
         }
         if tok == Q {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::Q,
-            });
+            return Ok(Obj::StandardSet(StandardSet::Q));
         }
         if tok == Z {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::Z,
-            });
+            return Ok(Obj::StandardSet(StandardSet::Z));
         }
         if tok == R {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::R,
-            });
+            return Ok(Obj::StandardSet(StandardSet::R));
         }
         if tok == Q_POS {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::QPos,
-            });
+            return Ok(Obj::StandardSet(StandardSet::QPos));
         }
         if tok == R_POS {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::RPos,
-            });
+            return Ok(Obj::StandardSet(StandardSet::RPos));
         }
         if tok == Q_NEG {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::QNeg,
-            });
+            return Ok(Obj::StandardSet(StandardSet::QNeg));
         }
         if tok == Z_NEG {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::ZNeg,
-            });
+            return Ok(Obj::StandardSet(StandardSet::ZNeg));
         }
         if tok == R_NEG {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::RNeg,
-            });
+            return Ok(Obj::StandardSet(StandardSet::RNeg));
         }
         if tok == Q_NZ {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::QNz,
-            });
+            return Ok(Obj::StandardSet(StandardSet::QNz));
         }
         if tok == Z_NZ {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::ZNz,
-            });
+            return Ok(Obj::StandardSet(StandardSet::ZNz));
         }
         if tok == R_NZ {
             tb.skip()?;
-            return Ok(Obj::StandardSet {
-                standard_set: StandardSet::RNz,
-            });
+            return Ok(Obj::StandardSet(StandardSet::RNz));
         }
 
         // 多元关键字：吃关键字 + 括号里若干 obj

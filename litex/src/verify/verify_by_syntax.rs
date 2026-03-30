@@ -139,44 +139,24 @@ impl Runtime {
                 Obj::FnSetWithParams(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::NPos,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::NPos,
-                } => true,
+            Obj::StandardSet(StandardSet::NPos) => match right {
+                Obj::StandardSet(StandardSet::NPos) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::N,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::N,
-                } => true,
+            Obj::StandardSet(StandardSet::N) => match right {
+                Obj::StandardSet(StandardSet::N) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::Q,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::Q,
-                } => true,
+            Obj::StandardSet(StandardSet::Q) => match right {
+                Obj::StandardSet(StandardSet::Q) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::Z,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::Z,
-                } => true,
+            Obj::StandardSet(StandardSet::Z) => match right {
+                Obj::StandardSet(StandardSet::Z) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::R,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::R,
-                } => true,
+            Obj::StandardSet(StandardSet::R) => match right {
+                Obj::StandardSet(StandardSet::R) => true,
                 _ => false,
             },
             Obj::Cart(a) => match right {
@@ -223,68 +203,36 @@ impl Runtime {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::QPos,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::QPos,
-                } => true,
+            Obj::StandardSet(StandardSet::QPos) => match right {
+                Obj::StandardSet(StandardSet::QPos) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::RPos,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::RPos,
-                } => true,
+            Obj::StandardSet(StandardSet::RPos) => match right {
+                Obj::StandardSet(StandardSet::RPos) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::QNeg,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::QNeg,
-                } => true,
+            Obj::StandardSet(StandardSet::QNeg) => match right {
+                Obj::StandardSet(StandardSet::QNeg) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::ZNeg,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::ZNeg,
-                } => true,
+            Obj::StandardSet(StandardSet::ZNeg) => match right {
+                Obj::StandardSet(StandardSet::ZNeg) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::RNeg,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::RNeg,
-                } => true,
+            Obj::StandardSet(StandardSet::RNeg) => match right {
+                Obj::StandardSet(StandardSet::RNeg) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::QNz,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::QNz,
-                } => true,
+            Obj::StandardSet(StandardSet::QNz) => match right {
+                Obj::StandardSet(StandardSet::QNz) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::ZNz,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::ZNz,
-                } => true,
+            Obj::StandardSet(StandardSet::ZNz) => match right {
+                Obj::StandardSet(StandardSet::ZNz) => true,
                 _ => false,
             },
-            Obj::StandardSet {
-                standard_set: StandardSet::RNz,
-            } => match right {
-                Obj::StandardSet {
-                    standard_set: StandardSet::RNz,
-                } => true,
+            Obj::StandardSet(StandardSet::RNz) => match right {
+                Obj::StandardSet(StandardSet::RNz) => true,
                 _ => false,
             },
         }

@@ -7,9 +7,9 @@ impl Runtime {
         and_fact: &AndFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
-            &Fact::AndFact(and_fact.clone()),
-        ) {
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&Fact::AndFact(and_fact.clone()))
+        {
             return Ok(cached_result);
         }
 
@@ -47,9 +47,9 @@ impl Runtime {
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
-            &Fact::ChainFact(chain_fact.clone()),
-        ) {
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&Fact::ChainFact(chain_fact.clone()))
+        {
             return Ok(cached_result);
         }
 
@@ -66,12 +66,7 @@ impl Runtime {
 
         let facts = chain_fact
             .facts()
-            .map_err(|e| {
-                VerifyError::new(
-                    Fact::ChainFact(chain_fact.clone()),
-                    Some(e.into()),
-                )
-            })?;
+            .map_err(|e| VerifyError::new(Fact::ChainFact(chain_fact.clone()), Some(e.into())))?;
         let mut verify_what = Vec::with_capacity(facts.len());
         for fact in &facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;

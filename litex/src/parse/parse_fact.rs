@@ -70,7 +70,11 @@ impl Runtime {
         let body_len = tb.body.len();
 
         let iff_block = tb.body.get_mut(body_len - 1).ok_or_else(|| {
-            ParsingError::new("Expected <=>: block in forall body".to_string(), tb.line_file, None)
+            ParsingError::new(
+                "Expected <=>: block in forall body".to_string(),
+                tb.line_file,
+                None,
+            )
         })?;
         iff_block.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
         for block in iff_block.body.iter_mut() {
@@ -78,7 +82,11 @@ impl Runtime {
         }
 
         let then_block = tb.body.get_mut(body_len - 2).ok_or_else(|| {
-            ParsingError::new("Expected =>: block in forall body".to_string(), tb.line_file, None)
+            ParsingError::new(
+                "Expected =>: block in forall body".to_string(),
+                tb.line_file,
+                None,
+            )
         })?;
         then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
         for block in then_block.body.iter_mut() {

@@ -1,7 +1,7 @@
-use crate::prelude::*;
 use crate::pipeline::render_run_source_code_output;
 use crate::pipeline::run_source_code;
 use crate::pipeline::run_stmt_at_global_env;
+use crate::prelude::*;
 use std::io::{self, BufRead, Write};
 
 pub fn run_repl(version: &str) {
@@ -13,11 +13,7 @@ fn run_repl_loop_internal(version_banner: &str) {
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
     let mut stdout_locked = stdout_handle.lock();
-    match run_repl_loop_with_readers(
-        version_banner,
-        &mut stdin_locked,
-        &mut stdout_locked,
-    ) {
+    match run_repl_loop_with_readers(version_banner, &mut stdin_locked, &mut stdout_locked) {
         Ok(()) => {}
         Err(write_error) => {
             eprintln!("repl output error: {}", write_error);
@@ -41,7 +37,8 @@ where
 
     let mut runtime = Runtime::new();
 
-    let (builtin_stmt_results, builtin_error) = run_source_code(builtin_env_code().as_str(), &mut runtime);
+    let (builtin_stmt_results, builtin_error) =
+        run_source_code(builtin_env_code().as_str(), &mut runtime);
     let (ok, msg) = render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
     if !ok {
         eprintln!("builtin code execution failed: {}", msg);

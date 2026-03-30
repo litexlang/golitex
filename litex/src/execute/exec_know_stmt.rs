@@ -20,11 +20,7 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
-                Stmt::KnowStmt(know_stmt.clone()),
-                infer_result,
-                vec![],
-            ),
+            NonFactualStmtSuccess::new(Stmt::KnowStmt(know_stmt.clone()), infer_result, vec![]),
         ))
     }
 }

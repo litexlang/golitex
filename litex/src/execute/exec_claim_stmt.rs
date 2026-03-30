@@ -6,18 +6,15 @@ impl Runtime {
         stmt: &ClaimStmt,
         forall_fact: &ForallFact,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        self.define_params_with_type(
-            &forall_fact.params_def_with_type,
-            false,
-        )
-        .map_err(|define_params_error| {
-            ExecStmtError::new(
-                Stmt::ClaimStmt(stmt.clone()),
-                "".to_string(),
-                Some(define_params_error.into()),
-                vec![],
-            )
-        })?;
+        self.define_params_with_type(&forall_fact.params_def_with_type, false)
+            .map_err(|define_params_error| {
+                ExecStmtError::new(
+                    Stmt::ClaimStmt(stmt.clone()),
+                    "".to_string(),
+                    Some(define_params_error.into()),
+                    vec![],
+                )
+            })?;
 
         for dom_fact in forall_fact.dom_facts.iter() {
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
@@ -38,6 +35,7 @@ impl Runtime {
                 return Err(RuntimeError::UnknownError(UnknownError::new(
                     format!("claim failed: cannot prove `{}`", stmt.fact),
                     stmt.line_file,
+                    Some(stmt.fact.clone()),
                     None,
                 )));
             }
@@ -105,6 +103,7 @@ impl Runtime {
                     return Err(RuntimeError::UnknownError(UnknownError::new(
                         format!("claim failed: cannot prove `{}`", stmt.fact),
                         stmt.line_file,
+                        Some(stmt.fact.clone()),
                         None,
                     )));
                 }

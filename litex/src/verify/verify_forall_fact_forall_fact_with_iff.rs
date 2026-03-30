@@ -45,14 +45,12 @@ impl Runtime {
                     let message = "failed to define params in forall".to_string();
                     VerifyError::new(
                         Fact::ForallFact(forall_fact.clone()),
-                        Some(
-                            UnknownError::new(
-                                message,
-                                forall_fact.line_file,
-                                Some(RuntimeError::DefineParamsError(e)),
-                            )
-                            .into(),
-                        ),
+                        Some(RuntimeError::UnknownError(UnknownError::new(
+                            message,
+                            forall_fact.line_file,
+                            Some(Fact::ForallFact(forall_fact.clone())),
+                            Some(RuntimeError::DefineParamsError(e)),
+                        ))),
                     )
                 })?;
             infer_result.new_infer_result_inside(param_infer_result);
@@ -67,14 +65,12 @@ impl Runtime {
                     let message = "failed to assume dom fact in forall".to_string();
                     VerifyError::new(
                         Fact::ForallFact(forall_fact.clone()),
-                        Some(
-                            UnknownError::new(
-                                message,
-                                forall_fact.line_file,
-                                Some(RuntimeError::StoreFactError(e)),
-                            )
-                            .into(),
-                        ),
+                        Some(RuntimeError::UnknownError(UnknownError::new(
+                            message,
+                            forall_fact.line_file,
+                            Some(Fact::ForallFact(forall_fact.clone())),
+                            Some(RuntimeError::StoreFactError(e)),
+                        ))),
                     )
                 })?;
             infer_result.new_infer_result_inside(dom_infer_result);

@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use crate::pipeline::run_stmt_at_global_env;
+use crate::prelude::*;
 use std::fs;
 
 pub type StmtResult = NonErrStmtExecResult;
@@ -12,7 +12,8 @@ pub fn run_source_code_in_file(entrance_file_path: &str) -> String {
 fn run_source_code_with_output(source_code: &str, entrance_label: &str) -> String {
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new();
-    let (builtin_stmt_results, builtin_error) = run_source_code(builtin_env_code().as_str(), &mut runtime);
+    let (builtin_stmt_results, builtin_error) =
+        run_source_code(builtin_env_code().as_str(), &mut runtime);
     let (ok, msg) = render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
     if !ok {
         return format!("builtin code execution failed: {}", msg);
@@ -22,7 +23,10 @@ fn run_source_code_with_output(source_code: &str, entrance_label: &str) -> Strin
     render_run_source_code_output(&runtime, &stmt_results, &runtime_error).1
 }
 
-pub fn run_source_code(source_code: &str, runtime: &mut Runtime) -> (Vec<StmtResult>, Option<RuntimeError>) {
+pub fn run_source_code(
+    source_code: &str,
+    runtime: &mut Runtime,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let blocks =
         match TokenBlock::parse_blocks(source_code, runtime.module_manager.current_file_index) {
             Ok(b) => b,

@@ -444,7 +444,7 @@ impl ByInducAxiomStmt {
         let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
         params_def_with_type.push(ParamDefWithParamType(
             vec![self.param.clone()],
-            ParamType::Obj(Obj::StandardSet { standard_set: StandardSet::Z }),
+            ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
         ));
         let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 

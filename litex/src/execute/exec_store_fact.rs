@@ -1,17 +1,13 @@
 use crate::prelude::*;
 
-
 impl Runtime {
     pub fn store_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: &Fact,
     ) -> Result<InferResult, StoreFactError> {
-        self
-            .top_level_env()
-            .store_fact_by_ref(fact)?;
+        self.top_level_env().store_fact_by_ref(fact)?;
 
-        self
-            .top_level_env()
+        self.top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), fact.line_file())?;
 
         let infer_result = self
@@ -24,13 +20,11 @@ impl Runtime {
         &mut self,
         fact: &AndChainAtomicFact,
     ) -> Result<InferResult, StoreFactError> {
-        self
-            .top_level_env()
+        self.top_level_env()
             .store_and_chain_atomic_fact_by_ref(fact)?;
 
         let line_file = fact.line_file();
-        self
-            .top_level_env()
+        self.top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
 
         let infer_result = self
@@ -43,13 +37,10 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
     ) -> Result<InferResult, StoreFactError> {
-        self
-            .top_level_env()
-            .store_atomic_fact_by_ref(fact)?;
+        self.top_level_env().store_atomic_fact_by_ref(fact)?;
 
         let line_file = fact.line_file();
-        self
-            .top_level_env()
+        self.top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
 
         let wrapped_fact = Fact::AtomicFact(fact.clone());
@@ -63,13 +54,11 @@ impl Runtime {
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
     ) -> Result<InferResult, StoreFactError> {
-        self
-            .top_level_env()
+        self.top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
 
         let line_file = fact.line_file();
-        self
-            .top_level_env()
+        self.top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
 
         let infer_result = self
@@ -82,13 +71,10 @@ impl Runtime {
         &mut self,
         fact: &OrAndChainAtomicFact,
     ) -> Result<InferResult, StoreFactError> {
-        self
-            .top_level_env()
-            .store_or_and_chain_atomic_fact(fact)?;
+        self.top_level_env().store_or_and_chain_atomic_fact(fact)?;
 
         let line_file = fact.line_file();
-        self
-            .top_level_env()
+        self.top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
 
         let infer_result = self

@@ -63,9 +63,8 @@ impl Runtime {
         let args_in_or_fact = or_fact.get_args_from_fact();
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in args_in_or_fact.iter() {
-            let mut all_objs_equal_to_current_arg = self
-                
-                .get_all_objs_equal_to_arg(&arg.to_string());
+            let mut all_objs_equal_to_current_arg =
+                self.get_all_objs_equal_to_arg(&arg.to_string());
             if all_objs_equal_to_current_arg.is_empty() {
                 all_objs_equal_to_current_arg.push(arg.to_string());
             }

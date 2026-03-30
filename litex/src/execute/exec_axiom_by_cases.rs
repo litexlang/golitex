@@ -65,10 +65,8 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesAxiomStmt,
     ) -> Result<(), ExecStmtError> {
-        let all_cases_or_fact = Fact::OrFact(crate::fact::OrFact::new(
-            stmt.cases.clone(),
-            stmt.line_file,
-        ));
+        let all_cases_or_fact =
+            Fact::OrFact(crate::fact::OrFact::new(stmt.cases.clone(), stmt.line_file));
         self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 ExecStmtError::with_message_and_cause(
@@ -192,7 +190,10 @@ impl Runtime {
                 NonFactualStmtSuccess::new(
                     Stmt::ByCasesAxiomStmt(stmt.clone()),
                     InferResult::new(),
-                    vec![verify_impossible_fact_result, verify_reversed_impossible_fact_result],
+                    vec![
+                        verify_impossible_fact_result,
+                        verify_reversed_impossible_fact_result,
+                    ],
                 ),
             ));
 
@@ -207,4 +208,3 @@ impl Runtime {
         Ok(inside_results)
     }
 }
-

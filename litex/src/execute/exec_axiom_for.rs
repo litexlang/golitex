@@ -125,7 +125,7 @@ impl Runtime {
         line_file: (usize, usize),
     ) -> Result<String, RuntimeError> {
         let calculated_string = {
-            let value = self.resolve_obj(number_like_obj);
+            let value = self.resolve_obj_to_number(number_like_obj);
 
             match value {
                 Some(number) => number.normalized_value,
@@ -136,6 +136,7 @@ impl Runtime {
                             number_like_obj
                         ),
                         line_file,
+                        None,
                         None,
                     )));
                 }
@@ -149,6 +150,7 @@ impl Runtime {
                     number_like_obj
                 ),
                 line_file,
+                None,
                 None,
             )));
         }
@@ -266,7 +268,7 @@ impl Runtime {
 
             let parameter_in_z_atomic_fact = AtomicFact::InFact(crate::fact::InFact::new(
                 Obj::Identifier(Identifier::new(parameter_name.clone())),
-                Obj::StandardSet { standard_set: StandardSet::Z },
+                Obj::StandardSet(StandardSet::Z),
                 stmt.line_file,
             ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(

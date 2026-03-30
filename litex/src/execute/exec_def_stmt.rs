@@ -264,7 +264,10 @@ impl Runtime {
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.store_identifier_obj(name).map_err(|runtime_error| {
                 DefineParamsError::new(
-                    format!("define params with set: failed to declare parameter `{}`", name),
+                    format!(
+                        "define params with set: failed to declare parameter `{}`",
+                        name
+                    ),
                     Some(RuntimeError::ExecStmtError(runtime_error)),
                     DEFAULT_LINE_FILE,
                 )
@@ -613,14 +616,14 @@ impl Runtime {
             .iter()
         {
             self.define_params_with_set(param_def_with_set)
-            .map_err(|define_params_error| {
-                ExecStmtError::new(
-                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
-                    "".to_string(),
-                    Some(define_params_error.into()),
-                    vec![],
-                )
-            })?;
+                .map_err(|define_params_error| {
+                    ExecStmtError::new(
+                        Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                        "".to_string(),
+                        Some(define_params_error.into()),
+                        vec![],
+                    )
+                })?;
         }
 
         for dom_fact in have_fn_equal_stmt.fn_set_with_params.dom_facts.iter() {
@@ -855,14 +858,14 @@ impl Runtime {
             .iter()
         {
             self.define_params_with_set(param_def_with_set)
-            .map_err(|define_params_error| {
-                ExecStmtError::new(
-                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
-                    "".to_string(),
-                    Some(define_params_error.into()),
-                    vec![],
-                )
-            })?;
+                .map_err(|define_params_error| {
+                    ExecStmtError::new(
+                        Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                        "".to_string(),
+                        Some(define_params_error.into()),
+                        vec![],
+                    )
+                })?;
         }
 
         for dom_fact in have_fn_equal_case_by_case_stmt

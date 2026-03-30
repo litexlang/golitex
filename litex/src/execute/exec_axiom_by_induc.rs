@@ -18,12 +18,14 @@ impl Runtime {
                     infer_result.new_infer_result_inside(one_fact_infer_result);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
-                        Stmt::ByInducAxiomStmt(stmt.clone()),
-                        format!("by_induc: failed to prove `{}`", fact),
-                        Some(exec_stmt_error.into()),
-                        vec![],
-                    )));
+                    return Err(RuntimeError::ExecStmtError(
+                        ExecStmtError::with_message_and_cause(
+                            Stmt::ByInducAxiomStmt(stmt.clone()),
+                            format!("by_induc: failed to prove `{}`", fact),
+                            Some(exec_stmt_error.into()),
+                            vec![],
+                        ),
+                    ));
                 }
             }
         }
@@ -74,7 +76,7 @@ impl Runtime {
 
         let induc_from_in_z_fact = AtomicFact::InFact(InFact::new(
             stmt.induc_from.clone(),
-            Obj::StandardSet { standard_set: StandardSet::Z },
+            Obj::StandardSet(StandardSet::Z),
             stmt.line_file,
         ));
         let verify_induc_from_in_z_result = self
@@ -88,12 +90,14 @@ impl Runtime {
                 ))
             })?;
         if verify_induc_from_in_z_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
-                Stmt::ByInducAxiomStmt(stmt.clone()),
-                format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
-                None,
-                vec![],
-            )));
+            return Err(RuntimeError::ExecStmtError(
+                ExecStmtError::with_message_and_cause(
+                    Stmt::ByInducAxiomStmt(stmt.clone()),
+                    format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
+                    None,
+                    vec![],
+                ),
+            ));
         }
 
         let param_as_identifier = Obj::Identifier(Identifier::new(stmt.param.clone()));
@@ -108,7 +112,7 @@ impl Runtime {
         let corresponding_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamDefWithParamType(
                 vec![stmt.param.clone()],
-                ParamType::Obj(Obj::StandardSet { standard_set: StandardSet::Z }),
+                ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
             )],
             vec![
                 ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(
@@ -124,21 +128,23 @@ impl Runtime {
             stmt.line_file,
         ));
 
-        self.verify_fact_return_err_if_not_true(&corresponding_forall_fact, &VerifyState::new(0, false))
-            .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
-                    Stmt::ByInducAxiomStmt(stmt.clone()),
-                    format!(
-                        "by_induc: generated step forall is not well-defined `{}`",
-                        corresponding_forall_fact
-                    ),
-                    Some(well_defined_error.into()),
-                    vec![],
-                ))
-            })?;
+        self.verify_fact_return_err_if_not_true(
+            &corresponding_forall_fact,
+            &VerifyState::new(0, false),
+        )
+        .map_err(|well_defined_error| {
+            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                Stmt::ByInducAxiomStmt(stmt.clone()),
+                format!(
+                    "by_induc: generated step forall is not well-defined `{}`",
+                    corresponding_forall_fact
+                ),
+                Some(well_defined_error.into()),
+                vec![],
+            ))
+        })?;
 
         infer_result.new_fact(&corresponding_forall_fact);
         Ok(infer_result)
     }
 }
-

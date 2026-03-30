@@ -123,7 +123,10 @@ impl Runtime {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
 
-        match (self.resolve_obj(left_obj), self.resolve_obj(right_obj)) {
+        match (
+            self.resolve_obj_to_number(left_obj),
+            self.resolve_obj_to_number(right_obj),
+        ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
                     return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
@@ -151,7 +154,7 @@ impl Runtime {
     }
 
     fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {
-        match self.resolve_obj(obj) {
+        match self.resolve_obj_to_number(obj) {
             Some(number) => number.normalized_value == "0",
             None => false,
         }
@@ -384,7 +387,7 @@ impl Runtime {
         _verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match &is_nonempty_set_fact.set {
-            Obj::StandardSet { .. } => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+            Obj::StandardSet(_) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
                     Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
                     "standard_nonempty_set".to_string(),
