@@ -12,7 +12,7 @@ impl Runtime {
         if let Some(fact_verified) =
             self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
         {
-            return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(fact_verified));
         }
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
@@ -65,7 +65,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+    ) -> Result<Option<FactualStmtSuccess>, VerifyError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
@@ -102,7 +102,7 @@ impl Runtime {
         arg_map: HashMap<String, Obj>,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+    ) -> Result<Option<FactualStmtSuccess>, VerifyError> {
         let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params_def);
 
         if !param_names
@@ -181,11 +181,13 @@ impl Runtime {
             )],
             known_forall.line_file.clone(),
         );
-        let fact_verified = FactVerifiedByFact::new(
+        let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact_source(
             Fact::AtomicFact(given_atomic_fact.clone()),
-            verified_by_known_forall_fact.to_string(),
             InferResult::new(),
-            verified_by_known_forall_fact.line_file,
+            verified_by_known_forall_fact.to_string(),
+            Some(Fact::ForallFact(verified_by_known_forall_fact.clone())),
+            None,
+            Vec::new(),
         );
         Ok(Some(fact_verified))
     }

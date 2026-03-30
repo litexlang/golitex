@@ -92,15 +92,18 @@ impl Runtime {
             }
 
             match &result {
-                NonErrStmtExecResult::FactVerifiedByBuiltinRules(builtin_verification_result) => {
+                NonErrStmtExecResult::FactualStmtSuccess(factual_verification_result)
+                    if factual_verification_result.is_verified_by_builtin_rules_only() =>
+                {
                     then_facts_builtin_verified_by_messages
-                        .push(builtin_verification_result.verified_by.clone());
+                        .push(factual_verification_result.msg.clone());
                     infer_result
-                        .new_infer_result_inside(builtin_verification_result.infers.clone());
+                        .new_infer_result_inside(factual_verification_result.infers.clone());
                 }
-                NonErrStmtExecResult::FactVerifiedByFact(fact_verification_result) => {
+                NonErrStmtExecResult::FactualStmtSuccess(factual_verification_result) => {
                     all_then_facts_are_verified_by_builtin_rules = false;
-                    infer_result.new_infer_result_inside(fact_verification_result.infers.clone());
+                    infer_result
+                        .new_infer_result_inside(factual_verification_result.infers.clone());
                 }
                 NonErrStmtExecResult::NonFactualStmtSuccess(non_factual_success) => {
                     all_then_facts_are_verified_by_builtin_rules = false;
@@ -113,30 +116,33 @@ impl Runtime {
         }
 
         if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
-            let combined_verified_by_message =
-                if then_facts_builtin_verified_by_messages.len() == 1 {
-                    then_facts_builtin_verified_by_messages[0].clone()
-                } else {
-                    format!(
-                        "forall then-facts: {}",
-                        then_facts_builtin_verified_by_messages.join("; ")
-                    )
-                };
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            let combined_verified_by_message = if then_facts_builtin_verified_by_messages.len() == 1
+            {
+                then_facts_builtin_verified_by_messages[0].clone()
+            } else {
+                format!(
+                    "forall then-facts: {}",
+                    then_facts_builtin_verified_by_messages.join("; ")
+                )
+            };
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::ForallFact(forall_fact.clone()),
-                    combined_verified_by_message,
                     infer_result,
+                    combined_verified_by_message,
+                    Vec::new(),
                 ),
             ));
         }
 
-        Ok(NonErrStmtExecResult::FactVerifiedByFact(
-            FactVerifiedByFact::new(
+        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source(
                 Fact::ForallFact(forall_fact.clone()),
-                "".to_string(),
                 infer_result,
-                forall_fact.line_file,
+                "".to_string(),
+                None,
+                Some(forall_fact.line_file),
+                Vec::new(),
             ),
         ))
     }
@@ -197,12 +203,14 @@ impl Runtime {
             return Ok(result2);
         }
 
-        Ok(NonErrStmtExecResult::FactVerifiedByFact(
-            FactVerifiedByFact::new(
+        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source(
                 Fact::ForallFactWithIff(forall_iff.clone()),
-                "forall iff: then=>iff and iff=>then verified".to_string(),
                 InferResult::new(),
-                crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+                "forall iff: then=>iff and iff=>then verified".to_string(),
+                None,
+                Some(DEFAULT_LINE_FILE),
+                Vec::new(),
             ),
         ))
     }

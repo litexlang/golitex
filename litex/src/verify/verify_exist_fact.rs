@@ -68,12 +68,14 @@ impl Runtime {
             for known_fact in known_exist_facts.iter() {
                 let known_string = Self::exist_fact_normalized_string(known_fact);
                 if target_string == known_string {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(
-                        crate::result::FactVerifiedByFact::new(
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
                             Fact::ExistFact(exist_fact.clone()),
+                            InferResult::new(),
                             known_fact.to_string(),
-                            crate::infer::InferResult::new(),
-                            known_fact.line_file(),
+                            Some(Fact::ExistFact(known_fact.clone())),
+                            None,
+                            Vec::new(),
                         ),
                     ));
                 }

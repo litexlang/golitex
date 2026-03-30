@@ -92,10 +92,11 @@ impl Runtime {
                 )
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(
-                NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
+                NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::IsSetFact(is_set_fact.clone())),
-                    "Every object is a set.".to_string(),
                     InferResult::new(),
+                    "Every object is a set.".to_string(),
+                    Vec::new(),
                 )),
             ),
             AtomicFact::RestrictFact(restrict_fact) => {
@@ -133,11 +134,12 @@ impl Runtime {
         ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                        FactVerifiedByBuiltinRules::new(
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
                             Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
-                            "calculation".to_string(),
                             InferResult::new(),
+                            "calculation".to_string(),
+                            Vec::new(),
                         ),
                     ));
                 }
@@ -419,11 +421,12 @@ impl Runtime {
         };
 
         match builtin_rule_label {
-            Some(rule_label) => Ok(Some(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Some(rule_label) => Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
-                    rule_label.to_string(),
                     InferResult::new(),
+                    rule_label.to_string(),
+                    Vec::new(),
                 ),
             ))),
             None => Ok(None),
@@ -436,18 +439,20 @@ impl Runtime {
         _verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match &is_nonempty_set_fact.set {
-            Obj::StandardSet(_) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Obj::StandardSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
-                    "standard_nonempty_set".to_string(),
                     InferResult::new(),
+                    "standard_nonempty_set".to_string(),
+                    Vec::new(),
                 ),
             )),
-            Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
-                    "list_set_nonempty".to_string(),
                     InferResult::new(),
+                    "list_set_nonempty".to_string(),
+                    Vec::new(),
                 ),
             )),
             Obj::Cart(cart) => {
@@ -468,11 +473,12 @@ impl Runtime {
 
                 // verified by objects in cart are all nonempty sets
                 // e.g. cart(R, Q) is nonempty set because R and Q are nonempty sets
-                Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                    FactVerifiedByBuiltinRules::new(
+                Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
                         Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                             is_nonempty_set_fact.clone(),
                         )),
+                        InferResult::new(),
                         format!(
                             "sets `{}` in `{}` are nonempty sets",
                             cart.args
@@ -482,7 +488,7 @@ impl Runtime {
                                 .join(", "),
                             cart.to_string()
                         ),
-                        InferResult::new(),
+                        Vec::new(),
                     ),
                 ))
             }
@@ -496,11 +502,12 @@ impl Runtime {
         _verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match &is_finite_set_fact.set {
-            Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::IsFiniteSetFact(is_finite_set_fact.clone())),
-                    "list_set_finite".to_string(),
                     InferResult::new(),
+                    "list_set_finite".to_string(),
+                    Vec::new(),
                 ),
             )),
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
@@ -514,11 +521,12 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match &is_cart_fact.set {
             Obj::Cart(_) => {
-                return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                    FactVerifiedByBuiltinRules::new(
+                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
                         Fact::AtomicFact(AtomicFact::IsCartFact(is_cart_fact.clone())),
-                        "any `cart` object is a cart".to_string(),
                         InferResult::new(),
+                        "any `cart` object is a cart".to_string(),
+                        Vec::new(),
                     ),
                 ));
             }
@@ -533,11 +541,12 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match &is_tuple_fact.set {
             Obj::Tuple(_) => {
-                return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                    FactVerifiedByBuiltinRules::new(
+                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
                         Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
-                        "any `cart_dim` object is a cart_dim".to_string(),
                         InferResult::new(),
+                        "any `cart_dim` object is a cart_dim".to_string(),
+                        Vec::new(),
                     ),
                 ));
             }
@@ -548,11 +557,12 @@ impl Runtime {
                     .known_tuple_objs
                     .get(&is_tuple_fact.set.to_string())
                 {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                        FactVerifiedByBuiltinRules::new(
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
                             Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
-                            "it is a known tuple".to_string(),
                             InferResult::new(),
+                            "it is a known tuple".to_string(),
+                            Vec::new(),
                         ),
                     ));
                 }

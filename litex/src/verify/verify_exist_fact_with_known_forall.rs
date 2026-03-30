@@ -12,7 +12,7 @@ impl Runtime {
         if let Some(fact_verified) =
             self.try_verify_exist_fact_with_known_forall_facts_in_envs(exist_fact, verify_state)?
         {
-            return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(fact_verified));
         }
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
@@ -64,7 +64,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+    ) -> Result<Option<FactualStmtSuccess>, VerifyError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
@@ -103,7 +103,7 @@ impl Runtime {
         arg_map: HashMap<String, Obj>,
         given_exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+    ) -> Result<Option<FactualStmtSuccess>, VerifyError> {
         // exist param matches exist param
         let given_exist_param_names =
             ParamDefWithParamType::collect_param_names(&given_exist_fact.params_def_with_type);
@@ -225,11 +225,13 @@ impl Runtime {
             )],
             known_forall.line_file.clone(),
         );
-        let fact_verified = FactVerifiedByFact::new(
+        let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact_source(
             Fact::ExistFact(given_exist_fact.clone()),
-            verified_by_known_forall_fact.to_string(),
             InferResult::new(),
-            verified_by_known_forall_fact.line_file,
+            verified_by_known_forall_fact.to_string(),
+            Some(Fact::ForallFact(verified_by_known_forall_fact.clone())),
+            None,
+            Vec::new(),
         );
         Ok(Some(fact_verified))
     }
