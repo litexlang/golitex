@@ -17,6 +17,8 @@ impl Runtime {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
                 return Err(VerifyError::new(
                     Fact::OrFact(or_fact.clone()),
+                    String::new(),
+                    or_fact.line_file,
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }
