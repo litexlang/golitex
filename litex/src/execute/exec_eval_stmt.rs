@@ -230,7 +230,7 @@ impl Runtime {
         }
     }
 
-    pub fn exec_eval_stmt(
+    pub fn _exec_eval_stmt(
         &mut self,
         stmt: &EvalStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {

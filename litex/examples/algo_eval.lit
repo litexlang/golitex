@@ -22,4 +22,3 @@ algo f(x, y):
     case x = 0: y
     case x > 0: f(x - 1, y)
 
-eval f(30, 2)

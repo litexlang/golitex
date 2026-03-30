@@ -10,11 +10,11 @@ impl Runtime {
         self.pop_env();
 
         match inside_results {
-            Ok(inside_results) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            Ok(_) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
                     Stmt::ProveStmt(stmt.clone()),
                     InferResult::new(),
-                    inside_results,
+                    vec![],
                 ),
             )),
             Err(inside_results_error) => Err(RuntimeError::from(inside_results_error)),

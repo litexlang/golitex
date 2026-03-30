@@ -506,7 +506,10 @@ impl Environment {
         }
     }
 
-    fn store_chain_fact_by_ref(&mut self, chain_fact: &ChainFact) -> Result<(), RuntimeErrorStruct> {
+    fn store_chain_fact_by_ref(
+        &mut self,
+        chain_fact: &ChainFact,
+    ) -> Result<(), RuntimeErrorStruct> {
         for fact in chain_fact
             .facts()
             .map_err(RuntimeErrorStruct::into_store_fact_wrapping_new_atomic)?
