@@ -267,12 +267,12 @@ impl fmt::Display for HaveExistObjStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {} {}",
+            "{} {} {} {} {}",
             HAVE,
-            vec_to_string_join_by_comma(&self.equal_tos),
+            BY,
+            self.exist_fact_in_have_obj_st,
             COLON,
-            self.exist_fact_in_have_obj_st
-                .exist_fact_string_without_exist_as_prefix()
+            vec_to_string_join_by_comma(&self.equal_tos),
         )
     }
 }

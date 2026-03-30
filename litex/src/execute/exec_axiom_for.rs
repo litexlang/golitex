@@ -9,7 +9,7 @@ impl Runtime {
             return Err(RuntimeError::ExecStmtError(
                 ExecStmtError::with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
-                    "for: number of params does not match number of ranges".to_string(),
+                    "by for: number of params does not match number of ranges".to_string(),
                     None,
                     vec![],
                 ),
@@ -29,7 +29,7 @@ impl Runtime {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     format!(
-                        "for: corresponding forall `{}` is not well-defined",
+                        "by for: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
                     ),
                     Some(well_defined_error.into()),
@@ -57,7 +57,7 @@ impl Runtime {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
                         format!(
-                            "for: failed to store corresponding forall `{}`",
+                            "by for: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
                         ),
                         Some(store_fact_error.into()),
@@ -100,7 +100,7 @@ impl Runtime {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     format!(
-                        "for: failed to store corresponding forall `{}`",
+                        "by for: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
                     Some(store_fact_error.into()),
@@ -132,7 +132,7 @@ impl Runtime {
                 _ => {
                     return Err(RuntimeError::UnknownError(UnknownError::new(
                         format!(
-                            "for: range boundary `{}` must be a calculable number expression",
+                            "by for: range boundary `{}` must be a calculable number expression",
                             number_like_obj
                         ),
                         line_file,
@@ -146,7 +146,7 @@ impl Runtime {
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
-                    "for: range boundary `{}` is not an integer number",
+                    "by for: range boundary `{}` is not an integer number",
                     number_like_obj
                 ),
                 line_file,
@@ -179,13 +179,13 @@ impl Runtime {
                 .map_err(|e| e.to_string())?;
             let start_integer_i128 = start_integer_string.parse::<i128>().map_err(|_| {
                 format!(
-                    "for: failed to parse start boundary `{}` as integer",
+                    "by for: failed to parse start boundary `{}` as integer",
                     start_integer_string
                 )
             })?;
             let end_integer_i128 = end_integer_string.parse::<i128>().map_err(|_| {
                 format!(
-                    "for: failed to parse end boundary `{}` as integer",
+                    "by for: failed to parse end boundary `{}` as integer",
                     end_integer_string
                 )
             })?;
@@ -304,7 +304,7 @@ impl Runtime {
                     return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
                         format!(
-                            "for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown",
+                            "by for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown",
                             dom_fact, reversed
                         ),
                         None,
@@ -334,7 +334,7 @@ impl Runtime {
                 return Err(RuntimeError::ExecStmtError(
                     ExecStmtError::with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
-                        format!("for: failed to prove `{}`", fact_to_prove),
+                        format!("by for: failed to prove `{}`", fact_to_prove),
                         None,
                         inside_results,
                     ),

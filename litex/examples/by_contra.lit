@@ -9,7 +9,7 @@ know forall a R:
 
 know not $p(c)
 
-by_contra:
+by contra:
     prove:
         not $p(c + b)
     impossible $p(c)

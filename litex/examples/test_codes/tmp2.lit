@@ -58,5 +58,5 @@ know infer exp_dvd_imply_dvd(x, y Z, a N_pos):
     =>:
         x $dvd y
 
-for i range():
+by for i range():
 """

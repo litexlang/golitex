@@ -1,4 +1,4 @@
-by_cases:
+by cases:
     prove:
         1 + 1 = 2
     case 1 + 1 = 2:

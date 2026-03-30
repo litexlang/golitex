@@ -11,7 +11,7 @@ impl Runtime {
             .map_err(|verify_error| {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ByContraAxiomStmt(stmt.clone()),
-                    format!("by_contra: failed to prove `{}`", to_prove_fact),
+                    format!("by contra: failed to prove `{}`", to_prove_fact),
                     Some(verify_error.into()),
                     vec![],
                 ))
@@ -28,7 +28,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ByContraAxiomStmt(stmt.clone()),
-                        format!("by_contra: failed to know reverse of `{}`", to_prove_fact),
+                        format!("by contra: failed to know reverse of `{}`", to_prove_fact),
                         Some(store_fact_error.into()),
                         vec![],
                     ))
@@ -81,7 +81,7 @@ impl Runtime {
             return Err(RuntimeError::ExecStmtError(
                 ExecStmtError::with_message_and_cause(
                     Stmt::ByContraAxiomStmt(stmt.clone()),
-                    "by_contra: failed to execute proof".to_string(),
+                    "by contra: failed to execute proof".to_string(),
                     Some(last_error),
                     exec_proof_inside_results,
                 ),
@@ -93,7 +93,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ByContraAxiomStmt(stmt.clone()),
-                    format!("by_contra: failed to release `{}`", to_prove_fact),
+                    format!("by contra: failed to release `{}`", to_prove_fact),
                     Some(store_fact_error.into()),
                     vec![],
                 ))

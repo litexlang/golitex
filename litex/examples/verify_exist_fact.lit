@@ -2,6 +2,6 @@ know exist a R st {a > 0, a < 1}
 
 exist b R st {b > 0, b < 1}
 
-have exist c R st {c > 0, c < 1}: number_larger_than_0_and_smaller_than_1
+have by exist c R st {c > 0, c < 1}: number_larger_than_0_and_smaller_than_1
 number_larger_than_0_and_smaller_than_1 > 0
 number_larger_than_0_and_smaller_than_1 < 1

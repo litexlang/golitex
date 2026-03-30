@@ -11,7 +11,7 @@ impl Runtime {
                 .map_err(|verify_error| {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ByCasesAxiomStmt(stmt.clone()),
-                        format!("by_cases: failed to prove `{}`", fact),
+                        format!("by cases: failed to prove `{}`", fact),
                         Some(verify_error.into()),
                         vec![],
                     ))
@@ -44,7 +44,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ByCasesAxiomStmt(stmt.clone()),
-                        format!("by_cases: failed to release `{}`", then_fact),
+                        format!("by cases: failed to release `{}`", then_fact),
                         Some(store_fact_error.into()),
                         vec![],
                     ))
@@ -71,7 +71,7 @@ impl Runtime {
             .map_err(|verify_error| {
                 ExecStmtError::with_message_and_cause(
                     Stmt::ByCasesAxiomStmt(stmt.clone()),
-                    "by_cases: cannot verify that all cases cover all situations".to_string(),
+                    "by cases: cannot verify that all cases cover all situations".to_string(),
                     Some(verify_error.into()),
                     vec![],
                 )
@@ -90,7 +90,7 @@ impl Runtime {
                 ExecStmtError::with_message_and_cause(
                     Stmt::ByCasesAxiomStmt(stmt.clone()),
                     format!(
-                        "by_cases: failed to prove `{}` under case `{}`",
+                        "by cases: failed to prove `{}` under case `{}`",
                         then_fact, stmt.cases[case_index]
                     ),
                     Some(statement_error),
@@ -114,7 +114,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 ExecStmtError::with_message_and_cause(
                     Stmt::ByCasesAxiomStmt(stmt.clone()),
-                    format!("by_cases: failed to assume case `{}`", case_fact),
+                    format!("by cases: failed to assume case `{}`", case_fact),
                     Some(store_fact_error.into()),
                     vec![],
                 )
@@ -128,7 +128,7 @@ impl Runtime {
                     return Err(ExecStmtError::with_message_and_cause(
                         Stmt::ByCasesAxiomStmt(stmt.clone()),
                         format!(
-                            "by_cases: failed while executing proof under case `{}`",
+                            "by cases: failed while executing proof under case `{}`",
                             case_fact
                         ),
                         Some(statement_error),

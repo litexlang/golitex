@@ -8,7 +8,7 @@ know:
         =>:
             $p(n + 1)
 
-by_induc n from 0:
+by induc n from 0:
     $p(n)
 
 forall n Z:

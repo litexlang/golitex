@@ -19,7 +19,7 @@ impl Runtime {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::EnumerateAxiomStmt(stmt.clone()),
                     format!(
-                        "enumerate: corresponding forall `{}` is not well-defined",
+                        "by enumerate: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
                     ),
                     Some(well_defined_error.into()),
@@ -38,7 +38,7 @@ impl Runtime {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::EnumerateAxiomStmt(stmt.clone()),
                         format!(
-                            "enumerate: failed to store corresponding forall `{}`",
+                            "by enumerate: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
                         ),
                         Some(store_fact_error.into()),
@@ -80,7 +80,7 @@ impl Runtime {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::EnumerateAxiomStmt(stmt.clone()),
                     format!(
-                        "enumerate: failed to store corresponding forall `{}`",
+                        "by enumerate: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
                     Some(store_fact_error.into()),
@@ -194,7 +194,21 @@ impl Runtime {
         }
 
         for fact_to_prove in stmt.to_prove.iter() {
-            self.verify_fact_return_err_if_not_true(fact_to_prove, &VerifyState::new(0, false))?;
+            let verified_result = self.verify_exist_or_and_chain_atomic_fact(
+                fact_to_prove,
+                &VerifyState::new(0, false),
+            )?;
+            if verified_result.is_unknown() {
+                return Err(RuntimeError::ExecStmtError(
+                    ExecStmtError::with_message_and_cause(
+                        Stmt::EnumerateAxiomStmt(stmt.clone()),
+                        format!("by enumerate: failed to prove `{}`", fact_to_prove),
+                        None,
+                        inside_results_before_failure,
+                    ),
+                ));
+            }
+            inside_results_before_failure.push(verified_result);
         }
         Ok(())
     }

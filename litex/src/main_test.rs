@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod run_examples_lit {
+mod lit_file_runner_tests {
     use std::fs;
     use std::path::PathBuf;
     use std::time::Instant;
@@ -7,7 +7,44 @@ mod run_examples_lit {
     use crate::pipeline::run_source_code_in_file_with_ok;
 
     #[test]
-    fn run_all_lit_files_in_examples_folder() {
+    fn run_tmp() {
+        let tmp_lit_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("examples")
+            .join("tmp.lit");
+
+        assert!(
+            tmp_lit_path.is_file(),
+            "examples/tmp.lit must exist at {:?}",
+            tmp_lit_path
+        );
+
+        let tmp_lit_content = match fs::read_to_string(&tmp_lit_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", tmp_lit_path, read_error),
+        };
+        if tmp_lit_content.trim().is_empty() {
+            println!("examples/tmp.lit is empty; skip run_tmp");
+            return;
+        }
+
+        let path_str = match tmp_lit_path.to_str() {
+            Some(path_string) => path_string,
+            None => panic!("{:?} must be valid UTF-8", tmp_lit_path),
+        };
+
+        let start_time = Instant::now();
+        let (run_succeeded, run_output) = run_source_code_in_file_with_ok(path_str);
+        let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+
+        let status_label = if run_succeeded { "OK" } else { "FAILED" };
+        println!(
+            "\n=== [{}] {:?} ({:.2} ms) ===\n{}\n",
+            status_label, tmp_lit_path, duration_ms, run_output
+        );
+    }
+
+    #[test]
+    fn run_examples() {
         let examples_directory_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples");
 
         let read_directory = match fs::read_dir(&examples_directory_path) {
@@ -38,7 +75,6 @@ mod run_examples_lit {
         }
         lit_file_paths.sort();
 
-        let start_time_for_whole_folder = Instant::now();
         let mut file_name_and_duration_ms_list: Vec<(String, f64)> = Vec::new();
         let mut every_file_run_ok = true;
 
@@ -57,14 +93,16 @@ mod run_examples_lit {
             };
 
             let start_time_for_one_file = Instant::now();
-            let (run_succeeded, run_output) =
-                run_source_code_in_file_with_ok(lit_file_path_str);
+            let (run_succeeded, run_output) = run_source_code_in_file_with_ok(lit_file_path_str);
             let duration_for_one_file = start_time_for_one_file.elapsed();
             let duration_ms_for_one_file = duration_for_one_file.as_secs_f64() * 1000.0;
 
             if !run_succeeded {
                 every_file_run_ok = false;
-                println!("=== [{}] {:?} ===\n{}\n", "FAILED", lit_file_path, run_output);
+                println!(
+                    "=== [{}] {:?} ===\n{}\n",
+                    "FAILED", lit_file_path, run_output
+                );
                 break;
             }
 
@@ -75,8 +113,6 @@ mod run_examples_lit {
             return;
         }
 
-        let duration_for_whole_folder = start_time_for_whole_folder.elapsed();
-        let duration_ms_for_whole_folder = duration_for_whole_folder.as_secs_f64() * 1000.0;
         let number_of_lit_files = file_name_and_duration_ms_list.len();
 
         println!(
@@ -91,10 +127,6 @@ mod run_examples_lit {
         println!(
             "  sum of per-file runs: {:.2} ms",
             sum_of_per_file_duration_ms
-        );
-        println!(
-            "  wall clock for whole loop: {:.2} ms",
-            duration_ms_for_whole_folder
         );
     }
 }
