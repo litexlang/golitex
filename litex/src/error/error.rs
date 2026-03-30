@@ -13,10 +13,9 @@ pub enum RuntimeError {
     ParseBlockError(ParseBlockError),
     ParsingError(ParsingError),
     ExecStmtError(ExecStmtError),
-    UnknownError(UnknownError),
     WellDefinedError(WellDefinedError),
     VerifyError(VerifyError),
-    VerifyUnknownError(VerifyUnknownError),
+    UnknownError(UnknownError),
     InferError(InferError),
     NameAlreadyUsedError(NameAlreadyUsedError),
     DefineParamsError(DefineParamsError),
@@ -33,17 +32,16 @@ impl RuntimeError {
             RuntimeError::ParseBlockError(e) => e.line_file(),
             RuntimeError::ParsingError(e) => e.line_file,
             RuntimeError::ExecStmtError(e) => e.stmt.line_file(),
-            RuntimeError::UnknownError(e) => e.line_file,
             RuntimeError::WellDefinedError(e) => e.line_file,
             RuntimeError::VerifyError(e) => e.fact.line_file(),
-            RuntimeError::VerifyUnknownError(e) => e.fact.line_file(),
+            RuntimeError::UnknownError(e) => e.line_file,
             RuntimeError::InferError(e) => e.line_file,
             RuntimeError::NameAlreadyUsedError(e) => e.line_file,
             RuntimeError::DefineParamsError(e) => e.line_file,
         }
     }
 
-    /// Short label for display (e.g. "ExecError", "UnknownError").
+    /// Short label for display (e.g. "ExecError", "VerifyUnknownError").
     pub fn display_label(&self) -> &'static str {
         match self {
             RuntimeError::ArithmeticError(e) => e.display_label(),
@@ -52,10 +50,9 @@ impl RuntimeError {
             RuntimeError::ParseBlockError(e) => e.display_label(),
             RuntimeError::ParsingError(e) => e.display_label(),
             RuntimeError::ExecStmtError(e) => e.display_label(),
-            RuntimeError::UnknownError(e) => e.display_label(),
             RuntimeError::WellDefinedError(e) => e.display_label(),
             RuntimeError::VerifyError(e) => e.display_label(),
-            RuntimeError::VerifyUnknownError(e) => e.display_label(),
+            RuntimeError::UnknownError(e) => e.display_label(),
             RuntimeError::InferError(e) => e.display_label(),
             RuntimeError::NameAlreadyUsedError(e) => e.display_label(),
             RuntimeError::DefineParamsError(e) => e.display_label(),
@@ -99,12 +96,6 @@ impl ExecStmtError {
     }
 }
 
-impl UnknownError {
-    pub fn display_label(&self) -> &'static str {
-        "UnknownError"
-    }
-}
-
 impl WellDefinedError {
     pub fn display_label(&self) -> &'static str {
         "WellDefinedError"
@@ -117,9 +108,9 @@ impl VerifyError {
     }
 }
 
-impl VerifyUnknownError {
+impl UnknownError {
     pub fn display_label(&self) -> &'static str {
-        "VerifyUnknownError"
+        "UnknownError"
     }
 }
 
@@ -365,10 +356,11 @@ impl ExecStmtError {
         let previous_error = if message.is_empty() {
             cause
         } else {
-            let error_message_for_unknown_error = message.clone();
+            let error_message_for_verify_unknown_error = message.clone();
             Some(RuntimeError::UnknownError(UnknownError::new(
-                error_message_for_unknown_error,
+                error_message_for_verify_unknown_error,
                 line_file,
+                None,
                 cause,
             )))
         };
@@ -458,45 +450,10 @@ impl From<VerifyError> for WellDefinedError {
 }
 
 #[derive(Debug)]
-pub struct VerifyUnknownError {
-    pub fact: Fact,
-    pub previous_error: Option<Box<RuntimeError>>,
-}
-
-impl std::error::Error for VerifyUnknownError {}
-
-impl fmt::Display for VerifyUnknownError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl VerifyUnknownError {
-    pub fn new(fact: Fact, previous_error: Option<RuntimeError>) -> Self {
-        VerifyUnknownError {
-            fact,
-            previous_error: boxed_previous_error(previous_error),
-        }
-    }
-}
-
-impl From<VerifyUnknownError> for RuntimeError {
-    fn from(e: VerifyUnknownError) -> Self {
-        RuntimeError::VerifyUnknownError(e)
-    }
-}
-
-impl From<VerifyUnknownError> for VerifyError {
-    fn from(e: VerifyUnknownError) -> Self {
-        let fact = e.fact.clone();
-        VerifyError::new(fact, Some(RuntimeError::VerifyUnknownError(e)))
-    }
-}
-
-#[derive(Debug)]
 pub struct UnknownError {
     pub msg: String,
     pub line_file: (usize, usize),
+    pub fact: Option<Fact>,
     pub previous_error: Option<Box<RuntimeError>>,
 }
 
@@ -512,11 +469,23 @@ impl UnknownError {
     pub fn new(
         msg: String,
         line_file: (usize, usize),
+        fact: Option<Fact>,
         previous_error: Option<RuntimeError>,
     ) -> Self {
         UnknownError {
             msg,
             line_file,
+            fact,
+            previous_error: boxed_previous_error(previous_error),
+        }
+    }
+
+    pub fn verify_result_unknown(fact: Fact, previous_error: Option<RuntimeError>) -> Self {
+        let line_file = fact.line_file();
+        UnknownError {
+            msg: String::new(),
+            line_file,
+            fact: Some(fact),
             previous_error: boxed_previous_error(previous_error),
         }
     }

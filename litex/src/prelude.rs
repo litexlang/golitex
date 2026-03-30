@@ -13,7 +13,6 @@ pub use crate::error::RuntimeError;
 pub use crate::error::StoreFactError;
 pub use crate::error::UnknownError;
 pub use crate::error::VerifyError;
-pub use crate::error::VerifyUnknownError;
 pub use crate::error::WellDefinedError;
 pub use crate::fact::line_file;
 pub use crate::fact::AndChainAtomicFact;

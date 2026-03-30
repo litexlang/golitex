@@ -20,7 +20,13 @@ impl Runtime {
         }?;
 
         if result.is_unknown() {
-            return Err(VerifyUnknownError::new(fact.clone(), None).into());
+            let fact_owned = fact.clone();
+            return Err(VerifyError::new(
+                fact_owned.clone(),
+                Some(RuntimeError::UnknownError(
+                    UnknownError::verify_result_unknown(fact_owned, None),
+                )),
+            ));
         } else {
             Ok(result)
         }

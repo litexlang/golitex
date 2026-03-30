@@ -188,19 +188,15 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<InferResult, InferError> {
-        if let Some(right_calculated_value) =
-            self.resolve_obj(&equal_fact.right)
-        {
+        if let Some(right_calculated_value) = self.resolve_obj_to_number(&equal_fact.right) {
             self.top_level_env()
-                .known_normalized_calculated_value_of_obj
+                .known_normalized_decimal_number_value_of_obj
                 .insert(equal_fact.left.to_string(), right_calculated_value);
         }
 
-        if let Some(left_calculated_value) =
-            self.resolve_obj(&equal_fact.left)
-        {
+        if let Some(left_calculated_value) = self.resolve_obj_to_number(&equal_fact.left) {
             self.top_level_env()
-                .known_normalized_calculated_value_of_obj
+                .known_normalized_decimal_number_value_of_obj
                 .insert(equal_fact.right.to_string(), left_calculated_value);
         }
 

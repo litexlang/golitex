@@ -387,10 +387,11 @@ impl Runtime {
         None
     }
 
-    pub fn get_normalized_calculated_value_of_obj(&self, obj_str: &str) -> Option<Number> {
+    pub fn get_normalized_decimal_number_value_of_obj(&self, obj_str: &str) -> Option<Number> {
         for env in self.iter_environments_from_top() {
-            if let Some(calculated_value) =
-                env.known_normalized_calculated_value_of_obj.get(obj_str)
+            if let Some(calculated_value) = env
+                .known_normalized_decimal_number_value_of_obj
+                .get(obj_str)
             {
                 return Some(calculated_value.clone());
             }
