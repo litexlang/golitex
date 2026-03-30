@@ -36,7 +36,13 @@ impl Runtime {
             &forall_param_names,
             tb.line_file,
         )
-        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
         tb.skip_token(COLON)?;
 
         let last_body = tb
@@ -199,7 +205,13 @@ impl Runtime {
             &exist_param_names,
             tb.line_file,
         )
-        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
         tb.skip_token(ST)?;
 
         tb.skip_token(LEFT_CURLY_BRACE)?;
