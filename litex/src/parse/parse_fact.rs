@@ -29,7 +29,7 @@ impl Runtime {
         tb.skip_token(FORALL)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON {
-            param_def.push(self.parse_param_def_with_param_type(tb)?);
+            param_def.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
         let forall_param_names = ParamDefWithParamType::collect_param_names(&param_def);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
@@ -194,10 +194,7 @@ impl Runtime {
         tb.skip_token(EXIST)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != ST {
-            param_def.push(self.parse_param_def_with_param_type(tb)?);
-            if tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-            }
+            param_def.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
         let exist_param_names = ParamDefWithParamType::collect_param_names(&param_def);
         self.push_parsing_time_name_scope();
