@@ -1,14 +1,5 @@
+use crate::prelude::*;
 use std::fmt;
-use crate::stmt::parameter_def::ParamType;
-use crate::obj::Obj;
-use crate::common::keywords::{COMMA, EXIST, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, ST};
-use crate::common::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
-use crate::stmt::parameter_def::ParamDefWithParamType;
-use super::atomic_fact::AtomicFact;
-use super::matchable_fact_with_atomic_fact_inside::{AndFact, ChainFact};
-use super::or_fact::OrFact;
-use super::fact_inside_forall::ExistOrAndChainAtomicFact;
-use super::fact::Fact;
 
 #[derive(Clone)]
 pub enum OrAndChainAtomicFact {
@@ -42,7 +33,11 @@ impl ExistFact {
         facts: Vec<OrAndChainAtomicFact>,
         line_file: (usize, usize),
     ) -> Self {
-        ExistFact { params_def_with_type, facts, line_file }
+        ExistFact {
+            params_def_with_type,
+            facts,
+            line_file,
+        }
     }
 
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {
@@ -50,7 +45,19 @@ impl ExistFact {
     }
 
     pub fn key(&self) -> String {
-        format!("{} {}{}{}", EXIST, LEFT_CURLY_BRACE, vec_to_string_join_by_comma(&self.facts.iter().map(|fact| fact.key()).collect::<Vec<String>>()), RIGHT_CURLY_BRACE)
+        format!(
+            "{} {}{}{}",
+            EXIST,
+            LEFT_CURLY_BRACE,
+            vec_to_string_join_by_comma(
+                &self
+                    .facts
+                    .iter()
+                    .map(|fact| fact.key())
+                    .collect::<Vec<String>>()
+            ),
+            RIGHT_CURLY_BRACE
+        )
     }
 
     pub fn line_file(&self) -> (usize, usize) {
@@ -66,13 +73,32 @@ impl ExistFact {
     }
 }
 
-fn exist_fact_string_without_exist_as_prefix(param_defs: &Vec<ParamDefWithParamType>, facts: &Vec<OrAndChainAtomicFact>) -> String {
-    format!("{} {} {}", vec_to_string_join_by_comma(param_defs), ST, curly_braced_vec_to_string_with_sep(&facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>(), format!("{} ", COMMA)))
+fn exist_fact_string_without_exist_as_prefix(
+    param_defs: &Vec<ParamDefWithParamType>,
+    facts: &Vec<OrAndChainAtomicFact>,
+) -> String {
+    format!(
+        "{} {} {}",
+        vec_to_string_join_by_comma(param_defs),
+        ST,
+        curly_braced_vec_to_string_with_sep(
+            &facts
+                .iter()
+                .map(|fact| fact.to_string())
+                .collect::<Vec<String>>(),
+            format!("{} ", COMMA)
+        )
+    )
 }
 
 impl fmt::Display for ExistFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", EXIST, self.exist_fact_string_without_exist_as_prefix())
+        write!(
+            f,
+            "{} {}",
+            EXIST,
+            self.exist_fact_string_without_exist_as_prefix()
+        )
     }
 }
 

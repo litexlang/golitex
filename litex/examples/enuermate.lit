@@ -1,0 +1,7 @@
+by enumerate x {1, 2}:
+    prove:
+        x = 1 or x = 2
+    do_nothing
+
+forall x {1, 2}:
+    x = 1 or x = 2

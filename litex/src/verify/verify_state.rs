@@ -19,7 +19,7 @@ impl VerifyState {
         return Self::new(self.round + 1, self.well_defined_already_verified);
     }
 
-    pub fn new_state_with_req_ok_set_to_true(&self) -> Self {
+    pub fn make_state_with_req_ok_set_to_true(&self) -> Self {
         return Self::new(self.round, true);
     }
 

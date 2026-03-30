@@ -1,0 +1,17 @@
+prop p(a)
+
+know:
+    $p(0)
+    forall n Z:
+        n >= 0
+        $p(n)
+        =>:
+            $p(n + 1)
+
+by induc n from 0:
+    $p(n)
+
+forall n Z:
+    n >= 0
+    =>:
+        $p(n)

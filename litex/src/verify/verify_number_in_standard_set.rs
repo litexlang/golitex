@@ -1,6 +1,6 @@
 //! Decides whether a decimal Number belongs to a standard number set (N, N_pos, Z, Z_neg, Z_nz, Q, R, etc.).
 
-use crate::obj::Number;
+use crate::prelude::*;
 
 /// Parses number string into sign and digit parts. Handles "-1.00", "0", "0.5".
 fn parse_number_parts(value: &str) -> (bool, Vec<u8>, Vec<u8>) {
@@ -29,7 +29,11 @@ fn parse_decimal_parts(s: &str) -> (Vec<u8>, Vec<u8>) {
             .map(|c| c as u8 - b'0')
             .collect()
     };
-    let int_digits = if int_digits.is_empty() { vec![0] } else { int_digits };
+    let int_digits = if int_digits.is_empty() {
+        vec![0]
+    } else {
+        int_digits
+    };
     let frac_digits: Vec<u8> = frac_str
         .chars()
         .filter(|c| c.is_ascii_digit())
@@ -44,24 +48,26 @@ fn digits_all_zero(digits: &[u8]) -> bool {
 
 /// True if the number is a whole number (no fractional part or fractional part all zeros, e.g. -1.00, 2.0).
 pub fn is_integer_after_simplification(number: &Number) -> bool {
-    let (_, _, frac_digits) = parse_number_parts(&number.value);
+    let (_, _, frac_digits) = parse_number_parts(&number.normalized_value);
     frac_digits.is_empty() || digits_all_zero(&frac_digits)
 }
 
 fn number_is_zero(number: &Number) -> bool {
-    let (_, int_digits, frac_digits) = parse_number_parts(&number.value);
+    let (_, int_digits, frac_digits) = parse_number_parts(&number.normalized_value);
     digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits))
 }
 
 fn number_is_positive(number: &Number) -> bool {
-    let (negative, int_digits, frac_digits) = parse_number_parts(&number.value);
-    let zero = digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
+    let (negative, int_digits, frac_digits) = parse_number_parts(&number.normalized_value);
+    let zero =
+        digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
     !negative && !zero
 }
 
 fn number_is_negative(number: &Number) -> bool {
-    let (negative, int_digits, frac_digits) = parse_number_parts(&number.value);
-    let zero = digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
+    let (negative, int_digits, frac_digits) = parse_number_parts(&number.normalized_value);
+    let zero =
+        digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
     negative && !zero
 }
 
@@ -93,7 +99,6 @@ pub fn number_is_in_z_neg(number: &Number) -> bool {
 pub fn number_is_in_z_nz(number: &Number) -> bool {
     number_is_in_z(number) && number_is_nonzero(number)
 }
-
 
 // --- Q_pos, R_pos (positive rationals/reals) ---
 pub fn number_is_in_q_pos(number: &Number) -> bool {

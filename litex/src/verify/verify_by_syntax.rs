@@ -1,7 +1,6 @@
-use crate::obj::{Obj};
-use crate::execute::Executor;
+use crate::prelude::*;
 
-impl<'a> Executor<'a> {
+impl Runtime {
     pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {
         match left {
             Obj::Identifier(a) => match right {
@@ -14,14 +13,18 @@ impl<'a> Executor<'a> {
                         a.name == b.name
                     } else {
                         match (
-                            self.runtime_context.module_manager.module_name_and_path_map.get(&a.mod_name),
-                            self.runtime_context.module_manager.module_name_and_path_map.get(&b.mod_name),
+                            self.module_manager
+                                .module_name_and_path_map
+                                .get(&a.mod_name),
+                            self.module_manager
+                                .module_name_and_path_map
+                                .get(&b.mod_name),
                         ) {
                             (Some(p1), Some(p2)) => p1 == p2 && a.name == b.name,
                             _ => false,
                         }
                     }
-                },
+                }
                 _ => false,
             },
             Obj::FieldAccess(a) => match right {
@@ -31,20 +34,37 @@ impl<'a> Executor<'a> {
             Obj::FieldAccessWithMod(a) => match right {
                 Obj::FieldAccessWithMod(b) => {
                     if a.mod_name == b.mod_name {
-                        a.name == b.name && a.fields.len() == b.fields.len() && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
+                        a.name == b.name
+                            && a.fields.len() == b.fields.len()
+                            && a.fields
+                                .iter()
+                                .zip(b.fields.iter())
+                                .all(|(a_field, b_field)| {
+                                    a_field.to_string() == b_field.to_string()
+                                })
                     } else {
                         match (
-                            self.runtime_context.module_manager.module_name_and_path_map.get(&a.mod_name),
-                            self.runtime_context.module_manager.module_name_and_path_map.get(&b.mod_name),
+                            self.module_manager
+                                .module_name_and_path_map
+                                .get(&a.mod_name),
+                            self.module_manager
+                                .module_name_and_path_map
+                                .get(&b.mod_name),
                         ) {
                             (Some(p1), Some(p2)) => {
-                                p1 == p2 && a.name == b.name && a.fields.len() == b.fields.len()
-                                    && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
+                                p1 == p2
+                                    && a.name == b.name
+                                    && a.fields.len() == b.fields.len()
+                                    && a.fields.iter().zip(b.fields.iter()).all(
+                                        |(a_field, b_field)| {
+                                            a_field.to_string() == b_field.to_string()
+                                        },
+                                    )
                             }
                             _ => false,
                         }
                     }
-                },
+                }
                 _ => false,
             },
             Obj::FnObj(f) => match right {
@@ -119,28 +139,24 @@ impl<'a> Executor<'a> {
                 Obj::FnSetWithParams(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::NPosObj(_) => match right {
-                Obj::NPosObj(_) => true,
+            Obj::StandardSet(StandardSet::NPos) => match right {
+                Obj::StandardSet(StandardSet::NPos) => true,
                 _ => false,
             },
-            Obj::NObj(_) => match right {
-                Obj::NObj(_) => true,
+            Obj::StandardSet(StandardSet::N) => match right {
+                Obj::StandardSet(StandardSet::N) => true,
                 _ => false,
             },
-            Obj::QObj(_) => match right {
-                Obj::QObj(_) => true,
+            Obj::StandardSet(StandardSet::Q) => match right {
+                Obj::StandardSet(StandardSet::Q) => true,
                 _ => false,
             },
-            Obj::ZObj(_) => match right {
-                Obj::ZObj(_) => true,
+            Obj::StandardSet(StandardSet::Z) => match right {
+                Obj::StandardSet(StandardSet::Z) => true,
                 _ => false,
             },
-            Obj::RObj(_) => match right {
-                Obj::RObj(_) => true,
-                _ => false,
-            },
-            Obj::InstSetStructObj(a) => match right {
-                Obj::InstSetStructObj(b) => a.to_string() == b.to_string(),
+            Obj::StandardSet(StandardSet::R) => match right {
+                Obj::StandardSet(StandardSet::R) => true,
                 _ => false,
             },
             Obj::Cart(a) => match right {
@@ -155,8 +171,8 @@ impl<'a> Executor<'a> {
                 Obj::Proj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Dim(a) => match right {
-                Obj::Dim(b) => a.to_string() == b.to_string(),
+            Obj::TupleDim(a) => match right {
+                Obj::TupleDim(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Tuple(a) => match right {
@@ -175,10 +191,6 @@ impl<'a> Executor<'a> {
                 Obj::ClosedRange(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Val(a) => match right {
-                Obj::Val(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             Obj::PowerSet(a) => match right {
                 Obj::PowerSet(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -187,22 +199,42 @@ impl<'a> Executor<'a> {
                 Obj::Choose(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::TupleDimObj(a) => match right {
-                Obj::TupleDimObj(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             Obj::ObjAtIndex(a) => match right {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::QPos(_) => match right { Obj::QPos(_) => true, _ => false },
-            Obj::RPos(_) => match right { Obj::RPos(_) => true, _ => false },
-            Obj::QNeg(_) => match right { Obj::QNeg(_) => true, _ => false },
-            Obj::ZNeg(_) => match right { Obj::ZNeg(_) => true, _ => false },
-            Obj::RNeg(_) => match right { Obj::RNeg(_) => true, _ => false },
-            Obj::QNz(_) => match right { Obj::QNz(_) => true, _ => false },
-            Obj::ZNz(_) => match right { Obj::ZNz(_) => true, _ => false },
-            Obj::RNz(_) => match right { Obj::RNz(_) => true, _ => false },
+            Obj::StandardSet(StandardSet::QPos) => match right {
+                Obj::StandardSet(StandardSet::QPos) => true,
+                _ => false,
+            },
+            Obj::StandardSet(StandardSet::RPos) => match right {
+                Obj::StandardSet(StandardSet::RPos) => true,
+                _ => false,
+            },
+            Obj::StandardSet(StandardSet::QNeg) => match right {
+                Obj::StandardSet(StandardSet::QNeg) => true,
+                _ => false,
+            },
+            Obj::StandardSet(StandardSet::ZNeg) => match right {
+                Obj::StandardSet(StandardSet::ZNeg) => true,
+                _ => false,
+            },
+            Obj::StandardSet(StandardSet::RNeg) => match right {
+                Obj::StandardSet(StandardSet::RNeg) => true,
+                _ => false,
+            },
+            Obj::StandardSet(StandardSet::QNz) => match right {
+                Obj::StandardSet(StandardSet::QNz) => true,
+                _ => false,
+            },
+            Obj::StandardSet(StandardSet::ZNz) => match right {
+                Obj::StandardSet(StandardSet::ZNz) => true,
+                _ => false,
+            },
+            Obj::StandardSet(StandardSet::RNz) => match right {
+                Obj::StandardSet(StandardSet::RNz) => true,
+                _ => false,
+            },
         }
     }
 }

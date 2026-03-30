@@ -1,0 +1,12 @@
+have fn f(x R, t R) R = x + t
+have fn g(x R, t R) R = x + t
+
+have x, y R
+
+# The followings are equivalent
+
+f(x \g y, x \g y) = f(x + y, x + y) = x + y + (x + y)
+
+(x \g y) \f (x \g y) = (x + y) \f (x + y) 
+
+f(g(x, y), g(x, y)) = f(x + y, x + y) = x + y + (x + y)

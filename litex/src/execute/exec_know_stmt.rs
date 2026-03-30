@@ -1,23 +1,26 @@
-use crate::error::ExecStmtError;
-use crate::infer::InferResult;
-use crate::stmt::know_stmt::KnowStmt;
-use crate::result::NonErrStmtExecResult;
-use crate::result::NonFactualStmtSuccess;
-use super::Executor;
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
-impl<'a> Executor<'a> {
-    pub fn exec_know_stmt(&mut self, know_stmt: &KnowStmt) -> Result<NonErrStmtExecResult, ExecStmtError> {
+impl Runtime {
+    pub fn exec_know_stmt(
+        &mut self,
+        know_stmt: &KnowStmt,
+    ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         let mut infer_result = InferResult::new();
         for fact in know_stmt.facts.iter() {
-            let fact_infer_result = self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false)).map_err(|e| ExecStmtError::new(know_stmt.stmt_type_name(), know_stmt.to_string(), Some(e.into()), know_stmt.line_file))?;
-            infer_result.append(fact_infer_result);
+            let fact_infer_result = self
+                .verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))
+                .map_err(|e| {
+                    ExecStmtError::new(
+                        Stmt::KnowStmt(know_stmt.clone()),
+                        "".to_string(),
+                        Some(e.into()),
+                        vec![],
+                    )
+                })?;
+            infer_result.new_infer_result_inside(fact_infer_result);
         }
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
-            know_stmt.to_string(),
-            infer_result,
-            vec![],
-            know_stmt.line_file,
-        )))
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            NonFactualStmtSuccess::new(Stmt::KnowStmt(know_stmt.clone()), infer_result, vec![]),
+        ))
     }
 }

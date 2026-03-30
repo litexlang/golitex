@@ -1,59 +1,23 @@
+use crate::prelude::*;
 use std::collections::HashMap;
-use crate::obj::Obj;
-use crate::stmt::parameter_def::ParamDefWithParamType;
-use crate::fact::ExistOrAndChainAtomicFact;
-use crate::fact::AtomicFact;
-use crate::fact::ExistFact;
-use crate::fact::Fact;
-use crate::fact::ForallFact;
-use crate::fact::ForallFactWithIff;
-use crate::fact::OrAndChainAtomicFact;
-use crate::fact::OrFact;
-use crate::fact::AndChainAtomicFact;
-use crate::fact::RestrictFact;
-use crate::fact::NotRestrictFact;
-use crate::fact::matchable_fact_with_atomic_fact_inside::AndFact;
-use crate::fact::matchable_fact_with_atomic_fact_inside::ChainFact;
-use crate::fact::{
-    NormalAtomicFact,
-    EqualFact,
-    LessFact,
-    GreaterFact,
-    LessEqualFact,
-    GreaterEqualFact,
-    IsSetFact,
-    IsNonemptySetFact,
-    IsFiniteSetFact,
-    InFact,
-    IsCartFact,
-    IsTupleFact,
-    SubsetFact,
-    SupersetFact,
-    NotNormalAtomicFact,
-    NotEqualFact,
-    NotLessFact,
-    NotGreaterFact,
-    NotLessEqualFact,
-    NotGreaterEqualFact,
-    NotIsSetFact,
-    NotIsNonemptySetFact,
-    NotIsFiniteSetFact,
-    NotInFact,
-    NotIsCartFact,
-    NotIsTupleFact,
-    NotSubsetFact,
-    NotSupersetFact,
-};
 
 impl Fact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Fact {
         match self {
-            Fact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.instantiate(param_to_arg_map)),
-            Fact::ExistFact(exist_fact) => Fact::ExistFact(exist_fact.instantiate(param_to_arg_map)),
+            Fact::AtomicFact(atomic_fact) => {
+                Fact::AtomicFact(atomic_fact.instantiate(param_to_arg_map))
+            }
+            Fact::ExistFact(exist_fact) => {
+                Fact::ExistFact(exist_fact.instantiate(param_to_arg_map))
+            }
             Fact::OrFact(or_fact) => Fact::OrFact(or_fact.instantiate(param_to_arg_map)),
             Fact::AndFact(and_fact) => Fact::AndFact(and_fact.instantiate(param_to_arg_map)),
-            Fact::ChainFact(chain_fact) => Fact::ChainFact(chain_fact.instantiate(param_to_arg_map)),
-            Fact::ForallFact(forall_fact) => Fact::ForallFact(forall_fact.instantiate(param_to_arg_map)),
+            Fact::ChainFact(chain_fact) => {
+                Fact::ChainFact(chain_fact.instantiate(param_to_arg_map))
+            }
+            Fact::ForallFact(forall_fact) => {
+                Fact::ForallFact(forall_fact.instantiate(param_to_arg_map))
+            }
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
                 Fact::ForallFactWithIff(forall_fact_with_iff.instantiate(param_to_arg_map))
             }
@@ -62,7 +26,10 @@ impl Fact {
 }
 
 impl ExistOrAndChainAtomicFact {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ExistOrAndChainAtomicFact {
+    pub fn instantiate(
+        &self,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> ExistOrAndChainAtomicFact {
         match self {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
                 ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.instantiate(param_to_arg_map))
@@ -127,9 +94,7 @@ impl AtomicFact {
             AtomicFact::EqualFact(fact) => {
                 AtomicFact::EqualFact(fact.instantiate(param_to_arg_map))
             }
-            AtomicFact::LessFact(fact) => {
-                AtomicFact::LessFact(fact.instantiate(param_to_arg_map))
-            }
+            AtomicFact::LessFact(fact) => AtomicFact::LessFact(fact.instantiate(param_to_arg_map)),
             AtomicFact::GreaterFact(fact) => {
                 AtomicFact::GreaterFact(fact.instantiate(param_to_arg_map))
             }
@@ -148,9 +113,7 @@ impl AtomicFact {
             AtomicFact::IsFiniteSetFact(fact) => {
                 AtomicFact::IsFiniteSetFact(fact.instantiate(param_to_arg_map))
             }
-            AtomicFact::InFact(fact) => {
-                AtomicFact::InFact(fact.instantiate(param_to_arg_map))
-            }
+            AtomicFact::InFact(fact) => AtomicFact::InFact(fact.instantiate(param_to_arg_map)),
             AtomicFact::IsCartFact(fact) => {
                 AtomicFact::IsCartFact(fact.instantiate(param_to_arg_map))
             }
@@ -599,7 +562,9 @@ impl RestrictFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> RestrictFact {
         RestrictFact {
             obj: self.obj.instantiate(param_to_arg_map),
-            obj_can_restrict_to_fn_set: self.obj_can_restrict_to_fn_set.instantiate(param_to_arg_map),
+            obj_can_restrict_to_fn_set: self
+                .obj_can_restrict_to_fn_set
+                .instantiate(param_to_arg_map),
             line_file: self.line_file,
         }
     }
@@ -609,7 +574,9 @@ impl NotRestrictFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotRestrictFact {
         NotRestrictFact {
             obj: self.obj.instantiate(param_to_arg_map),
-            obj_cannot_restrict_to_fn_set: self.obj_cannot_restrict_to_fn_set.instantiate(param_to_arg_map),
+            obj_cannot_restrict_to_fn_set: self
+                .obj_cannot_restrict_to_fn_set
+                .instantiate(param_to_arg_map),
             line_file: self.line_file,
         }
     }

@@ -1,22 +1,180 @@
-use crate::error::ExecStmtError;
-use crate::infer::InferResult;
-use crate::verify::VerifyState;
-use crate::fact::Fact;
-use super::Executor;
-use crate::error::StoreFactError;
+use crate::prelude::*;
 
-impl<'a> Executor<'a> {
-    pub fn store_fact_without_well_defined_verified_and_infer(&mut self, fact: &Fact) -> Result<InferResult, StoreFactError> {
-        self.runtime_context.top_level_env().store_fact(fact.clone())?;
+impl Runtime {
+    pub fn store_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        fact: &Fact,
+    ) -> Result<InferResult, RuntimeErrorStruct> {
+        self.top_level_env().store_fact_by_ref(fact)?;
 
-        self.runtime_context.top_level_env().store_fact_to_cache_known_fact(fact)?;
-        
-        let infer_result = self.infer(fact).map_err(|e| StoreFactError::new(format!("infer error: {}", e), Some(e.into())))?;
+        self.top_level_env()
+            .store_fact_to_cache_known_fact(fact.to_string(), fact.line_file())?;
+
+        let infer_result = self.infer(fact).map_err(|e| {
+            RuntimeErrorStruct::new_with_msg_previous_error(
+                format!("infer error: {}", e),
+                Some(e.into()),
+            )
+        })?;
         Ok(infer_result)
     }
 
-    pub fn verify_fact_well_defined_and_store_and_infer(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<InferResult, ExecStmtError> {
-        self.verify_fact_well_defined(fact, verify_state)?;
-        self.store_fact_without_well_defined_verified_and_infer(fact).map_err(ExecStmtError::from)
+    pub fn store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        fact: &AndChainAtomicFact,
+    ) -> Result<InferResult, RuntimeErrorStruct> {
+        self.top_level_env()
+            .store_and_chain_atomic_fact_by_ref(fact)?;
+
+        let line_file = fact.line_file();
+        self.top_level_env()
+            .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
+
+        let infer_result = self.infer(&fact.to_fact()).map_err(|e| {
+            RuntimeErrorStruct::new_with_msg_previous_error(
+                format!("infer error: {}", e),
+                Some(e.into()),
+            )
+        })?;
+        Ok(infer_result)
+    }
+
+    pub fn store_atomic_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        fact: &AtomicFact,
+    ) -> Result<InferResult, RuntimeErrorStruct> {
+        self.top_level_env().store_atomic_fact_by_ref(fact)?;
+
+        let line_file = fact.line_file();
+        self.top_level_env()
+            .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
+
+        let wrapped_fact = Fact::AtomicFact(fact.clone());
+        let infer_result = self.infer(&wrapped_fact).map_err(|e| {
+            RuntimeErrorStruct::new_with_msg_previous_error(
+                format!("infer error: {}", e),
+                Some(e.into()),
+            )
+        })?;
+        Ok(infer_result)
+    }
+
+    pub fn store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        fact: &ExistOrAndChainAtomicFact,
+    ) -> Result<InferResult, RuntimeErrorStruct> {
+        self.top_level_env()
+            .store_exist_or_and_chain_atomic_fact(fact)?;
+
+        let line_file = fact.line_file();
+        self.top_level_env()
+            .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
+
+        let infer_result = self
+            .infer_exist_or_and_chain_atomic_fact(fact)
+            .map_err(|e| {
+                RuntimeErrorStruct::new_with_msg_previous_error(
+                    format!("infer error: {}", e),
+                    Some(e.into()),
+                )
+            })?;
+        Ok(infer_result)
+    }
+
+    pub fn store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        fact: &OrAndChainAtomicFact,
+    ) -> Result<InferResult, RuntimeErrorStruct> {
+        self.top_level_env().store_or_and_chain_atomic_fact(fact)?;
+
+        let line_file = fact.line_file();
+        self.top_level_env()
+            .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
+
+        let infer_result = self.infer_or_and_chain_atomic_fact(fact).map_err(|e| {
+            RuntimeErrorStruct::new_with_msg_previous_error(
+                format!("infer error: {}", e),
+                Some(e.into()),
+            )
+        })?;
+        Ok(infer_result)
+    }
+
+    pub fn verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+        &mut self,
+        fact: &ExistOrAndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<InferResult, ExecStmtError> {
+        let stmt_for_fact_errors = Stmt::Fact(fact.clone().to_fact());
+        self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
+            .map_err(|well_defined_error| {
+                ExecStmtError::new(
+                    stmt_for_fact_errors.clone(),
+                    "".to_string(),
+                    Some(well_defined_error.into()),
+                    vec![],
+                )
+            })?;
+        self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact)
+            .map_err(|store_fact_error| {
+                ExecStmtError::new(
+                    stmt_for_fact_errors,
+                    "".to_string(),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
+            })
+    }
+
+    pub fn verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+        &mut self,
+        fact: &OrAndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<InferResult, ExecStmtError> {
+        let stmt_for_fact_errors = Stmt::Fact(fact.from_ref_to_cloned_fact());
+        self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)
+            .map_err(|well_defined_error| {
+                ExecStmtError::new(
+                    stmt_for_fact_errors.clone(),
+                    "".to_string(),
+                    Some(well_defined_error.into()),
+                    vec![],
+                )
+            })?;
+        self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact)
+            .map_err(|store_fact_error| {
+                ExecStmtError::new(
+                    stmt_for_fact_errors,
+                    "".to_string(),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
+            })
+    }
+
+    pub fn verify_fact_well_defined_and_store_and_infer(
+        &mut self,
+        fact: &Fact,
+        verify_state: &VerifyState,
+    ) -> Result<InferResult, ExecStmtError> {
+        let stmt_for_fact_errors = Stmt::Fact(fact.clone());
+        self.verify_fact_well_defined(fact, verify_state)
+            .map_err(|well_defined_error| {
+                ExecStmtError::new(
+                    stmt_for_fact_errors.clone(),
+                    "".to_string(),
+                    Some(well_defined_error.into()),
+                    vec![],
+                )
+            })?;
+        self.store_fact_without_well_defined_verified_and_infer(fact)
+            .map_err(|store_fact_error| {
+                ExecStmtError::new(
+                    stmt_for_fact_errors,
+                    "".to_string(),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
+            })
     }
 }
