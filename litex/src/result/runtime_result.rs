@@ -56,7 +56,7 @@ impl NonErrStmtExecResult {
                 format!(
                     "{}\n{}\n{}\n{}{}",
                     SUCCESS_COLON,
-                    x.fact,
+                    x.stmt,
                     VERIFIED_BY,
                     x.verified_by,
                     Self::infer_block_string(&x.infers)
@@ -66,7 +66,7 @@ impl NonErrStmtExecResult {
                 format!(
                     "{}\n{}\n{}\n{}{}",
                     SUCCESS_COLON,
-                    x.fact,
+                    x.stmt,
                     VERIFIED_BY,
                     x.verified_by,
                     Self::infer_block_string(&x.infers)
@@ -82,8 +82,8 @@ impl NonErrStmtExecResult {
     pub fn line_file(&self) -> (usize, usize) {
         match self {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.stmt.line_file(),
-            NonErrStmtExecResult::FactVerifiedByFact(x) => x.fact.line_file(),
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => x.fact.line_file(),
+            NonErrStmtExecResult::FactVerifiedByFact(x) => x.stmt.line_file(),
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => x.stmt.line_file(),
             NonErrStmtExecResult::StmtUnknown(_) => DEFAULT_LINE_FILE.clone(),
         }
     }
