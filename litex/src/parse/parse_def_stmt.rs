@@ -50,7 +50,7 @@ impl Runtime {
         tb.skip_token(LEFT_BRACE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != RIGHT_BRACE {
-            param_defs.push(self.param_def_with_type(tb)?);
+            param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
@@ -120,12 +120,12 @@ impl Runtime {
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file)
             .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file,
-                Some(RuntimeError::ParseBlockError(e)),
-            )
-        })?;
+                ParsingError::new(
+                    e.to_string(),
+                    tb.line_file,
+                    Some(RuntimeError::ParseBlockError(e)),
+                )
+            })?;
 
         Ok(DefPropWithoutMeaningStmt::new(name, params, tb.line_file))
     }
@@ -139,10 +139,7 @@ impl Runtime {
                 Err(_) => break,
                 Ok(_) => {}
             }
-            param_def.push(self.parse_param_def_with_param_type(tb)?);
-            if matches!(tb.current(), Ok(t) if t == COMMA) {
-                tb.skip_token(COMMA)?;
-            }
+            param_def.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
         let facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -183,11 +180,12 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         loop {
-            param_defs.push(self.parse_param_def_with_param_type(tb)?);
-            if !matches!(tb.current(), Ok(t) if t == COMMA) {
-                break;
+            param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
+            match tb.current() {
+                Ok(t) if t == EQUAL => break,
+                Err(_) => break,
+                Ok(_) => {}
             }
-            tb.skip_token(COMMA)?;
         }
         if param_defs.is_empty() {
             return Err(ParsingError::new(
@@ -287,12 +285,12 @@ impl Runtime {
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file)
             .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file,
-                Some(RuntimeError::ParseBlockError(e)),
-            )
-        })?;
+                ParsingError::new(
+                    e.to_string(),
+                    tb.line_file,
+                    Some(RuntimeError::ParseBlockError(e)),
+                )
+            })?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
             equal_tos,
@@ -327,10 +325,7 @@ impl Runtime {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
-            params_def_with_type.push(self.parse_param_def_with_param_type(tb)?);
-            if tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-            }
+            params_def_with_type.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
         let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
