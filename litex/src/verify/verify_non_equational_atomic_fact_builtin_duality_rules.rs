@@ -17,11 +17,12 @@ impl Runtime {
                 &converted_superset_fact,
             )?;
         if verify_result.is_true() {
-            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
-                    "subset_superset_duality".to_string(),
                     InferResult::new(),
+                    "subset_superset_duality".to_string(),
+                    Vec::new(),
                 ),
             ))
         } else {
@@ -45,11 +46,12 @@ impl Runtime {
                 &converted_subset_fact,
             )?;
         if verify_result.is_true() {
-            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
-                    "subset_superset_duality".to_string(),
                     InferResult::new(),
+                    "subset_superset_duality".to_string(),
+                    Vec::new(),
                 ),
             ))
         } else {
@@ -73,11 +75,12 @@ impl Runtime {
                 &converted_not_superset_fact,
             )?;
         if verify_result.is_true() {
-            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::NotSubsetFact(not_subset_fact.clone())),
-                    "subset_superset_duality".to_string(),
                     InferResult::new(),
+                    "subset_superset_duality".to_string(),
+                    Vec::new(),
                 ),
             ))
         } else {
@@ -101,11 +104,12 @@ impl Runtime {
                 &converted_not_subset_fact,
             )?;
         if verify_result.is_true() {
-            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::NotSupersetFact(not_superset_fact.clone())),
-                    "subset_superset_duality".to_string(),
                     InferResult::new(),
+                    "subset_superset_duality".to_string(),
+                    Vec::new(),
                 ),
             ))
         } else {
@@ -194,11 +198,12 @@ impl Runtime {
                 counterpart_fact,
             )?;
         if counterpart_verify_result.is_true() {
-            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(current_fact.clone()),
-                    builtin_rule_name.to_string(),
                     InferResult::new(),
+                    builtin_rule_name.to_string(),
+                    Vec::new(),
                 ),
             ))
         } else {
@@ -230,11 +235,12 @@ impl Runtime {
         )? {
             return Ok(None);
         }
-        Ok(Some(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-            FactVerifiedByBuiltinRules::new(
+        Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules(
                 Fact::AtomicFact(AtomicFact::LessFact(less_fact.clone())),
-                "mul_opposite_signs_product_less_than_zero".to_string(),
                 InferResult::new(),
+                "mul_opposite_signs_product_less_than_zero".to_string(),
+                Vec::new(),
             ),
         )))
     }
@@ -248,11 +254,12 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let number_compare_result = self.verify_number_comparison_builtin_rule(current_fact);
         if let Some(true) = number_compare_result {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(current_fact.clone()),
-                    "number comparison".to_string(),
                     InferResult::new(),
+                    "number comparison".to_string(),
+                    Vec::new(),
                 ),
             ));
         }

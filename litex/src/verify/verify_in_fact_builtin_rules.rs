@@ -4,18 +4,20 @@ fn number_in_set_verified_by_builtin_rules_result(
     in_fact: &InFact,
     reason: &str,
 ) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
+    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
         Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-        reason.to_string(),
         InferResult::new(),
+        reason.to_string(),
+        Vec::new(),
     ))
 }
 
 fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
+    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
         Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-        "arithmetic expression is in R".to_string(),
         InferResult::new(),
+        "arithmetic expression is in R".to_string(),
+        Vec::new(),
     ))
 }
 
@@ -226,11 +228,12 @@ impl Runtime {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
         match target_negative_standard_set {
-            StandardSet::RNeg => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            StandardSet::RNeg => Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                    "mul_opposite_signs_product_in_R_neg".to_string(),
                     InferResult::new(),
+                    "mul_opposite_signs_product_in_R_neg".to_string(),
+                    Vec::new(),
                 ),
             )),
             StandardSet::QNeg => {
@@ -243,11 +246,12 @@ impl Runtime {
                     &product_in_q_fact,
                     verify_state,
                 )? {
-                    Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                        FactVerifiedByBuiltinRules::new(
+                    Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
                             Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                            "mul_opposite_signs_product_in_Q_neg".to_string(),
                             InferResult::new(),
+                            "mul_opposite_signs_product_in_Q_neg".to_string(),
+                            Vec::new(),
                         ),
                     ))
                 } else {
@@ -264,11 +268,12 @@ impl Runtime {
                     &product_in_z_fact,
                     verify_state,
                 )? {
-                    Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                        FactVerifiedByBuiltinRules::new(
+                    Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
                             Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                            "mul_opposite_signs_product_in_Z_neg".to_string(),
                             InferResult::new(),
+                            "mul_opposite_signs_product_in_Z_neg".to_string(),
+                            Vec::new(),
                         ),
                     ))
                 } else {
@@ -293,14 +298,15 @@ impl Runtime {
             ));
             let equal_fact_verify_result = self.verify_atomic_fact(&equal_fact, verify_state)?;
             if equal_fact_verify_result.is_true() {
-                return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                    FactVerifiedByBuiltinRules::new(
+                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
                         Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                        InferResult::new(),
                         format!(
                             "{} equals one element in list_set {}",
                             in_fact.element, in_fact.set
                         ),
-                        InferResult::new(),
+                        Vec::new(),
                     ),
                 ));
             }
@@ -399,14 +405,15 @@ impl Runtime {
                     &in_fact_into_standard_subset,
                 )?;
             if verify_result.is_true() {
-                return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                    FactVerifiedByBuiltinRules::new(
+                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
                         Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                        InferResult::new(),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
                             in_fact.element, standard_subset_set_obj, target_set_obj
                         ),
-                        InferResult::new(),
+                        Vec::new(),
                     ),
                 ));
             }
@@ -440,11 +447,12 @@ impl Runtime {
             }
         }
 
-        Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-            FactVerifiedByBuiltinRules::new(
+        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules(
                 Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                "tuple in cart: each component is in the corresponding cart factor".to_string(),
                 InferResult::new(),
+                "tuple in cart: each component is in the corresponding cart factor".to_string(),
+                Vec::new(),
             ),
         ))
     }

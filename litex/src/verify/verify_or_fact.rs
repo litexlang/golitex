@@ -29,12 +29,14 @@ impl Runtime {
         for fact in or_fact.facts.iter() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
-                return Ok(NonErrStmtExecResult::FactVerifiedByFact(
-                    FactVerifiedByFact::new(
+                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_known_fact_source(
                         Fact::OrFact(or_fact.clone()),
-                        fact.to_string(),
                         InferResult::new(),
-                        fact.line_file(),
+                        fact.to_string(),
+                        None,
+                        Some(fact.line_file()),
+                        Vec::new(),
                     ),
                 ));
             }
@@ -108,12 +110,14 @@ impl Runtime {
                 }
 
                 if all_args_match {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(
-                        FactVerifiedByFact::new(
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
                             Fact::OrFact(or_fact.clone()),
-                            known_or_fact.to_string(),
                             InferResult::new(),
-                            known_or_fact.line_file,
+                            known_or_fact.to_string(),
+                            Some(Fact::OrFact(known_or_fact.clone())),
+                            None,
+                            Vec::new(),
                         ),
                     ));
                 }

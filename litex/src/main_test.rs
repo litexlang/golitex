@@ -45,8 +45,7 @@ mod lit_file_runner_tests {
 
     #[test]
     fn run_examples() {
-        let examples_directory_path =
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/test_codes");
+        let examples_directory_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples");
 
         let read_directory = match fs::read_dir(&examples_directory_path) {
             Ok(entries) => entries,

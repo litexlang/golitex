@@ -16,15 +16,16 @@ impl Runtime {
         line_file: (usize, usize),
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         if verify_equality_by_they_are_the_same(left, right) {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
                         right.clone(),
                         line_file,
                     ))),
-                    "the same".to_string(),
                     InferResult::new(),
+                    "the same".to_string(),
+                    Vec::new(),
                 ),
             ));
         }
@@ -35,15 +36,16 @@ impl Runtime {
         if left_for_numeric_verification
             .two_objs_can_be_calculated_and_equal_by_calculation(&right_for_numeric_verification)
         {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
                         right.clone(),
                         line_file,
                     ))),
-                    "calculation".to_string(),
                     InferResult::new(),
+                    "calculation".to_string(),
+                    Vec::new(),
                 ),
             ));
         }
@@ -52,15 +54,16 @@ impl Runtime {
             &left_for_numeric_verification,
             &right_for_numeric_verification,
         ) {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
                         right.clone(),
                         line_file,
                     ))),
-                    "calculation and rational expression simplification".to_string(),
                     InferResult::new(),
+                    "calculation and rational expression simplification".to_string(),
+                    Vec::new(),
                 ),
             ));
         }

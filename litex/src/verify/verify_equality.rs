@@ -41,15 +41,16 @@ impl Runtime {
                 line_file,
             )?;
         if verified_by_arg_to_arg {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
                         right.clone(),
                         line_file,
                     ))),
-                    same_shape_and_equal_args_reason(left, right),
                     InferResult::new(),
+                    same_shape_and_equal_args_reason(left, right),
+                    Vec::new(),
                 ),
             ));
         }
@@ -104,8 +105,14 @@ impl Runtime {
     ) -> Vec<(Option<Rc<Vec<Obj>>>, Option<Rc<Vec<Obj>>>)> {
         let mut pairs = Vec::with_capacity(self.environment_stack.len());
         for env in self.iter_environments_from_top() {
-            let known_left = env.known_equality.get(left_string).map(Rc::clone);
-            let known_right = env.known_equality.get(right_string).map(Rc::clone);
+            let known_left = env
+                .known_equality
+                .get(left_string)
+                .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
+            let known_right = env
+                .known_equality
+                .get(right_string)
+                .map(|(_, equiv_class_rc)| Rc::clone(equiv_class_rc));
             pairs.push((known_left, known_right));
         }
         pairs
@@ -491,15 +498,16 @@ impl Runtime {
         let mut result =
             self.verify_equality_by_builtin_rules(left_obj, right_obj, equality_line_file)?;
         if result.is_true() {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left_obj.clone(),
                         right_obj.clone(),
                         equality_line_file,
                     ))),
-                    "builtin rules".to_string(),
                     InferResult::new(),
+                    "builtin rules".to_string(),
+                    Vec::new(),
                 ),
             ));
         }
@@ -522,15 +530,16 @@ impl Runtime {
                 equality_line_file,
             )?;
         if verified_by_arg_to_arg {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                FactVerifiedByBuiltinRules::new(
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left_obj.clone(),
                         right_obj.clone(),
                         equality_line_file,
                     ))),
-                    same_shape_and_equal_args_reason(left_obj, right_obj),
                     InferResult::new(),
+                    same_shape_and_equal_args_reason(left_obj, right_obj),
+                    Vec::new(),
                 ),
             ));
         }

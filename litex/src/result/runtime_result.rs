@@ -3,8 +3,7 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub enum NonErrStmtExecResult {
     NonFactualStmtSuccess(NonFactualStmtSuccess),
-    FactVerifiedByFact(FactVerifiedByFact),
-    FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules),
+    FactualStmtSuccess(FactualStmtSuccess),
     StmtUnknown(StmtUnknown),
 }
 
@@ -17,10 +16,7 @@ impl NonErrStmtExecResult {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
                 x.infers.new_infer_result_inside(infer_result)
             }
-            NonErrStmtExecResult::FactVerifiedByFact(x) => {
-                x.infers.new_infer_result_inside(infer_result)
-            }
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
+            NonErrStmtExecResult::FactualStmtSuccess(x) => {
                 x.infers.new_infer_result_inside(infer_result)
             }
             NonErrStmtExecResult::StmtUnknown(_) => {}
@@ -52,23 +48,13 @@ impl NonErrStmtExecResult {
                     Self::infer_block_string(&x.infers)
                 )
             }
-            NonErrStmtExecResult::FactVerifiedByFact(x) => {
+            NonErrStmtExecResult::FactualStmtSuccess(x) => {
                 format!(
                     "{}\n{}\n{}\n{}{}",
                     SUCCESS_COLON,
                     x.stmt,
                     VERIFIED_BY,
-                    x.verified_by,
-                    Self::infer_block_string(&x.infers)
-                )
-            }
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
-                format!(
-                    "{}\n{}\n{}\n{}{}",
-                    SUCCESS_COLON,
-                    x.stmt,
-                    VERIFIED_BY,
-                    x.verified_by,
+                    x.msg,
                     Self::infer_block_string(&x.infers)
                 )
             }
@@ -82,9 +68,8 @@ impl NonErrStmtExecResult {
     pub fn line_file(&self) -> (usize, usize) {
         match self {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.stmt.line_file(),
-            NonErrStmtExecResult::FactVerifiedByFact(x) => x.stmt.line_file(),
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => x.stmt.line_file(),
-            NonErrStmtExecResult::StmtUnknown(_) => DEFAULT_LINE_FILE.clone(),
+            NonErrStmtExecResult::FactualStmtSuccess(x) => x.stmt.line_file(),
+            NonErrStmtExecResult::StmtUnknown(_) => DEFAULT_LINE_FILE,
         }
     }
 }
@@ -93,8 +78,7 @@ impl NonErrStmtExecResult {
     pub fn is_true(&self) -> bool {
         match self {
             NonErrStmtExecResult::NonFactualStmtSuccess(_) => true,
-            NonErrStmtExecResult::FactVerifiedByFact(_) => true,
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(_) => true,
+            NonErrStmtExecResult::FactualStmtSuccess(_) => true,
             NonErrStmtExecResult::StmtUnknown(_) => false,
         }
     }
@@ -103,8 +87,7 @@ impl NonErrStmtExecResult {
         match self {
             NonErrStmtExecResult::StmtUnknown(_) => true,
             NonErrStmtExecResult::NonFactualStmtSuccess(_) => false,
-            NonErrStmtExecResult::FactVerifiedByFact(_) => false,
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(_) => false,
+            NonErrStmtExecResult::FactualStmtSuccess(_) => false,
         }
     }
 }
