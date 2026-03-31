@@ -1,0 +1,506 @@
+use crate::prelude::*;
+use std::collections::HashMap;
+
+// coverage_by_forall_param: one entry per forall parameter, values start false.
+// Walk the clause: Identifier or FieldAccess base name appears and is a key -> set true.
+
+fn mark_forall_param_name_if_tracked(
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+    name: &IdentifierName,
+) {
+    match coverage_by_forall_param.get_mut(name) {
+        Some(is_mentioned) => {
+            *is_mentioned = true;
+        }
+        None => {}
+    }
+}
+
+fn mark_forall_param_coverage_in_param_type(
+    param_type: &ParamType,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match param_type {
+        ParamType::Obj(obj) => {
+            mark_forall_param_coverage_in_obj(obj, coverage_by_forall_param);
+        }
+        ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {}
+        ParamType::InstantiatedStruct(instantiated_struct) => {
+            for param_obj in instantiated_struct.params.iter() {
+                mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
+            }
+        }
+    }
+}
+
+fn mark_forall_param_coverage_in_atom(
+    atom: &Atom,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match atom {
+        Atom::Identifier(identifier) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &identifier.name);
+        }
+        Atom::IdentifierWithMod(_) => {}
+        Atom::FieldAccess(field_access) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.name);
+        }
+        Atom::FieldAccessWithMod(_) => {}
+    }
+}
+
+fn mark_forall_param_coverage_in_obj(
+    obj: &Obj,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match obj {
+        Obj::Identifier(identifier) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &identifier.name);
+        }
+        Obj::IdentifierWithMod(_) => {}
+        Obj::FieldAccess(field_access) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.name);
+        }
+        Obj::FieldAccessWithMod(_) => {}
+        Obj::FnObj(fn_obj) => {
+            mark_forall_param_coverage_in_atom(fn_obj.head.as_ref(), coverage_by_forall_param);
+            for group in fn_obj.body.iter() {
+                for boxed_obj in group.iter() {
+                    mark_forall_param_coverage_in_obj(boxed_obj.as_ref(), coverage_by_forall_param);
+                }
+            }
+        }
+        Obj::Number(_) | Obj::StandardSet(_) => {}
+        Obj::Add(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Sub(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Mul(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Div(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Mod(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Pow(binary) => {
+            mark_forall_param_coverage_in_obj(binary.base.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.exponent.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Union(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Intersect(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::SetMinus(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::SetDiff(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Cup(unary) => {
+            mark_forall_param_coverage_in_obj(unary.left.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Cap(unary) => {
+            mark_forall_param_coverage_in_obj(unary.left.as_ref(), coverage_by_forall_param);
+        }
+        Obj::PowerSet(unary) => {
+            mark_forall_param_coverage_in_obj(unary.set.as_ref(), coverage_by_forall_param);
+        }
+        Obj::ListSet(list_set) => {
+            for boxed_obj in list_set.list.iter() {
+                mark_forall_param_coverage_in_obj(boxed_obj.as_ref(), coverage_by_forall_param);
+            }
+        }
+        Obj::SetBuilder(set_builder) => {
+            mark_forall_param_coverage_in_obj(
+                set_builder.param_set.as_ref(),
+                coverage_by_forall_param,
+            );
+            for inner_fact in set_builder.facts.iter() {
+                mark_forall_param_coverage_in_or_and_chain_atomic_fact(
+                    inner_fact,
+                    coverage_by_forall_param,
+                );
+            }
+        }
+        Obj::FnSetWithParams(fn_set) => {
+            for param_def_with_set in fn_set.params_def_with_set.iter() {
+                mark_forall_param_coverage_in_obj(&param_def_with_set.1, coverage_by_forall_param);
+            }
+            for dom_fact in fn_set.dom_facts.iter() {
+                mark_forall_param_coverage_in_or_and_chain_atomic_fact(
+                    dom_fact,
+                    coverage_by_forall_param,
+                );
+            }
+            mark_forall_param_coverage_in_obj(fn_set.ret_set.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Cart(cart) => {
+            for boxed_arg in cart.args.iter() {
+                mark_forall_param_coverage_in_obj(boxed_arg.as_ref(), coverage_by_forall_param);
+            }
+        }
+        Obj::CartDim(cart_dim) => {
+            mark_forall_param_coverage_in_obj(cart_dim.set.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Proj(proj) => {
+            mark_forall_param_coverage_in_obj(proj.set.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(proj.dim.as_ref(), coverage_by_forall_param);
+        }
+        Obj::TupleDim(tuple_dim) => {
+            mark_forall_param_coverage_in_obj(tuple_dim.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Tuple(tuple_obj) => {
+            for boxed_arg in tuple_obj.args.iter() {
+                mark_forall_param_coverage_in_obj(boxed_arg.as_ref(), coverage_by_forall_param);
+            }
+        }
+        Obj::Count(count) => {
+            mark_forall_param_coverage_in_obj(count.set.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Range(range) => {
+            mark_forall_param_coverage_in_obj(range.start.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(range.end.as_ref(), coverage_by_forall_param);
+        }
+        Obj::ClosedRange(closed_range) => {
+            mark_forall_param_coverage_in_obj(
+                closed_range.start.as_ref(),
+                coverage_by_forall_param,
+            );
+            mark_forall_param_coverage_in_obj(closed_range.end.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Choose(choose) => {
+            mark_forall_param_coverage_in_obj(choose.set.as_ref(), coverage_by_forall_param);
+        }
+        Obj::ObjAtIndex(obj_at_index) => {
+            mark_forall_param_coverage_in_obj(obj_at_index.obj.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(
+                obj_at_index.index.as_ref(),
+                coverage_by_forall_param,
+            );
+        }
+    }
+}
+
+fn mark_forall_param_coverage_in_atomic_fact(
+    atomic_fact: &AtomicFact,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match atomic_fact {
+        AtomicFact::NormalAtomicFact(fact) => {
+            for body_obj in fact.body.iter() {
+                mark_forall_param_coverage_in_obj(body_obj, coverage_by_forall_param);
+            }
+        }
+        AtomicFact::NotNormalAtomicFact(fact) => {
+            for body_obj in fact.body.iter() {
+                mark_forall_param_coverage_in_obj(body_obj, coverage_by_forall_param);
+            }
+        }
+        AtomicFact::EqualFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::LessFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::GreaterFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::LessEqualFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::GreaterEqualFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::NotEqualFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::NotLessFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::NotGreaterFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::NotLessEqualFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::NotGreaterEqualFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::IsSetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::NotIsSetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::IsNonemptySetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::NotIsNonemptySetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::IsFiniteSetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::NotIsFiniteSetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::InFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.element, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::NotInFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.element, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::IsCartFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::NotIsCartFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::IsTupleFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::NotIsTupleFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
+        }
+        AtomicFact::SubsetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::SupersetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::NotSubsetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::NotSupersetFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
+        AtomicFact::RestrictFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.obj, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(
+                &fact.obj_can_restrict_to_fn_set,
+                coverage_by_forall_param,
+            );
+        }
+        AtomicFact::NotRestrictFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.obj, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(
+                &fact.obj_cannot_restrict_to_fn_set,
+                coverage_by_forall_param,
+            );
+        }
+    }
+}
+
+fn mark_forall_param_coverage_in_and_chain_atomic_fact(
+    parent_fact: &AndChainAtomicFact,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match parent_fact {
+        AndChainAtomicFact::AtomicFact(atomic_fact) => {
+            mark_forall_param_coverage_in_atomic_fact(atomic_fact, coverage_by_forall_param);
+        }
+        AndChainAtomicFact::AndFact(and_fact) => {
+            for inner_atomic in and_fact.facts.iter() {
+                mark_forall_param_coverage_in_atomic_fact(inner_atomic, coverage_by_forall_param);
+            }
+        }
+        AndChainAtomicFact::ChainFact(chain_fact) => {
+            for chain_obj in chain_fact.objs.iter() {
+                mark_forall_param_coverage_in_obj(chain_obj, coverage_by_forall_param);
+            }
+        }
+    }
+}
+
+fn mark_forall_param_coverage_in_or_and_chain_atomic_fact(
+    parent_fact: &OrAndChainAtomicFact,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match parent_fact {
+        OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+            mark_forall_param_coverage_in_atomic_fact(atomic_fact, coverage_by_forall_param);
+        }
+        OrAndChainAtomicFact::AndFact(and_fact) => {
+            for inner_atomic in and_fact.facts.iter() {
+                mark_forall_param_coverage_in_atomic_fact(inner_atomic, coverage_by_forall_param);
+            }
+        }
+        OrAndChainAtomicFact::ChainFact(chain_fact) => {
+            for chain_obj in chain_fact.objs.iter() {
+                mark_forall_param_coverage_in_obj(chain_obj, coverage_by_forall_param);
+            }
+        }
+        OrAndChainAtomicFact::OrFact(or_fact) => {
+            for branch in or_fact.facts.iter() {
+                mark_forall_param_coverage_in_and_chain_atomic_fact(
+                    branch,
+                    coverage_by_forall_param,
+                );
+            }
+        }
+    }
+}
+
+fn mark_forall_param_coverage_in_exist_fact(
+    exist_fact: &ExistFact,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    for param_def_with_type in exist_fact.params_def_with_type.iter() {
+        mark_forall_param_coverage_in_param_type(&param_def_with_type.1, coverage_by_forall_param);
+    }
+    for inner_fact in exist_fact.facts.iter() {
+        mark_forall_param_coverage_in_or_and_chain_atomic_fact(
+            inner_fact,
+            coverage_by_forall_param,
+        );
+    }
+}
+
+fn mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
+    parent_fact: &ExistOrAndChainAtomicFact,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match parent_fact {
+        ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+            mark_forall_param_coverage_in_atomic_fact(atomic_fact, coverage_by_forall_param);
+        }
+        ExistOrAndChainAtomicFact::AndFact(and_fact) => {
+            for inner_atomic in and_fact.facts.iter() {
+                mark_forall_param_coverage_in_atomic_fact(inner_atomic, coverage_by_forall_param);
+            }
+        }
+        ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+            for chain_obj in chain_fact.objs.iter() {
+                mark_forall_param_coverage_in_obj(chain_obj, coverage_by_forall_param);
+            }
+        }
+        ExistOrAndChainAtomicFact::OrFact(or_fact) => {
+            for branch in or_fact.facts.iter() {
+                mark_forall_param_coverage_in_and_chain_atomic_fact(
+                    branch,
+                    coverage_by_forall_param,
+                );
+            }
+        }
+        ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
+            mark_forall_param_coverage_in_exist_fact(exist_fact, coverage_by_forall_param);
+        }
+    }
+}
+
+impl ForallFact {
+    pub fn error_messages_if_forall_param_missing_in_some_then_clause(&self) -> Vec<String> {
+        let forall_param_names =
+            ParamDefWithParamType::collect_param_names(&self.params_def_with_type);
+        if forall_param_names.is_empty() {
+            return Vec::new();
+        }
+        let mut error_messages = Vec::new();
+        let mut then_index: usize = 0;
+        while then_index < self.then_facts.len() {
+            let then_fact = &self.then_facts[then_index];
+            let mut coverage_by_forall_param: HashMap<IdentifierName, bool> = HashMap::new();
+            for param_name in forall_param_names.iter() {
+                coverage_by_forall_param.insert(param_name.clone(), false);
+            }
+            mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
+                then_fact,
+                &mut coverage_by_forall_param,
+            );
+            let mut missing_param_names = Vec::new();
+            for param_name in forall_param_names.iter() {
+                let is_mentioned_in_then_clause = match coverage_by_forall_param.get(param_name) {
+                    Some(flag) => *flag,
+                    None => false,
+                };
+                if !is_mentioned_in_then_clause {
+                    missing_param_names.push(param_name.clone());
+                }
+            }
+            if !missing_param_names.is_empty() {
+                let missing_list = missing_param_names.join(", ");
+                error_messages.push(format!(
+                    "then-clause `{}` does not mention forall parameter(s) {{{}}}",
+                    then_fact, missing_list,
+                ));
+            }
+            then_index += 1;
+        }
+        error_messages
+    }
+}
+
+impl ForallFactWithIff {
+    pub fn error_messages_if_forall_param_missing_in_then_or_iff_clause(&self) -> Vec<String> {
+        let mut error_messages = self
+            .forall_fact
+            .error_messages_if_forall_param_missing_in_some_then_clause();
+        let forall_param_names =
+            ParamDefWithParamType::collect_param_names(&self.forall_fact.params_def_with_type);
+        if forall_param_names.is_empty() {
+            return error_messages;
+        }
+        let mut iff_index: usize = 0;
+        while iff_index < self.iff_facts.len() {
+            let iff_fact = &self.iff_facts[iff_index];
+            let mut coverage_by_forall_param: HashMap<IdentifierName, bool> = HashMap::new();
+            for param_name in forall_param_names.iter() {
+                coverage_by_forall_param.insert(param_name.clone(), false);
+            }
+            mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
+                iff_fact,
+                &mut coverage_by_forall_param,
+            );
+            let mut missing_param_names = Vec::new();
+            for param_name in forall_param_names.iter() {
+                let is_mentioned_in_iff_clause = match coverage_by_forall_param.get(param_name) {
+                    Some(flag) => *flag,
+                    None => false,
+                };
+                if !is_mentioned_in_iff_clause {
+                    missing_param_names.push(param_name.clone());
+                }
+            }
+            if !missing_param_names.is_empty() {
+                let missing_list = missing_param_names.join(", ");
+                error_messages.push(format!(
+                    "iff-clause `{}` does not mention forall parameter(s) {{{}}}",
+                    iff_fact, missing_list,
+                ));
+            }
+            iff_index += 1;
+        }
+        error_messages
+    }
+}
