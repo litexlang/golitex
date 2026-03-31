@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct Runtime {
@@ -136,7 +137,7 @@ impl Runtime {
     }
 
     pub fn new_file_path_new_env_new_name_scope(&mut self, path: &str) {
-        self.module_manager.run_file_paths.push(path.to_string());
+        self.module_manager.run_file_paths.push(Rc::from(path));
         self.module_manager.current_file_index += 1;
         self.push_parsing_time_name_scope();
         self.push_env();
@@ -462,7 +463,7 @@ impl Runtime {
 
 impl Runtime {
     pub fn new_file_and_update_runtime_with_file_content(&mut self, path: &str) {
-        self.module_manager.run_file_paths.push(path.to_string());
+        self.module_manager.run_file_paths.push(Rc::from(path));
         self.module_manager.current_file_index = self.module_manager.run_file_paths.len() - 1;
     }
 
