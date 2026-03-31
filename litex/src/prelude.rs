@@ -1,6 +1,7 @@
 pub use crate::environment::Environment;
 pub use crate::environment::KnownForallFactParamsAndDom;
 pub use crate::error::duplicate_used_name_error_msg_without_line_file;
+pub use crate::error::ConflictMsg;
 pub use crate::error::DefineParamsError;
 pub use crate::error::ExecStmtError;
 pub use crate::error::InferError;
