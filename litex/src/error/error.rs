@@ -5,8 +5,16 @@ use std::fmt;
 pub struct RuntimeErrorStruct {
     pub statement: Option<Stmt>,
     pub msg: String,
+    pub conflict_with: Option<ConflictMsg>,
     pub line_file: (usize, usize),
     pub previous_error: Option<Box<RuntimeError>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ConflictMsg {
+    pub msg: String,
+    pub line_file: (usize, usize),
+    pub stmt: Option<Stmt>,
 }
 
 impl RuntimeErrorStruct {
@@ -16,9 +24,20 @@ impl RuntimeErrorStruct {
         line_file: (usize, usize),
         previous_error: Option<RuntimeError>,
     ) -> Self {
+        RuntimeErrorStruct::new_with_conflict(statement, msg, line_file, None, previous_error)
+    }
+
+    pub fn new_with_conflict(
+        statement: Option<Stmt>,
+        msg: String,
+        line_file: (usize, usize),
+        conflict_with: Option<ConflictMsg>,
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
         RuntimeErrorStruct {
             statement,
             msg,
+            conflict_with,
             line_file,
             previous_error: boxed_previous_error(previous_error),
         }
@@ -332,14 +351,16 @@ impl RuntimeErrorStruct {
     }
 
     pub fn into_store_fact_wrapping_new_atomic(self) -> RuntimeErrorStruct {
+        let conflict_with_for_outer = self.conflict_with.clone();
         let statement_for_outer_store_fact_error_layer = self.statement.clone();
         let msg_for_outer_store_fact_error_layer = self.msg.clone();
         let line_file = self.line_file;
         let wrapped_new_atomic_runtime_error = RuntimeError::NewAtomicFactError(self);
-        RuntimeErrorStruct::new(
+        RuntimeErrorStruct::new_with_conflict(
             statement_for_outer_store_fact_error_layer,
             msg_for_outer_store_fact_error_layer,
             line_file,
+            conflict_with_for_outer,
             Some(wrapped_new_atomic_runtime_error),
         )
     }

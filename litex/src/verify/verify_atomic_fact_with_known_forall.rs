@@ -622,6 +622,9 @@ impl Runtime {
             }
             merged.insert(k, v);
         }
+        for (k, v) in map1 {
+            merged.insert(k, v);
+        }
         Some(merged)
     }
 

@@ -180,6 +180,13 @@ impl Runtime {
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
             )),
+            (Obj::ListSet(list_set), Obj::PowerSet(power_set)) => self
+                .verify_in_fact_list_set_in_power_set_defines_membership(
+                    in_fact,
+                    list_set,
+                    power_set,
+                    verify_state,
+                ),
             (_, Obj::ListSet(list_set)) => self.verify_in_fact_by_equal_to_one_element_in_list_set(
                 in_fact,
                 list_set,
@@ -282,6 +289,46 @@ impl Runtime {
             }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
+    }
+
+    fn verify_in_fact_list_set_in_power_set_defines_membership(
+        &mut self,
+        in_fact: &InFact,
+        list_set: &crate::obj::ListSet,
+        power_set: &crate::obj::PowerSet,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let base_set = power_set.set.as_ref();
+        let mut infer_result = InferResult::new();
+        for element_box in list_set.list.iter() {
+            let element_obj = *element_box.clone();
+            let element_in_base_fact =
+                AtomicFact::InFact(InFact::new(element_obj, base_set.clone(), in_fact.line_file));
+            let verify_one_element_result =
+                self.verify_atomic_fact(&element_in_base_fact, verify_state)?;
+            if !verify_one_element_result.is_true() {
+                return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+            }
+            match verify_one_element_result {
+                NonErrStmtExecResult::FactualStmtSuccess(factual_success) => {
+                    infer_result.new_infer_result_inside(factual_success.infers.clone());
+                }
+                NonErrStmtExecResult::NonFactualStmtSuccess(non_factual_success) => {
+                    infer_result.new_infer_result_inside(non_factual_success.infers.clone());
+                }
+                NonErrStmtExecResult::StmtUnknown(_) => {
+                    return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                }
+            }
+        }
+        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                infer_result,
+                "list_set in power_set: each element is in the base set".to_string(),
+                Vec::new(),
+            ),
+        ))
     }
 
     fn verify_in_fact_by_equal_to_one_element_in_list_set(
