@@ -1,3 +1,11 @@
-have f Fn(R, R) R 
+have f Fn(R, Q) R 
 
 $restrict(f, Fn(Q, Q) R)
+
+$restrict(f, fn(x R, y Q: x < y) R)
+
+have g fn(x, y R) R
+
+$restrict(g, fn(x, y R: x < y, x < 0) R)
+
+$restrict(g, Fn(Q, Q) R)
