@@ -58,44 +58,52 @@ know:
 
 const BUILTIN_ENV_CODE_FOR_SET_OPERATORS: &str = r#"
 
+prop in_intersect_is_in_both(z set, A set, B set):
+    $in(z, A)
+    $in(z, B)
+
+prop in_set_minus_is_in_first_operand(z set, A set, B set):
+    $in(z, A)
+
+prop in_set_minus_is_not_in_second_operand(z set, A set, B set):
+    not $in(z, B)
+
+prop in_cup_via_member_set(z set, F set, Y set):
+    $in(z, cup(F))
+
 know:
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         $in(z, A)
         =>:
             $in(z, union(A, B))
 
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         $in(z, B)
         =>:
             $in(z, union(A, B))
 
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         $in(z, union(A, B))
         =>:
             $in(z, A) or $in(z, B)
 
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         $in(z, A)
         $in(z, B)
         =>:
             $in(z, intersect(A, B))
 
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         $in(z, intersect(A, B))
         =>:
-            $in(z, A)
+            $in_intersect_is_in_both(z, A, B)
 
-    forall z obj, A set, B set:
-        $in(z, intersect(A, B))
-        =>:
-            $in(z, B)
-
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         not $in(z, A)
         =>:
             not $in(z, intersect(A, B))
 
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         not $in(z, B)
         =>:
             not $in(z, intersect(A, B))
@@ -148,21 +156,21 @@ know:
     forall A, B, C set:
         union(A, intersect(B, C)) = intersect(union(A, B), union(A, C))
 
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         $in(z, A)
         not $in(z, B)
         =>:
             $in(z, set_minus(A, B))
 
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         $in(z, set_minus(A, B))
         =>:
-            $in(z, A)
+            $in_set_minus_is_in_first_operand(z, A, B)
 
-    forall z obj, A set, B set:
+    forall z set, A set, B set:
         $in(z, set_minus(A, B))
         =>:
-            not $in(z, B)
+            $in_set_minus_is_not_in_second_operand(z, A, B)
 
     forall A, B set:
         set_minus(A, B) $subset A
@@ -170,11 +178,11 @@ know:
     forall A, B set:
         set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
 
-    forall z obj, F set, Y set:
+    forall z set, F set, Y set:
         $in(Y, F)
         $in(z, Y)
         =>:
-            $in(z, cup(F))
+            $in_cup_via_member_set(z, F, Y)
 "#;
 
 pub fn builtin_env_code() -> String {
