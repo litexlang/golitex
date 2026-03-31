@@ -269,12 +269,9 @@ impl Runtime {
             Obj::Cap(ref a) => Self::match_arg_when_left_is_cap(&a.left, given_arg),
             Obj::ListSet(ref left) => Self::match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(_) => Self::match_arg_when_left_is_set_builder(given_arg),
-            Obj::FnSetWithoutParams(ref left) => Self::match_arg_when_left_is_fn_set_without_dom(
-                &left.param_sets,
-                left.ret_set.as_ref(),
-                given_arg,
-            ),
-            Obj::FnSetWithParams(_) => Self::match_arg_when_left_is_fn_set_with_dom(given_arg),
+            Obj::FnSetWithParams(ref left) => {
+                Self::match_arg_when_left_is_fn_set_with_params(left, given_arg)
+            }
             Obj::StandardSet(StandardSet::NPos) => {
                 Self::match_arg_when_left_is_n_pos_obj(given_arg)
             }
@@ -675,21 +672,36 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_fn_set_without_dom(
-        left_param_sets: &[Box<Obj>],
-        left_ret_set: &Obj,
+    fn flatten_fn_set_with_params_param_sets_for_match(
+        fn_set: &FnSetWithParams,
+    ) -> Vec<Box<Obj>> {
+        let mut flat_param_sets: Vec<Box<Obj>> = Vec::new();
+        for param_def_with_set in &fn_set.params_def_with_set {
+            for _param_name in param_def_with_set.0.iter() {
+                flat_param_sets.push(Box::new(param_def_with_set.1.clone()));
+            }
+        }
+        flat_param_sets
+    }
+
+    fn match_arg_when_left_is_fn_set_with_params(
+        left: &FnSetWithParams,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::FnSetWithoutParams(ref given) => {
-                let param_maps =
-                    Self::match_arg_vec_then_merge(left_param_sets, &given.param_sets)?;
+            Obj::FnSetWithParams(ref given) => {
+                if !left.dom_facts.is_empty() || !given.dom_facts.is_empty() {
+                    return Self::match_arg_type_not_implemented("FnSetWithParams with dom_facts");
+                }
+                let left_flat = Self::flatten_fn_set_with_params_param_sets_for_match(left);
+                let given_flat = Self::flatten_fn_set_with_params_param_sets_for_match(given);
+                let param_maps = Self::match_arg_vec_then_merge(&left_flat, &given_flat)?;
                 let param_map = match param_maps {
                     Some(m) => m,
                     None => return Ok(None),
                 };
                 let ret_map = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    left_ret_set,
+                    left.ret_set.as_ref(),
                     given.ret_set.as_ref(),
                 )?;
                 let ret_map = match ret_map {
@@ -699,15 +711,6 @@ impl Runtime {
                 let merged = Self::merge_arg_match_maps(param_map, ret_map);
                 Ok(merged)
             }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_fn_set_with_dom(
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
-        match given_arg {
-            Obj::FnSetWithParams(_) => Self::match_arg_type_not_implemented("FnSetWithDom"),
             _ => Ok(None),
         }
     }

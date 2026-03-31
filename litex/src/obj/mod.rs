@@ -9,7 +9,7 @@ pub use atom::{
 };
 pub use obj::{
     fn_obj_to_string, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj,
-    FnSetObj, FnSetWithParams, FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul,
+    FnSetWithParams, InstStructObj, Intersect, ListSet, Mod, Mul,
     Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple,
     TupleDim, Union,
 };

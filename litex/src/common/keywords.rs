@@ -39,7 +39,6 @@ pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const CHOOSE: &str = "choose";
 pub const FN_FOR_FN_WITH_PARAMS: &str = "fn";
-pub const FN_FOR_FN_WITHOUT_PARAMS: &str = "Fn";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
@@ -229,7 +228,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         STRUCT,
         RESTRICT,
-        FN_FOR_FN_WITHOUT_PARAMS,
         BUILTIN_CODE,
     ];
     for &s in &words {

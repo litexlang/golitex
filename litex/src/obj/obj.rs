@@ -26,7 +26,6 @@ pub enum Obj {
     PowerSet(PowerSet),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
-    FnSetWithoutParams(FnSetWithoutParams),
     FnSetWithParams(FnSetWithParams),
     Cart(Cart),
     CartDim(CartDim),
@@ -39,12 +38,6 @@ pub enum Obj {
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
-}
-
-#[derive(Clone)]
-pub enum FnSetObj {
-    FnSetWithoutParams(FnSetWithoutParams),
-    FnSetWithDom(FnSetWithParams),
 }
 
 #[derive(Clone)]
@@ -192,24 +185,6 @@ pub struct SetBuilder {
     pub param: String,
     pub param_set: Box<Obj>,
     pub facts: Vec<OrAndChainAtomicFact>,
-}
-
-#[derive(Clone)]
-pub struct FnSetWithoutParams {
-    pub param_sets: Vec<Box<Obj>>,
-    pub ret_set: Box<Obj>,
-}
-
-impl FnSetWithParams {
-    pub fn params(&self) -> Vec<String> {
-        let mut ret = Vec::with_capacity(ParamDefWithParamSet::number_of_params(
-            &self.params_def_with_set,
-        ));
-        for param_def_with_set in &self.params_def_with_set {
-            ret.extend(param_def_with_set.0.iter().cloned());
-        }
-        ret
-    }
 }
 
 #[derive(Clone)]
@@ -380,15 +355,6 @@ impl SetBuilder {
     }
 }
 
-impl FnSetWithoutParams {
-    pub fn new(param_sets: Vec<Obj>, ret_set: Obj) -> Self {
-        FnSetWithoutParams {
-            param_sets: param_sets.into_iter().map(Box::new).collect(),
-            ret_set: Box::new(ret_set),
-        }
-    }
-}
-
 impl FnSetWithParams {
     pub fn new(
         params_and_their_sets: Vec<ParamDefWithParamSet>,
@@ -400,6 +366,16 @@ impl FnSetWithParams {
             dom_facts,
             ret_set: Box::new(ret_set),
         }
+    }
+
+    pub fn params(&self) -> Vec<String> {
+        let mut ret = Vec::with_capacity(ParamDefWithParamSet::number_of_params(
+            &self.params_def_with_set,
+        ));
+        for param_def_with_set in &self.params_def_with_set {
+            ret.extend(param_def_with_set.0.iter().cloned());
+        }
+        ret
     }
 }
 
@@ -558,7 +534,6 @@ impl Obj {
             Obj::Number(x) => write!(f, "{}", x)?,
             Obj::ListSet(x) => write!(f, "{}", x)?,
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
-            Obj::FnSetWithoutParams(x) => write!(f, "{}", x)?,
             Obj::FnSetWithParams(x) => write!(f, "{}", x)?,
             Obj::StandardSet(standard_set) => write!(f, "{}", standard_set)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
@@ -828,18 +803,6 @@ impl fmt::Display for SetBuilder {
     }
 }
 
-impl fmt::Display for FnSetWithoutParams {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}{}",
-            FN_FOR_FN_WITHOUT_PARAMS,
-            braced_vec_to_string(&self.param_sets),
-            self.ret_set
-        )
-    }
-}
-
 impl fmt::Display for FnSetWithParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -900,15 +863,6 @@ impl Identifier {
     }
 }
 
-impl fmt::Display for FnSetObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FnSetObj::FnSetWithoutParams(fn_set_without_dom) => write!(f, "{}", fn_set_without_dom),
-            FnSetObj::FnSetWithDom(fn_set_with_dom) => write!(f, "{}", fn_set_with_dom),
-        }
-    }
-}
-
 impl Obj {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         match self {
@@ -932,7 +886,6 @@ impl Obj {
             Obj::Cap(inner) => inner.instantiate(param_to_arg_map),
             Obj::ListSet(inner) => inner.instantiate(param_to_arg_map),
             Obj::SetBuilder(inner) => inner.instantiate(param_to_arg_map),
-            Obj::FnSetWithoutParams(inner) => inner.instantiate(param_to_arg_map),
             Obj::FnSetWithParams(inner) => inner.instantiate(param_to_arg_map),
             Obj::StandardSet(standard_set) => Obj::StandardSet(standard_set.clone()),
             Obj::Cart(inner) => inner.instantiate(param_to_arg_map),
@@ -946,15 +899,6 @@ impl Obj {
             Obj::PowerSet(inner) => inner.instantiate(param_to_arg_map),
             Obj::Choose(inner) => inner.instantiate(param_to_arg_map),
             Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
-        }
-    }
-}
-
-impl FnSetObj {
-    pub fn ret_set(&self) -> Box<Obj> {
-        match self {
-            FnSetObj::FnSetWithDom(e) => e.ret_set.clone(),
-            FnSetObj::FnSetWithoutParams(e) => e.ret_set.clone(),
         }
     }
 }

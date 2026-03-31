@@ -5,7 +5,7 @@ prove:
     g(2)(2, 1) = f(2, 1)
 
 prove:
-    have f Fn(R) Fn(R) R
+    have f fn(a R) fn(b R) R
 
     know forall x, y R:
         f(x)(y) = x + y

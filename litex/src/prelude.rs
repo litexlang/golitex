@@ -1,5 +1,7 @@
-pub use crate::environment::Environment;
-pub use crate::environment::KnownForallFactParamsAndDom;
+pub use crate::environment::{
+    AlgoName, AtomicFactKey, Environment, ExistFactKey, FactString, IdentifierName,
+    KnownForallFactParamsAndDom, ObjString, OrFactKey, PropName, StructName,
+};
 pub use crate::error::duplicate_used_name_error_msg_without_line_file;
 pub use crate::error::ConflictMsg;
 pub use crate::error::DefineParamsError;
@@ -76,9 +78,7 @@ pub use crate::obj::Div;
 pub use crate::obj::FieldAccess;
 pub use crate::obj::FieldAccessWithMod;
 pub use crate::obj::FnObj;
-pub use crate::obj::FnSetObj;
 pub use crate::obj::FnSetWithParams;
-pub use crate::obj::FnSetWithoutParams;
 pub use crate::obj::Identifier;
 pub use crate::obj::IdentifierOrIdentifierWithMod;
 pub use crate::obj::IdentifierWithMod;
@@ -223,7 +223,6 @@ pub use crate::common::keywords::EXTENSION;
 pub use crate::common::keywords::FACT_PREFIX;
 pub use crate::common::keywords::FINITE_SET;
 pub use crate::common::keywords::FN_DEF;
-pub use crate::common::keywords::FN_FOR_FN_WITHOUT_PARAMS;
 pub use crate::common::keywords::FN_FOR_FN_WITH_PARAMS;
 pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;

@@ -62,7 +62,7 @@ impl Runtime {
         fact: Fact,
     ) -> Result<InferResult, RuntimeErrorStruct> {
         let line_file = fact.line_file();
-        let fact_string = fact.to_string();
+        let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
         self.top_level_env().store_fact(fact)?;
 
@@ -83,7 +83,7 @@ impl Runtime {
         fact: AndChainAtomicFact,
     ) -> Result<InferResult, RuntimeErrorStruct> {
         let line_file = fact.line_file();
-        let fact_string = fact.to_string();
+        let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.to_fact();
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
 
@@ -104,7 +104,7 @@ impl Runtime {
         fact: AtomicFact,
     ) -> Result<InferResult, RuntimeErrorStruct> {
         let line_file = fact.line_file();
-        let fact_string = fact.to_string();
+        let fact_string: FactString = fact.to_string();
         let infer_wrapped_fact = Fact::AtomicFact(fact.clone());
         self.top_level_env().store_atomic_fact(fact)?;
 
@@ -125,7 +125,7 @@ impl Runtime {
         fact: ExistOrAndChainAtomicFact,
     ) -> Result<InferResult, RuntimeErrorStruct> {
         let line_file = fact.line_file();
-        let fact_string = fact.to_string();
+        let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
         self.top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
@@ -149,7 +149,7 @@ impl Runtime {
         fact: OrAndChainAtomicFact,
     ) -> Result<InferResult, RuntimeErrorStruct> {
         let line_file = fact.line_file();
-        let fact_string = fact.to_string();
+        let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
         self.top_level_env().store_or_and_chain_atomic_fact(fact)?;
 

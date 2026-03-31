@@ -241,20 +241,6 @@ fn insert_obj_identifier_names_for_coverage(
                 );
             }
         }
-        Obj::FnSetWithoutParams(fn_set) => {
-            for boxed_obj in fn_set.param_sets.iter() {
-                insert_obj_identifier_names_for_coverage(
-                    boxed_obj.as_ref(),
-                    name_binders,
-                    collected_names,
-                );
-            }
-            insert_obj_identifier_names_for_coverage(
-                fn_set.ret_set.as_ref(),
-                name_binders,
-                collected_names,
-            );
-        }
         Obj::FnSetWithParams(fn_set) => {
             let mut sequential_binders = name_binders.clone();
             for param_def_with_set in fn_set.params_def_with_set.iter() {
