@@ -52,7 +52,9 @@ impl Runtime {
             .any(|one_param_value_strings| one_param_value_strings.is_empty());
         if for_cartesian_product_is_empty {
             let infer_result_from_stored_forall_fact = self
-                .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
+                .store_fact_without_well_defined_verified_and_infer(
+                    corresponding_forall_fact.clone(),
+                )
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
@@ -95,7 +97,9 @@ impl Runtime {
         }
 
         let infer_result_from_stored_forall_fact = self
-            .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
+            .store_fact_without_well_defined_verified_and_infer(
+                corresponding_forall_fact.clone(),
+            )
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
@@ -272,7 +276,7 @@ impl Runtime {
                 stmt.line_file,
             ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
-                &parameter_in_z_atomic_fact,
+                parameter_in_z_atomic_fact,
             )
             .map_err(RuntimeError::from)?;
 
@@ -283,7 +287,7 @@ impl Runtime {
                     stmt.line_file,
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
-                &parameter_equal_to_assigned_obj_atomic_fact,
+                parameter_equal_to_assigned_obj_atomic_fact,
             )
             .map_err(RuntimeError::from)?;
         }
@@ -293,7 +297,7 @@ impl Runtime {
             let verify_dom_result =
                 self.verify_atomic_fact(dom_fact, &VerifyState::new(0, false))?;
             if verify_dom_result.is_true() {
-                self.store_atomic_fact_without_well_defined_verified_and_infer(dom_fact)
+                self.store_atomic_fact_without_well_defined_verified_and_infer(dom_fact.clone())
                     .map_err(RuntimeError::from)?;
                 inside_results.push(verify_dom_result);
             } else {

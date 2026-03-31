@@ -20,6 +20,7 @@ mod verify_number_in_standard_set;
 mod verify_obj_well_defined;
 mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
+mod verify_restrict_by_def;
 mod verify_state;
 
 pub use verify_number_in_standard_set::number_is_in_n;

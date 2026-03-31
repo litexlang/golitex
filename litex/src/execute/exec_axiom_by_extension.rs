@@ -128,7 +128,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer(
-                &left_equal_to_right_atomic_fact,
+                left_equal_to_right_atomic_fact,
             )?,
         );
 

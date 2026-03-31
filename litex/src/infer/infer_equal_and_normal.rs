@@ -3,11 +3,12 @@ use crate::prelude::*;
 impl Runtime {
     fn store_inferred_fact_and_record_result(
         &mut self,
-        inferred_fact: &Fact,
+        inferred_fact: Fact,
         equal_fact: &EqualFact,
         infer_result: &mut InferResult,
         infer_step_description: &str,
     ) -> Result<(), InferError> {
+        let inferred_fact_display = inferred_fact.to_string();
         self.store_fact_without_well_defined_verified_and_infer(inferred_fact)
             .map_err(|previous_error| {
                 InferError::new(
@@ -19,7 +20,7 @@ impl Runtime {
                     Some(previous_error.into()),
                 )
             })?;
-        infer_result.new_fact(inferred_fact);
+        infer_result.infer_facts.push(inferred_fact_display);
         Ok(())
     }
 
@@ -36,7 +37,7 @@ impl Runtime {
             equal_fact.line_file,
         )));
         self.store_inferred_fact_and_record_result(
-            &target_is_cart_fact,
+            target_is_cart_fact,
             equal_fact,
             infer_result,
             "cart fact",
@@ -52,7 +53,7 @@ impl Runtime {
             equal_fact.line_file,
         )));
         self.store_inferred_fact_and_record_result(
-            &cart_dim_equal_fact,
+            cart_dim_equal_fact,
             equal_fact,
             infer_result,
             "cart_dim fact",
@@ -82,7 +83,7 @@ impl Runtime {
             equal_fact.line_file,
         )));
         self.store_inferred_fact_and_record_result(
-            &target_is_tuple_fact,
+            target_is_tuple_fact,
             equal_fact,
             infer_result,
             "tuple fact",
@@ -98,7 +99,7 @@ impl Runtime {
             equal_fact.line_file,
         )));
         self.store_inferred_fact_and_record_result(
-            &tuple_dim_equal_fact,
+            tuple_dim_equal_fact,
             equal_fact,
             infer_result,
             "tuple_dim fact",
@@ -237,7 +238,8 @@ impl Runtime {
             let fact_to_store = param_type_fact
                 .clone()
                 .with_new_line_file(normal_atomic_fact.line_file);
-            self.store_atomic_fact_without_well_defined_verified_and_infer(&fact_to_store)
+            infer_result.push_atomic_fact(&fact_to_store);
+            self.store_atomic_fact_without_well_defined_verified_and_infer(fact_to_store)
                 .map_err(|previous_error| {
                     InferError::new(
                         format!(
@@ -248,7 +250,6 @@ impl Runtime {
                         Some(previous_error.into()),
                     )
                 })?;
-            infer_result.push_atomic_fact(&fact_to_store);
         }
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
@@ -260,7 +261,8 @@ impl Runtime {
             let instantiated_iff_fact = iff_fact.instantiate(&param_to_arg_map);
             let fact_to_store =
                 instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file);
-            self.store_fact_without_well_defined_verified_and_infer(&fact_to_store)
+            infer_result.new_fact(&fact_to_store);
+            self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
                 .map_err(|previous_error| {
                     InferError::new(
                         format!(
@@ -271,7 +273,6 @@ impl Runtime {
                         Some(previous_error.into()),
                     )
                 })?;
-            infer_result.new_fact(&fact_to_store);
         }
 
         Ok(infer_result)

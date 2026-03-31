@@ -24,7 +24,9 @@ impl Runtime {
             self.push_env();
 
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
-            self.store_atomic_fact_without_well_defined_verified_and_infer(&reverse_to_prove_fact)
+            self.store_atomic_fact_without_well_defined_verified_and_infer(
+                reverse_to_prove_fact,
+            )
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ByContraAxiomStmt(stmt.clone()),
@@ -88,12 +90,16 @@ impl Runtime {
             ));
         }
 
+        let to_prove_fact_display_string = to_prove_fact.to_string();
         let infer_result = self
-            .store_fact_without_well_defined_verified_and_infer(&to_prove_fact)
+            .store_fact_without_well_defined_verified_and_infer(to_prove_fact)
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ByContraAxiomStmt(stmt.clone()),
-                    format!("by contra: failed to release `{}`", to_prove_fact),
+                    format!(
+                        "by contra: failed to release `{}`",
+                        to_prove_fact_display_string
+                    ),
                     Some(store_fact_error.into()),
                     vec![],
                 ))

@@ -40,7 +40,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for then_fact in stmt.then_facts.iter() {
             let one_then_fact_infer_result = self
-                .store_fact_without_well_defined_verified_and_infer(then_fact)
+                .store_fact_without_well_defined_verified_and_infer(then_fact.clone())
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ByCasesAxiomStmt(stmt.clone()),
@@ -110,7 +110,7 @@ impl Runtime {
         let case_fact = &stmt.cases[case_index];
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
 
-        self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact)
+        self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact.clone())
             .map_err(|store_fact_error| {
                 ExecStmtError::with_message_and_cause(
                     Stmt::ByCasesAxiomStmt(stmt.clone()),

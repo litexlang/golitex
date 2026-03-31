@@ -34,16 +34,16 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        let fn_set_where_algo_belongs = match self.get_fn_set_where_fn_belongs_to(
-            &Atom::Identifier(Identifier::new(def_algo_stmt.name.clone())),
-        ) {
-            Some(fn_set) => fn_set,
-            None => {
-                return Err(Self::def_algo_verify_exec_error_without_message(
-                    def_algo_stmt,
-                ));
-            }
-        };
+        let function_name_obj = Obj::Identifier(Identifier::new(def_algo_stmt.name.clone()));
+        let fn_set_where_algo_belongs =
+            match self.get_fn_set_where_fn_belongs_to(&function_name_obj) {
+                Some(fn_set) => fn_set,
+                None => {
+                    return Err(Self::def_algo_verify_exec_error_without_message(
+                        def_algo_stmt,
+                    ));
+                }
+            };
 
         let (requirement_facts_for_param, algo_param_defs_with_type) =
             Self::collect_requirement_facts_and_algo_param_defs(

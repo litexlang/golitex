@@ -18,7 +18,7 @@ impl Runtime {
 
         for dom_fact in forall_fact.dom_facts.iter() {
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                dom_fact,
+                dom_fact.clone(),
             )?;
         }
 
@@ -109,7 +109,7 @@ impl Runtime {
                 }
 
                 let infer_result_after_store =
-                    self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
+                    self.store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))
             }
@@ -133,7 +133,7 @@ impl Runtime {
                     Err(runtime_error) => return Err(runtime_error),
                 };
                 let infer_result_after_store =
-                    self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
+                    self.store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))
             }

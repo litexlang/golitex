@@ -24,7 +24,9 @@ impl Runtime {
             subset_fact.line_file,
         ));
 
-        self.store_fact_without_well_defined_verified_and_infer(&inferred_forall_fact)
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&inferred_forall_fact);
+        self.store_fact_without_well_defined_verified_and_infer(inferred_forall_fact)
             .map_err(|previous_error| {
                 InferError::new(
                     format!(
@@ -35,9 +37,6 @@ impl Runtime {
                     Some(previous_error.into()),
                 )
             })?;
-
-        let mut infer_result = InferResult::new();
-        infer_result.new_fact(&inferred_forall_fact);
         Ok(infer_result)
     }
 
@@ -64,7 +63,9 @@ impl Runtime {
             superset_fact.line_file,
         ));
 
-        self.store_fact_without_well_defined_verified_and_infer(&inferred_forall_fact)
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&inferred_forall_fact);
+        self.store_fact_without_well_defined_verified_and_infer(inferred_forall_fact)
             .map_err(|previous_error| {
                 InferError::new(
                     format!(
@@ -75,9 +76,6 @@ impl Runtime {
                     Some(previous_error.into()),
                 )
             })?;
-
-        let mut infer_result = InferResult::new();
-        infer_result.new_fact(&inferred_forall_fact);
         Ok(infer_result)
     }
 }

@@ -21,7 +21,7 @@ impl Runtime {
 
         // 6) Store exist fact into the top-level (big) environment.
         let store_result = self.store_fact_without_well_defined_verified_and_infer(
-            &Fact::ExistFact(stmt.exist_fact_in_witness.clone()),
+            Fact::ExistFact(stmt.exist_fact_in_witness.clone()),
         );
         match store_result {
             Ok(infer_result) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
@@ -166,7 +166,7 @@ impl Runtime {
 
         // 6) Store nonempty set fact into the top-level (big) environment.
         let store_result = self.store_fact_without_well_defined_verified_and_infer(
-            &Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                 stmt.set.clone(),
                 stmt.line_file,
             ))),
