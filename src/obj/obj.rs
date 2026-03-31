@@ -817,7 +817,7 @@ impl fmt::Display for FnSetWithParams {
 
 impl fmt::Display for InstStructObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", INST_STRUCT_OBJ_SIGN)?;
+        write!(f, "{} ", STRUCT)?;
         match &self.struct_name {
             IdentifierOrIdentifierWithMod::Identifier(identifier) => write!(f, "{}", identifier)?,
             IdentifierOrIdentifierWithMod::IdentifierWithMod(identifier_with_mod) => {

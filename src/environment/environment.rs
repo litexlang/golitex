@@ -12,6 +12,7 @@ pub type PropName = String;
 pub type StructName = String;
 pub type AlgoName = String;
 pub type IdentifierName = String;
+pub type FieldAccessName = String;
 
 pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ()>,
@@ -20,6 +21,7 @@ pub struct Environment {
     pub defined_structs_with_fields: HashMap<StructName, DefStructWithFieldsStmt>,
     pub defined_structs_with_no_field: HashMap<StructName, DefStructWithNoFieldStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+    pub defined_field_access_name: HashMap<FieldAccessName, InstStructObj>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -57,6 +59,7 @@ impl Environment {
         structs_with_no_field: HashMap<StructName, DefStructWithNoFieldStmt>,
         props_without_meaning: HashMap<PropName, DefPropWithoutMeaningStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
+        field_access_name: HashMap<FieldAccessName, InstStructObj>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, FnSetWithParams>,
         known_set_equal_to_set_builder: HashMap<ObjString, SetBuilder>,
@@ -100,6 +103,7 @@ impl Environment {
             defined_structs_with_no_field: structs_with_no_field,
             defined_props_without_meaning: props_without_meaning,
             defined_algorithms: algorithms,
+            defined_field_access_name: field_access_name,
             known_equality,
             known_obj_in_fn_set: known_fn_in_fn_set,
             known_set_equal_to_set_builder,
@@ -659,6 +663,7 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
