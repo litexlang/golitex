@@ -1,0 +1,31 @@
+prove:
+    prop p(a, b)
+    prop q(a, b)
+
+    know $p(1, 2) or $q(1, 2)
+
+    $p(1, 2) or $q(1, 2)
+
+prove:
+    prop p(a, b, c)
+    prop q(a, b, c)
+
+    know $p(1, 2, 3) or $q(1, 2, 3)
+
+    let a, b, c R:
+        a = 1
+        b = 2
+        c = 3
+
+    $p(a, b, c) or $q(a, b, c)
+
+prove:
+    prop p(a, b)
+    prop q(a, b)
+
+    know:
+        forall a, b R:
+            $p(a, b) or $q(a, b)
+
+    $p(1, 2) or $q(1, 2)
+
