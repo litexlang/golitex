@@ -63,7 +63,7 @@ impl Runtime {
         for dom_fact in forall_fact.dom_facts.iter() {
             let dom_infer_result = self
                 .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                    dom_fact,
+                    dom_fact.clone(),
                 )
                 .map_err(|e| {
                     let message = "failed to assume dom fact in forall".to_string();

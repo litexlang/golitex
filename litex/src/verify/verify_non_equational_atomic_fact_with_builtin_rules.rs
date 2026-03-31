@@ -91,17 +91,14 @@ impl Runtime {
                     verify_state,
                 )
             }
-            AtomicFact::IsSetFact(is_set_fact) => Ok(
-                NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::IsSetFact(is_set_fact.clone())),
                     InferResult::new(),
                     "Every object is a set.".to_string(),
                     Vec::new(),
-                )),
-            ),
-            AtomicFact::RestrictFact(restrict_fact) => {
-                self.verify_restrict_fact_with_builtin_rules(restrict_fact, verify_state)
-            }
+                ),
+            )),
             AtomicFact::IsNonemptySetFact(is_nonempty_set_fact) => self
                 ._verify_is_nonempty_set_fact_with_builtin_rules(
                     is_nonempty_set_fact,
@@ -447,14 +444,22 @@ impl Runtime {
                     Vec::new(),
                 ),
             )),
-            Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
-                    Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
-                    InferResult::new(),
-                    "list_set_nonempty".to_string(),
-                    Vec::new(),
-                ),
-            )),
+            Obj::ListSet(list_set) => {
+                if list_set.list.is_empty() {
+                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+                } else {
+                    Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+                                is_nonempty_set_fact.clone(),
+                            )),
+                            InferResult::new(),
+                            "list_set_nonempty_has_member_in_syntax".to_string(),
+                            Vec::new(),
+                        ),
+                    ))
+                }
+            }
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
                     let is_nonempty_set_result = self

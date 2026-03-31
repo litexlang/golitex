@@ -38,7 +38,7 @@ impl Runtime {
                 vec![],
             ))
         })?;
-        self.store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)?;
+        self.store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact)?;
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(

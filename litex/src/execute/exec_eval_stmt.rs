@@ -261,10 +261,9 @@ impl Runtime {
             stmt.line_file,
         )));
 
-        self.store_fact_without_well_defined_verified_and_infer(&evaluated_equal_fact)?;
-
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&evaluated_equal_fact);
+        self.store_fact_without_well_defined_verified_and_infer(evaluated_equal_fact)?;
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(Stmt::EvalStmt(stmt.clone()), infer_result, vec![]),

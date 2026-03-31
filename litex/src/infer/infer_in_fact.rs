@@ -65,7 +65,9 @@ impl Runtime {
                 }
 
                 let or_fact = Fact::OrFact(OrFact::new(or_case_facts, in_fact.line_file));
-                self.store_fact_without_well_defined_verified_and_infer(&or_fact)
+                let mut infer_result = InferResult::new();
+                infer_result.new_fact(&or_fact);
+                self.store_fact_without_well_defined_verified_and_infer(or_fact)
                     .map_err(|previous_error| {
                         InferError::new(
                             format!(
@@ -76,9 +78,6 @@ impl Runtime {
                             Some(previous_error.into()),
                         )
                     })?;
-
-                let mut infer_result = InferResult::new();
-                infer_result.new_fact(&or_fact);
                 Ok(infer_result)
             }
             Obj::SetBuilder(set_builder) => {
@@ -91,7 +90,9 @@ impl Runtime {
                     in_fact.line_file,
                 )));
 
-                self.store_fact_without_well_defined_verified_and_infer(&element_in_param_set_fact)
+                let mut infer_result = InferResult::new();
+                infer_result.new_fact(&element_in_param_set_fact);
+                self.store_fact_without_well_defined_verified_and_infer(element_in_param_set_fact)
                     .map_err(|previous_error| {
                         InferError::new(
                             format!(
@@ -103,9 +104,6 @@ impl Runtime {
                         )
                     })?;
 
-                let mut infer_result = InferResult::new();
-                infer_result.new_fact(&element_in_param_set_fact);
-
                 for fact_in_set_builder in set_builder.facts.iter() {
                     let instantiated_fact_in_set_builder: OrAndChainAtomicFact =
                         fact_in_set_builder.instantiate(&param_to_arg_map);
@@ -113,7 +111,8 @@ impl Runtime {
                     let fact_to_store =
                         instantiated_fact_as_fact.with_new_line_file(in_fact.line_file);
 
-                    self.store_fact_without_well_defined_verified_and_infer(&fact_to_store)
+                    infer_result.new_fact(&fact_to_store);
+                    self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
                         .map_err(|previous_error| {
                             InferError::new(
                                 format!(
@@ -124,7 +123,6 @@ impl Runtime {
                                 Some(previous_error.into()),
                             )
                         })?;
-                    infer_result.new_fact(&fact_to_store);
                 }
 
                 Ok(infer_result)
@@ -137,7 +135,8 @@ impl Runtime {
                     in_fact.line_file,
                 )));
 
-                self.store_fact_without_well_defined_verified_and_infer(&is_cart_fact)
+                infer_result.new_fact(&is_cart_fact);
+                self.store_fact_without_well_defined_verified_and_infer(is_cart_fact)
                     .map_err(|previous_error| {
                         InferError::new(
                             format!(
@@ -148,7 +147,6 @@ impl Runtime {
                             Some(previous_error.into()),
                         )
                     })?;
-                infer_result.new_fact(&is_cart_fact);
 
                 let cart_args_count = cart.args.len();
                 let tuple_dim_obj = Obj::TupleDim(TupleDim::new(in_fact.element.clone()));
@@ -159,7 +157,8 @@ impl Runtime {
                     in_fact.line_file,
                 )));
 
-                self.store_fact_without_well_defined_verified_and_infer(&tuple_dim_fact)
+                infer_result.new_fact(&tuple_dim_fact);
+                self.store_fact_without_well_defined_verified_and_infer(tuple_dim_fact)
                     .map_err(|previous_error| {
                         InferError::new(
                             format!(
@@ -170,7 +169,6 @@ impl Runtime {
                             Some(previous_error.into()),
                         )
                     })?;
-                infer_result.new_fact(&tuple_dim_fact);
 
                 self.store_tuple_obj_and_cart(
                     &in_fact.element.to_string(),
@@ -187,7 +185,11 @@ impl Runtime {
                     Obj::StandardSet(StandardSet::Z),
                     in_fact.line_file,
                 ));
-                self.store_atomic_fact_without_well_defined_verified_and_infer(&inferred_in_z_fact)
+                let mut infer_result = InferResult::new();
+                infer_result.push_atomic_fact(&inferred_in_z_fact);
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    inferred_in_z_fact.clone(),
+                )
                     .map_err(|previous_error| {
                         InferError::new(
                             format!(
@@ -198,9 +200,6 @@ impl Runtime {
                             Some(previous_error.into()),
                         )
                     })?;
-
-                let mut infer_result = InferResult::new();
-                infer_result.push_atomic_fact(&inferred_in_z_fact);
                 Ok(infer_result)
             }
             Obj::StandardSet(StandardSet::QPos)
@@ -212,21 +211,21 @@ impl Runtime {
                     zero_obj,
                     in_fact.line_file,
                 ));
-                self.store_atomic_fact_without_well_defined_verified_and_infer(
-                    &inferred_atomic_fact,
-                )
-                .map_err(|previous_error| {
-                    InferError::new(
-                        format!(
-                            "failed to store inferred greater-than-zero while inferring `{}`",
-                            in_fact
-                        ),
-                        in_fact.line_file,
-                        Some(previous_error.into()),
-                    )
-                })?;
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    inferred_atomic_fact.clone(),
+                )
+                    .map_err(|previous_error| {
+                        InferError::new(
+                            format!(
+                                "failed to store inferred greater-than-zero while inferring `{}`",
+                                in_fact
+                            ),
+                            in_fact.line_file,
+                            Some(previous_error.into()),
+                        )
+                    })?;
                 Ok(infer_result)
             }
             Obj::StandardSet(StandardSet::QNeg)
@@ -238,21 +237,21 @@ impl Runtime {
                     zero_obj,
                     in_fact.line_file,
                 ));
-                self.store_atomic_fact_without_well_defined_verified_and_infer(
-                    &inferred_atomic_fact,
-                )
-                .map_err(|previous_error| {
-                    InferError::new(
-                        format!(
-                            "failed to store inferred less-than-zero while inferring `{}`",
-                            in_fact
-                        ),
-                        in_fact.line_file,
-                        Some(previous_error.into()),
-                    )
-                })?;
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    inferred_atomic_fact.clone(),
+                )
+                    .map_err(|previous_error| {
+                        InferError::new(
+                            format!(
+                                "failed to store inferred less-than-zero while inferring `{}`",
+                                in_fact
+                            ),
+                            in_fact.line_file,
+                            Some(previous_error.into()),
+                        )
+                    })?;
                 Ok(infer_result)
             }
             Obj::StandardSet(StandardSet::QNz)
@@ -264,21 +263,21 @@ impl Runtime {
                     zero_obj,
                     in_fact.line_file,
                 ));
-                self.store_atomic_fact_without_well_defined_verified_and_infer(
-                    &inferred_atomic_fact,
-                )
-                .map_err(|previous_error| {
-                    InferError::new(
-                        format!(
-                            "failed to store inferred not-equal-to-zero while inferring `{}`",
-                            in_fact
-                        ),
-                        in_fact.line_file,
-                        Some(previous_error.into()),
-                    )
-                })?;
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    inferred_atomic_fact.clone(),
+                )
+                    .map_err(|previous_error| {
+                        InferError::new(
+                            format!(
+                                "failed to store inferred not-equal-to-zero while inferring `{}`",
+                                in_fact
+                            ),
+                            in_fact.line_file,
+                            Some(previous_error.into()),
+                        )
+                    })?;
                 Ok(infer_result)
             }
             Obj::StandardSet(StandardSet::N)

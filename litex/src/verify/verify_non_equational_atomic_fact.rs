@@ -22,28 +22,10 @@ impl Runtime {
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
 
-            match atomic_fact {
-                AtomicFact::SubsetFact(subset_fact) => {
-                    if let Some(verified_by_subset_definition) = self
-                        .verify_subset_fact_by_membership_forall_definition(
-                            subset_fact,
-                            verify_state,
-                        )?
-                    {
-                        return Ok(verified_by_subset_definition);
-                    }
-                }
-                AtomicFact::SupersetFact(superset_fact) => {
-                    if let Some(verified_by_superset_definition) = self
-                        .verify_superset_fact_by_membership_forall_definition(
-                            superset_fact,
-                            verify_state,
-                        )?
-                    {
-                        return Ok(verified_by_superset_definition);
-                    }
-                }
-                _ => {}
+            if let Some(verified_by_builtin_fact_definition) =
+                self.verify_builtin_fact_with_their_definition(atomic_fact, verify_state)?
+            {
+                return Ok(verified_by_builtin_fact_definition);
             }
 
             if let AtomicFact::NormalAtomicFact(normal_atomic_fact) = atomic_fact {
@@ -290,16 +272,6 @@ impl Runtime {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    pub fn verify_restrict_fact_with_builtin_rules(
-        &mut self,
-        restrict_fact: &RestrictFact,
-        verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
-        _ = restrict_fact;
-        _ = verify_state;
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
-    }
-
     fn verify_fact(
         &mut self,
         fact: &Fact,
@@ -330,15 +302,16 @@ impl Runtime {
                 ParamType::Obj(subset_fact.left.clone()),
             )],
             vec![],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(bound_param_name)),
-                subset_fact.right.clone(),
-                subset_fact.line_file,
-            )))],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
+                InFact::new(
+                    Obj::Identifier(Identifier::new(bound_param_name)),
+                    subset_fact.right.clone(),
+                    subset_fact.line_file,
+                ),
+            ))],
             subset_fact.line_file,
         ));
-        let verify_forall_result =
-            self.verify_fact(&membership_forall_fact, verify_state)?;
+        let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
@@ -364,15 +337,16 @@ impl Runtime {
                 ParamType::Obj(superset_fact.right.clone()),
             )],
             vec![],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(bound_param_name)),
-                superset_fact.left.clone(),
-                superset_fact.line_file,
-            )))],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
+                InFact::new(
+                    Obj::Identifier(Identifier::new(bound_param_name)),
+                    superset_fact.left.clone(),
+                    superset_fact.line_file,
+                ),
+            ))],
             superset_fact.line_file,
         ));
-        let verify_forall_result =
-            self.verify_fact(&membership_forall_fact, verify_state)?;
+        let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
@@ -401,7 +375,8 @@ impl Runtime {
                 normal_atomic_fact.body[1].clone(),
                 normal_atomic_fact.line_file,
             );
-            return self.verify_subset_fact_by_membership_forall_definition(&subset_fact, verify_state);
+            return self
+                .verify_subset_fact_by_membership_forall_definition(&subset_fact, verify_state);
         }
         if predicate_name.as_str() == SUPERSET {
             if normal_atomic_fact.body.len() != 2 {
@@ -491,5 +466,43 @@ impl Runtime {
                 Vec::new(),
             ),
         )))
+    }
+
+    fn verify_builtin_fact_with_their_definition(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+        match fact {
+            AtomicFact::SubsetFact(subset_fact) => {
+                if let Some(verified_by_subset_definition) = self
+                    .verify_subset_fact_by_membership_forall_definition(subset_fact, verify_state)?
+                {
+                    return Ok(Some(verified_by_subset_definition));
+                }
+                return Ok(None);
+            }
+            AtomicFact::SupersetFact(superset_fact) => {
+                if let Some(verified_by_superset_definition) = self
+                    .verify_superset_fact_by_membership_forall_definition(
+                        superset_fact,
+                        verify_state,
+                    )?
+                {
+                    return Ok(Some(verified_by_superset_definition));
+                }
+                return Ok(None);
+            }
+            AtomicFact::RestrictFact(restrict_fact) => {
+                if let Some(verified_by_restrict_definition) =
+                    self.verify_restrict_fact_using_its_definition(restrict_fact, verify_state)?
+                {
+                    return Ok(Some(verified_by_restrict_definition));
+                }
+                return Ok(None);
+            }
+            _ => {}
+        }
+        Ok(None)
     }
 }

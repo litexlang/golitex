@@ -40,7 +40,7 @@ impl Runtime {
                     IsNonemptySetFact::new(param_set.clone(), DEFAULT_LINE_FILE.clone()),
                 ));
                 self.verify_fact_well_defined_and_store_and_infer(
-                    &nonempty_fact,
+                    nonempty_fact,
                     &VerifyState::new(0, false),
                 )?;
                 Ok(())

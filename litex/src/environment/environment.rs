@@ -28,7 +28,7 @@ pub struct Environment {
     pub known_or_facts_in_forall_facts:
         HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_obj_is_well_defined: HashMap<String, ()>,
-    pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
+    pub known_obj_in_fn_set: HashMap<String, FnSetObj>,
     pub known_tuple_objs: HashMap<String, (Option<Tuple>, Option<Cart>, (usize, usize))>,
     pub known_cart_objs: HashMap<String, (Cart, (usize, usize))>,
     pub known_normalized_decimal_number_value_of_obj: HashMap<String, Number>,
@@ -95,7 +95,7 @@ impl Environment {
             known_or_facts,
             known_or_facts_in_forall_facts,
             known_obj_is_well_defined,
-            known_atom_in_fn_set,
+            known_obj_in_fn_set: known_atom_in_fn_set,
             known_tuple_objs: known_tuple_objs,
             known_cart_objs,
             known_normalized_decimal_number_value_of_obj: known_calculated_value_of_obj,
@@ -188,7 +188,7 @@ impl fmt::Display for Environment {
         write!(
             f,
             "    known_obj_in_fn_set: {:?}\n",
-            self.known_atom_in_fn_set.len()
+            self.known_obj_in_fn_set.len()
         )?;
         write!(
             f,
@@ -212,7 +212,10 @@ impl Environment {
         self.store_atomic_fact(atomic_fact.clone())
     }
 
-    fn store_atomic_fact(&mut self, atomic_fact: AtomicFact) -> Result<(), RuntimeErrorStruct> {
+    pub(crate) fn store_atomic_fact(
+        &mut self,
+        atomic_fact: AtomicFact,
+    ) -> Result<(), RuntimeErrorStruct> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => self.store_equality(&equal_fact),
             _ => {
@@ -399,9 +402,9 @@ impl Environment {
         Ok(())
     }
 
-    fn store_and_fact_by_ref(&mut self, and_fact: &AndFact) -> Result<(), RuntimeErrorStruct> {
-        for fact in and_fact.facts.iter() {
-            self.store_atomic_fact(fact.clone())?;
+    fn store_and_fact(&mut self, and_fact: AndFact) -> Result<(), RuntimeErrorStruct> {
+        for atomic_fact in and_fact.facts {
+            self.store_atomic_fact(atomic_fact)?;
         }
         Ok(())
     }
@@ -417,17 +420,16 @@ impl Environment {
         Ok(())
     }
 
-    /// Stores a fact without moving it; clones only where the underlying maps need owned values.
-    pub fn store_fact_by_ref(&mut self, fact: &Fact) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_fact(&mut self, fact: Fact) -> Result<(), RuntimeErrorStruct> {
         match fact {
-            Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact.clone()),
-            Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact.clone()),
-            Fact::OrFact(or_fact) => self.store_or_fact(or_fact.clone()),
-            Fact::AndFact(and_fact) => self.store_and_fact_by_ref(and_fact),
-            Fact::ChainFact(chain_fact) => self.store_chain_fact_by_ref(chain_fact),
-            Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact.clone())),
+            Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
+            Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
+            Fact::OrFact(or_fact) => self.store_or_fact(or_fact),
+            Fact::AndFact(and_fact) => self.store_and_fact(and_fact),
+            Fact::ChainFact(chain_fact) => self.store_chain_fact(chain_fact),
+            Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
-                self.store_forall_fact_with_iff(forall_fact_with_iff.clone())
+                self.store_forall_fact_with_iff(forall_fact_with_iff)
             }
         }
     }
@@ -441,65 +443,57 @@ impl Environment {
 
     pub fn store_exist_or_and_chain_atomic_fact(
         &mut self,
-        fact: &ExistOrAndChainAtomicFact,
+        fact: ExistOrAndChainAtomicFact,
     ) -> Result<(), RuntimeErrorStruct> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
-                self.store_atomic_fact(atomic_fact.clone())
+                self.store_atomic_fact(atomic_fact)
             }
-            ExistOrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_by_ref(and_fact),
-            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
-                self.store_chain_fact_by_ref(chain_fact)
-            }
-            ExistOrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact(or_fact.clone()),
-            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
-                self.store_exist_fact(exist_fact.clone())
-            }
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact(and_fact),
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => self.store_chain_fact(chain_fact),
+            ExistOrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact(or_fact),
+            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
         }
     }
 
-    pub fn store_and_chain_atomic_fact_by_ref(
+    pub fn store_and_chain_atomic_fact(
         &mut self,
-        and_chain_atomic_fact: &AndChainAtomicFact,
+        and_chain_atomic_fact: AndChainAtomicFact,
     ) -> Result<(), RuntimeErrorStruct> {
         match and_chain_atomic_fact {
-            AndChainAtomicFact::AtomicFact(atomic_fact) => {
-                self.store_atomic_fact(atomic_fact.clone())?
-            }
-            AndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_by_ref(and_fact)?,
-            AndChainAtomicFact::ChainFact(chain_fact) => {
-                self.store_chain_fact_by_ref(chain_fact)?
-            }
+            AndChainAtomicFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
+            AndChainAtomicFact::AndFact(and_fact) => self.store_and_fact(and_fact),
+            AndChainAtomicFact::ChainFact(chain_fact) => self.store_chain_fact(chain_fact),
         }
-        Ok(())
     }
 
     pub fn store_or_and_chain_atomic_fact(
         &mut self,
-        fact: &OrAndChainAtomicFact,
+        fact: OrAndChainAtomicFact,
     ) -> Result<(), RuntimeErrorStruct> {
         match fact {
-            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
-                self.store_atomic_fact(atomic_fact.clone())
-            }
-            OrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_by_ref(and_fact),
-            OrAndChainAtomicFact::ChainFact(chain_fact) => self.store_chain_fact_by_ref(chain_fact),
-            OrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact(or_fact.clone()),
+            OrAndChainAtomicFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
+            OrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact(and_fact),
+            OrAndChainAtomicFact::ChainFact(chain_fact) => self.store_chain_fact(chain_fact),
+            OrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact(or_fact),
         }
+    }
+
+    fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeErrorStruct> {
+        let atomic_facts = chain_fact
+            .facts()
+            .map_err(RuntimeErrorStruct::into_store_fact_wrapping_new_atomic)?;
+        for atomic_fact in atomic_facts {
+            self.store_atomic_fact(atomic_fact)?;
+        }
+        Ok(())
     }
 
     pub fn store_chain_fact_by_ref(
         &mut self,
         chain_fact: &ChainFact,
     ) -> Result<(), RuntimeErrorStruct> {
-        for fact in chain_fact
-            .facts()
-            .map_err(RuntimeErrorStruct::into_store_fact_wrapping_new_atomic)?
-            .iter()
-        {
-            self.store_atomic_fact(fact.clone())?;
-        }
-        Ok(())
+        self.store_chain_fact(chain_fact.clone())
     }
 
     pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), RuntimeErrorStruct> {
