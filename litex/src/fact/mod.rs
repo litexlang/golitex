@@ -3,7 +3,7 @@ mod exist_fact;
 mod fact_inside_forall;
 mod forall_fact;
 mod forall_fact_with_iff;
-mod forall_then_param_coverage_warn;
+mod mark_forall_param_coverage;
 mod matchable_fact_with_atomic_fact_inside;
 mod or_fact;
 mod reversible_fact;
