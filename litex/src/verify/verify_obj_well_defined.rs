@@ -45,9 +45,6 @@ impl Runtime {
             Obj::Cap(x) => self.verify_cap_well_defined(x, verify_state),
             Obj::ListSet(x) => self.verify_list_set_well_defined(x, verify_state),
             Obj::SetBuilder(x) => self.verify_set_builder_well_defined(x, verify_state),
-            Obj::FnSetWithoutParams(x) => {
-                self.verify_fn_set_without_dom_well_defined(x, verify_state)
-            }
             Obj::FnSetWithParams(x) => self.verify_fn_set_with_dom_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::NPos) => self.verify_n_pos_obj_well_defined(),
             Obj::StandardSet(StandardSet::N) => self.verify_n_obj_well_defined(),
@@ -148,24 +145,23 @@ impl Runtime {
             .clone();
 
         for (i, args) in fn_obj.body.iter().enumerate() {
-            match &the_set_where_current_fn_obj_is_in {
-                FnSetObj::FnSetWithDom(fn_set_with_dom) => {
-                    self.verify_fn_obj_well_defined_against_fn_set_with_dom(args, &fn_set_with_dom, verify_state).map_err(|well_defined_error| WellDefinedError::new(
-                        format!("object {} is not well-defined, failed to verify arguments satisfy function domain.", fn_obj.to_string()),
-                        Some(RuntimeError::WellDefinedError(well_defined_error)),
-                        DEFAULT_LINE_FILE.clone(),
-                    ))?;
-                }
-                FnSetObj::FnSetWithoutParams(fn_set_without_dom) => {
-                    self.verify_fn_obj_args_well_defined_against_fn_set_without_dom(
-                        args,
-                        &fn_set_without_dom,
-                        verify_state,
-                    )?;
-                }
-            }
+            self.verify_fn_obj_well_defined_against_fn_set_with_dom(
+                args,
+                &the_set_where_current_fn_obj_is_in,
+                verify_state,
+            )
+            .map_err(|well_defined_error| {
+                WellDefinedError::new(
+                    format!(
+                        "object {} is not well-defined, failed to verify arguments satisfy function domain.",
+                        fn_obj.to_string()
+                    ),
+                    Some(RuntimeError::WellDefinedError(well_defined_error)),
+                    DEFAULT_LINE_FILE.clone(),
+                )
+            })?;
 
-            let set_where_the_next_fn_obj_is_in = the_set_where_current_fn_obj_is_in.ret_set();
+            let set_where_the_next_fn_obj_is_in = the_set_where_current_fn_obj_is_in.ret_set.clone();
 
             // Store: after applying current argument group i,
             // the intermediate prefix application fn_obj_prefix (e.g. f(a))
@@ -207,8 +203,7 @@ impl Runtime {
             }
 
             the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
-                Obj::FnSetWithParams(e) => FnSetObj::FnSetWithDom(e),
-                Obj::FnSetWithoutParams(e) => FnSetObj::FnSetWithoutParams(e),
+                Obj::FnSetWithParams(e) => e,
                 _ => {
                     return Err(WellDefinedError::new(
                         format!(
@@ -313,51 +308,6 @@ impl Runtime {
                     format!(
                         "failed to verify function domain fact:\n{}",
                         instantiated_dom_fact
-                    ),
-                    None,
-                    DEFAULT_LINE_FILE.clone(),
-                ));
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Verify that the given FnObj is well-defined with respect to a FnSetWithoutDom definition.
-    fn verify_fn_obj_args_well_defined_against_fn_set_without_dom(
-        &mut self,
-        args: &Vec<Box<Obj>>,
-        fn_set_without_dom: &FnSetWithoutParams,
-        verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
-        let param_count = fn_set_without_dom.param_sets.len();
-        if args.len() != param_count {
-            return Err(WellDefinedError::new(
-                format!(
-                    "number of args ({}) does not match fn set without dom param count ({})",
-                    args.len(),
-                    param_count
-                ),
-                None,
-                DEFAULT_LINE_FILE.clone(),
-            ));
-        }
-
-        for (index, arg) in args.iter().enumerate() {
-            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
-            let param_set = &fn_set_without_dom.param_sets[index];
-            let in_fact = InFact::new(
-                (**arg).clone(),
-                (**param_set).clone(),
-                DEFAULT_LINE_FILE.clone(),
-            );
-            let atomic_fact = AtomicFact::InFact(in_fact);
-            let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
-            if result.is_unknown() {
-                return Err(WellDefinedError::new(
-                    format!(
-                        "`{}` must hold, by function definition, but verification is unknown.",
-                        atomic_fact.to_string(),
                     ),
                     None,
                     DEFAULT_LINE_FILE.clone(),
@@ -743,18 +693,6 @@ impl Runtime {
             }
         }
 
-        Ok(())
-    }
-
-    fn verify_fn_set_without_dom_well_defined(
-        &mut self,
-        x: &FnSetWithoutParams,
-        verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
-        for obj in &x.param_sets {
-            self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
-        }
-        self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state)?;
         Ok(())
     }
 

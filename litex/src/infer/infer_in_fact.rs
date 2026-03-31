@@ -23,29 +23,8 @@ impl Runtime {
                 }
 
                 let key = in_fact.element.to_string();
-                let fn_set_obj = FnSetObj::FnSetWithDom(fn_set_with_dom.clone());
                 let env = self.top_level_env();
-                env.known_fn_in_fn_set.insert(key, fn_set_obj);
-                Ok(InferResult::new())
-            }
-            Obj::FnSetWithoutParams(fn_set_without_dom) => {
-                let is_element_atom = match &in_fact.element {
-                    Obj::Identifier(_)
-                    | Obj::IdentifierWithMod(_)
-                    | Obj::FieldAccess(_)
-                    | Obj::FieldAccessWithMod(_) => true,
-                    _ => false,
-                };
-
-                if !is_element_atom {
-                    return Ok(InferResult::new());
-                }
-
-                let key = in_fact.element.to_string();
-                let fn_set_obj = FnSetObj::FnSetWithoutParams(fn_set_without_dom.clone());
-                self.top_level_env()
-                    .known_fn_in_fn_set
-                    .insert(key, fn_set_obj);
+                env.known_obj_in_fn_set.insert(key, fn_set_with_dom.clone());
                 Ok(InferResult::new())
             }
             Obj::ListSet(list_set) => {
@@ -190,16 +169,16 @@ impl Runtime {
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
                     inferred_in_z_fact.clone(),
                 )
-                    .map_err(|previous_error| {
-                        InferError::new(
-                            format!(
-                                "failed to store inferred integer membership while inferring `{}`",
-                                in_fact
-                            ),
-                            in_fact.line_file,
-                            Some(previous_error.into()),
-                        )
-                    })?;
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred integer membership while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
                 Ok(infer_result)
             }
             Obj::StandardSet(StandardSet::QPos)
@@ -216,16 +195,16 @@ impl Runtime {
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
                     inferred_atomic_fact.clone(),
                 )
-                    .map_err(|previous_error| {
-                        InferError::new(
-                            format!(
-                                "failed to store inferred greater-than-zero while inferring `{}`",
-                                in_fact
-                            ),
-                            in_fact.line_file,
-                            Some(previous_error.into()),
-                        )
-                    })?;
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred greater-than-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
                 Ok(infer_result)
             }
             Obj::StandardSet(StandardSet::QNeg)
@@ -242,16 +221,16 @@ impl Runtime {
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
                     inferred_atomic_fact.clone(),
                 )
-                    .map_err(|previous_error| {
-                        InferError::new(
-                            format!(
-                                "failed to store inferred less-than-zero while inferring `{}`",
-                                in_fact
-                            ),
-                            in_fact.line_file,
-                            Some(previous_error.into()),
-                        )
-                    })?;
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred less-than-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
                 Ok(infer_result)
             }
             Obj::StandardSet(StandardSet::QNz)
@@ -268,16 +247,16 @@ impl Runtime {
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
                     inferred_atomic_fact.clone(),
                 )
-                    .map_err(|previous_error| {
-                        InferError::new(
-                            format!(
-                                "failed to store inferred not-equal-to-zero while inferring `{}`",
-                                in_fact
-                            ),
-                            in_fact.line_file,
-                            Some(previous_error.into()),
-                        )
-                    })?;
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred not-equal-to-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
                 Ok(infer_result)
             }
             Obj::StandardSet(StandardSet::N)

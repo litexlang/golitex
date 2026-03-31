@@ -1,5 +1,5 @@
 let f set
-know f $in Fn(R, R) R
+know f $in fn(x R, y R) R
 
 know:
     forall x, y R:

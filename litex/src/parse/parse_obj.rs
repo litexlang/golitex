@@ -123,35 +123,13 @@ impl Runtime {
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
-        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS)
-            | tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_PARAMS)
-        {
-            match self.parse_fn_set_obj(tb)? {
-                FnSetObj::FnSetWithDom(fs) => Ok(Obj::FnSetWithParams(fs)),
-                FnSetObj::FnSetWithoutParams(fs) => Ok(Obj::FnSetWithoutParams(fs)),
-            }
-        } else {
-            self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
-        }
-    }
-
-    pub fn parse_fn_set_obj(&mut self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
-        if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS) {
+        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS) {
             tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
-            Ok(FnSetObj::FnSetWithDom(
+            Ok(Obj::FnSetWithParams(
                 self.parse_fn_set_with_dom_without_fn_prefix(tb)?,
             ))
-        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_PARAMS) {
-            tb.skip_token(FN_FOR_FN_WITHOUT_PARAMS)?;
-            Ok(FnSetObj::FnSetWithoutParams(
-                self.parse_fn_set_without_dom_without_fn_prefix(tb)?,
-            ))
         } else {
-            Err(ParsingError::new(
-                "Expected fn for fn with dom".to_string(),
-                tb.line_file,
-                None,
-            ))
+            self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
     }
 
@@ -228,21 +206,6 @@ impl Runtime {
             dom_facts,
             ret_set,
         ))
-    }
-
-    pub fn parse_fn_set_without_dom_without_fn_prefix(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<FnSetWithoutParams, ParsingError> {
-        tb.skip_token(LEFT_BRACE)?;
-        let mut param_sets = vec![self.parse_obj(tb)?];
-        while tb.current_token_is_equal_to(COMMA) {
-            tb.skip_token(COMMA)?;
-            param_sets.push(self.parse_obj(tb)?);
-        }
-        tb.skip_token(RIGHT_BRACE)?;
-        let ret_set = self.parse_obj(tb)?;
-        Ok(FnSetWithoutParams::new(param_sets, ret_set))
     }
 
     pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(

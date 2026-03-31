@@ -325,11 +325,11 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn get_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<&FnSetObj> {
+    pub fn get_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<&FnSetWithParams> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_fn_in_fn_set.get(&key) {
+            if let Some(definition) = env.known_obj_in_fn_set.get(&key) {
                 return Some(definition);
             }
         }
@@ -337,11 +337,11 @@ impl Runtime {
         None
     }
 
-    pub fn get_cloned_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<FnSetObj> {
+    pub fn get_cloned_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<FnSetWithParams> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_fn_in_fn_set.get(&key) {
+            if let Some(definition) = env.known_obj_in_fn_set.get(&key) {
                 return Some(definition.clone());
             }
         }
@@ -419,7 +419,7 @@ impl Runtime {
         }
 
         for env in self.iter_environments_from_top() {
-            if env.defined_identifier_and_field_access.contains_key(name) {
+            if env.defined_identifier.contains_key(name) {
                 return true;
             }
         }

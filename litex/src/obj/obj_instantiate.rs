@@ -266,19 +266,6 @@ impl SetBuilder {
     }
 }
 
-impl FnSetWithoutParams {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        let mut param_sets = Vec::with_capacity(self.param_sets.len());
-        for param_set in self.param_sets.iter() {
-            param_sets.push(Box::new(param_set.instantiate(param_to_arg_map)));
-        }
-        Obj::FnSetWithoutParams(FnSetWithoutParams {
-            param_sets,
-            ret_set: Box::new(self.ret_set.instantiate(param_to_arg_map)),
-        })
-    }
-}
-
 impl FnSetWithParams {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let param_names = ParamDefWithParamSet::collect_param_names(&self.params_def_with_set);

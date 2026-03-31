@@ -103,48 +103,12 @@ impl Runtime {
 
     fn collect_requirement_facts_and_algo_param_defs(
         def_algo_stmt: &DefAlgoStmt,
-        fn_set_where_algo_belongs: &FnSetObj,
+        fn_set_where_algo_belongs: &FnSetWithParams,
     ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamType>), ExecStmtError> {
-        match fn_set_where_algo_belongs {
-            FnSetObj::FnSetWithoutParams(fn_set_without_params) => {
-                Self::requirement_facts_and_param_defs_for_fn_set_without_params(
-                    def_algo_stmt,
-                    fn_set_without_params,
-                )
-            }
-            FnSetObj::FnSetWithDom(fn_set_with_dom) => {
-                Self::requirement_facts_and_param_defs_for_fn_set_with_dom(
-                    def_algo_stmt,
-                    fn_set_with_dom,
-                )
-            }
-        }
-    }
-
-    fn requirement_facts_and_param_defs_for_fn_set_without_params(
-        def_algo_stmt: &DefAlgoStmt,
-        fn_set_without_params: &FnSetWithoutParams,
-    ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamType>), ExecStmtError> {
-        if fn_set_without_params.param_sets.len() != def_algo_stmt.params.len() {
-            return Err(Self::def_algo_verify_exec_error_without_message(
-                def_algo_stmt,
-            ));
-        }
-
-        let mut algo_param_defs_with_type: Vec<ParamDefWithParamType> =
-            Vec::with_capacity(def_algo_stmt.params.len());
-        for (param_name, param_set) in def_algo_stmt
-            .params
-            .iter()
-            .zip(fn_set_without_params.param_sets.iter())
-        {
-            algo_param_defs_with_type.push(ParamDefWithParamType(
-                vec![param_name.clone()],
-                ParamType::Obj(param_set.as_ref().clone()),
-            ));
-        }
-
-        Ok((vec![], algo_param_defs_with_type))
+        Self::requirement_facts_and_param_defs_for_fn_set_with_dom(
+            def_algo_stmt,
+            fn_set_where_algo_belongs,
+        )
     }
 
     fn requirement_facts_and_param_defs_for_fn_set_with_dom(
