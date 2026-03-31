@@ -12,7 +12,7 @@ impl Runtime {
         Err(RuntimeErrorStruct::new(
             None,
             format!(
-                "cannot store this forall fact: then or iff side must mention every forall parameter in each clause for matching (fix with a covering prop or repeat names in the conclusion).\n{}",
+                "failed to store forall fact with iff:\n{}",
                 coverage_error_detail_lines.join("\n")
             ),
             forall_fact_with_iff.line_file,
@@ -25,7 +25,10 @@ impl Runtime {
         fact: Fact,
     ) -> Result<InferResult, RuntimeErrorStruct> {
         match fact {
-            Fact::AtomicFact(_) | Fact::ExistFact(_) | Fact::OrFact(_) | Fact::AndFact(_)
+            Fact::AtomicFact(_)
+            | Fact::ExistFact(_)
+            | Fact::OrFact(_)
+            | Fact::AndFact(_)
             | Fact::ChainFact(_) => self.store_whole_fact_update_cache_known_fact_and_infer(fact),
             Fact::ForallFact(forall_fact) => {
                 self.store_forall_fact_without_well_defined_verified_and_infer(forall_fact)
@@ -52,9 +55,9 @@ impl Runtime {
         Self::return_err_if_forall_fact_with_iff_then_or_iff_clauses_miss_some_parameter_name(
             &forall_fact_with_iff,
         )?;
-        self.store_whole_fact_update_cache_known_fact_and_infer(
-            Fact::ForallFactWithIff(forall_fact_with_iff),
-        )
+        self.store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFactWithIff(
+            forall_fact_with_iff,
+        ))
     }
 
     fn store_whole_fact_update_cache_known_fact_and_infer(
@@ -156,12 +159,14 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        let infer_result = self.infer_or_and_chain_atomic_fact(&fact_for_infer).map_err(|e| {
-            RuntimeErrorStruct::new_with_msg_previous_error(
-                format!("infer error: {}", e),
-                Some(e.into()),
-            )
-        })?;
+        let infer_result = self
+            .infer_or_and_chain_atomic_fact(&fact_for_infer)
+            .map_err(|e| {
+                RuntimeErrorStruct::new_with_msg_previous_error(
+                    format!("infer error: {}", e),
+                    Some(e.into()),
+                )
+            })?;
         Ok(infer_result)
     }
 
@@ -257,7 +262,7 @@ fn return_err_if_forall_fact_then_or_iff_clauses_miss_some_parameter_name(
     Err(RuntimeErrorStruct::new(
         None,
         format!(
-            "cannot store this forall fact: then or iff side must mention every forall parameter in each clause for matching (fix with a covering prop or repeat names in the conclusion).\n{}",
+            "failed to store forall fact:\n{}",
             coverage_error_detail_lines.join("\n")
         ),
         forall_fact.line_file,

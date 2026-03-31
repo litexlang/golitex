@@ -640,7 +640,6 @@ impl ForallFact {
             return Vec::new();
         }
         let empty_binders = HashSet::new();
-        let line_file = self.line_file;
         let mut error_messages = Vec::new();
         let mut then_index: usize = 0;
         while then_index < self.then_facts.len() {
@@ -660,8 +659,8 @@ impl ForallFact {
             if !missing_param_names.is_empty() {
                 let missing_list = missing_param_names.join(", ");
                 error_messages.push(format!(
-                    "forall at {:?}: then-clause #{} does not mention forall parameter(s) {{{}}}",
-                    line_file, then_index, missing_list,
+                    "then-clause `{}` does not mention forall parameter(s) {{{}}}",
+                    then_fact, missing_list,
                 ));
             }
             then_index += 1;
@@ -681,7 +680,6 @@ impl ForallFactWithIff {
             return error_messages;
         }
         let empty_binders = HashSet::new();
-        let line_file = self.line_file;
         let mut iff_index: usize = 0;
         while iff_index < self.iff_facts.len() {
             let iff_fact = &self.iff_facts[iff_index];
@@ -700,10 +698,8 @@ impl ForallFactWithIff {
             if !missing_param_names.is_empty() {
                 let missing_list = missing_param_names.join(", ");
                 error_messages.push(format!(
-                    "forall-with-iff at {:?}: iff-clause #{} does not mention forall parameter(s) {{{}}}",
-                    line_file,
-                    iff_index,
-                    missing_list,
+                    "iff-clause `{}` does not mention forall parameter(s) {{{}}}",
+                    iff_fact, missing_list,
                 ));
             }
             iff_index += 1;
