@@ -1,30 +1,17 @@
-past_examples
-.dist
+# Rust build (crate root is repo root; was litex/target/)
+/target/
+
+# From former litex/.gitignore (paths now at root)
+binary/
+scripts/
+examples/hidden
+
+# Editor / tooling
 .vscode
-*.ipynb
-env.json
-syntax.md
-golitex.code-workspace
-deploy_web
-./reference_manual/thoughts.md
-/binary/
-litex/binary/
-litex/scripts/
-/kernel_lib/
-./examples/testings/.order
-/to_latex/
-/kernel_builtin_lib/
-update.sh
-release.sh
-web_doc.sh
-playground.sh
-tutorial.sh
-/tools/
-git_add_commit.sh
-safe_push.sh
-process_tmp.py
 .cursor
-.cursor/Tutorial
-golitex
-/litex/target/
-/litex/local-tools/
+
+# Local / secrets
+.dist
+
+examples/testings/.order
+tools/
