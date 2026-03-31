@@ -14,7 +14,7 @@ pub type AlgoName = String;
 pub type IdentifierName = String;
 
 pub struct Environment {
-    pub defined_identifier: HashMap<IdentifierName, ()>,
+    pub defined_identifiers: HashMap<IdentifierName, ()>,
     pub defined_props_with_meaning: HashMap<PropName, DefPropWithMeaningStmt>,
     pub defined_props_without_meaning: HashMap<PropName, DefPropWithoutMeaningStmt>,
     pub defined_structs_with_fields: HashMap<StructName, DefStructWithFieldsStmt>,
@@ -22,7 +22,6 @@ pub struct Environment {
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
-    pub known_obj_in_fn_set: HashMap<ObjString, FnSetWithParams>,
 
     pub known_atomic_facts_with_0_or_more_than_2_args:
         HashMap<(AtomicFactKey, bool), Vec<AtomicFact>>,
@@ -44,6 +43,7 @@ pub struct Environment {
     pub known_cart_objs: HashMap<ObjString, (Cart, (usize, usize))>,
     pub known_normalized_decimal_number_value_of_obj: HashMap<ObjString, Number>,
     pub known_set_equal_to_set_builder: HashMap<ObjString, SetBuilder>,
+    pub known_obj_in_fn_set: HashMap<ObjString, FnSetWithParams>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, (usize, usize)>,
@@ -94,7 +94,7 @@ impl Environment {
         cache_known_fact: HashMap<FactString, (usize, usize)>,
     ) -> Self {
         Environment {
-            defined_identifier: objs,
+            defined_identifiers: objs,
             defined_props_with_meaning: props,
             defined_structs_with_fields: structs_with_fields,
             defined_structs_with_no_field: structs_with_no_field,
@@ -124,7 +124,7 @@ impl Environment {
 impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Environment {{\n")?;
-        write!(f, "    objs: {:?}\n", self.defined_identifier.len())?;
+        write!(f, "    objs: {:?}\n", self.defined_identifiers.len())?;
         write!(
             f,
             "    props_with_meaning: {:?}\n",
