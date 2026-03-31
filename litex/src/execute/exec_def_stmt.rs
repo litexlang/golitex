@@ -84,7 +84,10 @@ impl Runtime {
             })?;
 
         for fact in def_prop_with_meaning_stmt.iff_facts.iter() {
-            self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))
+            self.verify_fact_well_defined_and_store_and_infer(
+                fact.clone(),
+                &VerifyState::new(0, false),
+            )
                 .map_err(|inner_exec_error| {
                     ExecStmtError::new(
                         Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
@@ -135,7 +138,10 @@ impl Runtime {
             })?;
         for fact in def_let_stmt.facts.iter() {
             let fact_infer_result = self
-                .verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))
+                .verify_fact_well_defined_and_store_and_infer(
+                    fact.clone(),
+                    &VerifyState::new(0, false),
+                )
                 .map_err(|inner_exec_error| {
                     ExecStmtError::new(
                         Stmt::DefLetStmt(def_let_stmt.clone()),
@@ -201,7 +207,7 @@ impl Runtime {
                 })?;
                 let fact_infer_result = self
                     .store_fact_without_well_defined_verified_and_infer(
-                        &ParamType::param_satisfy_param_type_fact(name, &param_def.1),
+                        ParamType::param_satisfy_param_type_fact(name, &param_def.1),
                     )
                     .map_err(|store_fact_error| {
                         DefineParamsError::new(
@@ -273,7 +279,7 @@ impl Runtime {
                 )
             })?;
             let fact_infer_result = self
-                .store_fact_without_well_defined_verified_and_infer(fact)
+                .store_fact_without_well_defined_verified_and_infer(fact.clone())
                 .map_err(|store_fact_error| {
                     DefineParamsError::new(
                         format!(
@@ -367,7 +373,7 @@ impl Runtime {
                 have_obj_equal_stmt.line_file,
             ));
             let equal_to_fact_infer_result = self
-                .store_atomic_fact_without_well_defined_verified_and_infer(&equal_to_fact)
+                .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
@@ -452,7 +458,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for fact in args_satisfy_param_types.iter() {
             let fact_infer_result = self
-                .store_atomic_fact_without_well_defined_verified_and_infer(fact)
+                .store_atomic_fact_without_well_defined_verified_and_infer(fact.clone())
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
@@ -476,7 +482,7 @@ impl Runtime {
                 .instantiate(&param_to_obj_map)
                 .to_fact();
             let fact_infer_result = self
-                .store_fact_without_well_defined_verified_and_infer(&instantiated_fact)
+                .store_fact_without_well_defined_verified_and_infer(instantiated_fact)
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
@@ -522,7 +528,7 @@ impl Runtime {
             have_fn_equal_stmt.line_file,
         )));
         let mut infer_result = self
-            .store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact)
+            .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
@@ -560,7 +566,7 @@ impl Runtime {
         );
         let forall_as_fact = Fact::ForallFact(forall_fact);
         let forall_infer_result = self
-            .store_fact_without_well_defined_verified_and_infer(&forall_as_fact)
+            .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
             .map_err(|store_fact_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
@@ -628,7 +634,9 @@ impl Runtime {
 
         for dom_fact in have_fn_equal_stmt.fn_set_with_params.dom_facts.iter() {
             let _ = self
-                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(dom_fact)
+                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    dom_fact.clone(),
+                )
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
@@ -717,7 +725,7 @@ impl Runtime {
         )));
 
         let mut infer_result = self
-            .store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact)
+            .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
@@ -726,7 +734,6 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        infer_result.new_fact(&function_in_function_set_fact);
 
         let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(
             &have_fn_equal_case_by_case_stmt.fn_set_with_params,
@@ -776,8 +783,9 @@ impl Runtime {
             );
             let forall_as_fact = Fact::ForallFact(forall_fact);
 
+            infer_result.new_fact(&forall_as_fact);
             let forall_infer_result = self
-                .store_fact_without_well_defined_verified_and_infer(&forall_as_fact)
+                .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
@@ -787,7 +795,6 @@ impl Runtime {
                     )
                 })?;
             infer_result.new_infer_result_inside(forall_infer_result);
-            infer_result.new_fact(&forall_as_fact);
         }
 
         Ok(infer_result)
@@ -874,7 +881,9 @@ impl Runtime {
             .iter()
         {
             let _ = self
-                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(dom_fact)
+                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    dom_fact.clone(),
+                )
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
@@ -886,7 +895,7 @@ impl Runtime {
         }
 
         let _ = self
-            .store_fact_without_well_defined_verified_and_infer(&case_fact_as_fact)
+            .store_fact_without_well_defined_verified_and_infer(case_fact_as_fact)
             .map_err(|store_fact_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),

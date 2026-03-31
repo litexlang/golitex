@@ -8,7 +8,10 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for fact in know_stmt.facts.iter() {
             let fact_infer_result = self
-                .verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))
+                .verify_fact_well_defined_and_store_and_infer(
+                    fact.clone(),
+                    &VerifyState::new(0, false),
+                )
                 .map_err(|e| {
                     ExecStmtError::new(
                         Stmt::KnowStmt(know_stmt.clone()),

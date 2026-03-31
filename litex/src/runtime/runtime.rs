@@ -325,12 +325,24 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn get_fn_set_where_fn_belongs_to(&self, atom: &Atom) -> Option<&FnSetObj> {
-        let key = atom.to_string();
+    pub fn get_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<&FnSetObj> {
+        let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
             if let Some(definition) = env.known_fn_in_fn_set.get(&key) {
                 return Some(definition);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_cloned_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<FnSetObj> {
+        let key = obj.to_string();
+
+        for env in self.iter_environments_from_top() {
+            if let Some(definition) = env.known_fn_in_fn_set.get(&key) {
+                return Some(definition.clone());
             }
         }
 

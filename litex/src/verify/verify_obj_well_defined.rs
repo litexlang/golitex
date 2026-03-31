@@ -132,8 +132,9 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
+        let function_name_obj = Obj::Identifier(Identifier::new(fn_obj.head.to_string()));
         let mut the_set_where_current_fn_obj_is_in = self
-            .get_fn_set_where_fn_belongs_to(&fn_obj.head)
+            .get_fn_set_where_fn_belongs_to(&function_name_obj)
             .ok_or_else(|| {
                 WellDefinedError::new(
                     todo_error_message(format!(
@@ -187,7 +188,7 @@ impl Runtime {
                 DEFAULT_LINE_FILE.clone(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
-            self.store_fact_without_well_defined_verified_and_infer(&Fact::AtomicFact(
+            self.store_fact_without_well_defined_verified_and_infer(Fact::AtomicFact(
                 intermediate_atomic_fact,
             ))
             .map_err(|store_fact_error| {
