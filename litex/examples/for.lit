@@ -1,4 +1,9 @@
 by for n range(0, 10):
     prove:
-        1 = 1
+        n < 10
+    do_nothing
+
+by for n closed_range(0, 10):
+    prove:
+        n <= 10
     do_nothing

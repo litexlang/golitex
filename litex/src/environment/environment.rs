@@ -406,10 +406,6 @@ impl Environment {
         Ok(())
     }
 
-    fn store_and_fact(&mut self, and_fact: AndFact) -> Result<(), RuntimeErrorStruct> {
-        self.store_and_fact_by_ref(&and_fact)
-    }
-
     fn store_forall_fact_with_iff(
         &mut self,
         forall_fact_with_iff: ForallFactWithIff,
@@ -419,20 +415,6 @@ impl Environment {
         self.store_forall_fact(Rc::new(forall_then_implies_iff))?;
         self.store_forall_fact(Rc::new(forall_iff_implies_then))?;
         Ok(())
-    }
-
-    pub fn store_fact(&mut self, fact: Fact) -> Result<(), RuntimeErrorStruct> {
-        match fact {
-            Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
-            Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
-            Fact::OrFact(or_fact) => self.store_or_fact(or_fact),
-            Fact::AndFact(and_fact) => self.store_and_fact(and_fact),
-            Fact::ChainFact(chain_fact) => self.store_chain_fact(chain_fact),
-            Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
-            Fact::ForallFactWithIff(forall_fact_with_iff) => {
-                self.store_forall_fact_with_iff(forall_fact_with_iff)
-            }
-        }
     }
 
     /// Stores a fact without moving it; clones only where the underlying maps need owned values.
@@ -506,7 +488,7 @@ impl Environment {
         }
     }
 
-    fn store_chain_fact_by_ref(
+    pub fn store_chain_fact_by_ref(
         &mut self,
         chain_fact: &ChainFact,
     ) -> Result<(), RuntimeErrorStruct> {
@@ -518,10 +500,6 @@ impl Environment {
             self.store_atomic_fact(fact.clone())?;
         }
         Ok(())
-    }
-
-    fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeErrorStruct> {
-        self.store_chain_fact_by_ref(&chain_fact)
     }
 
     pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), RuntimeErrorStruct> {
