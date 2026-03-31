@@ -419,7 +419,7 @@ impl Runtime {
         }
 
         for env in self.iter_environments_from_top() {
-            if env.defined_identifier.contains_key(name) {
+            if env.defined_identifiers.contains_key(name) {
                 return true;
             }
         }
