@@ -15,7 +15,6 @@ pub const RIGHT_BRACE: &str = ")";
 pub const COMMA: &str = ",";
 pub const LEFT_CURLY_BRACE: &str = "{";
 pub const RIGHT_CURLY_BRACE: &str = "}";
-pub const INST_STRUCT_OBJ_SIGN: &str = "&";
 pub const EQUAL: &str = "=";
 pub const NOT_EQUAL: &str = "!=";
 pub const LESS: &str = "<";
@@ -133,7 +132,6 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         COMMA,
         LEFT_CURLY_BRACE,
         RIGHT_CURLY_BRACE,
-        INST_STRUCT_OBJ_SIGN,
         EQUAL,
         LESS,
         GREATER,
@@ -292,7 +290,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == RESTRICT
 }
 
-pub fn is_builtin_identifier_obj(atom_name: &str) -> bool {
+pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
     atom_name == ADD
         || atom_name == SUB
         || atom_name == MUL

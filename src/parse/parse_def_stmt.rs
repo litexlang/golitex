@@ -24,7 +24,7 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -42,7 +42,7 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_msg_without_line_file(&name),
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -86,7 +86,7 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -103,7 +103,7 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_msg_without_line_file(&name),
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -234,7 +234,7 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_msg_without_line_file(&name),
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -305,7 +305,7 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_msg_without_line_file(&name),
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )

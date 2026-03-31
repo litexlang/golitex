@@ -1,8 +1,7 @@
 pub use crate::environment::{
     AlgoName, AtomicFactKey, Environment, ExistFactKey, FactString, IdentifierName,
-    KnownForallFactParamsAndDom, ObjString, OrFactKey, PropName, StructName,
+    KnownForallFactParamsAndDom, ObjString, OrFactKey, PropName, StructName, FieldAccessName,
 };
-pub use crate::error::duplicate_used_name_error_msg_without_line_file;
 pub use crate::error::ConflictMsg;
 pub use crate::error::DefineParamsError;
 pub use crate::error::ExecStmtError;
@@ -64,11 +63,6 @@ pub use crate::pipeline::{
     render_run_source_code_output, run_repl, run_source_code, run_source_code_in_file,
     run_source_code_in_file_with_ok, run_stmt_at_global_env,
 };
-pub use crate::obj::field_access_to_string;
-pub use crate::obj::field_access_with_mod_to_string;
-pub use crate::obj::fn_obj_to_string;
-pub use crate::obj::identifier_to_string;
-pub use crate::obj::identifier_with_mod_to_string;
 pub use crate::obj::Add;
 pub use crate::obj::Atom;
 pub use crate::obj::Cap;
@@ -187,7 +181,7 @@ pub use crate::common::helper::vec_to_string_add_four_spaces_at_beginning_of_eac
 pub use crate::common::helper::vec_to_string_join_by_comma;
 pub use crate::common::helper::vec_to_string_with_sep;
 pub use crate::common::is_valid_litex_name::is_valid_litex_name;
-pub use crate::common::keywords::is_builtin_identifier_obj;
+pub use crate::common::keywords::is_builtin_identifier_name;
 pub use crate::common::keywords::is_builtin_predicate;
 pub use crate::common::keywords::is_comparison_str;
 pub use crate::common::keywords::is_key_symbol_or_keyword;
@@ -239,7 +233,6 @@ pub use crate::common::keywords::IMPOSSIBLE;
 pub use crate::common::keywords::IN;
 pub use crate::common::keywords::INDUC;
 pub use crate::common::keywords::INFIX_FN_NAME_SIGN;
-pub use crate::common::keywords::INST_STRUCT_OBJ_SIGN;
 pub use crate::common::keywords::INTERSECT;
 pub use crate::common::keywords::IS_CART;
 pub use crate::common::keywords::IS_FINITE_SET;

@@ -30,7 +30,7 @@ impl Runtime {
             NONEMPTY_SET => self.param_type_nonempty_set(tb),
             FINITE_SET => self.param_type_finite_set(tb),
             SET => self.param_type_set(tb),
-            INST_STRUCT_OBJ_SIGN => self.param_type_instantiated_struct(tb),
+            STRUCT => self.param_type_instantiated_struct(tb),
             _ => self.param_type_obj(tb),
         }
     }
@@ -59,7 +59,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<ParamType, ParsingError> {
-        tb.skip_token(INST_STRUCT_OBJ_SIGN)?;
+        tb.skip_token(STRUCT)?;
         let name = self.parse_identifier_or_identifier_with_mod(tb)?;
         let params = self.parse_braced_objs(tb)?;
         Ok(ParamType::InstantiatedStruct(InstantiatedStruct {

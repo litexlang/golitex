@@ -62,8 +62,8 @@ impl fmt::Display for ParamType {
             ParamType::InstantiatedStruct(instantiated_struct) => {
                 write!(
                     f,
-                    "{}{}({})",
-                    INST_STRUCT_OBJ_SIGN,
+                    "{} {}({})",
+                    STRUCT,
                     instantiated_struct.name,
                     vec_to_string_join_by_comma(&instantiated_struct.params)
                 )
