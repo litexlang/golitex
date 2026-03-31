@@ -103,10 +103,6 @@ impl Runtime {
         original_fn_set: &FnSetWithParams,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
-        if !restrict_to.dom_facts.is_empty() {
-            return Ok(None);
-        }
-
         let mut restrict_flat_param_names: Vec<String> = Vec::new();
         for param_def_with_set in &restrict_to.params_def_with_set {
             for param_name in param_def_with_set.0.iter() {
@@ -138,18 +134,25 @@ impl Runtime {
             ));
         }
 
+        let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        for dom_fact in &restrict_to.dom_facts {
+            forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
+        }
+
         let then_facts = Self::build_then_facts_for_original_with_params(
             original_fn_set,
             &original_to_restrict_param_map,
             &restrict_flat_param_names,
-            &(*restrict_to.ret_set).clone(),
             restrict_fact.line_file,
         );
 
         self.verify_forall_and_return_restrict_success(
             restrict_fact,
             forall_params,
+            forall_dom_facts,
             then_facts,
+            &(*restrict_to.ret_set).clone(),
+            &(*original_fn_set.ret_set).clone(),
             verify_state,
         )
     }
@@ -199,14 +202,16 @@ impl Runtime {
             original_fn_set,
             &original_to_restrict_param_map,
             &generated_param_names,
-            &(*restrict_to.ret_set).clone(),
             restrict_fact.line_file,
         );
 
         self.verify_forall_and_return_restrict_success(
             restrict_fact,
             forall_params,
+            vec![],
             then_facts,
+            &(*restrict_to.ret_set).clone(),
+            &(*original_fn_set.ret_set).clone(),
             verify_state,
         )
     }
@@ -218,10 +223,6 @@ impl Runtime {
         original_fn_set: &FnSetWithoutParams,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
-        if !restrict_to.dom_facts.is_empty() {
-            return Ok(None);
-        }
-
         let mut restrict_flat_param_names: Vec<String> = Vec::new();
         for param_def_with_set in &restrict_to.params_def_with_set {
             for param_name in param_def_with_set.0.iter() {
@@ -241,17 +242,24 @@ impl Runtime {
             ));
         }
 
+        let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        for dom_fact in &restrict_to.dom_facts {
+            forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
+        }
+
         let then_facts = Self::build_then_facts_for_original_without_params(
             original_fn_set,
             &restrict_flat_param_names,
-            &(*restrict_to.ret_set).clone(),
             restrict_fact.line_file,
         );
 
         self.verify_forall_and_return_restrict_success(
             restrict_fact,
             forall_params,
+            forall_dom_facts,
             then_facts,
+            &(*restrict_to.ret_set).clone(),
+            &(*original_fn_set.ret_set).clone(),
             verify_state,
         )
     }
@@ -288,14 +296,16 @@ impl Runtime {
         let then_facts = Self::build_then_facts_for_original_without_params(
             original_fn_set,
             &generated_param_names,
-            &(*restrict_to.ret_set).clone(),
             restrict_fact.line_file,
         );
 
         self.verify_forall_and_return_restrict_success(
             restrict_fact,
             forall_params,
+            vec![],
             then_facts,
+            &(*restrict_to.ret_set).clone(),
+            &(*original_fn_set.ret_set).clone(),
             verify_state,
         )
     }
@@ -322,15 +332,15 @@ impl Runtime {
         original_fn_set: &FnSetWithParams,
         original_to_restrict_param_map: &HashMap<String, Obj>,
         restrict_flat_param_names: &Vec<String>,
-        restrict_ret_set: &Obj,
         line_file: (usize, usize),
     ) -> Vec<ExistOrAndChainAtomicFact> {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
         let mut index: usize = 0;
         for param_def_with_set in &original_fn_set.params_def_with_set {
-            let instantiated_original_set =
-                param_def_with_set.1.instantiate(original_to_restrict_param_map);
+            let instantiated_original_set = param_def_with_set
+                .1
+                .instantiate(original_to_restrict_param_map);
             for _param_name in param_def_with_set.0.iter() {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
                 then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
@@ -349,19 +359,12 @@ impl Runtime {
             then_facts.push(instantiated_dom_fact.to_exist_or_and_chain_atomic_fact());
         }
 
-        let instantiated_original_ret_set =
-            original_fn_set.ret_set.instantiate(original_to_restrict_param_map);
-        then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-            EqualFact::new(restrict_ret_set.clone(), instantiated_original_ret_set, line_file),
-        )));
-
         then_facts
     }
 
     fn build_then_facts_for_original_without_params(
         original_fn_set: &FnSetWithoutParams,
         restrict_flat_param_names: &Vec<String>,
-        restrict_ret_set: &Obj,
         line_file: (usize, usize),
     ) -> Vec<ExistOrAndChainAtomicFact> {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
@@ -380,14 +383,6 @@ impl Runtime {
             index += 1;
         }
 
-        then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-            EqualFact::new(
-                restrict_ret_set.clone(),
-                (*original_fn_set.ret_set).clone(),
-                line_file,
-            ),
-        )));
-
         then_facts
     }
 
@@ -395,14 +390,31 @@ impl Runtime {
         &mut self,
         restrict_fact: &RestrictFact,
         forall_params: Vec<ParamDefWithParamType>,
+        forall_dom_facts: Vec<ExistOrAndChainAtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
+        restrict_ret_set: &Obj,
+        original_ret_set: &Obj,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
-        let params_in_original_sets_forall =
-            ForallFact::new(forall_params, vec![], then_facts, restrict_fact.line_file);
+        let params_in_original_sets_forall = ForallFact::new(
+            forall_params,
+            forall_dom_facts,
+            then_facts,
+            restrict_fact.line_file,
+        );
         let forall_result =
             self.verify_forall_fact(&params_in_original_sets_forall, verify_state)?;
         if !forall_result.is_true() {
+            return Ok(None);
+        }
+
+        let ret_equal_fact = EqualFact::new(
+            restrict_ret_set.clone(),
+            original_ret_set.clone(),
+            restrict_fact.line_file,
+        );
+        let ret_equal_result = self.verify_equal_fact(&ret_equal_fact, verify_state)?;
+        if !ret_equal_result.is_true() {
             return Ok(None);
         }
 
