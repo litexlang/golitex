@@ -131,10 +131,6 @@ impl Runtime {
                 Obj::SetBuilder(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::FnSetWithoutParams(a) => match right {
-                Obj::FnSetWithoutParams(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             Obj::FnSetWithParams(a) => match right {
                 Obj::FnSetWithParams(b) => a.to_string() == b.to_string(),
                 _ => false,
