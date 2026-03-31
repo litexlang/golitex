@@ -56,6 +56,130 @@ know:
             a = 0 or b = 0
 "#;
 
+const BUILTIN_ENV_CODE_FOR_SET_OPERATORS: &str = r#"
+
+know:
+    forall z obj, A set, B set:
+        $in(z, A)
+        =>:
+            $in(z, union(A, B))
+
+    forall z obj, A set, B set:
+        $in(z, B)
+        =>:
+            $in(z, union(A, B))
+
+    forall z obj, A set, B set:
+        $in(z, union(A, B))
+        =>:
+            $in(z, A) or $in(z, B)
+
+    forall z obj, A set, B set:
+        $in(z, A)
+        $in(z, B)
+        =>:
+            $in(z, intersect(A, B))
+
+    forall z obj, A set, B set:
+        $in(z, intersect(A, B))
+        =>:
+            $in(z, A)
+
+    forall z obj, A set, B set:
+        $in(z, intersect(A, B))
+        =>:
+            $in(z, B)
+
+    forall z obj, A set, B set:
+        not $in(z, A)
+        =>:
+            not $in(z, intersect(A, B))
+
+    forall z obj, A set, B set:
+        not $in(z, B)
+        =>:
+            not $in(z, intersect(A, B))
+
+    forall A, B set:
+        intersect(A, B) $subset A
+
+    forall A, B set:
+        intersect(A, B) $subset B
+
+    forall A, B set:
+        A $subset union(A, B)
+
+    forall A, B set:
+        B $subset union(A, B)
+
+    forall A, B set:
+        union(A, B) = union(B, A)
+
+    forall A, B set:
+        intersect(A, B) = intersect(B, A)
+
+    forall A, B, C set:
+        union(union(A, B), C) = union(A, union(B, C))
+
+    forall A, B, C set:
+        intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+
+    forall A, B set:
+        union(A, intersect(A, B)) = A
+
+    forall A, B set:
+        intersect(A, union(A, B)) = A
+
+    forall A set:
+        union(A, A) = A
+
+    forall A set:
+        intersect(A, A) = A
+
+    forall A set:
+        union(A, {}) = A
+
+    forall A set:
+        intersect(A, {}) = {}
+
+    forall A, B, C set:
+        intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+
+    forall A, B, C set:
+        union(A, intersect(B, C)) = intersect(union(A, B), union(A, C))
+
+    forall z obj, A set, B set:
+        $in(z, A)
+        not $in(z, B)
+        =>:
+            $in(z, set_minus(A, B))
+
+    forall z obj, A set, B set:
+        $in(z, set_minus(A, B))
+        =>:
+            $in(z, A)
+
+    forall z obj, A set, B set:
+        $in(z, set_minus(A, B))
+        =>:
+            not $in(z, B)
+
+    forall A, B set:
+        set_minus(A, B) $subset A
+
+    forall A, B set:
+        set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
+
+    forall z obj, F set, Y set:
+        $in(Y, F)
+        $in(z, Y)
+        =>:
+            $in(z, cup(F))
+"#;
+
 pub fn builtin_env_code() -> String {
-    BUILTIN_ENV_CODE_FOR_REAL_NUMBER_COMPARISON.to_string()
+    let mut builtin_environment_source = String::new();
+    builtin_environment_source.push_str(BUILTIN_ENV_CODE_FOR_REAL_NUMBER_COMPARISON);
+    builtin_environment_source.push_str(BUILTIN_ENV_CODE_FOR_SET_OPERATORS);
+    builtin_environment_source
 }
