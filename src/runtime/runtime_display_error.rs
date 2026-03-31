@@ -479,7 +479,7 @@ impl Runtime {
         }
 
         let path = match self.module_manager.run_file_paths.get(file_index) {
-            Some(path) => path.clone(),
+            Some(path) => path.as_ref().to_string(),
             None => String::new(),
         };
         return path;
