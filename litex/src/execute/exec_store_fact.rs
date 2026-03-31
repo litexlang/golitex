@@ -1,7 +1,81 @@
 use crate::prelude::*;
 
 impl Runtime {
+    fn return_err_if_forall_fact_with_iff_then_or_iff_clauses_miss_some_parameter_name(
+        forall_fact_with_iff: &ForallFactWithIff,
+    ) -> Result<(), RuntimeErrorStruct> {
+        let coverage_error_detail_lines =
+            forall_fact_with_iff.error_messages_if_forall_param_missing_in_then_or_iff_clause();
+        if coverage_error_detail_lines.is_empty() {
+            return Ok(());
+        }
+        Err(RuntimeErrorStruct::new(
+            None,
+            format!(
+                "cannot store this forall fact: then or iff side must mention every forall parameter in each clause for matching (fix with a covering prop or repeat names in the conclusion).\n{}",
+                coverage_error_detail_lines.join("\n")
+            ),
+            forall_fact_with_iff.line_file,
+            None,
+        ))
+    }
+
     pub fn store_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        fact: &Fact,
+    ) -> Result<InferResult, RuntimeErrorStruct> {
+        match fact {
+            Fact::AtomicFact(atomic_fact) => self
+                .store_whole_fact_by_ref_update_cache_known_fact_and_infer(&Fact::AtomicFact(
+                    atomic_fact.clone(),
+                )),
+            Fact::ForallFact(forall_fact) => {
+                self.store_forall_fact_without_well_defined_verified_and_infer(forall_fact)
+            }
+            Fact::ForallFactWithIff(forall_fact_with_iff) => self
+                .store_forall_fact_with_iff_without_well_defined_verified_and_infer(
+                    forall_fact_with_iff,
+                ),
+            Fact::ExistFact(exist_fact) => self
+                .store_whole_fact_by_ref_update_cache_known_fact_and_infer(&Fact::ExistFact(
+                    exist_fact.clone(),
+                )),
+            Fact::OrFact(or_fact) => self
+                .store_whole_fact_by_ref_update_cache_known_fact_and_infer(&Fact::OrFact(
+                    or_fact.clone(),
+                )),
+            Fact::AndFact(and_fact) => self
+                .store_whole_fact_by_ref_update_cache_known_fact_and_infer(&Fact::AndFact(
+                    and_fact.clone(),
+                )),
+            Fact::ChainFact(chain_fact) => self
+                .store_whole_fact_by_ref_update_cache_known_fact_and_infer(&Fact::ChainFact(
+                    chain_fact.clone(),
+                )),
+        }
+    }
+
+    fn store_forall_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        forall_fact: &ForallFact,
+    ) -> Result<InferResult, RuntimeErrorStruct> {
+        return_err_if_forall_fact_then_or_iff_clauses_miss_some_parameter_name(forall_fact)?;
+        let whole_fact = Fact::ForallFact(forall_fact.clone());
+        self.store_whole_fact_by_ref_update_cache_known_fact_and_infer(&whole_fact)
+    }
+
+    fn store_forall_fact_with_iff_without_well_defined_verified_and_infer(
+        &mut self,
+        forall_fact_with_iff: &ForallFactWithIff,
+    ) -> Result<InferResult, RuntimeErrorStruct> {
+        Self::return_err_if_forall_fact_with_iff_then_or_iff_clauses_miss_some_parameter_name(
+            forall_fact_with_iff,
+        )?;
+        let whole_fact = Fact::ForallFactWithIff(forall_fact_with_iff.clone());
+        self.store_whole_fact_by_ref_update_cache_known_fact_and_infer(&whole_fact)
+    }
+
+    fn store_whole_fact_by_ref_update_cache_known_fact_and_infer(
         &mut self,
         fact: &Fact,
     ) -> Result<InferResult, RuntimeErrorStruct> {
@@ -177,4 +251,23 @@ impl Runtime {
                 )
             })
     }
+}
+
+fn return_err_if_forall_fact_then_or_iff_clauses_miss_some_parameter_name(
+    forall_fact: &ForallFact,
+) -> Result<(), RuntimeErrorStruct> {
+    let coverage_error_detail_lines =
+        forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
+    if coverage_error_detail_lines.is_empty() {
+        return Ok(());
+    }
+    Err(RuntimeErrorStruct::new(
+        None,
+        format!(
+            "cannot store this forall fact: then or iff side must mention every forall parameter in each clause for matching (fix with a covering prop or repeat names in the conclusion).\n{}",
+            coverage_error_detail_lines.join("\n")
+        ),
+        forall_fact.line_file,
+        None,
+    ))
 }
