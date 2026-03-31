@@ -1236,7 +1236,7 @@ impl AtomicFact {
             ],
             AtomicFact::RestrictFact(restrict_fact) => vec![
                 restrict_fact.obj.clone(),
-                restrict_fact.obj_can_restrict_to_fn_set.clone(),
+                restrict_fact.obj_can_restrict_to_fn_set.clone().into(),
             ],
             AtomicFact::NotRestrictFact(not_restrict_fact) => vec![
                 not_restrict_fact.obj.clone(),
