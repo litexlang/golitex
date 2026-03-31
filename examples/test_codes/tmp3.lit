@@ -1,10 +1,3 @@
-have fn product_of(s power_set(R)) R:
-        dom:
-            $is_finite_set(s)
-    prove:
-        do_nothing
-    = 1
-
 know:
     forall x R:
         product_of({x}) = x
