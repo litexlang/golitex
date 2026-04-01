@@ -102,6 +102,28 @@ impl Runtime {
                 )));
             }
         };
+        self.define_param_binding_struct_with_def(name, &def, struct_ty)
+    }
+
+    /// 与 [`define_param_binding_struct`] 相同，但直接使用已有定义（例如 `struct` **定义检查**时尚未写入全局 env）。
+    pub(crate) fn define_param_binding_struct_with_def(
+        &mut self,
+        name: &str,
+        def: &DefParamTypeStructStmt,
+        struct_ty: &StructParamType,
+    ) -> Result<InferResult, RuntimeError> {
+        let struct_name = struct_ty.name.to_string();
+        if def.name != struct_name {
+            return Err(RuntimeError::UnknownError(UnknownError::new(
+                format!(
+                    "struct type name `{}` does not match definition name `{}`",
+                    struct_name, def.name
+                ),
+                DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
+            )));
+        }
 
         let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
         if struct_ty.params.len() != expected_count {
@@ -128,9 +150,9 @@ impl Runtime {
         );
 
         let mut infer_result =
-            self.bind_struct_fields_for_root_param(&def, &param_to_arg_map, name)?;
+            self.bind_struct_fields_for_root_param(def, &param_to_arg_map, name)?;
         let fact_infer = self.store_instantiated_struct_def_facts_with_self(
-            &def,
+            def,
             &param_to_arg_map,
             Obj::Identifier(Identifier::new(name.to_string())),
         )?;
