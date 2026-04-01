@@ -219,10 +219,10 @@ impl Runtime {
         let mut infer_result = InferResult::new();
 
         let param_type_infer = self
-            .verify_args_satisfy_param_def_flat_types(
+            .store_args_satisfy_param_def(
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
-                &VerifyState::new(0, false),
+                normal_atomic_fact.line_file,
             )
             .map_err(|previous_error| {
                 InferError::new(

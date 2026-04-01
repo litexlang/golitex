@@ -383,6 +383,43 @@ impl Runtime {
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
     }
+
+    /// 与 [`define_param_binding_for_param_type`](crate::execute::exec_def_stmt) 一致，但左端为任意 [`Obj`]
+    ///（标识符、field access 或其它表达式）；`store_args_satisfy_param_def` 与谓词实例化共用此路径。
+    pub(crate) fn define_param_binding_for_param_type_on_obj(
+        &mut self,
+        subject: Obj,
+        param_type: &ParamType,
+    ) -> Result<InferResult, RuntimeError> {
+        match &subject {
+            Obj::Identifier(id) => self.define_param_binding_for_param_type(&id.name, param_type),
+            Obj::FieldAccess(fa) => {
+                self.define_param_binding_for_param_type_on_field_access(fa, param_type)
+            }
+            _ => match param_type {
+                ParamType::Struct(_) => Err(RuntimeError::UnknownError(UnknownError::new(
+                    format!(
+                        "struct parameter type requires an identifier or field access as subject, got {}",
+                        subject
+                    ),
+                    DEFAULT_LINE_FILE.clone(),
+                    None,
+                    None,
+                ))),
+                ParamType::Family(family_ty) => {
+                    self.define_param_binding_family_on_obj(subject.clone(), family_ty)
+                }
+                ParamType::Obj(obj) => self.define_param_binding_obj_on_obj(subject.clone(), obj),
+                ParamType::Set(set) => self.define_param_binding_set_on_obj(subject.clone(), set),
+                ParamType::NonemptySet(nonempty_set) => {
+                    self.define_param_binding_nonempty_set_on_obj(subject.clone(), nonempty_set)
+                }
+                ParamType::FiniteSet(finite_set) => {
+                    self.define_param_binding_finite_set_on_obj(subject.clone(), finite_set)
+                }
+            },
+        }
+    }
 }
 
 fn obj_from_field_access(field_access: &FieldAccess) -> Obj {

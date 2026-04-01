@@ -23,3 +23,8 @@ forall g struct group(s):
 
 # 之后再讨论 struct，field——access 和 cart 的关系
 """
+
+family seq(s set) = fn(x N_pos) s
+
+forall f family seq(R):
+    f(1) = f(1)
