@@ -1143,46 +1143,21 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        let args_satisfy_param_facts = self
-            .facts_for_args_satisfy_param_def_with_type_vec_for_verify(
-                &def.params_def_with_type,
-                &family_param_type.params,
+        self.verify_args_satisfy_param_def_flat_types(
+            &def.params_def_with_type,
+            &family_param_type.params,
+            verify_state,
+        )
+        .map_err(|runtime_error| {
+            WellDefinedError::new(
+                format!(
+                    "failed to verify family `{}` arguments satisfy parameter types",
+                    family_name
+                ),
+                Some(runtime_error),
+                DEFAULT_LINE_FILE.clone(),
             )
-            .map_err(|runtime_error| {
-                WellDefinedError::new(
-                    format!(
-                        "failed to build parameter satisfaction facts for family `{}`",
-                        family_name
-                    ),
-                    Some(runtime_error),
-                    DEFAULT_LINE_FILE.clone(),
-                )
-            })?;
-
-        for fact in args_satisfy_param_facts.iter() {
-            let verify_result = self.verify_atomic_fact(fact, verify_state).map_err(
-                |verify_error| {
-                    WellDefinedError::new(
-                        format!(
-                            "failed to verify family `{}` argument satisfies parameter type: {}",
-                            family_name, fact
-                        ),
-                        Some(RuntimeError::VerifyError(verify_error)),
-                        DEFAULT_LINE_FILE.clone(),
-                    )
-                },
-            )?;
-            if verify_result.is_unknown() {
-                return Err(WellDefinedError::new(
-                    format!(
-                        "argument does not satisfy family `{}` parameter type: {}",
-                        family_name, fact
-                    ),
-                    None,
-                    DEFAULT_LINE_FILE.clone(),
-                ));
-            }
-        }
+        })?;
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
@@ -1256,46 +1231,21 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        let args_satisfy_param_facts = self
-            .facts_for_args_satisfy_param_def_with_type_vec_for_verify(
-                &def.params_def_with_type,
-                &struct_ty.params,
+        self.verify_args_satisfy_param_def_flat_types(
+            &def.params_def_with_type,
+            &struct_ty.params,
+            verify_state,
+        )
+        .map_err(|runtime_error| {
+            WellDefinedError::new(
+                format!(
+                    "failed to verify struct `{}` arguments satisfy parameter types",
+                    struct_name
+                ),
+                Some(runtime_error),
+                DEFAULT_LINE_FILE.clone(),
             )
-            .map_err(|runtime_error| {
-                WellDefinedError::new(
-                    format!(
-                        "failed to build parameter satisfaction facts for struct `{}`",
-                        struct_name
-                    ),
-                    Some(runtime_error),
-                    DEFAULT_LINE_FILE.clone(),
-                )
-            })?;
-
-        for fact in args_satisfy_param_facts.iter() {
-            let verify_result = self.verify_atomic_fact(fact, verify_state).map_err(
-                |verify_error| {
-                    WellDefinedError::new(
-                        format!(
-                            "failed to verify struct `{}` argument satisfies parameter type: {}",
-                            struct_name, fact
-                        ),
-                        Some(RuntimeError::VerifyError(verify_error)),
-                        DEFAULT_LINE_FILE.clone(),
-                    )
-                },
-            )?;
-            if verify_result.is_unknown() {
-                return Err(WellDefinedError::new(
-                    format!(
-                        "argument does not satisfy struct `{}` parameter type: {}",
-                        struct_name, fact
-                    ),
-                    None,
-                    DEFAULT_LINE_FILE.clone(),
-                ));
-            }
-        }
+        })?;
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
