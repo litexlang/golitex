@@ -177,8 +177,8 @@ impl DefFamilyStmt {
     }
 }
 
-impl DefStructWithFieldsStmt {
+impl DefParamTypeStructStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefStructWithFieldsStmt".to_string()
+        "DefParamTypeStructStmt".to_string()
     }
 }
