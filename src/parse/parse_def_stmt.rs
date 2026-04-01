@@ -368,7 +368,10 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_param_type_struct_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
@@ -381,12 +384,12 @@ impl Runtime {
             })?;
 
         self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_struct_stmt_body(name, tb);
+        let stmt = self.parse_def_param_type_struct_stmt_body(name, tb);
         self.pop_parsing_time_name_scope();
         stmt
     }
 
-    fn parse_def_struct_stmt_body(
+    fn parse_def_param_type_struct_stmt_body(
         &mut self,
         name: String,
         tb: &mut TokenBlock,
@@ -444,7 +447,7 @@ impl Runtime {
             }
         }
 
-        Ok(Stmt::DefStructWithFieldsStmt(DefStructWithFieldsStmt::new(
+        Ok(Stmt::DefParamTypeStructStmt(DefParamTypeStructStmt::new(
             name,
             params_def_with_type,
             fields,

@@ -1,1 +1,4 @@
 family seq(s set) = fn(x N_pos) s
+
+forall x family seq(R):
+    x(1) = x(1)

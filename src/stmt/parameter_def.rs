@@ -133,39 +133,6 @@ impl ParamType {
         names
     }
 
-    /// Builds the fact that an identifier with the given name satisfies this param type.
-    pub fn param_satisfy_param_type_fact(param_name: &str, param_type: &ParamType) -> Fact {
-        match param_type {
-            ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(param_name.to_string())),
-                obj.clone(),
-                DEFAULT_LINE_FILE.clone(),
-            ))),
-            ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-                Obj::Identifier(Identifier::new(param_name.to_string())),
-                DEFAULT_LINE_FILE.clone(),
-            ))),
-            ParamType::NonemptySet(_) => {
-                Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                    Obj::Identifier(Identifier::new(param_name.to_string())),
-                    DEFAULT_LINE_FILE.clone(),
-                )))
-            }
-            ParamType::FiniteSet(_) => {
-                Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                    Obj::Identifier(Identifier::new(param_name.to_string())),
-                    DEFAULT_LINE_FILE.clone(),
-                )))
-            }
-            ParamType::Family(_) => {
-                unimplemented!("family param type is not supported yet");
-            }
-            ParamType::Struct(_) => {
-                unimplemented!("struct param type is not supported yet");
-            }
-        }
-    }
-
     /// Builds the fact that the given object satisfies this param type.
     pub fn fact_for_obj(obj: Obj, param_type: &ParamType) -> AtomicFact {
         match param_type {
@@ -372,7 +339,7 @@ impl ParamDefWithParamType {
         result
     }
 
-    fn instantiate_param_def_with_type_one_by_one(
+    pub(crate) fn instantiate_param_def_with_type_one_by_one(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Obj>,
     ) -> Result<Vec<ParamType>, RuntimeError> {

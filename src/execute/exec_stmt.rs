@@ -19,8 +19,7 @@ impl Runtime {
             Stmt::HaveFnEqualCaseByCaseStmt(d) => self
                 .have_fn_equal_case_by_case_stmt(d)
                 .map_err(RuntimeError::from),
-            Stmt::DefStructWithFieldsStmt(d) => self
-                .def_struct_with_fields_stmt(d)
+            Stmt::DefParamTypeStructStmt(d) => self.def_param_type_struct_stmt(d)
                 .map_err(RuntimeError::from),
             Stmt::DefFamilyStmt(d) => self.def_family_stmt(d)
                 .map_err(RuntimeError::from),

@@ -38,14 +38,14 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_def_struct_with_fields(
+    pub fn store_def_param_type_struct(
         &mut self,
-        def_struct_with_fields_stmt: &DefStructWithFieldsStmt,
+        def_param_type_struct_stmt: &DefParamTypeStructStmt,
     ) -> Result<(), ExecStmtError> {
-        let name = def_struct_with_fields_stmt.name.clone();
+        let name = def_param_type_struct_stmt.name.clone();
         self.top_level_env()
-            .defined_structs_with_fields
-            .insert(name, def_struct_with_fields_stmt.clone());
+            .defined_param_type_structs
+            .insert(name, def_param_type_struct_stmt.clone());
         Ok(())
     }
 

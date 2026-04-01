@@ -127,7 +127,7 @@ pub use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 pub use crate::stmt::definition_stmt::DefLetStmt;
 pub use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
 pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
-pub use crate::stmt::definition_stmt::DefStructWithFieldsStmt;
+pub use crate::stmt::definition_stmt::DefParamTypeStructStmt;
 pub use crate::stmt::definition_stmt::DefFamilyStmt;
 pub use crate::stmt::definition_stmt::HaveExistObjStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
