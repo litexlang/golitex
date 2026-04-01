@@ -105,10 +105,11 @@ pub const R_NEG: &str = "R_neg";
 pub const Q_NZ: &str = "Q_nz";
 pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
+pub const FAMILY: &str = "family";
 pub const STRUCT: &str = "struct";
 pub const RESTRICT: &str = "restrict";
 
-pub const BUILTIN_CODE: &str = "builtin_code";
+pub const BUILTIN_CODE_PATH: &str = "builtin_code";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -224,9 +225,10 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         Q_NZ,
         Z_NZ,
         R_NZ,
+        FAMILY,
         STRUCT,
         RESTRICT,
-        BUILTIN_CODE,
+        BUILTIN_CODE_PATH,
     ];
     for &s in &words {
         m.insert(s, s);
