@@ -1,3 +1,4 @@
+1= 0
 """
 prop group_property(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
     forall x, y, z s:
@@ -15,6 +16,9 @@ struct group(s set):
     <=>:
         $group_property(self.s, self.zero, self.add, self.inv)
 
+"""
+
+"""
 forall g struct group(s):
     g.zero $in s
     g.add $in fn(x, y s) s

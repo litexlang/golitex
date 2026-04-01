@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashSet;
 
 impl Runtime {
     pub fn parse_def_prop_with_meaning_stmt(
@@ -447,6 +448,27 @@ impl Runtime {
             }
         }
 
+        let fields = merge_struct_fields_with_implicit_type_params(
+            &name,
+            &params_def_with_type,
+            fields,
+            tb.line_file,
+        )?;
+
+        let mut seen = HashSet::new();
+        for (field_name, _) in fields.iter() {
+            if !seen.insert(field_name.clone()) {
+                return Err(ParsingError::new(
+                    format!(
+                        "struct `{}`: duplicate field `{}`",
+                        name, field_name
+                    ),
+                    tb.line_file,
+                    None,
+                ));
+            }
+        }
+
         Ok(Stmt::DefParamTypeStructStmt(DefParamTypeStructStmt::new(
             name,
             params_def_with_type,
@@ -520,4 +542,32 @@ impl Runtime {
         let value = self.parse_obj(block)?;
         Ok(AlgoReturn::new(value, block.line_file))
     }
+}
+
+/// `struct` 头部每个类型参数在 AST 里自动对应一条 field（排在用户写字段之前），以便 `self.s` 等与形参对齐。
+/// 若用户又显式写了同名字段，报错。
+fn merge_struct_fields_with_implicit_type_params(
+    struct_name: &str,
+    params_def_with_type: &[ParamDefWithParamType],
+    user_fields: Vec<(String, ParamType)>,
+    line_file: (usize, usize),
+) -> Result<Vec<(String, ParamType)>, ParsingError> {
+    let mut implicit: Vec<(String, ParamType)> = Vec::new();
+    for pd in params_def_with_type {
+        for pname in &pd.0 {
+            if user_fields.iter().any(|(n, _)| n == pname) {
+                return Err(ParsingError::new(
+                    format!(
+                        "struct `{}`: field `{}` duplicates a type parameter; remove the explicit field line",
+                        struct_name, pname
+                    ),
+                    line_file,
+                    None,
+                ));
+            }
+            implicit.push((pname.clone(), pd.1.clone()));
+        }
+    }
+    implicit.extend(user_fields);
+    Ok(implicit)
 }
