@@ -385,7 +385,7 @@ impl Runtime {
     }
 
     /// 与 [`define_param_binding_for_param_type`](crate::execute::exec_def_stmt) 一致，但左端为任意 [`Obj`]
-    ///（标识符、field access 或其它表达式）；`store_args_satisfy_param_def` 与谓词实例化共用此路径。
+    ///（标识符、field access 或其它表达式）；与 `store_args_satisfy_param_def`（`runtime_store_arg_satisfy_param_def`）共用此路径。
     pub(crate) fn define_param_binding_for_param_type_on_obj(
         &mut self,
         subject: Obj,

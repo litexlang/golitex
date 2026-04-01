@@ -22,9 +22,12 @@ forall g struct group(s):
     $group_property(s, g.zero, g.add, g.inv)
 
 # 之后再讨论 struct，field——access 和 cart 的关系
+# 之后在讨论 (R, zero, add, inv) 满足 group(s) 这样的情况
 """
 
+"""
 family seq(s set) = fn(x N_pos) s
 
 forall f family seq(R):
     f(1) = f(1)
+"""
