@@ -2,15 +2,15 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct DefPropWithoutMeaningStmt {
+pub struct DefAbstractPropStmt {
     pub name: String,
     pub params: Vec<String>,
     pub line_file: (usize, usize),
 }
 
-impl DefPropWithoutMeaningStmt {
+impl DefAbstractPropStmt {
     pub fn new(name: String, params: Vec<String>, line_file: (usize, usize)) -> Self {
-        DefPropWithoutMeaningStmt {
+        DefAbstractPropStmt {
             name,
             params,
             line_file,
@@ -28,7 +28,7 @@ pub struct DefStructWithFieldsStmt {
 }
 
 #[derive(Clone)]
-pub struct DefStructWithNoFieldStmt {
+pub struct DefFamilyStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
@@ -88,12 +88,12 @@ pub struct DefPropWithMeaningStmt {
     pub line_file: (usize, usize),
 }
 
-impl fmt::Display for DefPropWithoutMeaningStmt {
+impl fmt::Display for DefAbstractPropStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {}{}{}{}",
-            PROP,
+            ABSTRACT_PROP,
             self.name,
             LEFT_BRACE,
             vec_to_string_join_by_comma(&self.params),
@@ -369,7 +369,7 @@ impl HaveFnEqualCaseByCaseStmt {
     }
 }
 
-impl DefStructWithNoFieldStmt {
+impl DefFamilyStmt {
     pub fn new(
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
@@ -377,7 +377,7 @@ impl DefStructWithNoFieldStmt {
         equal_to: Obj,
         line_file: (usize, usize),
     ) -> Self {
-        DefStructWithNoFieldStmt {
+        DefFamilyStmt {
             name,
             params_def_with_type,
             dom_facts,
@@ -387,12 +387,12 @@ impl DefStructWithNoFieldStmt {
     }
 }
 
-impl fmt::Display for DefStructWithNoFieldStmt {
+impl fmt::Display for DefFamilyStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {}{}{} {} {}{} {} {}",
-            STRUCT,
+            FAMILY,
             self.name,
             LEFT_BRACE,
             vec_to_string_join_by_comma(&self.params_def_with_type),

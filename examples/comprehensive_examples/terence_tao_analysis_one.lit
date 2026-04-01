@@ -36,7 +36,7 @@ know:
 # The user actually can use "induc" + "there exists the smallest natural number" to prove the principle of mathematical induction. In this case, he does not need to use the builtin keyword "induc" to use "induc" to prove correctness of a statement.
 
 # define a random proposition
-prop random_proposition(n N)
+abstract_prop random_proposition(n N)
 
 # know it satisfies the condition of the principle of mathematical induction
 know:

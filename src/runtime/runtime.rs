@@ -177,11 +177,11 @@ impl Runtime {
         None
     }
 
-    /// Look up predicate definition without meaning by name from current env or builtin.
-    pub fn get_predicate_without_meaning_definition_by_name(
+    /// Look up abstract prop (`abstract_prop` keyword) definition by name from current env or builtin.
+    pub fn get_abstract_prop_definition_by_name(
         &self,
         predicate_name: &str,
-    ) -> Option<&DefPropWithoutMeaningStmt> {
+    ) -> Option<&DefAbstractPropStmt> {
         let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
@@ -189,7 +189,7 @@ impl Runtime {
 
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment
-                .defined_props_without_meaning
+                .defined_abstract_props
                 .get(predicate_name)
             {
                 return Some(definition);
@@ -244,20 +244,17 @@ impl Runtime {
         None
     }
 
-    pub fn get_set_struct_with_no_field_definition_by_name(
+    pub fn get_family_definition_by_name(
         &self,
-        set_struct_name: &str,
-    ) -> Option<&DefStructWithNoFieldStmt> {
-        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        family_name: &str,
+    ) -> Option<&DefFamilyStmt> {
+        let parts = family_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment
-                .defined_structs_with_no_field
-                .get(set_struct_name)
-            {
+            if let Some(definition) = environment.defined_families.get(family_name) {
                 return Some(definition);
             }
         }
@@ -265,20 +262,17 @@ impl Runtime {
         None
     }
 
-    pub fn get_cloned_set_struct_with_no_field_definition_by_name(
+    pub fn get_cloned_family_definition_by_name(
         &self,
-        set_struct_name: &str,
-    ) -> Option<DefStructWithNoFieldStmt> {
-        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        family_name: &str,
+    ) -> Option<DefFamilyStmt> {
+        let parts = family_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment
-                .defined_structs_with_no_field
-                .get(set_struct_name)
-            {
+            if let Some(definition) = environment.defined_families.get(family_name) {
                 return Some(definition.clone());
             }
         }
@@ -434,13 +428,13 @@ impl Runtime {
             .is_some();
     }
 
-    pub fn is_name_used_for_predicate_without_meaning(&self, name: &str) -> bool {
+    pub fn is_name_used_for_abstract_prop(&self, name: &str) -> bool {
         if is_builtin_predicate(name) {
             return true;
         }
 
         return self
-            .get_predicate_without_meaning_definition_by_name(name)
+            .get_abstract_prop_definition_by_name(name)
             .is_some();
     }
 
@@ -450,10 +444,8 @@ impl Runtime {
             .is_some();
     }
 
-    pub fn is_name_used_for_struct_with_no_field(&self, name: &str) -> bool {
-        return self
-            .get_set_struct_with_no_field_definition_by_name(name)
-            .is_some();
+    pub fn is_name_used_for_family(&self, name: &str) -> bool {
+        return self.get_family_definition_by_name(name).is_some();
     }
 
     pub fn is_name_used_for_algo(&self, name: &str) -> bool {
