@@ -471,19 +471,20 @@ impl Runtime {
         }))
     }
 
-    /// 对每个实参验证其是否满足展开后的参数类型（含嵌套的 `struct`），与仅构造一条 [`AtomicFact`] 的旧路径不同。
+    /// 对每个实参调用 [`Self::verify_obj_satisfies_param_type`]（含 `family` / `struct`），并合并各步的 [`InferResult`]。
     pub(crate) fn verify_args_satisfy_param_def_flat_types(
         &mut self,
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Obj>,
         verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<InferResult, RuntimeError> {
         let instantiated_types =
             ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
         let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
             param_defs,
             &instantiated_types,
         );
+        let mut infer_result = InferResult::new();
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let verify_result = self
                 .verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)
@@ -499,8 +500,17 @@ impl Runtime {
                     None,
                 )));
             }
+            match verify_result {
+                NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
+                    infer_result.new_infer_result_inside(x.infers);
+                }
+                NonErrStmtExecResult::FactualStmtSuccess(x) => {
+                    infer_result.new_infer_result_inside(x.infers);
+                }
+                NonErrStmtExecResult::StmtUnknown(_) => unreachable!(),
+            }
         }
-        Ok(())
+        Ok(infer_result)
     }
 
     pub fn define_params_with_type(
@@ -785,10 +795,11 @@ impl Runtime {
             .map(|s| Obj::Identifier(Identifier::new(s.clone())))
             .collect();
 
-        let args_satisfy_param_types =
-            ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
+        let mut infer_result = self
+            .verify_args_satisfy_param_def_flat_types(
                 &exist_fact_in_have_obj_stmt.params_def_with_type,
                 &new_obj_names_as_identifier_objs,
+                &verify_state,
             )
             .map_err(|e| {
                 ExecStmtError::new(
@@ -798,20 +809,6 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        let mut infer_result = InferResult::new();
-        for fact in args_satisfy_param_types.iter() {
-            let fact_infer_result = self
-                .store_atomic_fact_without_well_defined_verified_and_infer(fact.clone())
-                .map_err(|store_fact_error| {
-                    ExecStmtError::new(
-                        Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
-                        "".to_string(),
-                        Some(store_fact_error.into()),
-                        vec![],
-                    )
-                })?;
-            infer_result.new_infer_result_inside(fact_infer_result);
-        }
 
         let param_to_obj_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &exist_fact_in_have_obj_stmt.params_def_with_type,

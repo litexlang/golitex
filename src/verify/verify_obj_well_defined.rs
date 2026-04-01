@@ -1143,21 +1143,22 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        self.verify_args_satisfy_param_def_flat_types(
-            &def.params_def_with_type,
-            &family_param_type.params,
-            verify_state,
-        )
-        .map_err(|runtime_error| {
-            WellDefinedError::new(
-                format!(
-                    "failed to verify family `{}` arguments satisfy parameter types",
-                    family_name
-                ),
-                Some(runtime_error),
-                DEFAULT_LINE_FILE.clone(),
+        let _: InferResult = self
+            .verify_args_satisfy_param_def_flat_types(
+                &def.params_def_with_type,
+                &family_param_type.params,
+                verify_state,
             )
-        })?;
+            .map_err(|runtime_error| {
+                WellDefinedError::new(
+                    format!(
+                        "failed to verify family `{}` arguments satisfy parameter types",
+                        family_name
+                    ),
+                    Some(runtime_error),
+                    DEFAULT_LINE_FILE.clone(),
+                )
+            })?;
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
@@ -1231,21 +1232,22 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        self.verify_args_satisfy_param_def_flat_types(
-            &def.params_def_with_type,
-            &struct_ty.params,
-            verify_state,
-        )
-        .map_err(|runtime_error| {
-            WellDefinedError::new(
-                format!(
-                    "failed to verify struct `{}` arguments satisfy parameter types",
-                    struct_name
-                ),
-                Some(runtime_error),
-                DEFAULT_LINE_FILE.clone(),
+        let _: InferResult = self
+            .verify_args_satisfy_param_def_flat_types(
+                &def.params_def_with_type,
+                &struct_ty.params,
+                verify_state,
             )
-        })?;
+            .map_err(|runtime_error| {
+                WellDefinedError::new(
+                    format!(
+                        "failed to verify struct `{}` arguments satisfy parameter types",
+                        struct_name
+                    ),
+                    Some(runtime_error),
+                    DEFAULT_LINE_FILE.clone(),
+                )
+            })?;
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
@@ -1276,11 +1278,6 @@ impl Runtime {
                     DEFAULT_LINE_FILE.clone(),
                 ));
             }
-        }
-
-        for (_, field_param_type) in def.fields.iter() {
-            let instantiated_field_type = field_param_type.instantiate(&param_to_arg_map);
-            self.verify_param_type_well_defined(&instantiated_field_type, verify_state)?;
         }
 
         Ok(())
