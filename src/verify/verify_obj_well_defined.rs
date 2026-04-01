@@ -1090,9 +1090,29 @@ impl Runtime {
             ParamType::NonemptySet(_) => Ok(()),
             ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(obj) => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
-            ParamType::InstantiatedStruct(_) => {
-                unimplemented!("instantiated struct param type is not supported yet");
+            ParamType::Family(family) => {
+                return self.verify_param_type_family_or_struct_well_defined(
+                    &family.name,
+                    &family.params,
+                    verify_state,
+                );
+            }
+            ParamType::Struct(struct_ty) => {
+                return self.verify_param_type_family_or_struct_well_defined(
+                    &struct_ty.name,
+                    &struct_ty.params,
+                    verify_state,
+                );
             }
         }
+    }
+
+    fn verify_param_type_family_or_struct_well_defined(
+        &mut self,
+        _name: &IdentifierOrIdentifierWithMod,
+        _params: &[Obj],
+        _verify_state: &VerifyState,
+    ) -> Result<(), WellDefinedError> {
+        unimplemented!()
     }
 }

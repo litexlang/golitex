@@ -16,11 +16,22 @@ pub enum ParamType {
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
     Obj(Obj),
-    InstantiatedStruct(InstantiatedStruct),
+    /// Parameterized type family, e.g. `family seq(S)` — no record fields, indexed by type/set args.
+    Family(FamilyParamType),
+    /// Product/record-style type, e.g. `struct Point(R, R)` — named fields live in struct definitions.
+    Struct(StructParamType),
 }
 
+/// Instantiated family type: `family` name followed by argument objects (often sets).
 #[derive(Clone)]
-pub struct InstantiatedStruct {
+pub struct FamilyParamType {
+    pub name: IdentifierOrIdentifierWithMod,
+    pub params: Vec<Obj>,
+}
+
+/// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
+#[derive(Clone)]
+pub struct StructParamType {
     pub name: IdentifierOrIdentifierWithMod,
     pub params: Vec<Obj>,
 }
@@ -59,13 +70,22 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
-            ParamType::InstantiatedStruct(instantiated_struct) => {
+            ParamType::Family(family) => {
+                write!(
+                    f,
+                    "{} {}({})",
+                    FAMILY,
+                    family.name,
+                    vec_to_string_join_by_comma(&family.params)
+                )
+            }
+            ParamType::Struct(struct_ty) => {
                 write!(
                     f,
                     "{} {}({})",
                     STRUCT,
-                    instantiated_struct.name,
-                    vec_to_string_join_by_comma(&instantiated_struct.params)
+                    struct_ty.name,
+                    vec_to_string_join_by_comma(&struct_ty.params)
                 )
             }
         }
@@ -137,8 +157,11 @@ impl ParamType {
                     DEFAULT_LINE_FILE.clone(),
                 )))
             }
-            ParamType::InstantiatedStruct(_) => {
-                unimplemented!("instantiated struct param type is not supported yet");
+            ParamType::Family(_) => {
+                unimplemented!("family param type is not supported yet");
+            }
+            ParamType::Struct(_) => {
+                unimplemented!("struct param type is not supported yet");
             }
         }
     }
@@ -159,8 +182,11 @@ impl ParamType {
             ParamType::FiniteSet(_) => {
                 AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(obj, DEFAULT_LINE_FILE.clone()))
             }
-            ParamType::InstantiatedStruct(_) => {
-                unimplemented!("instantiated struct param type is not supported yet");
+            ParamType::Family(_) => {
+                unimplemented!("family param type is not supported yet");
+            }
+            ParamType::Struct(_) => {
+                unimplemented!("struct param type is not supported yet");
             }
         }
     }
@@ -442,13 +468,23 @@ impl ParamType {
             ParamType::FiniteSet(_) => self.clone(),
             ParamType::NonemptySet(_) => self.clone(),
             ParamType::Obj(obj) => ParamType::Obj(obj.instantiate(param_to_arg_map)),
-            ParamType::InstantiatedStruct(instantiated_struct) => {
-                let mut params = Vec::with_capacity(instantiated_struct.params.len());
-                for param in instantiated_struct.params.iter() {
+            ParamType::Family(family) => {
+                let mut params = Vec::with_capacity(family.params.len());
+                for param in family.params.iter() {
                     params.push(param.instantiate(param_to_arg_map));
                 }
-                ParamType::InstantiatedStruct(InstantiatedStruct {
-                    name: instantiated_struct.name.clone(),
+                ParamType::Family(FamilyParamType {
+                    name: family.name.clone(),
+                    params,
+                })
+            }
+            ParamType::Struct(struct_ty) => {
+                let mut params = Vec::with_capacity(struct_ty.params.len());
+                for param in struct_ty.params.iter() {
+                    params.push(param.instantiate(param_to_arg_map));
+                }
+                ParamType::Struct(StructParamType {
+                    name: struct_ty.name.clone(),
                     params,
                 })
             }

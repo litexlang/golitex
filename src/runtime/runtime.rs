@@ -11,7 +11,7 @@ pub struct Runtime {
 
 impl Runtime {
     pub fn new() -> Self {
-        let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
+        let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE_PATH);
         let new_environment = Box::new(Environment::new_empty_env());
 
         Runtime {
