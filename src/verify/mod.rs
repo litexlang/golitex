@@ -9,6 +9,7 @@ mod verify_exist_fact_with_known_forall;
 mod verify_fact;
 mod verify_fact_well_defined;
 mod verify_facts_the_same_type_and_return_matched_args;
+mod verify_fn_set_equality_builtin_rule;
 mod verify_forall_fact_forall_fact_with_iff;
 mod verify_helper;
 mod verify_in_fact_builtin_rules;

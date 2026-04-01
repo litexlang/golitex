@@ -1,4 +1,4 @@
-prop p(a, b, c)
+abstract_prop p(a, b, c)
 let a, b, c, d, e, f R:
     $p(a, b, c)
     a = d

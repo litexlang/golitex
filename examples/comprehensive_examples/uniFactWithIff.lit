@@ -1,5 +1,5 @@
-prop p(x R)
-prop q(x R)
+abstract_prop p(x R)
+abstract_prop q(x R)
 
 know:
     forall x R:

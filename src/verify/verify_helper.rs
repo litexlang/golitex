@@ -45,9 +45,20 @@ impl Runtime {
                 )?;
                 Ok(())
             }
-            ParamType::InstantiatedStruct(_) => {
-                unimplemented!("instantiated struct param type is not supported yet");
-            }
+            ParamType::Family(_) => Err(ExecStmtError::new(
+                None,
+                "family param type is not supported yet in verify_param_type_nonempty_if_required"
+                    .to_string(),
+                None,
+                vec![],
+            )),
+            ParamType::Struct(_) => Err(ExecStmtError::new(
+                None,
+                "struct param type is not supported yet in verify_param_type_nonempty_if_required"
+                    .to_string(),
+                None,
+                vec![],
+            )),
         }
     }
 }
