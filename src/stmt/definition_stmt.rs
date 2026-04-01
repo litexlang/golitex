@@ -22,7 +22,7 @@ impl DefAbstractPropStmt {
 pub struct DefParamTypeStructStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
-    pub fields: Vec<(String, Obj)>,
+    pub fields: Vec<(String, ParamType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: (usize, usize),
 }
@@ -409,7 +409,7 @@ impl DefParamTypeStructStmt {
     pub fn new(
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
-        fields: Vec<(String, Obj)>,
+        fields: Vec<(String, ParamType)>,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: (usize, usize),
     ) -> Self {

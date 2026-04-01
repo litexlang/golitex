@@ -39,34 +39,6 @@ impl FieldAccess {
                 name: identifier.name.clone(),
                 fields: self.fields.clone(),
             }),
-            Some(Obj::IdentifierWithMod(identifier_with_mod)) => {
-                Obj::FieldAccessWithMod(FieldAccessWithMod {
-                    mod_name: identifier_with_mod.mod_name.clone(),
-                    name: identifier_with_mod.name.clone(),
-                    fields: self.fields.clone(),
-                })
-            }
-            Some(Obj::FieldAccess(existing_field_access)) => {
-                let mut fields = existing_field_access.fields.clone();
-                for field in self.fields.iter() {
-                    fields.push(field.clone());
-                }
-                Obj::FieldAccess(FieldAccess {
-                    name: existing_field_access.name.clone(),
-                    fields,
-                })
-            }
-            Some(Obj::FieldAccessWithMod(existing_field_access_with_mod)) => {
-                let mut fields = existing_field_access_with_mod.fields.clone();
-                for field in self.fields.iter() {
-                    fields.push(field.clone());
-                }
-                Obj::FieldAccessWithMod(FieldAccessWithMod {
-                    mod_name: existing_field_access_with_mod.mod_name.clone(),
-                    name: existing_field_access_with_mod.name.clone(),
-                    fields,
-                })
-            }
             _ => Obj::FieldAccess(self.clone()),
         }
     }

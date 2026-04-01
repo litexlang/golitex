@@ -54,16 +54,8 @@ impl Runtime {
                 )
             })?;
 
-        for (_, field_obj) in def_param_type_struct_stmt.fields.iter() {
-            self.verify_obj_well_defined_and_store_cache(field_obj, &verify_state)
-                .map_err(|well_defined_error| {
-                    ExecStmtError::new(
-                        Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
-                        "".to_string(),
-                        Some(well_defined_error.into()),
-                        vec![],
-                    )
-                })?;
+        for (_, _) in def_param_type_struct_stmt.fields.iter() {
+            unreachable!();
         }
 
         // 在这里申明 field access
