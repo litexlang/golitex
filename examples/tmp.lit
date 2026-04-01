@@ -1,0 +1,23 @@
+prop group_property(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
+    forall x, y, z s:
+        add(x, add(y, z)) = add(add(x, y), z)
+    forall x s:
+        add(x, zero) = x
+        add(zero, x) = x
+        add(x, inv(x)) = zero
+        add(inv(x), x) = zero
+
+struct group(s set):
+    zero s
+    add fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        $group_property(self.s, self.zero, self.add, self.inv)
+
+forall g struct group(s):
+    g.zero $in s
+    g.add $in fn(x, y s) s
+    g.inv $in fn(x s) s
+    $group_property(s, g.zero, g.add, g.inv)
+
+# 之后再讨论 struct，field——access 和 cart 的关系
