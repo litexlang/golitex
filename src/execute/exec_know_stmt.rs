@@ -13,7 +13,7 @@ impl Runtime {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|e| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::KnowStmt(know_stmt.clone()),
                         "".to_string(),
                         Some(e.into()),

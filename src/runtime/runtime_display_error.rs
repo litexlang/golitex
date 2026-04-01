@@ -306,9 +306,11 @@ impl Runtime {
                 ));
             }
             RuntimeError::ExecStmtError(e) => {
-                let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), &e.stmt);
-                for stmt_line in stmt_lines {
-                    field_lines.push(stmt_line);
+                if let Some(stmt) = &e.stmt {
+                    let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), stmt);
+                    for stmt_line in stmt_lines {
+                        field_lines.push(stmt_line);
+                    }
                 }
 
                 let mut inside_result_elements: Vec<String> = Vec::new();

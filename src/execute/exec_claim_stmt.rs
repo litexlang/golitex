@@ -8,7 +8,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.define_params_with_type(&forall_fact.params_def_with_type, false)
             .map_err(|define_params_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::ClaimStmt(stmt.clone()),
                     "".to_string(),
                     Some(define_params_error.into()),
