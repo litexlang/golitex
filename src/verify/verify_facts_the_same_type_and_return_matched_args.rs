@@ -214,33 +214,40 @@ impl Runtime {
                     ParamType::FiniteSet(_) => {}
                     _ => return Ok(None),
                 },
-                ParamType::InstantiatedStruct(ref instantiated_struct) => {
-                    match &other_param_def.1 {
-                        ParamType::InstantiatedStruct(other_instantiated_struct) => {
-                            if instantiated_struct.name.to_string()
-                                != other_instantiated_struct.name.to_string()
-                            {
-                                return Ok(None);
-                            }
-                            if instantiated_struct.params.len()
-                                != other_instantiated_struct.params.len()
-                            {
-                                return Ok(None);
-                            }
-                            let mut matched_args: Vec<(Obj, Obj)> =
-                                Vec::with_capacity(instantiated_struct.params.len());
-                            for (param, other_param) in instantiated_struct
-                                .params
-                                .iter()
-                                .zip(other_instantiated_struct.params.iter())
-                            {
-                                matched_args.push((param.clone(), other_param.clone()));
-                            }
-                            return Ok(Some(matched_args));
+                ParamType::Family(ref family) => match &other_param_def.1 {
+                    ParamType::Family(other_family) => {
+                        if family.name.to_string() != other_family.name.to_string() {
+                            return Ok(None);
                         }
-                        _ => return Ok(None),
+                        if family.params.len() != other_family.params.len() {
+                            return Ok(None);
+                        }
+                        for (param, other_param) in
+                            family.params.iter().zip(other_family.params.iter())
+                        {
+                            matched_args.push((param.clone(), other_param.clone()));
+                        }
                     }
-                }
+                    _ => return Ok(None),
+                },
+                ParamType::Struct(ref struct_ty) => match &other_param_def.1 {
+                    ParamType::Struct(other_struct) => {
+                        if struct_ty.name.to_string() != other_struct.name.to_string() {
+                            return Ok(None);
+                        }
+                        if struct_ty.params.len() != other_struct.params.len() {
+                            return Ok(None);
+                        }
+                        for (param, other_param) in struct_ty
+                            .params
+                            .iter()
+                            .zip(other_struct.params.iter())
+                        {
+                            matched_args.push((param.clone(), other_param.clone()));
+                        }
+                    }
+                    _ => return Ok(None),
+                },
             }
         }
         for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {

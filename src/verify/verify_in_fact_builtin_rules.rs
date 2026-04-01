@@ -1,4 +1,73 @@
 use crate::prelude::*;
+use std::collections::HashMap;
+
+/// `fn(x N_pos) R` 与 `fn(y N_pos) R`：将两侧形参名统一为 `##0`, `##1`, …，对 `params_def_with_set` / `dom_facts` / `ret_set` 做代入后比较 `Display`。
+fn fn_set_with_params_equal_modulo_param_rename(a: &FnSetWithParams, b: &FnSetWithParams) -> bool {
+    let pa = a.params();
+    let pb = b.params();
+    if pa.len() != pb.len() {
+        return false;
+    }
+
+    let mut pa_map = HashMap::new();
+    let mut pb_map = HashMap::new();
+    for i in 0..pa.len() {
+        let ph = format!("##{}", i);
+        pa_map.insert(
+            pa[i].clone(),
+            Obj::Identifier(Identifier::new(ph.clone())),
+        );
+        pb_map.insert(pb[i].clone(), Obj::Identifier(Identifier::new(ph)));
+    }
+
+    let a_params =
+        param_def_with_set_rename_params_to_placeholders(&a.params_def_with_set, &pa);
+    let b_params =
+        param_def_with_set_rename_params_to_placeholders(&b.params_def_with_set, &pb);
+
+    let a_dom: Vec<OrAndChainAtomicFact> = a
+        .dom_facts
+        .iter()
+        .map(|dom_fact| dom_fact.instantiate(&pa_map))
+        .collect();
+    let b_dom: Vec<OrAndChainAtomicFact> = b
+        .dom_facts
+        .iter()
+        .map(|dom_fact| dom_fact.instantiate(&pb_map))
+        .collect();
+
+    let a_ret = a.ret_set.as_ref().clone();
+    let b_ret = b.ret_set.as_ref().clone();
+
+    let a_instantiated = FnSetWithParams::new(a_params, a_dom, a_ret);
+    let b_instantiated = FnSetWithParams::new(b_params, b_dom, b_ret);
+
+    a_instantiated.to_string() == b_instantiated.to_string()
+}
+
+fn param_def_with_set_rename_params_to_placeholders(
+    groups: &[ParamDefWithParamSet],
+    flat_param_names: &[String],
+) -> Vec<ParamDefWithParamSet> {
+    let mut name_to_i: HashMap<String, usize> = HashMap::new();
+    for (i, n) in flat_param_names.iter().enumerate() {
+        name_to_i.insert(n.clone(), i);
+    }
+    let mut out = Vec::with_capacity(groups.len());
+    for g in groups {
+        let new_names: Vec<String> = g
+            .0
+            .iter()
+            .map(|n| {
+                let i = name_to_i[n];
+                format!("##{}", i)
+            })
+            .collect();
+        let set_obj = g.1.clone();
+        out.push(ParamDefWithParamSet(new_names, set_obj));
+    }
+    out
+}
 
 fn number_in_set_verified_by_builtin_rules_result(
     in_fact: &InFact,
@@ -192,6 +261,12 @@ impl Runtime {
                 list_set,
                 verify_state,
             ),
+            (Obj::Identifier(identifier), Obj::FnSetWithParams(expected_fn_set)) => self
+                .verify_in_fact_identifier_in_fn_set_by_stored_definition(
+                    identifier,
+                    expected_fn_set,
+                    in_fact,
+                ),
             (_, target_set_obj) => {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
@@ -429,6 +504,30 @@ impl Runtime {
             ]),
             _ => None,
         }
+    }
+
+    /// 若环境中已有 `identifier $in fn_定义`（由先前推断写入 `known_obj_in_fn_set`），则与当前 `fn ...` 右侧做 α-等价比较。
+    fn verify_in_fact_identifier_in_fn_set_by_stored_definition(
+        &mut self,
+        identifier: &Identifier,
+        expected_fn_set: &FnSetWithParams,
+        in_fact: &InFact,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let element_obj = Obj::Identifier(Identifier::new(identifier.name.clone()));
+        let Some(stored_fn_set) = self.get_cloned_fn_set_where_fn_belongs_to(&element_obj) else {
+            return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+        };
+        if fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set) {
+            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                    InferResult::new(),
+                    "fn membership: stored fn signature matches RHS (α-renamed compare)".to_string(),
+                    Vec::new(),
+                ),
+            ));
+        }
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     fn verify_in_fact_by_known_standard_subset_membership(

@@ -80,7 +80,7 @@ impl Runtime {
     }
 
     fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> ExecStmtError {
-        ExecStmtError::new(
+        ExecStmtError::new_with_stmt(
             Stmt::DefAlgoStmt(def_algo_stmt.clone()),
             "".to_string(),
             None,

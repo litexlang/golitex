@@ -123,9 +123,9 @@ impl ByCartDefAxiomStmt {
     }
 }
 
-impl DefPropWithoutMeaningStmt {
+impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefPropWithoutMeaningStmt".to_string()
+        "DefAbstractPropStmt".to_string()
     }
 }
 
@@ -171,14 +171,14 @@ impl HaveFnEqualCaseByCaseStmt {
     }
 }
 
-impl DefStructWithNoFieldStmt {
+impl DefFamilyStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefStructWithNoFieldStmt".to_string()
+        "DefFamilyStmt".to_string()
     }
 }
 
-impl DefStructWithFieldsStmt {
+impl DefParamTypeStructStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefStructWithFieldsStmt".to_string()
+        "DefParamTypeStructStmt".to_string()
     }
 }

@@ -1,4 +1,4 @@
-prop p(n N_pos)
+abstract_prop p(n N_pos)
 
 prove:
     know:

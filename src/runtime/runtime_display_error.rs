@@ -164,7 +164,7 @@ impl Runtime {
                     name_already_used_on_line_file.1,
                 );
                 if location_string.is_empty() {
-                    duplicate_used_name_error_msg_without_line_file(name)
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(name)
                 } else {
                     format!("name `{}` already used {}", name, location_string)
                 }
@@ -306,9 +306,11 @@ impl Runtime {
                 ));
             }
             RuntimeError::ExecStmtError(e) => {
-                let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), &e.stmt);
-                for stmt_line in stmt_lines {
-                    field_lines.push(stmt_line);
+                if let Some(stmt) = &e.stmt {
+                    let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), stmt);
+                    for stmt_line in stmt_lines {
+                        field_lines.push(stmt_line);
+                    }
                 }
 
                 let mut inside_result_elements: Vec<String> = Vec::new();
@@ -479,7 +481,7 @@ impl Runtime {
         }
 
         let path = match self.module_manager.run_file_paths.get(file_index) {
-            Some(path) => path.clone(),
+            Some(path) => path.as_ref().to_string(),
             None => String::new(),
         };
         return path;

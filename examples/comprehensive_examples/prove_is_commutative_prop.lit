@@ -1,4 +1,4 @@
-prop p(x, y N)
+abstract_prop p(x, y N)
 know forall x, y N: not $p(x, y) <=> x = y
 
 com_prop(not $p(x, y)):
@@ -15,7 +15,7 @@ com_prop(not $p(x, y)):
 
 forall x, y N: not $p(x, y) <=> not $p(y, x)
 
-prop q(x, y N)
+abstract_prop q(x, y N)
 know forall x, y N: $q(x, y) <=> x = y
 
 com_prop($q(x, y)):

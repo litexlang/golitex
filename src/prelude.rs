@@ -1,8 +1,8 @@
-pub use crate::environment::{
-    AlgoName, AtomicFactKey, Environment, ExistFactKey, FactString, IdentifierName,
-    KnownForallFactParamsAndDom, ObjString, OrFactKey, PropName, StructName,
+pub use crate::common::name_types::{
+    AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, FieldAccessName,
+    IdentifierName, ObjString, OrFactKey, PropName, StructName, FamilyName,
 };
-pub use crate::error::duplicate_used_name_error_msg_without_line_file;
+pub use crate::environment::{Environment, KnownForallFactParamsAndDom};
 pub use crate::error::ConflictMsg;
 pub use crate::error::DefineParamsError;
 pub use crate::error::ExecStmtError;
@@ -64,11 +64,6 @@ pub use crate::pipeline::{
     render_run_source_code_output, run_repl, run_source_code, run_source_code_in_file,
     run_source_code_in_file_with_ok, run_stmt_at_global_env,
 };
-pub use crate::obj::field_access_to_string;
-pub use crate::obj::field_access_with_mod_to_string;
-pub use crate::obj::fn_obj_to_string;
-pub use crate::obj::identifier_to_string;
-pub use crate::obj::identifier_with_mod_to_string;
 pub use crate::obj::Add;
 pub use crate::obj::Atom;
 pub use crate::obj::Cap;
@@ -131,9 +126,9 @@ pub use crate::stmt::define_algorithm_stmt::AlgoReturnOrAlgoCase;
 pub use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 pub use crate::stmt::definition_stmt::DefLetStmt;
 pub use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
-pub use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
-pub use crate::stmt::definition_stmt::DefStructWithFieldsStmt;
-pub use crate::stmt::definition_stmt::DefStructWithNoFieldStmt;
+pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
+pub use crate::stmt::definition_stmt::DefParamTypeStructStmt;
+pub use crate::stmt::definition_stmt::DefFamilyStmt;
 pub use crate::stmt::definition_stmt::HaveExistObjStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualStmt;
@@ -142,7 +137,8 @@ pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
 pub use crate::stmt::know_stmt::KnowStmt;
 pub use crate::stmt::parameter_def::FiniteSet;
-pub use crate::stmt::parameter_def::InstantiatedStruct;
+pub use crate::stmt::parameter_def::FamilyParamType;
+pub use crate::stmt::parameter_def::StructParamType;
 pub use crate::stmt::parameter_def::NonemptySet;
 pub use crate::stmt::parameter_def::ParamDefWithParamSet;
 pub use crate::stmt::parameter_def::ParamDefWithParamType;
@@ -187,7 +183,7 @@ pub use crate::common::helper::vec_to_string_add_four_spaces_at_beginning_of_eac
 pub use crate::common::helper::vec_to_string_join_by_comma;
 pub use crate::common::helper::vec_to_string_with_sep;
 pub use crate::common::is_valid_litex_name::is_valid_litex_name;
-pub use crate::common::keywords::is_builtin_identifier_obj;
+pub use crate::common::keywords::is_builtin_identifier_name;
 pub use crate::common::keywords::is_builtin_predicate;
 pub use crate::common::keywords::is_comparison_str;
 pub use crate::common::keywords::is_key_symbol_or_keyword;
@@ -196,8 +192,9 @@ pub use crate::common::keywords::key_symbols_sorted_by_len_desc;
 pub use crate::common::keywords::ADD;
 pub use crate::common::keywords::ALGO;
 pub use crate::common::keywords::AND;
+pub use crate::common::keywords::ABSTRACT_PROP;
 pub use crate::common::keywords::AS;
-pub use crate::common::keywords::BUILTIN_CODE;
+pub use crate::common::keywords::BUILTIN_CODE_PATH;
 pub use crate::common::keywords::BY;
 pub use crate::common::keywords::CAP;
 pub use crate::common::keywords::CART;
@@ -239,7 +236,6 @@ pub use crate::common::keywords::IMPOSSIBLE;
 pub use crate::common::keywords::IN;
 pub use crate::common::keywords::INDUC;
 pub use crate::common::keywords::INFIX_FN_NAME_SIGN;
-pub use crate::common::keywords::INST_STRUCT_OBJ_SIGN;
 pub use crate::common::keywords::INTERSECT;
 pub use crate::common::keywords::IS_CART;
 pub use crate::common::keywords::IS_FINITE_SET;
@@ -285,7 +281,9 @@ pub use crate::common::keywords::R_POS;
 pub use crate::common::keywords::SET;
 pub use crate::common::keywords::SET_DIFF;
 pub use crate::common::keywords::SET_MINUS;
+pub use crate::common::keywords::SELF;
 pub use crate::common::keywords::ST;
+pub use crate::common::keywords::FAMILY;
 pub use crate::common::keywords::STRUCT;
 pub use crate::common::keywords::SUB;
 pub use crate::common::keywords::SUBSET;

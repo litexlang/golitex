@@ -2,15 +2,15 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct DefPropWithoutMeaningStmt {
+pub struct DefAbstractPropStmt {
     pub name: String,
     pub params: Vec<String>,
     pub line_file: (usize, usize),
 }
 
-impl DefPropWithoutMeaningStmt {
+impl DefAbstractPropStmt {
     pub fn new(name: String, params: Vec<String>, line_file: (usize, usize)) -> Self {
-        DefPropWithoutMeaningStmt {
+        DefAbstractPropStmt {
             name,
             params,
             line_file,
@@ -19,16 +19,18 @@ impl DefPropWithoutMeaningStmt {
 }
 
 #[derive(Clone)]
-pub struct DefStructWithFieldsStmt {
+pub struct DefParamTypeStructStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
-    pub fields: Vec<(String, Obj)>,
+    /// 形参括号内 `:` 之后的域条件（与 `family` 的 `dom_facts` 同形），实例化时用实参代入。
+    pub dom_facts: Vec<OrAndChainAtomicFact>,
+    pub fields: Vec<(String, ParamType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: (usize, usize),
 }
 
 #[derive(Clone)]
-pub struct DefStructWithNoFieldStmt {
+pub struct DefFamilyStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
@@ -88,12 +90,12 @@ pub struct DefPropWithMeaningStmt {
     pub line_file: (usize, usize),
 }
 
-impl fmt::Display for DefPropWithoutMeaningStmt {
+impl fmt::Display for DefAbstractPropStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {}{}{}{}",
-            PROP,
+            ABSTRACT_PROP,
             self.name,
             LEFT_BRACE,
             vec_to_string_join_by_comma(&self.params),
@@ -102,12 +104,15 @@ impl fmt::Display for DefPropWithoutMeaningStmt {
     }
 }
 
-impl fmt::Display for DefStructWithFieldsStmt {
+impl fmt::Display for DefParamTypeStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
+        // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
+        let implicit_prefix_len = ParamDefWithParamType::number_of_params(&self.params_def_with_type);
         let fields_str: String = self
             .fields
             .iter()
+            .skip(implicit_prefix_len)
             .map(|(name, or_val)| format!("{} {}", name, or_val))
             .collect::<Vec<_>>()
             .join("\n");
@@ -369,7 +374,7 @@ impl HaveFnEqualCaseByCaseStmt {
     }
 }
 
-impl DefStructWithNoFieldStmt {
+impl DefFamilyStmt {
     pub fn new(
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
@@ -377,7 +382,7 @@ impl DefStructWithNoFieldStmt {
         equal_to: Obj,
         line_file: (usize, usize),
     ) -> Self {
-        DefStructWithNoFieldStmt {
+        DefFamilyStmt {
             name,
             params_def_with_type,
             dom_facts,
@@ -387,12 +392,12 @@ impl DefStructWithNoFieldStmt {
     }
 }
 
-impl fmt::Display for DefStructWithNoFieldStmt {
+impl fmt::Display for DefFamilyStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {}{}{} {} {}{} {} {}",
-            STRUCT,
+            FAMILY,
             self.name,
             LEFT_BRACE,
             vec_to_string_join_by_comma(&self.params_def_with_type),
@@ -405,17 +410,19 @@ impl fmt::Display for DefStructWithNoFieldStmt {
     }
 }
 
-impl DefStructWithFieldsStmt {
+impl DefParamTypeStructStmt {
     pub fn new(
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
-        fields: Vec<(String, Obj)>,
+        dom_facts: Vec<OrAndChainAtomicFact>,
+        fields: Vec<(String, ParamType)>,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: (usize, usize),
     ) -> Self {
-        DefStructWithFieldsStmt {
+        DefParamTypeStructStmt {
             name,
             params_def_with_type,
+            dom_facts,
             fields,
             facts,
             line_file,

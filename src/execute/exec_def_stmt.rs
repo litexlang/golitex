@@ -39,7 +39,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         self.def_prop_with_meaning_stmt_check_well_defined(def_prop_with_meaning_stmt)
             .map_err(|e| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
                     "".to_string(),
                     Some(e.into()),
@@ -75,7 +75,7 @@ impl Runtime {
     ) -> Result<(), ExecStmtError> {
         self.define_params_with_type(&def_prop_with_meaning_stmt.params_def_with_type, false)
             .map_err(|e| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
                     "".to_string(),
                     Some(e.into()),
@@ -89,7 +89,7 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )
                 .map_err(|inner_exec_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
                         "".to_string(),
                         Some(RuntimeError::ExecStmtError(inner_exec_error)),
@@ -100,14 +100,14 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn def_prop_without_meaning_stmt(
+    pub fn def_abstract_prop_stmt(
         &mut self,
-        def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt,
+        def_abstract_prop_stmt: &DefAbstractPropStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        self.store_def_prop_without_meaning(def_prop_without_meaning_stmt)
+        self.store_def_abstract_prop(def_abstract_prop_stmt)
             .map_err(|e| {
-                ExecStmtError::new(
-                    Stmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt.clone()),
+                ExecStmtError::new_with_stmt(
+                    Stmt::DefAbstractPropStmt(def_abstract_prop_stmt.clone()),
                     "".to_string(),
                     Some(e.into()),
                     vec![],
@@ -115,7 +115,7 @@ impl Runtime {
             })?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt.clone()),
+                Stmt::DefAbstractPropStmt(def_abstract_prop_stmt.clone()),
                 InferResult::new(),
                 vec![],
             ),
@@ -129,7 +129,7 @@ impl Runtime {
         let mut infer_result = self
             .define_params_with_type(&def_let_stmt.param_def, false)
             .map_err(|e| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::DefLetStmt(def_let_stmt.clone()),
                     "".to_string(),
                     Some(e.into()),
@@ -143,7 +143,7 @@ impl Runtime {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|inner_exec_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::DefLetStmt(def_let_stmt.clone()),
                         "".to_string(),
                         Some(RuntimeError::ExecStmtError(inner_exec_error)),
@@ -159,6 +159,114 @@ impl Runtime {
                 vec![],
             ),
         ))
+    }
+
+    /// After `store_identifier_obj`, run param-type-specific work (type facts, storage, and later hooks).
+    pub(crate) fn define_param_binding_for_param_type(
+        &mut self,
+        name: &str,
+        param_type: &ParamType,
+    ) -> Result<InferResult, RuntimeError> {
+        match param_type {
+            ParamType::Family(family_ty) => self.define_param_binding_family(name, family_ty),
+            ParamType::Obj(obj) => self.define_param_binding_obj(name, obj),
+            ParamType::Set(set) => self.define_param_binding_set(name, set),
+            ParamType::NonemptySet(nonempty_set) => {
+                self.define_param_binding_nonempty_set(name, nonempty_set)
+            }
+            ParamType::FiniteSet(finite_set) => self.define_param_binding_finite_set(name, finite_set),
+            ParamType::Struct(struct_ty) => self.define_param_binding_struct(name, struct_ty),
+        }
+    }
+
+    fn define_param_binding_family(
+        &mut self,
+        name: &str,
+        family_ty: &FamilyParamType,
+    ) -> Result<InferResult, RuntimeError> {
+        let family_name = family_ty.name.to_string();
+        let def = match self.get_cloned_family_definition_by_name(&family_name) {
+            Some(d) => d,
+            None => {
+                return Err(RuntimeError::UnknownError(UnknownError::new(
+                    format!("family `{}` is not defined", family_name),
+                    DEFAULT_LINE_FILE.clone(),
+                    None,
+                    None,
+                )));
+            }
+        };
+        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        if family_ty.params.len() != expected_count {
+            return Err(RuntimeError::UnknownError(UnknownError::new(
+                format!(
+                    "family `{}` expects {} type argument(s), got {}",
+                    family_name,
+                    expected_count,
+                    family_ty.params.len()
+                ),
+                DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
+            )));
+        }
+        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+            &def.params_def_with_type,
+            &family_ty.params,
+        );
+        let member_set = def.equal_to.instantiate(&param_to_arg_map);
+        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            member_set,
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_obj(&mut self, name: &str, obj: &Obj) -> Result<InferResult, RuntimeError> {
+        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            obj.clone(),
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_set(&mut self, name: &str, _set: &Set) -> Result<InferResult, RuntimeError> {
+        let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_nonempty_set(
+        &mut self,
+        name: &str,
+        _nonempty_set: &NonemptySet,
+    ) -> Result<InferResult, RuntimeError> {
+        let type_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_finite_set(
+        &mut self,
+        name: &str,
+        _finite_set: &FiniteSet,
+    ) -> Result<InferResult, RuntimeError> {
+        let type_fact = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
     }
 
     pub fn define_params_with_type(
@@ -206,16 +314,14 @@ impl Runtime {
                     )
                 })?;
                 let fact_infer_result = self
-                    .store_fact_without_well_defined_verified_and_infer(
-                        ParamType::param_satisfy_param_type_fact(name, &param_def.1),
-                    )
-                    .map_err(|store_fact_error| {
+                    .define_param_binding_for_param_type(name, &param_def.1)
+                    .map_err(|runtime_error| {
                         DefineParamsError::new(
                             format!(
-                                "define params with type: failed to store type fact for parameter `{}` with type {}",
+                                "define params with type: failed to apply param type for parameter `{}` with type {}",
                                 name, param_def.1
                             ),
-                            Some(store_fact_error.into()),
+                            Some(runtime_error),
                             DEFAULT_LINE_FILE,
                         )
                     })?;
@@ -232,7 +338,7 @@ impl Runtime {
         let infer_result = self
             .define_params_with_type(&stmt.param_def, true)
             .map_err(|define_params_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveObjInNonemptySetStmt(stmt.clone()),
                     "".to_string(),
                     Some(define_params_error.into()),
@@ -318,11 +424,14 @@ impl Runtime {
             for name in param_def.0.iter() {
                 let current_param_equal_to = &have_obj_equal_stmt.objs_equal_to[current_index];
 
-                let fact = ParamType::fact_for_obj(current_param_equal_to.clone(), current_type);
                 let verify_result = self
-                    .verify_atomic_fact(&fact, &VerifyState::new(0, false))
+                    .verify_obj_satisfies_param_type(
+                        current_param_equal_to.clone(),
+                        current_type,
+                        &VerifyState::new(0, false),
+                    )
                     .map_err(|verify_error| {
-                        ExecStmtError::new(
+                        ExecStmtError::new_with_stmt(
                             Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
                             "".to_string(),
                             Some(verify_error.into()),
@@ -353,7 +462,7 @@ impl Runtime {
         let param_infer_result = self
             .define_params_with_type(&have_obj_equal_stmt.param_def, true)
             .map_err(|define_params_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
                     "".to_string(),
                     Some(define_params_error.into()),
@@ -375,7 +484,7 @@ impl Runtime {
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
                 .map_err(|store_fact_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
                         "".to_string(),
                         Some(store_fact_error.into()),
@@ -404,7 +513,7 @@ impl Runtime {
         let result = self
             .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
             .map_err(|verify_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
                     "".to_string(),
                     Some(verify_error.into()),
@@ -442,33 +551,20 @@ impl Runtime {
             .map(|s| Obj::Identifier(Identifier::new(s.clone())))
             .collect();
 
-        let args_satisfy_param_types =
-            ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
+        let mut infer_result = self
+            .store_args_satisfy_param_def(
                 &exist_fact_in_have_obj_stmt.params_def_with_type,
                 &new_obj_names_as_identifier_objs,
+                have_exist_obj_stmt.line_file,
             )
             .map_err(|e| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
                     "".to_string(),
                     Some(e),
                     vec![],
                 )
             })?;
-        let mut infer_result = InferResult::new();
-        for fact in args_satisfy_param_types.iter() {
-            let fact_infer_result = self
-                .store_atomic_fact_without_well_defined_verified_and_infer(fact.clone())
-                .map_err(|store_fact_error| {
-                    ExecStmtError::new(
-                        Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
-                        "".to_string(),
-                        Some(store_fact_error.into()),
-                        vec![],
-                    )
-                })?;
-            infer_result.new_infer_result_inside(fact_infer_result);
-        }
 
         let param_to_obj_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &exist_fact_in_have_obj_stmt.params_def_with_type,
@@ -484,7 +580,7 @@ impl Runtime {
             let fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(instantiated_fact)
                 .map_err(|store_fact_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
                         "".to_string(),
                         Some(store_fact_error.into()),
@@ -530,7 +626,7 @@ impl Runtime {
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                     "".to_string(),
                     Some(store_fact_error.into()),
@@ -568,7 +664,7 @@ impl Runtime {
         let forall_infer_result = self
             .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                     "".to_string(),
                     Some(store_fact_error.into()),
@@ -608,7 +704,7 @@ impl Runtime {
         let function_set_obj = Obj::FnSetWithParams(have_fn_equal_stmt.fn_set_with_params.clone());
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state)
             .map_err(|well_defined_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                     "".to_string(),
                     Some(well_defined_error.into()),
@@ -623,7 +719,7 @@ impl Runtime {
         {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                         "".to_string(),
                         Some(define_params_error.into()),
@@ -638,7 +734,7 @@ impl Runtime {
                     dom_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                         "".to_string(),
                         Some(store_fact_error.into()),
@@ -659,7 +755,7 @@ impl Runtime {
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                     "".to_string(),
                     Some(verify_error.into()),
@@ -727,7 +823,7 @@ impl Runtime {
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                     "".to_string(),
                     Some(store_fact_error.into()),
@@ -787,7 +883,7 @@ impl Runtime {
             let forall_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
                 .map_err(|store_fact_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                         "".to_string(),
                         Some(store_fact_error.into()),
@@ -823,7 +919,7 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            ExecStmtError::new(
+            ExecStmtError::new_with_stmt(
                 Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                 "".to_string(),
                 Some(well_defined_error.into()),
@@ -866,7 +962,7 @@ impl Runtime {
         {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                         "".to_string(),
                         Some(define_params_error.into()),
@@ -885,7 +981,7 @@ impl Runtime {
                     dom_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                         "".to_string(),
                         Some(store_fact_error.into()),
@@ -897,7 +993,7 @@ impl Runtime {
         let _ = self
             .store_fact_without_well_defined_verified_and_infer(case_fact_as_fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                     "".to_string(),
                     Some(store_fact_error.into()),
@@ -906,7 +1002,7 @@ impl Runtime {
             })?;
         self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)
             .map_err(|well_defined_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                     "".to_string(),
                     Some(well_defined_error.into()),
@@ -926,7 +1022,7 @@ impl Runtime {
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                     "".to_string(),
                     Some(verify_error.into()),

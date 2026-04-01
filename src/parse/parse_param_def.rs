@@ -27,44 +27,52 @@ impl Runtime {
 
     pub fn parse_param_type(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
         match tb.current()? {
-            NONEMPTY_SET => self.param_type_nonempty_set(tb),
-            FINITE_SET => self.param_type_finite_set(tb),
-            SET => self.param_type_set(tb),
-            INST_STRUCT_OBJ_SIGN => self.param_type_instantiated_struct(tb),
-            _ => self.param_type_obj(tb),
+            NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
+            FINITE_SET => self.parse_param_type_finite_set(tb),
+            SET => self.parse_param_type_set(tb),
+            FAMILY => self.parse_param_type_family(tb),
+            STRUCT => self.parse_param_type_struct(tb),
+            _ => self.parse_param_type_obj(tb),
         }
     }
 
-    pub fn param_type_nonempty_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type_nonempty_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
         tb.skip_token(NONEMPTY_SET)?;
         Ok(ParamType::NonemptySet(NonemptySet::new()))
     }
 
-    pub fn param_type_finite_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type_finite_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
         tb.skip_token(FINITE_SET)?;
         Ok(ParamType::FiniteSet(FiniteSet::new()))
     }
 
-    pub fn param_type_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
         tb.skip_token(SET)?;
         Ok(ParamType::Set(Set::new()))
     }
 
-    pub fn param_type_obj(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type_obj(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
         let obj = self.parse_obj(tb)?;
         Ok(ParamType::Obj(obj))
     }
 
-    pub fn param_type_instantiated_struct(
+    pub fn parse_param_type_family(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<ParamType, ParsingError> {
-        tb.skip_token(INST_STRUCT_OBJ_SIGN)?;
+        tb.skip_token(FAMILY)?;
         let name = self.parse_identifier_or_identifier_with_mod(tb)?;
         let params = self.parse_braced_objs(tb)?;
-        Ok(ParamType::InstantiatedStruct(InstantiatedStruct {
-            name,
-            params,
-        }))
+        Ok(ParamType::Family(FamilyParamType { name, params }))
+    }
+
+    pub fn parse_param_type_struct(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamType, ParsingError> {
+        tb.skip_token(STRUCT)?;
+        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let params = self.parse_braced_objs(tb)?;
+        Ok(ParamType::Struct(StructParamType { name, params }))
     }
 }

@@ -74,7 +74,13 @@ impl RuntimeError {
             RuntimeError::StoreFactError(e) => e.line_file,
             RuntimeError::ParseBlockError(e) => e.line_file(),
             RuntimeError::ParsingError(e) => e.line_file,
-            RuntimeError::ExecStmtError(e) => e.stmt.line_file(),
+            RuntimeError::ExecStmtError(e) => {
+                if let Some(stmt) = &e.stmt {
+                    stmt.line_file()
+                } else {
+                    DEFAULT_LINE_FILE
+                }
+            }
             RuntimeError::WellDefinedError(e) => e.line_file,
             RuntimeError::VerifyError(e) => e.line_file,
             RuntimeError::UnknownError(e) => e.line_file,
@@ -100,6 +106,13 @@ impl RuntimeError {
             RuntimeError::NameAlreadyUsedError(e) => e.display_label(),
             RuntimeError::DefineParamsError(e) => e.display_label(),
         }
+    }
+
+    pub fn duplicate_used_name_error_msg_without_line_file(name: &str) -> String {
+        format!(
+            "name `{}` is already used, cannot be used again for other definitions",
+            name
+        )
     }
 }
 
@@ -149,13 +162,6 @@ impl NameAlreadyUsedError {
     pub fn display_label(&self) -> &'static str {
         "NameAlreadyUsedError"
     }
-}
-
-pub fn duplicate_used_name_error_msg_without_line_file(name: &str) -> String {
-    format!(
-        "name `{}` is already used, cannot be used again for other definitions",
-        name
-    )
 }
 
 // Display outputs a short placeholder; full machine-readable form is Runtime::display_error_json_string.
@@ -251,7 +257,7 @@ impl From<ParsingError> for RuntimeError {
 
 #[derive(Debug)]
 pub struct ExecStmtError {
-    pub stmt: Stmt,
+    pub stmt: Option<Stmt>,
     pub info: String,
     pub previous_error: Option<Box<RuntimeError>>,
     pub inside_results: Vec<NonErrStmtExecResult>,
@@ -267,13 +273,27 @@ impl fmt::Display for ExecStmtError {
 
 impl ExecStmtError {
     pub fn new(
-        stmt: Stmt,
+        stmt: Option<Stmt>,
         info: String,
         previous_error: Option<RuntimeError>,
         inside_results: Vec<NonErrStmtExecResult>,
     ) -> Self {
         ExecStmtError {
             stmt,
+            info,
+            previous_error: boxed_previous_error(previous_error),
+            inside_results,
+        }
+    }
+    
+    pub fn new_with_stmt(
+        stmt: Stmt,
+        info: String,
+        previous_error: Option<RuntimeError>,
+        inside_results: Vec<NonErrStmtExecResult>,
+    ) -> Self {
+        ExecStmtError {
+            stmt: Some(stmt),
             info,
             previous_error: boxed_previous_error(previous_error),
             inside_results,
@@ -298,7 +318,7 @@ impl ExecStmtError {
                 cause,
             )))
         };
-        ExecStmtError::new(stmt, message, previous_error, inside_results)
+        ExecStmtError::new_with_stmt(stmt, message, previous_error, inside_results)
     }
 }
 

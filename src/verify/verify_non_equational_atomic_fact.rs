@@ -397,25 +397,16 @@ impl Runtime {
             None => return Ok(None),
         };
 
-        let param_constraint_atomic_facts =
-            match ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
-                &definition.params_def_with_type,
-                &normal_atomic_fact.body,
-            ) {
-                Ok(atomic_facts) => atomic_facts,
-                Err(_) => return Ok(None),
-            };
-
         let verify_state_for_definition_clauses = verify_state;
 
-        for param_constraint_atomic_fact in param_constraint_atomic_facts.iter() {
-            let param_constraint_verify_result = self.verify_atomic_fact(
-                param_constraint_atomic_fact,
-                &verify_state_for_definition_clauses,
-            )?;
-            if !param_constraint_verify_result.is_true() {
-                return Ok(None);
-            }
+        match self.verify_args_satisfy_param_def_flat_types(
+            &definition.params_def_with_type,
+            &normal_atomic_fact.body,
+            verify_state_for_definition_clauses,
+        ) {
+            Ok(_) => {}
+            Err(RuntimeError::VerifyError(e)) => return Err(e),
+            Err(_) => return Ok(None),
         }
 
         if definition.iff_facts.is_empty() {

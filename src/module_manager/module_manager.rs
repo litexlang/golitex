@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 pub struct ImportedModuleEnvironment {
     pub environment: Environment,
@@ -7,7 +8,7 @@ pub struct ImportedModuleEnvironment {
 }
 
 pub struct ModuleManager {
-    pub run_file_paths: Vec<String>,
+    pub run_file_paths: Vec<Rc<str>>,
     pub module_name_and_path_map: HashMap<String, String>,
     pub module_path_and_names_map: HashMap<String, Vec<String>>,
     pub current_module_path: String,
@@ -20,7 +21,7 @@ pub struct ModuleManager {
 impl ModuleManager {
     pub fn new_empty_module_manager(entrance_file_path: &str) -> Self {
         ModuleManager {
-            run_file_paths: vec![entrance_file_path.to_string()],
+            run_file_paths: vec![Rc::from(entrance_file_path)],
             module_name_and_path_map: HashMap::new(),
             module_path_and_names_map: HashMap::new(),
             current_module_path: String::new(),

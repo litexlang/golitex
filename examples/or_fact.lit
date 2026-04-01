@@ -1,14 +1,14 @@
 prove:
-    prop p(a, b)
-    prop q(a, b)
+    abstract_prop p(a, b)
+    abstract_prop q(a, b)
 
     know $p(1, 2) or $q(1, 2)
 
     $p(1, 2) or $q(1, 2)
 
 prove:
-    prop p(a, b, c)
-    prop q(a, b, c)
+    abstract_prop p(a, b, c)
+    abstract_prop q(a, b, c)
 
     know $p(1, 2, 3) or $q(1, 2, 3)
 
@@ -20,8 +20,8 @@ prove:
     $p(a, b, c) or $q(a, b, c)
 
 prove:
-    prop p(a, b)
-    prop q(a, b)
+    abstract_prop p(a, b)
+    abstract_prop q(a, b)
 
     know:
         forall a, b R:
