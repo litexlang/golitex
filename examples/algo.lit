@@ -6,7 +6,7 @@ prove:
 
 
 prove:
-    prop p(x, y)
+    abstract_prop p(x, y)
     have fn f(x, y R) R = 1
 
     know:
