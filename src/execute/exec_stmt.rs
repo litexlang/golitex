@@ -33,7 +33,7 @@ impl Runtime {
             Stmt::RunFileStmt(s) => self.exec_run_file_stmt(s),
             Stmt::EvalStmt(s) => {
                 self._exec_eval_stmt(s)?;
-                return Err(RuntimeError::ExecStmtError(ExecStmtError::new(
+                return Err(RuntimeError::ExecStmtError(ExecStmtError::new_with_stmt(
                     Stmt::EvalStmt(s.clone()),
                     "eval: obj_to_eval must be a fnObj".to_string(),
                     None,
