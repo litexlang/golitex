@@ -269,14 +269,6 @@ impl Runtime {
             .map_err(RuntimeError::from)
     }
 
-    fn define_param_binding_struct(
-        &mut self,
-        _name: &str,
-        _struct_ty: &StructParamType,
-    ) -> Result<InferResult, RuntimeError> {
-        unimplemented!("struct param type is not supported yet");
-    }
-
     pub(crate) fn fact_for_obj_satisfies_param_type(
         &self,
         obj: Obj,

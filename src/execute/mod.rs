@@ -10,6 +10,7 @@ mod exec_claim_stmt;
 mod exec_def_algo_stmt;
 mod exec_def_stmt;
 mod exec_def_param_type_struct;
+mod exec_param_type_struct_binding;
 mod exec_eval_stmt;
 mod exec_fact_stmt;
 mod exec_know_stmt;

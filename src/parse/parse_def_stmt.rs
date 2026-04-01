@@ -414,7 +414,7 @@ impl Runtime {
             ));
         }
 
-        let mut fields: Vec<(String, Obj)> = vec![];
+        let mut fields: Vec<(String, ParamType)> = vec![];
         let mut facts: Vec<OrAndChainAtomicFact> = vec![];
 
         let body_len = tb.body.len();
@@ -433,7 +433,7 @@ impl Runtime {
                 ParsingError::new("Expected field block".to_string(), tb.line_file, None)
             })?;
             let field_name = block.advance()?;
-            let cond = self.parse_obj(block)?;
+            let cond = self.parse_param_type(block)?;
             fields.push((field_name, cond));
         }
 
