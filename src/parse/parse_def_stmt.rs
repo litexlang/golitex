@@ -394,7 +394,7 @@ impl Runtime {
         name: String,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, ParsingError> {
-        let (params_def_with_type, _dom_facts) =
+        let (params_def_with_type, dom_facts) =
             self.parse_braced_params_and_optional_dom_facts(tb)?;
         if tb.current_token_is_equal_to(EQUAL) {
             return Err(ParsingError::new(
@@ -450,6 +450,7 @@ impl Runtime {
         Ok(Stmt::DefParamTypeStructStmt(DefParamTypeStructStmt::new(
             name,
             params_def_with_type,
+            dom_facts,
             fields,
             facts,
             tb.line_file,
