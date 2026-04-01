@@ -10,6 +10,8 @@ mod exec_claim_stmt;
 mod exec_def_algo_stmt;
 mod exec_def_stmt;
 mod exec_def_param_type_struct;
+mod runtime_store_arg_satisfy_param_def;
+mod runtime_verify_arg_satisfy_param_def;
 mod exec_param_type_struct_binding;
 mod exec_eval_stmt;
 mod exec_fact_stmt;
