@@ -85,10 +85,23 @@ impl Runtime {
         let mut all_then_facts_are_verified_by_builtin_rules = true;
         let mut then_facts_builtin_verified_by_messages: Vec<String> = Vec::new();
 
-        for then_fact in forall_fact.then_facts.iter() {
+        let then_count = forall_fact.then_facts.len();
+        for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
             let result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
             if result.is_unknown() {
-                return Ok(result);
+                let then_one_based = then_index + 1;
+                let then_line_file = then_fact.line_file();
+                return Err(VerifyError::new(
+                    Fact::ForallFact(forall_fact.clone()),
+                    format!(
+                        "forall: then-fact {}/{} could not be verified (unknown):\n{}",
+                        then_one_based,
+                        then_count,
+                        then_fact
+                    ),
+                    then_line_file,
+                    None,
+                ));
             }
 
             match &result {
@@ -109,9 +122,9 @@ impl Runtime {
                     all_then_facts_are_verified_by_builtin_rules = false;
                     infer_result.new_infer_result_inside(non_factual_success.infers.clone());
                 }
-                NonErrStmtExecResult::StmtUnknown(_) => {
-                    return Ok(result);
-                }
+                NonErrStmtExecResult::StmtUnknown(_) => unreachable!(
+                    "stmt unknown is handled above before this match"
+                ),
             }
         }
 
