@@ -3,23 +3,14 @@ use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
-pub type ObjString = String;
-pub type FactString = String;
-pub type OrFactKey = String;
-pub type ExistFactKey = String;
-pub type AtomicFactKey = String;
-pub type PropName = String;
-pub type StructName = String;
-pub type AlgoName = String;
-pub type IdentifierName = String;
-
 pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ()>,
     pub defined_props_with_meaning: HashMap<PropName, DefPropWithMeaningStmt>,
-    pub defined_props_without_meaning: HashMap<PropName, DefPropWithoutMeaningStmt>,
-    pub defined_structs_with_fields: HashMap<StructName, DefStructWithFieldsStmt>,
-    pub defined_structs_with_no_field: HashMap<StructName, DefStructWithNoFieldStmt>,
+    pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
+    pub defined_param_type_structs: HashMap<StructName, DefParamTypeStructStmt>,
+    pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+    pub defined_field_access_name: HashMap<FieldAccessName, InstStructObj>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -53,10 +44,11 @@ impl Environment {
     pub fn new(
         objs: HashMap<IdentifierName, ()>,
         props: HashMap<PropName, DefPropWithMeaningStmt>,
-        structs_with_fields: HashMap<StructName, DefStructWithFieldsStmt>,
-        structs_with_no_field: HashMap<StructName, DefStructWithNoFieldStmt>,
-        props_without_meaning: HashMap<PropName, DefPropWithoutMeaningStmt>,
+        param_type_structs: HashMap<StructName, DefParamTypeStructStmt>,
+        families: HashMap<FamilyName, DefFamilyStmt>,
+        abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
+        field_access_name: HashMap<FieldAccessName, InstStructObj>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, FnSetWithParams>,
         known_set_equal_to_set_builder: HashMap<ObjString, SetBuilder>,
@@ -96,10 +88,11 @@ impl Environment {
         Environment {
             defined_identifiers: objs,
             defined_props_with_meaning: props,
-            defined_structs_with_fields: structs_with_fields,
-            defined_structs_with_no_field: structs_with_no_field,
-            defined_props_without_meaning: props_without_meaning,
+            defined_param_type_structs: param_type_structs,
+            defined_families: families,
+            defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
+            defined_field_access_name: field_access_name,
             known_equality,
             known_obj_in_fn_set: known_fn_in_fn_set,
             known_set_equal_to_set_builder,
@@ -132,13 +125,13 @@ impl fmt::Display for Environment {
         )?;
         write!(
             f,
-            "    structs_with_fields: {:?}\n",
-            self.defined_structs_with_fields.len()
+            "    param_type_structs: {:?}\n",
+            self.defined_param_type_structs.len()
         )?;
         write!(
             f,
-            "    structs_with_no_field: {:?}\n",
-            self.defined_structs_with_no_field.len()
+            "    families: {:?}\n",
+            self.defined_families.len()
         )?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
@@ -659,6 +652,7 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

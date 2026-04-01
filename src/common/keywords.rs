@@ -15,7 +15,6 @@ pub const RIGHT_BRACE: &str = ")";
 pub const COMMA: &str = ",";
 pub const LEFT_CURLY_BRACE: &str = "{";
 pub const RIGHT_CURLY_BRACE: &str = "}";
-pub const INST_STRUCT_OBJ_SIGN: &str = "&";
 pub const EQUAL: &str = "=";
 pub const NOT_EQUAL: &str = "!=";
 pub const LESS: &str = "<";
@@ -72,6 +71,8 @@ pub const SUCCESS_COLON: &str = "Success:";
 pub const UNKNOWN_COLON: &str = "Unknown:";
 pub const LET: &str = "let";
 pub const PROP: &str = "prop";
+/// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
+pub const ABSTRACT_PROP: &str = "abstract_prop";
 pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
 
@@ -106,10 +107,12 @@ pub const R_NEG: &str = "R_neg";
 pub const Q_NZ: &str = "Q_nz";
 pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
+pub const FAMILY: &str = "family";
 pub const STRUCT: &str = "struct";
+pub const SELF: &str = "self";
 pub const RESTRICT: &str = "restrict";
 
-pub const BUILTIN_CODE: &str = "builtin_code";
+pub const BUILTIN_CODE_PATH: &str = "builtin_code";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -133,7 +136,6 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         COMMA,
         LEFT_CURLY_BRACE,
         RIGHT_CURLY_BRACE,
-        INST_STRUCT_OBJ_SIGN,
         EQUAL,
         LESS,
         GREATER,
@@ -194,6 +196,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         UNKNOWN_COLON,
         LET,
         PROP,
+        ABSTRACT_PROP,
         CLAIM,
         PROVE,
         BY,
@@ -226,9 +229,11 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         Q_NZ,
         Z_NZ,
         R_NZ,
+        FAMILY,
         STRUCT,
+        SELF,
         RESTRICT,
-        BUILTIN_CODE,
+        BUILTIN_CODE_PATH,
     ];
     for &s in &words {
         m.insert(s, s);
@@ -292,7 +297,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == RESTRICT
 }
 
-pub fn is_builtin_identifier_obj(atom_name: &str) -> bool {
+pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
     atom_name == ADD
         || atom_name == SUB
         || atom_name == MUL

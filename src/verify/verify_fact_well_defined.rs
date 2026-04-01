@@ -86,10 +86,10 @@ impl Runtime {
                 self.get_predicate_with_meaning_definition_by_name(&name_string)
             {
                 ParamDefWithParamType::number_of_params(&predicate_definition.params_def_with_type)
-            } else if let Some(predicate_without_meaning_definition) =
-                self.get_predicate_without_meaning_definition_by_name(&name_string)
+            } else if let Some(abstract_prop_definition) =
+                self.get_abstract_prop_definition_by_name(&name_string)
             {
-                predicate_without_meaning_definition.params.len()
+                abstract_prop_definition.params.len()
             } else {
                 return Err(WellDefinedError::new(
                     format!("fact `{}` not defined", name_string),

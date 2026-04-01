@@ -52,9 +52,11 @@ mod tests {
     fn keyword_rejected() {
         assert!(is_valid_litex_name("let").is_err());
         assert!(is_valid_litex_name("prop").is_err());
+        assert!(is_valid_litex_name("abstract_prop").is_err());
         assert!(is_valid_litex_name("exist").is_err());
         assert!(is_valid_litex_name("R").is_err());
         assert!(is_valid_litex_name("in").is_err());
+        assert!(is_valid_litex_name("self").is_err());
     }
 
     #[test]

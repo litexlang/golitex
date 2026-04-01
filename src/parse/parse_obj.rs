@@ -753,7 +753,7 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_msg_without_line_file(&a.name),
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&a.name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
