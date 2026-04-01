@@ -796,10 +796,10 @@ impl Runtime {
             .collect();
 
         let mut infer_result = self
-            .verify_args_satisfy_param_def_flat_types(
+            .store_args_satisfy_param_def(
                 &exist_fact_in_have_obj_stmt.params_def_with_type,
                 &new_obj_names_as_identifier_objs,
-                &verify_state,
+                have_exist_obj_stmt.line_file,
             )
             .map_err(|e| {
                 ExecStmtError::new(

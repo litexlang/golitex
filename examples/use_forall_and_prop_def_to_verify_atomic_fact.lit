@@ -1,5 +1,5 @@
 prove:
-    prop q(x, y, z)
+    abstract_prop q(x, y, z)
 
     prop p(x, y R):
         x > y
@@ -15,7 +15,7 @@ prove:
     $q(a, b, 2)
 
 prove:
-    prop p(a)
+    abstract_prop p(a)
 
     have b R, c R
 
