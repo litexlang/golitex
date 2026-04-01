@@ -161,77 +161,120 @@ impl Runtime {
         ))
     }
 
-    /// `ParamType::Family`: look up the family definition and use `InFact(id, instantiate(equal_to))`.
-    fn param_satisfy_param_type_fact_for_define_params(
-        &self,
+    /// After `store_identifier_obj`, run param-type-specific work (type facts, storage, and later hooks).
+    fn define_param_binding_for_param_type(
+        &mut self,
         name: &str,
         param_type: &ParamType,
-    ) -> Result<Fact, RuntimeError> {
+    ) -> Result<InferResult, RuntimeError> {
         match param_type {
-            ParamType::Family(family_ty) => {
-                let family_name = family_ty.name.to_string();
-                let def = match self.get_cloned_family_definition_by_name(&family_name) {
-                    Some(d) => d,
-                    None => {
-                        return Err(RuntimeError::UnknownError(UnknownError::new(
-                            format!("family `{}` is not defined", family_name),
-                            DEFAULT_LINE_FILE.clone(),
-                            None,
-                            None,
-                        )));
-                    }
-                };
-                let expected_count =
-                    ParamDefWithParamType::number_of_params(&def.params_def_with_type);
-                if family_ty.params.len() != expected_count {
-                    return Err(RuntimeError::UnknownError(UnknownError::new(
-                        format!(
-                            "family `{}` expects {} type argument(s), got {}",
-                            family_name,
-                            expected_count,
-                            family_ty.params.len()
-                        ),
-                        DEFAULT_LINE_FILE.clone(),
-                        None,
-                        None,
-                    )));
-                }
-                let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
-                    &def.params_def_with_type,
-                    &family_ty.params,
-                );
-                let member_set = def.equal_to.instantiate(&param_to_arg_map);
-                Ok(Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                    Obj::Identifier(Identifier::new(name.to_string())),
-                    member_set,
-                    DEFAULT_LINE_FILE.clone(),
-                ))))
+            ParamType::Family(family_ty) => self.define_param_binding_family(name, family_ty),
+            ParamType::Obj(obj) => self.define_param_binding_obj(name, obj),
+            ParamType::Set(set) => self.define_param_binding_set(name, set),
+            ParamType::NonemptySet(nonempty_set) => {
+                self.define_param_binding_nonempty_set(name, nonempty_set)
             }
-            ParamType::Obj(obj) => Ok(Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                    Obj::Identifier(Identifier::new(name.to_string())),
-                    obj.clone(),
-                    DEFAULT_LINE_FILE.clone(),
-                )))),
-            ParamType::Set(_) => Ok(Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-                Obj::Identifier(Identifier::new(name.to_string())),
-                DEFAULT_LINE_FILE.clone(),
-            )))),
-            ParamType::NonemptySet(_) => {
-                Ok(Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                    Obj::Identifier(Identifier::new(name.to_string())),
-                    DEFAULT_LINE_FILE.clone(),
-                ))))
-            }
-            ParamType::FiniteSet(_) => {
-                Ok(Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                    Obj::Identifier(Identifier::new(name.to_string())),
-                    DEFAULT_LINE_FILE.clone(),
-                ))))
-            }
-            ParamType::Struct(_) => {
-                unimplemented!("struct param type is not supported yet");
-            }
+            ParamType::FiniteSet(finite_set) => self.define_param_binding_finite_set(name, finite_set),
+            ParamType::Struct(struct_ty) => self.define_param_binding_struct(name, struct_ty),
         }
+    }
+
+    fn define_param_binding_family(
+        &mut self,
+        name: &str,
+        family_ty: &FamilyParamType,
+    ) -> Result<InferResult, RuntimeError> {
+        let family_name = family_ty.name.to_string();
+        let def = match self.get_cloned_family_definition_by_name(&family_name) {
+            Some(d) => d,
+            None => {
+                return Err(RuntimeError::UnknownError(UnknownError::new(
+                    format!("family `{}` is not defined", family_name),
+                    DEFAULT_LINE_FILE.clone(),
+                    None,
+                    None,
+                )));
+            }
+        };
+        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        if family_ty.params.len() != expected_count {
+            return Err(RuntimeError::UnknownError(UnknownError::new(
+                format!(
+                    "family `{}` expects {} type argument(s), got {}",
+                    family_name,
+                    expected_count,
+                    family_ty.params.len()
+                ),
+                DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
+            )));
+        }
+        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+            &def.params_def_with_type,
+            &family_ty.params,
+        );
+        let member_set = def.equal_to.instantiate(&param_to_arg_map);
+        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            member_set,
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_obj(&mut self, name: &str, obj: &Obj) -> Result<InferResult, RuntimeError> {
+        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            obj.clone(),
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_set(&mut self, name: &str, _set: &Set) -> Result<InferResult, RuntimeError> {
+        let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_nonempty_set(
+        &mut self,
+        name: &str,
+        _nonempty_set: &NonemptySet,
+    ) -> Result<InferResult, RuntimeError> {
+        let type_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_finite_set(
+        &mut self,
+        name: &str,
+        _finite_set: &FiniteSet,
+    ) -> Result<InferResult, RuntimeError> {
+        let type_fact = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+            Obj::Identifier(Identifier::new(name.to_string())),
+            DEFAULT_LINE_FILE.clone(),
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+            .map_err(RuntimeError::from)
+    }
+
+    fn define_param_binding_struct(
+        &mut self,
+        _name: &str,
+        _struct_ty: &StructParamType,
+    ) -> Result<InferResult, RuntimeError> {
+        unimplemented!("struct param type is not supported yet");
     }
 
     pub(crate) fn fact_for_obj_satisfies_param_type(
@@ -345,27 +388,15 @@ impl Runtime {
                         DEFAULT_LINE_FILE,
                     )
                 })?;
-                let type_fact = self
-                    .param_satisfy_param_type_fact_for_define_params(name, &param_def.1)
+                let fact_infer_result = self
+                    .define_param_binding_for_param_type(name, &param_def.1)
                     .map_err(|runtime_error| {
                         DefineParamsError::new(
                             format!(
-                                "define params with type: failed to build type fact for parameter `{}` with type {}",
+                                "define params with type: failed to apply param type for parameter `{}` with type {}",
                                 name, param_def.1
                             ),
                             Some(runtime_error),
-                            DEFAULT_LINE_FILE,
-                        )
-                    })?;
-                let fact_infer_result = self
-                    .store_fact_without_well_defined_verified_and_infer(type_fact)
-                    .map_err(|store_fact_error| {
-                        DefineParamsError::new(
-                            format!(
-                                "define params with type: failed to store type fact for parameter `{}` with type {}",
-                                name, param_def.1
-                            ),
-                            Some(store_fact_error.into()),
                             DEFAULT_LINE_FILE,
                         )
                     })?;
