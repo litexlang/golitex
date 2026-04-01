@@ -12,14 +12,14 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_def_prop_without_meaning(
+    pub fn store_def_abstract_prop(
         &mut self,
-        def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt,
+        def_abstract_prop_stmt: &DefAbstractPropStmt,
     ) -> Result<(), ExecStmtError> {
-        let name = def_prop_without_meaning_stmt.name.clone();
+        let name = def_abstract_prop_stmt.name.clone();
         self.top_level_env()
-            .defined_props_without_meaning
-            .insert(name, def_prop_without_meaning_stmt.clone());
+            .defined_abstract_props
+            .insert(name, def_abstract_prop_stmt.clone());
         Ok(())
     }
 
@@ -49,14 +49,14 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_def_struct_with_no_field(
+    pub fn store_def_family(
         &mut self,
-        def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt,
+        def_family_stmt: &DefFamilyStmt,
     ) -> Result<(), ExecStmtError> {
-        let name = def_struct_with_no_field_stmt.name.clone();
+        let name = def_family_stmt.name.clone();
         self.top_level_env()
-            .defined_structs_with_no_field
-            .insert(name, def_struct_with_no_field_stmt.clone());
+            .defined_families
+            .insert(name, def_family_stmt.clone());
         Ok(())
     }
 }

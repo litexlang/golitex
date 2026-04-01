@@ -1,17 +1,6 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_def_prop_with_meaning_stmt_or_prop_without_meaning(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
-        if tb.token_at_end_of_head() != COLON {
-            return self.parse_def_prop_without_meaning_stmt(tb);
-        } else {
-            self.parse_def_prop_with_meaning_stmt(tb)
-        }
-    }
-
     pub fn parse_def_prop_with_meaning_stmt(
         &mut self,
         tb: &mut TokenBlock,
@@ -74,12 +63,12 @@ impl Runtime {
         ))
     }
 
-    pub fn parse_def_prop_without_meaning_stmt(
+    pub fn parse_def_abstract_prop_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, ParsingError> {
         self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_prop_without_meaning_stmt_body(tb);
+        let stmt = self.parse_def_abstract_prop_stmt_body(tb);
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
@@ -91,14 +80,14 @@ impl Runtime {
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
-        Ok(Stmt::DefPropWithoutMeaningStmt(stmt_ok))
+        Ok(Stmt::DefAbstractPropStmt(stmt_ok))
     }
 
-    fn parse_def_prop_without_meaning_stmt_body(
+    fn parse_def_abstract_prop_stmt_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<DefPropWithoutMeaningStmt, ParsingError> {
-        tb.skip_token(PROP)?;
+    ) -> Result<DefAbstractPropStmt, ParsingError> {
+        tb.skip_token(ABSTRACT_PROP)?;
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
@@ -127,7 +116,7 @@ impl Runtime {
                 )
             })?;
 
-        Ok(DefPropWithoutMeaningStmt::new(name, params, tb.line_file))
+        Ok(DefAbstractPropStmt::new(name, params, tb.line_file))
     }
 
     pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -299,37 +288,18 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(STRUCT)?;
-        let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
-            .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
-                    tb.line_file,
-                    Some(RuntimeError::ParseBlockError(e)),
-                )
-            })?;
-
-        self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_struct_stmt_body(name, tb);
-        self.pop_parsing_time_name_scope();
-        stmt
-    }
-
-    fn parse_def_struct_stmt_body(
+    fn parse_braced_params_and_optional_dom_facts(
         &mut self,
-        name: String,
         tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
+    ) -> Result<(Vec<ParamDefWithParamType>, Vec<OrAndChainAtomicFact>), ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
             params_def_with_type.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
-        let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
+        let param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
-            &struct_param_names,
+            &param_names,
             tb.line_file,
         )
         .map_err(|e| {
@@ -353,70 +323,134 @@ impl Runtime {
             vec![]
         };
         tb.skip_token(RIGHT_BRACE)?;
-        if tb.current_token_is_equal_to(EQUAL) {
-            tb.skip_token(EQUAL)?;
-            let equal_to = self.parse_obj(tb)?;
-            Ok(Stmt::DefStructWithNoFieldStmt(
-                DefStructWithNoFieldStmt::new(
-                    name,
-                    params_def_with_type,
-                    dom_facts,
-                    equal_to,
+        Ok((params_def_with_type, dom_facts))
+    }
+
+    pub fn parse_def_family_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(FAMILY)?;
+        let name = tb.advance()?;
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
+            .map_err(|e| {
+                ParsingError::new(
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
-                ),
-            ))
-        } else {
-            tb.skip_token(COLON)?;
+                    Some(RuntimeError::ParseBlockError(e)),
+                )
+            })?;
 
-            if tb.body.is_empty() {
-                return Err(ParsingError::new(
-                    "struct with fields expects body".to_string(),
-                    tb.line_file,
-                    None,
-                ));
-            }
+        self.push_parsing_time_name_scope();
+        let stmt = self.parse_def_family_stmt_body(name, tb);
+        self.pop_parsing_time_name_scope();
+        stmt
+    }
 
-            let mut fields: Vec<(String, Obj)> = vec![];
-            let mut facts: Vec<OrAndChainAtomicFact> = vec![];
-
-            let body_len = tb.body.len();
-            let last_index = body_len - 1;
-            let last_is_equiv = {
-                let last = tb.body.get(last_index).ok_or_else(|| {
-                    ParsingError::new("Expected body".to_string(), tb.line_file, None)
-                })?;
-                last.token_at_end_of_head() == EQUIVALENT_SIGN
-            };
-
-            let field_end = if last_is_equiv { last_index } else { body_len };
-
-            for i in 0..field_end {
-                let block = tb.body.get_mut(i).ok_or_else(|| {
-                    ParsingError::new("Expected field block".to_string(), tb.line_file, None)
-                })?;
-                let field_name = block.advance()?;
-                let cond = self.parse_obj(block)?;
-                fields.push((field_name, cond));
-            }
-
-            if last_is_equiv {
-                let last = tb.body.get_mut(last_index).ok_or_else(|| {
-                    ParsingError::new("Expected <=>: block".to_string(), tb.line_file, None)
-                })?;
-                last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
-                for block in last.body.iter_mut() {
-                    facts.push(self.parse_or_and_chain_atomic_fact(block)?);
-                }
-            }
-
-            Ok(Stmt::DefStructWithFieldsStmt(DefStructWithFieldsStmt::new(
-                name,
-                params_def_with_type,
-                fields,
-                facts,
+    fn parse_def_family_stmt_body(
+        &mut self,
+        name: String,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
+        let (params_def_with_type, dom_facts) = self.parse_braced_params_and_optional_dom_facts(tb)?;
+        if !tb.current_token_is_equal_to(EQUAL) {
+            return Err(ParsingError::new(
+                "family definition expects `=` after `}`".to_string(),
                 tb.line_file,
-            )))
+                None,
+            ));
         }
+        tb.skip_token(EQUAL)?;
+        let equal_to = self.parse_obj(tb)?;
+        Ok(Stmt::DefFamilyStmt(DefFamilyStmt::new(
+            name,
+            params_def_with_type,
+            dom_facts,
+            equal_to,
+            tb.line_file,
+        )))
+    }
+
+    pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(STRUCT)?;
+        let name = tb.advance()?;
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
+            .map_err(|e| {
+                ParsingError::new(
+                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
+                    tb.line_file,
+                    Some(RuntimeError::ParseBlockError(e)),
+                )
+            })?;
+
+        self.push_parsing_time_name_scope();
+        let stmt = self.parse_def_struct_stmt_body(name, tb);
+        self.pop_parsing_time_name_scope();
+        stmt
+    }
+
+    fn parse_def_struct_stmt_body(
+        &mut self,
+        name: String,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
+        let (params_def_with_type, _dom_facts) =
+            self.parse_braced_params_and_optional_dom_facts(tb)?;
+        if tb.current_token_is_equal_to(EQUAL) {
+            return Err(ParsingError::new(
+                "use `family` for set-style definitions (`... {} = ...`); `struct` requires field definitions after `:`"
+                    .to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+        tb.skip_token(COLON)?;
+
+        if tb.body.is_empty() {
+            return Err(ParsingError::new(
+                "struct with fields expects body".to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+
+        let mut fields: Vec<(String, Obj)> = vec![];
+        let mut facts: Vec<OrAndChainAtomicFact> = vec![];
+
+        let body_len = tb.body.len();
+        let last_index = body_len - 1;
+        let last_is_equiv = {
+            let last = tb.body.get(last_index).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+            })?;
+            last.token_at_end_of_head() == EQUIVALENT_SIGN
+        };
+
+        let field_end = if last_is_equiv { last_index } else { body_len };
+
+        for i in 0..field_end {
+            let block = tb.body.get_mut(i).ok_or_else(|| {
+                ParsingError::new("Expected field block".to_string(), tb.line_file, None)
+            })?;
+            let field_name = block.advance()?;
+            let cond = self.parse_obj(block)?;
+            fields.push((field_name, cond));
+        }
+
+        if last_is_equiv {
+            let last = tb.body.get_mut(last_index).ok_or_else(|| {
+                ParsingError::new("Expected <=>: block".to_string(), tb.line_file, None)
+            })?;
+            last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
+            for block in last.body.iter_mut() {
+                facts.push(self.parse_or_and_chain_atomic_fact(block)?);
+            }
+        }
+
+        Ok(Stmt::DefStructWithFieldsStmt(DefStructWithFieldsStmt::new(
+            name,
+            params_def_with_type,
+            fields,
+            facts,
+            tb.line_file,
+        )))
     }
 
     pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

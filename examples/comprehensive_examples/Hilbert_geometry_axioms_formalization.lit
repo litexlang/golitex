@@ -21,9 +21,9 @@ let point set
 let line set
 let plane set
 
-prop point_on_line(p point, l line)
-prop point_on_plane(q point, p plane)
-prop line_on_plane(l line, p plane)
+abstract_prop point_on_line(p point, l line)
+abstract_prop point_on_plane(q point, p plane)
+abstract_prop line_on_plane(l line, p plane)
 
 # 1. Incidence
 
@@ -328,7 +328,7 @@ prove:
 # 1. If A, B are two points on a line a, and if A′ is a point upon the same or another line a′, then, upon a given side of A′ on the straight line a′, we can always find a point B′ so that the segment AB is congruent to the segment A′B′. We indicate this relation by writing AB ≅ A′B′. Every segment is congruent to itself; that is, we always have AB ≅ AB.
 # We can state the above axiom briefly by saying that every segment can be laid off upon a given side of a given point of a given straight line in at least one way.
 
-prop finite_line_equal(l1 finite_line, l2 finite_line)
+abstract_prop finite_line_equal(l1 finite_line, l2 finite_line)
 know:
     forall l1 finite_line, l2 finite_line:
         =>:
@@ -479,7 +479,7 @@ let ray set
 let half_plane set
 let angle set
 
-prop point_on_ray(a point, r ray)
+abstract_prop point_on_ray(a point, r ray)
 
 let fn ray_with_end_point_and_direction(a point, b point) ray:
     dom:
@@ -502,7 +502,7 @@ let fn angle_of_two_rays_with_the_same_start_point(a point, r1 ray, r2 ray) angl
         =>:
             x = a
 
-prop angle_equal(ang1 angle, ang2 angle)
+abstract_prop angle_equal(ang1 angle, ang2 angle)
 
 prop half_plane_to_ray(a point, r ray, p half_plane):
     $point_on_ray(a, r)
@@ -551,7 +551,7 @@ let fn triangle_of_points(a point, b point, c point) triangle:
         a != c
         b != c
 
-prop triangle_equal(t1 triangle, t2 triangle)
+abstract_prop triangle_equal(t1 triangle, t2 triangle)
 
 let fn angle_of_points(a point, b point, c point) angle:
     dom:
