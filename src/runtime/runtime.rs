@@ -199,17 +199,20 @@ impl Runtime {
         None
     }
 
-    pub fn get_cloned_set_struct_with_fields_definition_by_name(
+    pub fn get_cloned_param_type_struct_definition_by_name(
         &self,
-        set_struct_name: &str,
-    ) -> Option<DefStructWithFieldsStmt> {
-        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        param_type_struct_name: &str,
+    ) -> Option<DefParamTypeStructStmt> {
+        let parts = param_type_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.defined_structs_with_fields.get(set_struct_name) {
+            if let Some(definition) = environment
+                .defined_param_type_structs
+                .get(param_type_struct_name)
+            {
                 return Some(definition.clone());
             }
         }
@@ -217,17 +220,20 @@ impl Runtime {
         None
     }
 
-    pub fn get_set_struct_with_fields_definition_by_name(
+    pub fn get_param_type_struct_definition_by_name(
         &self,
-        set_struct_name: &str,
-    ) -> Option<&DefStructWithFieldsStmt> {
-        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        param_type_struct_name: &str,
+    ) -> Option<&DefParamTypeStructStmt> {
+        let parts = param_type_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.defined_structs_with_fields.get(set_struct_name) {
+            if let Some(definition) = environment
+                .defined_param_type_structs
+                .get(param_type_struct_name)
+            {
                 return Some(definition);
             }
         }
@@ -438,9 +444,9 @@ impl Runtime {
             .is_some();
     }
 
-    pub fn is_name_used_for_struct_with_fields(&self, name: &str) -> bool {
+    pub fn is_name_used_for_param_type_struct(&self, name: &str) -> bool {
         return self
-            .get_set_struct_with_fields_definition_by_name(name)
+            .get_param_type_struct_definition_by_name(name)
             .is_some();
     }
 

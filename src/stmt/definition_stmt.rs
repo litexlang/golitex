@@ -19,7 +19,7 @@ impl DefAbstractPropStmt {
 }
 
 #[derive(Clone)]
-pub struct DefStructWithFieldsStmt {
+pub struct DefParamTypeStructStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub fields: Vec<(String, Obj)>,
@@ -102,7 +102,7 @@ impl fmt::Display for DefAbstractPropStmt {
     }
 }
 
-impl fmt::Display for DefStructWithFieldsStmt {
+impl fmt::Display for DefParamTypeStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         let fields_str: String = self
@@ -405,7 +405,7 @@ impl fmt::Display for DefFamilyStmt {
     }
 }
 
-impl DefStructWithFieldsStmt {
+impl DefParamTypeStructStmt {
     pub fn new(
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
@@ -413,7 +413,7 @@ impl DefStructWithFieldsStmt {
         facts: Vec<OrAndChainAtomicFact>,
         line_file: (usize, usize),
     ) -> Self {
-        DefStructWithFieldsStmt {
+        DefParamTypeStructStmt {
             name,
             params_def_with_type,
             fields,

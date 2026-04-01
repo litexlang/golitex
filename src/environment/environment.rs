@@ -7,7 +7,7 @@ pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ()>,
     pub defined_props_with_meaning: HashMap<PropName, DefPropWithMeaningStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
-    pub defined_structs_with_fields: HashMap<StructName, DefStructWithFieldsStmt>,
+    pub defined_param_type_structs: HashMap<StructName, DefParamTypeStructStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
     pub defined_field_access_name: HashMap<FieldAccessName, InstStructObj>,
@@ -44,7 +44,7 @@ impl Environment {
     pub fn new(
         objs: HashMap<IdentifierName, ()>,
         props: HashMap<PropName, DefPropWithMeaningStmt>,
-        structs_with_fields: HashMap<StructName, DefStructWithFieldsStmt>,
+        param_type_structs: HashMap<StructName, DefParamTypeStructStmt>,
         families: HashMap<FamilyName, DefFamilyStmt>,
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
@@ -88,7 +88,7 @@ impl Environment {
         Environment {
             defined_identifiers: objs,
             defined_props_with_meaning: props,
-            defined_structs_with_fields: structs_with_fields,
+            defined_param_type_structs: param_type_structs,
             defined_families: families,
             defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
@@ -125,8 +125,8 @@ impl fmt::Display for Environment {
         )?;
         write!(
             f,
-            "    structs_with_fields: {:?}\n",
-            self.defined_structs_with_fields.len()
+            "    param_type_structs: {:?}\n",
+            self.defined_param_type_structs.len()
         )?;
         write!(
             f,
