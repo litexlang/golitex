@@ -424,7 +424,7 @@ impl Runtime {
             let last = tb.body.get(last_index).ok_or_else(|| {
                 ParsingError::new("Expected body".to_string(), tb.line_file, None)
             })?;
-            last.token_at_end_of_head() == EQUIVALENT_SIGN
+            last.current_token_is_equal_to(EQUIVALENT_SIGN)
         };
 
         let field_end = if last_is_equiv { last_index } else { body_len };
