@@ -1223,9 +1223,116 @@ impl Runtime {
 
     fn verify_param_type_struct_well_defined(
         &mut self,
-        _struct_ty: &StructParamType,
-        _verify_state: &VerifyState,
+        struct_ty: &StructParamType,
+        verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        unimplemented!()
+        let struct_name = struct_ty.name.to_string();
+        let def = match self.get_cloned_param_type_struct_definition_by_name(&struct_name) {
+            Some(d) => d,
+            None => {
+                return Err(WellDefinedError::new(
+                    format!("struct `{}` is not defined", struct_name),
+                    None,
+                    DEFAULT_LINE_FILE.clone(),
+                ));
+            }
+        };
+
+        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        if struct_ty.params.len() != expected_count {
+            return Err(WellDefinedError::new(
+                format!(
+                    "struct `{}` expects {} parameter(s), got {}",
+                    struct_name,
+                    expected_count,
+                    struct_ty.params.len()
+                ),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
+        }
+
+        for arg in struct_ty.params.iter() {
+            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
+        }
+
+        let args_satisfy_param_facts = self
+            .facts_for_args_satisfy_param_def_with_type_vec_for_verify(
+                &def.params_def_with_type,
+                &struct_ty.params,
+            )
+            .map_err(|runtime_error| {
+                WellDefinedError::new(
+                    format!(
+                        "failed to build parameter satisfaction facts for struct `{}`",
+                        struct_name
+                    ),
+                    Some(runtime_error),
+                    DEFAULT_LINE_FILE.clone(),
+                )
+            })?;
+
+        for fact in args_satisfy_param_facts.iter() {
+            let verify_result = self.verify_atomic_fact(fact, verify_state).map_err(
+                |verify_error| {
+                    WellDefinedError::new(
+                        format!(
+                            "failed to verify struct `{}` argument satisfies parameter type: {}",
+                            struct_name, fact
+                        ),
+                        Some(RuntimeError::VerifyError(verify_error)),
+                        DEFAULT_LINE_FILE.clone(),
+                    )
+                },
+            )?;
+            if verify_result.is_unknown() {
+                return Err(WellDefinedError::new(
+                    format!(
+                        "argument does not satisfy struct `{}` parameter type: {}",
+                        struct_name, fact
+                    ),
+                    None,
+                    DEFAULT_LINE_FILE.clone(),
+                ));
+            }
+        }
+
+        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+            &def.params_def_with_type,
+            &struct_ty.params,
+        );
+
+        for dom_fact in def.dom_facts.iter() {
+            let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            let verify_result = self
+                .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
+                .map_err(|verify_error| {
+                    WellDefinedError::new(
+                        format!(
+                            "failed to verify struct `{}` domain fact:\n{}",
+                            struct_name, instantiated_dom_fact
+                        ),
+                        Some(RuntimeError::VerifyError(verify_error)),
+                        DEFAULT_LINE_FILE.clone(),
+                    )
+                })?;
+            if verify_result.is_unknown() {
+                return Err(WellDefinedError::new(
+                    format!(
+                        "failed to verify struct `{}` domain fact:\n{}",
+                        struct_name, instantiated_dom_fact
+                    ),
+                    None,
+                    DEFAULT_LINE_FILE.clone(),
+                ));
+            }
+        }
+
+        for (_, field_param_type) in def.fields.iter() {
+            let instantiated_field_type = field_param_type.instantiate(&param_to_arg_map);
+            self.verify_param_type_well_defined(&instantiated_field_type, verify_state)?;
+        }
+
+        Ok(())
     }
 }

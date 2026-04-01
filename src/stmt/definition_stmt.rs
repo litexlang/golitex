@@ -22,6 +22,8 @@ impl DefAbstractPropStmt {
 pub struct DefParamTypeStructStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
+    /// 形参括号内 `:` 之后的域条件（与 `family` 的 `dom_facts` 同形），实例化时用实参代入。
+    pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub fields: Vec<(String, ParamType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: (usize, usize),
@@ -409,6 +411,7 @@ impl DefParamTypeStructStmt {
     pub fn new(
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
+        dom_facts: Vec<OrAndChainAtomicFact>,
         fields: Vec<(String, ParamType)>,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: (usize, usize),
@@ -416,6 +419,7 @@ impl DefParamTypeStructStmt {
         DefParamTypeStructStmt {
             name,
             params_def_with_type,
+            dom_facts,
             fields,
             facts,
             line_file,
