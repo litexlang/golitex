@@ -218,39 +218,23 @@ impl Runtime {
             };
         let mut infer_result = InferResult::new();
 
-        let param_type_facts =
-            ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
+        let param_type_infer = self
+            .verify_args_satisfy_param_def_flat_types(
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
+                &VerifyState::new(0, false),
             )
             .map_err(|previous_error| {
                 InferError::new(
                     format!(
-                        "failed to infer parameter type facts for `{}`",
+                        "failed to verify parameter types for `{}`",
                         normal_atomic_fact
                     ),
                     normal_atomic_fact.line_file,
                     Some(previous_error),
                 )
             })?;
-
-        for param_type_fact in param_type_facts.iter() {
-            let fact_to_store = param_type_fact
-                .clone()
-                .with_new_line_file(normal_atomic_fact.line_file);
-            infer_result.push_atomic_fact(&fact_to_store);
-            self.store_atomic_fact_without_well_defined_verified_and_infer(fact_to_store)
-                .map_err(|previous_error| {
-                    InferError::new(
-                        format!(
-                            "failed to store parameter type fact while inferring `{}`",
-                            normal_atomic_fact
-                        ),
-                        normal_atomic_fact.line_file,
-                        Some(previous_error.into()),
-                    )
-                })?;
-        }
+        infer_result.new_infer_result_inside(param_type_infer);
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &predicate_definition.params_def_with_type,

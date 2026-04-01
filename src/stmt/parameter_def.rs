@@ -166,7 +166,7 @@ impl ParamDefWithParamSet {
     }
 
     // Example: given fn(x R, y Q), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q.
-    // Unlike facts_for_args_satisfy_param_def_with_type_vec, this function requires each later parameter to belong to a concrete, fixed set (not syntactic sugar like set/nonempty_set/finite_set), and that set must not depend on earlier parameters. For example, in a ParamSet definition, `x R, y f(x)` is not allowed: mathematically, y's set membership must be specified in advance, rather than chosen only after x is determined.
+    // 与 [`ParamDefWithParamType`] 不同：此处每个参数必须属于**事先确定**的集合（不能用 `set` / `nonempty_set` / `finite_set` 等语法糖），且该集合不能依赖更早的参数。例如 `x R, y f(x)` 不允许。
     pub fn facts_for_args_satisfy_param_def_with_set_vec(
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Obj>,
@@ -186,20 +186,11 @@ impl ParamDefWithParamSet {
         Ok(facts)
     }
 
-    fn number_of_params_in_param_def_with_set_def(param_defs: &Vec<ParamDefWithParamSet>) -> usize {
-        let mut total_param_count: usize = 0;
-        for param_def in param_defs.iter() {
-            total_param_count += param_def.0.len();
-        }
-        total_param_count
-    }
-
     fn flat_instantiated_param_sets_for_args(
         param_defs: &Vec<ParamDefWithParamSet>,
         instantiated_param_sets: &Vec<Obj>,
     ) -> Vec<Obj> {
-        let mut result =
-            Vec::with_capacity(Self::number_of_params_in_param_def_with_set_def(param_defs));
+        let mut result = Vec::with_capacity(Self::number_of_params(param_defs));
         for (param_def, param_set) in param_defs.iter().zip(instantiated_param_sets.iter()) {
             for _ in param_def.0.iter() {
                 result.push(param_set.clone());
@@ -212,7 +203,7 @@ impl ParamDefWithParamSet {
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Obj>,
     ) -> Result<Vec<Obj>, RuntimeError> {
-        let total_param_count = Self::number_of_params_in_param_def_with_set_def(param_defs);
+        let total_param_count = Self::number_of_params(param_defs);
         if total_param_count != args.len() {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
@@ -249,66 +240,12 @@ impl ParamDefWithParamSet {
 
 impl ParamDefWithParamType {
 
-    pub fn facts_for_args_satisfy_param_def_with_type_vec(
-        param_defs: &Vec<ParamDefWithParamType>,
-        args: &Vec<Obj>,
-    ) -> Result<Vec<AtomicFact>, RuntimeError> {
-        let instantiated_types =
-            ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
-        let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
-            param_defs,
-            &instantiated_types,
-        );
-        let mut facts = Vec::with_capacity(args.len());
-        for (arg, param_type) in args.iter().zip(flat_types.iter()) {
-            facts.push(match param_type {
-                ParamType::Obj(set_obj) => AtomicFact::InFact(InFact::new(
-                    arg.clone(),
-                    set_obj.clone(),
-                    DEFAULT_LINE_FILE.clone(),
-                )),
-                ParamType::Set(_) => {
-                    AtomicFact::IsSetFact(IsSetFact::new(arg.clone(), DEFAULT_LINE_FILE.clone()))
-                }
-                ParamType::NonemptySet(_) => AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                    arg.clone(),
-                    DEFAULT_LINE_FILE.clone(),
-                )),
-                ParamType::FiniteSet(_) => AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                    arg.clone(),
-                    DEFAULT_LINE_FILE.clone(),
-                )),
-                ParamType::Family(_) | ParamType::Struct(_) => {
-                    return Err(RuntimeError::UnknownError(UnknownError::new(
-                        "facts_for_args_satisfy_param_def_with_type_vec: family/struct need Runtime::verify_obj_satisfies_param_type"
-                            .to_string(),
-                        DEFAULT_LINE_FILE.clone(),
-                        None,
-                        None,
-                    )));
-                }
-            });
-        }
-        Ok(facts)
-    }
-
-    fn number_of_params_in_param_def_with_type_def(
-        param_defs: &Vec<ParamDefWithParamType>,
-    ) -> usize {
-        let mut total_param_count: usize = 0;
-        for p in param_defs.iter() {
-            total_param_count += p.0.len();
-        }
-        return total_param_count;
-    }
-
     pub fn flat_instantiated_types_for_args(
         param_defs: &Vec<ParamDefWithParamType>,
         instantiated_types: &Vec<ParamType>,
     ) -> Vec<ParamType> {
-        let mut result = Vec::with_capacity(Self::number_of_params_in_param_def_with_type_def(
-            param_defs,
-        ));
+        let mut result =
+            Vec::with_capacity(Self::number_of_params(param_defs));
         for (param_def, param_type) in param_defs.iter().zip(instantiated_types.iter()) {
             for _ in param_def.0.iter() {
                 result.push(param_type.clone());
@@ -321,7 +258,7 @@ impl ParamDefWithParamType {
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Obj>,
     ) -> Result<Vec<ParamType>, RuntimeError> {
-        let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
+        let total_param_count = Self::number_of_params(param_defs);
         if total_param_count != args.len() {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
@@ -394,7 +331,7 @@ impl ParamDefWithParamType {
 
     pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamType>) -> Vec<String> {
         let mut names: Vec<String> = Vec::with_capacity(
-            Self::number_of_params_in_param_def_with_type_def(param_defs),
+            Self::number_of_params(param_defs),
         );
         for def in param_defs.iter() {
             for name in def.param_names().iter() {

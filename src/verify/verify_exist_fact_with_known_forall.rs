@@ -179,10 +179,11 @@ impl Runtime {
             }
         }
 
-        let args_satisfy_param_types =
-            ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
+        let _: InferResult = self
+            .verify_args_satisfy_param_def_flat_types(
                 &known_forall.params_def,
                 &args_for_params,
+                verify_state,
             )
             .map_err(|e| {
                 VerifyError::new(
@@ -192,13 +193,6 @@ impl Runtime {
                     Some(e),
                 )
             })?;
-
-        for fact in args_satisfy_param_types.iter() {
-            let result = self.verify_atomic_fact(fact, verify_state)?;
-            if result.is_unknown() {
-                return Ok(None);
-            }
-        }
 
         let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(
             &known_forall.params_def,
