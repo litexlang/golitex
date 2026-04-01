@@ -16,6 +16,23 @@
 //!
 //! 在登记 `defined_field_access_name["g"]` 之后，对 `id`、`add` 要分别建立与字段 [`ParamType`] 一致的事实，
 //! 左端为 `FieldAccess { name: "g", fields: ["id"] }` 对应的 [`Obj::FieldAccess`]。
+//!
+//! ## `self` 与定义体事实 `facts`
+//!
+//! `struct` 定义里 `<=>:` 之后的事实中，用标识符 [`SELF`]（`"self"`）表示「当前实例」。
+//! 在把参数绑定到某次 `struct T(...)` 时，要把 `self` **额外**映射到具体对象再 `instantiate`：
+//! - 根参数 `g`：`self ↦ Identifier(g)`；
+//! - 嵌套在 field 上（如 `g.h` 又是某个 struct）：`self ↦ FieldAccess(g.h)`。
+//!
+//! 该映射与形参代入 `param_to_arg_map` **合并**后，对 [`DefParamTypeStructStmt::facts`] 中每条
+//! [`OrAndChainAtomicFact`] 调用 [`OrAndChainAtomicFact::instantiate`]，再写入环境（见
+//! [`Runtime::store_instantiated_struct_def_facts_with_self`]）。
+//!
+//! ## [`Environment::cache_well_defined_obj`]
+//!
+//! - 字段类型事实（[`define_param_binding_for_param_type_on_field_access`] 成功）：缓存 `g.add` 等路径。
+//! - struct 实例登记（[`register_param_as_struct_instance`]，键为根名 `g` 或嵌套路径 `g.h`）：同样写入缓存。
+//! [`verify_field_access_well_defined`] 也会显式查缓存，与顶层 [`Runtime::verify_obj_well_defined_and_store_cache`] 一致。
 
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -28,13 +45,15 @@ impl Runtime {
     ///
     /// 嵌套 [`ParamType::Struct`] 时会在 [`Environment::defined_field_access_name`] 中以
     /// `field_access` 的字符串形式（[`FieldAccess`] 的 [`Display`]）为键登记子实例，并递归绑定子字段。
+    ///
+    /// 成功时：将该路径记入 [`Environment::cache_well_defined_obj`]，便于后续 well-defined 快速通过。
     pub(crate) fn define_param_binding_for_param_type_on_field_access(
         &mut self,
         field_access: &FieldAccess,
         param_type: &ParamType,
     ) -> Result<InferResult, RuntimeError> {
         let subject = obj_from_field_access(field_access);
-        match param_type {
+        let result = match param_type {
             ParamType::Family(family_ty) => {
                 self.define_param_binding_family_on_obj(subject, family_ty)
             }
@@ -49,7 +68,18 @@ impl Runtime {
             ParamType::Struct(struct_ty) => {
                 self.define_param_binding_struct_at_field_access(field_access, struct_ty)
             }
+        };
+        if result.is_ok() {
+            self.cache_well_defined_for_field_access_path(field_access);
         }
+        result
+    }
+
+    /// 将 `g.add` 这类路径写入 [`Environment::cache_well_defined_obj`]，与 [`Obj::to_string`] 键一致。
+    fn cache_well_defined_for_field_access_path(&mut self, field_access: &FieldAccess) {
+        self.top_level_env()
+            .cache_well_defined_obj
+            .insert(field_access.to_string(), ());
     }
 
     pub(crate) fn define_param_binding_struct(
@@ -97,7 +127,15 @@ impl Runtime {
             &struct_ty.params,
         );
 
-        self.bind_struct_fields_for_root_param(&def, &param_to_arg_map, name)
+        let mut infer_result =
+            self.bind_struct_fields_for_root_param(&def, &param_to_arg_map, name)?;
+        let fact_infer = self.store_instantiated_struct_def_facts_with_self(
+            &def,
+            &param_to_arg_map,
+            Obj::Identifier(Identifier::new(name.to_string())),
+        )?;
+        infer_result.new_infer_result_inside(fact_infer);
+        Ok(infer_result)
     }
 
     /// 根参数 `name`（如 `g`）已登记为 [`InstStructObj`] 后，对定义中每个字段做 field-access 上的类型绑定。
@@ -119,6 +157,9 @@ impl Runtime {
 
     /// 某 **field access 路径** 已视为 `struct_ty` 的实例（与根上 [`define_param_binding_struct`] 同构），
     /// 登记 `field_access.to_string()` → [`InstStructObj`]，并绑定该 struct 定义中的各字段。
+    ///
+    /// 口语上可称为「在 field access 上绑定 struct」；与根参数分支一样，在字段绑定之后会 **`self` → 本路径**
+    /// 并落库 [`DefParamTypeStructStmt::facts`]（见 [`Runtime::store_instantiated_struct_def_facts_with_self`]）。
     fn define_param_binding_struct_at_field_access(
         &mut self,
         field_access: &FieldAccess,
@@ -172,13 +213,55 @@ impl Runtime {
             let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
             infer_result.new_infer_result_inside(fr);
         }
+        let fact_infer = self.store_instantiated_struct_def_facts_with_self(
+            &def,
+            &param_to_arg_map,
+            obj_from_field_access(field_access),
+        )?;
+        infer_result.new_infer_result_inside(fact_infer);
         Ok(infer_result)
     }
 
+    /// 将 `struct` 定义中 `<=>:` 下的 [`DefParamTypeStructStmt::facts`] 做形参代入，并把 `self` 换成当前实例后存库。
+    ///
+    /// `param_to_arg_map` 来自 [`ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
+    /// `instantiate` 使用同一张表）。在此之上插入 `SELF` → `self_replacement`：
+    /// - 根绑定：`Obj::Identifier(g)`；
+    /// - [`define_param_binding_struct_at_field_access`]（即「在某一 field access 上绑定嵌套 struct」，与
+    ///   [`define_param_binding_for_param_type_on_field_access`] 的 `Struct` 分支同源）：`self_replacement`
+    ///   为该路径的 [`Obj::FieldAccess`]。
+    ///
+    /// 这样定义里写的 `self ∈ ...`、`P(self, ...)` 等会在实例化后变成关于 `g` 或 `g.h` 的事实。
+    fn store_instantiated_struct_def_facts_with_self(
+        &mut self,
+        def: &DefParamTypeStructStmt,
+        param_to_arg_map: &HashMap<String, Obj>,
+        self_replacement: Obj,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut extended = param_to_arg_map.clone();
+        extended.insert(SELF.to_string(), self_replacement);
+
+        let mut infer_result = InferResult::new();
+        for fact in def.facts.iter() {
+            let instantiated = fact.instantiate(&extended);
+            let fr = self
+                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(instantiated)
+                .map_err(RuntimeError::from)?;
+            infer_result.new_infer_result_inside(fr);
+        }
+        Ok(infer_result)
+    }
+
+    /// 写入 [`Environment::defined_field_access_name`]，并把同一字符串键写入 [`Environment::cache_well_defined_obj`]，
+    /// 与「字段上已绑定类型」路径共用一套缓存语义，便于 [`verify_field_access_well_defined`]。
     fn register_param_as_struct_instance(&mut self, env_key: &str, inst: InstStructObj) {
+        let key = env_key.to_string();
         self.top_level_env()
             .defined_field_access_name
-            .insert(env_key.to_string(), inst);
+            .insert(key.clone(), inst);
+        self.top_level_env()
+            .cache_well_defined_obj
+            .insert(key, ());
     }
 
     fn define_param_binding_family_on_obj(
@@ -280,13 +363,10 @@ impl Runtime {
     }
 }
 
-/// 将 [`FieldAccess`] 转为出现在事实左端的 [`Obj::FieldAccess`]。
-#[inline]
 fn obj_from_field_access(field_access: &FieldAccess) -> Obj {
     Obj::FieldAccess(field_access.clone())
 }
 
-/// 在已有路径上追加一段字段名，得到 `g` + `a.b` → `g.a.b` 形式的 [`FieldAccess`]。
 fn append_field_to_field_access(base: &FieldAccess, field_name: &str) -> FieldAccess {
     let mut fields = base.fields.clone();
     fields.push(field_name.to_string());

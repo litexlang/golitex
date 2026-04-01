@@ -105,6 +105,9 @@ impl Runtime {
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
         let key = x.to_string();
+        if self.cache_well_defined_obj_contains(&key) {
+            return Ok(());
+        }
         if self.is_name_used_for_identifier_and_field_access(&key) {
             return Ok(());
         }
