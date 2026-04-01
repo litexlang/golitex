@@ -39,7 +39,13 @@ impl FieldAccess {
                 name: identifier.name.clone(),
                 fields: self.fields.clone(),
             }),
-            _ => Obj::FieldAccess(self.clone()),
+            Some(Obj::Tuple(_tuple)) => {
+                unimplemented!();
+            }
+            Some(_) => {
+                unreachable!();
+            }
+            None => Obj::FieldAccess(self.clone()),
         }
     }
 }
