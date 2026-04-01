@@ -100,14 +100,14 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn def_prop_without_meaning_stmt(
+    pub fn def_abstract_prop_stmt(
         &mut self,
-        def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt,
+        def_abstract_prop_stmt: &DefAbstractPropStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        self.store_def_prop_without_meaning(def_prop_without_meaning_stmt)
+        self.store_def_abstract_prop(def_abstract_prop_stmt)
             .map_err(|e| {
                 ExecStmtError::new(
-                    Stmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt.clone()),
+                    Stmt::DefAbstractPropStmt(def_abstract_prop_stmt.clone()),
                     "".to_string(),
                     Some(e.into()),
                     vec![],
@@ -115,7 +115,7 @@ impl Runtime {
             })?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt.clone()),
+                Stmt::DefAbstractPropStmt(def_abstract_prop_stmt.clone()),
                 InferResult::new(),
                 vec![],
             ),

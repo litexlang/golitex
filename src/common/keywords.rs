@@ -71,6 +71,8 @@ pub const SUCCESS_COLON: &str = "Success:";
 pub const UNKNOWN_COLON: &str = "Unknown:";
 pub const LET: &str = "let";
 pub const PROP: &str = "prop";
+/// Predicate symbol declared by name and parameter list only (no `:` / definition body); cf. `prop` with iff body.
+pub const ABSTRACT_PROP: &str = "abstract_prop";
 pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
 
@@ -193,6 +195,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         UNKNOWN_COLON,
         LET,
         PROP,
+        ABSTRACT_PROP,
         CLAIM,
         PROVE,
         BY,

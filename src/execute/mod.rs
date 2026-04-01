@@ -19,4 +19,4 @@ mod exec_store_def;
 mod exec_store_fact;
 mod exec_tooling_stmt;
 mod exec_witness_stmt;
-mod exec_struct_without_fields_def;
+mod exec_family_def;

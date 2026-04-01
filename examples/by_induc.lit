@@ -1,4 +1,4 @@
-prop p(a)
+abstract_prop p(a)
 
 know:
     $p(0)

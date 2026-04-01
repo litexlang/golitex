@@ -3,7 +3,8 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         match tb.current()? {
-            PROP => self.parse_def_prop_with_meaning_stmt_or_prop_without_meaning(tb),
+            PROP => self.parse_def_prop_with_meaning_stmt(tb),
+            ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
             LET => self.parse_def_let_stmt(tb),
             HAVE => {
                 if tb.token_at_index(1)? == FN_FOR_FN_WITH_PARAMS {
@@ -22,6 +23,7 @@ impl Runtime {
             RUN_FILE => self.parse_run_file_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
+            FAMILY => self.parse_def_family_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
             BY => self.parse_by_prefixed_axiom_stmt(tb),

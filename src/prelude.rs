@@ -1,7 +1,8 @@
-pub use crate::environment::{
-    AlgoName, AtomicFactKey, Environment, ExistFactKey, FactString, IdentifierName,
-    KnownForallFactParamsAndDom, ObjString, OrFactKey, PropName, StructName, FieldAccessName,
+pub use crate::common::name_types::{
+    AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, FieldAccessName,
+    IdentifierName, ObjString, OrFactKey, PropName, StructName, FamilyName,
 };
+pub use crate::environment::{Environment, KnownForallFactParamsAndDom};
 pub use crate::error::ConflictMsg;
 pub use crate::error::DefineParamsError;
 pub use crate::error::ExecStmtError;
@@ -125,9 +126,9 @@ pub use crate::stmt::define_algorithm_stmt::AlgoReturnOrAlgoCase;
 pub use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 pub use crate::stmt::definition_stmt::DefLetStmt;
 pub use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
-pub use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
+pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
 pub use crate::stmt::definition_stmt::DefStructWithFieldsStmt;
-pub use crate::stmt::definition_stmt::DefStructWithNoFieldStmt;
+pub use crate::stmt::definition_stmt::DefFamilyStmt;
 pub use crate::stmt::definition_stmt::HaveExistObjStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualStmt;
@@ -191,6 +192,7 @@ pub use crate::common::keywords::key_symbols_sorted_by_len_desc;
 pub use crate::common::keywords::ADD;
 pub use crate::common::keywords::ALGO;
 pub use crate::common::keywords::AND;
+pub use crate::common::keywords::ABSTRACT_PROP;
 pub use crate::common::keywords::AS;
 pub use crate::common::keywords::BUILTIN_CODE_PATH;
 pub use crate::common::keywords::BY;

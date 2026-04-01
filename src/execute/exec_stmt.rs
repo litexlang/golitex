@@ -7,8 +7,8 @@ impl Runtime {
             Stmt::DefPropWithMeaningStmt(d) => self
                 .def_prop_with_meaning_stmt(d)
                 .map_err(RuntimeError::from),
-            Stmt::DefPropWithoutMeaningStmt(d) => self
-                .def_prop_without_meaning_stmt(d)
+            Stmt::DefAbstractPropStmt(d) => self
+                .def_abstract_prop_stmt(d)
                 .map_err(RuntimeError::from),
             Stmt::HaveObjInNonemptySetStmt(d) => self
                 .have_obj_in_nonempty_set_or_param_type_stmt(d)
@@ -22,8 +22,7 @@ impl Runtime {
             Stmt::DefStructWithFieldsStmt(d) => self
                 .def_struct_with_fields_stmt(d)
                 .map_err(RuntimeError::from),
-            Stmt::DefStructWithNoFieldStmt(d) => self
-                .def_struct_with_no_field_stmt(d)
+            Stmt::DefFamilyStmt(d) => self.def_family_stmt(d)
                 .map_err(RuntimeError::from),
             Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d).map_err(RuntimeError::from),
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt).map_err(RuntimeError::from),
