@@ -30,7 +30,8 @@ impl Runtime {
             NONEMPTY_SET => self.param_type_nonempty_set(tb),
             FINITE_SET => self.param_type_finite_set(tb),
             SET => self.param_type_set(tb),
-            STRUCT => self.param_type_instantiated_struct(tb),
+            FAMILY => self.param_type_family(tb),
+            STRUCT => self.param_type_struct(tb),
             _ => self.param_type_obj(tb),
         }
     }
@@ -55,16 +56,23 @@ impl Runtime {
         Ok(ParamType::Obj(obj))
     }
 
-    pub fn param_type_instantiated_struct(
+    pub fn param_type_family(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamType, ParsingError> {
+        tb.skip_token(FAMILY)?;
+        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let params = self.parse_braced_objs(tb)?;
+        Ok(ParamType::Family(FamilyParamType { name, params }))
+    }
+
+    pub fn param_type_struct(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<ParamType, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = self.parse_identifier_or_identifier_with_mod(tb)?;
         let params = self.parse_braced_objs(tb)?;
-        Ok(ParamType::InstantiatedStruct(InstantiatedStruct {
-            name,
-            params,
-        }))
+        Ok(ParamType::Struct(StructParamType { name, params }))
     }
 }
