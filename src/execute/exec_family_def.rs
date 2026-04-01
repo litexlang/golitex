@@ -10,7 +10,7 @@ impl Runtime {
 
         self.store_def_family(def_family_stmt)
             .map_err(|store_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::DefFamilyStmt(def_family_stmt.clone()),
                     "failed to store family definition".to_string(),
                     Some(store_error.into()),
@@ -46,7 +46,7 @@ impl Runtime {
         let mut family_definition_infer_result = self
             .define_params_with_type(&def_family_stmt.params_def_with_type, false)
             .map_err(|define_params_error| {
-                ExecStmtError::new(
+                ExecStmtError::new_with_stmt(
                     Stmt::DefFamilyStmt(def_family_stmt.clone()),
                     "".to_string(),
                     Some(define_params_error.into()),
@@ -61,7 +61,7 @@ impl Runtime {
                     &verify_state,
                 )
                 .map_err(|inner_exec_error| {
-                    ExecStmtError::new(
+                    ExecStmtError::new_with_stmt(
                         Stmt::DefFamilyStmt(def_family_stmt.clone()),
                         "".to_string(),
                         Some(RuntimeError::ExecStmtError(inner_exec_error)),
@@ -76,7 +76,7 @@ impl Runtime {
             &verify_state,
         )
         .map_err(|well_defined_error| {
-            ExecStmtError::new(
+            ExecStmtError::new_with_stmt(
                 Stmt::DefFamilyStmt(def_family_stmt.clone()),
                 "".to_string(),
                 Some(well_defined_error.into()),
