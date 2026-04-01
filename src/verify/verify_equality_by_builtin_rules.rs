@@ -10,10 +10,11 @@ pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
 
 impl Runtime {
     pub(crate) fn verify_equality_by_builtin_rules(
-        &self,
+        &mut self,
         left: &Obj,
         right: &Obj,
         line_file: (usize, usize),
+        verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         if verify_equality_by_they_are_the_same(left, right) {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
@@ -68,6 +69,17 @@ impl Runtime {
             ));
         }
 
+        if let (Obj::FnSetWithParams(left_fn_set), Obj::FnSetWithParams(right_fn_set)) =
+            (left, right)
+        {
+            return self.verify_fn_set_with_params_equality_by_builtin_rules(
+                left_fn_set,
+                right_fn_set,
+                line_file,
+                verify_state,
+            );
+        }
+
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 }
@@ -78,6 +90,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: (usize, usize),
+        verify_state: &VerifyState,
         known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
         known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
     ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
@@ -85,7 +98,8 @@ impl Runtime {
             (None, None) => Ok(None),
             (Some(known_objs_equal_to_left), None) => {
                 for obj in known_objs_equal_to_left.iter() {
-                    let result = self.verify_equality_by_builtin_rules(obj, right, line_file)?;
+                    let result =
+                        self.verify_equality_by_builtin_rules(obj, right, line_file, verify_state)?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }
@@ -94,7 +108,8 @@ impl Runtime {
             }
             (None, Some(known_objs_equal_to_right)) => {
                 for obj in known_objs_equal_to_right.iter() {
-                    let result = self.verify_equality_by_builtin_rules(left, obj, line_file)?;
+                    let result =
+                        self.verify_equality_by_builtin_rules(left, obj, line_file, verify_state)?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }
@@ -104,8 +119,12 @@ impl Runtime {
             (Some(known_objs_equal_to_left), Some(known_objs_equal_to_right)) => {
                 for obj1 in known_objs_equal_to_left.iter() {
                     for obj2 in known_objs_equal_to_right.iter() {
-                        let result =
-                            self.verify_equality_by_builtin_rules(obj1, obj2, line_file)?;
+                        let result = self.verify_equality_by_builtin_rules(
+                            obj1,
+                            obj2,
+                            line_file,
+                            verify_state,
+                        )?;
                         if result.is_true() {
                             return Ok(Some(result));
                         }

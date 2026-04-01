@@ -22,7 +22,8 @@ impl Runtime {
         line_file: (usize, usize),
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let mut result = self.verify_equality_by_builtin_rules(left, right, line_file)?;
+        let mut result =
+            self.verify_equality_by_builtin_rules(left, right, line_file, verify_state)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -74,7 +75,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: (usize, usize),
-        _verify_state: &VerifyState,
+        verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let left_string = left.to_string();
         let right_string = right.to_string();
@@ -86,6 +87,7 @@ impl Runtime {
                     left,
                     right,
                     line_file,
+                    verify_state,
                     known_left.as_ref(),
                     known_right.as_ref(),
                 )?
@@ -495,8 +497,12 @@ impl Runtime {
         verify_state: &VerifyState,
         equality_line_file: (usize, usize),
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let mut result =
-            self.verify_equality_by_builtin_rules(left_obj, right_obj, equality_line_file)?;
+        let mut result = self.verify_equality_by_builtin_rules(
+            left_obj,
+            right_obj,
+            equality_line_file,
+            verify_state,
+        )?;
         if result.is_true() {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(

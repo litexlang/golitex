@@ -281,6 +281,7 @@ pub use crate::common::keywords::R_POS;
 pub use crate::common::keywords::SET;
 pub use crate::common::keywords::SET_DIFF;
 pub use crate::common::keywords::SET_MINUS;
+pub use crate::common::keywords::SELF;
 pub use crate::common::keywords::ST;
 pub use crate::common::keywords::FAMILY;
 pub use crate::common::keywords::STRUCT;
