@@ -2,8 +2,6 @@ use crate::prelude::*;
 
 const JSON_KEY_RESULT: &str = "result";
 const JSON_KEY_SUCCESS: &str = "success";
-const JSON_KEY_VERIFIED_BY_BUILTIN_RULE: &str = "verified_by_builtin_rule";
-const JSON_KEY_VERIFIED_BY_KNOWN_FACT: &str = "verified_by_known_fact";
 const JSON_KEY_INFER_FACTS: &str = "infer_facts";
 const JSON_KEY_SOURCE: &str = "source";
 
@@ -174,7 +172,7 @@ impl Runtime {
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_RESULT,
-            json_string_literal(JSON_KEY_VERIFIED_BY_BUILTIN_RULE)
+            json_string_literal(JSON_KEY_SUCCESS)
         ));
         field_lines.push(format!(
             "{}\"stmt_type\": {}",
@@ -249,7 +247,7 @@ impl Runtime {
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_RESULT,
-            json_string_literal(JSON_KEY_VERIFIED_BY_KNOWN_FACT)
+            json_string_literal(JSON_KEY_SUCCESS)
         ));
         field_lines.push(format!(
             "{}\"stmt_type\": {}",

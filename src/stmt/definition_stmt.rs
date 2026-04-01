@@ -107,9 +107,12 @@ impl fmt::Display for DefAbstractPropStmt {
 impl fmt::Display for DefParamTypeStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
+        // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
+        let implicit_prefix_len = ParamDefWithParamType::number_of_params(&self.params_def_with_type);
         let fields_str: String = self
             .fields
             .iter()
+            .skip(implicit_prefix_len)
             .map(|(name, or_val)| format!("{} {}", name, or_val))
             .collect::<Vec<_>>()
             .join("\n");
