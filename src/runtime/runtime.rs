@@ -213,7 +213,7 @@ impl Runtime {
 
     pub fn is_name_used_for_param_type_struct(&self, name: &str) -> bool {
         return self
-            .get_cloned_param_type_struct_definition_by_name(name)
+            .get_cloned_definition_of_struct(name)
             .is_some();
     }
 

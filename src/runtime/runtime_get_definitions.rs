@@ -41,27 +41,6 @@ impl Runtime {
         None
     }
 
-    pub fn get_cloned_param_type_struct_definition_by_name(
-        &self,
-        param_type_struct_name: &str,
-    ) -> Option<DefParamTypeStructStmt> {
-        let parts = param_type_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
-        if parts.len() != 1 {
-            unimplemented!();
-        }
-
-        for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment
-                .defined_structs
-                .get(param_type_struct_name)
-            {
-                return Some(definition.clone());
-            }
-        }
-
-        None
-    }
-
     pub fn get_obj_in_struct(
         &self,
         struct_name: &str,
@@ -130,20 +109,46 @@ impl Runtime {
             return None;
         };
 
-        let Some(def) = self.get_definition_of_struct(struct_object_satisfies) else {
+        let Some(def) = self.get_definition_of_struct(&struct_object_satisfies.name.to_string()) else {
             return None;
         };
 
         Some(def)
     }
 
-    fn get_definition_of_struct(&self, struct_object_satisfies: &StructParamType) -> Option<&DefParamTypeStructStmt> {
-        let key = struct_object_satisfies.name.to_string();
-        for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.defined_structs.get(&key) {
+    fn get_definition_of_struct(&self, struct_name: &str) -> Option<&DefParamTypeStructStmt> {
+        let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            unimplemented!();
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_structs.get(struct_name) {
                 return Some(definition);
             }
         }
         None
     }
+
+    pub fn get_cloned_definition_of_struct(
+        &self,
+        param_type_struct_name: &str,
+    ) -> Option<DefParamTypeStructStmt> {
+        let parts = param_type_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            unimplemented!();
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment
+                .defined_structs
+                .get(param_type_struct_name)
+            {
+                return Some(definition.clone());
+            }
+        }
+
+        None
+    }
+
 }
