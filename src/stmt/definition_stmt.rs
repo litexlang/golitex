@@ -121,8 +121,10 @@ impl fmt::Display for DefParamTypeStructStmt {
         let fields_indented =
             to_string_and_add_four_spaces_at_beginning_of_each_line(&fields_str, 1);
         let equiv_line = add_four_spaces_at_beginning(format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
-        let facts_indented =
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1);
+        let facts_indented = vec_to_string_add_four_spaces_at_beginning_of_each_line(
+            &self.facts.iter().skip(implicit_prefix_len).cloned().collect(),
+            1,
+        );
         write!(
             f,
             "{} {}{}{}{} {}\n{}\n{}\n{}",

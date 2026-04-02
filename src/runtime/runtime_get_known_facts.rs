@@ -102,4 +102,17 @@ impl Runtime {
 
         result
     }
+
+    /// `defined_field_access_name` 里以根名（如 `g`）登记的 struct 实例。
+    pub fn get_inst_struct_obj_for_field_access_root(
+        &self,
+        root: &str,
+    ) -> Option<InstStructObj> {
+        for env in self.iter_environments_from_top() {
+            if let Some(inst) = env.defined_field_access_name.get(root) {
+                return Some(inst.clone());
+            }
+        }
+        None
+    }
 }

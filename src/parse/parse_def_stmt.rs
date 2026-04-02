@@ -627,7 +627,7 @@ fn build_struct_implicit_param_projection_facts(
                 EqualFact::new(
                     Obj::FieldAccess(FieldAccess::new(
                         SELF.to_string(),
-                        vec![param_name.clone()],
+                        param_name.clone(),
                     )),
                     Obj::Identifier(Identifier::new(param_name.clone())),
                     line_file,

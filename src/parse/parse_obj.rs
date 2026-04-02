@@ -820,14 +820,18 @@ impl Runtime {
             let right = tb.advance()?;
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                 tb.skip()?;
-                let mut fields = vec![tb.advance()?.to_string()];
-                while !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                    tb.skip()?;
-                    fields.push(tb.advance()?.to_string());
+                let field = tb.advance()?.to_string();
+                if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
+                    return Err(ParsingError::new(
+                        "chained field access `a.b.c` is not supported; use at most one `.`"
+                            .to_string(),
+                        tb.line_file,
+                        None,
+                    ));
                 }
 
                 Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(
-                    left, right, fields,
+                    left, right, field,
                 )))
             } else {
                 Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(left, right)))
@@ -836,12 +840,16 @@ impl Runtime {
             // 如果后面有 .，则解析为 FieldAccess
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                 tb.skip()?;
-                let mut fields = vec![tb.advance()?.to_string()];
-                while !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                    tb.skip()?;
-                    fields.push(tb.advance()?.to_string());
+                let field = tb.advance()?.to_string();
+                if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
+                    return Err(ParsingError::new(
+                        "chained field access `a.b.c` is not supported; use at most one `.`"
+                            .to_string(),
+                        tb.line_file,
+                        None,
+                    ));
                 }
-                Ok(Atom::FieldAccess(FieldAccess::new(left, fields)))
+                Ok(Atom::FieldAccess(FieldAccess::new(left, field)))
             } else {
                 Ok(Atom::Identifier(Identifier::new(left)))
             }
