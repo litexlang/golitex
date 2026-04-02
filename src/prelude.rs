@@ -81,7 +81,6 @@ pub use crate::obj::FnSetWithParams;
 pub use crate::obj::Identifier;
 pub use crate::obj::IdentifierOrIdentifierWithMod;
 pub use crate::obj::IdentifierWithMod;
-pub use crate::obj::InstStructObj;
 pub use crate::obj::Intersect;
 pub use crate::obj::ListSet;
 pub use crate::obj::Mod;

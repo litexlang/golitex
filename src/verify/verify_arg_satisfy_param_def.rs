@@ -46,29 +46,37 @@ impl Runtime {
         
         match &obj {
             Obj::Tuple(tuple) => {
-                self.verify_tuple_satisfy_param_def_with_struct_type(
+                self.push_env();
+                let result = self.verify_tuple_satisfy_param_def_with_struct_type(
                     tuple,
                     struct_ty,
                     &def,
                     verify_state,
-                )
+                );
+                self.pop_env();
+                result
             }
             Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
-                let expected_inst =
-                    InstStructObj::new(struct_ty.name.clone(), struct_ty.args.clone());
-                if let Some(inst) =
+                let _ =
+                if let Some(_) =
                     self.get_inst_struct_obj_for_field_access_root(&obj.to_string())
                 {
-                    if inst.to_string() == expected_inst.to_string() {
-                        return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
-                            NonFactualStmtSuccess::new(
-                                Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE)),
-                                InferResult::new(),
-                                vec![],
-                            ),
-                        ));
-                    }
-                }
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        // TODO: 这其实是有问题的 因为这种 satisfy 不是正常意义的 fact
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                            Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                                obj.clone(),
+                                Obj::Identifier(Identifier::new(String::from("_"))),
+                                DEFAULT_LINE_FILE.clone(),
+                            ))),
+                            InferResult::new(),
+                            "".to_string(),
+                            None,
+                            Some(DEFAULT_LINE_FILE),
+                            vec![],
+                        ),
+                    ));
+                };
                 Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
             }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
@@ -229,6 +237,7 @@ impl Runtime {
         let args_of_struct_param_type = &struct_param_type.args;
         let expected_tuple_len = args_of_struct_param_type.len() + struct_def.fields.len();
         if expected_tuple_len != tuple.args.len() {
+            // TODO: 这不是正常的 in fact
             return Err(VerifyError::new(
                 Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     Obj::Tuple(tuple.clone()),
@@ -327,6 +336,7 @@ impl Runtime {
         param_arg_map.insert(SELF.to_string(), Obj::Tuple(tuple.clone()));
 
         // TODO TODO: 让 self 对应这个 def ，否则 无法 instantiate
+        self.register_param_as_struct_instance(SELF, struct_param_type.clone());
         
         for iff_fact in struct_def.facts.iter() {
             let instantiated = self
