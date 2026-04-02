@@ -454,6 +454,10 @@ impl Runtime {
             fields,
             tb.line_file,
         )?;
+        let mut implicit_param_projection_facts =
+            build_struct_implicit_param_projection_facts(&params_def_with_type, tb.line_file);
+        implicit_param_projection_facts.extend(facts);
+        facts = implicit_param_projection_facts;
 
         let mut seen = HashSet::new();
         for (field_name, _) in fields.iter() {
@@ -554,20 +558,44 @@ fn merge_struct_fields_with_implicit_type_params(
 ) -> Result<Vec<(String, ParamType)>, ParsingError> {
     let mut implicit: Vec<(String, ParamType)> = Vec::new();
     for pd in params_def_with_type {
-        for pname in &pd.0 {
-            if user_fields.iter().any(|(n, _)| n == pname) {
+        for name in &pd.0 {
+            if user_fields.iter().any(|(n, _)| n == name) {
                 return Err(ParsingError::new(
                     format!(
                         "struct `{}`: field `{}` duplicates a type parameter; remove the explicit field line",
-                        struct_name, pname
+                        struct_name, name
                     ),
                     line_file,
                     None,
                 ));
             }
-            implicit.push((pname.clone(), pd.1.clone()));
+            implicit.push((name.clone(), pd.1.clone()));
         }
     }
     implicit.extend(user_fields);
     Ok(implicit)
+}
+
+fn build_struct_implicit_param_projection_facts(
+    params_def_with_type: &[ParamDefWithParamType],
+    line_file: (usize, usize),
+) -> Vec<OrAndChainAtomicFact> {
+    let mut facts = Vec::with_capacity(ParamDefWithParamType::number_of_params(
+        &params_def_with_type.to_vec(),
+    ));
+    for param_def in params_def_with_type {
+        for param_name in &param_def.0 {
+            facts.push(OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Obj::FieldAccess(FieldAccess::new(
+                        SELF.to_string(),
+                        vec![param_name.clone()],
+                    )),
+                    Obj::Identifier(Identifier::new(param_name.clone())),
+                    line_file,
+                ),
+            )));
+        }
+    }
+    facts
 }
