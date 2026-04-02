@@ -107,7 +107,7 @@ impl Runtime {
                         field_access,
                         struct_name
                     ),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
                 )));
@@ -123,7 +123,7 @@ impl Runtime {
                     expected_count,
                     struct_ty.args.len()
                 ),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
                 None,
                 None,
             )));
@@ -165,7 +165,7 @@ impl Runtime {
             None => {
                 return Err(RuntimeError::UnknownError(UnknownError::new(
                     format!("struct `{}` is not defined", struct_name),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
                 )));
@@ -177,7 +177,7 @@ impl Runtime {
                     "struct type name `{}` does not match definition name `{}`",
                     struct_name, def.name
                 ),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
                 None,
                 None,
             )));
@@ -192,7 +192,7 @@ impl Runtime {
                     expected_count,
                     struct_ty.args.len()
                 ),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
                 None,
                 None,
             )));
@@ -206,7 +206,7 @@ impl Runtime {
                     tuple.args.len(),
                     def.fields.len()
                 ),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
                 None,
                 None,
             )));
@@ -285,7 +285,7 @@ impl Runtime {
             None => {
                 return Err(RuntimeError::UnknownError(UnknownError::new(
                     format!("family `{}` is not defined", family_name),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
                 )));
@@ -300,7 +300,7 @@ impl Runtime {
                     expected_count,
                     family_ty.params.len()
                 ),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
                 None,
                 None,
             )));
@@ -313,7 +313,7 @@ impl Runtime {
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             subject,
             member_set,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -327,7 +327,7 @@ impl Runtime {
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             subject,
             obj.clone(),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -340,7 +340,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
             subject,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -353,7 +353,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
             subject,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -366,7 +366,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
             subject,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -393,7 +393,7 @@ impl Runtime {
                             "tuple as subject is only supported for struct parameter type, got {}",
                             param_type
                         ),
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                         None,
                         None,
                     )))
@@ -405,7 +405,7 @@ impl Runtime {
                         "struct parameter type requires an identifier, field access, or tuple matching struct fields, got {}",
                         subject
                     ),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
                 ))),

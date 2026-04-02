@@ -248,7 +248,7 @@ impl ParamDefWithParamSet {
             let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                 Obj::Identifier(Identifier::new(name.clone())),
                 self.1.clone(),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             )));
             facts.push(fact);
         }
@@ -277,7 +277,7 @@ impl ParamDefWithParamSet {
             facts.push(AtomicFact::InFact(InFact::new(
                 arg.clone(),
                 param_set.clone(),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             )));
         }
         Ok(facts)

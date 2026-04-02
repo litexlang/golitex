@@ -59,10 +59,10 @@ impl Runtime {
                         InFact::new(
                             Obj::Identifier(Identifier::new(unused_name.clone())),
                             stmt.right.clone(),
-                            stmt.line_file,
+                            stmt.line_file.clone(),
                         ),
                     ))],
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                 ));
                 self.verify_fact_return_err_if_not_true(
                     &left_to_right_forall_fact,
@@ -90,10 +90,10 @@ impl Runtime {
                         InFact::new(
                             Obj::Identifier(Identifier::new(unused_name.clone())),
                             stmt.left.clone(),
-                            stmt.line_file,
+                            stmt.line_file.clone(),
                         ),
                     ))],
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                 ));
                 self.verify_fact_return_err_if_not_true(
                     &right_to_left_forall_fact,
@@ -122,7 +122,7 @@ impl Runtime {
         let left_equal_to_right_atomic_fact = AtomicFact::EqualFact(crate::fact::EqualFact::new(
             stmt.left.clone(),
             stmt.right.clone(),
-            stmt.line_file,
+            stmt.line_file.clone(),
         ));
 
         let mut infer_result = InferResult::new();

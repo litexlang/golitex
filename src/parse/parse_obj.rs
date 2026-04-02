@@ -27,7 +27,7 @@ impl Runtime {
                     PROJ => Ok(Obj::Proj(Proj::new(left, right))),
                     _ => Err(ParsingError::new(
                         format!("{} does not support infix function syntax", fn_name),
-                        tb.line_file,
+                        tb.line_file.clone(),
                         None,
                     )),
                 };
@@ -170,7 +170,7 @@ impl Runtime {
             } else {
                 return Err(ParsingError::new(
                     "Expected comma or colon".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
@@ -179,12 +179,12 @@ impl Runtime {
         let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &fn_set_param_names,
-            tb.line_file,
+            tb.line_file.clone(),
         )
         .map_err(|e| {
             ParsingError::new(
                 e.to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 Some(RuntimeError::ParseBlockError(e)),
             )
         })?;
@@ -258,7 +258,7 @@ impl Runtime {
                 if !is_number(&number) {
                     return Err(ParsingError::new(
                         format!("Invalid number: {}", number),
-                        tb.line_file,
+                        tb.line_file.clone(),
                         None,
                     ));
                 }
@@ -272,7 +272,7 @@ impl Runtime {
                 if !is_number(&number) {
                     return Err(ParsingError::new(
                         format!("Invalid number: {}", number),
-                        tb.line_file,
+                        tb.line_file.clone(),
                         None,
                     ));
                 }
@@ -281,7 +281,7 @@ impl Runtime {
                 if !is_number(&number) {
                     return Err(ParsingError::new(
                         format!("Invalid number: {}", number),
-                        tb.line_file,
+                        tb.line_file.clone(),
                         None,
                     ));
                 }
@@ -379,16 +379,16 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(ParsingError::new(
                     "union expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new("union expects 2 arguments".to_string(), tb.line_file, None)
+                ParsingError::new("union expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new("union expects 2 arguments".to_string(), tb.line_file, None)
+                ParsingError::new("union expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Union(Union::new(left, right)));
         }
@@ -398,7 +398,7 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(ParsingError::new(
                     "intersect expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
@@ -406,14 +406,14 @@ impl Runtime {
             let left = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "intersect expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
             let right = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "intersect expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
@@ -425,7 +425,7 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(ParsingError::new(
                     "set_minus expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
@@ -433,14 +433,14 @@ impl Runtime {
             let left = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "set_minus expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
             let right = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "set_minus expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
@@ -452,7 +452,7 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(ParsingError::new(
                     "disjoint_union expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
@@ -460,14 +460,14 @@ impl Runtime {
             let left = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "disjoint_union expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
             let right = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "disjoint_union expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
@@ -479,13 +479,13 @@ impl Runtime {
             if args.len() != 1 {
                 return Err(ParsingError::new(
                     "cap expects 1 argument".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("cap expects 1 argument".to_string(), tb.line_file, None)
+                ParsingError::new("cap expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Cap(Cap::new(value)));
         }
@@ -495,13 +495,13 @@ impl Runtime {
             if args.len() != 1 {
                 return Err(ParsingError::new(
                     "cup expects 1 argument".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("cup expects 1 argument".to_string(), tb.line_file, None)
+                ParsingError::new("cup expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Cup(Cup::new(value)));
         }
@@ -511,13 +511,13 @@ impl Runtime {
             if args.len() != 1 {
                 return Err(ParsingError::new(
                     "choice expects 1 argument".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("choice expects 1 argument".to_string(), tb.line_file, None)
+                ParsingError::new("choice expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Choose(Choose::new(value)));
         }
@@ -527,16 +527,16 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(ParsingError::new(
                     "proj expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new("proj expects 2 arguments".to_string(), tb.line_file, None)
+                ParsingError::new("proj expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new("proj expects 2 arguments".to_string(), tb.line_file, None)
+                ParsingError::new("proj expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Proj(Proj::new(left, right)));
         }
@@ -546,16 +546,16 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(ParsingError::new(
                     "range expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new("range expects 2 arguments".to_string(), tb.line_file, None)
+                ParsingError::new("range expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new("range expects 2 arguments".to_string(), tb.line_file, None)
+                ParsingError::new("range expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Range(Range::new(left, right)));
         }
@@ -565,7 +565,7 @@ impl Runtime {
             if args.len() != 2 {
                 return Err(ParsingError::new(
                     "closed_range expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
@@ -573,14 +573,14 @@ impl Runtime {
             let left = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "closed_range expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
             let right = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "closed_range expects 2 arguments".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
@@ -593,13 +593,13 @@ impl Runtime {
             if args.len() != 1 {
                 return Err(ParsingError::new(
                     "cup expects 1 argument".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("cup expects 1 argument".to_string(), tb.line_file, None)
+                ParsingError::new("cup expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Cup(Cup::new(value)));
         }
@@ -609,7 +609,7 @@ impl Runtime {
             if args.len() != 1 {
                 return Err(ParsingError::new(
                     "power_set expects 1 argument".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
@@ -617,7 +617,7 @@ impl Runtime {
             let value = it.next().ok_or_else(|| {
                 ParsingError::new(
                     "power_set expects 1 argument".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
@@ -629,13 +629,13 @@ impl Runtime {
             if args.len() != 1 {
                 return Err(ParsingError::new(
                     "set_dim expects 1 argument".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("set_dim expects 1 argument".to_string(), tb.line_file, None)
+                ParsingError::new("set_dim expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::CartDim(CartDim::new(value)));
         }
@@ -645,13 +645,13 @@ impl Runtime {
             if args.len() != 1 {
                 return Err(ParsingError::new(
                     "count expects 1 argument".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("count expects 1 argument".to_string(), tb.line_file, None)
+                ParsingError::new("count expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Count(Count::new(value)));
         }
@@ -694,7 +694,7 @@ impl Runtime {
         if parsed_args.len() != 1 {
             return Err(ParsingError::new(
                 "expected exactly 1 argument".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -750,11 +750,11 @@ impl Runtime {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, ParsingError> {
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name, tb.line_file)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(&a.name),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -825,7 +825,7 @@ impl Runtime {
                     return Err(ParsingError::new(
                         "chained field access `a.b.c` is not supported; use at most one `.`"
                             .to_string(),
-                        tb.line_file,
+                        tb.line_file.clone(),
                         None,
                     ));
                 }
@@ -845,7 +845,7 @@ impl Runtime {
                     return Err(ParsingError::new(
                         "chained field access `a.b.c` is not supported; use at most one `.`"
                             .to_string(),
-                        tb.line_file,
+                        tb.line_file.clone(),
                         None,
                     ));
                 }

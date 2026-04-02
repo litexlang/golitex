@@ -156,7 +156,9 @@ pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::Stmt;
 pub use crate::verify::VerifyState;
 
-pub use crate::common::defaults::DEFAULT_LINE_FILE;
+pub use crate::common::defaults::default_line_file;
+pub use crate::common::defaults::is_default_line_file;
+pub use crate::common::defaults::LineFile;
 pub use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
 pub use crate::common::helper::add_four_spaces_at_beginning;
 pub use crate::common::helper::brace_vec_colon_vec_to_string;

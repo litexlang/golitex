@@ -143,7 +143,7 @@ impl Runtime {
                     None => return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                         None,
                         format!("field `{}` of struct `{}` is not a tuple", field_access.field, field_access.name),
-                        DEFAULT_LINE_FILE,
+                        default_line_file(),
                         None,
                     ))),
                 }
@@ -162,7 +162,7 @@ impl Runtime {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
                 format!("struct `{}` is not defined", field_access.name),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 None,
             )));
         };
@@ -175,7 +175,7 @@ impl Runtime {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
                 format!("field `{}` of struct `{}` is not defined", field_access.field, field_access.name),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 None,
             )));
         };
@@ -185,7 +185,7 @@ impl Runtime {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
                 format!("field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)", field_access.field, field_access.name, tuple_index, field_access.name, tuple.args.len()),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 None,
             )));
         };
@@ -521,7 +521,7 @@ impl Runtime {
                     total_param_count,
                     args.len()
                 ),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 None,
             )));
         }
@@ -560,7 +560,7 @@ impl Runtime {
                     total_param_count,
                     args.len()
                 ),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 None,
             )));
         }

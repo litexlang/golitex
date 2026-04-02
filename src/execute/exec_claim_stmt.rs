@@ -34,7 +34,7 @@ impl Runtime {
             if result.is_unknown() {
                 return Err(RuntimeError::UnknownError(UnknownError::new(
                     format!("claim failed: cannot prove `{}`", stmt.fact),
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                     Some(stmt.fact.clone()),
                     None,
                 )));
@@ -102,7 +102,7 @@ impl Runtime {
                 if non_err_after_body.is_unknown() {
                     return Err(RuntimeError::UnknownError(UnknownError::new(
                         format!("claim failed: cannot prove `{}`", stmt.fact),
-                        stmt.line_file,
+                        stmt.line_file.clone(),
                         Some(stmt.fact.clone()),
                         None,
                     )));

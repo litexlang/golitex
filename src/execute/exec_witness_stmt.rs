@@ -96,7 +96,7 @@ impl Runtime {
         let have_obj_equal_stmt = HaveObjEqualStmt {
             param_def: stmt.exist_fact_in_witness.params_def_with_type.clone(),
             objs_equal_to: stmt.equal_tos.clone(),
-            line_file: stmt.line_file,
+            line_file: stmt.line_file.clone(),
         };
 
         match self.have_obj_equal_stmt(&have_obj_equal_stmt) {
@@ -169,7 +169,7 @@ impl Runtime {
         let store_result = self.store_fact_without_well_defined_verified_and_infer(
             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                 stmt.set.clone(),
-                stmt.line_file,
+                stmt.line_file.clone(),
             ))),
         );
         match store_result {
@@ -246,7 +246,7 @@ impl Runtime {
         let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             stmt.obj.clone(),
             stmt.set.clone(),
-            stmt.line_file,
+            stmt.line_file.clone(),
         )));
         let verify_state_for_proof_check = VerifyState::new(0, false);
         self.verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)?;

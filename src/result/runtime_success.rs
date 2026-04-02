@@ -13,7 +13,7 @@ pub struct FactualStmtSuccess {
     pub infers: InferResult,
     pub msg: String,
     pub verified_by_fact: Option<Fact>,
-    pub verified_by_fact_known_line_file: Option<(usize, usize)>,
+    pub verified_by_fact_known_line_file: Option<LineFile>,
     pub inside_results: Vec<NonErrStmtExecResult>,
 }
 
@@ -39,7 +39,7 @@ impl FactualStmtSuccess {
         infers: InferResult,
         msg: String,
         verified_by_fact: Option<Fact>,
-        verified_by_fact_known_line_file: Option<(usize, usize)>,
+        verified_by_fact_known_line_file: Option<LineFile>,
         inside_results: Vec<NonErrStmtExecResult>,
     ) -> Self {
         FactualStmtSuccess {
@@ -52,14 +52,14 @@ impl FactualStmtSuccess {
         }
     }
 
-    pub fn line_file_for_verified_by_known_fact_in_json(&self) -> (usize, usize) {
-        if let Some(line_file) = self.verified_by_fact_known_line_file {
-            return line_file;
+    pub fn line_file_for_verified_by_known_fact_in_json(&self) -> LineFile {
+        if let Some(ref line_file) = self.verified_by_fact_known_line_file {
+            return line_file.clone();
         }
         if let Some(cited_fact) = &self.verified_by_fact {
             return cited_fact.line_file();
         }
-        DEFAULT_LINE_FILE
+        default_line_file()
     }
 
     pub fn is_verified_by_builtin_rules_only(&self) -> bool {

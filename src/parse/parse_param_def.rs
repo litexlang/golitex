@@ -52,7 +52,7 @@ impl Runtime {
                 }),
             STRUCT => Err(ParsingError::new(
                 "nested `struct` types are not allowed in struct parameter and field types".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             )),
             _ => self

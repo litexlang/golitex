@@ -56,7 +56,7 @@ impl Runtime {
             }
         }
 
-        Ok((DEFAULT_LINE_FILE, None, None))
+        Ok(((0, 0), None, None))
     }
 
     fn try_verify_or_fact_with_known_forall_facts_in_envs(
@@ -143,7 +143,7 @@ impl Runtime {
                 VerifyError::new(
                     Fact::OrFact(given_or_fact.clone()),
                     String::new(),
-                    given_or_fact.line_file,
+                    given_or_fact.line_file.clone(),
                     Some(e),
                 )
             })?;
@@ -163,7 +163,7 @@ impl Runtime {
                     VerifyError::new(
                         Fact::OrFact(given_or_fact.clone()),
                         String::new(),
-                        given_or_fact.line_file,
+                        given_or_fact.line_file.clone(),
                         Some(e),
                     )
                 })?;

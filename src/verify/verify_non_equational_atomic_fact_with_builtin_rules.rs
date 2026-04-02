@@ -44,7 +44,7 @@ impl Runtime {
                 let counterpart_fact = AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
                     less_fact.left.clone(),
                     less_fact.right.clone(),
-                    less_fact.line_file,
+                    less_fact.line_file.clone(),
                 ));
                 self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
                     &current_fact,
@@ -57,7 +57,7 @@ impl Runtime {
                 let counterpart_fact = AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
                     greater_fact.left.clone(),
                     greater_fact.right.clone(),
-                    greater_fact.line_file,
+                    greater_fact.line_file.clone(),
                 ));
                 self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
                     &current_fact,
@@ -70,7 +70,7 @@ impl Runtime {
                 let counterpart_fact = AtomicFact::NotGreaterFact(NotGreaterFact::new(
                     less_equal_fact.left.clone(),
                     less_equal_fact.right.clone(),
-                    less_equal_fact.line_file,
+                    less_equal_fact.line_file.clone(),
                 ));
                 self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
                     &current_fact,
@@ -83,7 +83,7 @@ impl Runtime {
                 let counterpart_fact = AtomicFact::NotLessFact(NotLessFact::new(
                     greater_equal_fact.left.clone(),
                     greater_equal_fact.right.clone(),
-                    greater_equal_fact.line_file,
+                    greater_equal_fact.line_file.clone(),
                 ));
                 self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
                     &current_fact,
@@ -166,7 +166,7 @@ impl Runtime {
     fn operand_is_not_equal_to_zero_by_known_non_equational_facts(
         &mut self,
         operand: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Result<bool, VerifyError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let operand_not_equal_zero_fact =
@@ -182,10 +182,10 @@ impl Runtime {
         &mut self,
         left_operand: &Obj,
         right_operand: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Result<bool, VerifyError> {
         let left_nonzero = self
-            .operand_is_not_equal_to_zero_by_known_non_equational_facts(left_operand, line_file)?;
+            .operand_is_not_equal_to_zero_by_known_non_equational_facts(left_operand, line_file.clone())?;
         if !left_nonzero {
             return Ok(false);
         }
@@ -205,14 +205,14 @@ impl Runtime {
         &mut self,
         left_operand: &Obj,
         right_operand: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let left_greater_than_zero = AtomicFact::GreaterFact(GreaterFact::new(
             left_operand.clone(),
             zero_obj.clone(),
-            line_file,
+            line_file.clone(),
         ));
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &left_greater_than_zero,
@@ -232,14 +232,14 @@ impl Runtime {
         &mut self,
         left_operand: &Obj,
         right_operand: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let left_less_than_zero = AtomicFact::LessFact(LessFact::new(
             left_operand.clone(),
             zero_obj.clone(),
-            line_file,
+            line_file.clone(),
         ));
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &left_less_than_zero,
@@ -259,19 +259,19 @@ impl Runtime {
         &mut self,
         left_factor: &Obj,
         right_factor: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let left_less_than_zero = AtomicFact::LessFact(LessFact::new(
             left_factor.clone(),
             zero_obj.clone(),
-            line_file,
+            line_file.clone(),
         ));
         let right_greater_than_zero = AtomicFact::GreaterFact(GreaterFact::new(
             right_factor.clone(),
             zero_obj.clone(),
-            line_file,
+            line_file.clone(),
         ));
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &left_less_than_zero,
@@ -285,7 +285,7 @@ impl Runtime {
         let left_greater_than_zero = AtomicFact::GreaterFact(GreaterFact::new(
             left_factor.clone(),
             zero_obj.clone(),
-            line_file,
+            line_file.clone(),
         ));
         let right_less_than_zero =
             AtomicFact::LessFact(LessFact::new(right_factor.clone(), zero_obj, line_file));
@@ -304,19 +304,19 @@ impl Runtime {
         &mut self,
         minuend: &Obj,
         subtrahend: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let minuend_greater_than_zero = AtomicFact::GreaterFact(GreaterFact::new(
             minuend.clone(),
             zero_obj.clone(),
-            line_file,
+            line_file.clone(),
         ));
         let subtrahend_less_than_zero = AtomicFact::LessFact(LessFact::new(
             subtrahend.clone(),
             zero_obj.clone(),
-            line_file,
+            line_file.clone(),
         ));
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &minuend_greater_than_zero,
@@ -328,7 +328,7 @@ impl Runtime {
             return Ok(true);
         }
         let minuend_less_than_zero =
-            AtomicFact::LessFact(LessFact::new(minuend.clone(), zero_obj.clone(), line_file));
+            AtomicFact::LessFact(LessFact::new(minuend.clone(), zero_obj.clone(), line_file.clone()));
         let subtrahend_greater_than_zero =
             AtomicFact::GreaterFact(GreaterFact::new(subtrahend.clone(), zero_obj, line_file));
         Ok(
@@ -347,7 +347,7 @@ impl Runtime {
         not_equal_fact: &NotEqualFact,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
-        let line_file = not_equal_fact.line_file;
+        let line_file = not_equal_fact.line_file.clone();
         let expression_obj =
             if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
                 &not_equal_fact.left
@@ -362,14 +362,14 @@ impl Runtime {
                 if self.both_operands_strictly_positive_by_non_equational_verify(
                     &add.left,
                     &add.right,
-                    line_file,
+                    line_file.clone(),
                     verify_state,
                 )? {
                     Some("add_not_equal_zero_both_operands_strictly_positive")
                 } else if self.both_operands_strictly_negative_by_non_equational_verify(
                     &add.left,
                     &add.right,
-                    line_file,
+                    line_file.clone(),
                     verify_state,
                 )? {
                     Some("add_not_equal_zero_both_operands_strictly_negative")
@@ -381,20 +381,20 @@ impl Runtime {
                 if self.both_operands_nonzero_by_known_non_equational_facts(
                     &mul.left,
                     &mul.right,
-                    line_file,
+                    line_file.clone(),
                 )? {
                     Some("mul_not_equal_zero_both_factors_nonzero_by_known_facts")
                 } else if self.both_operands_strictly_positive_by_non_equational_verify(
                     &mul.left,
                     &mul.right,
-                    line_file,
+                    line_file.clone(),
                     verify_state,
                 )? {
                     Some("mul_not_equal_zero_both_factors_strictly_positive")
                 } else if self.both_operands_strictly_negative_by_non_equational_verify(
                     &mul.left,
                     &mul.right,
-                    line_file,
+                    line_file.clone(),
                     verify_state,
                 )? {
                     Some("mul_not_equal_zero_both_factors_strictly_negative")
@@ -466,7 +466,7 @@ impl Runtime {
                         .verify_non_equational_atomic_fact_with_builtin_rules(
                             &AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                                 *arg_obj.clone(),
-                                is_nonempty_set_fact.line_file,
+                                is_nonempty_set_fact.line_file.clone(),
                             )),
                             _verify_state,
                         )?;

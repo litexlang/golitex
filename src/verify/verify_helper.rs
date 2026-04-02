@@ -37,7 +37,7 @@ impl Runtime {
             ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(param_set) => {
                 let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                    IsNonemptySetFact::new(param_set.clone(), DEFAULT_LINE_FILE.clone()),
+                    IsNonemptySetFact::new(param_set.clone(), default_line_file()),
                 ));
                 self.verify_fact_well_defined_and_store_and_infer(
                     nonempty_fact,

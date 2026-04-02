@@ -4,11 +4,11 @@ use std::fmt;
 #[derive(Clone)]
 pub struct KnowStmt {
     pub facts: Vec<Fact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl KnowStmt {
-    pub fn new(facts: Vec<Fact>, line_file: (usize, usize)) -> Self {
+    pub fn new(facts: Vec<Fact>, line_file: LineFile) -> Self {
         KnowStmt { facts, line_file }
     }
 }
