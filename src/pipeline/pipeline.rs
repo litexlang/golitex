@@ -49,12 +49,13 @@ pub fn run_source_code(
     source_code: &str,
     runtime: &mut Runtime,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let blocks =
-        match TokenBlock::parse_blocks(source_code, runtime.module_manager.current_file_index) {
+    let blocks = match TokenBlock::parse_blocks(
+        source_code,
+        runtime.module_manager.current_file_path_rc(),
+    ) {
             Ok(b) => b,
             Err(e) => {
-                let runtime_error = e.into();
-                return (vec![], Some(runtime_error));
+                return (vec![], Some(e));
             }
         };
 
@@ -64,8 +65,7 @@ pub fn run_source_code(
             match runtime.parse_stmt(&mut block) {
                 Ok(s) => s,
                 Err(e) => {
-                    let runtime_error = e.into();
-                    return (stmt_results, Some(runtime_error));
+                    return (stmt_results, Some(e));
                 }
             }
         };

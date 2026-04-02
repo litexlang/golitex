@@ -24,14 +24,14 @@ impl OrAndChainAtomicFact {
 pub struct ExistFact {
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub facts: Vec<OrAndChainAtomicFact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl ExistFact {
     pub fn new(
         params_def_with_type: Vec<ParamDefWithParamType>,
         facts: Vec<OrAndChainAtomicFact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         ExistFact {
             params_def_with_type,
@@ -60,8 +60,8 @@ impl ExistFact {
         )
     }
 
-    pub fn line_file(&self) -> (usize, usize) {
-        self.line_file
+    pub fn line_file(&self) -> LineFile {
+        self.line_file.clone()
     }
 
     pub fn params_def_with_type(&self) -> &Vec<ParamDefWithParamType> {
@@ -123,12 +123,12 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => o.key(),
         }
     }
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
             OrAndChainAtomicFact::AtomicFact(a) => a.line_file(),
             OrAndChainAtomicFact::AndFact(a) => a.line_file(),
             OrAndChainAtomicFact::ChainFact(c) => c.line_file(),
-            OrAndChainAtomicFact::OrFact(o) => o.line_file,
+            OrAndChainAtomicFact::OrFact(o) => o.line_file.clone(),
         }
     }
 }

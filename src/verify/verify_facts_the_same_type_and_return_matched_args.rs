@@ -4,7 +4,7 @@ impl Runtime {
     pub fn _verify_exist_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
         fact: &ExistOrAndChainAtomicFact,
         other: &ExistOrAndChainAtomicFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         match fact {
             ExistOrAndChainAtomicFact::ChainFact(f) => match other {
                 ExistOrAndChainAtomicFact::ChainFact(other) => {
@@ -42,7 +42,7 @@ impl Runtime {
     pub fn _verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
         fact: &OrAndChainAtomicFact,
         other: &OrAndChainAtomicFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         match fact {
             OrAndChainAtomicFact::AndFact(f) => match other {
                 OrAndChainAtomicFact::AndFact(other) => {
@@ -74,7 +74,7 @@ impl Runtime {
     pub fn _verify_and_chain_atomic_facts_the_same_type_and_return_matched_args(
         fact: &AndChainAtomicFact,
         other: &AndChainAtomicFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         match fact {
             AndChainAtomicFact::AndFact(f) => match other {
                 AndChainAtomicFact::AndFact(other) => {
@@ -100,7 +100,7 @@ impl Runtime {
     pub fn _verify_chain_fact_the_same_type_and_return_matched_args(
         fact: &ChainFact,
         other: &ChainFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         if fact.prop_names.len() != other.prop_names.len() {
             return Ok(None);
         }
@@ -126,7 +126,7 @@ impl Runtime {
     pub fn _verify_or_fact_the_same_type_and_return_matched_args(
         fact: &OrFact,
         other: &OrFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         if fact.facts.len() != other.facts.len() {
             return Ok(None);
         }
@@ -151,7 +151,7 @@ impl Runtime {
     pub fn _verify_and_fact_the_same_type_and_return_matched_args(
         fact: &AndFact,
         other: &AndFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         if fact.facts.len() != other.facts.len() {
             return Ok(None);
         }
@@ -176,7 +176,7 @@ impl Runtime {
     pub fn _verify_exist_fact_the_same_type_and_return_matched_args(
         fact: &ExistFact,
         other: &ExistFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         if fact.params_def_with_type.len() != other.params_def_with_type.len() {
             return Ok(None);
         }
@@ -235,13 +235,13 @@ impl Runtime {
                         if struct_ty.name.to_string() != other_struct.name.to_string() {
                             return Ok(None);
                         }
-                        if struct_ty.params.len() != other_struct.params.len() {
+                        if struct_ty.args.len() != other_struct.args.len() {
                             return Ok(None);
                         }
                         for (param, other_param) in struct_ty
-                            .params
+                            .args
                             .iter()
-                            .zip(other_struct.params.iter())
+                            .zip(other_struct.args.iter())
                         {
                             matched_args.push((param.clone(), other_param.clone()));
                         }
@@ -269,7 +269,7 @@ impl Runtime {
     pub fn _verify_atomic_fact_the_same_type_and_return_matched_args(
         _fact: &AtomicFact,
         _other: &AtomicFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         match _fact {
             AtomicFact::NormalAtomicFact(fact_normal_atomic_fact) => match _other {
                 AtomicFact::NormalAtomicFact(other_normal_atomic_fact) => {

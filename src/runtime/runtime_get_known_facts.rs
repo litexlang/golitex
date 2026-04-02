@@ -5,6 +5,16 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
+    pub fn get_struct_that_object_satisfies(&self, obj: &IdentifierOrIdentifierWithMod) -> Option<&StructParamType> {
+        let key = obj.to_string();
+        for env in self.iter_environments_from_top() {
+            if let Some(definition) = env.defined_field_access_name.get(&key) {
+                return Some(definition);
+            }
+        }
+        None
+    }
+
     pub fn get_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<&FnSetWithParams> {
         let key = obj.to_string();
 
@@ -38,13 +48,13 @@ impl Runtime {
         false
     }
 
-    pub fn cache_known_facts_contains(&self, key: &str) -> (bool, (usize, usize)) {
+    pub fn cache_known_facts_contains(&self, key: &str) -> (bool, LineFile) {
         for env in self.iter_environments_from_top() {
             if let Some(line_file) = env.cache_known_fact.get(key) {
-                return (true, *line_file);
+                return (true, line_file.clone());
             }
         }
-        (false, DEFAULT_LINE_FILE)
+        (false, default_line_file())
     }
 
     pub fn get_known_cart_obj_of_obj(&self, name: &str) -> Option<Cart> {

@@ -91,8 +91,9 @@ fn push_optional_conflict_with_json_field_lines(
         )),
         Some(conflict) => {
             let indent_nested = format!("{}  ", indent_inner);
-            let (conflict_line, conflict_file) = conflict.line_file;
-            let conflict_source = runtime.get_file_name_empty_if_default((conflict_line, conflict_file));
+            let conflict_line_file = conflict.line_file.clone();
+            let conflict_line = conflict_line_file.0;
+            let conflict_source = runtime.get_file_name_empty_if_default(conflict_line_file);
             let message_literal = json_string_literal(&conflict.msg);
             let source_literal = json_string_literal(conflict_source.as_str());
             let mut inner_lines: Vec<String> = Vec::new();
@@ -147,31 +148,6 @@ fn push_optional_statement_json_field_lines(
 }
 
 impl Runtime {
-    fn parse_block_error_message(&self, parse_block_error: &ParseBlockError) -> String {
-        match parse_block_error {
-            ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
-            ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
-            ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
-            ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-            ParseBlockError::InvalidName(msg) => msg.clone(),
-            ParseBlockError::NameAlreadyUsed {
-                name,
-                name_already_used_on_line_file,
-                ..
-            } => {
-                let location_string = self.get_location_string_of_line_file(
-                    name_already_used_on_line_file.0,
-                    name_already_used_on_line_file.1,
-                );
-                if location_string.is_empty() {
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(name)
-                } else {
-                    format!("name `{}` already used {}", name, location_string)
-                }
-            }
-        }
-    }
-
     pub fn display_error_json_string(&self, error: &RuntimeError) -> String {
         self.build_display_error_json_object(error, 0, true)
     }
@@ -199,10 +175,11 @@ impl Runtime {
             json_string_literal(JSON_VALUE_ERROR)
         ));
 
-        let (line, file_index) = error.line_file();
+        let line_file = error.line_file();
+        let line = line_file.0;
         field_lines.push(format!("{}\"{}\": {}", indent_inner, JSON_KEY_LINE, line));
 
-        let source_text = self.get_file_name_empty_if_default((line, file_index));
+        let source_text = self.get_file_name_empty_if_default(line_file.clone());
 
         field_lines.push(format!(
             "{}\"{}\": {}",
@@ -220,16 +197,12 @@ impl Runtime {
                     json_string_literal(&e.msg)
                 ));
             }
-            RuntimeError::NameAlreadyUsedError(_) => {
-                let location_string = self.get_location_string_of_line_file(line, file_index);
-
-                let body_string = format!("name already used {}", location_string);
-
+            RuntimeError::NameAlreadyUsedError(e) => {
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
                     JSON_KEY_MESSAGE,
-                    json_string_literal(&body_string)
+                    json_string_literal(&e.msg)
                 ));
             }
             RuntimeError::ArithmeticError(e) => {
@@ -289,15 +262,7 @@ impl Runtime {
                     &e.conflict_with,
                 );
             }
-            RuntimeError::ParseBlockError(e) => {
-                field_lines.push(format!(
-                    "{}\"{}\": {}",
-                    indent_inner,
-                    JSON_KEY_MESSAGE,
-                    json_string_literal(&self.parse_block_error_message(e))
-                ));
-            }
-            RuntimeError::ParsingError(e) => {
+            RuntimeError::ParseError(e) => {
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
@@ -306,7 +271,13 @@ impl Runtime {
                 ));
             }
             RuntimeError::ExecStmtError(e) => {
-                if let Some(stmt) = &e.stmt {
+                field_lines.push(format!(
+                    "{}\"{}\": {}",
+                    indent_inner,
+                    JSON_KEY_MESSAGE,
+                    json_string_literal(&e.msg)
+                ));
+                if let Some(stmt) = &e.statement {
                     let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), stmt);
                     for stmt_line in stmt_lines {
                         field_lines.push(stmt_line);
@@ -333,31 +304,19 @@ impl Runtime {
                 ));
             }
             RuntimeError::VerifyError(e) => {
-                let message_for_json = if !e.msg.is_empty() {
-                    e.msg.clone()
-                } else {
-                    e.fact.to_string()
-                };
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
                     JSON_KEY_MESSAGE,
-                    json_string_literal(&message_for_json)
+                    json_string_literal(&e.msg)
                 ));
             }
             RuntimeError::UnknownError(e) => {
-                let message_for_json = if !e.msg.is_empty() {
-                    e.msg.clone()
-                } else if let Some(ref fact) = e.fact {
-                    fact.to_string()
-                } else {
-                    String::new()
-                };
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
                     JSON_KEY_MESSAGE,
-                    json_string_literal(&message_for_json)
+                    json_string_literal(&e.msg)
                 ));
             }
             RuntimeError::InferError(e) => {
@@ -367,6 +326,25 @@ impl Runtime {
                     JSON_KEY_MESSAGE,
                     json_string_literal(&e.msg)
                 ));
+            }
+            RuntimeError::InstantiateError(e) => {
+                field_lines.push(format!(
+                    "{}\"{}\": {}",
+                    indent_inner,
+                    JSON_KEY_MESSAGE,
+                    json_string_literal(&e.msg)
+                ));
+                push_optional_statement_json_field_lines(
+                    &mut field_lines,
+                    indent_inner.as_str(),
+                    &e.statement,
+                );
+                push_optional_conflict_with_json_field_lines(
+                    self,
+                    &mut field_lines,
+                    indent_inner.as_str(),
+                    &e.conflict_with,
+                );
             }
         }
 
@@ -423,7 +401,10 @@ impl Runtime {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },
-            RuntimeError::NameAlreadyUsedError(_) => None,
+            RuntimeError::NameAlreadyUsedError(e) => match &e.previous_error {
+                Some(previous_error) => Some(previous_error.as_ref()),
+                None => None,
+            },
             RuntimeError::ArithmeticError(e) => match &e.previous_error {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
@@ -436,8 +417,7 @@ impl Runtime {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },
-            RuntimeError::ParseBlockError(_) => None,
-            RuntimeError::ParsingError(e) => match &e.previous_error {
+            RuntimeError::ParseError(e) => match &e.previous_error {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },
@@ -461,6 +441,10 @@ impl Runtime {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },
+            RuntimeError::InstantiateError(e) => match &e.previous_error {
+                Some(previous_error) => Some(previous_error.as_ref()),
+                None => None,
+            },
         }
     }
 
@@ -472,18 +456,10 @@ impl Runtime {
         self.display_result_json_string(inside_result)
     }
 
-    pub(in crate::runtime) fn get_file_name_empty_if_default(
-        &self,
-        (line, file_index): (usize, usize),
-    ) -> String {
-        if (line, file_index) == DEFAULT_LINE_FILE {
+    pub(in crate::runtime) fn get_file_name_empty_if_default(&self, line_file: LineFile) -> String {
+        if is_default_line_file(&line_file) {
             return String::new();
         }
-
-        let path = match self.module_manager.run_file_paths.get(file_index) {
-            Some(path) => path.as_ref().to_string(),
-            None => String::new(),
-        };
-        return path;
+        line_file.1.as_ref().to_string()
     }
 }

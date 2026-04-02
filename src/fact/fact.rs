@@ -46,21 +46,25 @@ impl fmt::Display for Fact {
 }
 
 impl Fact {
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
-            Fact::AtomicFact(a) => super::atomic_fact::line_file(a),
+            Fact::AtomicFact(a) => a.line_file(),
             Fact::ExistFact(e) => e.line_file(),
-            Fact::OrFact(o) => o.line_file,
+            Fact::OrFact(o) => o.line_file.clone(),
             Fact::AndFact(a) => a.line_file(),
             Fact::ChainFact(c) => c.line_file(),
-            Fact::ForallFact(f) => f.line_file,
-            Fact::ForallFactWithIff(f) => f.line_file,
+            Fact::ForallFact(f) => f.line_file.clone(),
+            Fact::ForallFactWithIff(f) => f.line_file.clone(),
         }
+    }
+
+    pub fn into_stmt(self) -> Stmt {
+        return Stmt::Fact(self);
     }
 }
 
 impl Fact {
-    pub fn with_new_line_file(self, line_file: (usize, usize)) -> Fact {
+    pub fn with_new_line_file(self, line_file: LineFile) -> Fact {
         match self {
             Fact::AtomicFact(atomic_fact) => {
                 Fact::AtomicFact(atomic_fact.with_new_line_file(line_file))

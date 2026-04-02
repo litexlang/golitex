@@ -29,7 +29,7 @@ impl Runtime {
         &mut self,
         param_type: &ParamType,
         check_type_nonempty: bool,
-    ) -> Result<(), ExecStmtError> {
+    ) -> Result<(), RuntimeErrorStruct> {
         if !check_type_nonempty {
             return Ok(());
         }
@@ -37,7 +37,7 @@ impl Runtime {
             ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(param_set) => {
                 let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                    IsNonemptySetFact::new(param_set.clone(), DEFAULT_LINE_FILE.clone()),
+                    IsNonemptySetFact::new(param_set.clone(), default_line_file()),
                 ));
                 self.verify_fact_well_defined_and_store_and_infer(
                     nonempty_fact,
@@ -45,14 +45,14 @@ impl Runtime {
                 )?;
                 Ok(())
             }
-            ParamType::Family(_) => Err(ExecStmtError::new(
+            ParamType::Family(_) => Err(RuntimeErrorStruct::exec_stmt_new(
                 None,
                 "family param type is not supported yet in verify_param_type_nonempty_if_required"
                     .to_string(),
                 None,
                 vec![],
             )),
-            ParamType::Struct(_) => Err(ExecStmtError::new(
+            ParamType::Struct(_) => Err(RuntimeErrorStruct::exec_stmt_new(
                 None,
                 "struct param type is not supported yet in verify_param_type_nonempty_if_required"
                     .to_string(),

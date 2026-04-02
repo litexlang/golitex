@@ -15,7 +15,7 @@ impl Runtime {
                 "failed to store forall fact with iff:\n{}",
                 coverage_error_detail_lines.join("\n")
             ),
-            forall_fact_with_iff.line_file,
+            forall_fact_with_iff.line_file.clone(),
             None,
         ))
     }
@@ -75,7 +75,7 @@ impl Runtime {
         let infer_result = self.infer(&fact_for_infer).map_err(|e| {
             RuntimeErrorStruct::new_with_msg_previous_error(
                 format!("infer error: {}", e),
-                Some(e.into()),
+                Some(e),
             )
         })?;
         Ok(infer_result)
@@ -96,7 +96,7 @@ impl Runtime {
         let infer_result = self.infer(&fact_for_infer).map_err(|e| {
             RuntimeErrorStruct::new_with_msg_previous_error(
                 format!("infer error: {}", e),
-                Some(e.into()),
+                Some(e),
             )
         })?;
         Ok(infer_result)
@@ -117,7 +117,7 @@ impl Runtime {
         let infer_result = self.infer(&infer_wrapped_fact).map_err(|e| {
             RuntimeErrorStruct::new_with_msg_previous_error(
                 format!("infer error: {}", e),
-                Some(e.into()),
+                Some(e),
             )
         })?;
         Ok(infer_result)
@@ -141,7 +141,7 @@ impl Runtime {
             .map_err(|e| {
                 RuntimeErrorStruct::new_with_msg_previous_error(
                     format!("infer error: {}", e),
-                    Some(e.into()),
+                    Some(e),
                 )
             })?;
         Ok(infer_result)
@@ -164,7 +164,7 @@ impl Runtime {
             .map_err(|e| {
                 RuntimeErrorStruct::new_with_msg_previous_error(
                     format!("infer error: {}", e),
-                    Some(e.into()),
+                    Some(e),
                 )
             })?;
         Ok(infer_result)
@@ -185,7 +185,7 @@ fn return_err_if_forall_fact_then_or_iff_clauses_miss_some_parameter_name(
             "failed to store forall fact:\n{}",
             coverage_error_detail_lines.join("\n")
         ),
-        forall_fact.line_file,
+        forall_fact.line_file.clone(),
         None,
     ))
 }

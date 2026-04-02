@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 pub struct ImportedModuleEnvironment {
     pub environment: Environment,
-    pub name_scope: HashMap<String, (usize, usize)>,
+    pub name_scope: HashMap<String, LineFile>,
 }
 
 pub struct ModuleManager {
@@ -30,5 +30,9 @@ impl ModuleManager {
             entrance_path: entrance_file_path.to_string(),
             imported_module_environments: HashMap::new(),
         }
+    }
+
+    pub fn current_file_path_rc(&self) -> Rc<str> {
+        self.run_file_paths[self.current_file_index].clone()
     }
 }

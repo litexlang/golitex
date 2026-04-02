@@ -13,9 +13,9 @@ impl Runtime {
         &mut self,
         left: &Obj,
         right: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
@@ -89,17 +89,17 @@ impl Runtime {
         &mut self,
         left: &Obj,
         right: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
         known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
         known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
-    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         match (known_objs_equal_to_left, known_objs_equal_to_right) {
             (None, None) => Ok(None),
             (Some(known_objs_equal_to_left), None) => {
                 for obj in known_objs_equal_to_left.iter() {
                     let result =
-                        self.verify_equality_by_builtin_rules(obj, right, line_file, verify_state)?;
+                        self.verify_equality_by_builtin_rules(obj, right, line_file.clone(), verify_state)?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }
@@ -109,7 +109,7 @@ impl Runtime {
             (None, Some(known_objs_equal_to_right)) => {
                 for obj in known_objs_equal_to_right.iter() {
                     let result =
-                        self.verify_equality_by_builtin_rules(left, obj, line_file, verify_state)?;
+                        self.verify_equality_by_builtin_rules(left, obj, line_file.clone(), verify_state)?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }
@@ -122,7 +122,7 @@ impl Runtime {
                         let result = self.verify_equality_by_builtin_rules(
                             obj1,
                             obj2,
-                            line_file,
+                            line_file.clone(),
                             verify_state,
                         )?;
                         if result.is_true() {
