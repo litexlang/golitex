@@ -80,27 +80,6 @@ impl Runtime {
         None
     }
     
-    pub fn get_param_type_struct_definition_by_name(
-        &self,
-        param_type_struct_name: &str,
-    ) -> Option<&DefParamTypeStructStmt> {
-        let parts = param_type_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
-        if parts.len() != 1 {
-            unimplemented!();
-        }
-
-        for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment
-                .defined_structs
-                .get(param_type_struct_name)
-            {
-                return Some(definition);
-            }
-        }
-
-        None
-    }
-
     pub fn get_algo_definition_by_name(&self, algo_name: &str) -> Option<&DefAlgoStmt> {
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment.defined_algorithms.get(algo_name) {
@@ -143,6 +122,28 @@ impl Runtime {
             }
         }
 
+        None
+    }
+
+    pub fn get_definition_of_struct_where_object_satisfies(&self, obj: &IdentifierOrIdentifierWithMod) -> Option<&DefParamTypeStructStmt> {
+        let Some(struct_object_satisfies) = self.get_struct_that_object_satisfies(obj) else {
+            return None;
+        };
+
+        let Some(def) = self.get_definition_of_struct(struct_object_satisfies) else {
+            return None;
+        };
+
+        Some(def)
+    }
+
+    fn get_definition_of_struct(&self, struct_object_satisfies: &StructParamType) -> Option<&DefParamTypeStructStmt> {
+        let key = struct_object_satisfies.name.to_string();
+        for env in self.iter_environments_from_top() {
+            if let Some(definition) = env.defined_structs.get(&key) {
+                return Some(definition);
+            }
+        }
         None
     }
 }

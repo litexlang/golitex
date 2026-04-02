@@ -7,7 +7,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         self.def_param_type_struct_stmt_check_well_defined(def_param_type_struct_stmt)?;
 
-        self.store_def_param_type_struct(def_param_type_struct_stmt)
+        self.store_struct_def(def_param_type_struct_stmt)
             .map_err(|store_error| {
                 ExecStmtError::new_with_stmt(
                     Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
@@ -103,7 +103,18 @@ impl Runtime {
             }
         }
         
-        self.register_param_as_struct_instance(SELF, StructParamType::new(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(SELF.to_string())), struct_params));
+        self.register_param_as_struct_instance(SELF, StructParamType::new(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(def_param_type_struct_stmt.name.clone())), struct_params));
+
+        let tmp_def = DefParamTypeStructStmt::new(
+            def_param_type_struct_stmt.name.clone(),
+            def_param_type_struct_stmt.param_defs.clone(),
+            def_param_type_struct_stmt.dom_facts.clone(),
+            def_param_type_struct_stmt.fields.clone(),
+            vec![],
+            def_param_type_struct_stmt.line_file.clone(),
+        );
+
+        self.store_struct_def(&tmp_def)?;
 
         for fact in def_param_type_struct_stmt.facts.iter() {
             self
