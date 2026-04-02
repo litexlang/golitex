@@ -38,11 +38,12 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_def_param_type_struct(
+    pub fn store_struct_def(
         &mut self,
         def_param_type_struct_stmt: &DefParamTypeStructStmt,
     ) -> Result<(), ExecStmtError> {
         let name = def_param_type_struct_stmt.name.clone();
+
         self.top_level_env()
             .defined_structs
             .insert(name, def_param_type_struct_stmt.clone());
