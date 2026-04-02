@@ -97,7 +97,7 @@ impl Runtime {
         struct_ty: &StructParamType,
     ) -> Result<InferResult, RuntimeError> {
         let struct_name = struct_ty.name.to_string();
-        let def = match self.get_cloned_param_type_struct_definition_by_name(&struct_name) {
+        let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
                 return Err(RuntimeError::UnknownError(UnknownError::new(
@@ -160,7 +160,7 @@ impl Runtime {
         struct_ty: &StructParamType,
     ) -> Result<InferResult, RuntimeError> {
         let struct_name = struct_ty.name.to_string();
-        let def = match self.get_cloned_param_type_struct_definition_by_name(&struct_name) {
+        let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
                 return Err(RuntimeError::UnknownError(UnknownError::new(

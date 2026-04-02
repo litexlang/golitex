@@ -1234,7 +1234,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         let struct_name = struct_ty.name.to_string();
-        let def = match self.get_cloned_param_type_struct_definition_by_name(&struct_name) {
+        let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
                 return Err(WellDefinedError::new(

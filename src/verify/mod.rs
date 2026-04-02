@@ -24,6 +24,8 @@ mod verify_or_fact_with_known_forall;
 mod verify_restrict_by_def;
 mod verify_state;
 mod verify_arg_satisfy_param_def;
+mod verify_obj_satisfy_struct;
+mod verify_obj_satisfy_family;
 
 pub use verify_number_in_standard_set::number_is_in_n;
 pub use verify_number_in_standard_set::number_is_in_n_pos;
