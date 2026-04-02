@@ -245,6 +245,92 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    /// 元组实参与 `struct T(...)` 一一对应 [`DefParamTypeStructStmt::fields`]（含头部形参对应的隐式 field），
+    /// 各分量再按字段类型做 [`define_param_binding_for_param_type_on_obj`]；`<=>:` 下事实里 `self` 代换为整段 tuple，
+    /// 并临时登记 `SELF` → [`InstStructObj`] 以便实例化时 `self.<field>` 能投影到分量。
+    fn define_param_binding_struct_from_tuple(
+        &mut self,
+        tuple: &Tuple,
+        struct_ty: &StructParamType,
+    ) -> Result<InferResult, RuntimeError> {
+        let struct_name = struct_ty.name.to_string();
+        let def = match self.get_cloned_param_type_struct_definition_by_name(&struct_name) {
+            Some(d) => d,
+            None => {
+                return Err(RuntimeError::UnknownError(UnknownError::new(
+                    format!("struct `{}` is not defined", struct_name),
+                    DEFAULT_LINE_FILE.clone(),
+                    None,
+                    None,
+                )));
+            }
+        };
+        if def.name != struct_name {
+            return Err(RuntimeError::UnknownError(UnknownError::new(
+                format!(
+                    "struct type name `{}` does not match definition name `{}`",
+                    struct_name, def.name
+                ),
+                DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
+            )));
+        }
+
+        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
+        if struct_ty.params.len() != expected_count {
+            return Err(RuntimeError::UnknownError(UnknownError::new(
+                format!(
+                    "struct `{}` expects {} type argument(s), got {}",
+                    struct_name,
+                    expected_count,
+                    struct_ty.params.len()
+                ),
+                DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
+            )));
+        }
+
+        if tuple.args.len() != def.fields.len() {
+            return Err(RuntimeError::UnknownError(UnknownError::new(
+                format!(
+                    "struct `{}`: tuple has {} component(s), definition has {} field(s) (must match)",
+                    struct_name,
+                    tuple.args.len(),
+                    def.fields.len()
+                ),
+                DEFAULT_LINE_FILE.clone(),
+                None,
+                None,
+            )));
+        }
+
+        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
+            &struct_ty.params,
+        );
+
+        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.params.clone());
+        self.register_param_as_struct_instance(SELF, inst);
+
+        let mut infer_result = InferResult::new();
+        for (i, (_field_name, field_pt)) in def.fields.iter().enumerate() {
+            let instantiated = self.inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)?;
+            let component = (*tuple.args[i]).clone();
+            let ir = self.define_param_binding_for_param_type_on_obj(component, &instantiated)?;
+            infer_result.new_infer_result_inside(ir);
+        }
+
+        let fact_ir = self.store_instantiated_struct_def_facts_with_self(
+            &def,
+            &param_to_arg_map,
+            Obj::Tuple(tuple.clone()),
+        )?;
+        infer_result.new_infer_result_inside(fact_ir);
+        Ok(infer_result)
+    }
+
     /// 将 `struct` 定义中 `<=>:` 下的 [`DefParamTypeStructStmt::facts`] 做形参代入，并把 `self` 换成当前实例后存库。
     ///
     /// `param_to_arg_map` 来自 [`ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
@@ -397,10 +483,25 @@ impl Runtime {
             Obj::FieldAccess(fa) => {
                 self.define_param_binding_for_param_type_on_field_access(fa, param_type)
             }
+            Obj::Tuple(tuple) => {
+                if let ParamType::Struct(struct_ty) = param_type {
+                    self.define_param_binding_struct_from_tuple(tuple, struct_ty)
+                } else {
+                    Err(RuntimeError::UnknownError(UnknownError::new(
+                        format!(
+                            "tuple as subject is only supported for struct parameter type, got {}",
+                            param_type
+                        ),
+                        DEFAULT_LINE_FILE.clone(),
+                        None,
+                        None,
+                    )))
+                }
+            }
             _ => match param_type {
                 ParamType::Struct(_) => Err(RuntimeError::UnknownError(UnknownError::new(
                     format!(
-                        "struct parameter type requires an identifier or field access as subject, got {}",
+                        "struct parameter type requires an identifier, field access, or tuple matching struct fields, got {}",
                         subject
                     ),
                     DEFAULT_LINE_FILE.clone(),

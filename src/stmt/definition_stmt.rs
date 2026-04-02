@@ -433,3 +433,9 @@ impl DefParamTypeStructStmt {
         }
     }
 }
+
+impl DefParamTypeStructStmt {
+    pub fn number_of_params(&self) -> usize {
+        self.param_defs.iter().map(|param_def| param_def.0.len()).sum()
+    }
+}

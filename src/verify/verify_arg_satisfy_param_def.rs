@@ -56,6 +56,86 @@ impl Runtime {
             &struct_ty.params,
         );
 
+        if let Obj::Tuple(tuple) = &obj {
+            if tuple.args.len() != def.fields.len() {
+                return Err(VerifyError::new(
+                    Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                        obj.clone(),
+                        Obj::Identifier(Identifier::new(String::from("_"))),
+                        DEFAULT_LINE_FILE.clone(),
+                    ))),
+                    format!(
+                        "struct `{}`: tuple has {} component(s), definition has {} field(s)",
+                        struct_name,
+                        tuple.args.len(),
+                        def.fields.len()
+                    ),
+                    DEFAULT_LINE_FILE,
+                    None,
+                ));
+            }
+            
+            let mut last_result: Option<NonErrStmtExecResult> = None;
+            for (i, (_, field_pt)) in def.fields.iter().enumerate() {
+                let instantiated = self
+                    .inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)
+                    .map_err(|e| {
+                        VerifyError::new(
+                            Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                                obj.clone(),
+                                Obj::Identifier(Identifier::new(String::from("_"))),
+                                DEFAULT_LINE_FILE.clone(),
+                            ))),
+                            String::new(),
+                            DEFAULT_LINE_FILE,
+                            Some(e),
+                        )
+                    })?;
+                let component = (*tuple.args[i]).clone();
+                let r =
+                    self.verify_obj_satisfies_param_type(component, &instantiated, verify_state)?;
+                if r.is_unknown() {
+                    return Ok(r);
+                }
+                last_result = Some(r);
+            }
+
+            let mut extended = param_to_arg_map.clone();
+            extended.insert(SELF.to_string(), obj.clone());
+            for iff_fact in def.facts.iter() {
+                let instantiated = self
+                    .inst_or_and_chain_atomic_fact(iff_fact, &extended)
+                    .map_err(|e| {
+                        VerifyError::new(
+                            Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                                obj.clone(),
+                                Obj::Identifier(Identifier::new(String::from("_"))),
+                                DEFAULT_LINE_FILE.clone(),
+                            ))),
+                            format!(
+                                "struct `{}`: failed to instantiate `<=>:` fact: {}",
+                                struct_name, e
+                            ),
+                            DEFAULT_LINE_FILE,
+                            Some(e),
+                        )
+                    })?;
+                let r = self.verify_or_and_chain_atomic_fact(&instantiated, verify_state)?;
+                if r.is_unknown() {
+                    return Ok(r);
+                }
+                last_result = Some(r);
+            }
+
+            return Ok(last_result.unwrap_or_else(|| {
+                NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+                    Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE)),
+                    InferResult::new(),
+                    vec![],
+                ))
+            }));
+        }
+
         if def.fields.is_empty() {
             self.verify_obj_well_defined_and_store_cache(&obj, verify_state)
                 .map_err(|e| {

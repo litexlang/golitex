@@ -172,7 +172,7 @@ impl Runtime {
         else {
             return Ok(Obj::FieldAccess(field_access.clone()));
         };
-        let Some(component) = tuple.args.get(field_index) else {
+        let Some(component) = tuple.args.get(field_index + def.number_of_params()) else {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
                 format!(
