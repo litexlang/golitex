@@ -1240,20 +1240,20 @@ impl Runtime {
         };
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
-        if struct_ty.params.len() != expected_count {
+        if struct_ty.args.len() != expected_count {
             return Err(WellDefinedError::new(
                 format!(
                     "struct `{}` expects {} parameter(s), got {}",
                     struct_name,
                     expected_count,
-                    struct_ty.params.len()
+                    struct_ty.args.len()
                 ),
                 None,
                 DEFAULT_LINE_FILE.clone(),
             ));
         }
 
-        for arg in struct_ty.params.iter() {
+        for arg in struct_ty.args.iter() {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
@@ -1262,7 +1262,7 @@ impl Runtime {
         let _: InferResult = self
             .verify_args_satisfy_param_def_flat_types(
                 &param_defs_pt,
-                &struct_ty.params,
+                &struct_ty.args,
                 verify_state,
             )
             .map_err(|runtime_error| {
@@ -1278,7 +1278,7 @@ impl Runtime {
 
         let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
             &def.param_defs,
-            &struct_ty.params,
+            &struct_ty.args,
         );
 
         for dom_fact in def.dom_facts.iter() {
