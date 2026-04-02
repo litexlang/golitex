@@ -4,15 +4,15 @@ use std::fmt;
 #[derive(Clone)]
 pub struct AndFact {
     pub facts: Vec<AtomicFact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl AndFact {
-    pub fn new(facts: Vec<AtomicFact>, line_file: (usize, usize)) -> Self {
+    pub fn new(facts: Vec<AtomicFact>, line_file: LineFile) -> Self {
         AndFact { facts, line_file }
     }
-    pub fn line_file(&self) -> (usize, usize) {
-        self.line_file
+    pub fn line_file(&self) -> LineFile {
+        self.line_file.clone()
     }
 }
 
@@ -20,14 +20,14 @@ impl AndFact {
 pub struct ChainFact {
     pub objs: Vec<Obj>,
     pub prop_names: Vec<IdentifierOrIdentifierWithMod>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl ChainFact {
     pub fn new(
         objs: Vec<Obj>,
         prop_names: Vec<IdentifierOrIdentifierWithMod>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         ChainFact {
             objs,
@@ -35,8 +35,8 @@ impl ChainFact {
             line_file,
         }
     }
-    pub fn line_file(&self) -> (usize, usize) {
-        self.line_file
+    pub fn line_file(&self) -> LineFile {
+        self.line_file.clone()
     }
 
     pub fn facts(&self) -> Result<Vec<AtomicFact>, RuntimeErrorStruct> {
@@ -56,11 +56,11 @@ impl ChainFact {
             let prop_name = self.prop_names[i].clone();
             let left_obj = self.objs[i].clone();
             let right_obj = self.objs[i + 1].clone();
-            let atomic_fact = AtomicFact::to_atomic_fact(
+            let atomic_fact =             AtomicFact::to_atomic_fact(
                 prop_name,
                 true,
                 vec![left_obj, right_obj],
-                self.line_file,
+                self.line_file.clone(),
             );
             facts.push(atomic_fact?);
         }
@@ -91,7 +91,7 @@ pub enum AndChainAtomicFact {
 }
 
 impl AndChainAtomicFact {
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
             AndChainAtomicFact::AtomicFact(a) => a.line_file(),
             AndChainAtomicFact::AndFact(a) => a.line_file(),

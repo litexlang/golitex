@@ -34,14 +34,7 @@ impl Runtime {
             Obj::FieldAccessWithMod(a) => match right {
                 Obj::FieldAccessWithMod(b) => {
                     if a.mod_name == b.mod_name {
-                        a.name == b.name
-                            && a.fields.len() == b.fields.len()
-                            && a.fields
-                                .iter()
-                                .zip(b.fields.iter())
-                                .all(|(a_field, b_field)| {
-                                    a_field.to_string() == b_field.to_string()
-                                })
+                        a.name == b.name && a.field == b.field
                     } else {
                         match (
                             self.module_manager
@@ -52,14 +45,7 @@ impl Runtime {
                                 .get(&b.mod_name),
                         ) {
                             (Some(p1), Some(p2)) => {
-                                p1 == p2
-                                    && a.name == b.name
-                                    && a.fields.len() == b.fields.len()
-                                    && a.fields.iter().zip(b.fields.iter()).all(
-                                        |(a_field, b_field)| {
-                                            a_field.to_string() == b_field.to_string()
-                                        },
-                                    )
+                                p1 == p2 && a.name == b.name && a.field == b.field
                             }
                             _ => false,
                         }

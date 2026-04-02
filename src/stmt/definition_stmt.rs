@@ -1,15 +1,18 @@
-use crate::prelude::*;
+use crate::{
+    prelude::*,
+    stmt::parameter_def::{ParamDefWithStructFieldType, StructFieldType},
+};
 use std::fmt;
 
 #[derive(Clone)]
 pub struct DefAbstractPropStmt {
     pub name: String,
     pub params: Vec<String>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl DefAbstractPropStmt {
-    pub fn new(name: String, params: Vec<String>, line_file: (usize, usize)) -> Self {
+    pub fn new(name: String, params: Vec<String>, line_file: LineFile) -> Self {
         DefAbstractPropStmt {
             name,
             params,
@@ -21,12 +24,11 @@ impl DefAbstractPropStmt {
 #[derive(Clone)]
 pub struct DefParamTypeStructStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamType>,
-    /// 形参括号内 `:` 之后的域条件（与 `family` 的 `dom_facts` 同形），实例化时用实参代入。
+    pub param_defs: Vec<ParamDefWithStructFieldType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
-    pub fields: Vec<(String, ParamType)>,
+    pub fields: Vec<(String, StructFieldType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -35,7 +37,7 @@ pub struct DefFamilyStmt {
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub equal_to: Obj,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -44,7 +46,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
     pub fn_set_with_params: FnSetWithParams,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -52,34 +54,34 @@ pub struct HaveFnEqualStmt {
     pub name: String,
     pub fn_set_with_params: FnSetWithParams,
     pub equal_to: Obj,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveExistObjStmt {
     pub equal_tos: Vec<String>,
     pub exist_fact_in_have_obj_st: ExistFact,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjEqualStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub objs_equal_to: Vec<Obj>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub param_def: Vec<ParamDefWithParamType>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct DefLetStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub facts: Vec<Fact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -87,7 +89,7 @@ pub struct DefPropWithMeaningStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub iff_facts: Vec<Fact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl fmt::Display for DefAbstractPropStmt {
@@ -108,7 +110,7 @@ impl fmt::Display for DefParamTypeStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
-        let implicit_prefix_len = ParamDefWithParamType::number_of_params(&self.params_def_with_type);
+        let implicit_prefix_len = ParamDefWithStructFieldType::number_of_params(&self.param_defs);
         let fields_str: String = self
             .fields
             .iter()
@@ -119,15 +121,17 @@ impl fmt::Display for DefParamTypeStructStmt {
         let fields_indented =
             to_string_and_add_four_spaces_at_beginning_of_each_line(&fields_str, 1);
         let equiv_line = add_four_spaces_at_beginning(format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
-        let facts_indented =
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1);
+        let facts_indented = vec_to_string_add_four_spaces_at_beginning_of_each_line(
+            &self.facts.iter().skip(implicit_prefix_len).cloned().collect(),
+            1,
+        );
         write!(
             f,
             "{} {}{}{}{} {}\n{}\n{}\n{}",
             STRUCT,
             self.name,
             LEFT_BRACE,
-            vec_to_string_join_by_comma(&self.params_def_with_type),
+            vec_to_string_join_by_comma(&self.param_defs),
             RIGHT_BRACE,
             COLON,
             fields_indented,
@@ -142,7 +146,7 @@ impl DefPropWithMeaningStmt {
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
         iff_facts: Vec<Fact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefPropWithMeaningStmt {
             name,
@@ -180,7 +184,7 @@ impl DefLetStmt {
     pub fn new(
         param_def: Vec<ParamDefWithParamType>,
         facts: Vec<Fact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefLetStmt {
             param_def,
@@ -208,7 +212,7 @@ impl fmt::Display for DefLetStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(param_def: Vec<ParamDefWithParamType>, line_file: (usize, usize)) -> Self {
+    pub fn new(param_def: Vec<ParamDefWithParamType>, line_file: LineFile) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt {
             param_def,
             line_file,
@@ -231,7 +235,7 @@ impl HaveObjEqualStmt {
     pub fn new(
         param_def: Vec<ParamDefWithParamType>,
         objs_equal_to: Vec<Obj>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         HaveObjEqualStmt {
             param_def,
@@ -258,7 +262,7 @@ impl HaveExistObjStmt {
     pub fn new(
         equal_tos: Vec<String>,
         exist_fact_in_have_obj_st: ExistFact,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         HaveExistObjStmt {
             equal_tos,
@@ -287,7 +291,7 @@ impl HaveFnEqualStmt {
         name: String,
         fn_set_with_params: FnSetWithParams,
         equal_to: Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         HaveFnEqualStmt {
             name,
@@ -362,7 +366,7 @@ impl HaveFnEqualCaseByCaseStmt {
         fn_set_with_params: FnSetWithParams,
         cases: Vec<AndChainAtomicFact>,
         equal_tos: Vec<Obj>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         HaveFnEqualCaseByCaseStmt {
             name,
@@ -380,7 +384,7 @@ impl DefFamilyStmt {
         params_def_with_type: Vec<ParamDefWithParamType>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         equal_to: Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefFamilyStmt {
             name,
@@ -413,19 +417,30 @@ impl fmt::Display for DefFamilyStmt {
 impl DefParamTypeStructStmt {
     pub fn new(
         name: String,
-        params_def_with_type: Vec<ParamDefWithParamType>,
+        param_defs: Vec<ParamDefWithStructFieldType>,
         dom_facts: Vec<OrAndChainAtomicFact>,
-        fields: Vec<(String, ParamType)>,
+        fields: Vec<(String, StructFieldType)>,
         facts: Vec<OrAndChainAtomicFact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefParamTypeStructStmt {
             name,
-            params_def_with_type,
+            param_defs,
             dom_facts,
             fields,
             facts,
             line_file,
         }
+    }
+}
+
+impl DefParamTypeStructStmt {
+    pub fn number_of_params(&self) -> usize {
+        ParamDefWithStructFieldType::number_of_params(&self.param_defs)
+    }
+
+    /// 按定义顺序展开所有类型形参名（与 `struct T(...)` 中参数顺序一致）。
+    pub fn get_params(&self) -> Vec<String> {
+        ParamDefWithStructFieldType::collect_param_names(&self.param_defs)
     }
 }

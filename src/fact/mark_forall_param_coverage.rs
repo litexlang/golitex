@@ -31,7 +31,7 @@ fn mark_forall_param_coverage_in_param_type(
             }
         }
         ParamType::Struct(struct_ty) => {
-            for param_obj in struct_ty.params.iter() {
+            for param_obj in struct_ty.args.iter() {
                 mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
             }
         }

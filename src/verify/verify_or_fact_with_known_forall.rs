@@ -8,7 +8,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_or_fact_with_known_forall_facts_in_envs(or_fact, verify_state)?
         {
@@ -28,7 +28,7 @@ impl Runtime {
             Option<HashMap<String, Obj>>,
             Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
         ),
-        VerifyError,
+        RuntimeError,
     > {
         let lookup_key = given_or_fact.key();
 
@@ -56,14 +56,14 @@ impl Runtime {
             }
         }
 
-        Ok((DEFAULT_LINE_FILE, None, None))
+        Ok(((0, 0), None, None))
     }
 
     fn try_verify_or_fact_with_known_forall_facts_in_envs(
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactualStmtSuccess>, VerifyError> {
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
@@ -102,7 +102,7 @@ impl Runtime {
         arg_map: HashMap<String, Obj>,
         given_or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactualStmtSuccess>, VerifyError> {
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params_def);
 
         if !param_names
@@ -140,10 +140,10 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|e| {
-                VerifyError::new(
+                RuntimeError::verify_error(
                     Fact::OrFact(given_or_fact.clone()),
                     String::new(),
-                    given_or_fact.line_file,
+                    given_or_fact.line_file.clone(),
                     Some(e),
                 )
             })?;
@@ -157,7 +157,16 @@ impl Runtime {
         };
 
         for dom_fact in known_forall.dom.iter() {
-            let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            let instantiated_dom_fact = self
+                .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .map_err(|e| {
+                    RuntimeError::verify_error(
+                        Fact::OrFact(given_or_fact.clone()),
+                        String::new(),
+                        given_or_fact.line_file.clone(),
+                        Some(e),
+                    )
+                })?;
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
             if result.is_unknown() {

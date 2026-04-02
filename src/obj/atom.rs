@@ -52,14 +52,14 @@ pub fn identifier_with_mod_to_string(mod_name: &str, name: &str) -> String {
 #[derive(Clone)]
 pub struct FieldAccess {
     pub name: String,
-    pub fields: Vec<String>,
+    pub field: String,
 }
 
 #[derive(Clone)]
 pub struct FieldAccessWithMod {
     pub mod_name: String,
     pub name: String,
-    pub fields: Vec<String>,
+    pub field: String,
 }
 
 impl fmt::Display for Atom {
@@ -86,33 +86,54 @@ impl IdentifierWithMod {
 }
 
 impl FieldAccess {
-    pub fn new(name: String, fields: Vec<String>) -> Self {
-        FieldAccess { name, fields }
+    pub fn new(name: String, field: String) -> Self {
+        FieldAccess { name, field }
+    }
+
+    /// 在已有 `root.field` 上再追加一段（嵌套 struct 绑定等运行时路径；`name` 中可含 `.`）。
+    pub fn with_appended_field(&self, field_name: &str) -> FieldAccess {
+        let prefix = format!(
+            "{}{}{}",
+            self.name,
+            DOT_AKA_FIELD_ACCESS_SIGN,
+            self.field
+        );
+        FieldAccess::new(prefix, field_name.to_string())
     }
 }
 
 impl FieldAccessWithMod {
-    pub fn new(mod_name: String, name: String, fields: Vec<String>) -> Self {
+    pub fn new(mod_name: String, name: String, field: String) -> Self {
         FieldAccessWithMod {
             mod_name,
             name,
-            fields,
+            field,
         }
+    }
+
+    pub fn with_appended_field(&self, field_name: &str) -> FieldAccessWithMod {
+        let prefix = format!(
+            "{}{}{}",
+            self.name,
+            DOT_AKA_FIELD_ACCESS_SIGN,
+            self.field
+        );
+        FieldAccessWithMod::new(self.mod_name.clone(), prefix, field_name.to_string())
     }
 }
 
 impl fmt::Display for FieldAccess {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", field_access_to_string(&self.name, &self.fields))
+        write!(f, "{}", field_access_to_string(&self.name, &self.field))
     }
 }
 
-pub fn field_access_to_string(name: &str, fields: &Vec<String>) -> String {
+pub fn field_access_to_string(name: &str, field: &str) -> String {
     format!(
         "{}{}{}",
         name,
         DOT_AKA_FIELD_ACCESS_SIGN,
-        fields.join(DOT_AKA_FIELD_ACCESS_SIGN)
+        field
     )
 }
 
@@ -121,18 +142,18 @@ impl fmt::Display for FieldAccessWithMod {
         write!(
             f,
             "{}",
-            field_access_with_mod_to_string(&self.mod_name, &self.name, &self.fields)
+            field_access_with_mod_to_string(&self.mod_name, &self.name, &self.field)
         )
     }
 }
 
-pub fn field_access_with_mod_to_string(mod_name: &str, name: &str, fields: &Vec<String>) -> String {
+pub fn field_access_with_mod_to_string(mod_name: &str, name: &str, field: &str) -> String {
     format!(
         "{}{}{}{}{}",
         mod_name,
         MOD_SIGN,
         name,
         DOT_AKA_FIELD_ACCESS_SIGN,
-        fields.join(DOT_AKA_FIELD_ACCESS_SIGN)
+        field
     )
 }

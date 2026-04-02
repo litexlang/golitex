@@ -6,11 +6,11 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.verify_objs_are_equal(
             &equal_fact.left,
             &equal_fact.right,
-            equal_fact.line_file,
+            equal_fact.line_file.clone(),
             verify_state,
         )
     }
@@ -19,17 +19,17 @@ impl Runtime {
         &mut self,
         left: &Obj,
         right: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut result =
-            self.verify_equality_by_builtin_rules(left, right, line_file, verify_state)?;
+            self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
         if result.is_true() {
             return Ok(result);
         }
 
         result =
-            self.verify_equality_with_known_equalities(left, right, line_file, verify_state)?;
+            self.verify_equality_with_known_equalities(left, right, line_file.clone(), verify_state)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -39,7 +39,7 @@ impl Runtime {
                 left,
                 right,
                 verify_state,
-                line_file,
+                line_file.clone(),
             )?;
         if verified_by_arg_to_arg {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
@@ -47,7 +47,7 @@ impl Runtime {
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
                         right.clone(),
-                        line_file,
+                        line_file.clone(),
                     ))),
                     InferResult::new(),
                     same_shape_and_equal_args_reason(left, right),
@@ -59,7 +59,7 @@ impl Runtime {
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
             result = self.verify_atomic_fact_with_known_forall(
-                &AtomicFact::EqualFact(EqualFact::new(left.clone(), right.clone(), line_file)),
+                &AtomicFact::EqualFact(EqualFact::new(left.clone(), right.clone(), line_file.clone())),
                 &verify_state_add_one_round,
             )?;
             if result.is_true() {
@@ -74,9 +74,9 @@ impl Runtime {
         &mut self,
         left: &Obj,
         right: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let left_string = left.to_string();
         let right_string = right.to_string();
 
@@ -86,7 +86,7 @@ impl Runtime {
                 .try_verify_equality_with_known_equalities_by_builtin_rules_only(
                     left,
                     right,
-                    line_file,
+                    line_file.clone(),
                     verify_state,
                     known_left.as_ref(),
                     known_right.as_ref(),
@@ -127,13 +127,13 @@ impl Runtime {
         right_left: &Obj,
         right_right: &Obj,
         verify_state: &VerifyState,
-        equality_line_file: (usize, usize),
-    ) -> Result<bool, VerifyError> {
+        equality_line_file: LineFile,
+    ) -> Result<bool, RuntimeError> {
         let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
             left_left,
             right_left,
             verify_state,
-            equality_line_file,
+            equality_line_file.clone(),
         )?;
         if result.is_unknown() {
             return Ok(false);
@@ -142,7 +142,7 @@ impl Runtime {
             left_right,
             right_right,
             verify_state,
-            equality_line_file,
+            equality_line_file.clone(),
         )?;
         if result.is_unknown() {
             return Ok(false);
@@ -155,13 +155,13 @@ impl Runtime {
         left_value: &Obj,
         right_value: &Obj,
         verify_state: &VerifyState,
-        equality_line_file: (usize, usize),
-    ) -> Result<bool, VerifyError> {
+        equality_line_file: LineFile,
+    ) -> Result<bool, RuntimeError> {
         let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
             left_value,
             right_value,
             verify_state,
-            equality_line_file,
+            equality_line_file.clone(),
         )?;
         if result.is_true() {
             return Ok(true);
@@ -174,8 +174,8 @@ impl Runtime {
         left_values: &Vec<Box<Obj>>,
         right_values: &Vec<Box<Obj>>,
         verify_state: &VerifyState,
-        equality_line_file: (usize, usize),
-    ) -> Result<bool, VerifyError> {
+        equality_line_file: LineFile,
+    ) -> Result<bool, RuntimeError> {
         if left_values.len() != right_values.len() {
             return Ok(false);
         }
@@ -186,7 +186,7 @@ impl Runtime {
                 &left_values[current_index],
                 &right_values[current_index],
                 verify_state,
-                equality_line_file,
+                equality_line_file.clone(),
             )?;
             if result.is_unknown() {
                 return Ok(false);
@@ -201,8 +201,8 @@ impl Runtime {
         left_fn_obj: &FnObj,
         right_fn_obj: &FnObj,
         verify_state: &VerifyState,
-        equality_line_file: (usize, usize),
-    ) -> Result<bool, VerifyError> {
+        equality_line_file: LineFile,
+    ) -> Result<bool, RuntimeError> {
         if left_fn_obj.body.len() != right_fn_obj.body.len() {
             return Ok(false);
         }
@@ -216,7 +216,7 @@ impl Runtime {
                 left_group,
                 right_group,
                 verify_state,
-                equality_line_file,
+                equality_line_file.clone(),
             )?;
             if !result {
                 return Ok(false);
@@ -231,8 +231,8 @@ impl Runtime {
         left_fn_obj: &FnObj,
         right_fn_obj: &FnObj,
         verify_state: &VerifyState,
-        equality_line_file: (usize, usize),
-    ) -> Result<bool, VerifyError> {
+        equality_line_file: LineFile,
+    ) -> Result<bool, RuntimeError> {
         let mut remaining_left_group_count = left_fn_obj.body.len();
         let mut remaining_right_group_count = right_fn_obj.body.len();
 
@@ -243,7 +243,7 @@ impl Runtime {
                 left_group,
                 right_group,
                 verify_state,
-                equality_line_file,
+                equality_line_file.clone(),
             )? {
                 return Ok(false);
             }
@@ -258,7 +258,7 @@ impl Runtime {
                 &remaining_left_obj,
                 &remaining_right_obj,
                 verify_state,
-                equality_line_file,
+                equality_line_file.clone(),
             )?;
         Ok(remaining_equality_result.is_true())
     }
@@ -268,8 +268,8 @@ impl Runtime {
         left_obj: &Obj,
         right_obj: &Obj,
         verify_state: &VerifyState,
-        equality_line_file: (usize, usize),
-    ) -> Result<bool, VerifyError> {
+        equality_line_file: LineFile,
+    ) -> Result<bool, RuntimeError> {
         match (left_obj, right_obj) {
             (Obj::FnObj(left_fn_obj), Obj::FnObj(right_fn_obj)) => {
                 if left_fn_obj.body.len() == right_fn_obj.body.len()
@@ -495,12 +495,12 @@ impl Runtime {
         left_obj: &Obj,
         right_obj: &Obj,
         verify_state: &VerifyState,
-        equality_line_file: (usize, usize),
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        equality_line_file: LineFile,
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut result = self.verify_equality_by_builtin_rules(
             left_obj,
             right_obj,
-            equality_line_file,
+            equality_line_file.clone(),
             verify_state,
         )?;
         if result.is_true() {
@@ -509,7 +509,7 @@ impl Runtime {
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left_obj.clone(),
                         right_obj.clone(),
-                        equality_line_file,
+                        equality_line_file.clone(),
                     ))),
                     InferResult::new(),
                     "builtin rules".to_string(),
@@ -521,7 +521,7 @@ impl Runtime {
         result = self.verify_equality_with_known_equalities(
             left_obj,
             right_obj,
-            equality_line_file,
+            equality_line_file.clone(),
             verify_state,
         )?;
         if result.is_true() {
@@ -533,7 +533,7 @@ impl Runtime {
                 left_obj,
                 right_obj,
                 verify_state,
-                equality_line_file,
+                equality_line_file.clone(),
             )?;
         if verified_by_arg_to_arg {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(

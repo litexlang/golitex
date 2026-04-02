@@ -6,8 +6,8 @@ impl Runtime {
         stmt: &ForAxiomStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if stmt.params.len() != stmt.param_sets.len() {
-            return Err(RuntimeError::ExecStmtError(
-                ExecStmtError::with_message_and_cause(
+            return Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     "by for: number of params does not match number of ranges".to_string(),
                     None,
@@ -17,7 +17,7 @@ impl Runtime {
         }
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 Stmt::ForAxiomStmt(stmt.clone()),
                 msg,
                 None,
@@ -26,7 +26,7 @@ impl Runtime {
         })?;
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     format!(
                         "by for: corresponding forall `{}` is not well-defined",
@@ -40,7 +40,7 @@ impl Runtime {
         let param_value_strings_of_each_param = self
             .for_param_value_strings_of_each_param(stmt)
             .map_err(|msg| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     msg,
                     None,
@@ -56,7 +56,7 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
                         format!(
                             "by for: failed to store corresponding forall `{}`",
@@ -101,7 +101,7 @@ impl Runtime {
                 corresponding_forall_fact.clone(),
             )
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     format!(
                         "by for: failed to store corresponding forall `{}`",
@@ -126,7 +126,7 @@ impl Runtime {
     fn integer_string_from_number_like_obj_for_for(
         self: &Self,
         number_like_obj: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Result<String, RuntimeError> {
         let calculated_string = {
             let value = self.resolve_obj_to_number(number_like_obj);
@@ -134,7 +134,7 @@ impl Runtime {
             match value {
                 Some(number) => number.normalized_value,
                 _ => {
-                    return Err(RuntimeError::UnknownError(UnknownError::new(
+                    return Err(RuntimeError::unknown_error(
                         format!(
                             "by for: range boundary `{}` must be a calculable number expression",
                             number_like_obj
@@ -142,13 +142,13 @@ impl Runtime {
                         line_file,
                         None,
                         None,
-                    )));
+                    ).into());
                 }
             }
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "by for: range boundary `{}` is not an integer number",
                     number_like_obj
@@ -156,7 +156,7 @@ impl Runtime {
                 line_file,
                 None,
                 None,
-            )));
+            ).into());
         }
         Ok(calculated_string)
     }
@@ -176,10 +176,10 @@ impl Runtime {
                 }
             };
             let start_integer_string = self
-                .integer_string_from_number_like_obj_for_for(start_obj, stmt.line_file)
+                .integer_string_from_number_like_obj_for_for(start_obj, stmt.line_file.clone())
                 .map_err(|e| e.to_string())?;
             let end_integer_string = self
-                .integer_string_from_number_like_obj_for_for(end_obj, stmt.line_file)
+                .integer_string_from_number_like_obj_for_for(end_obj, stmt.line_file.clone())
                 .map_err(|e| e.to_string())?;
             let start_integer_i128 = start_integer_string.parse::<i128>().map_err(|_| {
                 format!(
@@ -273,7 +273,7 @@ impl Runtime {
             let parameter_in_z_atomic_fact = AtomicFact::InFact(crate::fact::InFact::new(
                 Obj::Identifier(Identifier::new(parameter_name.clone())),
                 Obj::StandardSet(StandardSet::Z),
-                stmt.line_file,
+                stmt.line_file.clone(),
             ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_in_z_atomic_fact,
@@ -284,7 +284,7 @@ impl Runtime {
                 AtomicFact::EqualFact(crate::fact::EqualFact::new(
                     Obj::Identifier(Identifier::new(parameter_name.clone())),
                     Obj::Number(Number::new(assigned_integer_string)),
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,
@@ -305,7 +305,7 @@ impl Runtime {
                 let verify_reversed_dom_result =
                     self.verify_atomic_fact(&reversed, &VerifyState::new(0, false))?;
                 if verify_reversed_dom_result.is_unknown() {
-                    return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
                         format!(
                             "by for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown",
@@ -335,8 +335,8 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )?;
             if verified_result.is_unknown() {
-                return Err(RuntimeError::ExecStmtError(
-                    ExecStmtError::with_message_and_cause(
+                return Err(RuntimeError::from(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
                         format!("by for: failed to prove `{}`", fact_to_prove),
                         None,

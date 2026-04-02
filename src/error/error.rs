@@ -1,19 +1,21 @@
 use crate::prelude::*;
 use std::fmt;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct RuntimeErrorStruct {
     pub statement: Option<Stmt>,
     pub msg: String,
     pub conflict_with: Option<ConflictMsg>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
     pub previous_error: Option<Box<RuntimeError>>,
+    pub inside_results: Vec<NonErrStmtExecResult>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ConflictMsg {
     pub msg: String,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
     pub stmt: Option<Stmt>,
 }
 
@@ -21,18 +23,26 @@ impl RuntimeErrorStruct {
     pub fn new(
         statement: Option<Stmt>,
         msg: String,
-        line_file: (usize, usize),
+        line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
-        RuntimeErrorStruct::new_with_conflict(statement, msg, line_file, None, previous_error)
+        RuntimeErrorStruct::new_with_conflict(
+            statement,
+            msg,
+            line_file,
+            None,
+            previous_error,
+            vec![],
+        )
     }
 
     pub fn new_with_conflict(
         statement: Option<Stmt>,
         msg: String,
-        line_file: (usize, usize),
+        line_file: LineFile,
         conflict_with: Option<ConflictMsg>,
         previous_error: Option<RuntimeError>,
+        inside_results: Vec<NonErrStmtExecResult>,
     ) -> Self {
         RuntimeErrorStruct {
             statement,
@@ -40,11 +50,110 @@ impl RuntimeErrorStruct {
             conflict_with,
             line_file,
             previous_error: boxed_previous_error(previous_error),
+            inside_results,
         }
     }
 
     pub fn new_with_msg_previous_error(msg: String, previous_error: Option<RuntimeError>) -> Self {
-        RuntimeErrorStruct::new(None, msg, DEFAULT_LINE_FILE, previous_error)
+        RuntimeErrorStruct::new(None, msg, default_line_file(), previous_error)
+    }
+
+    pub fn exec_stmt_new(
+        stmt: Option<Stmt>,
+        info: String,
+        previous_error: Option<RuntimeError>,
+        inside_results: Vec<NonErrStmtExecResult>,
+    ) -> Self {
+        let line_file = if let Some(ref stmt) = stmt {
+            stmt.line_file()
+        } else {
+            default_line_file()
+        };
+        RuntimeErrorStruct::new_with_conflict(
+            stmt,
+            info,
+            line_file,
+            None,
+            previous_error,
+            inside_results,
+        )
+    }
+
+    pub fn exec_stmt_new_with_stmt(
+        stmt: Stmt,
+        info: String,
+        previous_error: Option<RuntimeError>,
+        inside_results: Vec<NonErrStmtExecResult>,
+    ) -> Self {
+        let line_file = stmt.line_file();
+        RuntimeErrorStruct::new_with_conflict(
+            Some(stmt),
+            info,
+            line_file,
+            None,
+            previous_error,
+            inside_results,
+        )
+    }
+
+    pub fn exec_stmt_with_message_and_cause(
+        stmt: Stmt,
+        message: String,
+        cause: Option<RuntimeError>,
+        inside_results: Vec<NonErrStmtExecResult>,
+    ) -> Self {
+        let line_file = stmt.line_file();
+        let previous_error = if message.is_empty() {
+            cause
+        } else {
+            Some(RuntimeError::unknown_error(
+                message.clone(),
+                line_file,
+                None,
+                cause,
+            ))
+        };
+        RuntimeErrorStruct::exec_stmt_new_with_stmt(stmt, message, previous_error, inside_results)
+    }
+
+    pub fn into_runtime_error_as_new_atomic_fact_layer(self) -> RuntimeError {
+        RuntimeError::NewAtomicFactError(self)
+    }
+
+    pub fn into_runtime_error_as_store_fact_layer(self) -> RuntimeError {
+        RuntimeError::StoreFactError(self)
+    }
+
+    pub fn into_runtime_error_as_arithmetic_layer(self) -> RuntimeError {
+        RuntimeError::ArithmeticError(self)
+    }
+
+    pub fn into_store_fact_wrapping_new_atomic(self) -> RuntimeErrorStruct {
+        let conflict_with_for_outer = self.conflict_with.clone();
+        let statement_for_outer_store_fact_error_layer = self.statement.clone();
+        let msg_for_outer_store_fact_error_layer = self.msg.clone();
+        let line_file = self.line_file.clone();
+        let wrapped_new_atomic_runtime_error = RuntimeError::NewAtomicFactError(self);
+        RuntimeErrorStruct::new_with_conflict(
+            statement_for_outer_store_fact_error_layer,
+            msg_for_outer_store_fact_error_layer,
+            line_file,
+            conflict_with_for_outer,
+            Some(wrapped_new_atomic_runtime_error),
+            vec![],
+        )
+    }
+
+    pub fn into_well_defined_wrapping_new_atomic(self) -> RuntimeError {
+        let line_file = self.line_file.clone();
+        let msg_for_well_defined_error = self.msg.clone();
+        let wrapped_runtime_error = RuntimeError::NewAtomicFactError(self);
+        RuntimeError::WellDefinedError(RuntimeErrorStruct::new(
+            None,
+            msg_for_well_defined_error,
+            line_file,
+            Some(wrapped_runtime_error),
+        ))
     }
 }
 
@@ -53,40 +162,34 @@ pub enum RuntimeError {
     ArithmeticError(RuntimeErrorStruct),
     NewAtomicFactError(RuntimeErrorStruct),
     StoreFactError(RuntimeErrorStruct),
-    ParseBlockError(ParseBlockError),
-    ParsingError(ParsingError),
-    ExecStmtError(ExecStmtError),
-    WellDefinedError(WellDefinedError),
-    VerifyError(VerifyError),
-    UnknownError(UnknownError),
-    InferError(InferError),
-    NameAlreadyUsedError(NameAlreadyUsedError),
-    DefineParamsError(DefineParamsError),
+    ParseError(RuntimeErrorStruct),
+    ExecStmtError(RuntimeErrorStruct),
+    WellDefinedError(RuntimeErrorStruct),
+    VerifyError(RuntimeErrorStruct),
+    UnknownError(RuntimeErrorStruct),
+    InferError(RuntimeErrorStruct),
+    NameAlreadyUsedError(RuntimeErrorStruct),
+    DefineParamsError(RuntimeErrorStruct),
+    InstantiateError(RuntimeErrorStruct),
 }
 
 impl std::error::Error for RuntimeError {}
 
 impl RuntimeError {
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
-            RuntimeError::ArithmeticError(e) => e.line_file,
-            RuntimeError::NewAtomicFactError(e) => e.line_file,
-            RuntimeError::StoreFactError(e) => e.line_file,
-            RuntimeError::ParseBlockError(e) => e.line_file(),
-            RuntimeError::ParsingError(e) => e.line_file,
-            RuntimeError::ExecStmtError(e) => {
-                if let Some(stmt) = &e.stmt {
-                    stmt.line_file()
-                } else {
-                    DEFAULT_LINE_FILE
-                }
-            }
-            RuntimeError::WellDefinedError(e) => e.line_file,
-            RuntimeError::VerifyError(e) => e.line_file,
-            RuntimeError::UnknownError(e) => e.line_file,
-            RuntimeError::InferError(e) => e.line_file,
-            RuntimeError::NameAlreadyUsedError(e) => e.line_file,
-            RuntimeError::DefineParamsError(e) => e.line_file,
+            RuntimeError::ArithmeticError(e) => e.line_file.clone(),
+            RuntimeError::NewAtomicFactError(e) => e.line_file.clone(),
+            RuntimeError::StoreFactError(e) => e.line_file.clone(),
+            RuntimeError::ParseError(e) => e.line_file.clone(),
+            RuntimeError::ExecStmtError(e) => e.line_file.clone(),
+            RuntimeError::WellDefinedError(e) => e.line_file.clone(),
+            RuntimeError::VerifyError(e) => e.line_file.clone(),
+            RuntimeError::UnknownError(e) => e.line_file.clone(),
+            RuntimeError::InferError(e) => e.line_file.clone(),
+            RuntimeError::NameAlreadyUsedError(e) => e.line_file.clone(),
+            RuntimeError::DefineParamsError(e) => e.line_file.clone(),
+            RuntimeError::InstantiateError(e) => e.line_file.clone(),
         }
     }
 
@@ -96,15 +199,15 @@ impl RuntimeError {
             RuntimeError::ArithmeticError(_) => "ArithmeticError",
             RuntimeError::NewAtomicFactError(_) => "NewAtomicFactError",
             RuntimeError::StoreFactError(_) => "StoreFactError",
-            RuntimeError::ParseBlockError(e) => e.display_label(),
-            RuntimeError::ParsingError(e) => e.display_label(),
-            RuntimeError::ExecStmtError(e) => e.display_label(),
-            RuntimeError::WellDefinedError(e) => e.display_label(),
-            RuntimeError::VerifyError(e) => e.display_label(),
-            RuntimeError::UnknownError(e) => e.display_label(),
-            RuntimeError::InferError(e) => e.display_label(),
-            RuntimeError::NameAlreadyUsedError(e) => e.display_label(),
-            RuntimeError::DefineParamsError(e) => e.display_label(),
+            RuntimeError::ParseError(_) => "ParseError",
+            RuntimeError::ExecStmtError(_) => "ExecStmtError",
+            RuntimeError::WellDefinedError(_) => "WellDefinedError",
+            RuntimeError::VerifyError(_) => "VerifyError",
+            RuntimeError::UnknownError(_) => "UnknownError",
+            RuntimeError::InferError(_) => "InferError",
+            RuntimeError::NameAlreadyUsedError(_) => "NameAlreadyUsedError",
+            RuntimeError::DefineParamsError(_) => "DefineParamsError",
+            RuntimeError::InstantiateError(_) => "InstantiateError",
         }
     }
 
@@ -114,54 +217,198 @@ impl RuntimeError {
             name
         )
     }
-}
 
-impl ParseBlockError {
-    pub fn display_label(&self) -> &'static str {
-        "ParseBlockError"
+    pub fn infer_error(
+        msg: String,
+        line_file: LineFile,
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
+        RuntimeError::InferError(RuntimeErrorStruct::new(
+            None,
+            msg,
+            line_file,
+            previous_error,
+        ))
     }
-}
 
-impl ParsingError {
-    pub fn display_label(&self) -> &'static str {
-        "ParsingError"
+    pub fn define_params_error(
+        msg: String,
+        previous_error: Option<RuntimeError>,
+        line_file: LineFile,
+    ) -> Self {
+        RuntimeError::DefineParamsError(RuntimeErrorStruct::new(
+            None,
+            msg,
+            line_file,
+            previous_error,
+        ))
     }
-}
 
-impl ExecStmtError {
-    pub fn display_label(&self) -> &'static str {
-        "ExecStmtError"
+    pub fn name_already_used_error(
+        name: String,
+        name_already_used_on_line_file: LineFile,
+        line_file: LineFile,
+    ) -> Self {
+        let msg = format!(
+            "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
+            name,
+            name_already_used_on_line_file.0,
+            name_already_used_on_line_file.1.as_ref(),
+            line_file.0,
+            line_file.1.as_ref(),
+        );
+        RuntimeError::NameAlreadyUsedError(RuntimeErrorStruct::new(None, msg, line_file, None))
     }
-}
 
-impl WellDefinedError {
-    pub fn display_label(&self) -> &'static str {
-        "WellDefinedError"
+    pub fn parse_error(
+        msg: String,
+        line_file: LineFile,
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
+        RuntimeError::ParseError(RuntimeErrorStruct::new(
+            None,
+            msg,
+            line_file,
+            previous_error,
+        ))
     }
-}
 
-impl VerifyError {
-    pub fn display_label(&self) -> &'static str {
-        "VerifyError"
+    pub fn parse_error_wrap(
+        inner: RuntimeError,
+        outer_line_file: LineFile,
+        outer_summary: Option<String>,
+    ) -> Self {
+        let RuntimeError::ParseError(inner_struct) = inner else {
+            return inner;
+        };
+        let summary = outer_summary.unwrap_or_else(|| inner_struct.msg.clone());
+        RuntimeError::ParseError(RuntimeErrorStruct::new(
+            None,
+            summary,
+            outer_line_file,
+            Some(RuntimeError::ParseError(inner_struct)),
+        ))
     }
-}
 
-impl UnknownError {
-    pub fn display_label(&self) -> &'static str {
-        "UnknownError"
+    pub fn parse_block_unexpected_indent(line_no: usize, path: Rc<str>) -> Self {
+        Self::parse_error(
+            format!("unexpected indent at line {} in {}", line_no, path.as_ref()),
+            (line_no, path.clone()),
+            None,
+        )
     }
-}
 
-impl InferError {
-    pub fn display_label(&self) -> &'static str {
-        "InferError"
+    pub fn parse_block_expected_indent(line_no: usize, path: Rc<str>) -> Self {
+        Self::parse_error(
+            format!("expected indent at line {} in {}", line_no, path.as_ref()),
+            (line_no, path.clone()),
+            None,
+        )
     }
-}
 
-impl NameAlreadyUsedError {
-    pub fn display_label(&self) -> &'static str {
-        "NameAlreadyUsedError"
+    pub fn parse_block_missing_body(line_no: usize, path: Rc<str>) -> Self {
+        Self::parse_error(
+            format!(
+                "block header missing body at line {} in {}",
+                line_no,
+                path.as_ref()
+            ),
+            (line_no, path.clone()),
+            None,
+        )
     }
+
+    pub fn parse_block_inconsistent_indent(line_no: usize, path: Rc<str>) -> Self {
+        Self::parse_error(
+            format!("inconsistent indent at line {} in {}", line_no, path.as_ref()),
+            (line_no, path.clone()),
+            None,
+        )
+    }
+
+    pub fn verify_error(
+        fact: Fact,
+        msg: String,
+        line_file: LineFile,
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
+        RuntimeError::VerifyError(RuntimeErrorStruct::new(
+            Some(fact.into_stmt()),
+            msg,
+            line_file,
+            previous_error,
+        ))
+    }
+
+    pub fn verify_error_message_only(
+        msg: String,
+        line_file: LineFile,
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
+        RuntimeError::VerifyError(RuntimeErrorStruct::new(
+            None,
+            msg,
+            line_file,
+            previous_error,
+        ))
+    }
+
+    pub fn unknown_error(
+        msg: String,
+        line_file: LineFile,
+        fact: Option<Fact>,
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
+        RuntimeError::UnknownError(RuntimeErrorStruct::new(
+            if let Some(fact) = fact {
+                Some(fact.into_stmt())
+            } else {
+                None
+            },
+            msg,
+            line_file,
+            previous_error,
+        ))
+    }
+
+    pub fn verify_result_unknown(fact: Fact, previous_error: Option<RuntimeError>) -> Self {
+        let line_file = fact.line_file();
+        RuntimeError::unknown_error(String::new(), line_file, Some(fact), previous_error)
+    }
+
+    pub fn well_defined_error(
+        msg: String,
+        previous_error: Option<RuntimeError>,
+        line_file: LineFile,
+    ) -> Self {
+        RuntimeError::WellDefinedError(RuntimeErrorStruct::new(
+            None,
+            msg,
+            line_file,
+            previous_error,
+        ))
+    }
+
+    pub fn well_defined_wrapping_from_verify_error(e: RuntimeError) -> RuntimeError {
+        match e {
+            RuntimeError::VerifyError(inner) => {
+                let line_file = inner.line_file.clone();
+                let msg_for_well_defined = if inner.msg.is_empty() {
+                    "verify fact error:".to_string()
+                } else {
+                    inner.msg.clone()
+                };
+                RuntimeError::WellDefinedError(RuntimeErrorStruct::new(
+                    None,
+                    msg_for_well_defined,
+                    line_file,
+                    Some(RuntimeError::VerifyError(inner)),
+                ))
+            }
+            _ => e,
+        }
+    }
+
 }
 
 // Display outputs a short placeholder; full machine-readable form is Runtime::display_error_json_string.
@@ -179,444 +426,9 @@ impl fmt::Display for RuntimeErrorStruct {
 
 impl std::error::Error for RuntimeErrorStruct {}
 
-#[derive(Debug)]
-pub enum ParseBlockError {
-    ExpectedIndent(usize, usize),
-    UnexpectedIndent(usize, usize),
-    InconsistentIndent(usize, usize),
-    MissingBody(usize, usize),
-    InvalidName(String),
-    NameAlreadyUsed {
-        name: String,
-        name_already_used_on_line_file: (usize, usize),
-        line_file: (usize, usize),
-    },
-}
-
-impl std::error::Error for ParseBlockError {}
-
-impl fmt::Display for ParseBlockError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl ParseBlockError {
-    pub fn line_file(&self) -> (usize, usize) {
-        match self {
-            ParseBlockError::ExpectedIndent(line, file) => (*line, *file),
-            ParseBlockError::UnexpectedIndent(line, file) => (*line, *file),
-            ParseBlockError::InconsistentIndent(line, file) => (*line, *file),
-            ParseBlockError::MissingBody(line, file) => (*line, *file),
-            ParseBlockError::InvalidName(_) => DEFAULT_LINE_FILE.clone(),
-            ParseBlockError::NameAlreadyUsed { line_file, .. } => *line_file,
-        }
-    }
-}
-
-impl From<ParseBlockError> for RuntimeError {
-    fn from(e: ParseBlockError) -> Self {
-        RuntimeError::ParseBlockError(e)
-    }
-}
-
-#[derive(Debug)]
-pub struct ParsingError {
-    pub msg: String,
-    pub line_file: (usize, usize),
-    pub previous_error: Option<Box<RuntimeError>>,
-}
-
-impl std::error::Error for ParsingError {}
-
-impl fmt::Display for ParsingError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl ParsingError {
-    pub fn new(
-        msg: String,
-        line_file: (usize, usize),
-        previous_error: Option<RuntimeError>,
-    ) -> Self {
-        ParsingError {
-            msg,
-            line_file,
-            previous_error: boxed_previous_error(previous_error),
-        }
-    }
-}
-
-impl From<ParsingError> for RuntimeError {
-    fn from(e: ParsingError) -> Self {
-        RuntimeError::ParsingError(e)
-    }
-}
-
-#[derive(Debug)]
-pub struct ExecStmtError {
-    pub stmt: Option<Stmt>,
-    pub info: String,
-    pub previous_error: Option<Box<RuntimeError>>,
-    pub inside_results: Vec<NonErrStmtExecResult>,
-}
-
-impl std::error::Error for ExecStmtError {}
-
-impl fmt::Display for ExecStmtError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl ExecStmtError {
-    pub fn new(
-        stmt: Option<Stmt>,
-        info: String,
-        previous_error: Option<RuntimeError>,
-        inside_results: Vec<NonErrStmtExecResult>,
-    ) -> Self {
-        ExecStmtError {
-            stmt,
-            info,
-            previous_error: boxed_previous_error(previous_error),
-            inside_results,
-        }
-    }
-    
-    pub fn new_with_stmt(
-        stmt: Stmt,
-        info: String,
-        previous_error: Option<RuntimeError>,
-        inside_results: Vec<NonErrStmtExecResult>,
-    ) -> Self {
-        ExecStmtError {
-            stmt: Some(stmt),
-            info,
-            previous_error: boxed_previous_error(previous_error),
-            inside_results,
-        }
-    }
-
-    pub fn with_message_and_cause(
-        stmt: Stmt,
-        message: String,
-        cause: Option<RuntimeError>,
-        inside_results: Vec<NonErrStmtExecResult>,
-    ) -> Self {
-        let line_file = stmt.line_file();
-        let previous_error = if message.is_empty() {
-            cause
-        } else {
-            let error_message_for_verify_unknown_error = message.clone();
-            Some(RuntimeError::UnknownError(UnknownError::new(
-                error_message_for_verify_unknown_error,
-                line_file,
-                None,
-                cause,
-            )))
-        };
-        ExecStmtError::new_with_stmt(stmt, message, previous_error, inside_results)
-    }
-}
-
-impl From<ExecStmtError> for RuntimeError {
-    fn from(e: ExecStmtError) -> Self {
-        RuntimeError::ExecStmtError(e)
-    }
-}
-
-#[derive(Debug)]
-pub struct WellDefinedError {
-    pub msg: String,
-    pub previous_error: Option<Box<RuntimeError>>,
-    pub line_file: (usize, usize),
-}
-
-impl std::error::Error for WellDefinedError {}
-
-impl fmt::Display for WellDefinedError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl WellDefinedError {
-    pub fn new(
-        msg: String,
-        previous_error: Option<RuntimeError>,
-        line_file: (usize, usize),
-    ) -> Self {
-        WellDefinedError {
-            msg,
-            previous_error: boxed_previous_error(previous_error),
-            line_file,
-        }
-    }
-}
-
-impl RuntimeErrorStruct {
-    pub fn into_runtime_error_as_new_atomic_fact_layer(self) -> RuntimeError {
-        RuntimeError::NewAtomicFactError(self)
-    }
-
-    pub fn into_runtime_error_as_store_fact_layer(self) -> RuntimeError {
-        RuntimeError::StoreFactError(self)
-    }
-
-    pub fn into_runtime_error_as_arithmetic_layer(self) -> RuntimeError {
-        RuntimeError::ArithmeticError(self)
-    }
-
-    pub fn into_store_fact_wrapping_new_atomic(self) -> RuntimeErrorStruct {
-        let conflict_with_for_outer = self.conflict_with.clone();
-        let statement_for_outer_store_fact_error_layer = self.statement.clone();
-        let msg_for_outer_store_fact_error_layer = self.msg.clone();
-        let line_file = self.line_file;
-        let wrapped_new_atomic_runtime_error = RuntimeError::NewAtomicFactError(self);
-        RuntimeErrorStruct::new_with_conflict(
-            statement_for_outer_store_fact_error_layer,
-            msg_for_outer_store_fact_error_layer,
-            line_file,
-            conflict_with_for_outer,
-            Some(wrapped_new_atomic_runtime_error),
-        )
-    }
-
-    pub fn into_well_defined_wrapping_new_atomic(self) -> WellDefinedError {
-        let line_file = self.line_file;
-        let msg_for_well_defined_error = self.msg.clone();
-        let wrapped_runtime_error = RuntimeError::NewAtomicFactError(self);
-        WellDefinedError::new(
-            msg_for_well_defined_error,
-            Some(wrapped_runtime_error),
-            line_file,
-        )
-    }
-}
-
-impl From<RuntimeErrorStruct> for WellDefinedError {
-    fn from(new_atomic_fact_runtime_error_struct: RuntimeErrorStruct) -> Self {
-        new_atomic_fact_runtime_error_struct.into_well_defined_wrapping_new_atomic()
-    }
-}
-
 impl From<RuntimeErrorStruct> for RuntimeError {
     fn from(store_or_infer_runtime_error_struct: RuntimeErrorStruct) -> Self {
         RuntimeError::StoreFactError(store_or_infer_runtime_error_struct)
-    }
-}
-
-impl From<WellDefinedError> for RuntimeError {
-    fn from(e: WellDefinedError) -> Self {
-        RuntimeError::WellDefinedError(e)
-    }
-}
-
-#[derive(Debug)]
-pub struct VerifyError {
-    pub fact: Fact,
-    pub msg: String,
-    pub line_file: (usize, usize),
-    pub previous_error: Option<Box<RuntimeError>>,
-}
-
-impl std::error::Error for VerifyError {}
-
-impl fmt::Display for VerifyError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl VerifyError {
-    pub fn new(
-        fact: Fact,
-        msg: String,
-        line_file: (usize, usize),
-        previous_error: Option<RuntimeError>,
-    ) -> Self {
-        VerifyError {
-            fact,
-            msg,
-            line_file,
-            previous_error: boxed_previous_error(previous_error),
-        }
-    }
-}
-
-impl From<VerifyError> for RuntimeError {
-    fn from(e: VerifyError) -> Self {
-        RuntimeError::VerifyError(e)
-    }
-}
-
-impl From<VerifyError> for WellDefinedError {
-    fn from(e: VerifyError) -> Self {
-        let line_file = e.line_file;
-        let msg_for_well_defined = if e.msg.is_empty() {
-            "verify fact error:".to_string()
-        } else {
-            e.msg.clone()
-        };
-        WellDefinedError::new(
-            msg_for_well_defined,
-            Some(RuntimeError::VerifyError(e)),
-            line_file,
-        )
-    }
-}
-
-#[derive(Debug)]
-pub struct UnknownError {
-    pub msg: String,
-    pub line_file: (usize, usize),
-    pub fact: Option<Fact>,
-    pub previous_error: Option<Box<RuntimeError>>,
-}
-
-impl std::error::Error for UnknownError {}
-
-impl fmt::Display for UnknownError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl UnknownError {
-    pub fn new(
-        msg: String,
-        line_file: (usize, usize),
-        fact: Option<Fact>,
-        previous_error: Option<RuntimeError>,
-    ) -> Self {
-        UnknownError {
-            msg,
-            line_file,
-            fact,
-            previous_error: boxed_previous_error(previous_error),
-        }
-    }
-
-    pub fn verify_result_unknown(fact: Fact, previous_error: Option<RuntimeError>) -> Self {
-        let line_file = fact.line_file();
-        UnknownError {
-            msg: String::new(),
-            line_file,
-            fact: Some(fact),
-            previous_error: boxed_previous_error(previous_error),
-        }
-    }
-}
-
-impl From<UnknownError> for RuntimeError {
-    fn from(e: UnknownError) -> Self {
-        RuntimeError::UnknownError(e)
-    }
-}
-
-#[derive(Debug)]
-pub struct InferError {
-    pub msg: String,
-    pub line_file: (usize, usize),
-    pub previous_error: Option<Box<RuntimeError>>,
-}
-
-impl std::error::Error for InferError {}
-
-impl fmt::Display for InferError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl InferError {
-    pub fn new(
-        msg: String,
-        line_file: (usize, usize),
-        previous_error: Option<RuntimeError>,
-    ) -> Self {
-        InferError {
-            msg,
-            line_file,
-            previous_error: boxed_previous_error(previous_error),
-        }
-    }
-}
-
-impl From<InferError> for RuntimeError {
-    fn from(e: InferError) -> Self {
-        RuntimeError::InferError(e)
-    }
-}
-
-#[derive(Debug)]
-pub struct NameAlreadyUsedError {
-    pub name: String,
-    pub name_already_used_on_line_file: (usize, usize),
-    pub line_file: (usize, usize),
-}
-
-impl std::error::Error for NameAlreadyUsedError {}
-
-impl fmt::Display for NameAlreadyUsedError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl NameAlreadyUsedError {
-    pub fn new(
-        name: String,
-        name_already_used_on_line_file: (usize, usize),
-        line_file: (usize, usize),
-    ) -> Self {
-        NameAlreadyUsedError {
-            name,
-            name_already_used_on_line_file,
-            line_file,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct DefineParamsError {
-    pub msg: String,
-    pub previous_error: Option<Box<RuntimeError>>,
-    pub line_file: (usize, usize),
-}
-
-impl std::error::Error for DefineParamsError {}
-
-impl fmt::Display for DefineParamsError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_label())
-    }
-}
-
-impl DefineParamsError {
-    pub fn new(
-        msg: String,
-        previous_error: Option<RuntimeError>,
-        line_file: (usize, usize),
-    ) -> Self {
-        DefineParamsError {
-            msg,
-            previous_error: boxed_previous_error(previous_error),
-            line_file,
-        }
-    }
-
-    pub fn display_label(&self) -> &'static str {
-        "DefineParamsError"
-    }
-}
-
-impl From<DefineParamsError> for RuntimeError {
-    fn from(e: DefineParamsError) -> Self {
-        RuntimeError::DefineParamsError(e)
     }
 }
 

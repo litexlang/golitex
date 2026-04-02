@@ -10,19 +10,19 @@ pub struct DefAlgoStmt {
     pub params: Vec<String>,
     pub default_return: Option<AlgoReturn>,
     pub cases: Vec<AlgoCase>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct AlgoReturn {
     pub value: Obj,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 #[derive(Clone)]
 pub struct AlgoCase {
     pub condition: AtomicFact, // 只有 atomic fact 能reverse，而 algo case 有可能需要被reverse掉（处理 default_return 的时候）。
     pub return_stmt: AlgoReturn,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -37,7 +37,7 @@ impl DefAlgoStmt {
         params: Vec<String>,
         cases: Vec<AlgoCase>,
         default_return: Option<AlgoReturn>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefAlgoStmt {
             name,
@@ -110,13 +110,13 @@ impl fmt::Display for DefAlgoStmt {
 }
 
 impl AlgoReturn {
-    pub fn new(value: Obj, line_file: (usize, usize)) -> Self {
+    pub fn new(value: Obj, line_file: LineFile) -> Self {
         AlgoReturn { value, line_file }
     }
 }
 
 impl AlgoCase {
-    pub fn new(condition: AtomicFact, return_stmt: AlgoReturn, line_file: (usize, usize)) -> Self {
+    pub fn new(condition: AtomicFact, return_stmt: AlgoReturn, line_file: LineFile) -> Self {
         AlgoCase {
             condition,
             return_stmt,
@@ -126,10 +126,10 @@ impl AlgoCase {
 }
 
 impl AlgoReturnOrAlgoCase {
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
-            AlgoReturnOrAlgoCase::AlgoReturn(algo_return) => algo_return.line_file,
-            AlgoReturnOrAlgoCase::AlgoCase(algo_case) => algo_case.line_file,
+            AlgoReturnOrAlgoCase::AlgoReturn(algo_return) => algo_return.line_file.clone(),
+            AlgoReturnOrAlgoCase::AlgoCase(algo_case) => algo_case.line_file.clone(),
         }
     }
 }

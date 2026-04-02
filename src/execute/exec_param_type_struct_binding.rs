@@ -15,7 +15,7 @@
 //! ```
 //!
 //! 在登记 `defined_field_access_name["g"]` 之后，对 `id`、`add` 要分别建立与字段 [`ParamType`] 一致的事实，
-//! 左端为 `FieldAccess { name: "g", fields: ["id"] }` 对应的 [`Obj::FieldAccess`]。
+//! 左端为 `FieldAccess { name: "g", field: "id" }` 对应的 [`Obj::FieldAccess`]。
 //!
 //! ## `self` 与定义体事实 `facts`
 //!
@@ -25,7 +25,7 @@
 //! - 嵌套在 field 上（如 `g.h` 又是某个 struct）：`self ↦ FieldAccess(g.h)`。
 //!
 //! 该映射与形参代入 `param_to_arg_map` **合并**后，对 [`DefParamTypeStructStmt::facts`] 中每条
-//! [`OrAndChainAtomicFact`] 调用 [`OrAndChainAtomicFact::instantiate`]，再写入环境（见
+//! [`OrAndChainAtomicFact`] 经 [`Runtime::inst_or_and_chain_atomic_fact`] 代入后，再写入环境（见
 //! [`Runtime::store_instantiated_struct_def_facts_with_self`]）。
 //!
 //! ## [`Environment::cache_well_defined_obj`]
@@ -40,7 +40,7 @@ use std::collections::HashMap;
 impl Runtime {
     /// 与 [`define_param_binding_for_param_type`](crate::execute::exec_def_stmt) 类似，但**约束左端为 field access**。
     ///
-    /// - `field_access`：已解析好的访问路径，如 `g.id` → [`FieldAccess::new`] `("g", ["id"])`。
+    /// - `field_access`：已解析好的访问路径，如 `g.id` → [`FieldAccess::new`] `("g", "id")`。
     /// - `param_type`：该位置上应当满足的类型（可与定义中字段类型经 `instantiate` 后一致）。
     ///
     /// 嵌套 [`ParamType::Struct`] 时会在 [`Environment::defined_field_access_name`] 中以
@@ -87,150 +87,57 @@ impl Runtime {
         name: &str,
         struct_ty: &StructParamType,
     ) -> Result<InferResult, RuntimeError> {
-        let struct_name = struct_ty.name.to_string();
-        let def = match self.get_cloned_param_type_struct_definition_by_name(&struct_name) {
-            Some(d) => d,
-            None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
-                    format!(
-                        "struct `{}` is not defined (needed for param `{}` of type `struct {}(...)`)",
-                        struct_name, name, struct_name
-                    ),
-                    DEFAULT_LINE_FILE.clone(),
-                    None,
-                    None,
-                )));
-            }
-        };
-        self.define_param_binding_struct_with_def(name, &def, struct_ty)
+        self.register_param_as_struct_instance(name, struct_ty.clone());
+        Ok(InferResult::new())
     }
 
-    /// 与 [`define_param_binding_struct`] 相同，但直接使用已有定义（例如 `struct` **定义检查**时尚未写入全局 env）。
-    pub(crate) fn define_param_binding_struct_with_def(
-        &mut self,
-        name: &str,
-        def: &DefParamTypeStructStmt,
-        struct_ty: &StructParamType,
-    ) -> Result<InferResult, RuntimeError> {
-        let struct_name = struct_ty.name.to_string();
-        if def.name != struct_name {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
-                format!(
-                    "struct type name `{}` does not match definition name `{}`",
-                    struct_name, def.name
-                ),
-                DEFAULT_LINE_FILE.clone(),
-                None,
-                None,
-            )));
-        }
-
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
-        if struct_ty.params.len() != expected_count {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
-                format!(
-                    "struct `{}` expects {} type argument(s) in `struct {}(...)`, got {}",
-                    struct_name,
-                    expected_count,
-                    struct_name,
-                    struct_ty.params.len()
-                ),
-                DEFAULT_LINE_FILE.clone(),
-                None,
-                None,
-            )));
-        }
-
-        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.params.clone());
-        self.register_param_as_struct_instance(name, inst);
-
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
-            &struct_ty.params,
-        );
-
-        let mut infer_result =
-            self.bind_struct_fields_for_root_param(def, &param_to_arg_map, name)?;
-        let fact_infer = self.store_instantiated_struct_def_facts_with_self(
-            def,
-            &param_to_arg_map,
-            Obj::Identifier(Identifier::new(name.to_string())),
-        )?;
-        infer_result.new_infer_result_inside(fact_infer);
-        Ok(infer_result)
-    }
-
-    /// 根参数 `name`（如 `g`）已登记为 [`InstStructObj`] 后，对定义中每个字段做 field-access 上的类型绑定。
-    fn bind_struct_fields_for_root_param(
-        &mut self,
-        def: &DefParamTypeStructStmt,
-        param_to_arg_map: &HashMap<String, Obj>,
-        root_param_name: &str,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
-        for (field_name, field_param_type) in def.fields.iter() {
-            let instantiated = field_param_type.instantiate(param_to_arg_map);
-            let fa = FieldAccess::new(root_param_name.to_string(), vec![field_name.clone()]);
-            let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
-            infer_result.new_infer_result_inside(fr);
-        }
-        Ok(infer_result)
-    }
-
-    /// 某 **field access 路径** 已视为 `struct_ty` 的实例（与根上 [`define_param_binding_struct`] 同构），
-    /// 登记 `field_access.to_string()` → [`InstStructObj`]，并绑定该 struct 定义中的各字段。
-    ///
-    /// 口语上可称为「在 field access 上绑定 struct」；与根参数分支一样，在字段绑定之后会 **`self` → 本路径**
-    /// 并落库 [`DefParamTypeStructStmt::facts`]（见 [`Runtime::store_instantiated_struct_def_facts_with_self`]）。
     fn define_param_binding_struct_at_field_access(
         &mut self,
         field_access: &FieldAccess,
         struct_ty: &StructParamType,
     ) -> Result<InferResult, RuntimeError> {
         let struct_name = struct_ty.name.to_string();
-        let def = match self.get_cloned_param_type_struct_definition_by_name(&struct_name) {
+        let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
+                return Err(RuntimeError::unknown_error(
                     format!(
                         "struct `{}` is not defined (needed for field `{}` of type `struct {}(...)`)",
                         struct_name,
                         field_access,
                         struct_name
                     ),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
-                )));
+                ).into());
             }
         };
 
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
-        if struct_ty.params.len() != expected_count {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
+        if struct_ty.args.len() != expected_count {
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "struct `{}` expects {} type argument(s), got {}",
                     struct_name,
                     expected_count,
-                    struct_ty.params.len()
+                    struct_ty.args.len()
                 ),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
                 None,
                 None,
-            )));
+            ).into());
         }
 
-        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.params.clone());
-        self.register_param_as_struct_instance(&field_access.to_string(), inst);
-
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
-            &struct_ty.params,
+        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
+            &struct_ty.args,
         );
 
         let mut infer_result = InferResult::new();
         for (field_name, field_param_type) in def.fields.iter() {
-            let instantiated = field_param_type.instantiate(&param_to_arg_map);
+            let instantiated =
+                self.inst_param_type(&field_param_type.to_param_type(), &param_to_arg_map)?;
             let fa = append_field_to_field_access(field_access, field_name);
             let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
             infer_result.new_infer_result_inside(fr);
@@ -244,9 +151,92 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    /// 元组实参与 `struct T(...)` 一一对应 [`DefParamTypeStructStmt::fields`]（含头部形参对应的隐式 field），
+    /// 各分量再按字段类型做 [`define_param_binding_for_param_type_on_obj`]；`<=>:` 下事实里 `self` 代换为整段 tuple，
+    /// 并临时登记 `SELF` → [`InstStructObj`] 以便实例化时 `self.<field>` 能投影到分量。
+    fn define_param_binding_struct_from_tuple(
+        &mut self,
+        tuple: &Tuple,
+        struct_ty: &StructParamType,
+    ) -> Result<InferResult, RuntimeError> {
+        let struct_name = struct_ty.name.to_string();
+        let def = match self.get_cloned_definition_of_struct(&struct_name) {
+            Some(d) => d,
+            None => {
+                return Err(RuntimeError::unknown_error(
+                    format!("struct `{}` is not defined", struct_name),
+                    default_line_file(),
+                    None,
+                    None,
+                ).into());
+            }
+        };
+        if def.name != struct_name {
+            return Err(RuntimeError::unknown_error(
+                format!(
+                    "struct type name `{}` does not match definition name `{}`",
+                    struct_name, def.name
+                ),
+                default_line_file(),
+                None,
+                None,
+            ).into());
+        }
+
+        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
+        if struct_ty.args.len() != expected_count {
+            return Err(RuntimeError::unknown_error(
+                format!(
+                    "struct `{}` expects {} type argument(s), got {}",
+                    struct_name,
+                    expected_count,
+                    struct_ty.args.len()
+                ),
+                default_line_file(),
+                None,
+                None,
+            ).into());
+        }
+
+        if tuple.args.len() != def.fields.len() + def.number_of_params() {
+            return Err(RuntimeError::unknown_error(
+                format!(
+                    "struct `{}`: tuple has {} component(s), definition has {} field(s) (must match)",
+                    struct_name,
+                    tuple.args.len(),
+                    def.fields.len()
+                ),
+                default_line_file(),
+                None,
+                None,
+            ).into());
+        }
+
+        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
+            &struct_ty.args,
+        );
+
+        let mut infer_result = InferResult::new();
+        for (i, (_field_name, field_pt)) in def.fields.iter().enumerate() {
+            let instantiated = self.inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)?;
+            let component = (*tuple.args[i + def.number_of_params()]).clone();
+            let ir = self.define_param_binding_for_param_type_on_obj(component, &instantiated)?;
+            infer_result.new_infer_result_inside(ir);
+        }
+
+        let fact_ir = self.store_instantiated_struct_def_facts_with_self(
+            &def,
+            &param_to_arg_map,
+            Obj::Tuple(tuple.clone()),
+        )?;
+        infer_result.new_infer_result_inside(fact_ir);
+        Ok(infer_result)
+    }
+
     /// 将 `struct` 定义中 `<=>:` 下的 [`DefParamTypeStructStmt::facts`] 做形参代入，并把 `self` 换成当前实例后存库。
     ///
-    /// `param_to_arg_map` 来自 [`ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
+    /// `param_to_arg_map` 来自 [`ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
     /// `instantiate` 使用同一张表）。在此之上插入 `SELF` → `self_replacement`：
     /// - 根绑定：`Obj::Identifier(g)`；
     /// - [`define_param_binding_struct_at_field_access`]（即「在某一 field access 上绑定嵌套 struct」，与
@@ -265,7 +255,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         for fact in def.facts.iter() {
-            let instantiated = fact.instantiate(&extended);
+            let instantiated = self.inst_or_and_chain_atomic_fact(fact, &extended)?;
             let fr = self
                 .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(instantiated)
                 .map_err(RuntimeError::from)?;
@@ -274,9 +264,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// 写入 [`Environment::defined_field_access_name`]，并把同一字符串键写入 [`Environment::cache_well_defined_obj`]，
-    /// 与「字段上已绑定类型」路径共用一套缓存语义，便于 [`verify_field_access_well_defined`]。
-    fn register_param_as_struct_instance(&mut self, env_key: &str, inst: InstStructObj) {
+    pub fn register_param_as_struct_instance(&mut self, env_key: &str, inst: StructParamType) {
         let key = env_key.to_string();
         self.top_level_env()
             .defined_field_access_name
@@ -295,37 +283,37 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
+                return Err(RuntimeError::unknown_error(
                     format!("family `{}` is not defined", family_name),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
-                )));
+                ).into());
             }
         };
         let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "family `{}` expects {} type argument(s), got {}",
                     family_name,
                     expected_count,
                     family_ty.params.len()
                 ),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
                 None,
                 None,
-            )));
+            ).into());
         }
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_ty.params,
         );
-        let member_set = def.equal_to.instantiate(&param_to_arg_map);
+        let member_set = self.inst_obj(&def.equal_to, &param_to_arg_map)?;
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             subject,
             member_set,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -339,7 +327,7 @@ impl Runtime {
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             subject,
             obj.clone(),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -352,7 +340,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
             subject,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -365,7 +353,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
             subject,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -378,7 +366,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
             subject,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -396,16 +384,31 @@ impl Runtime {
             Obj::FieldAccess(fa) => {
                 self.define_param_binding_for_param_type_on_field_access(fa, param_type)
             }
+            Obj::Tuple(tuple) => {
+                if let ParamType::Struct(struct_ty) = param_type {
+                    self.define_param_binding_struct_from_tuple(tuple, struct_ty)
+                } else {
+                    Err(RuntimeError::unknown_error(
+                        format!(
+                            "tuple as subject is only supported for struct parameter type, got {}",
+                            param_type
+                        ),
+                        default_line_file(),
+                        None,
+                        None,
+                    ).into())
+                }
+            }
             _ => match param_type {
-                ParamType::Struct(_) => Err(RuntimeError::UnknownError(UnknownError::new(
+                ParamType::Struct(_) => Err(RuntimeError::unknown_error(
                     format!(
-                        "struct parameter type requires an identifier or field access as subject, got {}",
+                        "struct parameter type requires an identifier, field access, or tuple matching struct fields, got {}",
                         subject
                     ),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
-                ))),
+                ).into()),
                 ParamType::Family(family_ty) => {
                     self.define_param_binding_family_on_obj(subject.clone(), family_ty)
                 }
@@ -427,7 +430,5 @@ fn obj_from_field_access(field_access: &FieldAccess) -> Obj {
 }
 
 fn append_field_to_field_access(base: &FieldAccess, field_name: &str) -> FieldAccess {
-    let mut fields = base.fields.clone();
-    fields.push(field_name.to_string());
-    FieldAccess::new(base.name.clone(), fields)
+    base.with_appended_field(field_name)
 }

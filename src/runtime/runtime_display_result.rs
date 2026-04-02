@@ -316,32 +316,3 @@ impl Runtime {
         )
     }
 }
-
-impl Runtime {
-    pub(in crate::runtime) fn get_location_string_of_line_file(
-        &self,
-        line: usize,
-        file_index: usize,
-    ) -> String {
-        if (line, file_index) == DEFAULT_LINE_FILE {
-            return String::new();
-        }
-
-        let path = match self.module_manager.run_file_paths.get(file_index) {
-            Some(path) => path.as_ref().to_string(),
-            None => String::new(),
-        };
-
-        if path.is_empty() {
-            format!("on line {}", line)
-        } else if file_index == FILE_INDEX_FOR_BUILTIN + 1 {
-            format!("on line {}", line)
-        } else {
-            format!(
-                "on line {}, file {}",
-                line,
-                self.get_file_name_empty_if_default((line, file_index))
-            )
-        }
-    }
-}

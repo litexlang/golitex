@@ -1,12 +1,17 @@
 use crate::prelude::*;
+use crate::verify::*;
 use std::collections::HashMap;
 
 /// `fn(x N_pos) R` 与 `fn(y N_pos) R`：将两侧形参名统一为 `##0`, `##1`, …，对 `params_def_with_set` / `dom_facts` / `ret_set` 做代入后比较 `Display`。
-fn fn_set_with_params_equal_modulo_param_rename(a: &FnSetWithParams, b: &FnSetWithParams) -> bool {
+fn fn_set_with_params_equal_modulo_param_rename(
+    runtime: &Runtime,
+    a: &FnSetWithParams,
+    b: &FnSetWithParams,
+) -> Result<bool, RuntimeError> {
     let pa = a.params();
     let pb = b.params();
     if pa.len() != pb.len() {
-        return false;
+        return Ok(false);
     }
 
     let mut pa_map = HashMap::new();
@@ -28,13 +33,13 @@ fn fn_set_with_params_equal_modulo_param_rename(a: &FnSetWithParams, b: &FnSetWi
     let a_dom: Vec<OrAndChainAtomicFact> = a
         .dom_facts
         .iter()
-        .map(|dom_fact| dom_fact.instantiate(&pa_map))
-        .collect();
+        .map(|dom_fact| runtime.inst_or_and_chain_atomic_fact(dom_fact, &pa_map))
+        .collect::<Result<Vec<_>, _>>()?;
     let b_dom: Vec<OrAndChainAtomicFact> = b
         .dom_facts
         .iter()
-        .map(|dom_fact| dom_fact.instantiate(&pb_map))
-        .collect();
+        .map(|dom_fact| runtime.inst_or_and_chain_atomic_fact(dom_fact, &pb_map))
+        .collect::<Result<Vec<_>, _>>()?;
 
     let a_ret = a.ret_set.as_ref().clone();
     let b_ret = b.ret_set.as_ref().clone();
@@ -42,7 +47,7 @@ fn fn_set_with_params_equal_modulo_param_rename(a: &FnSetWithParams, b: &FnSetWi
     let a_instantiated = FnSetWithParams::new(a_params, a_dom, a_ret);
     let b_instantiated = FnSetWithParams::new(b_params, b_dom, b_ret);
 
-    a_instantiated.to_string() == b_instantiated.to_string()
+    Ok(a_instantiated.to_string() == b_instantiated.to_string())
 }
 
 fn param_def_with_set_rename_params_to_placeholders(
@@ -187,7 +192,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Obj::StandardSet(standard_set) = &in_fact.set {
             if !matches!(&in_fact.element, Obj::Number(_)) {
                 if let Some(evaluated_number) =
@@ -278,7 +283,7 @@ impl Runtime {
         in_fact: &InFact,
         verify_state: &VerifyState,
         target_negative_standard_set: StandardSet,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -293,7 +298,7 @@ impl Runtime {
         let product_in_r_fact = AtomicFact::InFact(InFact::new(
             in_fact.element.clone(),
             Obj::StandardSet(StandardSet::R),
-            in_fact.line_file,
+            in_fact.line_file.clone(),
         ));
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &product_in_r_fact,
@@ -304,7 +309,7 @@ impl Runtime {
         if !self.mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
             &mul.left,
             &mul.right,
-            in_fact.line_file,
+            in_fact.line_file.clone(),
             verify_state,
         )? {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
@@ -322,7 +327,7 @@ impl Runtime {
                 let product_in_q_fact = AtomicFact::InFact(InFact::new(
                     in_fact.element.clone(),
                     Obj::StandardSet(StandardSet::Q),
-                    in_fact.line_file,
+                    in_fact.line_file.clone(),
                 ));
                 if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
                     &product_in_q_fact,
@@ -344,7 +349,7 @@ impl Runtime {
                 let product_in_z_fact = AtomicFact::InFact(InFact::new(
                     in_fact.element.clone(),
                     Obj::StandardSet(StandardSet::Z),
-                    in_fact.line_file,
+                    in_fact.line_file.clone(),
                 ));
                 if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
                     &product_in_z_fact,
@@ -372,13 +377,13 @@ impl Runtime {
         list_set: &crate::obj::ListSet,
         power_set: &crate::obj::PowerSet,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
         let mut infer_result = InferResult::new();
         for element_box in list_set.list.iter() {
             let element_obj = *element_box.clone();
             let element_in_base_fact =
-                AtomicFact::InFact(InFact::new(element_obj, base_set.clone(), in_fact.line_file));
+                AtomicFact::InFact(InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()));
             let verify_one_element_result =
                 self.verify_atomic_fact(&element_in_base_fact, verify_state)?;
             if !verify_one_element_result.is_true() {
@@ -411,12 +416,12 @@ impl Runtime {
         in_fact: &InFact,
         list_set: &crate::obj::ListSet,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         for current_element_in_list_set in list_set.list.iter() {
             let equal_fact = AtomicFact::EqualFact(EqualFact::new(
                 in_fact.element.clone(),
                 *current_element_in_list_set.clone(),
-                in_fact.line_file,
+                in_fact.line_file.clone(),
             ));
             let equal_fact_verify_result = self.verify_atomic_fact(&equal_fact, verify_state)?;
             if equal_fact_verify_result.is_true() {
@@ -512,12 +517,21 @@ impl Runtime {
         identifier: &Identifier,
         expected_fn_set: &FnSetWithParams,
         in_fact: &InFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let element_obj = Obj::Identifier(Identifier::new(identifier.name.clone()));
         let Some(stored_fn_set) = self.get_cloned_fn_set_where_fn_belongs_to(&element_obj) else {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         };
-        if fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set) {
+        if fn_set_with_params_equal_modulo_param_rename(self, &stored_fn_set, expected_fn_set)
+            .map_err(|e| {
+                RuntimeError::verify_error(
+                    Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                    String::new(),
+                    in_fact.line_file.clone(),
+                    Some(e),
+                )
+            })?
+        {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
@@ -534,7 +548,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         target_set_obj: &Obj,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let standard_subset_set_objs =
             match Self::standard_subset_set_objs_for_target_set(target_set_obj) {
                 Some(standard_subset_set_objs) => standard_subset_set_objs,
@@ -544,7 +558,7 @@ impl Runtime {
             let in_fact_into_standard_subset = AtomicFact::InFact(InFact::new(
                 in_fact.element.clone(),
                 standard_subset_set_obj.clone(),
-                in_fact.line_file,
+                in_fact.line_file.clone(),
             ));
             let verify_result = self
                 .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
@@ -573,7 +587,7 @@ impl Runtime {
         tuple: &Tuple,
         cart: &Cart,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if tuple.args.len() != cart.args.len() {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
@@ -584,7 +598,7 @@ impl Runtime {
             let component_in_fact = AtomicFact::InFact(InFact::new(
                 tuple_component_obj,
                 cart_component_obj,
-                in_fact.line_file,
+                in_fact.line_file.clone(),
             ));
             let component_verify_result =
                 self.verify_atomic_fact(&component_in_fact, verify_state)?;

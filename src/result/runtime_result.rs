@@ -65,11 +65,11 @@ impl NonErrStmtExecResult {
 
 impl NonErrStmtExecResult {
     #[allow(dead_code)]
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.stmt.line_file(),
             NonErrStmtExecResult::FactualStmtSuccess(x) => x.stmt.line_file(),
-            NonErrStmtExecResult::StmtUnknown(_) => DEFAULT_LINE_FILE,
+            NonErrStmtExecResult::StmtUnknown(_) => default_line_file(),
         }
     }
 }

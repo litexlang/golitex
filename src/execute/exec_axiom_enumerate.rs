@@ -6,7 +6,7 @@ impl Runtime {
         stmt: &EnumerateAxiomStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 Stmt::EnumerateAxiomStmt(stmt.clone()),
                 msg,
                 None,
@@ -16,7 +16,7 @@ impl Runtime {
 
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::EnumerateAxiomStmt(stmt.clone()),
                     format!(
                         "by enumerate: corresponding forall `{}` is not well-defined",
@@ -37,7 +37,7 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::EnumerateAxiomStmt(stmt.clone()),
                         format!(
                             "by enumerate: failed to store corresponding forall `{}`",
@@ -81,7 +81,7 @@ impl Runtime {
                 corresponding_forall_fact.clone(),
             )
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::EnumerateAxiomStmt(stmt.clone()),
                     format!(
                         "by enumerate: failed to store corresponding forall `{}`",
@@ -171,7 +171,7 @@ impl Runtime {
                 AtomicFact::EqualFact(EqualFact::new(
                     Obj::Identifier(Identifier::new(parameter_name.clone())),
                     assigned_obj.clone(),
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,
@@ -185,8 +185,8 @@ impl Runtime {
                     inside_results_before_failure.push(proof_result);
                 }
                 Err(statement_error) => {
-                    return Err(RuntimeError::ExecStmtError(
-                        ExecStmtError::with_message_and_cause(
+                    return Err(RuntimeError::from(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EnumerateAxiomStmt(stmt.clone()),
                             proof_stmt.to_string(),
                             Some(statement_error),
@@ -203,8 +203,8 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )?;
             if verified_result.is_unknown() {
-                return Err(RuntimeError::ExecStmtError(
-                    ExecStmtError::with_message_and_cause(
+                return Err(RuntimeError::from(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::EnumerateAxiomStmt(stmt.clone()),
                         format!("by enumerate: failed to prove `{}`", fact_to_prove),
                         None,
