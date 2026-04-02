@@ -238,8 +238,8 @@ impl Runtime {
 
             if tb.current_token_is_equal_to(COMMA) {
                 let mut args = vec![obj];
-                tb.skip_token(COMMA)?;
-                while !tb.current_token_is_equal_to(RIGHT_BRACE) {
+                while tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
                     args.push(self.parse_obj(tb)?);
                 }
                 tb.skip_token(RIGHT_BRACE)?;

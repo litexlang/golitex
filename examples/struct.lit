@@ -1,4 +1,3 @@
-# 之后再讨论 struct，field——access 和 cart 的关系
 prop group_property(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
     forall x, y, z s:
         add(x, add(y, z)) = add(add(x, y), z)
@@ -15,10 +14,12 @@ struct group(s set):
     <=>:
         $group_property(self.s, self.zero, self.add, self.inv)
 
-prop is_R_group(g struct group(R)):
+claim:
+    prove:
+        forall s set, g struct group(s):
+            g.add $in fn(x, y s) s
+            g.inv $in fn(x s) s
+            $group_property(s, g.zero, g.add, g.inv)
+    
+    s = g.s
     $group_property(g.s, g.zero, g.add, g.inv)
-
-let a, b, c set:
-    $is_R_group((R, a, b, c))
-
-$group_property(R, a, b, c)

@@ -152,7 +152,6 @@ impl Runtime {
         }
     }
 
-    /// 在已解析出的 [`Tuple`] 上：用环境中根名对应的 struct 定义里 **字段顺序**，取 `field` 在 `def.fields` 中的下标，再投影 `tuple.args`。
     fn inst_field_access_on_struct_tuple(
         &self,
         field_access: &FieldAccess,
