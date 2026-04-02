@@ -157,36 +157,39 @@ impl Runtime {
         field_access: &FieldAccess,
         tuple: &Tuple,
     ) -> Result<Obj, RuntimeError> {
-        let Some(inst_struct) = self.get_inst_struct_obj_for_field_access_root(&field_access.name)
+        let Some(def) = self.get_definition_of_struct_where_object_satisfies(&IdentifierOrIdentifierWithMod::Identifier(Identifier::new(field_access.name.clone())))
         else {
-            return Ok(Obj::FieldAccess(field_access.clone()));
+            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                None,
+                format!("struct `{}` is not defined", field_access.name),
+                DEFAULT_LINE_FILE,
+                None,
+            )));
         };
-        let struct_name = inst_struct.name.to_string();
-        let Some(def) = self.get_cloned_param_type_struct_definition_by_name(&struct_name) else {
-            return Ok(Obj::FieldAccess(field_access.clone()));
-        };
+
         let Some(field_index) = def
             .fields
             .iter()
             .position(|(fname, _)| fname == &field_access.field)
         else {
-            return Ok(Obj::FieldAccess(field_access.clone()));
-        };
-        let Some(component) = tuple.args.get(field_index + def.number_of_params()) else {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
-                format!(
-                    "field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)",
-                    field_access.field,
-                    struct_name,
-                    field_index,
-                    field_access.name,
-                    tuple.args.len()
-                ),
+                format!("field `{}` of struct `{}` is not defined", field_access.field, field_access.name),
                 DEFAULT_LINE_FILE,
                 None,
             )));
         };
+
+        let tuple_index = field_index + def.number_of_params();
+        let Some(component) = tuple.args.get(tuple_index) else {
+            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                None,
+                format!("field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)", field_access.field, field_access.name, tuple_index, field_access.name, tuple.args.len()),
+                DEFAULT_LINE_FILE,
+                None,
+            )));
+        };
+
         Ok((**component).clone())
     }
 
