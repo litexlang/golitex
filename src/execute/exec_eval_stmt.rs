@@ -168,7 +168,8 @@ impl Runtime {
         }
 
         for algo_case in algo_definition.cases.iter() {
-            let instantiated_case_condition = algo_case.condition.instantiate(&param_to_arg_map);
+            let instantiated_case_condition =
+                self.inst_atomic_fact(&algo_case.condition, &param_to_arg_map)?;
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
@@ -182,7 +183,7 @@ impl Runtime {
 
             if verify_result.is_true() {
                 let instantiated_symbol_result =
-                    algo_case.return_stmt.value.instantiate(&param_to_arg_map);
+                    self.inst_obj(&algo_case.return_stmt.value, &param_to_arg_map)?;
                 return self
                     .evaluate_symbol_obj_recursively(&instantiated_symbol_result, eval_stmt);
             }
@@ -216,7 +217,7 @@ impl Runtime {
 
         if let Some(default_return_stmt) = &algo_definition.default_return {
             let instantiated_default_symbol =
-                default_return_stmt.value.instantiate(&param_to_arg_map);
+                self.inst_obj(&default_return_stmt.value, &param_to_arg_map)?;
             self.evaluate_symbol_obj_recursively(&instantiated_default_symbol, eval_stmt)
         } else {
             Err(RuntimeError::ExecStmtError(

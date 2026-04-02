@@ -60,9 +60,8 @@ impl Runtime {
 
         let mut base_case_param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         base_case_param_to_arg_map.insert(stmt.param.clone(), stmt.induc_from.clone());
-        let base_case_fact = fact
-            .clone()
-            .instantiate(&base_case_param_to_arg_map)
+        let base_case_fact = self
+            .inst_exist_or_and_chain_atomic_fact(fact, &base_case_param_to_arg_map)?
             .to_fact();
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
@@ -107,7 +106,8 @@ impl Runtime {
         ));
         let mut induction_step_param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         induction_step_param_to_obj_map.insert(stmt.param.clone(), param_plus_one_obj);
-        let next_fact_of_induction_step = fact.instantiate(&induction_step_param_to_obj_map);
+        let next_fact_of_induction_step = self
+            .inst_exist_or_and_chain_atomic_fact(fact, &induction_step_param_to_obj_map)?;
 
         let corresponding_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamDefWithParamType(

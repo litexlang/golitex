@@ -168,11 +168,12 @@ impl ParamDefWithParamSet {
     // Example: given fn(x R, y Q), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q.
     // 与 [`ParamDefWithParamType`] 不同：此处每个参数必须属于**事先确定**的集合（不能用 `set` / `nonempty_set` / `finite_set` 等语法糖），且该集合不能依赖更早的参数。例如 `x R, y f(x)` 不允许。
     pub fn facts_for_args_satisfy_param_def_with_set_vec(
+        runtime: &Runtime,
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Obj>,
     ) -> Result<Vec<AtomicFact>, RuntimeError> {
         let instantiated_param_sets =
-            Self::instantiate_param_def_with_set_one_by_one(param_defs, args)?;
+            runtime.inst_param_def_with_set_one_by_one(param_defs, args)?;
         let flat_param_sets =
             Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
         let mut facts = Vec::with_capacity(args.len());
@@ -199,47 +200,9 @@ impl ParamDefWithParamSet {
         result
     }
 
-    fn instantiate_param_def_with_set_one_by_one(
-        param_defs: &Vec<ParamDefWithParamSet>,
-        args: &Vec<Obj>,
-    ) -> Result<Vec<Obj>, RuntimeError> {
-        let total_param_count = Self::number_of_params(param_defs);
-        if total_param_count != args.len() {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
-                format!(
-                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
-                    total_param_count,
-                    args.len()
-                ),
-                DEFAULT_LINE_FILE.clone(),
-                None,
-                None,
-            )));
-        }
-
-        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
-        let mut arg_index: usize = 0;
-        let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
-        for param_def in param_defs.iter() {
-            let instantiated_param_set = if arg_index != 0 {
-                param_def.1.instantiate(&param_to_arg_map)
-            } else {
-                param_def.1.clone()
-            };
-            instantiated_param_sets.push(instantiated_param_set);
-
-            for param_name in param_def.0.iter() {
-                param_to_arg_map.insert(param_name.clone(), args[arg_index].clone());
-                arg_index += 1;
-            }
-        }
-
-        Ok(instantiated_param_sets)
-    }
 }
 
 impl ParamDefWithParamType {
-
     pub fn flat_instantiated_types_for_args(
         param_defs: &Vec<ParamDefWithParamType>,
         instantiated_types: &Vec<ParamType>,
@@ -254,77 +217,6 @@ impl ParamDefWithParamType {
         result
     }
 
-    pub(crate) fn instantiate_param_def_with_type_one_by_one(
-        param_defs: &Vec<ParamDefWithParamType>,
-        args: &Vec<Obj>,
-    ) -> Result<Vec<ParamType>, RuntimeError> {
-        let total_param_count = Self::number_of_params(param_defs);
-        if total_param_count != args.len() {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
-                format!(
-                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
-                    total_param_count,
-                    args.len()
-                ),
-                DEFAULT_LINE_FILE.clone(),
-                None,
-                None,
-            )));
-        }
-
-        let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
-        let mut arg_index: usize = 0;
-        let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.len());
-        for param_def in param_defs.iter() {
-            let new_type = if arg_index != 0 {
-                param_def.1.instantiate(&param_arg_map)
-            } else {
-                param_def.1.clone()
-            };
-            new_types.push(new_type);
-
-            for param_name in param_def.0.iter() {
-                param_arg_map.insert(param_name.clone(), args[arg_index].clone());
-                arg_index += 1;
-            }
-        }
-
-        Ok(new_types)
-    }
-}
-
-impl ParamType {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ParamType {
-        match &self {
-            ParamType::Set(_) => self.clone(),
-            ParamType::FiniteSet(_) => self.clone(),
-            ParamType::NonemptySet(_) => self.clone(),
-            ParamType::Obj(obj) => ParamType::Obj(obj.instantiate(param_to_arg_map)),
-            ParamType::Family(family) => {
-                let mut params = Vec::with_capacity(family.params.len());
-                for param in family.params.iter() {
-                    params.push(param.instantiate(param_to_arg_map));
-                }
-                ParamType::Family(FamilyParamType {
-                    name: family.name.clone(),
-                    params,
-                })
-            }
-            ParamType::Struct(struct_ty) => {
-                let mut params = Vec::with_capacity(struct_ty.params.len());
-                for param in struct_ty.params.iter() {
-                    params.push(param.instantiate(param_to_arg_map));
-                }
-                ParamType::Struct(StructParamType {
-                    name: struct_ty.name.clone(),
-                    params,
-                })
-            }
-        }
-    }
-}
-
-impl ParamDefWithParamType {
     pub fn param_names(&self) -> &Vec<String> {
         &self.0
     }

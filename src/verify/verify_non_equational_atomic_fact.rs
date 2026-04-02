@@ -422,8 +422,16 @@ impl Runtime {
         let mut definition_clause_descriptions: Vec<String> = Vec::new();
 
         for iff_fact in definition.iff_facts.iter() {
-            let instantiated_iff_fact = iff_fact
-                .instantiate(&param_to_arg_map)
+            let instantiated_iff_fact = self
+                .inst_fact(iff_fact, &param_to_arg_map)
+                .map_err(|e| {
+                    VerifyError::new(
+                        Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal_atomic_fact.clone())),
+                        String::new(),
+                        normal_atomic_fact.line_file,
+                        Some(e),
+                    )
+                })?
                 .with_new_line_file(normal_atomic_fact.line_file);
             let iff_clause_verify_result =
                 self.verify_fact(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;

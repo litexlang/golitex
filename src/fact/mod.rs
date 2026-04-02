@@ -20,4 +20,3 @@ pub use fact::Fact;
 mod fact;
 pub use fact_inside_forall::ExistOrAndChainAtomicFact;
 
-mod instantiate_fact;

@@ -214,7 +214,7 @@ impl Runtime {
             &def.params_def_with_type,
             &family_ty.params,
         );
-        let member_set = def.equal_to.instantiate(&param_to_arg_map);
+        let member_set = self.inst_obj(&def.equal_to, &param_to_arg_map)?;
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
             member_set,
@@ -420,7 +420,17 @@ impl Runtime {
         let mut current_index = 0;
         let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         for param_def in have_obj_equal_stmt.param_def.iter() {
-            let current_type = &param_def.1.instantiate(&param_to_obj_map);
+            let current_type_holder = self.inst_param_type(&param_def.1, &param_to_obj_map).map_err(
+                |runtime_error| {
+                    ExecStmtError::new_with_stmt(
+                        Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                        "".to_string(),
+                        Some(runtime_error),
+                        vec![],
+                    )
+                },
+            )?;
+            let current_type = &current_type_holder;
             for name in param_def.0.iter() {
                 let current_param_equal_to = &have_obj_equal_stmt.objs_equal_to[current_index];
 
@@ -572,10 +582,16 @@ impl Runtime {
         );
 
         for fact in exist_fact_in_have_obj_stmt.facts.iter() {
-            let instantiated_fact = fact
-                .clone()
-                .to_exist_or_and_chain_atomic_fact()
-                .instantiate(&param_to_obj_map)
+            let instantiated_fact = self
+                .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map)
+                .map_err(|runtime_error| {
+                    ExecStmtError::new_with_stmt(
+                        Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                        "".to_string(),
+                        Some(runtime_error),
+                        vec![],
+                    )
+                })?
                 .to_fact();
             let fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(instantiated_fact)

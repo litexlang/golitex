@@ -255,6 +255,7 @@ impl Runtime {
 
         let args_satisfy_fn_set_params_set_facts =
             ParamDefWithParamSet::facts_for_args_satisfy_param_def_with_set_vec(
+                self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_as_obj,
             )
@@ -293,7 +294,15 @@ impl Runtime {
             &args_as_obj,
         );
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
-            let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            let instantiated_dom_fact =
+                self.inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                    .map_err(|e| {
+                        WellDefinedError::new(
+                            format!("failed to instantiate function domain fact: {}", e),
+                            Some(e),
+                            DEFAULT_LINE_FILE.clone(),
+                        )
+                    })?;
             let verify_result = self
                 .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {
@@ -1166,7 +1175,15 @@ impl Runtime {
         );
 
         for dom_fact in def.dom_facts.iter() {
-            let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            let instantiated_dom_fact =
+                self.inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                    .map_err(|e| {
+                        WellDefinedError::new(
+                            format!("failed to instantiate family `{}` domain fact: {}", family_name, e),
+                            Some(e),
+                            DEFAULT_LINE_FILE.clone(),
+                        )
+                    })?;
             let verify_result = self
                 .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {
@@ -1191,7 +1208,15 @@ impl Runtime {
             }
         }
 
-        let instantiated_equal_to = def.equal_to.instantiate(&param_to_arg_map);
+        let instantiated_equal_to = self.inst_obj(&def.equal_to, &param_to_arg_map).map_err(
+            |e| {
+                WellDefinedError::new(
+                    format!("failed to instantiate family `{}` member set: {}", family_name, e),
+                    Some(e),
+                    DEFAULT_LINE_FILE.clone(),
+                )
+            },
+        )?;
         self.verify_obj_well_defined_and_store_cache(&instantiated_equal_to, verify_state)?;
 
         Ok(())
@@ -1255,7 +1280,18 @@ impl Runtime {
         );
 
         for dom_fact in def.dom_facts.iter() {
-            let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            let instantiated_dom_fact =
+                self.inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                    .map_err(|e| {
+                        WellDefinedError::new(
+                            format!(
+                                "failed to instantiate struct `{}` domain fact: {}",
+                                struct_name, e
+                            ),
+                            Some(e),
+                            DEFAULT_LINE_FILE.clone(),
+                        )
+                    })?;
             let verify_result = self
                 .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {

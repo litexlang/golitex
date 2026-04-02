@@ -45,6 +45,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
+                self,
                 environment,
                 exist_fact,
                 known_exist_fact,
@@ -58,15 +59,32 @@ impl Runtime {
     }
 
     pub fn verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
+        runtime: &Runtime,
         environment: &Environment,
         exist_fact: &ExistFact,
         known_exist_fact: &ExistFact,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key())
         {
-            let target_string = Self::exist_fact_normalized_string(exist_fact);
+            let target_string = Self::exist_fact_normalized_string(runtime, exist_fact)
+                .map_err(|e| {
+                    VerifyError::new(
+                        Fact::ExistFact(exist_fact.clone()),
+                        String::new(),
+                        exist_fact.line_file(),
+                        Some(e),
+                    )
+                })?;
             for known_fact in known_exist_facts.iter() {
-                let known_string = Self::exist_fact_normalized_string(known_fact);
+                let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
+                    .map_err(|e| {
+                        VerifyError::new(
+                            Fact::ExistFact(exist_fact.clone()),
+                            String::new(),
+                            exist_fact.line_file(),
+                            Some(e),
+                        )
+                    })?;
                 if target_string == known_string {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_known_fact_source(
@@ -85,7 +103,10 @@ impl Runtime {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn exist_fact_normalized_string(exist_fact: &ExistFact) -> String {
+    fn exist_fact_normalized_string(
+        runtime: &Runtime,
+        exist_fact: &ExistFact,
+    ) -> Result<String, RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         let mut normalized_params: Vec<ParamDefWithParamType> = Vec::new();
         let mut param_index: usize = 0;
@@ -103,14 +124,15 @@ impl Runtime {
                 new_param_names.push(normalized_name);
             }
 
-            let instantiated_param_type = param_def_with_type.1.instantiate(&param_to_arg_map);
+            let instantiated_param_type =
+                runtime.inst_param_type(&param_def_with_type.1, &param_to_arg_map)?;
             normalized_params.push(ParamDefWithParamType(
                 new_param_names,
                 instantiated_param_type,
             ));
         }
 
-        let instantiated_exist_fact = exist_fact.instantiate(&param_to_arg_map);
+        let instantiated_exist_fact = runtime.inst_exist_fact(exist_fact, &param_to_arg_map)?;
 
         let mut fact_strings: Vec<String> = Vec::new();
         for fact in instantiated_exist_fact.facts().iter() {
@@ -129,6 +151,6 @@ impl Runtime {
         let params_string = params_string_parts.join("; ");
         let facts_string = fact_strings.join("; ");
 
-        format!("{} || {}", params_string, facts_string)
+        Ok(format!("{} || {}", params_string, facts_string))
     }
 }

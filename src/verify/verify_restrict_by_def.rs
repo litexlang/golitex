@@ -83,11 +83,20 @@ impl Runtime {
         }
 
         let then_facts = Self::build_then_facts_for_original_with_params(
+            self,
             original_fn_set,
             &original_to_restrict_param_map,
             &restrict_flat_param_names,
             restrict_fact.line_file,
-        );
+        )
+        .map_err(|e| {
+            VerifyError::new(
+                Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
+                String::new(),
+                restrict_fact.line_file,
+                Some(e),
+            )
+        })?;
 
         self.verify_forall_and_return_restrict_success(
             restrict_fact,
@@ -119,17 +128,18 @@ impl Runtime {
     }
 
     fn build_then_facts_for_original_with_params(
+        runtime: &Runtime,
         original_fn_set: &FnSetWithParams,
         original_to_restrict_param_map: &HashMap<String, Obj>,
         restrict_flat_param_names: &Vec<String>,
         line_file: (usize, usize),
-    ) -> Vec<ExistOrAndChainAtomicFact> {
+    ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeError> {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
         let mut index: usize = 0;
         for param_def_with_set in &original_fn_set.params_def_with_set {
             let instantiated_original_set =
-                param_def_with_set.1.instantiate(original_to_restrict_param_map);
+                runtime.inst_obj(&param_def_with_set.1, original_to_restrict_param_map)?;
             for _param_name in param_def_with_set.0.iter() {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
                 then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
@@ -144,11 +154,12 @@ impl Runtime {
         }
 
         for dom_fact in &original_fn_set.dom_facts {
-            let instantiated_dom_fact = dom_fact.instantiate(original_to_restrict_param_map);
+            let instantiated_dom_fact = runtime
+                .inst_or_and_chain_atomic_fact(dom_fact, original_to_restrict_param_map)?;
             then_facts.push(instantiated_dom_fact.to_exist_or_and_chain_atomic_fact());
         }
 
-        then_facts
+        Ok(then_facts)
     }
 
     fn verify_forall_and_return_restrict_success(

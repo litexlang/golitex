@@ -1,6 +1,5 @@
 mod atom;
 mod obj;
-mod obj_instantiate;
 mod standard_set;
 pub use atom::{
     field_access_to_string, field_access_with_mod_to_string, identifier_to_string,

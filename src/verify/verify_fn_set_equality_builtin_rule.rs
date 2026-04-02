@@ -138,15 +138,37 @@ impl Runtime {
         }
 
         if !self.verify_directional_target_fn_set_dom_facts(
+            source,
             target,
+            line_file,
             &target_param_to_generated_arg_map,
             verify_state,
         )? {
             return Ok(false);
         }
 
-        let source_ret_set = source.ret_set.instantiate(&source_param_to_generated_arg_map);
-        let target_ret_set = target.ret_set.instantiate(&target_param_to_generated_arg_map);
+        let source_ret_set = self.inst_obj(&source.ret_set, &source_param_to_generated_arg_map).map_err(
+            |e| {
+                fn_set_equality_verify_error(
+                    source,
+                    target,
+                    line_file,
+                    "failed to instantiate source ret set for fnset equality check".to_string(),
+                    Some(e),
+                )
+            },
+        )?;
+        let target_ret_set = self.inst_obj(&target.ret_set, &target_param_to_generated_arg_map).map_err(
+            |e| {
+                fn_set_equality_verify_error(
+                    source,
+                    target,
+                    line_file,
+                    "failed to instantiate target ret set for fnset equality check".to_string(),
+                    Some(e),
+                )
+            },
+        )?;
         let ret_equal_fact = EqualFact::new(source_ret_set, target_ret_set, line_file);
         let ret_equal_result = self.verify_equal_fact(&ret_equal_fact, verify_state)?;
         Ok(ret_equal_result.is_true())
@@ -196,8 +218,17 @@ impl Runtime {
             let next_flat_index = flat_index + param_def_with_set.0.len();
             let generated_names_for_current_group =
                 generated_param_names[flat_index..next_flat_index].to_vec();
-            let instantiated_param_set =
-                param_def_with_set.1.instantiate(&source_param_to_generated_arg_map);
+            let instantiated_param_set = self
+                .inst_obj(&param_def_with_set.1, &source_param_to_generated_arg_map)
+                .map_err(|e| {
+                    fn_set_equality_verify_error(
+                        source,
+                        target,
+                        line_file,
+                        "failed to instantiate source fnset param set".to_string(),
+                        Some(e),
+                    )
+                })?;
             let generated_param_def =
                 ParamDefWithParamSet::new(generated_names_for_current_group.clone(), instantiated_param_set);
             self.define_params_with_set(&generated_param_def)
@@ -236,7 +267,17 @@ impl Runtime {
         line_file: (usize, usize),
     ) -> Result<(), VerifyError> {
         for dom_fact in source.dom_facts.iter() {
-            let instantiated_dom_fact = dom_fact.instantiate(source_param_to_generated_arg_map);
+            let instantiated_dom_fact = self
+                .inst_or_and_chain_atomic_fact(dom_fact, source_param_to_generated_arg_map)
+                .map_err(|e| {
+                    fn_set_equality_verify_error(
+                        source,
+                        target,
+                        line_file,
+                        "failed to instantiate source fnset dom fact".to_string(),
+                        Some(e),
+                    )
+                })?;
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                 instantiated_dom_fact.to_exist_or_and_chain_atomic_fact(),
             )
@@ -263,8 +304,17 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         for param_def_with_set in target.params_def_with_set.iter() {
-            let instantiated_param_set =
-                param_def_with_set.1.instantiate(target_param_to_generated_arg_map);
+            let instantiated_param_set = self
+                .inst_obj(&param_def_with_set.1, target_param_to_generated_arg_map)
+                .map_err(|e| {
+                    fn_set_equality_verify_error(
+                        source,
+                        target,
+                        line_file,
+                        "failed to instantiate target fnset param set".to_string(),
+                        Some(e),
+                    )
+                })?;
             for param_name in param_def_with_set.0.iter() {
                 let Some(generated_param_obj) =
                     target_param_to_generated_arg_map.get(param_name).cloned()
@@ -295,13 +345,24 @@ impl Runtime {
 
     fn verify_directional_target_fn_set_dom_facts(
         &mut self,
+        source: &FnSetWithParams,
         target: &FnSetWithParams,
+        line_file: (usize, usize),
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         for dom_fact in target.dom_facts.iter() {
-            let instantiated_dom_fact =
-                dom_fact.instantiate(target_param_to_generated_arg_map);
+            let instantiated_dom_fact = self
+                .inst_or_and_chain_atomic_fact(dom_fact, target_param_to_generated_arg_map)
+                .map_err(|e| {
+                    fn_set_equality_verify_error(
+                        source,
+                        target,
+                        line_file,
+                        "failed to instantiate target fnset dom fact".to_string(),
+                        Some(e),
+                    )
+                })?;
             let verify_result = self.verify_or_and_chain_atomic_fact(
                 &instantiated_dom_fact,
                 verify_state,
