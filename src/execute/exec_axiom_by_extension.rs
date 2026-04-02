@@ -7,7 +7,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByExtensionAxiomStmt(stmt.clone()),
                     format!("by extension: left set `{}` is not well-defined", stmt.left),
                     Some(well_defined_error.into()),
@@ -16,7 +16,7 @@ impl Runtime {
             })?;
         self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByExtensionAxiomStmt(stmt.clone()),
                     format!(
                         "by extension: right set `{}` is not well-defined",
@@ -34,7 +34,7 @@ impl Runtime {
                 for proof_stmt in stmt.proof.iter() {
                     let one_proof_stmt_exec_result =
                         self.exec_stmt(proof_stmt).map_err(|stmt_error| {
-                            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 Stmt::ByExtensionAxiomStmt(stmt.clone()),
                                 format!(
                                     "by extension: failed to execute proof stmt `{}`",
@@ -59,17 +59,17 @@ impl Runtime {
                         InFact::new(
                             Obj::Identifier(Identifier::new(unused_name.clone())),
                             stmt.right.clone(),
-                            stmt.line_file,
+                            stmt.line_file.clone(),
                         ),
                     ))],
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                 ));
                 self.verify_fact_return_err_if_not_true(
                     &left_to_right_forall_fact,
                     &VerifyState::new(0, false),
                 )
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ByExtensionAxiomStmt(stmt.clone()),
                         format!(
                             "by extension: failed to prove left subset right `{}`",
@@ -90,17 +90,17 @@ impl Runtime {
                         InFact::new(
                             Obj::Identifier(Identifier::new(unused_name.clone())),
                             stmt.left.clone(),
-                            stmt.line_file,
+                            stmt.line_file.clone(),
                         ),
                     ))],
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                 ));
                 self.verify_fact_return_err_if_not_true(
                     &right_to_left_forall_fact,
                     &VerifyState::new(0, false),
                 )
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ByExtensionAxiomStmt(stmt.clone()),
                         format!(
                             "by extension: failed to prove right subset left `{}`",
@@ -122,7 +122,7 @@ impl Runtime {
         let left_equal_to_right_atomic_fact = AtomicFact::EqualFact(crate::fact::EqualFact::new(
             stmt.left.clone(),
             stmt.right.clone(),
-            stmt.line_file,
+            stmt.line_file.clone(),
         ));
 
         let mut infer_result = InferResult::new();

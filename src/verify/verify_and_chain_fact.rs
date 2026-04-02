@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::AndFact(and_fact.clone()))
         {
@@ -15,11 +15,11 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::AndFact(and_fact.clone()),
                     String::new(),
                     and_fact.line_file(),
-                    Some(RuntimeError::WellDefinedError(e)),
+                    Some(e.into()),
                 ));
             }
         }
@@ -40,7 +40,7 @@ impl Runtime {
                 InferResult::new(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
-                Some(DEFAULT_LINE_FILE),
+                Some(default_line_file()),
                 Vec::new(),
             ),
         ))
@@ -50,7 +50,7 @@ impl Runtime {
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::ChainFact(chain_fact.clone()))
         {
@@ -59,11 +59,11 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::ChainFact(chain_fact.clone()),
                     String::new(),
                     chain_fact.line_file(),
-                    Some(RuntimeError::WellDefinedError(e)),
+                    Some(e.into()),
                 ));
             }
         }
@@ -71,7 +71,7 @@ impl Runtime {
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
         let facts = chain_fact.facts().map_err(|e| {
-            VerifyError::new(
+            RuntimeError::verify_error(
                 Fact::ChainFact(chain_fact.clone()),
                 String::new(),
                 Fact::ChainFact(chain_fact.clone()).line_file(),
@@ -93,7 +93,7 @@ impl Runtime {
                 InferResult::new(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
-                Some(DEFAULT_LINE_FILE),
+                Some(default_line_file()),
                 Vec::new(),
             ),
         ))

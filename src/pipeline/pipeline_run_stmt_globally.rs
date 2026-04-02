@@ -25,7 +25,7 @@ fn run_file(
 ) -> Result<NonErrStmtExecResult, RuntimeError> {
     let path = _run_file_stmt.file_path.as_str();
     let content = fs::read_to_string(path).map_err(|_| {
-        RuntimeError::ExecStmtError(ExecStmtError::new_with_stmt(
+        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
             Stmt::RunFileStmt(_run_file_stmt.clone()),
             format!("Failed to read file: {}", path),
             None,

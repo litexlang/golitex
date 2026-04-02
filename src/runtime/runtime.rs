@@ -6,7 +6,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct Runtime {
     pub module_manager: ModuleManager,
     pub environment_stack: Vec<Box<Environment>>,
-    pub parsing_time_name_scope_stack: Vec<HashMap<String, (usize, usize)>>,
+    pub parsing_time_name_scope_stack: Vec<HashMap<String, LineFile>>,
 }
 
 impl Runtime {
@@ -30,28 +30,46 @@ impl Runtime {
     pub fn validate_name(
         &mut self,
         name: &str,
-        current_line_file: (usize, usize),
-    ) -> Result<(), ParseBlockError> {
+        current_line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(ParseBlockError::InvalidName(invalid_name_message));
+            return Err(RuntimeError::parse_error(
+                invalid_name_message,
+                default_line_file(),
+                None,
+            ));
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
             if let Some(name_already_defined_on_line_file) = names_in_scope.get(name) {
-                return Err(ParseBlockError::NameAlreadyUsed {
-                    name: name.to_string(),
-                    name_already_used_on_line_file: *name_already_defined_on_line_file,
-                    line_file: current_line_file,
-                });
+                return Err(RuntimeError::parse_error(
+                    format!(
+                        "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
+                        name,
+                        name_already_defined_on_line_file.0,
+                        name_already_defined_on_line_file.1.as_ref(),
+                        current_line_file.0,
+                        current_line_file.1.as_ref(),
+                    ),
+                    current_line_file,
+                    None,
+                ));
             }
         }
 
         if self.is_name_used(name) {
-            return Err(ParseBlockError::NameAlreadyUsed {
-                name: name.to_string(),
-                name_already_used_on_line_file: DEFAULT_LINE_FILE,
-                line_file: current_line_file,
-            });
+            return Err(RuntimeError::parse_error(
+                format!(
+                    "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
+                    name,
+                    default_line_file().0,
+                    default_line_file().1.as_ref(),
+                    current_line_file.0,
+                    current_line_file.1.as_ref(),
+                ),
+                current_line_file,
+                None,
+            ));
         }
 
         Ok(())
@@ -64,10 +82,10 @@ impl Runtime {
     pub fn validate_names_and_insert_into_top_parsing_time_name_scope(
         &mut self,
         names: &Vec<String>,
-        line_file: (usize, usize),
-    ) -> Result<(), ParseBlockError> {
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
         for name in names {
-            self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file)?;
+            self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file.clone())?;
         }
         Ok(())
     }
@@ -75,11 +93,11 @@ impl Runtime {
     pub fn validate_name_and_insert_into_top_parsing_time_name_scope(
         &mut self,
         name: &str,
-        (line, file): (usize, usize),
-    ) -> Result<(), ParseBlockError> {
-        self.validate_name(name, (line, file))?;
+        (line, path): LineFile,
+    ) -> Result<(), RuntimeError> {
+        self.validate_name(name, (line, path.clone()))?;
         if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
-            names_in_top_scope.insert(name.to_string(), (line, file));
+            names_in_top_scope.insert(name.to_string(), (line, path.clone()));
         }
         Ok(())
     }
@@ -213,7 +231,7 @@ impl Runtime {
 
     pub fn is_name_used_for_param_type_struct(&self, name: &str) -> bool {
         return self
-            .get_param_type_struct_definition_by_name(name)
+            .get_cloned_definition_of_struct(name)
             .is_some();
     }
 
@@ -243,7 +261,7 @@ impl Runtime {
         name: &str,
         tuple: Option<Tuple>,
         cart: Option<Cart>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) {
         let known_tuple_objs = &mut self.top_level_env().known_tuple_objs;
         let old_tuple_and_cart = known_tuple_objs.get(name).cloned();
@@ -266,7 +284,7 @@ impl Runtime {
         );
     }
 
-    pub fn store_known_cart_obj(&mut self, name: &str, cart: Cart, line_file: (usize, usize)) {
+    pub fn store_known_cart_obj(&mut self, name: &str, cart: Cart, line_file: LineFile) {
         self.top_level_env()
             .known_cart_objs
             .insert(name.to_string(), (cart, line_file));

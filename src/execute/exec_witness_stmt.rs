@@ -27,8 +27,8 @@ impl Runtime {
             Ok(infer_result) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
             )),
-            Err(store_error) => Err(RuntimeError::ExecStmtError(
-                ExecStmtError::with_message_and_cause(
+            Err(store_error) => Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness exist fact: failed to store exist fact".to_string(),
                     Some(store_error.into()),
@@ -50,8 +50,8 @@ impl Runtime {
             &stmt.exist_fact_in_witness.params_def_with_type,
         );
         if expected_param_count != stmt.equal_tos.len() {
-            return Err(RuntimeError::ExecStmtError(
-                ExecStmtError::with_message_and_cause(
+            return Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness exist fact: parameter count mismatch".to_string(),
                     None,
@@ -65,8 +65,8 @@ impl Runtime {
             &stmt.exist_fact_in_witness,
             &verify_state_for_well_defined,
         ) {
-            return Err(RuntimeError::ExecStmtError(
-                ExecStmtError::with_message_and_cause(
+            return Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness exist fact: exist fact well-defined failed".to_string(),
                     Some(well_defined_error.into()),
@@ -81,8 +81,8 @@ impl Runtime {
                 equal_to_obj,
                 &verify_state_for_well_defined,
             ) {
-                return Err(RuntimeError::ExecStmtError(
-                    ExecStmtError::with_message_and_cause(
+                return Err(RuntimeError::from(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         witness_stmt,
                         "witness exist fact: equal_to well-defined failed".to_string(),
                         Some(well_defined_error.into()),
@@ -96,7 +96,7 @@ impl Runtime {
         let have_obj_equal_stmt = HaveObjEqualStmt {
             param_def: stmt.exist_fact_in_witness.params_def_with_type.clone(),
             objs_equal_to: stmt.equal_tos.clone(),
-            line_file: stmt.line_file,
+            line_file: stmt.line_file.clone(),
         };
 
         match self.have_obj_equal_stmt(&have_obj_equal_stmt) {
@@ -114,8 +114,8 @@ impl Runtime {
                     inside_results.push(proof_result);
                 }
                 Err(proof_exec_error) => {
-                    return Err(RuntimeError::ExecStmtError(
-                        ExecStmtError::with_message_and_cause(
+                    return Err(RuntimeError::from(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             witness_stmt.clone(),
                             proof_stmt.to_string(),
                             Some(proof_exec_error),
@@ -131,7 +131,8 @@ impl Runtime {
             &stmt.exist_fact_in_witness.params_def_with_type,
             &stmt.equal_tos,
         );
-        let instantiated_exist_fact = stmt.exist_fact_in_witness.instantiate(&param_to_obj_map);
+        let instantiated_exist_fact =
+            self.inst_exist_fact(&stmt.exist_fact_in_witness, &param_to_obj_map)?;
 
         let verify_state_for_proof_check = VerifyState::new(0, false);
         for internal_fact_template in instantiated_exist_fact.facts.iter() {
@@ -168,15 +169,15 @@ impl Runtime {
         let store_result = self.store_fact_without_well_defined_verified_and_infer(
             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                 stmt.set.clone(),
-                stmt.line_file,
+                stmt.line_file.clone(),
             ))),
         );
         match store_result {
             Ok(infer_result) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
             )),
-            Err(store_error) => Err(RuntimeError::ExecStmtError(
-                ExecStmtError::with_message_and_cause(
+            Err(store_error) => Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness nonempty set: failed to store nonempty set fact".to_string(),
                     Some(store_error.into()),
@@ -198,8 +199,8 @@ impl Runtime {
         if let Err(well_defined_error) =
             self.verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state_for_well_defined)
         {
-            return Err(RuntimeError::ExecStmtError(
-                ExecStmtError::with_message_and_cause(
+            return Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness nonempty set: obj well-defined failed".to_string(),
                     Some(well_defined_error.into()),
@@ -211,8 +212,8 @@ impl Runtime {
         if let Err(well_defined_error) =
             self.verify_obj_well_defined_and_store_cache(&stmt.set, &verify_state_for_well_defined)
         {
-            return Err(RuntimeError::ExecStmtError(
-                ExecStmtError::with_message_and_cause(
+            return Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt.clone(),
                     "witness nonempty set: set well-defined failed".to_string(),
                     Some(well_defined_error.into()),
@@ -229,8 +230,8 @@ impl Runtime {
                     inside_results.push(proof_result);
                 }
                 Err(proof_exec_error) => {
-                    return Err(RuntimeError::ExecStmtError(
-                        ExecStmtError::with_message_and_cause(
+                    return Err(RuntimeError::from(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             witness_stmt.clone(),
                             proof_stmt.to_string(),
                             Some(proof_exec_error),
@@ -245,7 +246,7 @@ impl Runtime {
         let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             stmt.obj.clone(),
             stmt.set.clone(),
-            stmt.line_file,
+            stmt.line_file.clone(),
         )));
         let verify_state_for_proof_check = VerifyState::new(0, false);
         self.verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)?;

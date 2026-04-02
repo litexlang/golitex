@@ -18,11 +18,11 @@ impl Runtime {
                     infer_result.new_infer_result_inside(one_fact_infer_result);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(RuntimeError::ExecStmtError(
-                        ExecStmtError::with_message_and_cause(
+                    return Err(RuntimeError::from(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::ByInducAxiomStmt(stmt.clone()),
                             format!("by induc: failed to prove `{}`", fact),
-                            Some(exec_stmt_error.into()),
+                            Some(RuntimeError::from(exec_stmt_error)),
                             vec![],
                         ),
                     ));
@@ -31,7 +31,7 @@ impl Runtime {
         }
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 Stmt::ByInducAxiomStmt(stmt.clone()),
                 msg,
                 None,
@@ -60,13 +60,12 @@ impl Runtime {
 
         let mut base_case_param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         base_case_param_to_arg_map.insert(stmt.param.clone(), stmt.induc_from.clone());
-        let base_case_fact = fact
-            .clone()
-            .instantiate(&base_case_param_to_arg_map)
+        let base_case_fact = self
+            .inst_exist_or_and_chain_atomic_fact(fact, &base_case_param_to_arg_map)?
             .to_fact();
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
                     format!("by induc: base case is not proved `{}`", base_case_fact),
                     Some(verify_error.into()),
@@ -77,12 +76,12 @@ impl Runtime {
         let induc_from_in_z_fact = AtomicFact::InFact(InFact::new(
             stmt.induc_from.clone(),
             Obj::StandardSet(StandardSet::Z),
-            stmt.line_file,
+            stmt.line_file.clone(),
         ));
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
                     format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
                     Some(verify_error.into()),
@@ -90,8 +89,8 @@ impl Runtime {
                 ))
             })?;
         if verify_induc_from_in_z_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError(
-                ExecStmtError::with_message_and_cause(
+            return Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
                     format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
                     None,
@@ -107,7 +106,8 @@ impl Runtime {
         ));
         let mut induction_step_param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         induction_step_param_to_obj_map.insert(stmt.param.clone(), param_plus_one_obj);
-        let next_fact_of_induction_step = fact.instantiate(&induction_step_param_to_obj_map);
+        let next_fact_of_induction_step = self
+            .inst_exist_or_and_chain_atomic_fact(fact, &induction_step_param_to_obj_map)?;
 
         let corresponding_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamDefWithParamType(
@@ -119,13 +119,13 @@ impl Runtime {
                     GreaterEqualFact::new(
                         param_as_identifier,
                         stmt.induc_from.clone(),
-                        stmt.line_file,
+                        stmt.line_file.clone(),
                     ),
                 )),
                 fact.clone(),
             ],
             vec![next_fact_of_induction_step],
-            stmt.line_file,
+            stmt.line_file.clone(),
         ));
 
         self.verify_fact_return_err_if_not_true(
@@ -133,7 +133,7 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 Stmt::ByInducAxiomStmt(stmt.clone()),
                 format!(
                     "by induc: generated step forall is not well-defined `{}`",

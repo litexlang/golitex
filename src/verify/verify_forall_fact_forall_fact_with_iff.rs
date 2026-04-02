@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::ForallFact(forall_fact.clone()))
         {
@@ -16,11 +16,11 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::ForallFact(forall_fact.clone()),
                     String::new(),
-                    forall_fact.line_file,
-                    Some(RuntimeError::WellDefinedError(e)),
+                    forall_fact.line_file.clone(),
+                    Some(e.into()),
                 ));
             }
         }
@@ -38,23 +38,23 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for param_def in forall_fact.params_def_with_type.iter() {
             let param_infer_result = self
                 .define_params_with_type(std::slice::from_ref(param_def), false)
                 .map_err(|e| {
                     let message = "failed to define params in forall".to_string();
-                    VerifyError::new(
+                    RuntimeError::verify_error(
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
-                        forall_fact.line_file,
-                        Some(RuntimeError::UnknownError(UnknownError::new(
+                        forall_fact.line_file.clone(),
+                        Some(RuntimeError::unknown_error(
                             message,
-                            forall_fact.line_file,
+                            forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
-                            Some(RuntimeError::DefineParamsError(e)),
-                        ))),
+                            Some(e),
+                        ).into()),
                     )
                 })?;
             infer_result.new_infer_result_inside(param_infer_result);
@@ -67,16 +67,16 @@ impl Runtime {
                 )
                 .map_err(|e| {
                     let message = "failed to assume dom fact in forall".to_string();
-                    VerifyError::new(
+                    RuntimeError::verify_error(
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
-                        forall_fact.line_file,
-                        Some(RuntimeError::UnknownError(UnknownError::new(
+                        forall_fact.line_file.clone(),
+                        Some(RuntimeError::unknown_error(
                             message,
-                            forall_fact.line_file,
+                            forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
                             Some(RuntimeError::StoreFactError(e)),
-                        ))),
+                        ).into()),
                     )
                 })?;
             infer_result.new_infer_result_inside(dom_infer_result);
@@ -85,10 +85,23 @@ impl Runtime {
         let mut all_then_facts_are_verified_by_builtin_rules = true;
         let mut then_facts_builtin_verified_by_messages: Vec<String> = Vec::new();
 
-        for then_fact in forall_fact.then_facts.iter() {
+        let then_count = forall_fact.then_facts.len();
+        for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
             let result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
             if result.is_unknown() {
-                return Ok(result);
+                let then_one_based = then_index + 1;
+                let then_line_file = then_fact.line_file();
+                return Err(RuntimeError::verify_error(
+                    Fact::ForallFact(forall_fact.clone()),
+                    format!(
+                        "forall: then-fact {}/{} could not be verified (unknown):\n{}",
+                        then_one_based,
+                        then_count,
+                        then_fact
+                    ),
+                    then_line_file,
+                    None,
+                ));
             }
 
             match &result {
@@ -109,9 +122,9 @@ impl Runtime {
                     all_then_facts_are_verified_by_builtin_rules = false;
                     infer_result.new_infer_result_inside(non_factual_success.infers.clone());
                 }
-                NonErrStmtExecResult::StmtUnknown(_) => {
-                    return Ok(result);
-                }
+                NonErrStmtExecResult::StmtUnknown(_) => unreachable!(
+                    "stmt unknown is handled above before this match"
+                ),
             }
         }
 
@@ -141,7 +154,7 @@ impl Runtime {
                 infer_result,
                 "".to_string(),
                 None,
-                Some(forall_fact.line_file),
+                Some(forall_fact.line_file.clone()),
                 Vec::new(),
             ),
         ))
@@ -152,7 +165,7 @@ impl Runtime {
         &mut self,
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
             &Fact::ForallFactWithIff(forall_iff.clone()),
         ) {
@@ -162,11 +175,11 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_forall_fact_with_iff_well_defined(forall_iff, verify_state)
             {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::ForallFactWithIff(forall_iff.clone()),
                     String::new(),
-                    forall_iff.line_file,
-                    Some(RuntimeError::WellDefinedError(e)),
+                    forall_iff.line_file.clone(),
+                    Some(e.into()),
                 ));
             }
         }
@@ -181,7 +194,7 @@ impl Runtime {
             f.params_def_with_type.clone(),
             dom_then,
             forall_iff.iff_facts.clone(),
-            forall_iff.line_file,
+            forall_iff.line_file.clone(),
         );
         let result1 =
             self.verify_forall_fact(&forall_then_implies_iff, &verify_state_for_children)?;
@@ -195,7 +208,7 @@ impl Runtime {
             f.params_def_with_type.clone(),
             dom_iff,
             f.then_facts.clone(),
-            forall_iff.line_file,
+            forall_iff.line_file.clone(),
         );
         let result2 =
             self.verify_forall_fact(&forall_iff_implies_then, &verify_state_for_children)?;
@@ -209,7 +222,7 @@ impl Runtime {
                 InferResult::new(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 None,
-                Some(DEFAULT_LINE_FILE),
+                Some(default_line_file()),
                 Vec::new(),
             ),
         ))
