@@ -104,16 +104,22 @@ impl Runtime {
     }
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
-        let key = x.to_string();
-        if self.cache_well_defined_obj_contains(&key) {
-            return Ok(());
-        }
-        if self.is_name_used_for_identifier_and_field_access(&key) {
-            return Ok(());
+        let Some(def) = self.get_param_type_struct_definition_by_name(&x.name.to_string()) else {
+            return Err(WellDefinedError::new(
+                format!("field access `{}` unknown, `{}` is not a struct", x.to_string(), x.name.to_string()),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
+        };
+
+        for field in def.fields.iter() {
+            if field.0 == x.field.to_string() {
+                return Ok(());
+            }
         }
 
         return Err(WellDefinedError::new(
-            format!("field access `{}` not defined", x.to_string()),
+            format!("field access `{}` unknown, {} does not contain field `{}`", x.to_string(), x.name.to_string(), x.field.to_string()),
             None,
             DEFAULT_LINE_FILE.clone(),
         ));

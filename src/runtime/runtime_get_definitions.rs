@@ -62,6 +62,24 @@ impl Runtime {
         None
     }
 
+    pub fn get_obj_in_struct(
+        &self,
+        struct_name: &str,
+    ) -> Option<&StructParamType> {
+        let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            unimplemented!();
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(t) = environment.defined_field_access_name.get(struct_name) {
+                return Some(&t);
+            }
+        }
+
+        None
+    }
+    
     pub fn get_param_type_struct_definition_by_name(
         &self,
         param_type_struct_name: &str,

@@ -183,6 +183,16 @@ know:
         $in(z, Y)
         =>:
             $in_cup_via_member_set(z, F, Y)
+
+    forall A, B finite_set:
+        A $subset B
+        =>:
+            count(A) <= count(B)
+
+    forall A, B finite_set:
+        A $superset B
+        =>:
+            count(A) >= count(B)
 "#;
 
 pub fn builtin_env_code() -> String {

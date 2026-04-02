@@ -126,6 +126,12 @@ pub struct StructParamType {
     pub args: Vec<Obj>,
 }
 
+impl StructParamType {
+    pub fn new(name: IdentifierOrIdentifierWithMod, args: Vec<Obj>) -> Self {
+        StructParamType { name, args }
+    }
+}
+
 #[derive(Clone)]
 pub struct Set {}
 
