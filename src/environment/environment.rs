@@ -7,7 +7,7 @@ pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ()>,
     pub defined_props_with_meaning: HashMap<PropName, DefPropWithMeaningStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
-    pub defined_param_type_structs: HashMap<StructName, DefParamTypeStructStmt>,
+    pub defined_structs: HashMap<StructName, DefParamTypeStructStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
     pub defined_field_access_name: HashMap<FieldAccessName, StructParamType>,
@@ -88,7 +88,7 @@ impl Environment {
         Environment {
             defined_identifiers: objs,
             defined_props_with_meaning: props,
-            defined_param_type_structs: param_type_structs,
+            defined_structs: param_type_structs,
             defined_families: families,
             defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
@@ -126,7 +126,7 @@ impl fmt::Display for Environment {
         write!(
             f,
             "    param_type_structs: {:?}\n",
-            self.defined_param_type_structs.len()
+            self.defined_structs.len()
         )?;
         write!(
             f,

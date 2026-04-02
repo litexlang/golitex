@@ -44,7 +44,7 @@ impl Runtime {
     ) -> Result<(), ExecStmtError> {
         let name = def_param_type_struct_stmt.name.clone();
         self.top_level_env()
-            .defined_param_type_structs
+            .defined_structs
             .insert(name, def_param_type_struct_stmt.clone());
         Ok(())
     }
