@@ -13,10 +13,10 @@ impl Runtime {
         let stmt_ok = stmt?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
+                parsing_error_from_parse_block_error(
+                    e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
+                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name)),
                 )
             })?;
 
@@ -31,10 +31,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
+                parsing_error_from_parse_block_error(
+                    e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
+                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
@@ -49,11 +49,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file.clone(),
-                Some(RuntimeError::ParseBlockError(e)),
-            )
+            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
         let facts = self.parse_facts_in_body(tb)?;
         Ok(DefPropWithMeaningStmt::new(
@@ -75,10 +71,10 @@ impl Runtime {
         let stmt_ok = stmt?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
+                parsing_error_from_parse_block_error(
+                    e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
+                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name)),
                 )
             })?;
         Ok(Stmt::DefAbstractPropStmt(stmt_ok))
@@ -92,10 +88,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
+                parsing_error_from_parse_block_error(
+                    e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
+                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
@@ -110,11 +106,7 @@ impl Runtime {
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    e.to_string(),
-                    tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
-                )
+                parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
             })?;
 
         Ok(DefAbstractPropStmt::new(name, params, tb.line_file.clone()))
@@ -152,11 +144,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file.clone(),
-                Some(RuntimeError::ParseBlockError(e)),
-            )
+            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
@@ -190,11 +178,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file.clone(),
-                Some(RuntimeError::ParseBlockError(e)),
-            )
+            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
@@ -223,10 +207,10 @@ impl Runtime {
 
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
+                parsing_error_from_parse_block_error(
+                    e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
+                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
                 )
             })?;
 
@@ -275,11 +259,7 @@ impl Runtime {
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    e.to_string(),
-                    tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
-                )
+                parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
             })?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
@@ -304,11 +284,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file.clone(),
-                Some(RuntimeError::ParseBlockError(e)),
-            )
+            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -342,11 +318,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file.clone(),
-                Some(RuntimeError::ParseBlockError(e)),
-            )
+            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -370,10 +342,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
+                parsing_error_from_parse_block_error(
+                    e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
+                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
                 )
             })?;
 
@@ -415,10 +387,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
+                parsing_error_from_parse_block_error(
+                    e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
+                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
                 )
             })?;
 

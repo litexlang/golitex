@@ -526,41 +526,6 @@ impl fmt::Display for AtomicFact {
     }
 }
 
-pub fn line_file(a: &AtomicFact) -> LineFile {
-    match a {
-        AtomicFact::NormalAtomicFact(x) => x.line_file.clone(),
-        AtomicFact::EqualFact(x) => x.line_file.clone(),
-        AtomicFact::LessFact(x) => x.line_file.clone(),
-        AtomicFact::GreaterFact(x) => x.line_file.clone(),
-        AtomicFact::LessEqualFact(x) => x.line_file.clone(),
-        AtomicFact::GreaterEqualFact(x) => x.line_file.clone(),
-        AtomicFact::IsSetFact(x) => x.line_file.clone(),
-        AtomicFact::IsNonemptySetFact(x) => x.line_file.clone(),
-        AtomicFact::IsFiniteSetFact(x) => x.line_file.clone(),
-        AtomicFact::NotNormalAtomicFact(x) => x.line_file.clone(),
-        AtomicFact::NotEqualFact(x) => x.line_file.clone(),
-        AtomicFact::NotLessFact(x) => x.line_file.clone(),
-        AtomicFact::NotGreaterFact(x) => x.line_file.clone(),
-        AtomicFact::NotLessEqualFact(x) => x.line_file.clone(),
-        AtomicFact::NotGreaterEqualFact(x) => x.line_file.clone(),
-        AtomicFact::NotIsSetFact(x) => x.line_file.clone(),
-        AtomicFact::NotIsNonemptySetFact(x) => x.line_file.clone(),
-        AtomicFact::NotIsFiniteSetFact(x) => x.line_file.clone(),
-        AtomicFact::InFact(x) => x.line_file.clone(),
-        AtomicFact::NotInFact(x) => x.line_file.clone(),
-        AtomicFact::IsCartFact(x) => x.line_file.clone(),
-        AtomicFact::NotIsCartFact(x) => x.line_file.clone(),
-        AtomicFact::IsTupleFact(x) => x.line_file.clone(),
-        AtomicFact::NotIsTupleFact(x) => x.line_file.clone(),
-        AtomicFact::SubsetFact(x) => x.line_file.clone(),
-        AtomicFact::NotSubsetFact(x) => x.line_file.clone(),
-        AtomicFact::SupersetFact(x) => x.line_file.clone(),
-        AtomicFact::NotSupersetFact(x) => x.line_file.clone(),
-        AtomicFact::RestrictFact(x) => x.line_file.clone(),
-        AtomicFact::NotRestrictFact(x) => x.line_file.clone(),
-    }
-}
-
 impl fmt::Display for SupersetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(

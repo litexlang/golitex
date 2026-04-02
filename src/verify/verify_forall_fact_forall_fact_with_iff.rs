@@ -20,7 +20,7 @@ impl Runtime {
                     Fact::ForallFact(forall_fact.clone()),
                     String::new(),
                     forall_fact.line_file.clone(),
-                    Some(RuntimeError::WellDefinedError(e)),
+                    Some(e.into()),
                 ));
             }
         }
@@ -49,12 +49,12 @@ impl Runtime {
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
                         forall_fact.line_file.clone(),
-                        Some(RuntimeError::UnknownError(UnknownError::new(
+                        Some(UnknownError::new(
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
                             Some(RuntimeError::DefineParamsError(e)),
-                        ))),
+                        ).into()),
                     )
                 })?;
             infer_result.new_infer_result_inside(param_infer_result);
@@ -71,12 +71,12 @@ impl Runtime {
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
                         forall_fact.line_file.clone(),
-                        Some(RuntimeError::UnknownError(UnknownError::new(
+                        Some(UnknownError::new(
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
                             Some(RuntimeError::StoreFactError(e)),
-                        ))),
+                        ).into()),
                     )
                 })?;
             infer_result.new_infer_result_inside(dom_infer_result);
@@ -179,7 +179,7 @@ impl Runtime {
                     Fact::ForallFactWithIff(forall_iff.clone()),
                     String::new(),
                     forall_iff.line_file.clone(),
-                    Some(RuntimeError::WellDefinedError(e)),
+                    Some(e.into()),
                 ));
             }
         }

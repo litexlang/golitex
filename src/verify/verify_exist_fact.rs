@@ -20,7 +20,7 @@ impl Runtime {
                     Fact::ExistFact(exist_fact.clone()),
                     String::new(),
                     exist_fact.line_file(),
-                    Some(RuntimeError::WellDefinedError(e)),
+                    Some(e.into()),
                 ));
             }
         }

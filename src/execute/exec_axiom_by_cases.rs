@@ -9,7 +9,7 @@ impl Runtime {
         for fact in stmt.then_facts.iter() {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    RuntimeError::from(ExecStmtError::with_message_and_cause(
                         Stmt::ByCasesAxiomStmt(stmt.clone()),
                         format!("by cases: failed to prove `{}`", fact),
                         Some(verify_error.into()),
@@ -32,7 +32,7 @@ impl Runtime {
                     inside_results.append(&mut one_case_inside_results);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(RuntimeError::ExecStmtError(exec_stmt_error));
+                    return Err(RuntimeError::from(exec_stmt_error));
                 }
             }
         }
@@ -42,7 +42,7 @@ impl Runtime {
             let one_then_fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(then_fact.clone())
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    RuntimeError::from(ExecStmtError::with_message_and_cause(
                         Stmt::ByCasesAxiomStmt(stmt.clone()),
                         format!("by cases: failed to release `{}`", then_fact),
                         Some(store_fact_error.into()),

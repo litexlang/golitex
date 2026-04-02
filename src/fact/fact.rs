@@ -48,7 +48,7 @@ impl fmt::Display for Fact {
 impl Fact {
     pub fn line_file(&self) -> LineFile {
         match self {
-            Fact::AtomicFact(a) => super::atomic_fact::line_file(a),
+            Fact::AtomicFact(a) => a.line_file(),
             Fact::ExistFact(e) => e.line_file(),
             Fact::OrFact(o) => o.line_file.clone(),
             Fact::AndFact(a) => a.line_file(),

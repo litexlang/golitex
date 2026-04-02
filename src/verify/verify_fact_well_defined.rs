@@ -78,7 +78,7 @@ impl Runtime {
                         actual_args.len()
                     ),
                     None,
-                    line_file(atomic_fact),
+                    atomic_fact.line_file(),
                 ));
             }
         } else {
@@ -94,7 +94,7 @@ impl Runtime {
                 return Err(WellDefinedError::new(
                     format!("fact `{}` not defined", name_string),
                     None,
-                    line_file(atomic_fact),
+                    atomic_fact.line_file(),
                 ));
             };
 
@@ -108,7 +108,7 @@ impl Runtime {
                         actual_args.len()
                     ),
                     None,
-                    line_file(atomic_fact),
+                    atomic_fact.line_file(),
                 ));
             }
         }
@@ -238,7 +238,7 @@ impl Runtime {
             {
                 return Err(WellDefinedError::new(
                     String::new(),
-                    Some(RuntimeError::ExecStmtError(exec_stmt_error)),
+                    Some(RuntimeError::from(exec_stmt_error)),
                     fact.line_file(),
                 ));
             }
@@ -252,7 +252,7 @@ impl Runtime {
             {
                 return Err(WellDefinedError::new(
                     String::new(),
-                    Some(RuntimeError::ExecStmtError(exec_stmt_error)),
+                    Some(RuntimeError::from(exec_stmt_error)),
                     fact.line_file(),
                 ));
             }

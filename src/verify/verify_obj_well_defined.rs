@@ -165,7 +165,7 @@ impl Runtime {
                         "object {} is not well-defined, failed to verify arguments satisfy function domain.",
                         fn_obj.to_string()
                     ),
-                    Some(RuntimeError::WellDefinedError(well_defined_error)),
+                    Some(well_defined_error.into()),
                     default_line_file(),
                 )
             })?;
@@ -282,7 +282,7 @@ impl Runtime {
                                 "failed to verify arg satisfy fn set parameter set: {}",
                                 fact
                             ),
-                            Some(RuntimeError::VerifyError(verify_error)),
+                            Some(RuntimeError::from(verify_error)),
                             default_line_file(),
                         )
                     })?;
@@ -317,7 +317,7 @@ impl Runtime {
                             "failed to verify function domain fact:\n{}",
                             instantiated_dom_fact
                         ),
-                        Some(RuntimeError::VerifyError(verify_error)),
+                        Some(RuntimeError::from(verify_error)),
                         default_line_file(),
                     )
                 })?;
@@ -646,7 +646,7 @@ impl Runtime {
                                 "failed to verify list set elements are pairwise not equal: {}",
                                 not_equal_atomic_fact
                             ),
-                            Some(RuntimeError::VerifyError(previous_error)),
+                            Some(RuntimeError::from(previous_error)),
                             default_line_file(),
                         )
                     })?;
@@ -705,7 +705,7 @@ impl Runtime {
                         "failed to verify well-defined of set builder {}",
                         x.to_string()
                     ),
-                    Some(RuntimeError::ExecStmtError(e)),
+                    Some(RuntimeError::from(e)),
                     default_line_file(),
                 ));
             }
@@ -736,7 +736,7 @@ impl Runtime {
                     "failed to verify well-defined of fn set with dom {}",
                     x.to_string()
                 ),
-                Some(RuntimeError::WellDefinedError(e)),
+                Some(e.into()),
                 default_line_file(),
             ));
         }
@@ -764,7 +764,7 @@ impl Runtime {
                         "failed to verify well-defined of fn set with dom {}",
                         x.to_string()
                     ),
-                    Some(RuntimeError::ExecStmtError(e)),
+                    Some(RuntimeError::from(e)),
                     default_line_file(),
                 ));
             }
@@ -1198,7 +1198,7 @@ impl Runtime {
                             "failed to verify family `{}` domain fact:\n{}",
                             family_name, instantiated_dom_fact
                         ),
-                        Some(RuntimeError::VerifyError(verify_error)),
+                        Some(RuntimeError::from(verify_error)),
                         default_line_file(),
                     )
                 })?;
@@ -1308,7 +1308,7 @@ impl Runtime {
                             "failed to verify struct `{}` domain fact:\n{}",
                             struct_name, instantiated_dom_fact
                         ),
-                        Some(RuntimeError::VerifyError(verify_error)),
+                        Some(RuntimeError::from(verify_error)),
                         default_line_file(),
                     )
                 })?;

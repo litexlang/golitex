@@ -18,11 +18,11 @@ impl Runtime {
                     infer_result.new_infer_result_inside(one_fact_infer_result);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(RuntimeError::ExecStmtError(
+                    return Err(RuntimeError::from(
                         ExecStmtError::with_message_and_cause(
                             Stmt::ByInducAxiomStmt(stmt.clone()),
                             format!("by induc: failed to prove `{}`", fact),
-                            Some(exec_stmt_error.into()),
+                            Some(RuntimeError::from(exec_stmt_error)),
                             vec![],
                         ),
                     ));
@@ -31,7 +31,7 @@ impl Runtime {
         }
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+            RuntimeError::from(ExecStmtError::with_message_and_cause(
                 Stmt::ByInducAxiomStmt(stmt.clone()),
                 msg,
                 None,
@@ -65,7 +65,7 @@ impl Runtime {
             .to_fact();
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::from(ExecStmtError::with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
                     format!("by induc: base case is not proved `{}`", base_case_fact),
                     Some(verify_error.into()),
@@ -81,7 +81,7 @@ impl Runtime {
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                RuntimeError::from(ExecStmtError::with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
                     format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
                     Some(verify_error.into()),
@@ -89,7 +89,7 @@ impl Runtime {
                 ))
             })?;
         if verify_induc_from_in_z_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError(
+            return Err(RuntimeError::from(
                 ExecStmtError::with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
                     format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
@@ -133,7 +133,7 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+            RuntimeError::from(ExecStmtError::with_message_and_cause(
                 Stmt::ByInducAxiomStmt(stmt.clone()),
                 format!(
                     "by induc: generated step forall is not well-defined `{}`",

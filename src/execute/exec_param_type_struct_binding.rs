@@ -100,7 +100,7 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
+                return Err(UnknownError::new(
                     format!(
                         "struct `{}` is not defined (needed for field `{}` of type `struct {}(...)`)",
                         struct_name,
@@ -110,13 +110,13 @@ impl Runtime {
                     default_line_file(),
                     None,
                     None,
-                )));
+                ).into());
             }
         };
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+            return Err(UnknownError::new(
                 format!(
                     "struct `{}` expects {} type argument(s), got {}",
                     struct_name,
@@ -126,7 +126,7 @@ impl Runtime {
                 default_line_file(),
                 None,
                 None,
-            )));
+            ).into());
         }
 
         let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
@@ -163,16 +163,16 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
+                return Err(UnknownError::new(
                     format!("struct `{}` is not defined", struct_name),
                     default_line_file(),
                     None,
                     None,
-                )));
+                ).into());
             }
         };
         if def.name != struct_name {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+            return Err(UnknownError::new(
                 format!(
                     "struct type name `{}` does not match definition name `{}`",
                     struct_name, def.name
@@ -180,12 +180,12 @@ impl Runtime {
                 default_line_file(),
                 None,
                 None,
-            )));
+            ).into());
         }
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+            return Err(UnknownError::new(
                 format!(
                     "struct `{}` expects {} type argument(s), got {}",
                     struct_name,
@@ -195,11 +195,11 @@ impl Runtime {
                 default_line_file(),
                 None,
                 None,
-            )));
+            ).into());
         }
 
         if tuple.args.len() != def.fields.len() + def.number_of_params() {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+            return Err(UnknownError::new(
                 format!(
                     "struct `{}`: tuple has {} component(s), definition has {} field(s) (must match)",
                     struct_name,
@@ -209,7 +209,7 @@ impl Runtime {
                 default_line_file(),
                 None,
                 None,
-            )));
+            ).into());
         }
 
         let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
@@ -283,17 +283,17 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
+                return Err(UnknownError::new(
                     format!("family `{}` is not defined", family_name),
                     default_line_file(),
                     None,
                     None,
-                )));
+                ).into());
             }
         };
         let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+            return Err(UnknownError::new(
                 format!(
                     "family `{}` expects {} type argument(s), got {}",
                     family_name,
@@ -303,7 +303,7 @@ impl Runtime {
                 default_line_file(),
                 None,
                 None,
-            )));
+            ).into());
         }
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
@@ -388,7 +388,7 @@ impl Runtime {
                 if let ParamType::Struct(struct_ty) = param_type {
                     self.define_param_binding_struct_from_tuple(tuple, struct_ty)
                 } else {
-                    Err(RuntimeError::UnknownError(UnknownError::new(
+                    Err(UnknownError::new(
                         format!(
                             "tuple as subject is only supported for struct parameter type, got {}",
                             param_type
@@ -396,11 +396,11 @@ impl Runtime {
                         default_line_file(),
                         None,
                         None,
-                    )))
+                    ).into())
                 }
             }
             _ => match param_type {
-                ParamType::Struct(_) => Err(RuntimeError::UnknownError(UnknownError::new(
+                ParamType::Struct(_) => Err(UnknownError::new(
                     format!(
                         "struct parameter type requires an identifier, field access, or tuple matching struct fields, got {}",
                         subject
@@ -408,7 +408,7 @@ impl Runtime {
                     default_line_file(),
                     None,
                     None,
-                ))),
+                ).into()),
                 ParamType::Family(family_ty) => {
                     self.define_param_binding_family_on_obj(subject.clone(), family_ty)
                 }

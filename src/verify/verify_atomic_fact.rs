@@ -18,7 +18,7 @@ impl Runtime {
                     Fact::AtomicFact(fact.clone()),
                     String::new(),
                     fact.line_file(),
-                    Some(RuntimeError::WellDefinedError(e)),
+                    Some(e.into()),
                 ));
             }
         }

@@ -182,11 +182,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file.clone(),
-                Some(RuntimeError::ParseBlockError(e)),
-            )
+            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
 
         let mut dom_facts = vec![];
@@ -752,10 +748,10 @@ impl Runtime {
     ) -> Result<Obj, ParsingError> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name, tb.line_file.clone())
             .map_err(|e| {
-                ParsingError::new(
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(&a.name),
+                parsing_error_from_parse_block_error(
+                    e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::ParseBlockError(e)),
+                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&a.name)),
                 )
             })?;
 

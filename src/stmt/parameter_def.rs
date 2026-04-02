@@ -2,11 +2,9 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt;
 
-/// 参数名列表（长度 1 表示单参数）与对应的 Obj（set）
 #[derive(Clone)]
 pub struct ParamDefWithParamSet(pub Vec<String>, pub Obj);
 
-/// 参数名列表（长度 1 表示单参数）与对应的 ParamType
 #[derive(Clone)]
 pub struct ParamDefWithParamType(pub Vec<String>, pub ParamType);
 

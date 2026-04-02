@@ -60,7 +60,7 @@ impl Runtime {
                 .verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)
                 .map_err(RuntimeError::from)?;
             if verify_result.is_unknown() {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
+                return Err(UnknownError::new(
                     format!(
                         "argument {} does not satisfy parameter type (unknown): {}",
                         arg,
@@ -69,7 +69,7 @@ impl Runtime {
                     default_line_file(),
                     None,
                     None,
-                )));
+                ).into());
             }
             match verify_result {
                 NonErrStmtExecResult::NonFactualStmtSuccess(x) => {

@@ -31,7 +31,7 @@ impl Runtime {
             match exec_stmt_result {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
-                    return Err(RuntimeError::ExecStmtError(
+                    return Err(RuntimeError::from(
                         ExecStmtError::with_message_and_cause(
                             Stmt::ProveStmt(stmt.clone()),
                             proof_stmt.to_string(),
