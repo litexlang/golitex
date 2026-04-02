@@ -87,101 +87,10 @@ impl Runtime {
         name: &str,
         struct_ty: &StructParamType,
     ) -> Result<InferResult, RuntimeError> {
-        let struct_name = struct_ty.name.to_string();
-        let def = match self.get_cloned_param_type_struct_definition_by_name(&struct_name) {
-            Some(d) => d,
-            None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
-                    format!(
-                        "struct `{}` is not defined (needed for param `{}` of type `struct {}(...)`)",
-                        struct_name, name, struct_name
-                    ),
-                    DEFAULT_LINE_FILE.clone(),
-                    None,
-                    None,
-                )));
-            }
-        };
-        self.define_param_binding_struct_with_def(name, &def, struct_ty)
+        self.register_param_as_struct_instance(name, struct_ty.clone());
+        Ok(InferResult::new())
     }
 
-    /// 与 [`define_param_binding_struct`] 相同，但直接使用已有定义（例如 `struct` **定义检查**时尚未写入全局 env）。
-    pub(crate) fn define_param_binding_struct_with_def(
-        &mut self,
-        name: &str,
-        def: &DefParamTypeStructStmt,
-        struct_ty: &StructParamType,
-    ) -> Result<InferResult, RuntimeError> {
-        let struct_name = struct_ty.name.to_string();
-        if def.name != struct_name {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
-                format!(
-                    "struct type name `{}` does not match definition name `{}`",
-                    struct_name, def.name
-                ),
-                DEFAULT_LINE_FILE.clone(),
-                None,
-                None,
-            )));
-        }
-
-        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
-        if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
-                format!(
-                    "struct `{}` expects {} type argument(s) in `struct {}(...)`, got {}",
-                    struct_name,
-                    expected_count,
-                    struct_name,
-                    struct_ty.args.len()
-                ),
-                DEFAULT_LINE_FILE.clone(),
-                None,
-                None,
-            )));
-        }
-
-        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.args.clone());
-        self.register_param_as_struct_instance(name, inst);
-
-        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
-            &def.param_defs,
-            &struct_ty.args,
-        );
-
-        let mut infer_result =
-            self.bind_struct_fields_for_root_param(def, &param_to_arg_map, name)?;
-        let fact_infer = self.store_instantiated_struct_def_facts_with_self(
-            def,
-            &param_to_arg_map,
-            Obj::Identifier(Identifier::new(name.to_string())),
-        )?;
-        infer_result.new_infer_result_inside(fact_infer);
-        Ok(infer_result)
-    }
-
-    /// 根参数 `name`（如 `g`）已登记为 [`InstStructObj`] 后，对定义中每个字段做 field-access 上的类型绑定。
-    fn bind_struct_fields_for_root_param(
-        &mut self,
-        def: &DefParamTypeStructStmt,
-        param_to_arg_map: &HashMap<String, Obj>,
-        root_param_name: &str,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
-        for (field_name, field_param_type) in def.fields.iter() {
-            let instantiated = self.inst_param_type(&field_param_type.to_param_type(), param_to_arg_map)?;
-            let fa = FieldAccess::new(root_param_name.to_string(), field_name.clone());
-            let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
-            infer_result.new_infer_result_inside(fr);
-        }
-        Ok(infer_result)
-    }
-
-    /// 某 **field access 路径** 已视为 `struct_ty` 的实例（与根上 [`define_param_binding_struct`] 同构），
-    /// 登记 `field_access.to_string()` → [`InstStructObj`]，并绑定该 struct 定义中的各字段。
-    ///
-    /// 口语上可称为「在 field access 上绑定 struct」；与根参数分支一样，在字段绑定之后会 **`self` → 本路径**
-    /// 并落库 [`DefParamTypeStructStmt::facts`]（见 [`Runtime::store_instantiated_struct_def_facts_with_self`]）。
     fn define_param_binding_struct_at_field_access(
         &mut self,
         field_access: &FieldAccess,
@@ -219,9 +128,6 @@ impl Runtime {
                 None,
             )));
         }
-
-        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.args.clone());
-        self.register_param_as_struct_instance(&field_access.to_string(), inst);
 
         let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
             &def.param_defs,
@@ -311,9 +217,6 @@ impl Runtime {
             &struct_ty.args,
         );
 
-        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.args.clone());
-        self.register_param_as_struct_instance(SELF, inst);
-
         let mut infer_result = InferResult::new();
         for (i, (_field_name, field_pt)) in def.fields.iter().enumerate() {
             let instantiated = self.inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)?;
@@ -361,9 +264,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// 写入 [`Environment::defined_field_access_name`]，并把同一字符串键写入 [`Environment::cache_well_defined_obj`]，
-    /// 与「字段上已绑定类型」路径共用一套缓存语义，便于 [`verify_field_access_well_defined`]。
-    fn register_param_as_struct_instance(&mut self, env_key: &str, inst: InstStructObj) {
+    pub fn register_param_as_struct_instance(&mut self, env_key: &str, inst: StructParamType) {
         let key = env_key.to_string();
         self.top_level_env()
             .defined_field_access_name

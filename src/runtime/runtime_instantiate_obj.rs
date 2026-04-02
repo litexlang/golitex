@@ -161,7 +161,7 @@ impl Runtime {
         else {
             return Ok(Obj::FieldAccess(field_access.clone()));
         };
-        let struct_name = inst_struct.struct_name.to_string();
+        let struct_name = inst_struct.name.to_string();
         let Some(def) = self.get_cloned_param_type_struct_definition_by_name(&struct_name) else {
             return Ok(Obj::FieldAccess(field_access.clone()));
         };
