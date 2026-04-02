@@ -10,12 +10,8 @@ use crate::prelude::*;
 
 fn field_access_append_field(obj: &Obj, field_name: &str) -> Option<FieldAccess> {
     match obj {
-        Obj::Identifier(i) => Some(FieldAccess::new(i.name.clone(), vec![field_name.to_string()])),
-        Obj::FieldAccess(fa) => {
-            let mut fields = fa.fields.clone();
-            fields.push(field_name.to_string());
-            Some(FieldAccess::new(fa.name.clone(), fields))
-        }
+        Obj::Identifier(i) => Some(FieldAccess::new(i.name.clone(), field_name.to_string())),
+        Obj::FieldAccess(fa) => Some(fa.with_appended_field(field_name)),
         _ => None,
     }
 }

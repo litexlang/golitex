@@ -15,7 +15,7 @@
 //! ```
 //!
 //! 在登记 `defined_field_access_name["g"]` 之后，对 `id`、`add` 要分别建立与字段 [`ParamType`] 一致的事实，
-//! 左端为 `FieldAccess { name: "g", fields: ["id"] }` 对应的 [`Obj::FieldAccess`]。
+//! 左端为 `FieldAccess { name: "g", field: "id" }` 对应的 [`Obj::FieldAccess`]。
 //!
 //! ## `self` 与定义体事实 `facts`
 //!
@@ -40,7 +40,7 @@ use std::collections::HashMap;
 impl Runtime {
     /// 与 [`define_param_binding_for_param_type`](crate::execute::exec_def_stmt) 类似，但**约束左端为 field access**。
     ///
-    /// - `field_access`：已解析好的访问路径，如 `g.id` → [`FieldAccess::new`] `("g", ["id"])`。
+    /// - `field_access`：已解析好的访问路径，如 `g.id` → [`FieldAccess::new`] `("g", "id")`。
     /// - `param_type`：该位置上应当满足的类型（可与定义中字段类型经 `instantiate` 后一致）。
     ///
     /// 嵌套 [`ParamType::Struct`] 时会在 [`Environment::defined_field_access_name`] 中以
@@ -170,7 +170,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for (field_name, field_param_type) in def.fields.iter() {
             let instantiated = self.inst_param_type(&field_param_type.to_param_type(), param_to_arg_map)?;
-            let fa = FieldAccess::new(root_param_name.to_string(), vec![field_name.clone()]);
+            let fa = FieldAccess::new(root_param_name.to_string(), field_name.clone());
             let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
             infer_result.new_infer_result_inside(fr);
         }
@@ -428,7 +428,5 @@ fn obj_from_field_access(field_access: &FieldAccess) -> Obj {
 }
 
 fn append_field_to_field_access(base: &FieldAccess, field_name: &str) -> FieldAccess {
-    let mut fields = base.fields.clone();
-    fields.push(field_name.to_string());
-    FieldAccess::new(base.name.clone(), fields)
+    base.with_appended_field(field_name)
 }

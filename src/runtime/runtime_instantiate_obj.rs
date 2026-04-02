@@ -121,20 +121,74 @@ impl Runtime {
         field_access: &FieldAccess,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(match param_to_arg_map.get(&field_access.name) {
-            Some(Obj::Identifier(identifier)) => Obj::FieldAccess(FieldAccess {
+        match param_to_arg_map.get(&field_access.name) {
+            Some(Obj::Identifier(identifier)) => Ok(Obj::FieldAccess(FieldAccess {
                 name: identifier.name.clone(),
-                fields: field_access.fields.clone(),
-            }),
+                field: field_access.field.clone(),
+            })),
             Some(Obj::IdentifierWithMod(identifier_with_mod)) => {
-                Obj::FieldAccessWithMod(FieldAccessWithMod {
+                Ok(Obj::FieldAccessWithMod(FieldAccessWithMod {
                     mod_name: identifier_with_mod.mod_name.clone(),
                     name: identifier_with_mod.name.clone(),
-                    fields: field_access.fields.clone(),
-                })
+                    field: field_access.field.clone(),
+                }))
             }
-            _ => Obj::FieldAccess(field_access.clone()),
-        })
+            Some(obj) => {
+                let tuple_opt = match obj {
+                    Obj::Tuple(t) => Some(t.clone()),
+                    _ => self.get_known_tuple_obj_of_obj(&obj.to_string()),
+                };
+                match tuple_opt {
+                    Some(t) => self.inst_field_access_on_struct_tuple(field_access, &t),
+                    None => return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                        None,
+                        format!("field `{}` of struct `{}` is not a tuple", field_access.field, field_access.name),
+                        DEFAULT_LINE_FILE,
+                        None,
+                    ))),
+                }
+            }
+            None => Ok(Obj::FieldAccess(field_access.clone())),
+        }
+    }
+
+    /// 在已解析出的 [`Tuple`] 上：用环境中根名对应的 struct 定义里 **字段顺序**，取 `field` 在 `def.fields` 中的下标，再投影 `tuple.args`。
+    fn inst_field_access_on_struct_tuple(
+        &self,
+        field_access: &FieldAccess,
+        tuple: &Tuple,
+    ) -> Result<Obj, RuntimeError> {
+        let Some(inst_struct) = self.get_inst_struct_obj_for_field_access_root(&field_access.name)
+        else {
+            return Ok(Obj::FieldAccess(field_access.clone()));
+        };
+        let struct_name = inst_struct.struct_name.to_string();
+        let Some(def) = self.get_cloned_param_type_struct_definition_by_name(&struct_name) else {
+            return Ok(Obj::FieldAccess(field_access.clone()));
+        };
+        let Some(field_index) = def
+            .fields
+            .iter()
+            .position(|(fname, _)| fname == &field_access.field)
+        else {
+            return Ok(Obj::FieldAccess(field_access.clone()));
+        };
+        let Some(component) = tuple.args.get(field_index) else {
+            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)",
+                    field_access.field,
+                    struct_name,
+                    field_index,
+                    field_access.name,
+                    tuple.args.len()
+                ),
+                DEFAULT_LINE_FILE,
+                None,
+            )));
+        };
+        Ok((**component).clone())
     }
 
     pub fn inst_field_access_with_mod(
