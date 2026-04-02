@@ -52,7 +52,7 @@ impl Runtime {
 
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment
-                .defined_param_type_structs
+                .defined_structs
                 .get(param_type_struct_name)
             {
                 return Some(definition.clone());
@@ -91,7 +91,7 @@ impl Runtime {
 
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment
-                .defined_param_type_structs
+                .defined_structs
                 .get(param_type_struct_name)
             {
                 return Some(definition);

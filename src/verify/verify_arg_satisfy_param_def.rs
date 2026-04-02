@@ -58,9 +58,23 @@ impl Runtime {
             }
             Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
                 let _ =
-                if let Some(_) =
-                    self.get_inst_struct_obj_for_field_access_root(&obj.to_string())
+                if let Some(def) =
+                    self.get_definition_of_struct_where_object_satisfies(&IdentifierOrIdentifierWithMod::Identifier(Identifier::new(obj.to_string())))
                 {
+                    if def.name.to_string() != struct_ty.name.to_string() {
+                        // TODO
+                        return Err(VerifyError::new(
+                            Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                                obj.clone(),
+                                Obj::Identifier(Identifier::new(String::from("_"))),
+                                DEFAULT_LINE_FILE.clone(),
+                            ))),
+                            format!("{} satisfies struct `{}`, but it should satisfy struct `{}`", obj.to_string(), def.name.to_string(), struct_ty.name.to_string()),
+                            DEFAULT_LINE_FILE,
+                            None,
+                        ));
+                    }
+                    
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                         // TODO: 这其实是有问题的 因为这种 satisfy 不是正常意义的 fact
                         FactualStmtSuccess::new_with_verified_by_known_fact_source(

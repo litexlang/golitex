@@ -5,6 +5,38 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
+    pub fn get_definition_of_struct_where_object_satisfies(&self, obj: &IdentifierOrIdentifierWithMod) -> Option<&DefParamTypeStructStmt> {
+        let Some(struct_object_satisfies) = self.get_struct_that_object_satisfies(obj) else {
+            return None;
+        };
+
+        let Some(def) = self.get_definition_of_struct(struct_object_satisfies) else {
+            return None;
+        };
+
+        Some(def)
+    }
+
+    fn get_definition_of_struct(&self, struct_object_satisfies: &StructParamType) -> Option<&DefParamTypeStructStmt> {
+        let key = struct_object_satisfies.name.to_string();
+        for env in self.iter_environments_from_top() {
+            if let Some(definition) = env.defined_structs.get(&key) {
+                return Some(definition);
+            }
+        }
+        None
+    }
+
+    fn get_struct_that_object_satisfies(&self, obj: &IdentifierOrIdentifierWithMod) -> Option<&StructParamType> {
+        let key = obj.to_string();
+        for env in self.iter_environments_from_top() {
+            if let Some(definition) = env.defined_field_access_name.get(&key) {
+                return Some(definition);
+            }
+        }
+        None
+    }
+
     pub fn get_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<&FnSetWithParams> {
         let key = obj.to_string();
 
@@ -103,16 +135,16 @@ impl Runtime {
         result
     }
 
-    /// `defined_field_access_name` 里以根名（如 `g`）登记的 struct 实例。
-    pub fn get_inst_struct_obj_for_field_access_root(
-        &self,
-        root: &str,
-    ) -> Option<StructParamType> {
-        for env in self.iter_environments_from_top() {
-            if let Some(inst) = env.defined_field_access_name.get(root) {
-                return Some(inst.clone());
-            }
-        }
-        None
-    }
+    // /// `defined_field_access_name` 里以根名（如 `g`）登记的 struct 实例。
+    // pub fn get_inst_struct_obj_for_field_access_root(
+    //     &self,
+    //     root: &str,
+    // ) -> Option<StructParamType> {
+    //     for env in self.iter_environments_from_top() {
+    //         if let Some(inst) = env.defined_field_access_name.get(root) {
+    //             return Some(inst.clone());
+    //         }
+    //     }
+    //     None
+    // }
 }
