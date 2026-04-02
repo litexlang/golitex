@@ -1239,7 +1239,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.params.len() != expected_count {
             return Err(WellDefinedError::new(
                 format!(
@@ -1257,9 +1257,11 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
+        let param_defs_pt =
+            ParamDefWithStructFieldType::to_param_defs_with_param_type(&def.param_defs);
         let _: InferResult = self
             .verify_args_satisfy_param_def_flat_types(
-                &def.params_def_with_type,
+                &param_defs_pt,
                 &struct_ty.params,
                 verify_state,
             )
@@ -1274,8 +1276,8 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
+        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
             &struct_ty.params,
         );
 
