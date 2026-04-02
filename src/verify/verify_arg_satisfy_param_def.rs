@@ -193,7 +193,8 @@ impl Runtime {
             if verify_result.is_unknown() {
                 return Err(RuntimeError::UnknownError(UnknownError::new(
                     format!(
-                        "argument does not satisfy parameter type (unknown): {}",
+                        "argument {} does not satisfy parameter type (unknown): {}",
+                        arg,
                         param_type
                     ),
                     DEFAULT_LINE_FILE.clone(),
@@ -324,6 +325,9 @@ impl Runtime {
         }
 
         param_arg_map.insert(SELF.to_string(), Obj::Tuple(tuple.clone()));
+
+        // TODO TODO: 让 self 对应这个 def ，否则 无法 instantiate
+        
         for iff_fact in struct_def.facts.iter() {
             let instantiated = self
                 .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map)
@@ -342,6 +346,7 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
+            println!("instantiated: {:?}", instantiated.to_string());
             let result = self.verify_or_and_chain_atomic_fact(&instantiated, verify_state)?;
             if result.is_unknown() {
                 return Ok(result);
