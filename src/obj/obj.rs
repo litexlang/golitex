@@ -193,11 +193,6 @@ pub struct FnSetWithParams {
     pub ret_set: Box<Obj>,
 }
 
-#[derive(Clone)]
-pub struct InstStructObj {
-    pub struct_name: IdentifierOrIdentifierWithMod,
-    pub args: Vec<Box<Obj>>,
-}
 
 #[derive(Clone)]
 pub struct Cart {
@@ -378,14 +373,6 @@ impl FnSetWithParams {
     }
 }
 
-impl InstStructObj {
-    pub fn new(struct_name: IdentifierOrIdentifierWithMod, param_sets: Vec<Obj>) -> Self {
-        InstStructObj {
-            struct_name,
-            args: param_sets.into_iter().map(Box::new).collect(),
-        }
-    }
-}
 
 impl PowerSet {
     pub fn new(set: Obj) -> Self {
@@ -814,18 +801,7 @@ impl fmt::Display for FnSetWithParams {
     }
 }
 
-impl fmt::Display for InstStructObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ", STRUCT)?;
-        match &self.struct_name {
-            IdentifierOrIdentifierWithMod::Identifier(identifier) => write!(f, "{}", identifier)?,
-            IdentifierOrIdentifierWithMod::IdentifierWithMod(identifier_with_mod) => {
-                write!(f, "{}", identifier_with_mod)?
-            }
-        };
-        write!(f, "{}", braced_vec_to_string(&self.args))
-    }
-}
+
 
 impl fmt::Display for Cart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

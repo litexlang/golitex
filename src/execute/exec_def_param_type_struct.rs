@@ -121,7 +121,7 @@ impl Runtime {
             args: struct_params,
         };
 
-        self.define_param_binding_struct_with_def(SELF, &local_def, &struct_ty)
+        self.define_param_binding_struct(SELF, &struct_ty)
             .map_err(|runtime_error| {
                 ExecStmtError::new_with_stmt(
                     Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
