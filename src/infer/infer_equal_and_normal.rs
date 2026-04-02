@@ -242,7 +242,18 @@ impl Runtime {
         );
 
         for iff_fact in predicate_definition.iff_facts.iter() {
-            let instantiated_iff_fact = iff_fact.instantiate(&param_to_arg_map);
+            let instantiated_iff_fact = self.inst_fact(iff_fact, &param_to_arg_map).map_err(
+                |e| {
+                    InferError::new(
+                        format!(
+                            "failed to instantiate iff fact while inferring `{}`",
+                            normal_atomic_fact
+                        ),
+                        normal_atomic_fact.line_file,
+                        Some(e),
+                    )
+                },
+            )?;
             let fact_to_store =
                 instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file);
             infer_result.new_fact(&fact_to_store);

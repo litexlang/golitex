@@ -157,7 +157,16 @@ impl Runtime {
         };
 
         for dom_fact in known_forall.dom.iter() {
-            let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            let instantiated_dom_fact = self
+                .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .map_err(|e| {
+                    VerifyError::new(
+                        Fact::OrFact(given_or_fact.clone()),
+                        String::new(),
+                        given_or_fact.line_file,
+                        Some(e),
+                    )
+                })?;
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
             if result.is_unknown() {

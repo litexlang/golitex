@@ -62,6 +62,7 @@ pub enum RuntimeError {
     InferError(InferError),
     NameAlreadyUsedError(NameAlreadyUsedError),
     DefineParamsError(DefineParamsError),
+    InstantiateError(RuntimeErrorStruct),
 }
 
 impl std::error::Error for RuntimeError {}
@@ -87,6 +88,7 @@ impl RuntimeError {
             RuntimeError::InferError(e) => e.line_file,
             RuntimeError::NameAlreadyUsedError(e) => e.line_file,
             RuntimeError::DefineParamsError(e) => e.line_file,
+            RuntimeError::InstantiateError(e) => e.line_file,
         }
     }
 
@@ -105,6 +107,7 @@ impl RuntimeError {
             RuntimeError::InferError(e) => e.display_label(),
             RuntimeError::NameAlreadyUsedError(e) => e.display_label(),
             RuntimeError::DefineParamsError(e) => e.display_label(),
+            RuntimeError::InstantiateError(_) => "InstantiateError",
         }
     }
 

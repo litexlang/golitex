@@ -46,7 +46,7 @@ impl Runtime {
             };
 
         let (requirement_facts_for_param, algo_param_defs_with_type) =
-            Self::collect_requirement_facts_and_algo_param_defs(
+            self.collect_requirement_facts_and_algo_param_defs(
                 def_algo_stmt,
                 &fn_set_where_algo_belongs,
             )?;
@@ -102,16 +102,18 @@ impl Runtime {
     }
 
     fn collect_requirement_facts_and_algo_param_defs(
+        &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_where_algo_belongs: &FnSetWithParams,
     ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamType>), ExecStmtError> {
-        Self::requirement_facts_and_param_defs_for_fn_set_with_dom(
+        self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
             fn_set_where_algo_belongs,
         )
     }
 
     fn requirement_facts_and_param_defs_for_fn_set_with_dom(
+        &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_with_dom: &FnSetWithParams,
     ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamType>), ExecStmtError> {
@@ -122,6 +124,7 @@ impl Runtime {
 
         let param_satisfy_fn_param_set_facts_atomic =
             ParamDefWithParamSet::facts_for_args_satisfy_param_def_with_set_vec(
+                self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_for_algo_params,
             )
@@ -181,9 +184,15 @@ impl Runtime {
                     }
                 }
             }
-            let instantiated_param_set = param_def_with_set
-                .1
-                .instantiate(&fn_set_param_name_to_algo_arg_obj);
+            let instantiated_param_set = self
+                .inst_obj(&param_def_with_set.1, &fn_set_param_name_to_algo_arg_obj)
+                .map_err(|runtime_error| {
+                    Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                        def_algo_stmt,
+                        "algo verify: failed to instantiate fn set param set".to_string(),
+                        Some(runtime_error),
+                    )
+                })?;
             algo_param_defs_with_type.push(ParamDefWithParamType(
                 mapped_param_names,
                 ParamType::Obj(instantiated_param_set),
@@ -194,7 +203,15 @@ impl Runtime {
             requirement_facts.push(Fact::AtomicFact(in_fact_atomic.clone()));
         }
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
-            let instantiated_dom_fact = dom_fact.instantiate(&fn_set_param_name_to_algo_arg_obj);
+            let instantiated_dom_fact = self
+                .inst_or_and_chain_atomic_fact(dom_fact, &fn_set_param_name_to_algo_arg_obj)
+                .map_err(|runtime_error| {
+                    Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                        def_algo_stmt,
+                        "algo verify: failed to instantiate fn set dom fact".to_string(),
+                        Some(runtime_error),
+                    )
+                })?;
             requirement_facts.push(instantiated_dom_fact.to_fact());
         }
 

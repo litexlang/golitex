@@ -84,8 +84,18 @@ impl Runtime {
                     })?;
 
                 for fact_in_set_builder in set_builder.facts.iter() {
-                    let instantiated_fact_in_set_builder: OrAndChainAtomicFact =
-                        fact_in_set_builder.instantiate(&param_to_arg_map);
+                    let instantiated_fact_in_set_builder: OrAndChainAtomicFact = self
+                        .inst_or_and_chain_atomic_fact(fact_in_set_builder, &param_to_arg_map)
+                        .map_err(|e| {
+                            InferError::new(
+                                format!(
+                                    "failed to instantiate set builder fact while inferring `{}`",
+                                    in_fact
+                                ),
+                                in_fact.line_file,
+                                Some(e),
+                            )
+                        })?;
                     let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
                     let fact_to_store =
                         instantiated_fact_as_fact.with_new_line_file(in_fact.line_file);
