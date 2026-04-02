@@ -1,6 +1,69 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn parse_param_def_with_struct_field_type_and_skip_comma(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamDefWithStructFieldType, ParsingError> {
+        let param = tb.advance()?;
+        let param_def = if tb.current()? != COMMA {
+            ParamDefWithStructFieldType(vec![param], self.parse_struct_field_type(tb)?)
+        } else {
+            let mut vec_of_params = vec![param];
+
+            while tb.current_token_is_equal_to(COMMA) {
+                tb.skip()?;
+                vec_of_params.push(tb.advance()?);
+            }
+            let param_type = self.parse_struct_field_type(tb)?;
+
+            ParamDefWithStructFieldType(vec_of_params, param_type)
+        };
+        if tb.current_token_is_equal_to(COMMA) {
+            tb.skip_token(COMMA)?;
+        }
+        Ok(param_def)
+    }
+
+    /// `struct` 头部与字段类型：不允许嵌套 `struct`（无 `struct Foo(...)`）。
+    pub fn parse_struct_field_type(&mut self, tb: &mut TokenBlock) -> Result<StructFieldType, ParsingError> {
+        match tb.current()? {
+            NONEMPTY_SET => self
+                .parse_param_type_nonempty_set(tb)
+                .map(|pt| match pt {
+                    ParamType::NonemptySet(n) => StructFieldType::NonemptySet(n),
+                    _ => unreachable!(),
+                }),
+            FINITE_SET => self
+                .parse_param_type_finite_set(tb)
+                .map(|pt| match pt {
+                    ParamType::FiniteSet(f) => StructFieldType::FiniteSet(f),
+                    _ => unreachable!(),
+                }),
+            SET => self.parse_param_type_set(tb).map(|pt| match pt {
+                ParamType::Set(s) => StructFieldType::Set(s),
+                _ => unreachable!(),
+            }),
+            FAMILY => self
+                .parse_param_type_family(tb)
+                .map(|pt| match pt {
+                    ParamType::Family(f) => StructFieldType::Family(f),
+                    _ => unreachable!(),
+                }),
+            STRUCT => Err(ParsingError::new(
+                "nested `struct` types are not allowed in struct parameter and field types".to_string(),
+                tb.line_file,
+                None,
+            )),
+            _ => self
+                .parse_param_type_obj(tb)
+                .map(|pt| match pt {
+                    ParamType::Obj(o) => StructFieldType::Obj(o),
+                    _ => unreachable!(),
+                }),
+        }
+    }
+
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,

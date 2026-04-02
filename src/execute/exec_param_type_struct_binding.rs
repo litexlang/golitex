@@ -125,7 +125,7 @@ impl Runtime {
             )));
         }
 
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.params.len() != expected_count {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
@@ -144,8 +144,8 @@ impl Runtime {
         let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.params.clone());
         self.register_param_as_struct_instance(name, inst);
 
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
+        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
             &struct_ty.params,
         );
 
@@ -169,7 +169,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for (field_name, field_param_type) in def.fields.iter() {
-            let instantiated = self.inst_param_type(field_param_type, param_to_arg_map)?;
+            let instantiated = self.inst_param_type(&field_param_type.to_param_type(), param_to_arg_map)?;
             let fa = FieldAccess::new(root_param_name.to_string(), vec![field_name.clone()]);
             let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
             infer_result.new_infer_result_inside(fr);
@@ -205,7 +205,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.params.len() != expected_count {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
@@ -223,14 +223,15 @@ impl Runtime {
         let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.params.clone());
         self.register_param_as_struct_instance(&field_access.to_string(), inst);
 
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
+        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
             &struct_ty.params,
         );
 
         let mut infer_result = InferResult::new();
         for (field_name, field_param_type) in def.fields.iter() {
-            let instantiated = self.inst_param_type(field_param_type, &param_to_arg_map)?;
+            let instantiated =
+                self.inst_param_type(&field_param_type.to_param_type(), &param_to_arg_map)?;
             let fa = append_field_to_field_access(field_access, field_name);
             let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
             infer_result.new_infer_result_inside(fr);
@@ -246,7 +247,7 @@ impl Runtime {
 
     /// 将 `struct` 定义中 `<=>:` 下的 [`DefParamTypeStructStmt::facts`] 做形参代入，并把 `self` 换成当前实例后存库。
     ///
-    /// `param_to_arg_map` 来自 [`ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
+    /// `param_to_arg_map` 来自 [`ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
     /// `instantiate` 使用同一张表）。在此之上插入 `SELF` → `self_replacement`：
     /// - 根绑定：`Obj::Identifier(g)`；
     /// - [`define_param_binding_struct_at_field_access`]（即「在某一 field access 上绑定嵌套 struct」，与

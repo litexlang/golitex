@@ -327,6 +327,44 @@ impl Runtime {
         Ok((params_def_with_type, dom_facts))
     }
 
+    fn parse_braced_struct_field_params_and_optional_dom_facts(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<(Vec<ParamDefWithStructFieldType>, Vec<OrAndChainAtomicFact>), ParsingError> {
+        tb.skip_token(LEFT_BRACE)?;
+        let mut param_defs: Vec<ParamDefWithStructFieldType> = vec![];
+        while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
+            param_defs.push(self.parse_param_def_with_struct_field_type_and_skip_comma(tb)?);
+        }
+        let param_names = ParamDefWithStructFieldType::collect_param_names(&param_defs);
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &param_names,
+            tb.line_file,
+        )
+        .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
+        let dom_facts = if tb.current_token_is_equal_to(COLON) {
+            tb.skip_token(COLON)?;
+            let mut facts = vec![];
+            while tb.current()? != RIGHT_BRACE {
+                facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+                if tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                }
+            }
+            facts
+        } else {
+            vec![]
+        };
+        tb.skip_token(RIGHT_BRACE)?;
+        Ok((param_defs, dom_facts))
+    }
+
     pub fn parse_def_family_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(FAMILY)?;
         let name = tb.advance()?;
@@ -395,8 +433,8 @@ impl Runtime {
         name: String,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, ParsingError> {
-        let (params_def_with_type, dom_facts) =
-            self.parse_braced_params_and_optional_dom_facts(tb)?;
+        let (param_defs, dom_facts) =
+            self.parse_braced_struct_field_params_and_optional_dom_facts(tb)?;
         if tb.current_token_is_equal_to(EQUAL) {
             return Err(ParsingError::new(
                 "use `family` for set-style definitions (`... {} = ...`); `struct` requires field definitions after `:`"
@@ -415,7 +453,7 @@ impl Runtime {
             ));
         }
 
-        let mut fields: Vec<(String, ParamType)> = vec![];
+        let mut fields: Vec<(String, StructFieldType)> = vec![];
         let mut facts: Vec<OrAndChainAtomicFact> = vec![];
 
         let body_len = tb.body.len();
@@ -434,7 +472,7 @@ impl Runtime {
                 ParsingError::new("Expected field block".to_string(), tb.line_file, None)
             })?;
             let field_name = block.advance()?;
-            let cond = self.parse_param_type(block)?;
+            let cond = self.parse_struct_field_type(block)?;
             fields.push((field_name, cond));
         }
 
@@ -450,12 +488,12 @@ impl Runtime {
 
         let fields = merge_struct_fields_with_implicit_type_params(
             &name,
-            &params_def_with_type,
+            &param_defs,
             fields,
             tb.line_file,
         )?;
         let mut implicit_param_projection_facts =
-            build_struct_implicit_param_projection_facts(&params_def_with_type, tb.line_file);
+            build_struct_implicit_param_projection_facts(&param_defs, tb.line_file);
         implicit_param_projection_facts.extend(facts);
         facts = implicit_param_projection_facts;
 
@@ -475,7 +513,7 @@ impl Runtime {
 
         Ok(Stmt::DefParamTypeStructStmt(DefParamTypeStructStmt::new(
             name,
-            params_def_with_type,
+            param_defs,
             dom_facts,
             fields,
             facts,
@@ -552,12 +590,12 @@ impl Runtime {
 /// 若用户又显式写了同名字段，报错。
 fn merge_struct_fields_with_implicit_type_params(
     struct_name: &str,
-    params_def_with_type: &[ParamDefWithParamType],
-    user_fields: Vec<(String, ParamType)>,
+    param_defs: &[ParamDefWithStructFieldType],
+    user_fields: Vec<(String, StructFieldType)>,
     line_file: (usize, usize),
-) -> Result<Vec<(String, ParamType)>, ParsingError> {
-    let mut implicit: Vec<(String, ParamType)> = Vec::new();
-    for pd in params_def_with_type {
+) -> Result<Vec<(String, StructFieldType)>, ParsingError> {
+    let mut implicit: Vec<(String, StructFieldType)> = Vec::new();
+    for pd in param_defs {
         for name in &pd.0 {
             if user_fields.iter().any(|(n, _)| n == name) {
                 return Err(ParsingError::new(
@@ -577,13 +615,13 @@ fn merge_struct_fields_with_implicit_type_params(
 }
 
 fn build_struct_implicit_param_projection_facts(
-    params_def_with_type: &[ParamDefWithParamType],
+    param_defs: &[ParamDefWithStructFieldType],
     line_file: (usize, usize),
 ) -> Vec<OrAndChainAtomicFact> {
-    let mut facts = Vec::with_capacity(ParamDefWithParamType::number_of_params(
-        &params_def_with_type.to_vec(),
+    let mut facts = Vec::with_capacity(ParamDefWithStructFieldType::number_of_params(
+        &param_defs.to_vec(),
     ));
-    for param_def in params_def_with_type {
+    for param_def in param_defs {
         for param_name in &param_def.0 {
             facts.push(OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
                 EqualFact::new(

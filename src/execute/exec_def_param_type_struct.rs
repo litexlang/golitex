@@ -43,8 +43,12 @@ impl Runtime {
     ) -> Result<(), ExecStmtError> {
         let verify_state = VerifyState::new(0, false);
 
-        self
-            .define_params_with_type(&def_param_type_struct_stmt.params_def_with_type, false)
+        self.define_params_with_type(
+            &ParamDefWithStructFieldType::to_param_defs_with_param_type(
+                &def_param_type_struct_stmt.param_defs,
+            ),
+            false,
+        )
             .map_err(|define_params_error| {
                 ExecStmtError::new_with_stmt(
                     Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
@@ -72,7 +76,7 @@ impl Runtime {
 
         for (_, field_param_type) in def_param_type_struct_stmt.fields.iter() {
             self
-                .verify_param_type_well_defined(field_param_type, &verify_state)
+                .verify_param_type_well_defined(&field_param_type.to_param_type(), &verify_state)
                 .map_err(|well_defined_error| {
                     ExecStmtError::new_with_stmt(
                         Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
@@ -91,7 +95,7 @@ impl Runtime {
         // 使后面事实检查与运行时语义一致。
         let local_def = DefParamTypeStructStmt::new(
             def_param_type_struct_stmt.name.clone(),
-            def_param_type_struct_stmt.params_def_with_type.clone(),
+            def_param_type_struct_stmt.param_defs.clone(),
             def_param_type_struct_stmt.dom_facts.clone(),
             def_param_type_struct_stmt.fields.clone(),
             vec![],
@@ -107,8 +111,7 @@ impl Runtime {
             )
         })?;
 
-        let param_names =
-            ParamDefWithParamType::collect_param_names(&local_def.params_def_with_type);
+        let param_names = ParamDefWithStructFieldType::collect_param_names(&local_def.param_defs);
         let struct_params: Vec<Obj> = param_names
             .iter()
             .map(|n| Obj::Identifier(Identifier::new(n.clone())))

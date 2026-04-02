@@ -11,6 +11,96 @@ pub struct ParamDefWithParamSet(pub Vec<String>, pub Obj);
 pub struct ParamDefWithParamType(pub Vec<String>, pub ParamType);
 
 #[derive(Clone)]
+pub struct ParamDefWithStructFieldType(pub Vec<String>, pub StructFieldType);
+
+#[derive(Clone)]
+pub enum StructFieldType {
+    Obj(Obj),
+    Set(Set),
+    FiniteSet(FiniteSet),
+    NonemptySet(NonemptySet),
+    Family(FamilyParamType),
+}
+
+impl StructFieldType {
+    pub fn to_param_type(&self) -> ParamType {
+        match self {
+            StructFieldType::Obj(o) => ParamType::Obj(o.clone()),
+            StructFieldType::Set(s) => ParamType::Set(s.clone()),
+            StructFieldType::FiniteSet(f) => ParamType::FiniteSet(f.clone()),
+            StructFieldType::NonemptySet(n) => ParamType::NonemptySet(n.clone()),
+            StructFieldType::Family(f) => ParamType::Family(f.clone()),
+        }
+    }
+}
+
+impl fmt::Display for StructFieldType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_param_type())
+    }
+}
+
+impl fmt::Display for ParamDefWithStructFieldType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", vec_to_string_join_by_comma(&self.0), self.1)
+    }
+}
+
+impl ParamDefWithStructFieldType {
+    pub fn number_of_params(defs: &Vec<ParamDefWithStructFieldType>) -> usize {
+        let mut total_param_count: usize = 0;
+        for p in defs.iter() {
+            total_param_count += p.0.len();
+        }
+        total_param_count
+    }
+
+    pub fn to_param_def_with_param_type(&self) -> ParamDefWithParamType {
+        ParamDefWithParamType(self.0.clone(), self.1.to_param_type())
+    }
+
+    pub fn to_param_defs_with_param_type(defs: &[ParamDefWithStructFieldType]) -> Vec<ParamDefWithParamType> {
+        defs.iter()
+            .map(|d| d.to_param_def_with_param_type())
+            .collect()
+    }
+
+    pub fn param_names(&self) -> &Vec<String> {
+        &self.0
+    }
+
+    pub fn collect_param_names(param_defs: &Vec<ParamDefWithStructFieldType>) -> Vec<String> {
+        let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
+        for def in param_defs.iter() {
+            for name in def.param_names().iter() {
+                names.push(name.clone());
+            }
+        }
+        names
+    }
+
+    pub fn param_defs_and_args_to_param_to_arg_map(
+        param_defs: &Vec<ParamDefWithStructFieldType>,
+        args: &Vec<Obj>,
+    ) -> HashMap<String, Obj> {
+        let param_names = Self::collect_param_names(param_defs);
+        if param_names.len() != args.len() {
+            unreachable!();
+        }
+
+        let mut result: HashMap<String, Obj> = HashMap::new();
+        let mut index = 0;
+        while index < param_names.len() {
+            let param_name = &param_names[index];
+            let arg = &args[index];
+            result.insert(param_name.clone(), arg.clone());
+            index += 1;
+        }
+        result
+    }
+}
+
+#[derive(Clone)]
 pub enum ParamType {
     Set(Set),
     NonemptySet(NonemptySet),
