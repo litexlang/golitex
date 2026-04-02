@@ -235,13 +235,13 @@ impl Runtime {
                         if struct_ty.name.to_string() != other_struct.name.to_string() {
                             return Ok(None);
                         }
-                        if struct_ty.params.len() != other_struct.params.len() {
+                        if struct_ty.args.len() != other_struct.args.len() {
                             return Ok(None);
                         }
                         for (param, other_param) in struct_ty
-                            .params
+                            .args
                             .iter()
-                            .zip(other_struct.params.iter())
+                            .zip(other_struct.args.iter())
                         {
                             matched_args.push((param.clone(), other_param.clone()));
                         }

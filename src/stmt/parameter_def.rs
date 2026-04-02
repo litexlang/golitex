@@ -123,7 +123,7 @@ pub struct FamilyParamType {
 #[derive(Clone)]
 pub struct StructParamType {
     pub name: IdentifierOrIdentifierWithMod,
-    pub params: Vec<Obj>,
+    pub args: Vec<Obj>,
 }
 
 #[derive(Clone)]
@@ -175,7 +175,7 @@ impl fmt::Display for ParamType {
                     "{} {}({})",
                     STRUCT,
                     struct_ty.name,
-                    vec_to_string_join_by_comma(&struct_ty.params)
+                    vec_to_string_join_by_comma(&struct_ty.args)
                 )
             }
         }

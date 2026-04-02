@@ -118,7 +118,7 @@ impl Runtime {
             .collect();
         let struct_ty = StructParamType {
             name: IdentifierOrIdentifierWithMod::Identifier(Identifier::new(local_def.name.clone())),
-            params: struct_params,
+            args: struct_params,
         };
 
         self.define_param_binding_struct_with_def(SELF, &local_def, &struct_ty)

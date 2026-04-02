@@ -1,12 +1,5 @@
+use std::collections::HashMap;
 use crate::prelude::*;
-
-fn field_access_append_field(obj: &Obj, field_name: &str) -> Option<FieldAccess> {
-    match obj {
-        Obj::Identifier(i) => Some(FieldAccess::new(i.name.clone(), field_name.to_string())),
-        Obj::FieldAccess(fa) => Some(fa.with_appended_field(field_name)),
-        _ => None,
-    }
-}
 
 impl Runtime {
     fn verify_obj_satisfies_struct_param_type(
@@ -32,8 +25,8 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
-        if struct_ty.params.len() != expected_count {
+        let number_of_params_in_def = def.number_of_params();
+        if number_of_params_in_def != struct_ty.args.len() {
             return Err(VerifyError::new(
                 Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     obj.clone(),
@@ -41,170 +34,45 @@ impl Runtime {
                     DEFAULT_LINE_FILE.clone(),
                 ))),
                 format!(
-                    "struct `{}` expects {} type argument(s), got {}",
-                    struct_name,
-                    expected_count,
-                    struct_ty.params.len()
+                    "struct `{}` definition expects {} parameter(s), but struct type has {} argument(s)",
+                    def.name,
+                    number_of_params_in_def,
+                    struct_ty.args.len()
                 ),
                 DEFAULT_LINE_FILE,
                 None,
             ));
         }
-
-        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
-            &def.param_defs,
-            &struct_ty.params,
-        );
-
-        if let Obj::Tuple(tuple) = &obj {
-            if tuple.args.len() != def.fields.len() {
-                return Err(VerifyError::new(
-                    Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                        obj.clone(),
-                        Obj::Identifier(Identifier::new(String::from("_"))),
-                        DEFAULT_LINE_FILE.clone(),
-                    ))),
-                    format!(
-                        "struct `{}`: tuple has {} component(s), definition has {} field(s)",
-                        struct_name,
-                        tuple.args.len(),
-                        def.fields.len()
-                    ),
-                    DEFAULT_LINE_FILE,
-                    None,
-                ));
+        
+        match &obj {
+            Obj::Tuple(tuple) => {
+                self.verify_tuple_satisfy_param_def_with_struct_type(
+                    tuple,
+                    struct_ty,
+                    &def,
+                    verify_state,
+                )
             }
-            
-            let mut last_result: Option<NonErrStmtExecResult> = None;
-            for (i, (_, field_pt)) in def.fields.iter().enumerate() {
-                let instantiated = self
-                    .inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)
-                    .map_err(|e| {
-                        VerifyError::new(
-                            Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                                obj.clone(),
-                                Obj::Identifier(Identifier::new(String::from("_"))),
-                                DEFAULT_LINE_FILE.clone(),
-                            ))),
-                            String::new(),
-                            DEFAULT_LINE_FILE,
-                            Some(e),
-                        )
-                    })?;
-                let component = (*tuple.args[i]).clone();
-                let r =
-                    self.verify_obj_satisfies_param_type(component, &instantiated, verify_state)?;
-                if r.is_unknown() {
-                    return Ok(r);
-                }
-                last_result = Some(r);
-            }
-
-            let mut extended = param_to_arg_map.clone();
-            extended.insert(SELF.to_string(), obj.clone());
-            for iff_fact in def.facts.iter() {
-                let instantiated = self
-                    .inst_or_and_chain_atomic_fact(iff_fact, &extended)
-                    .map_err(|e| {
-                        VerifyError::new(
-                            Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                                obj.clone(),
-                                Obj::Identifier(Identifier::new(String::from("_"))),
-                                DEFAULT_LINE_FILE.clone(),
-                            ))),
-                            format!(
-                                "struct `{}`: failed to instantiate `<=>:` fact: {}",
-                                struct_name, e
+            Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
+                let expected_inst =
+                    InstStructObj::new(struct_ty.name.clone(), struct_ty.args.clone());
+                if let Some(inst) =
+                    self.get_inst_struct_obj_for_field_access_root(&obj.to_string())
+                {
+                    if inst.to_string() == expected_inst.to_string() {
+                        return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+                            NonFactualStmtSuccess::new(
+                                Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE)),
+                                InferResult::new(),
+                                vec![],
                             ),
-                            DEFAULT_LINE_FILE,
-                            Some(e),
-                        )
-                    })?;
-                let r = self.verify_or_and_chain_atomic_fact(&instantiated, verify_state)?;
-                if r.is_unknown() {
-                    return Ok(r);
+                        ));
+                    }
                 }
-                last_result = Some(r);
+                Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
             }
-
-            return Ok(last_result.unwrap_or_else(|| {
-                NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
-                    Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE)),
-                    InferResult::new(),
-                    vec![],
-                ))
-            }));
+            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
-
-        if def.fields.is_empty() {
-            self.verify_obj_well_defined_and_store_cache(&obj, verify_state)
-                .map_err(|e| {
-                    VerifyError::new(
-                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                            obj.clone(),
-                            Obj::Identifier(Identifier::new(String::from("_"))),
-                            DEFAULT_LINE_FILE.clone(),
-                        ))),
-                        e.msg.clone(),
-                        e.line_file,
-                        Some(RuntimeError::WellDefinedError(e)),
-                    )
-                })?;
-            return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
-                NonFactualStmtSuccess::new(
-                    Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE)),
-                    InferResult::new(),
-                    vec![],
-                ),
-            ));
-        }
-
-        let mut last_result: Option<NonErrStmtExecResult> = None;
-        for (field_name, field_pt) in def.fields.iter() {
-            let instantiated = self
-                .inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)
-                .map_err(
-                |e| {
-                    VerifyError::new(
-                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                            obj.clone(),
-                            Obj::Identifier(Identifier::new(String::from("_"))),
-                            DEFAULT_LINE_FILE.clone(),
-                        ))),
-                        String::new(),
-                        DEFAULT_LINE_FILE,
-                        Some(e),
-                    )
-                },
-            )?;
-            let Some(fa) = field_access_append_field(&obj, field_name) else {
-                return Err(VerifyError::new(
-                    Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                        obj.clone(),
-                        Obj::Identifier(Identifier::new(String::from("_"))),
-                        DEFAULT_LINE_FILE.clone(),
-                    ))),
-                    "struct param satisfaction: object root must be identifier or field access"
-                        .to_string(),
-                    DEFAULT_LINE_FILE,
-                    None,
-                ));
-            };
-            let field_obj = Obj::FieldAccess(fa);
-            let r = self.verify_obj_satisfies_param_type(field_obj, &instantiated, verify_state)?;
-            if r.is_unknown() {
-                return Ok(r);
-            }
-            last_result = Some(r);
-        }
-
-        Ok(last_result.unwrap_or_else(|| {
-            NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
-                Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE)),
-                InferResult::new(),
-                vec![],
-            ))
-        }))
     }
 
     /// 检查 `obj` 是否满足 `param_type`（按 [`ParamType`] 各变体分别处理）。
@@ -344,5 +212,149 @@ impl Runtime {
             }
         }
         Ok(infer_result)
+    }
+}
+
+impl Runtime {
+    fn verify_tuple_satisfy_param_def_with_struct_type(
+        &mut self,
+        tuple: &Tuple,
+        struct_param_type: &StructParamType,
+        struct_def: &DefParamTypeStructStmt,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        // 输入 (R, id, +, neg) 对应 struct group(s set): id: s, add: fn(x, y s)s, inv: fn(x s)s
+
+        let args_of_struct_param_type = &struct_param_type.args;
+        let expected_tuple_len = args_of_struct_param_type.len() + struct_def.fields.len();
+        if expected_tuple_len != tuple.args.len() {
+            return Err(VerifyError::new(
+                Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                    Obj::Tuple(tuple.clone()),
+                    Obj::Identifier(Identifier::new(String::from("_"))),
+                    DEFAULT_LINE_FILE.clone(),
+                ))),
+                format!(
+                    "tuple for struct `{}` should have {} component(s), got {}",
+                    struct_param_type.name,
+                    expected_tuple_len,
+                    tuple.args.len()
+                ),
+                DEFAULT_LINE_FILE,
+                None,
+            ));
+        }
+
+        let mut tuple_args_for_struct_param_type_args: Vec<Obj> = vec![];
+        for i in 0..args_of_struct_param_type.len() {
+            tuple_args_for_struct_param_type_args.push((*tuple.args[i]).clone());
+        }
+
+        let mut tuple_args_for_struct_param_type_fields: Vec<Obj> = vec![];
+        for i in args_of_struct_param_type.len()
+            ..args_of_struct_param_type.len() + struct_def.fields.len()
+        {
+            tuple_args_for_struct_param_type_fields.push((*tuple.args[i]).clone())
+        }
+
+        // tuple_args_for_struct_param_type_args 和 args_of_struct_param_type 一一对应相等
+        for (i, tuple_arg) in tuple_args_for_struct_param_type_args.iter().enumerate() {
+            let struct_type_arg = struct_param_type.args[i].clone();
+            let result = self.verify_equal_fact(
+                &EqualFact::new(tuple_arg.clone(), struct_type_arg.clone(), DEFAULT_LINE_FILE),
+                verify_state,
+            )?;
+            if result.is_unknown() {
+                return Err(VerifyError::new(
+                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        tuple_arg.clone(),
+                        struct_type_arg.clone(),
+                        DEFAULT_LINE_FILE.clone(),
+                    ))),
+                    format!(
+                        "cannot verify tuple component {} equals struct type argument `{}`",
+                        i, struct_type_arg
+                    ),
+                    DEFAULT_LINE_FILE,
+                    None,
+                ));
+            }
+        }
+
+        let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
+        for (i, key) in struct_def.get_params().iter().enumerate() {
+            param_arg_map.insert(key.clone(), tuple_args_for_struct_param_type_args[i].clone());
+        }
+
+        // 验证：tuple_args_for_struct_param_type_fields 满足 field 对应的 实例化的 struct_type 
+        // e.g. (R, 0, +, neg) 中 (0, +, neg) 满足 struct group(R): zero: R, add: fn(x, y R) R, inv: fn(x R) R 中: 0 满足 zero:R, + 满足 add: fn(x, y R) R, neg 满足 inv: fn(x R) R
+        let mut last_result: Option<NonErrStmtExecResult> = None;
+        for (i, ((_, field_type), tuple_field_arg)) in struct_def
+            .fields
+            .iter()
+            .zip(tuple_args_for_struct_param_type_fields.iter())
+            .enumerate()
+        {
+            let instantiated_field_type = self
+                .inst_param_type(&field_type.to_param_type(), &param_arg_map)
+                .map_err(|e| {
+                    VerifyError::new(
+                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                            tuple_field_arg.clone(),
+                            Obj::Identifier(Identifier::new(String::from("_"))),
+                            DEFAULT_LINE_FILE.clone(),
+                        ))),
+                        format!(
+                            "failed to instantiate field type {} of struct `{}`",
+                            i, struct_def.name
+                        ),
+                        DEFAULT_LINE_FILE,
+                        Some(e),
+                    )
+                })?;
+            let result = self.verify_obj_satisfies_param_type(
+                tuple_field_arg.clone(),
+                &instantiated_field_type,
+                verify_state,
+            )?;
+            if result.is_unknown() {
+                return Ok(result);
+            }
+            last_result = Some(result);
+        }
+
+        param_arg_map.insert(SELF.to_string(), Obj::Tuple(tuple.clone()));
+        for iff_fact in struct_def.facts.iter() {
+            let instantiated = self
+                .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map)
+                .map_err(|e| {
+                    VerifyError::new(
+                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                            Obj::Tuple(tuple.clone()),
+                            Obj::Identifier(Identifier::new(String::from("_"))),
+                            DEFAULT_LINE_FILE.clone(),
+                        ))),
+                        format!(
+                            "struct `{}`: failed to instantiate `<=>:` fact: {}",
+                            struct_def.name, e
+                        ),
+                        DEFAULT_LINE_FILE,
+                        Some(e),
+                    )
+                })?;
+            let result = self.verify_or_and_chain_atomic_fact(&instantiated, verify_state)?;
+            if result.is_unknown() {
+                return Ok(result);
+            }
+            last_result = Some(result);
+        }
+
+        Ok(last_result.unwrap_or_else(|| {
+            NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+                Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE)),
+                InferResult::new(),
+                vec![],
+            ))
+        }))
     }
 }

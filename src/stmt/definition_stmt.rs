@@ -436,6 +436,11 @@ impl DefParamTypeStructStmt {
 
 impl DefParamTypeStructStmt {
     pub fn number_of_params(&self) -> usize {
-        self.param_defs.iter().map(|param_def| param_def.0.len()).sum()
+        ParamDefWithStructFieldType::number_of_params(&self.param_defs)
+    }
+
+    /// 按定义顺序展开所有类型形参名（与 `struct T(...)` 中参数顺序一致）。
+    pub fn get_params(&self) -> Vec<String> {
+        ParamDefWithStructFieldType::collect_param_names(&self.param_defs)
     }
 }
