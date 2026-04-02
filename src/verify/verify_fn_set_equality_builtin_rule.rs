@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 fn fn_set_equality_fact(
     left: &FnSetWithParams,
     right: &FnSetWithParams,
-    line_file: (usize, usize),
+    line_file: LineFile,
 ) -> Fact {
     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::FnSetWithParams(left.clone()),
@@ -16,12 +16,12 @@ fn fn_set_equality_fact(
 fn fn_set_equality_verify_error(
     left: &FnSetWithParams,
     right: &FnSetWithParams,
-    line_file: (usize, usize),
+    line_file: LineFile,
     message: String,
     cause: Option<RuntimeError>,
 ) -> VerifyError {
     VerifyError::new(
-        fn_set_equality_fact(left, right, line_file),
+        fn_set_equality_fact(left, right, line_file.clone()),
         message,
         line_file,
         cause,
@@ -31,7 +31,7 @@ fn fn_set_equality_verify_error(
 fn fn_set_equality_verified_by_builtin_rules_result(
     left: &FnSetWithParams,
     right: &FnSetWithParams,
-    line_file: (usize, usize),
+    line_file: LineFile,
 ) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
         fn_set_equality_fact(left, right, line_file),
@@ -46,7 +46,7 @@ impl Runtime {
         &mut self,
         left: &FnSetWithParams,
         right: &FnSetWithParams,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         if ParamDefWithParamSet::number_of_params(&left.params_def_with_set)
@@ -59,7 +59,7 @@ impl Runtime {
             .verify_fn_set_with_params_directionally_in_local_env(
                 left,
                 right,
-                line_file,
+                line_file.clone(),
                 verify_state,
             )?;
         if !left_implies_right {
@@ -70,7 +70,7 @@ impl Runtime {
             .verify_fn_set_with_params_directionally_in_local_env(
                 right,
                 left,
-                line_file,
+                line_file.clone(),
                 verify_state,
             )?;
         if !right_implies_left {
@@ -86,7 +86,7 @@ impl Runtime {
         &mut self,
         source: &FnSetWithParams,
         target: &FnSetWithParams,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         self.push_env();
@@ -104,7 +104,7 @@ impl Runtime {
         &mut self,
         source: &FnSetWithParams,
         target: &FnSetWithParams,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         let target_flat_param_names = ParamDefWithParamSet::collect_param_names(&target.params_def_with_set);
@@ -115,7 +115,7 @@ impl Runtime {
                 source,
                 &generated_param_names,
                 target,
-                line_file,
+                line_file.clone(),
             )?;
         let target_param_to_generated_arg_map =
             Self::build_param_to_generated_arg_map(&target_flat_param_names, &generated_param_names);
@@ -124,14 +124,14 @@ impl Runtime {
             source,
             &source_param_to_generated_arg_map,
             target,
-            line_file,
+            line_file.clone(),
         )?;
 
         if !self.verify_directional_target_fn_set_param_membership_facts(
             source,
             target,
             &target_param_to_generated_arg_map,
-            line_file,
+            line_file.clone(),
             verify_state,
         )? {
             return Ok(false);
@@ -140,7 +140,7 @@ impl Runtime {
         if !self.verify_directional_target_fn_set_dom_facts(
             source,
             target,
-            line_file,
+            line_file.clone(),
             &target_param_to_generated_arg_map,
             verify_state,
         )? {
@@ -152,7 +152,7 @@ impl Runtime {
                 fn_set_equality_verify_error(
                     source,
                     target,
-                    line_file,
+                    line_file.clone(),
                     "failed to instantiate source ret set for fnset equality check".to_string(),
                     Some(e),
                 )
@@ -163,7 +163,7 @@ impl Runtime {
                 fn_set_equality_verify_error(
                     source,
                     target,
-                    line_file,
+                    line_file.clone(),
                     "failed to instantiate target ret set for fnset equality check".to_string(),
                     Some(e),
                 )
@@ -208,7 +208,7 @@ impl Runtime {
         source: &FnSetWithParams,
         generated_param_names: &[String],
         target: &FnSetWithParams,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Result<HashMap<String, Obj>, VerifyError> {
         let mut source_param_to_generated_arg_map: HashMap<String, Obj> =
             HashMap::with_capacity(generated_param_names.len());
@@ -224,7 +224,7 @@ impl Runtime {
                     fn_set_equality_verify_error(
                         source,
                         target,
-                        line_file,
+                        line_file.clone(),
                         "failed to instantiate source fnset param set".to_string(),
                         Some(e),
                     )
@@ -236,7 +236,7 @@ impl Runtime {
                     fn_set_equality_verify_error(
                         source,
                         target,
-                        line_file,
+                        line_file.clone(),
                         "failed to define fresh params for directional fnset equality verification"
                             .to_string(),
                         Some(RuntimeError::DefineParamsError(e)),
@@ -264,7 +264,7 @@ impl Runtime {
         source: &FnSetWithParams,
         source_param_to_generated_arg_map: &HashMap<String, Obj>,
         target: &FnSetWithParams,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Result<(), VerifyError> {
         for dom_fact in source.dom_facts.iter() {
             let instantiated_dom_fact = self
@@ -273,7 +273,7 @@ impl Runtime {
                     fn_set_equality_verify_error(
                         source,
                         target,
-                        line_file,
+                        line_file.clone(),
                         "failed to instantiate source fnset dom fact".to_string(),
                         Some(e),
                     )
@@ -285,7 +285,7 @@ impl Runtime {
                 fn_set_equality_verify_error(
                     source,
                     target,
-                    line_file,
+                    line_file.clone(),
                     "failed to assume source fnset dom fact in local equality environment"
                         .to_string(),
                     Some(RuntimeError::StoreFactError(e)),
@@ -300,7 +300,7 @@ impl Runtime {
         source: &FnSetWithParams,
         target: &FnSetWithParams,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
-        line_file: (usize, usize),
+        line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         for param_def_with_set in target.params_def_with_set.iter() {
@@ -310,7 +310,7 @@ impl Runtime {
                     fn_set_equality_verify_error(
                         source,
                         target,
-                        line_file,
+                        line_file.clone(),
                         "failed to instantiate target fnset param set".to_string(),
                         Some(e),
                     )
@@ -322,7 +322,7 @@ impl Runtime {
                     return Err(fn_set_equality_verify_error(
                         source,
                         target,
-                        line_file,
+                        line_file.clone(),
                         "internal error: missing generated param while verifying fnset equality"
                             .to_string(),
                         None,
@@ -331,7 +331,7 @@ impl Runtime {
                 let param_in_target_set_fact = AtomicFact::InFact(InFact::new(
                     generated_param_obj,
                     instantiated_param_set.clone(),
-                    line_file,
+                    line_file.clone(),
                 ));
                 let verify_result =
                     self.verify_atomic_fact(&param_in_target_set_fact, verify_state)?;
@@ -347,7 +347,7 @@ impl Runtime {
         &mut self,
         source: &FnSetWithParams,
         target: &FnSetWithParams,
-        line_file: (usize, usize),
+        line_file: LineFile,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
@@ -358,7 +358,7 @@ impl Runtime {
                     fn_set_equality_verify_error(
                         source,
                         target,
-                        line_file,
+                        line_file.clone(),
                         "failed to instantiate target fnset dom fact".to_string(),
                         Some(e),
                     )

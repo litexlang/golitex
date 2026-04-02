@@ -10,7 +10,7 @@ impl Runtime {
         } else {
             return Err(ParsingError::new(
                 "witness expects a exist or nonempty set".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -30,7 +30,7 @@ impl Runtime {
             equal_tos,
             exist_fact_in_witness,
             proof,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -55,7 +55,7 @@ impl Runtime {
             obj,
             set,
             proof,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 }

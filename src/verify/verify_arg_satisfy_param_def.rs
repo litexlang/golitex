@@ -18,24 +18,24 @@ impl Runtime {
                 let fact = AtomicFact::InFact(InFact::new(
                     obj,
                     set_obj.clone(),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::Set(_) => {
-                let fact = AtomicFact::IsSetFact(IsSetFact::new(obj, DEFAULT_LINE_FILE.clone()));
+                let fact = AtomicFact::IsSetFact(IsSetFact::new(obj, default_line_file()));
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::NonemptySet(_) => {
                 let fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                     obj,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::FiniteSet(_) => {
                 let fact =
-                    AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(obj, DEFAULT_LINE_FILE.clone()));
+                    AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(obj, default_line_file()));
                 self.verify_atomic_fact(&fact, verify_state)
             }
         }
@@ -66,7 +66,7 @@ impl Runtime {
                         arg,
                         param_type
                     ),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
                 )));

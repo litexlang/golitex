@@ -90,7 +90,7 @@ impl Runtime {
             Err(WellDefinedError::new(
                 format!("identifier `{}` not defined", identifier.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ))
         }
     }
@@ -108,7 +108,7 @@ impl Runtime {
             return Err(WellDefinedError::new(
                 format!("field access `{}` unknown, `{}` is not a struct", x.to_string(), x.name.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         };
 
@@ -121,7 +121,7 @@ impl Runtime {
         return Err(WellDefinedError::new(
             format!("field access `{}` unknown, {} does not contain field `{}`", x.to_string(), x.name.to_string(), x.field.to_string()),
             None,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
     }
 
@@ -148,7 +148,7 @@ impl Runtime {
                         fn_obj.head.to_string()
                     )),
                     None,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 )
             })?
             .clone();
@@ -166,7 +166,7 @@ impl Runtime {
                         fn_obj.to_string()
                     ),
                     Some(RuntimeError::WellDefinedError(well_defined_error)),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 )
             })?;
 
@@ -190,7 +190,7 @@ impl Runtime {
             let intermediate_in_fact = InFact::new(
                 fn_obj_prefix_as_obj,
                 set_where_the_next_fn_obj_is_in_obj,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
             self.store_fact_without_well_defined_verified_and_infer(Fact::AtomicFact(
@@ -203,7 +203,7 @@ impl Runtime {
                         fn_obj.to_string()
                     ),
                     Some(store_fact_error.into()),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 )
             })?;
 
@@ -220,7 +220,7 @@ impl Runtime {
                             the_set_where_current_fn_obj_is_in.to_string()
                         ),
                         None,
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     ));
                 }
             };
@@ -246,7 +246,7 @@ impl Runtime {
                     param_count
                 ),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -269,7 +269,7 @@ impl Runtime {
                 WellDefinedError::new(
                     format!("failed to build facts for args satisfy fn set parameter sets"),
                     Some(stmt_error),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 )
             })?;
 
@@ -283,14 +283,14 @@ impl Runtime {
                                 fact
                             ),
                             Some(RuntimeError::VerifyError(verify_error)),
-                            DEFAULT_LINE_FILE.clone(),
+                            default_line_file(),
                         )
                     })?;
             if verify_result.is_unknown() {
                 return Err(WellDefinedError::new(
                     format!("arg does not satisfy fn set parameter set: {}", fact),
                     None,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         }
@@ -306,7 +306,7 @@ impl Runtime {
                         WellDefinedError::new(
                             format!("failed to instantiate function domain fact: {}", e),
                             Some(e),
-                            DEFAULT_LINE_FILE.clone(),
+                            default_line_file(),
                         )
                     })?;
             let verify_result = self
@@ -318,7 +318,7 @@ impl Runtime {
                             instantiated_dom_fact
                         ),
                         Some(RuntimeError::VerifyError(verify_error)),
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     )
                 })?;
             if verify_result.is_unknown() {
@@ -328,7 +328,7 @@ impl Runtime {
                         instantiated_dom_fact
                     ),
                     None,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         }
@@ -342,14 +342,14 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         let r_obj = Obj::StandardSet(StandardSet::R);
-        let in_fact = InFact::new(obj.clone(), r_obj, DEFAULT_LINE_FILE.clone());
+        let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("obj {} is not in r", obj.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
         Ok(())
@@ -361,14 +361,14 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         let z_obj = Obj::StandardSet(StandardSet::Z);
-        let in_fact = InFact::new(obj.clone(), z_obj, DEFAULT_LINE_FILE.clone());
+        let in_fact = InFact::new(obj.clone(), z_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("obj {} is not in z", obj.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
         Ok(())
@@ -420,14 +420,14 @@ impl Runtime {
 
         let zero = Obj::Number(Number::new("0".to_string()));
         let not_equal_fact =
-            NotEqualFact::new((*div.right).clone(), zero, DEFAULT_LINE_FILE.clone());
+            NotEqualFact::new((*div.right).clone(), zero, default_line_file());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("divisor `{}` must be non-zero", div.right.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -446,14 +446,14 @@ impl Runtime {
         self.require_obj_in_z(&m.left, verify_state)?;
         self.require_obj_in_z(&m.right, verify_state)?;
         let zero = Obj::Number(Number::new("0".to_string()));
-        let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, DEFAULT_LINE_FILE.clone());
+        let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, default_line_file());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("modulus `{}` must be non-zero", m.right.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
         Ok(())
@@ -476,15 +476,15 @@ impl Runtime {
                 AtomicFact::GreaterFact(GreaterFact::new(
                     (*pow.base).clone(),
                     zero_obj.clone(),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                 )),
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
                     Obj::StandardSet(StandardSet::R),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                 )),
             ],
-            DEFAULT_LINE_FILE,
+            default_line_file(),
         ));
 
         let zero_base_and_positive_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
@@ -492,20 +492,20 @@ impl Runtime {
                 AtomicFact::EqualFact(EqualFact::new(
                     (*pow.base).clone(),
                     zero_obj.clone(),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                 )),
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
                     Obj::StandardSet(StandardSet::R),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                 )),
                 AtomicFact::GreaterFact(GreaterFact::new(
                     (*pow.exponent).clone(),
                     zero_obj.clone(),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                 )),
             ],
-            DEFAULT_LINE_FILE,
+            default_line_file(),
         ));
 
         let even_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
@@ -513,22 +513,22 @@ impl Runtime {
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
                     Obj::StandardSet(StandardSet::Z),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                 )),
                 AtomicFact::EqualFact(EqualFact::new(
                     exponent_mod_two_obj,
                     zero_obj,
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                 )),
             ],
-            DEFAULT_LINE_FILE,
+            default_line_file(),
         ));
 
         let exponent_is_positive_integer =
             AndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
                 (*pow.exponent).clone(),
                 Obj::StandardSet(StandardSet::NPos),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
             )));
 
         let pow_domain_or_fact = OrFact::new(
@@ -538,7 +538,7 @@ impl Runtime {
                 even_integer_exponent,
                 exponent_is_positive_integer,
             ],
-            DEFAULT_LINE_FILE,
+            default_line_file(),
         );
 
         let result = self.verify_or_fact(&pow_domain_or_fact, verify_state)?;
@@ -546,7 +546,7 @@ impl Runtime {
             return Err(WellDefinedError::new(
                 format!("base and exponent do not satisfy the pow domain"),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
         Ok(())
@@ -636,7 +636,7 @@ impl Runtime {
                 let not_equal_atomic_fact = AtomicFact::NotEqualFact(NotEqualFact::new(
                     left_obj.clone(),
                     right_obj,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
                 let verify_result = self
                     .verify_atomic_fact(&not_equal_atomic_fact, &next_verify_state)
@@ -647,14 +647,14 @@ impl Runtime {
                                 not_equal_atomic_fact
                             ),
                             Some(RuntimeError::VerifyError(previous_error)),
-                            DEFAULT_LINE_FILE.clone(),
+                            default_line_file(),
                         )
                     })?;
                 if verify_result.is_unknown() {
                     return Err(WellDefinedError::new(
                         format!("list set elements must be pairwise not equal, but it is not provable: {}", not_equal_atomic_fact),
                         None,
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     ));
                 }
                 j += 1;
@@ -691,7 +691,7 @@ impl Runtime {
                     x.to_string()
                 ),
                 Some(RuntimeError::DefineParamsError(e)),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -706,7 +706,7 @@ impl Runtime {
                         x.to_string()
                     ),
                     Some(RuntimeError::ExecStmtError(e)),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         }
@@ -737,7 +737,7 @@ impl Runtime {
                     x.to_string()
                 ),
                 Some(RuntimeError::WellDefinedError(e)),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -749,7 +749,7 @@ impl Runtime {
                         x.to_string()
                     ),
                     Some(RuntimeError::DefineParamsError(e)),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         }
@@ -765,7 +765,7 @@ impl Runtime {
                         x.to_string()
                     ),
                     Some(RuntimeError::ExecStmtError(e)),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         }
@@ -812,13 +812,13 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
 
         let is_cart_fact =
-            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), DEFAULT_LINE_FILE.clone()));
+            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), default_line_file()));
         let result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
         if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("set {} is not a cart", x.set.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -837,7 +837,7 @@ impl Runtime {
             WellDefinedError::new(
                 format!("projection dimension {} is not a number", x.dim),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             )
         })?;
         let projection_dimension_obj =
@@ -846,7 +846,7 @@ impl Runtime {
         let projection_dimension_is_positive_integer_fact = AtomicFact::InFact(InFact::new(
             projection_dimension_obj.clone(),
             Obj::StandardSet(StandardSet::NPos),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
         let projection_dimension_is_positive_integer_result =
             self.verify_atomic_fact(&projection_dimension_is_positive_integer_fact, verify_state)?;
@@ -857,19 +857,19 @@ impl Runtime {
                     projection_dimension_obj
                 ),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
         let left_set_is_cart_fact =
-            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), DEFAULT_LINE_FILE.clone()));
+            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), default_line_file()));
         let left_set_is_cart_result =
             self.verify_atomic_fact(&left_set_is_cart_fact, verify_state)?;
         if left_set_is_cart_result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("projection left side {} is not a cart", x.set),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -878,7 +878,7 @@ impl Runtime {
         let proj_index_not_larger_than_cart_dim = AtomicFact::LessEqualFact(LessEqualFact::new(
             projection_dimension_obj.clone(),
             left_set_cart_dim_obj.clone(),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
         let left_set_cart_dim_less_equal_projection_dimension_result =
             self.verify_atomic_fact(&proj_index_not_larger_than_cart_dim, verify_state)?;
@@ -889,7 +889,7 @@ impl Runtime {
                     projection_dimension_obj, left_set_cart_dim_obj
                 ),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -905,7 +905,7 @@ impl Runtime {
 
         let is_tuple_fact = AtomicFact::IsTupleFact(IsTupleFact::new(
             (*x.arg).clone(),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
         let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if result.is_unknown() {
@@ -915,7 +915,7 @@ impl Runtime {
                     is_tuple_fact
                 ),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -941,14 +941,14 @@ impl Runtime {
         // 必须 is_finite_set
         let is_finite_set_fact = AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
             (*x.set).clone(),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
         if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("set {} is not a finite set", x.set.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
         Ok(())
@@ -1007,7 +1007,7 @@ impl Runtime {
             WellDefinedError::new(
                 format!("index {} is not a number", x.index.to_string()),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             )
         })?;
         let index_calculated_obj =
@@ -1016,7 +1016,7 @@ impl Runtime {
         let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
             index_calculated_obj.clone(),
             Obj::StandardSet(StandardSet::NPos),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
         let index_is_positive_integer_result =
             self.verify_atomic_fact(&index_is_positive_integer_in_z_pos_fact, verify_state)?;
@@ -1024,13 +1024,13 @@ impl Runtime {
             return Err(WellDefinedError::new(
                 format!("index {} is not a positive integer", index_calculated_obj),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
         let target_obj_is_tuple_fact = AtomicFact::IsTupleFact(IsTupleFact::new(
             (*x.obj).clone(),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
         let target_obj_is_tuple_result =
             self.verify_atomic_fact(&target_obj_is_tuple_fact, verify_state)?;
@@ -1038,7 +1038,7 @@ impl Runtime {
             return Err(WellDefinedError::new(
                 format!("index target {} is not a tuple", x.obj),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -1046,7 +1046,7 @@ impl Runtime {
         let index_not_larger_than_tuple_dim_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
             index_calculated_obj.clone(),
             target_tuple_dim_obj.clone(),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
         let index_not_larger_than_tuple_dim_result =
             self.verify_atomic_fact(&index_not_larger_than_tuple_dim_fact, verify_state)?;
@@ -1057,7 +1057,7 @@ impl Runtime {
                     index_calculated_obj, target_tuple_dim_obj
                 ),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -1135,7 +1135,7 @@ impl Runtime {
                 return Err(WellDefinedError::new(
                     format!("family `{}` is not defined", family_name),
                     None,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         };
@@ -1150,7 +1150,7 @@ impl Runtime {
                     family_param_type.params.len()
                 ),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -1171,7 +1171,7 @@ impl Runtime {
                         family_name
                     ),
                     Some(runtime_error),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 )
             })?;
 
@@ -1187,7 +1187,7 @@ impl Runtime {
                         WellDefinedError::new(
                             format!("failed to instantiate family `{}` domain fact: {}", family_name, e),
                             Some(e),
-                            DEFAULT_LINE_FILE.clone(),
+                            default_line_file(),
                         )
                     })?;
             let verify_result = self
@@ -1199,7 +1199,7 @@ impl Runtime {
                             family_name, instantiated_dom_fact
                         ),
                         Some(RuntimeError::VerifyError(verify_error)),
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     )
                 })?;
             if verify_result.is_unknown() {
@@ -1209,7 +1209,7 @@ impl Runtime {
                         family_name, instantiated_dom_fact
                     ),
                     None,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         }
@@ -1219,7 +1219,7 @@ impl Runtime {
                 WellDefinedError::new(
                     format!("failed to instantiate family `{}` member set: {}", family_name, e),
                     Some(e),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 )
             },
         )?;
@@ -1240,7 +1240,7 @@ impl Runtime {
                 return Err(WellDefinedError::new(
                     format!("struct `{}` is not defined", struct_name),
                     None,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         };
@@ -1255,7 +1255,7 @@ impl Runtime {
                     struct_ty.args.len()
                 ),
                 None,
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
             ));
         }
 
@@ -1278,7 +1278,7 @@ impl Runtime {
                         struct_name
                     ),
                     Some(runtime_error),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 )
             })?;
 
@@ -1297,7 +1297,7 @@ impl Runtime {
                                 struct_name, e
                             ),
                             Some(e),
-                            DEFAULT_LINE_FILE.clone(),
+                            default_line_file(),
                         )
                     })?;
             let verify_result = self
@@ -1309,7 +1309,7 @@ impl Runtime {
                             struct_name, instantiated_dom_fact
                         ),
                         Some(RuntimeError::VerifyError(verify_error)),
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     )
                 })?;
             if verify_result.is_unknown() {
@@ -1319,7 +1319,7 @@ impl Runtime {
                         struct_name, instantiated_dom_fact
                     ),
                     None,
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ));
             }
         }

@@ -10,7 +10,7 @@ impl Runtime {
         let converted_superset_fact = AtomicFact::SupersetFact(SupersetFact::new(
             subset_fact.right.clone(),
             subset_fact.left.clone(),
-            subset_fact.line_file,
+            subset_fact.line_file.clone(),
         ));
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
@@ -39,7 +39,7 @@ impl Runtime {
         let converted_subset_fact = AtomicFact::SubsetFact(SubsetFact::new(
             superset_fact.right.clone(),
             superset_fact.left.clone(),
-            superset_fact.line_file,
+            superset_fact.line_file.clone(),
         ));
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
@@ -68,7 +68,7 @@ impl Runtime {
         let converted_not_superset_fact = AtomicFact::NotSupersetFact(NotSupersetFact::new(
             not_subset_fact.right.clone(),
             not_subset_fact.left.clone(),
-            not_subset_fact.line_file,
+            not_subset_fact.line_file.clone(),
         ));
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
@@ -97,7 +97,7 @@ impl Runtime {
         let converted_not_subset_fact = AtomicFact::NotSubsetFact(NotSubsetFact::new(
             not_superset_fact.right.clone(),
             not_superset_fact.left.clone(),
-            not_superset_fact.line_file,
+            not_superset_fact.line_file.clone(),
         ));
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
@@ -126,7 +126,7 @@ impl Runtime {
         let counterpart_fact = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
             not_less_fact.left.clone(),
             not_less_fact.right.clone(),
-            not_less_fact.line_file,
+            not_less_fact.line_file.clone(),
         ));
         self.verify_duality_atomic_fact_by_known_counterpart(
             &AtomicFact::NotLessFact(not_less_fact.clone()),
@@ -144,7 +144,7 @@ impl Runtime {
         let counterpart_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
             not_greater_fact.left.clone(),
             not_greater_fact.right.clone(),
-            not_greater_fact.line_file,
+            not_greater_fact.line_file.clone(),
         ));
         self.verify_duality_atomic_fact_by_known_counterpart(
             &AtomicFact::NotGreaterFact(not_greater_fact.clone()),
@@ -161,7 +161,7 @@ impl Runtime {
         let counterpart_fact = AtomicFact::GreaterFact(GreaterFact::new(
             not_less_equal_fact.left.clone(),
             not_less_equal_fact.right.clone(),
-            not_less_equal_fact.line_file,
+            not_less_equal_fact.line_file.clone(),
         ));
         self.verify_duality_atomic_fact_by_known_counterpart(
             &AtomicFact::NotLessEqualFact(not_less_equal_fact.clone()),
@@ -178,7 +178,7 @@ impl Runtime {
         let counterpart_fact = AtomicFact::LessFact(LessFact::new(
             not_greater_equal_fact.left.clone(),
             not_greater_equal_fact.right.clone(),
-            not_greater_equal_fact.line_file,
+            not_greater_equal_fact.line_file.clone(),
         ));
         self.verify_duality_atomic_fact_by_known_counterpart(
             &AtomicFact::NotGreaterEqualFact(not_greater_equal_fact.clone()),
@@ -230,7 +230,7 @@ impl Runtime {
         if !self.mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
             &mul.left,
             &mul.right,
-            less_fact.line_file,
+            less_fact.line_file.clone(),
             verify_state,
         )? {
             return Ok(None);

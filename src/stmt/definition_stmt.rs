@@ -8,11 +8,11 @@ use std::fmt;
 pub struct DefAbstractPropStmt {
     pub name: String,
     pub params: Vec<String>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl DefAbstractPropStmt {
-    pub fn new(name: String, params: Vec<String>, line_file: (usize, usize)) -> Self {
+    pub fn new(name: String, params: Vec<String>, line_file: LineFile) -> Self {
         DefAbstractPropStmt {
             name,
             params,
@@ -28,7 +28,7 @@ pub struct DefParamTypeStructStmt {
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub fields: Vec<(String, StructFieldType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -37,7 +37,7 @@ pub struct DefFamilyStmt {
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub equal_to: Obj,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -46,7 +46,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
     pub fn_set_with_params: FnSetWithParams,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -54,34 +54,34 @@ pub struct HaveFnEqualStmt {
     pub name: String,
     pub fn_set_with_params: FnSetWithParams,
     pub equal_to: Obj,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveExistObjStmt {
     pub equal_tos: Vec<String>,
     pub exist_fact_in_have_obj_st: ExistFact,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjEqualStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub objs_equal_to: Vec<Obj>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub param_def: Vec<ParamDefWithParamType>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct DefLetStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub facts: Vec<Fact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -89,7 +89,7 @@ pub struct DefPropWithMeaningStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub iff_facts: Vec<Fact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl fmt::Display for DefAbstractPropStmt {
@@ -146,7 +146,7 @@ impl DefPropWithMeaningStmt {
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
         iff_facts: Vec<Fact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefPropWithMeaningStmt {
             name,
@@ -184,7 +184,7 @@ impl DefLetStmt {
     pub fn new(
         param_def: Vec<ParamDefWithParamType>,
         facts: Vec<Fact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefLetStmt {
             param_def,
@@ -212,7 +212,7 @@ impl fmt::Display for DefLetStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(param_def: Vec<ParamDefWithParamType>, line_file: (usize, usize)) -> Self {
+    pub fn new(param_def: Vec<ParamDefWithParamType>, line_file: LineFile) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt {
             param_def,
             line_file,
@@ -235,7 +235,7 @@ impl HaveObjEqualStmt {
     pub fn new(
         param_def: Vec<ParamDefWithParamType>,
         objs_equal_to: Vec<Obj>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         HaveObjEqualStmt {
             param_def,
@@ -262,7 +262,7 @@ impl HaveExistObjStmt {
     pub fn new(
         equal_tos: Vec<String>,
         exist_fact_in_have_obj_st: ExistFact,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         HaveExistObjStmt {
             equal_tos,
@@ -291,7 +291,7 @@ impl HaveFnEqualStmt {
         name: String,
         fn_set_with_params: FnSetWithParams,
         equal_to: Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         HaveFnEqualStmt {
             name,
@@ -366,7 +366,7 @@ impl HaveFnEqualCaseByCaseStmt {
         fn_set_with_params: FnSetWithParams,
         cases: Vec<AndChainAtomicFact>,
         equal_tos: Vec<Obj>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         HaveFnEqualCaseByCaseStmt {
             name,
@@ -384,7 +384,7 @@ impl DefFamilyStmt {
         params_def_with_type: Vec<ParamDefWithParamType>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         equal_to: Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefFamilyStmt {
             name,
@@ -421,7 +421,7 @@ impl DefParamTypeStructStmt {
         dom_facts: Vec<OrAndChainAtomicFact>,
         fields: Vec<(String, StructFieldType)>,
         facts: Vec<OrAndChainAtomicFact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefParamTypeStructStmt {
             name,

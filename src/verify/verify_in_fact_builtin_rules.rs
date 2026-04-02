@@ -298,7 +298,7 @@ impl Runtime {
         let product_in_r_fact = AtomicFact::InFact(InFact::new(
             in_fact.element.clone(),
             Obj::StandardSet(StandardSet::R),
-            in_fact.line_file,
+            in_fact.line_file.clone(),
         ));
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &product_in_r_fact,
@@ -309,7 +309,7 @@ impl Runtime {
         if !self.mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
             &mul.left,
             &mul.right,
-            in_fact.line_file,
+            in_fact.line_file.clone(),
             verify_state,
         )? {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
@@ -327,7 +327,7 @@ impl Runtime {
                 let product_in_q_fact = AtomicFact::InFact(InFact::new(
                     in_fact.element.clone(),
                     Obj::StandardSet(StandardSet::Q),
-                    in_fact.line_file,
+                    in_fact.line_file.clone(),
                 ));
                 if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
                     &product_in_q_fact,
@@ -349,7 +349,7 @@ impl Runtime {
                 let product_in_z_fact = AtomicFact::InFact(InFact::new(
                     in_fact.element.clone(),
                     Obj::StandardSet(StandardSet::Z),
-                    in_fact.line_file,
+                    in_fact.line_file.clone(),
                 ));
                 if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
                     &product_in_z_fact,
@@ -383,7 +383,7 @@ impl Runtime {
         for element_box in list_set.list.iter() {
             let element_obj = *element_box.clone();
             let element_in_base_fact =
-                AtomicFact::InFact(InFact::new(element_obj, base_set.clone(), in_fact.line_file));
+                AtomicFact::InFact(InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()));
             let verify_one_element_result =
                 self.verify_atomic_fact(&element_in_base_fact, verify_state)?;
             if !verify_one_element_result.is_true() {
@@ -421,7 +421,7 @@ impl Runtime {
             let equal_fact = AtomicFact::EqualFact(EqualFact::new(
                 in_fact.element.clone(),
                 *current_element_in_list_set.clone(),
-                in_fact.line_file,
+                in_fact.line_file.clone(),
             ));
             let equal_fact_verify_result = self.verify_atomic_fact(&equal_fact, verify_state)?;
             if equal_fact_verify_result.is_true() {
@@ -527,7 +527,7 @@ impl Runtime {
                 VerifyError::new(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
                     String::new(),
-                    in_fact.line_file,
+                    in_fact.line_file.clone(),
                     Some(e),
                 )
             })?
@@ -558,7 +558,7 @@ impl Runtime {
             let in_fact_into_standard_subset = AtomicFact::InFact(InFact::new(
                 in_fact.element.clone(),
                 standard_subset_set_obj.clone(),
-                in_fact.line_file,
+                in_fact.line_file.clone(),
             ));
             let verify_result = self
                 .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
@@ -598,7 +598,7 @@ impl Runtime {
             let component_in_fact = AtomicFact::InFact(InFact::new(
                 tuple_component_obj,
                 cart_component_obj,
-                in_fact.line_file,
+                in_fact.line_file.clone(),
             ));
             let component_verify_result =
                 self.verify_atomic_fact(&component_in_fact, verify_state)?;

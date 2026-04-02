@@ -5,14 +5,14 @@ use std::fmt;
 #[derive(Clone)]
 pub struct ByFnDefAxiomStmt {
     pub function: Obj,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 // view a cartesian product set as a set (ordered pairs)
 #[derive(Clone)]
 pub struct ByCartDefAxiomStmt {
     pub cart: Cart,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 // prove that a set is equal to another set by proving that they are subsets of each other
@@ -21,7 +21,7 @@ pub struct ByExtensionAxiomStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -38,7 +38,7 @@ pub struct ForAxiomStmt {
     pub dom_facts: Vec<AtomicFact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
     pub proof: Vec<Stmt>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 // prove fact is true by induction
@@ -47,7 +47,7 @@ pub struct ByInducAxiomStmt {
     pub to_prove: Vec<ExistOrAndChainAtomicFact>,
     pub param: String,
     pub induc_from: Obj,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 // prove fact is true for a set of values by enumeration
@@ -57,7 +57,7 @@ pub struct EnumerateAxiomStmt {
     pub param_sets: Vec<ListSet>,
     pub to_prove: Vec<ExistOrAndChainAtomicFact>,
     pub proof: Vec<Stmt>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 // prove fact is true case by case
@@ -67,7 +67,7 @@ pub struct ByCasesAxiomStmt {
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
     pub impossible_facts: Vec<Option<AtomicFact>>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 // prove fact is true by contradiction
@@ -76,7 +76,7 @@ pub struct ByContraAxiomStmt {
     pub to_prove: AtomicFact,
     pub proof: Vec<Stmt>,
     pub impossible_fact: AtomicFact,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl EnumerateAxiomStmt {
@@ -85,7 +85,7 @@ impl EnumerateAxiomStmt {
         param_sets: Vec<ListSet>,
         to_prove: Vec<ExistOrAndChainAtomicFact>,
         proof: Vec<Stmt>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         EnumerateAxiomStmt {
             params,
@@ -114,7 +114,7 @@ impl EnumerateAxiomStmt {
             params_def_with_type,
             vec![],
             self.to_prove.clone(),
-            self.line_file,
+            self.line_file.clone(),
         );
         Ok(Fact::ForallFact(forall_fact))
     }
@@ -126,7 +126,7 @@ impl ByCasesAxiomStmt {
         then_facts: Vec<Fact>,
         proofs: Vec<Vec<Stmt>>,
         impossible_facts: Vec<Option<AtomicFact>>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         ByCasesAxiomStmt {
             cases,
@@ -187,7 +187,7 @@ impl ByContraAxiomStmt {
         to_prove: AtomicFact,
         proof: Vec<Stmt>,
         impossible_fact: AtomicFact,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         ByContraAxiomStmt {
             to_prove,
@@ -248,7 +248,7 @@ impl ByInducAxiomStmt {
         fact: Vec<ExistOrAndChainAtomicFact>,
         param: String,
         induc_from: Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         ByInducAxiomStmt {
             to_prove: fact,
@@ -338,7 +338,7 @@ impl ForAxiomStmt {
                 .map(|atomic_fact| ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone()))
                 .collect(),
             self.then_facts.clone(),
-            self.line_file,
+            self.line_file.clone(),
         )))
     }
 
@@ -348,7 +348,7 @@ impl ForAxiomStmt {
         dom_facts: Vec<AtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         proof: Vec<Stmt>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         ForAxiomStmt {
             params,
@@ -394,7 +394,7 @@ impl fmt::Display for ByExtensionAxiomStmt {
 }
 
 impl ByExtensionAxiomStmt {
-    pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
+    pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file: LineFile) -> Self {
         ByExtensionAxiomStmt {
             left,
             right,
@@ -411,7 +411,7 @@ impl fmt::Display for ByFnDefAxiomStmt {
 }
 
 impl ByFnDefAxiomStmt {
-    pub fn new(function: Obj, line_file: (usize, usize)) -> Self {
+    pub fn new(function: Obj, line_file: LineFile) -> Self {
         ByFnDefAxiomStmt {
             function,
             line_file,
@@ -426,7 +426,7 @@ impl fmt::Display for ByCartDefAxiomStmt {
 }
 
 impl ByCartDefAxiomStmt {
-    pub fn new(cart: Cart, line_file: (usize, usize)) -> Self {
+    pub fn new(cart: Cart, line_file: LineFile) -> Self {
         ByCartDefAxiomStmt { cart, line_file }
     }
 }
@@ -444,7 +444,7 @@ impl ByInducAxiomStmt {
             AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
                 Obj::Identifier(Identifier::new(self.param.clone())),
                 self.induc_from.clone(),
-                self.line_file,
+                self.line_file.clone(),
             )),
         ));
 
@@ -453,7 +453,7 @@ impl ByInducAxiomStmt {
             then_facts.push(fact.clone());
         }
         let forall_fact =
-            ForallFact::new(params_def_with_type, dom_facts, then_facts, self.line_file);
+            ForallFact::new(params_def_with_type, dom_facts, then_facts, self.line_file.clone());
         Ok(Fact::ForallFact(forall_fact))
     }
 }

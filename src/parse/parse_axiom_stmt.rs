@@ -21,7 +21,7 @@ impl Runtime {
                     "by: expected cases, contra, enumerate, induc, for, extension, fn_def, or cart_def after `by`, got `{}`",
                     second_keyword
                 ),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             )),
         }
@@ -33,13 +33,13 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(ParsingError::new(
                 "cases: expects at least one body block".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
         let then_facts: Vec<Fact> = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+                ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None)
             })?;
             first.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             first
@@ -59,7 +59,7 @@ impl Runtime {
             if !block.exceed_end_of_head() {
                 return Err(ParsingError::new(
                     "case: expected end of head after condition".to_string(),
-                    block.line_file,
+                    block.line_file.clone(),
                     None,
                 ));
             }
@@ -77,7 +77,7 @@ impl Runtime {
                         .map(|b| self.parse_stmt(b))
                         .collect::<Result<_, _>>()?;
                     let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
-                        ParsingError::new("Expected body".to_string(), tb.line_file, None)
+                        ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None)
                     })?;
                     last_block.skip_token(IMPOSSIBLE)?;
                     let imp = self.parse_atomic_fact(last_block, true)?;
@@ -98,7 +98,7 @@ impl Runtime {
             then_facts,
             proofs,
             impossible_facts,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -112,31 +112,31 @@ impl Runtime {
         if !tb.exceed_end_of_head() {
             return Err(ParsingError::new(
                 "by contra: expected end of head after by contra:".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
         if tb.body.len() < 2 {
             return Err(ParsingError::new(
                 "by contra: expects prove: block and impossible ... tail".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
         let to_prove = {
             let prove_block = tb.body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+                ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None)
             })?;
             prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             if prove_block.body.len() != 1 {
                 return Err(ParsingError::new(
                     "by contra: prove: expects exactly one atomic fact block".to_string(),
-                    prove_block.line_file,
+                    prove_block.line_file.clone(),
                     None,
                 ));
             }
             let atomic_fact_block = prove_block.body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), prove_block.line_file, None)
+                ParsingError::new("Expected body".to_string(), prove_block.line_file.clone(), None)
             })?;
             self.parse_atomic_fact(atomic_fact_block, true)?
         };
@@ -149,14 +149,14 @@ impl Runtime {
         let mut last_block = tb
             .body
             .last_mut()
-            .ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
+            .ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None))?;
         last_block.skip_token(IMPOSSIBLE)?;
         let impossible_fact = self.parse_atomic_fact(&mut last_block, true)?;
         Ok(Stmt::ByContraAxiomStmt(ByContraAxiomStmt::new(
             to_prove,
             proof,
             impossible_fact,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -170,7 +170,7 @@ impl Runtime {
         if tb.current_token_is_equal_to(COLON) {
             return Err(ParsingError::new(
                 "by enumerate: expects at least one (param, set) pair".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -185,14 +185,14 @@ impl Runtime {
         if !tb.exceed_end_of_head() {
             return Err(ParsingError::new(
                 "by enumerate: expected end of head after params".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
         if tb.body.is_empty() {
             return Err(ParsingError::new(
                 "by enumerate: expects prove: block and at least one fact to prove".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -200,7 +200,7 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(ParsingError::new(
                 "by enumerate: expects at least one body block".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -222,7 +222,7 @@ impl Runtime {
             param_sets,
             to_prove,
             proof,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -235,7 +235,7 @@ impl Runtime {
         if !tb.exceed_end_of_head() {
             return Err(ParsingError::new(
                 "by induc: expected end of head".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -249,7 +249,7 @@ impl Runtime {
             to_prove,
             param,
             induc_from,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -266,7 +266,7 @@ impl Runtime {
                 _ => {
                     return Err(ParsingError::new(
                         "by for: param set must be range or closed_range".to_string(),
-                        tb.line_file,
+                        tb.line_file.clone(),
                         None,
                     ));
                 }
@@ -280,14 +280,14 @@ impl Runtime {
         if !tb.exceed_end_of_head() {
             return Err(ParsingError::new(
                 "by for: expected end of head after params".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
         if tb.body.is_empty() {
             return Err(ParsingError::new(
                 "by for: expects at least one body block".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -297,7 +297,7 @@ impl Runtime {
         let (dom_facts, then_facts, proof) = if first_is_prove {
             // body[0] 是 =>:，其 body 是 then_facts；后面全是 proof
             let then_block = tb.body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+                ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None)
             })?;
             let then_fact_count_upper_bound = then_block.body.len();
             then_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
@@ -322,7 +322,7 @@ impl Runtime {
                 }
             }
             let arrow_idx = arrow_idx.ok_or_else(|| {
-                ParsingError::new("by for: expects a =>: block".to_string(), tb.line_file, None)
+                ParsingError::new("by for: expects a =>: block".to_string(), tb.line_file.clone(), None)
             })?;
 
             let mut dom_facts: Vec<AtomicFact> = Vec::with_capacity(arrow_idx);
@@ -331,7 +331,7 @@ impl Runtime {
             }
 
             let then_block = tb.body.get_mut(arrow_idx).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+                ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None)
             })?;
             let then_fact_count_upper_bound = then_block.body.len();
             then_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
@@ -355,7 +355,7 @@ impl Runtime {
             dom_facts,
             then_facts,
             proof,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -368,7 +368,7 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(ParsingError::new(
                 "by extension: expects at least one body block".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -378,14 +378,14 @@ impl Runtime {
         if tb.body[0].body.len() != 1 {
             return Err(ParsingError::new(
                 "by extension: prove: expects exactly one atomic fact block".to_string(),
-                tb.body[0].line_file,
+                tb.body[0].line_file.clone(),
                 None,
             ));
         }
 
         let to_prove_equal_fact = self.parse_atomic_fact(
             tb.body[0].body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+                ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None)
             })?,
             true,
         )?;
@@ -395,7 +395,7 @@ impl Runtime {
             _ => {
                 return Err(ParsingError::new(
                     "by extension: prove: expects equal fact".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
@@ -410,7 +410,7 @@ impl Runtime {
             left,
             right,
             proof,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -422,7 +422,7 @@ impl Runtime {
         let function = self.parse_obj(tb)?;
         Ok(Stmt::ByFnDefAxiomStmt(ByFnDefAxiomStmt::new(
             function,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -437,14 +437,14 @@ impl Runtime {
             _ => {
                 return Err(ParsingError::new(
                     "by cart_def: expected cart(...) object".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
         };
         Ok(Stmt::ByCartDefAxiomStmt(ByCartDefAxiomStmt::new(
             cart,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 }

@@ -5,11 +5,11 @@ use std::fmt;
 pub struct ClaimStmt {
     pub fact: Fact,
     pub proof: Vec<Stmt>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl ClaimStmt {
-    pub fn new(fact: Fact, proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
+    pub fn new(fact: Fact, proof: Vec<Stmt>, line_file: LineFile) -> Self {
         ClaimStmt {
             fact,
             proof,

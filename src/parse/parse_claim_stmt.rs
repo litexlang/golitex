@@ -14,7 +14,7 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(ParsingError::new(
                 "claim : expects at least one body block (=>: fact)".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -22,7 +22,7 @@ impl Runtime {
             let first = tb.body.get_mut(0).ok_or_else(|| {
                 ParsingError::new(
                     "claim : expects at least one body block (=>: fact)".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 )
             })?;
@@ -33,7 +33,7 @@ impl Runtime {
             let body_block = first.body.get_mut(0).ok_or_else(|| {
                 ParsingError::new(
                     "claim =>: expects exactly one body block (the fact)".to_string(),
-                    first.line_file,
+                    first.line_file.clone(),
                     None,
                 )
             })?;
@@ -41,7 +41,7 @@ impl Runtime {
             if matches!(&f, Fact::ForallFactWithIff(_)) {
                 return Err(ParsingError::new(
                     "claim multiline fact cannot be iff".to_string(),
-                    first.line_file,
+                    first.line_file.clone(),
                     None,
                 ));
             }
@@ -54,6 +54,6 @@ impl Runtime {
             .skip(1)
             .map(|b| self.parse_stmt(b))
             .collect::<Result<_, _>>()?;
-        Ok(ClaimStmt::new(fact, proof, tb.line_file))
+        Ok(ClaimStmt::new(fact, proof, tb.line_file.clone()))
     }
 }

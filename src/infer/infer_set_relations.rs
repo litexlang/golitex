@@ -15,13 +15,13 @@ impl Runtime {
             ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
                 Obj::Identifier(Identifier::new(generated_param_name.clone())),
                 subset_fact.right.clone(),
-                subset_fact.line_file,
+                subset_fact.line_file.clone(),
             )));
         let inferred_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![parameter_definition],
             vec![],
             vec![in_fact_for_forall_then],
-            subset_fact.line_file,
+            subset_fact.line_file.clone(),
         ));
 
         let mut infer_result = InferResult::new();
@@ -33,7 +33,7 @@ impl Runtime {
                         "failed to store inferred forall fact while inferring `{}`",
                         subset_fact
                     ),
-                    subset_fact.line_file,
+                    subset_fact.line_file.clone(),
                     Some(previous_error.into()),
                 )
             })?;
@@ -54,13 +54,13 @@ impl Runtime {
             ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
                 Obj::Identifier(Identifier::new(generated_param_name.clone())),
                 superset_fact.left.clone(),
-                superset_fact.line_file,
+                superset_fact.line_file.clone(),
             )));
         let inferred_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![parameter_definition],
             vec![],
             vec![in_fact_for_forall_then],
-            superset_fact.line_file,
+            superset_fact.line_file.clone(),
         ));
 
         let mut infer_result = InferResult::new();
@@ -72,7 +72,7 @@ impl Runtime {
                         "failed to store inferred forall fact while inferring `{}`",
                         superset_fact
                     ),
-                    superset_fact.line_file,
+                    superset_fact.line_file.clone(),
                     Some(previous_error.into()),
                 )
             })?;

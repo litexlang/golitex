@@ -4,11 +4,11 @@ use std::fmt;
 #[derive(Clone)]
 pub struct ProveStmt {
     pub proof: Vec<Stmt>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl ProveStmt {
-    pub fn new(proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
+    pub fn new(proof: Vec<Stmt>, line_file: LineFile) -> Self {
         ProveStmt { proof, line_file }
     }
 }

@@ -4,7 +4,7 @@ use std::fmt;
 #[derive(Clone)]
 pub struct EvalStmt {
     pub obj_to_eval: Obj,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl fmt::Display for EvalStmt {
@@ -14,7 +14,7 @@ impl fmt::Display for EvalStmt {
 }
 
 impl EvalStmt {
-    pub fn new(obj_to_eval: Obj, line_file: (usize, usize)) -> Self {
+    pub fn new(obj_to_eval: Obj, line_file: LineFile) -> Self {
         EvalStmt {
             obj_to_eval,
             line_file,

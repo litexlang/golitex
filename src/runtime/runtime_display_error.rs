@@ -91,8 +91,9 @@ fn push_optional_conflict_with_json_field_lines(
         )),
         Some(conflict) => {
             let indent_nested = format!("{}  ", indent_inner);
-            let (conflict_line, conflict_file) = conflict.line_file;
-            let conflict_source = runtime.get_file_name_empty_if_default((conflict_line, conflict_file));
+            let conflict_line_file = conflict.line_file.clone();
+            let conflict_line = conflict_line_file.0;
+            let conflict_source = runtime.get_file_name_empty_if_default(conflict_line_file);
             let message_literal = json_string_literal(&conflict.msg);
             let source_literal = json_string_literal(conflict_source.as_str());
             let mut inner_lines: Vec<String> = Vec::new();
@@ -159,10 +160,8 @@ impl Runtime {
                 name_already_used_on_line_file,
                 ..
             } => {
-                let location_string = self.get_location_string_of_line_file(
-                    name_already_used_on_line_file.0,
-                    name_already_used_on_line_file.1,
-                );
+                let location_string =
+                    self.get_location_string_of_line_file(name_already_used_on_line_file.clone());
                 if location_string.is_empty() {
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(name)
                 } else {
@@ -199,10 +198,11 @@ impl Runtime {
             json_string_literal(JSON_VALUE_ERROR)
         ));
 
-        let (line, file_index) = error.line_file();
+        let line_file = error.line_file();
+        let line = line_file.0;
         field_lines.push(format!("{}\"{}\": {}", indent_inner, JSON_KEY_LINE, line));
 
-        let source_text = self.get_file_name_empty_if_default((line, file_index));
+        let source_text = self.get_file_name_empty_if_default(line_file.clone());
 
         field_lines.push(format!(
             "{}\"{}\": {}",
@@ -221,7 +221,7 @@ impl Runtime {
                 ));
             }
             RuntimeError::NameAlreadyUsedError(_) => {
-                let location_string = self.get_location_string_of_line_file(line, file_index);
+                let location_string = self.get_location_string_of_line_file(line_file.clone());
 
                 let body_string = format!("name already used {}", location_string);
 
@@ -495,18 +495,10 @@ impl Runtime {
         self.display_result_json_string(inside_result)
     }
 
-    pub(in crate::runtime) fn get_file_name_empty_if_default(
-        &self,
-        (line, file_index): (usize, usize),
-    ) -> String {
-        if (line, file_index) == DEFAULT_LINE_FILE {
+    pub(in crate::runtime) fn get_file_name_empty_if_default(&self, line_file: LineFile) -> String {
+        if is_default_line_file(&line_file) {
             return String::new();
         }
-
-        let path = match self.module_manager.run_file_paths.get(file_index) {
-            Some(path) => path.as_ref().to_string(),
-            None => String::new(),
-        };
-        return path;
+        line_file.1.as_ref().to_string()
     }
 }
