@@ -92,7 +92,7 @@ impl Runtime {
                     ExecStmtError::new_with_stmt(
                         Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
                         "".to_string(),
-                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
+                        Some(RuntimeError::from(inner_exec_error)),
                         vec![],
                     )
                 })?;
@@ -146,7 +146,7 @@ impl Runtime {
                     ExecStmtError::new_with_stmt(
                         Stmt::DefLetStmt(def_let_stmt.clone()),
                         "".to_string(),
-                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
+                        Some(RuntimeError::from(inner_exec_error)),
                         vec![],
                     )
                 })?;
@@ -188,17 +188,17 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
+                return Err(UnknownError::new(
                     format!("family `{}` is not defined", family_name),
                     default_line_file(),
                     None,
                     None,
-                )));
+                ).into());
             }
         };
         let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
-            return Err(RuntimeError::UnknownError(UnknownError::new(
+            return Err(UnknownError::new(
                 format!(
                     "family `{}` expects {} type argument(s), got {}",
                     family_name,
@@ -208,7 +208,7 @@ impl Runtime {
                 default_line_file(),
                 None,
                 None,
-            )));
+            ).into());
         }
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
@@ -297,7 +297,7 @@ impl Runtime {
                             "define params with type: nonempty check failed for params [{}] with type {}",
                             param_names_text, param_def.1
                         ),
-                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
+                        Some(RuntimeError::from(inner_exec_error)),
                         default_line_file(),
                     )
                 })?;
@@ -309,7 +309,7 @@ impl Runtime {
                             "define params with type: failed to declare parameter `{}`",
                             name
                         ),
-                        Some(RuntimeError::ExecStmtError(runtime_error)),
+                        Some(RuntimeError::from(runtime_error)),
                         default_line_file(),
                     )
                 })?;
@@ -380,7 +380,7 @@ impl Runtime {
                         "define params with set: failed to declare parameter `{}`",
                         name
                     ),
-                    Some(RuntimeError::ExecStmtError(runtime_error)),
+                    Some(RuntimeError::from(runtime_error)),
                     default_line_file(),
                 )
             })?;

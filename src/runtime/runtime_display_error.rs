@@ -148,29 +148,6 @@ fn push_optional_statement_json_field_lines(
 }
 
 impl Runtime {
-    fn parse_block_error_message(&self, parse_block_error: &ParseBlockError) -> String {
-        match parse_block_error {
-            ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
-            ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
-            ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
-            ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-            ParseBlockError::InvalidName(msg) => msg.clone(),
-            ParseBlockError::NameAlreadyUsed {
-                name,
-                name_already_used_on_line_file,
-                ..
-            } => {
-                let location_string =
-                    self.get_location_string_of_line_file(name_already_used_on_line_file.clone());
-                if location_string.is_empty() {
-                    RuntimeError::duplicate_used_name_error_msg_without_line_file(name)
-                } else {
-                    format!("name `{}` already used {}", name, location_string)
-                }
-            }
-        }
-    }
-
     pub fn display_error_json_string(&self, error: &RuntimeError) -> String {
         self.build_display_error_json_object(error, 0, true)
     }
@@ -289,15 +266,7 @@ impl Runtime {
                     &e.conflict_with,
                 );
             }
-            RuntimeError::ParseBlockError(e) => {
-                field_lines.push(format!(
-                    "{}\"{}\": {}",
-                    indent_inner,
-                    JSON_KEY_MESSAGE,
-                    json_string_literal(&self.parse_block_error_message(e))
-                ));
-            }
-            RuntimeError::ParsingError(e) => {
+            RuntimeError::ParseError(e) => {
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
@@ -306,7 +275,13 @@ impl Runtime {
                 ));
             }
             RuntimeError::ExecStmtError(e) => {
-                if let Some(stmt) = &e.stmt {
+                field_lines.push(format!(
+                    "{}\"{}\": {}",
+                    indent_inner,
+                    JSON_KEY_MESSAGE,
+                    json_string_literal(&e.msg)
+                ));
+                if let Some(stmt) = &e.statement {
                     let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), stmt);
                     for stmt_line in stmt_lines {
                         field_lines.push(stmt_line);
@@ -333,31 +308,19 @@ impl Runtime {
                 ));
             }
             RuntimeError::VerifyError(e) => {
-                let message_for_json = if !e.msg.is_empty() {
-                    e.msg.clone()
-                } else {
-                    e.fact.to_string()
-                };
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
                     JSON_KEY_MESSAGE,
-                    json_string_literal(&message_for_json)
+                    json_string_literal(&e.msg)
                 ));
             }
             RuntimeError::UnknownError(e) => {
-                let message_for_json = if !e.msg.is_empty() {
-                    e.msg.clone()
-                } else if let Some(ref fact) = e.fact {
-                    fact.to_string()
-                } else {
-                    String::new()
-                };
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
                     JSON_KEY_MESSAGE,
-                    json_string_literal(&message_for_json)
+                    json_string_literal(&e.msg)
                 ));
             }
             RuntimeError::InferError(e) => {
@@ -455,8 +418,7 @@ impl Runtime {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },
-            RuntimeError::ParseBlockError(_) => None,
-            RuntimeError::ParsingError(e) => match &e.previous_error {
+            RuntimeError::ParseError(e) => match &e.previous_error {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },

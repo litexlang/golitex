@@ -19,7 +19,7 @@ impl Runtime {
                     Fact::AndFact(and_fact.clone()),
                     String::new(),
                     and_fact.line_file(),
-                    Some(RuntimeError::WellDefinedError(e)),
+                    Some(e.into()),
                 ));
             }
         }
@@ -63,7 +63,7 @@ impl Runtime {
                     Fact::ChainFact(chain_fact.clone()),
                     String::new(),
                     chain_fact.line_file(),
-                    Some(RuntimeError::WellDefinedError(e)),
+                    Some(e.into()),
                 ));
             }
         }

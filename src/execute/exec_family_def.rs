@@ -64,7 +64,7 @@ impl Runtime {
                     ExecStmtError::new_with_stmt(
                         Stmt::DefFamilyStmt(def_family_stmt.clone()),
                         "".to_string(),
-                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
+                        Some(RuntimeError::from(inner_exec_error)),
                         vec![],
                     )
                 })?;

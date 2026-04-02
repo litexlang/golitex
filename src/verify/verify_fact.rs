@@ -26,9 +26,7 @@ impl Runtime {
                 fact_owned.clone(),
                 String::new(),
                 line_file,
-                Some(RuntimeError::UnknownError(
-                    UnknownError::verify_result_unknown(fact_owned, None),
-                )),
+                Some(UnknownError::verify_result_unknown(fact_owned, None).into()),
             ));
         } else {
             Ok(result)
