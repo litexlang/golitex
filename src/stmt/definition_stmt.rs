@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use crate::{
+    prelude::*,
+    stmt::parameter_def::{ParamDefWithStructFieldType, StructFieldType},
+};
 use std::fmt;
 
 #[derive(Clone)]
@@ -21,10 +24,9 @@ impl DefAbstractPropStmt {
 #[derive(Clone)]
 pub struct DefParamTypeStructStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamType>,
-    /// 形参括号内 `:` 之后的域条件（与 `family` 的 `dom_facts` 同形），实例化时用实参代入。
+    pub param_defs: Vec<ParamDefWithStructFieldType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
-    pub fields: Vec<(String, ParamType)>,
+    pub fields: Vec<(String, StructFieldType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: (usize, usize),
 }
@@ -108,7 +110,7 @@ impl fmt::Display for DefParamTypeStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
-        let implicit_prefix_len = ParamDefWithParamType::number_of_params(&self.params_def_with_type);
+        let implicit_prefix_len = ParamDefWithStructFieldType::number_of_params(&self.param_defs);
         let fields_str: String = self
             .fields
             .iter()
@@ -127,7 +129,7 @@ impl fmt::Display for DefParamTypeStructStmt {
             STRUCT,
             self.name,
             LEFT_BRACE,
-            vec_to_string_join_by_comma(&self.params_def_with_type),
+            vec_to_string_join_by_comma(&self.param_defs),
             RIGHT_BRACE,
             COLON,
             fields_indented,
@@ -413,15 +415,15 @@ impl fmt::Display for DefFamilyStmt {
 impl DefParamTypeStructStmt {
     pub fn new(
         name: String,
-        params_def_with_type: Vec<ParamDefWithParamType>,
+        param_defs: Vec<ParamDefWithStructFieldType>,
         dom_facts: Vec<OrAndChainAtomicFact>,
-        fields: Vec<(String, ParamType)>,
+        fields: Vec<(String, StructFieldType)>,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: (usize, usize),
     ) -> Self {
         DefParamTypeStructStmt {
             name,
-            params_def_with_type,
+            param_defs,
             dom_facts,
             fields,
             facts,

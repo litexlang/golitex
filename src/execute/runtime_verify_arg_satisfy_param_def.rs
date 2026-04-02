@@ -44,7 +44,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.params.len() != expected_count {
             return Err(VerifyError::new(
                 Fact::AtomicFact(AtomicFact::InFact(InFact::new(
@@ -63,8 +63,8 @@ impl Runtime {
             ));
         }
 
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
+        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
             &struct_ty.params,
         );
 
@@ -93,7 +93,9 @@ impl Runtime {
 
         let mut last_result: Option<NonErrStmtExecResult> = None;
         for (field_name, field_pt) in def.fields.iter() {
-            let instantiated = self.inst_param_type(field_pt, &param_to_arg_map).map_err(
+            let instantiated = self
+                .inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)
+                .map_err(
                 |e| {
                     VerifyError::new(
                         Fact::AtomicFact(AtomicFact::InFact(InFact::new(
