@@ -27,7 +27,7 @@ impl Runtime {
             Ok(infer_result) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
             )),
-            Err(store_error) => Err(RuntimeError::ExecStmtError(
+            Err(store_error) => Err(RuntimeError::from(
                 ExecStmtError::with_message_and_cause(
                     witness_stmt,
                     "witness exist fact: failed to store exist fact".to_string(),
@@ -50,7 +50,7 @@ impl Runtime {
             &stmt.exist_fact_in_witness.params_def_with_type,
         );
         if expected_param_count != stmt.equal_tos.len() {
-            return Err(RuntimeError::ExecStmtError(
+            return Err(RuntimeError::from(
                 ExecStmtError::with_message_and_cause(
                     witness_stmt,
                     "witness exist fact: parameter count mismatch".to_string(),
@@ -65,7 +65,7 @@ impl Runtime {
             &stmt.exist_fact_in_witness,
             &verify_state_for_well_defined,
         ) {
-            return Err(RuntimeError::ExecStmtError(
+            return Err(RuntimeError::from(
                 ExecStmtError::with_message_and_cause(
                     witness_stmt,
                     "witness exist fact: exist fact well-defined failed".to_string(),
@@ -81,7 +81,7 @@ impl Runtime {
                 equal_to_obj,
                 &verify_state_for_well_defined,
             ) {
-                return Err(RuntimeError::ExecStmtError(
+                return Err(RuntimeError::from(
                     ExecStmtError::with_message_and_cause(
                         witness_stmt,
                         "witness exist fact: equal_to well-defined failed".to_string(),
@@ -114,7 +114,7 @@ impl Runtime {
                     inside_results.push(proof_result);
                 }
                 Err(proof_exec_error) => {
-                    return Err(RuntimeError::ExecStmtError(
+                    return Err(RuntimeError::from(
                         ExecStmtError::with_message_and_cause(
                             witness_stmt.clone(),
                             proof_stmt.to_string(),
@@ -176,7 +176,7 @@ impl Runtime {
             Ok(infer_result) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
             )),
-            Err(store_error) => Err(RuntimeError::ExecStmtError(
+            Err(store_error) => Err(RuntimeError::from(
                 ExecStmtError::with_message_and_cause(
                     witness_stmt,
                     "witness nonempty set: failed to store nonempty set fact".to_string(),
@@ -199,7 +199,7 @@ impl Runtime {
         if let Err(well_defined_error) =
             self.verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state_for_well_defined)
         {
-            return Err(RuntimeError::ExecStmtError(
+            return Err(RuntimeError::from(
                 ExecStmtError::with_message_and_cause(
                     witness_stmt,
                     "witness nonempty set: obj well-defined failed".to_string(),
@@ -212,7 +212,7 @@ impl Runtime {
         if let Err(well_defined_error) =
             self.verify_obj_well_defined_and_store_cache(&stmt.set, &verify_state_for_well_defined)
         {
-            return Err(RuntimeError::ExecStmtError(
+            return Err(RuntimeError::from(
                 ExecStmtError::with_message_and_cause(
                     witness_stmt.clone(),
                     "witness nonempty set: set well-defined failed".to_string(),
@@ -230,7 +230,7 @@ impl Runtime {
                     inside_results.push(proof_result);
                 }
                 Err(proof_exec_error) => {
-                    return Err(RuntimeError::ExecStmtError(
+                    return Err(RuntimeError::from(
                         ExecStmtError::with_message_and_cause(
                             witness_stmt.clone(),
                             proof_stmt.to_string(),

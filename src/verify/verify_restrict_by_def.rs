@@ -16,14 +16,17 @@ impl Runtime {
                     Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                     String::new(),
                     restrict_fact.line_file.clone(),
-                    Some(RuntimeError::WellDefinedError(WellDefinedError::new(
-                        format!(
-                            "function `{}` belongs to what function set is unknown",
-                            function.to_string()
-                        ),
-                        None,
-                        default_line_file(),
-                    ))),
+                    Some(
+                        WellDefinedError::new(
+                            format!(
+                                "function `{}` belongs to what function set is unknown",
+                                function.to_string()
+                            ),
+                            None,
+                            default_line_file(),
+                        )
+                        .into(),
+                    ),
                 ));
             }
         };

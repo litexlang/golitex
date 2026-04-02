@@ -37,11 +37,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file.clone(),
-                Some(RuntimeError::ParseBlockError(e)),
-            )
+            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
         tb.skip_token(COLON)?;
 
@@ -203,11 +199,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            ParsingError::new(
-                e.to_string(),
-                tb.line_file.clone(),
-                Some(RuntimeError::ParseBlockError(e)),
-            )
+            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
         tb.skip_token(ST)?;
 

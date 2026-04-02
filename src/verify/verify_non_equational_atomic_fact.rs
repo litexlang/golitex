@@ -238,12 +238,12 @@ impl Runtime {
                         Fact::AtomicFact(atomic_fact.clone()),
                         message.clone(),
                         atomic_fact.line_file(),
-                        Some(RuntimeError::UnknownError(UnknownError::new(
+                        Some(UnknownError::new(
                             message,
                             atomic_fact.line_file(),
                             Some(Fact::AtomicFact(atomic_fact.clone())),
                             None,
-                        ))),
+                        ).into()),
                     ));
                 }
                 let mut all_args_match = true;
@@ -405,7 +405,7 @@ impl Runtime {
             verify_state_for_definition_clauses,
         ) {
             Ok(_) => {}
-            Err(RuntimeError::VerifyError(e)) => return Err(e),
+            Err(RuntimeError::VerifyError(e)) => return Err(VerifyError::from(e)),
             Err(_) => return Ok(None),
         }
 

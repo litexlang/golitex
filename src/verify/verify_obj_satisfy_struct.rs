@@ -12,12 +12,7 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(VerifyError::new(
-                    Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                        obj.clone(),
-                        Obj::Identifier(Identifier::new(String::from("_"))),
-                        default_line_file(),
-                    ))),
+                return Err(VerifyError::new_message_only(
                     format!("struct `{}` is not defined", struct_name),
                     default_line_file(),
                     None,
@@ -27,12 +22,7 @@ impl Runtime {
 
         let number_of_params_in_def = def.number_of_params();
         if number_of_params_in_def != struct_ty.args.len() {
-            return Err(VerifyError::new(
-                Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                    obj.clone(),
-                    Obj::Identifier(Identifier::new(String::from("_"))),
-                    default_line_file(),
-                ))),
+            return Err(VerifyError::new_message_only(
                 format!(
                     "struct `{}` definition expects {} parameter(s), but struct type has {} argument(s)",
                     def.name,
@@ -63,12 +53,7 @@ impl Runtime {
                 {
                     if def.name.to_string() != struct_ty.name.to_string() {
                         // TODO
-                        return Err(VerifyError::new(
-                            Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                                obj.clone(),
-                                Obj::Identifier(Identifier::new(String::from("_"))),
-                                default_line_file(),
-                            ))),
+                        return Err(VerifyError::new_message_only(
                             format!("{} satisfies struct `{}`, but it should satisfy struct `{}`", obj.to_string(), def.name.to_string(), struct_ty.name.to_string()),
                             default_line_file(),
                             None,
@@ -107,13 +92,7 @@ impl Runtime {
         let args_of_struct_param_type = &struct_param_type.args;
         let expected_tuple_len = args_of_struct_param_type.len() + struct_def.fields.len();
         if expected_tuple_len != tuple.args.len() {
-            // TODO: 这不是正常的 in fact
-            return Err(VerifyError::new(
-                Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                    Obj::Tuple(tuple.clone()),
-                    Obj::Identifier(Identifier::new(String::from("_"))),
-                    default_line_file(),
-                ))),
+            return Err(VerifyError::new_message_only(
                 format!(
                     "tuple for struct `{}` should have {} component(s), got {}",
                     struct_param_type.name,
@@ -145,19 +124,7 @@ impl Runtime {
                 verify_state,
             )?;
             if result.is_unknown() {
-                return Err(VerifyError::new(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                        tuple_arg.clone(),
-                        struct_type_arg.clone(),
-                        default_line_file(),
-                    ))),
-                    format!(
-                        "cannot verify tuple component {} equals struct type argument `{}`",
-                        i, struct_type_arg
-                    ),
-                    default_line_file(),
-                    None,
-                ));
+                return Ok(result);
             }
         }
 
@@ -178,12 +145,7 @@ impl Runtime {
             let instantiated_field_type = self
                 .inst_param_type(&field_type.to_param_type(), &param_arg_map)
                 .map_err(|e| {
-                    VerifyError::new(
-                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                            tuple_field_arg.clone(),
-                            Obj::Identifier(Identifier::new(String::from("_"))),
-                            default_line_file(),
-                        ))),
+                    VerifyError::new_message_only(
                         format!(
                             "failed to instantiate field type {} of struct `{}`",
                             i, struct_def.name
@@ -212,12 +174,7 @@ impl Runtime {
             let instantiated = self
                 .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map)
                 .map_err(|e| {
-                    VerifyError::new(
-                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                            Obj::Tuple(tuple.clone()),
-                            Obj::Identifier(Identifier::new(String::from("_"))),
-                            default_line_file(),
-                        ))),
+                    VerifyError::new_message_only(
                         format!(
                             "struct `{}`: failed to instantiate `<=>:` fact: {}",
                             struct_def.name, e
