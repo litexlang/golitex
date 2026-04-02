@@ -38,4 +38,5 @@ pub use verify_number_in_standard_set::number_is_in_r_pos;
 pub use verify_number_in_standard_set::number_is_in_z;
 pub use verify_number_in_standard_set::number_is_in_z_neg;
 pub use verify_number_in_standard_set::number_is_in_z_nz;
+
 pub use verify_state::VerifyState;

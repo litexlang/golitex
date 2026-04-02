@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::verify::*;
 use std::collections::HashMap;
 
 /// `fn(x N_pos) R` 与 `fn(y N_pos) R`：将两侧形参名统一为 `##0`, `##1`, …，对 `params_def_with_set` / `dom_facts` / `ret_set` 做代入后比较 `Display`。
