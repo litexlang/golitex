@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::AtomicFact(fact.clone()))
         {
@@ -14,7 +14,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::AtomicFact(fact.clone()),
                     String::new(),
                     fact.line_file(),

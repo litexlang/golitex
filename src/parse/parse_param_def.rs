@@ -4,7 +4,7 @@ impl Runtime {
     pub fn parse_param_def_with_struct_field_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithStructFieldType, ParsingError> {
+    ) -> Result<ParamDefWithStructFieldType, RuntimeError> {
         let param = tb.advance()?;
         let param_def = if tb.current()? != COMMA {
             ParamDefWithStructFieldType(vec![param], self.parse_struct_field_type(tb)?)
@@ -26,7 +26,7 @@ impl Runtime {
     }
 
     /// `struct` 头部与字段类型：不允许嵌套 `struct`（无 `struct Foo(...)`）。
-    pub fn parse_struct_field_type(&mut self, tb: &mut TokenBlock) -> Result<StructFieldType, ParsingError> {
+    pub fn parse_struct_field_type(&mut self, tb: &mut TokenBlock) -> Result<StructFieldType, RuntimeError> {
         match tb.current()? {
             NONEMPTY_SET => self
                 .parse_param_type_nonempty_set(tb)
@@ -50,7 +50,7 @@ impl Runtime {
                     ParamType::Family(f) => StructFieldType::Family(f),
                     _ => unreachable!(),
                 }),
-            STRUCT => Err(ParsingError::new(
+            STRUCT => Err(RuntimeError::parse_error(
                 "nested `struct` types are not allowed in struct parameter and field types".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -67,7 +67,7 @@ impl Runtime {
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithParamType, ParsingError> {
+    ) -> Result<ParamDefWithParamType, RuntimeError> {
         let param = tb.advance()?;
         let param_def_with_param_type = if tb.current()? != COMMA {
             ParamDefWithParamType(vec![param], self.parse_param_type(tb)?)
@@ -88,7 +88,7 @@ impl Runtime {
         Ok(param_def_with_param_type)
     }
 
-    pub fn parse_param_type(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type(&mut self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         match tb.current()? {
             NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
             FINITE_SET => self.parse_param_type_finite_set(tb),
@@ -99,22 +99,22 @@ impl Runtime {
         }
     }
 
-    pub fn parse_param_type_nonempty_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type_nonempty_set(&self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         tb.skip_token(NONEMPTY_SET)?;
         Ok(ParamType::NonemptySet(NonemptySet::new()))
     }
 
-    pub fn parse_param_type_finite_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type_finite_set(&self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         tb.skip_token(FINITE_SET)?;
         Ok(ParamType::FiniteSet(FiniteSet::new()))
     }
 
-    pub fn parse_param_type_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type_set(&self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         tb.skip_token(SET)?;
         Ok(ParamType::Set(Set::new()))
     }
 
-    pub fn parse_param_type_obj(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type_obj(&mut self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         let obj = self.parse_obj(tb)?;
         Ok(ParamType::Obj(obj))
     }
@@ -122,7 +122,7 @@ impl Runtime {
     pub fn parse_param_type_family(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamType, ParsingError> {
+    ) -> Result<ParamType, RuntimeError> {
         tb.skip_token(FAMILY)?;
         let name = self.parse_identifier_or_identifier_with_mod(tb)?;
         let params = self.parse_braced_objs(tb)?;
@@ -132,7 +132,7 @@ impl Runtime {
     pub fn parse_param_type_struct(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamType, ParsingError> {
+    ) -> Result<ParamType, RuntimeError> {
         tb.skip_token(STRUCT)?;
         let name = self.parse_identifier_or_identifier_with_mod(tb)?;
         let params = self.parse_braced_objs(tb)?;

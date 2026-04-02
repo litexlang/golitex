@@ -15,7 +15,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
@@ -93,7 +93,7 @@ impl Runtime {
         verify_state: &VerifyState,
         known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
         known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
-    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         match (known_objs_equal_to_left, known_objs_equal_to_right) {
             (None, None) => Ok(None),
             (Some(known_objs_equal_to_left), None) => {

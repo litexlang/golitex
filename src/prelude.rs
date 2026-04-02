@@ -4,18 +4,8 @@ pub use crate::common::name_types::{
 };
 pub use crate::environment::{Environment, KnownForallFactParamsAndDom};
 pub use crate::error::ConflictMsg;
-pub use crate::error::DefineParamsError;
-pub use crate::error::ExecStmtError;
-pub use crate::error::InferError;
-pub use crate::error::NameAlreadyUsedError;
-pub use crate::error::ParseBlockError;
-pub use crate::error::ParsingError;
-pub use crate::error::parsing_error_from_parse_block_error;
 pub use crate::error::RuntimeError;
 pub use crate::error::RuntimeErrorStruct;
-pub use crate::error::UnknownError;
-pub use crate::error::VerifyError;
-pub use crate::error::WellDefinedError;
 pub use crate::fact::AndChainAtomicFact;
 pub use crate::fact::AndFact;
 pub use crate::fact::AtomicFact;

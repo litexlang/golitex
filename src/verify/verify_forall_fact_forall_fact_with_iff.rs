@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::ForallFact(forall_fact.clone()))
         {
@@ -16,7 +16,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::ForallFact(forall_fact.clone()),
                     String::new(),
                     forall_fact.line_file.clone(),
@@ -38,22 +38,22 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for param_def in forall_fact.params_def_with_type.iter() {
             let param_infer_result = self
                 .define_params_with_type(std::slice::from_ref(param_def), false)
                 .map_err(|e| {
                     let message = "failed to define params in forall".to_string();
-                    VerifyError::new(
+                    RuntimeError::verify_error(
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
                         forall_fact.line_file.clone(),
-                        Some(UnknownError::new(
+                        Some(RuntimeError::unknown_error(
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
-                            Some(RuntimeError::DefineParamsError(e)),
+                            Some(e),
                         ).into()),
                     )
                 })?;
@@ -67,11 +67,11 @@ impl Runtime {
                 )
                 .map_err(|e| {
                     let message = "failed to assume dom fact in forall".to_string();
-                    VerifyError::new(
+                    RuntimeError::verify_error(
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
                         forall_fact.line_file.clone(),
-                        Some(UnknownError::new(
+                        Some(RuntimeError::unknown_error(
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
@@ -91,7 +91,7 @@ impl Runtime {
             if result.is_unknown() {
                 let then_one_based = then_index + 1;
                 let then_line_file = then_fact.line_file();
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::ForallFact(forall_fact.clone()),
                     format!(
                         "forall: then-fact {}/{} could not be verified (unknown):\n{}",
@@ -165,7 +165,7 @@ impl Runtime {
         &mut self,
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
             &Fact::ForallFactWithIff(forall_iff.clone()),
         ) {
@@ -175,7 +175,7 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_forall_fact_with_iff_well_defined(forall_iff, verify_state)
             {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::ForallFactWithIff(forall_iff.clone()),
                     String::new(),
                     forall_iff.line_file.clone(),

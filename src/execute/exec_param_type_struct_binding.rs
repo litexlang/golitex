@@ -100,7 +100,7 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(UnknownError::new(
+                return Err(RuntimeError::unknown_error(
                     format!(
                         "struct `{}` is not defined (needed for field `{}` of type `struct {}(...)`)",
                         struct_name,
@@ -116,7 +116,7 @@ impl Runtime {
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
-            return Err(UnknownError::new(
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "struct `{}` expects {} type argument(s), got {}",
                     struct_name,
@@ -163,7 +163,7 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(UnknownError::new(
+                return Err(RuntimeError::unknown_error(
                     format!("struct `{}` is not defined", struct_name),
                     default_line_file(),
                     None,
@@ -172,7 +172,7 @@ impl Runtime {
             }
         };
         if def.name != struct_name {
-            return Err(UnknownError::new(
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "struct type name `{}` does not match definition name `{}`",
                     struct_name, def.name
@@ -185,7 +185,7 @@ impl Runtime {
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
-            return Err(UnknownError::new(
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "struct `{}` expects {} type argument(s), got {}",
                     struct_name,
@@ -199,7 +199,7 @@ impl Runtime {
         }
 
         if tuple.args.len() != def.fields.len() + def.number_of_params() {
-            return Err(UnknownError::new(
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "struct `{}`: tuple has {} component(s), definition has {} field(s) (must match)",
                     struct_name,
@@ -283,7 +283,7 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(UnknownError::new(
+                return Err(RuntimeError::unknown_error(
                     format!("family `{}` is not defined", family_name),
                     default_line_file(),
                     None,
@@ -293,7 +293,7 @@ impl Runtime {
         };
         let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
-            return Err(UnknownError::new(
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "family `{}` expects {} type argument(s), got {}",
                     family_name,
@@ -388,7 +388,7 @@ impl Runtime {
                 if let ParamType::Struct(struct_ty) = param_type {
                     self.define_param_binding_struct_from_tuple(tuple, struct_ty)
                 } else {
-                    Err(UnknownError::new(
+                    Err(RuntimeError::unknown_error(
                         format!(
                             "tuple as subject is only supported for struct parameter type, got {}",
                             param_type
@@ -400,7 +400,7 @@ impl Runtime {
                 }
             }
             _ => match param_type {
-                ParamType::Struct(_) => Err(UnknownError::new(
+                ParamType::Struct(_) => Err(RuntimeError::unknown_error(
                     format!(
                         "struct parameter type requires an identifier, field access, or tuple matching struct fields, got {}",
                         subject
