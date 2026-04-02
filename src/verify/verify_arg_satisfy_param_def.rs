@@ -1,11 +1,3 @@
-//! 实参与 [`ParamDefWithParamType`] 展开类型的**验证**（不写入环境）。
-//!
-//! 调用顺序（自顶向下）：
-//! 1. [`Runtime::verify_args_satisfy_param_def_flat_types`] — 对 `param_defs` + `args` 展开后逐对验证；
-//! 2. [`Runtime::verify_obj_satisfies_param_type`] — 单个 `obj` 是否满足 `param_type`；
-//! 3. [`Runtime::verify_obj_satisfies_struct_param_type`] — `struct` 时按字段递归，内部再调 2；
-//! 4. [`field_access_append_field`] — 仅 struct 字段路径用。
-
 use crate::prelude::*;
 
 fn field_access_append_field(obj: &Obj, field_name: &str) -> Option<FieldAccess> {
