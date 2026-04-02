@@ -9,7 +9,7 @@ impl Runtime {
         let to_prove_fact = Fact::AtomicFact(stmt.to_prove.clone());
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::from(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByContraAxiomStmt(stmt.clone()),
                     format!("by contra: failed to prove `{}`", to_prove_fact),
                     Some(verify_error.into()),
@@ -28,7 +28,7 @@ impl Runtime {
                 reverse_to_prove_fact,
             )
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(ExecStmtError::with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ByContraAxiomStmt(stmt.clone()),
                         format!("by contra: failed to know reverse of `{}`", to_prove_fact),
                         Some(store_fact_error.into()),
@@ -51,7 +51,7 @@ impl Runtime {
                 self.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
             if verify_impossible_fact_result.is_unknown() {
                 return Err(RuntimeError::from(
-                    ExecStmtError::with_message_and_cause(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ByContraAxiomStmt(stmt.clone()),
                         impossible_proof_error_message(&stmt.impossible_fact, None),
                         None,
@@ -66,7 +66,7 @@ impl Runtime {
             )?;
             if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(RuntimeError::from(
-                    ExecStmtError::with_message_and_cause(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ByContraAxiomStmt(stmt.clone()),
                         impossible_proof_error_message(&stmt.impossible_fact, None),
                         None,
@@ -81,7 +81,7 @@ impl Runtime {
 
         if let Some(last_error) = last_error {
             return Err(RuntimeError::from(
-                ExecStmtError::with_message_and_cause(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByContraAxiomStmt(stmt.clone()),
                     "by contra: failed to execute proof".to_string(),
                     Some(last_error),
@@ -94,7 +94,7 @@ impl Runtime {
         let infer_result = self
             .store_fact_without_well_defined_verified_and_infer(to_prove_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::from(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByContraAxiomStmt(stmt.clone()),
                     format!(
                         "by contra: failed to release `{}`",

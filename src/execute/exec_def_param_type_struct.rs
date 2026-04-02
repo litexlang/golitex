@@ -4,12 +4,12 @@ impl Runtime {
     pub fn def_param_type_struct_stmt(
         &mut self,
         def_param_type_struct_stmt: &DefParamTypeStructStmt,
-    ) -> Result<NonErrStmtExecResult, ExecStmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
         self.def_param_type_struct_stmt_check_well_defined(def_param_type_struct_stmt)?;
 
         self.store_struct_def(def_param_type_struct_stmt)
             .map_err(|store_error| {
-                ExecStmtError::new_with_stmt(
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
                     "".to_string(),
                     Some(store_error.into()),
@@ -29,7 +29,7 @@ impl Runtime {
     fn def_param_type_struct_stmt_check_well_defined(
         &mut self,
         def_param_type_struct_stmt: &DefParamTypeStructStmt,
-    ) -> Result<(), ExecStmtError> {
+    ) -> Result<(), RuntimeErrorStruct> {
         self.push_env();
         let struct_check_well_defined_result = self
             .def_param_type_struct_stmt_check_well_defined_body(def_param_type_struct_stmt);
@@ -40,7 +40,7 @@ impl Runtime {
     fn def_param_type_struct_stmt_check_well_defined_body(
         &mut self,
         def_param_type_struct_stmt: &DefParamTypeStructStmt,
-    ) -> Result<(), ExecStmtError> {
+    ) -> Result<(), RuntimeErrorStruct> {
         let verify_state = VerifyState::new(0, false);
 
         self.define_params_with_type(
@@ -50,10 +50,10 @@ impl Runtime {
             false,
         )
             .map_err(|define_params_error| {
-                ExecStmtError::new_with_stmt(
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
                     "".to_string(),
-                    Some(define_params_error.into()),
+                    Some(define_params_error),
                     vec![],
                 )
             })?;
@@ -65,7 +65,7 @@ impl Runtime {
                     &verify_state,
                 )
                 .map_err(|inner_exec_error| {
-                    ExecStmtError::new_with_stmt(
+                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
                         "".to_string(),
                         Some(RuntimeError::from(inner_exec_error)),
@@ -78,7 +78,7 @@ impl Runtime {
             self
                 .verify_param_type_well_defined(&field_param_type.to_param_type(), &verify_state)
                 .map_err(|well_defined_error| {
-                    ExecStmtError::new_with_stmt(
+                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
                         "".to_string(),
                         Some(well_defined_error.into()),
@@ -88,7 +88,7 @@ impl Runtime {
         }
 
         self.store_identifier_obj(SELF).map_err(|store_error| {
-            ExecStmtError::new_with_stmt(
+            RuntimeErrorStruct::exec_stmt_new_with_stmt(
                 Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
                 "".to_string(),
                 Some(store_error.into()),
@@ -123,7 +123,7 @@ impl Runtime {
                     &verify_state,
                 )
                 .map_err(|inner_exec_error| {
-                    ExecStmtError::new_with_stmt(
+                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         Stmt::DefParamTypeStructStmt(def_param_type_struct_stmt.clone()),
                         "".to_string(),
                         Some(RuntimeError::from(inner_exec_error)),

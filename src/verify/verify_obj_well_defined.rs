@@ -14,7 +14,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         if self
             .verify_obj_well_defined_from_cache_if_known(obj)
             .is_some()
@@ -83,11 +83,11 @@ impl Runtime {
     fn verify_identifier_well_defined(
         &self,
         identifier: &Identifier,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         if self.is_name_used_for_identifier_and_field_access(&identifier.name) {
             Ok(())
         } else {
-            Err(WellDefinedError::new(
+            Err(RuntimeError::well_defined_error(
                 format!("identifier `{}` not defined", identifier.to_string()),
                 None,
                 default_line_file(),
@@ -98,14 +98,14 @@ impl Runtime {
     fn verify_identifier_with_mod_well_defined(
         &self,
         x: &IdentifierWithMod,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let _ = x;
         unreachable!()
     }
 
-    fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
+    fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), RuntimeError> {
         let Some(def) = self.get_definition_of_struct_where_object_satisfies(&IdentifierOrIdentifierWithMod::Identifier(Identifier::new(x.name.to_string()))) else {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("field access `{}` unknown, `{}` is not a struct", x.to_string(), x.name.to_string()),
                 None,
                 default_line_file(),
@@ -118,7 +118,7 @@ impl Runtime {
             }
         }
 
-        return Err(WellDefinedError::new(
+        return Err(RuntimeError::well_defined_error(
             format!("field access `{}` unknown, {} does not contain field `{}`", x.to_string(), x.name.to_string(), x.field.to_string()),
             None,
             default_line_file(),
@@ -128,7 +128,7 @@ impl Runtime {
     fn verify_field_access_with_mod_well_defined(
         &self,
         x: &FieldAccessWithMod,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let _ = x;
         unreachable!()
     }
@@ -137,12 +137,12 @@ impl Runtime {
         &mut self,
         fn_obj: &FnObj,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let function_name_obj = Obj::Identifier(Identifier::new(fn_obj.head.to_string()));
         let mut the_set_where_current_fn_obj_is_in = self
             .get_fn_set_where_fn_belongs_to(&function_name_obj)
             .ok_or_else(|| {
-                WellDefinedError::new(
+                RuntimeError::well_defined_error(
                     todo_error_message(format!(
                         "`{}` is not a defined function",
                         fn_obj.head.to_string()
@@ -160,7 +160,7 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|well_defined_error| {
-                WellDefinedError::new(
+                RuntimeError::well_defined_error(
                     format!(
                         "object {} is not well-defined, failed to verify arguments satisfy function domain.",
                         fn_obj.to_string()
@@ -197,7 +197,7 @@ impl Runtime {
                 intermediate_atomic_fact,
             ))
             .map_err(|store_fact_error| {
-                WellDefinedError::new(
+                RuntimeError::well_defined_error(
                     format!(
                         "failed to store intermediate fn-obj membership fact while verifying `{}`",
                         fn_obj.to_string()
@@ -214,7 +214,7 @@ impl Runtime {
             the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
                 Obj::FnSetWithParams(e) => e,
                 _ => {
-                    return Err(WellDefinedError::new(
+                    return Err(RuntimeError::well_defined_error(
                         format!(
                             "expect return set of {} to be a fn_set object.",
                             the_set_where_current_fn_obj_is_in.to_string()
@@ -235,11 +235,11 @@ impl Runtime {
         args: &Vec<Box<Obj>>,
         fn_set_with_dom: &FnSetWithParams,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let param_count =
             ParamDefWithParamSet::number_of_params(&fn_set_with_dom.params_def_with_set);
         if args.len() != param_count {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "number of args ({}) does not match fn set with dom param count ({})",
                     args.len(),
@@ -266,7 +266,7 @@ impl Runtime {
                 &args_as_obj,
             )
             .map_err(|stmt_error| {
-                WellDefinedError::new(
+                RuntimeError::well_defined_error(
                     format!("failed to build facts for args satisfy fn set parameter sets"),
                     Some(stmt_error),
                     default_line_file(),
@@ -277,7 +277,7 @@ impl Runtime {
             let verify_result =
                 self.verify_atomic_fact(fact, verify_state)
                     .map_err(|verify_error| {
-                        WellDefinedError::new(
+                        RuntimeError::well_defined_error(
                             format!(
                                 "failed to verify arg satisfy fn set parameter set: {}",
                                 fact
@@ -287,7 +287,7 @@ impl Runtime {
                         )
                     })?;
             if verify_result.is_unknown() {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!("arg does not satisfy fn set parameter set: {}", fact),
                     None,
                     default_line_file(),
@@ -303,7 +303,7 @@ impl Runtime {
             let instantiated_dom_fact =
                 self.inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                     .map_err(|e| {
-                        WellDefinedError::new(
+                        RuntimeError::well_defined_error(
                             format!("failed to instantiate function domain fact: {}", e),
                             Some(e),
                             default_line_file(),
@@ -312,7 +312,7 @@ impl Runtime {
             let verify_result = self
                 .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {
-                    WellDefinedError::new(
+                    RuntimeError::well_defined_error(
                         format!(
                             "failed to verify function domain fact:\n{}",
                             instantiated_dom_fact
@@ -322,7 +322,7 @@ impl Runtime {
                     )
                 })?;
             if verify_result.is_unknown() {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!(
                         "failed to verify function domain fact:\n{}",
                         instantiated_dom_fact
@@ -340,13 +340,13 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let r_obj = Obj::StandardSet(StandardSet::R);
         let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("obj {} is not in r", obj.to_string()),
                 None,
                 default_line_file(),
@@ -359,13 +359,13 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let z_obj = Obj::StandardSet(StandardSet::Z);
         let in_fact = InFact::new(obj.clone(), z_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("obj {} is not in z", obj.to_string()),
                 None,
                 default_line_file(),
@@ -378,7 +378,7 @@ impl Runtime {
         &mut self,
         add: &Add,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&add.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&add.right, verify_state)?;
         self.require_obj_in_r(&add.left, verify_state)?;
@@ -390,7 +390,7 @@ impl Runtime {
         &mut self,
         sub: &Sub,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&sub.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&sub.right, verify_state)?;
         self.require_obj_in_r(&sub.left, verify_state)?;
@@ -402,7 +402,7 @@ impl Runtime {
         &mut self,
         mul: &Mul,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&mul.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&mul.right, verify_state)?;
         self.require_obj_in_r(&mul.left, verify_state)?;
@@ -414,7 +414,7 @@ impl Runtime {
         &mut self,
         div: &Div,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&div.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&div.right, verify_state)?;
 
@@ -424,7 +424,7 @@ impl Runtime {
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("divisor `{}` must be non-zero", div.right.to_string()),
                 None,
                 default_line_file(),
@@ -440,7 +440,7 @@ impl Runtime {
         &mut self,
         m: &Mod,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&m.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&m.right, verify_state)?;
         self.require_obj_in_z(&m.left, verify_state)?;
@@ -450,7 +450,7 @@ impl Runtime {
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("modulus `{}` must be non-zero", m.right.to_string()),
                 None,
                 default_line_file(),
@@ -463,7 +463,7 @@ impl Runtime {
         &mut self,
         pow: &Pow,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&pow.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
 
@@ -543,7 +543,7 @@ impl Runtime {
 
         let result = self.verify_or_fact(&pow_domain_or_fact, verify_state)?;
         if result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("base and exponent do not satisfy the pow domain"),
                 None,
                 default_line_file(),
@@ -556,7 +556,7 @@ impl Runtime {
         &mut self,
         x: &Union,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
         Ok(())
@@ -566,7 +566,7 @@ impl Runtime {
         &mut self,
         x: &Intersect,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
         Ok(())
@@ -576,7 +576,7 @@ impl Runtime {
         &mut self,
         x: &SetMinus,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
         Ok(())
@@ -586,7 +586,7 @@ impl Runtime {
         &mut self,
         x: &SetDiff,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
         Ok(())
@@ -596,7 +596,7 @@ impl Runtime {
         &mut self,
         x: &Cup,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
         Ok(())
     }
@@ -605,7 +605,7 @@ impl Runtime {
         &mut self,
         x: &Cap,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
         Ok(())
     }
@@ -614,7 +614,7 @@ impl Runtime {
         &mut self,
         x: &ListSet,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         for obj in &x.list {
             self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
@@ -641,7 +641,7 @@ impl Runtime {
                 let verify_result = self
                     .verify_atomic_fact(&not_equal_atomic_fact, &next_verify_state)
                     .map_err(|previous_error| {
-                        WellDefinedError::new(
+                        RuntimeError::well_defined_error(
                             format!(
                                 "failed to verify list set elements are pairwise not equal: {}",
                                 not_equal_atomic_fact
@@ -651,7 +651,7 @@ impl Runtime {
                         )
                     })?;
                 if verify_result.is_unknown() {
-                    return Err(WellDefinedError::new(
+                    return Err(RuntimeError::well_defined_error(
                         format!("list set elements must be pairwise not equal, but it is not provable: {}", not_equal_atomic_fact),
                         None,
                         default_line_file(),
@@ -669,7 +669,7 @@ impl Runtime {
         &mut self,
         x: &SetBuilder,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.push_env();
         let result = self.verify_set_builder_well_defined_body(x, verify_state);
         self.pop_env();
@@ -680,17 +680,17 @@ impl Runtime {
         &mut self,
         x: &SetBuilder,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         if let Err(e) = self.define_params_with_set(&ParamDefWithParamSet::new(
             vec![x.param.clone()],
             *x.param_set.clone(),
         )) {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "failed to verify well-defined of set builder {}",
                     x.to_string()
                 ),
-                Some(RuntimeError::DefineParamsError(e)),
+                Some(e),
                 default_line_file(),
             ));
         }
@@ -700,7 +700,7 @@ impl Runtime {
                 fact,
                 verify_state,
             ) {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!(
                         "failed to verify well-defined of set builder {}",
                         x.to_string()
@@ -718,7 +718,7 @@ impl Runtime {
         &mut self,
         x: &FnSetWithParams,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.push_env();
         let result = self.verify_fn_set_with_dom_well_defined_body(x, verify_state);
         self.pop_env();
@@ -729,9 +729,9 @@ impl Runtime {
         &mut self,
         x: &FnSetWithParams,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "failed to verify well-defined of fn set with dom {}",
                     x.to_string()
@@ -743,12 +743,12 @@ impl Runtime {
 
         for param_def_with_set in x.params_def_with_set.iter() {
             if let Err(e) = self.define_params_with_set(param_def_with_set) {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!(
                         "failed to verify well-defined of fn set with dom {}",
                         x.to_string()
                     ),
-                    Some(RuntimeError::DefineParamsError(e)),
+                    Some(e),
                     default_line_file(),
                 ));
             }
@@ -759,7 +759,7 @@ impl Runtime {
                 fact,
                 verify_state,
             ) {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!(
                         "failed to verify well-defined of fn set with dom {}",
                         x.to_string()
@@ -773,23 +773,23 @@ impl Runtime {
         Ok(())
     }
 
-    fn verify_n_pos_obj_well_defined(&mut self) -> Result<(), WellDefinedError> {
+    fn verify_n_pos_obj_well_defined(&mut self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_n_obj_well_defined(&mut self) -> Result<(), WellDefinedError> {
+    fn verify_n_obj_well_defined(&mut self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_q_obj_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_q_obj_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_z_obj_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_z_obj_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_r_obj_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_r_obj_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
@@ -797,7 +797,7 @@ impl Runtime {
         &mut self,
         x: &Cart,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         for obj in &x.args {
             self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
@@ -808,14 +808,14 @@ impl Runtime {
         &mut self,
         x: &CartDim,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
 
         let is_cart_fact =
             AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), default_line_file()));
         let result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
         if result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("set {} is not a cart", x.set.to_string()),
                 None,
                 default_line_file(),
@@ -829,12 +829,12 @@ impl Runtime {
         &mut self,
         x: &Proj,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.dim, verify_state)?;
 
         let projection_dimension_number = self.resolve_obj_to_number(&x.dim).ok_or_else(|| {
-            WellDefinedError::new(
+            RuntimeError::well_defined_error(
                 format!("projection dimension {} is not a number", x.dim),
                 None,
                 default_line_file(),
@@ -851,7 +851,7 @@ impl Runtime {
         let projection_dimension_is_positive_integer_result =
             self.verify_atomic_fact(&projection_dimension_is_positive_integer_fact, verify_state)?;
         if projection_dimension_is_positive_integer_result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "projection dimension {} is not a positive integer",
                     projection_dimension_obj
@@ -866,7 +866,7 @@ impl Runtime {
         let left_set_is_cart_result =
             self.verify_atomic_fact(&left_set_is_cart_fact, verify_state)?;
         if left_set_is_cart_result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("projection left side {} is not a cart", x.set),
                 None,
                 default_line_file(),
@@ -883,7 +883,7 @@ impl Runtime {
         let left_set_cart_dim_less_equal_projection_dimension_result =
             self.verify_atomic_fact(&proj_index_not_larger_than_cart_dim, verify_state)?;
         if left_set_cart_dim_less_equal_projection_dimension_result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "{} <= {} is unknown",
                     projection_dimension_obj, left_set_cart_dim_obj
@@ -900,7 +900,7 @@ impl Runtime {
         &mut self,
         x: &TupleDim,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.arg, verify_state)?;
 
         let is_tuple_fact = AtomicFact::IsTupleFact(IsTupleFact::new(
@@ -909,7 +909,7 @@ impl Runtime {
         ));
         let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "`{}` is unknown, `dim` object requires its argument to be a tuple",
                     is_tuple_fact
@@ -926,7 +926,7 @@ impl Runtime {
         &mut self,
         x: &Tuple,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         for obj in &x.args {
             self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
@@ -937,7 +937,7 @@ impl Runtime {
         &mut self,
         x: &Count,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         // 必须 is_finite_set
         let is_finite_set_fact = AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
             (*x.set).clone(),
@@ -945,7 +945,7 @@ impl Runtime {
         ));
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
         if result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("set {} is not a finite set", x.set.to_string()),
                 None,
                 default_line_file(),
@@ -958,7 +958,7 @@ impl Runtime {
         &mut self,
         x: &Range,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
@@ -970,7 +970,7 @@ impl Runtime {
         &mut self,
         x: &ClosedRange,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
@@ -982,7 +982,7 @@ impl Runtime {
         &mut self,
         x: &PowerSet,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         Ok(())
     }
@@ -991,7 +991,7 @@ impl Runtime {
         &mut self,
         _x: &Choose,
         _verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         unimplemented!()
     }
 
@@ -999,12 +999,12 @@ impl Runtime {
         &mut self,
         x: &ObjAtIndex,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;
 
         let index_calculated_number = self.resolve_obj_to_number(&x.index).ok_or_else(|| {
-            WellDefinedError::new(
+            RuntimeError::well_defined_error(
                 format!("index {} is not a number", x.index.to_string()),
                 None,
                 default_line_file(),
@@ -1021,7 +1021,7 @@ impl Runtime {
         let index_is_positive_integer_result =
             self.verify_atomic_fact(&index_is_positive_integer_in_z_pos_fact, verify_state)?;
         if index_is_positive_integer_result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("index {} is not a positive integer", index_calculated_obj),
                 None,
                 default_line_file(),
@@ -1035,7 +1035,7 @@ impl Runtime {
         let target_obj_is_tuple_result =
             self.verify_atomic_fact(&target_obj_is_tuple_fact, verify_state)?;
         if target_obj_is_tuple_result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!("index target {} is not a tuple", x.obj),
                 None,
                 default_line_file(),
@@ -1051,7 +1051,7 @@ impl Runtime {
         let index_not_larger_than_tuple_dim_result =
             self.verify_atomic_fact(&index_not_larger_than_tuple_dim_fact, verify_state)?;
         if index_not_larger_than_tuple_dim_result.is_unknown() {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "{} <= {} is unknown",
                     index_calculated_obj, target_tuple_dim_obj
@@ -1064,35 +1064,35 @@ impl Runtime {
         Ok(())
     }
 
-    fn verify_q_pos_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_q_pos_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_r_pos_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_r_pos_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_q_neg_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_q_neg_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_z_neg_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_z_neg_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_r_neg_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_r_neg_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_q_nz_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_q_nz_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_z_nz_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_z_nz_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
-    fn verify_r_nz_well_defined(&self) -> Result<(), WellDefinedError> {
+    fn verify_r_nz_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 }
@@ -1102,7 +1102,7 @@ impl Runtime {
         &mut self,
         param_type: &ParamType,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         match param_type {
             ParamType::Set(_) => Ok(()),
             ParamType::NonemptySet(_) => Ok(()),
@@ -1127,12 +1127,12 @@ impl Runtime {
         &mut self,
         family_param_type: &FamilyParamType,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let family_name = family_param_type.name.to_string();
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!("family `{}` is not defined", family_name),
                     None,
                     default_line_file(),
@@ -1142,7 +1142,7 @@ impl Runtime {
 
         let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
         if family_param_type.params.len() != expected_count {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "family `{}` expects {} parameter(s), got {}",
                     family_name,
@@ -1165,7 +1165,7 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|runtime_error| {
-                WellDefinedError::new(
+                RuntimeError::well_defined_error(
                     format!(
                         "failed to verify family `{}` arguments satisfy parameter types",
                         family_name
@@ -1184,7 +1184,7 @@ impl Runtime {
             let instantiated_dom_fact =
                 self.inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                     .map_err(|e| {
-                        WellDefinedError::new(
+                        RuntimeError::well_defined_error(
                             format!("failed to instantiate family `{}` domain fact: {}", family_name, e),
                             Some(e),
                             default_line_file(),
@@ -1193,7 +1193,7 @@ impl Runtime {
             let verify_result = self
                 .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {
-                    WellDefinedError::new(
+                    RuntimeError::well_defined_error(
                         format!(
                             "failed to verify family `{}` domain fact:\n{}",
                             family_name, instantiated_dom_fact
@@ -1203,7 +1203,7 @@ impl Runtime {
                     )
                 })?;
             if verify_result.is_unknown() {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!(
                         "failed to verify family `{}` domain fact:\n{}",
                         family_name, instantiated_dom_fact
@@ -1216,7 +1216,7 @@ impl Runtime {
 
         let instantiated_equal_to = self.inst_obj(&def.equal_to, &param_to_arg_map).map_err(
             |e| {
-                WellDefinedError::new(
+                RuntimeError::well_defined_error(
                     format!("failed to instantiate family `{}` member set: {}", family_name, e),
                     Some(e),
                     default_line_file(),
@@ -1232,12 +1232,12 @@ impl Runtime {
         &mut self,
         struct_ty: &StructParamType,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let struct_name = struct_ty.name.to_string();
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!("struct `{}` is not defined", struct_name),
                     None,
                     default_line_file(),
@@ -1247,7 +1247,7 @@ impl Runtime {
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 format!(
                     "struct `{}` expects {} parameter(s), got {}",
                     struct_name,
@@ -1272,7 +1272,7 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|runtime_error| {
-                WellDefinedError::new(
+                RuntimeError::well_defined_error(
                     format!(
                         "failed to verify struct `{}` arguments satisfy parameter types",
                         struct_name
@@ -1291,7 +1291,7 @@ impl Runtime {
             let instantiated_dom_fact =
                 self.inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                     .map_err(|e| {
-                        WellDefinedError::new(
+                        RuntimeError::well_defined_error(
                             format!(
                                 "failed to instantiate struct `{}` domain fact: {}",
                                 struct_name, e
@@ -1303,7 +1303,7 @@ impl Runtime {
             let verify_result = self
                 .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {
-                    WellDefinedError::new(
+                    RuntimeError::well_defined_error(
                         format!(
                             "failed to verify struct `{}` domain fact:\n{}",
                             struct_name, instantiated_dom_fact
@@ -1313,7 +1313,7 @@ impl Runtime {
                     )
                 })?;
             if verify_result.is_unknown() {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!(
                         "failed to verify struct `{}` domain fact:\n{}",
                         struct_name, instantiated_dom_fact

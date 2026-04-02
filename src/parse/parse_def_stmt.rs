@@ -5,7 +5,7 @@ impl Runtime {
     pub fn parse_def_prop_with_meaning_stmt(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
+    ) -> Result<Stmt, RuntimeError> {
         self.push_parsing_time_name_scope();
         let stmt = self.parse_def_prop_with_meaning_stmt_body(tb);
         self.pop_parsing_time_name_scope();
@@ -13,7 +13,7 @@ impl Runtime {
         let stmt_ok = stmt?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(
+                RuntimeError::parse_error_wrap(
                     e,
                     tb.line_file.clone(),
                     Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name)),
@@ -26,12 +26,12 @@ impl Runtime {
     fn parse_def_prop_with_meaning_stmt_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<DefPropWithMeaningStmt, ParsingError> {
+    ) -> Result<DefPropWithMeaningStmt, RuntimeError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(
+                RuntimeError::parse_error_wrap(
                     e,
                     tb.line_file.clone(),
                     Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
@@ -49,15 +49,15 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
+            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
         })?;
 
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
         } else {
             if !tb.exceed_end_of_head() {
-                return Err(ParsingError::new(
-                    "expect `:` after `}` in prop statement".to_string(),
+                return Err(RuntimeError::parse_error(
+                    "expect `:` or end of line after `)` in prop statement".to_string(),
                     tb.line_file.clone(),
                     None,
                 ));
@@ -83,7 +83,7 @@ impl Runtime {
     pub fn parse_def_abstract_prop_stmt(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
+    ) -> Result<Stmt, RuntimeError> {
         self.push_parsing_time_name_scope();
         let stmt = self.parse_def_abstract_prop_stmt_body(tb);
         self.pop_parsing_time_name_scope();
@@ -91,7 +91,7 @@ impl Runtime {
         let stmt_ok = stmt?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(
+                RuntimeError::parse_error_wrap(
                     e,
                     tb.line_file.clone(),
                     Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name)),
@@ -103,12 +103,12 @@ impl Runtime {
     fn parse_def_abstract_prop_stmt_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<DefAbstractPropStmt, ParsingError> {
+    ) -> Result<DefAbstractPropStmt, RuntimeError> {
         tb.skip_token(ABSTRACT_PROP)?;
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(
+                RuntimeError::parse_error_wrap(
                     e,
                     tb.line_file.clone(),
                     Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
@@ -126,13 +126,13 @@ impl Runtime {
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
+                RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
             })?;
 
         Ok(DefAbstractPropStmt::new(name, params, tb.line_file.clone()))
     }
 
-    pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(LET)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         loop {
@@ -147,7 +147,7 @@ impl Runtime {
             tb.skip_token(COLON)?;
 
             if !tb.exceed_end_of_head() {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "expect end of line after `:` in let statement".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -164,7 +164,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
+            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
         })?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
@@ -174,7 +174,7 @@ impl Runtime {
     }
 
     // return HaveObjInNonemptySetOrParamTypeStmt or HaveObjEqualStmt
-    pub fn parse_have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         loop {
@@ -186,7 +186,7 @@ impl Runtime {
             }
         }
         if param_defs.is_empty() {
-            return Err(ParsingError::new(
+            return Err(RuntimeError::parse_error(
                 "have expects at least one param type pair".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -198,7 +198,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
+            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
         })?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
@@ -220,14 +220,14 @@ impl Runtime {
         }
     }
 
-    pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
         let name = tb.advance()?;
 
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(
+                RuntimeError::parse_error_wrap(
                     e,
                     tb.line_file.clone(),
                     Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
@@ -261,7 +261,7 @@ impl Runtime {
         }
     }
 
-    pub fn parse_have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(BY)?;
 
@@ -279,7 +279,7 @@ impl Runtime {
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
+                RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
             })?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
@@ -292,7 +292,7 @@ impl Runtime {
     fn parse_braced_params_and_optional_dom_facts(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<(Vec<ParamDefWithParamType>, Vec<OrAndChainAtomicFact>), ParsingError> {
+    ) -> Result<(Vec<ParamDefWithParamType>, Vec<OrAndChainAtomicFact>), RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
@@ -304,7 +304,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
+            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -326,7 +326,7 @@ impl Runtime {
     fn parse_braced_struct_field_params_and_optional_dom_facts(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<(Vec<ParamDefWithStructFieldType>, Vec<OrAndChainAtomicFact>), ParsingError> {
+    ) -> Result<(Vec<ParamDefWithStructFieldType>, Vec<OrAndChainAtomicFact>), RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut param_defs: Vec<ParamDefWithStructFieldType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
@@ -338,7 +338,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
+            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -357,12 +357,12 @@ impl Runtime {
         Ok((param_defs, dom_facts))
     }
 
-    pub fn parse_def_family_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_family_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(FAMILY)?;
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(
+                RuntimeError::parse_error_wrap(
                     e,
                     tb.line_file.clone(),
                     Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
@@ -379,10 +379,10 @@ impl Runtime {
         &mut self,
         name: String,
         tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
+    ) -> Result<Stmt, RuntimeError> {
         let (params_def_with_type, dom_facts) = self.parse_braced_params_and_optional_dom_facts(tb)?;
         if !tb.current_token_is_equal_to(EQUAL) {
-            return Err(ParsingError::new(
+            return Err(RuntimeError::parse_error(
                 "family definition expects `=` after `}`".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -402,12 +402,12 @@ impl Runtime {
     pub fn parse_def_param_type_struct_stmt(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
+    ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(
+                RuntimeError::parse_error_wrap(
                     e,
                     tb.line_file.clone(),
                     Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
@@ -424,11 +424,11 @@ impl Runtime {
         &mut self,
         name: String,
         tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
+    ) -> Result<Stmt, RuntimeError> {
         let (param_defs, dom_facts) =
             self.parse_braced_struct_field_params_and_optional_dom_facts(tb)?;
         if tb.current_token_is_equal_to(EQUAL) {
-            return Err(ParsingError::new(
+            return Err(RuntimeError::parse_error(
                 "use `family` for set-style definitions (`... {} = ...`); `struct` requires field definitions after `:`"
                     .to_string(),
                 tb.line_file.clone(),
@@ -438,7 +438,7 @@ impl Runtime {
         tb.skip_token(COLON)?;
 
         if tb.body.is_empty() {
-            return Err(ParsingError::new(
+            return Err(RuntimeError::parse_error(
                 "struct with fields expects body".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -452,7 +452,7 @@ impl Runtime {
         let last_index = body_len - 1;
         let last_is_equiv = {
             let last = tb.body.get(last_index).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("Expected body".to_string(), tb.line_file.clone(), None)
             })?;
             last.current_token_is_equal_to(EQUIVALENT_SIGN)
         };
@@ -461,7 +461,7 @@ impl Runtime {
 
         for i in 0..field_end {
             let block = tb.body.get_mut(i).ok_or_else(|| {
-                ParsingError::new("Expected field block".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("Expected field block".to_string(), tb.line_file.clone(), None)
             })?;
             let field_name = block.advance()?;
             let cond = self.parse_struct_field_type(block)?;
@@ -470,7 +470,7 @@ impl Runtime {
 
         if last_is_equiv {
             let last = tb.body.get_mut(last_index).ok_or_else(|| {
-                ParsingError::new("Expected <=>: block".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("Expected <=>: block".to_string(), tb.line_file.clone(), None)
             })?;
             last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
             for block in last.body.iter_mut() {
@@ -482,7 +482,7 @@ impl Runtime {
         let mut seen = HashSet::new();
         for (field_name, _) in fields.iter() {
             if !seen.insert(field_name.clone()) {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     format!(
                         "struct `{}`: duplicate field `{}`",
                         name, field_name
@@ -503,7 +503,7 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
         self.push_parsing_time_name_scope();
@@ -516,7 +516,7 @@ impl Runtime {
         &mut self,
         name: String,
         tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
+    ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params: Vec<String> = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -552,7 +552,7 @@ impl Runtime {
     }
 
     /// head 里是 if and_spec_fact :，body 有且只有一个块，即 return obj。
-    fn parse_algo_case(&mut self, block: &mut TokenBlock) -> Result<AlgoCase, ParsingError> {
+    fn parse_algo_case(&mut self, block: &mut TokenBlock) -> Result<AlgoCase, RuntimeError> {
         block.skip_token(CASE)?;
         let condition = self.parse_atomic_fact(block, true)?;
         block.skip_token(COLON)?;
@@ -562,7 +562,7 @@ impl Runtime {
     }
 
     /// head 里是 return，后跟 obj。
-    fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
+    fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, RuntimeError> {
         let value = self.parse_obj(block)?;
         Ok(AlgoReturn::new(value, block.line_file.clone()))
     }

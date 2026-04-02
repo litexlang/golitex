@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         subset_fact: &SubsetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let converted_superset_fact = AtomicFact::SupersetFact(SupersetFact::new(
             subset_fact.right.clone(),
             subset_fact.left.clone(),
@@ -35,7 +35,7 @@ impl Runtime {
         &mut self,
         superset_fact: &SupersetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let converted_subset_fact = AtomicFact::SubsetFact(SubsetFact::new(
             superset_fact.right.clone(),
             superset_fact.left.clone(),
@@ -64,7 +64,7 @@ impl Runtime {
         &mut self,
         not_subset_fact: &NotSubsetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let converted_not_superset_fact = AtomicFact::NotSupersetFact(NotSupersetFact::new(
             not_subset_fact.right.clone(),
             not_subset_fact.left.clone(),
@@ -93,7 +93,7 @@ impl Runtime {
         &mut self,
         not_superset_fact: &NotSupersetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let converted_not_subset_fact = AtomicFact::NotSubsetFact(NotSubsetFact::new(
             not_superset_fact.right.clone(),
             not_superset_fact.left.clone(),
@@ -122,7 +122,7 @@ impl Runtime {
         &mut self,
         not_less_fact: &NotLessFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let counterpart_fact = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
             not_less_fact.left.clone(),
             not_less_fact.right.clone(),
@@ -140,7 +140,7 @@ impl Runtime {
         &mut self,
         not_greater_fact: &NotGreaterFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let counterpart_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
             not_greater_fact.left.clone(),
             not_greater_fact.right.clone(),
@@ -157,7 +157,7 @@ impl Runtime {
         &mut self,
         not_less_equal_fact: &NotLessEqualFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let counterpart_fact = AtomicFact::GreaterFact(GreaterFact::new(
             not_less_equal_fact.left.clone(),
             not_less_equal_fact.right.clone(),
@@ -174,7 +174,7 @@ impl Runtime {
         &mut self,
         not_greater_equal_fact: &NotGreaterEqualFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let counterpart_fact = AtomicFact::LessFact(LessFact::new(
             not_greater_equal_fact.left.clone(),
             not_greater_equal_fact.right.clone(),
@@ -192,7 +192,7 @@ impl Runtime {
         current_fact: &AtomicFact,
         counterpart_fact: &AtomicFact,
         builtin_rule_name: &str,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let counterpart_verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
                 counterpart_fact,
@@ -215,7 +215,7 @@ impl Runtime {
         &mut self,
         less_fact: &LessFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let right_is_zero = match self.resolve_obj_to_number(&less_fact.right) {
             Some(number) => number.normalized_value == "0",
             None => false,
@@ -251,7 +251,7 @@ impl Runtime {
         current_fact: &AtomicFact,
         counterpart_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let number_compare_result = self.verify_number_comparison_builtin_rule(current_fact);
         if let Some(true) = number_compare_result {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(

@@ -1,12 +1,12 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         self.parse_obj_hierarchy0(tb)
     }
 
     /// 中缀 \ 最松散；往下依次为 +-、*/%、^、[]、主元
-    fn parse_obj_hierarchy0(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_obj_hierarchy0(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy1(tb)?;
         if tb.exceed_end_of_head() {
             return Ok(left);
@@ -25,7 +25,7 @@ impl Runtime {
                     RANGE => Ok(Obj::Range(Range::new(left, right))),
                     CLOSED_RANGE => Ok(Obj::ClosedRange(ClosedRange::new(left, right))),
                     PROJ => Ok(Obj::Proj(Proj::new(left, right))),
-                    _ => Err(ParsingError::new(
+                    _ => Err(RuntimeError::parse_error(
                         format!("{} does not support infix function syntax", fn_name),
                         tb.line_file.clone(),
                         None,
@@ -42,7 +42,7 @@ impl Runtime {
     }
 
     /// + - 优先级最低，左结合，可连续 2 + 3 - 4
-    fn parse_obj_hierarchy1(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_obj_hierarchy1(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let mut left = self.parse_obj_hierarchy2(tb)?;
         loop {
             if tb.exceed_end_of_head() {
@@ -64,7 +64,7 @@ impl Runtime {
     }
 
     /// * / % 高于 + -，左结合
-    fn parse_obj_hierarchy2(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_obj_hierarchy2(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let mut left = self.parse_obj_hierarchy3(tb)?;
         loop {
             if tb.exceed_end_of_head() {
@@ -89,7 +89,7 @@ impl Runtime {
     }
 
     /// ^ 高于 * / %，右结合：2^3^2 = 2^(3^2)
-    fn parse_obj_hierarchy3(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_obj_hierarchy3(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy4(tb)?;
         if tb.exceed_end_of_head() {
             return Ok(left);
@@ -104,7 +104,7 @@ impl Runtime {
     }
 
     /// [] 下标，优先级高于 ^
-    fn parse_obj_hierarchy4(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_obj_hierarchy4(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy5(tb)?;
         if tb.exceed_end_of_head() {
             return Ok(left);
@@ -120,7 +120,7 @@ impl Runtime {
     }
 
     /// 主元：{ }、@、fn、数字、括号、关键字、atom
-    fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS) {
@@ -136,7 +136,7 @@ impl Runtime {
     pub fn parse_fn_set_with_dom_without_fn_prefix(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<FnSetWithParams, ParsingError> {
+    ) -> Result<FnSetWithParams, RuntimeError> {
         self.push_parsing_time_name_scope();
         let fn_set = self.parse_fn_set_with_dom_without_fn_prefix_body(tb);
         self.pop_parsing_time_name_scope();
@@ -146,7 +146,7 @@ impl Runtime {
     fn parse_fn_set_with_dom_without_fn_prefix_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<FnSetWithParams, ParsingError> {
+    ) -> Result<FnSetWithParams, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamDefWithParamSet> = vec![];
         loop {
@@ -168,7 +168,7 @@ impl Runtime {
             } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
                 break;
             } else {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "Expected comma or colon".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -182,7 +182,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
+            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
         })?;
 
         let mut dom_facts = vec![];
@@ -207,7 +207,7 @@ impl Runtime {
     pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Obj, ParsingError> {
+    ) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(SUB) {
             tb.skip()?;
             let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
@@ -224,7 +224,7 @@ impl Runtime {
     fn parse_number_or_primary_obj_or_fn_obj(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Obj, ParsingError> {
+    ) -> Result<Obj, RuntimeError> {
         let token = tb.current()?;
 
         // 0. (obj) 或 (obj, obj, ...)
@@ -252,7 +252,7 @@ impl Runtime {
             // 若已经到行尾，则直接检查并返回
             if tb.exceed_end_of_head() {
                 if !is_number(&number) {
-                    return Err(ParsingError::new(
+                    return Err(RuntimeError::parse_error(
                         format!("Invalid number: {}", number),
                         tb.line_file.clone(),
                         None,
@@ -266,7 +266,7 @@ impl Runtime {
                 let fraction = tb.advance()?;
                 let number = format!("{}{}{}", number, DOT_AKA_FIELD_ACCESS_SIGN, fraction);
                 if !is_number(&number) {
-                    return Err(ParsingError::new(
+                    return Err(RuntimeError::parse_error(
                         format!("Invalid number: {}", number),
                         tb.line_file.clone(),
                         None,
@@ -275,7 +275,7 @@ impl Runtime {
                 return Ok(Obj::Number(Number::new(number)));
             } else {
                 if !is_number(&number) {
-                    return Err(ParsingError::new(
+                    return Err(RuntimeError::parse_error(
                         format!("Invalid number: {}", number),
                         tb.line_file.clone(),
                         None,
@@ -311,7 +311,7 @@ impl Runtime {
     }
 
     /// 解析「主元」：当前 token 必须是单符号集合名、多元关键字、或普通标识符(atom)。
-    fn parse_primary_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_primary_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let tok = tb.current()?;
 
         // 单符号集合（无参）
@@ -373,7 +373,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "union expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -381,10 +381,10 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new("union expects 2 arguments".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("union expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new("union expects 2 arguments".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("union expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Union(Union::new(left, right)));
         }
@@ -392,7 +392,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "intersect expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -400,14 +400,14 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "intersect expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
                 )
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "intersect expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -419,7 +419,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "set_minus expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -427,14 +427,14 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "set_minus expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
                 )
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "set_minus expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -446,7 +446,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "disjoint_union expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -454,14 +454,14 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "disjoint_union expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
                 )
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "disjoint_union expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -473,7 +473,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "cap expects 1 argument".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -481,7 +481,7 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("cap expects 1 argument".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("cap expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Cap(Cap::new(value)));
         }
@@ -489,7 +489,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "cup expects 1 argument".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -497,7 +497,7 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("cup expects 1 argument".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("cup expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Cup(Cup::new(value)));
         }
@@ -505,7 +505,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "choice expects 1 argument".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -513,7 +513,7 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("choice expects 1 argument".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("choice expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Choose(Choose::new(value)));
         }
@@ -521,7 +521,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "proj expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -529,10 +529,10 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new("proj expects 2 arguments".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("proj expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new("proj expects 2 arguments".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("proj expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Proj(Proj::new(left, right)));
         }
@@ -540,7 +540,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "range expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -548,10 +548,10 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new("range expects 2 arguments".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("range expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new("range expects 2 arguments".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("range expects 2 arguments".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Range(Range::new(left, right)));
         }
@@ -559,7 +559,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "closed_range expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -567,14 +567,14 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "closed_range expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
                 )
             })?;
             let right = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "closed_range expects 2 arguments".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -587,7 +587,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "cup expects 1 argument".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -595,7 +595,7 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("cup expects 1 argument".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("cup expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Cup(Cup::new(value)));
         }
@@ -603,7 +603,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "power_set expects 1 argument".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -611,7 +611,7 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new(
+                RuntimeError::parse_error(
                     "power_set expects 1 argument".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -623,7 +623,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "set_dim expects 1 argument".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -631,7 +631,7 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("set_dim expects 1 argument".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("set_dim expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::CartDim(CartDim::new(value)));
         }
@@ -639,7 +639,7 @@ impl Runtime {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
-                return Err(ParsingError::new(
+                return Err(RuntimeError::parse_error(
                     "count expects 1 argument".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -647,7 +647,7 @@ impl Runtime {
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                ParsingError::new("count expects 1 argument".to_string(), tb.line_file.clone(), None)
+                RuntimeError::parse_error("count expects 1 argument".to_string(), tb.line_file.clone(), None)
             })?;
             return Ok(Obj::Count(Count::new(value)));
         }
@@ -674,7 +674,7 @@ impl Runtime {
         return Ok(Obj::from(atom));
     }
 
-    pub fn parse_braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
+    pub fn parse_braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut objs = vec![self.parse_obj(tb)?];
         while tb.current_token_is_equal_to(COMMA) {
@@ -685,10 +685,10 @@ impl Runtime {
         Ok(objs)
     }
 
-    pub fn parse_braced_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    pub fn parse_braced_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let mut parsed_args = self.parse_braced_objs(tb)?;
         if parsed_args.len() != 1 {
-            return Err(ParsingError::new(
+            return Err(RuntimeError::parse_error(
                 "expected exactly 1 argument".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -699,7 +699,7 @@ impl Runtime {
     }
 
     /// 解析逗号分隔的 obj 列表，直到遇到非 COMMA 的 token（如 COLON）。
-    pub fn parse_obj_list(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
+    pub fn parse_obj_list(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
         let mut objs = vec![self.parse_obj(tb)?];
         while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
@@ -708,7 +708,7 @@ impl Runtime {
         Ok(objs)
     }
 
-    fn parse_set_builder_or_set_list(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_set_builder_or_set_list(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         tb.skip_token(LEFT_CURLY_BRACE)?;
         if tb.current_token_is_equal_to(RIGHT_CURLY_BRACE) {
             tb.skip_token(RIGHT_CURLY_BRACE)?;
@@ -733,7 +733,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         a: Identifier,
-    ) -> Result<Obj, ParsingError> {
+    ) -> Result<Obj, RuntimeError> {
         self.push_parsing_time_name_scope();
         let result = self.parse_set_builder_body(tb, a);
         self.pop_parsing_time_name_scope();
@@ -745,10 +745,10 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         a: Identifier,
-    ) -> Result<Obj, ParsingError> {
+    ) -> Result<Obj, RuntimeError> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name, tb.line_file.clone())
             .map_err(|e| {
-                parsing_error_from_parse_block_error(
+                RuntimeError::parse_error_wrap(
                     e,
                     tb.line_file.clone(),
                     Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&a.name)),
@@ -784,7 +784,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         left_most_obj: Obj,
-    ) -> Result<Obj, ParsingError> {
+    ) -> Result<Obj, RuntimeError> {
         let mut objs = vec![left_most_obj];
         while tb.current()? != RIGHT_CURLY_BRACE {
             if tb.current_token_is_equal_to(COMMA) {
@@ -796,7 +796,7 @@ impl Runtime {
         Ok(Obj::ListSet(ListSet::new(objs)))
     }
 
-    pub fn parse_list_set_obj(&mut self, tb: &mut TokenBlock) -> Result<ListSet, ParsingError> {
+    pub fn parse_list_set_obj(&mut self, tb: &mut TokenBlock) -> Result<ListSet, RuntimeError> {
         let mut objs = vec![];
         tb.skip_token(LEFT_CURLY_BRACE)?;
         while tb.current()? != RIGHT_CURLY_BRACE {
@@ -809,7 +809,7 @@ impl Runtime {
         Ok(ListSet::new(objs))
     }
 
-    pub fn parse_atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
+    pub fn parse_atom(&self, tb: &mut TokenBlock) -> Result<Atom, RuntimeError> {
         let left = tb.advance()?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             tb.skip()?;
@@ -818,7 +818,7 @@ impl Runtime {
                 tb.skip()?;
                 let field = tb.advance()?.to_string();
                 if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                    return Err(ParsingError::new(
+                    return Err(RuntimeError::parse_error(
                         "chained field access `a.b.c` is not supported; use at most one `.`"
                             .to_string(),
                         tb.line_file.clone(),
@@ -838,7 +838,7 @@ impl Runtime {
                 tb.skip()?;
                 let field = tb.advance()?.to_string();
                 if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                    return Err(ParsingError::new(
+                    return Err(RuntimeError::parse_error(
                         "chained field access `a.b.c` is not supported; use at most one `.`"
                             .to_string(),
                         tb.line_file.clone(),
@@ -855,7 +855,7 @@ impl Runtime {
     pub fn parse_identifier_or_identifier_with_mod(
         &self,
         tb: &mut TokenBlock,
-    ) -> Result<IdentifierOrIdentifierWithMod, ParsingError> {
+    ) -> Result<IdentifierOrIdentifierWithMod, RuntimeError> {
         let left = tb.advance()?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             tb.skip()?;

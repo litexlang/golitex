@@ -192,7 +192,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Obj::StandardSet(standard_set) = &in_fact.set {
             if !matches!(&in_fact.element, Obj::Number(_)) {
                 if let Some(evaluated_number) =
@@ -283,7 +283,7 @@ impl Runtime {
         in_fact: &InFact,
         verify_state: &VerifyState,
         target_negative_standard_set: StandardSet,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -377,7 +377,7 @@ impl Runtime {
         list_set: &crate::obj::ListSet,
         power_set: &crate::obj::PowerSet,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
         let mut infer_result = InferResult::new();
         for element_box in list_set.list.iter() {
@@ -416,7 +416,7 @@ impl Runtime {
         in_fact: &InFact,
         list_set: &crate::obj::ListSet,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         for current_element_in_list_set in list_set.list.iter() {
             let equal_fact = AtomicFact::EqualFact(EqualFact::new(
                 in_fact.element.clone(),
@@ -517,14 +517,14 @@ impl Runtime {
         identifier: &Identifier,
         expected_fn_set: &FnSetWithParams,
         in_fact: &InFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let element_obj = Obj::Identifier(Identifier::new(identifier.name.clone()));
         let Some(stored_fn_set) = self.get_cloned_fn_set_where_fn_belongs_to(&element_obj) else {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         };
         if fn_set_with_params_equal_modulo_param_rename(self, &stored_fn_set, expected_fn_set)
             .map_err(|e| {
-                VerifyError::new(
+                RuntimeError::verify_error(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
                     String::new(),
                     in_fact.line_file.clone(),
@@ -548,7 +548,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         target_set_obj: &Obj,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let standard_subset_set_objs =
             match Self::standard_subset_set_objs_for_target_set(target_set_obj) {
                 Some(standard_subset_set_objs) => standard_subset_set_objs,
@@ -587,7 +587,7 @@ impl Runtime {
         tuple: &Tuple,
         cart: &Cart,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if tuple.args.len() != cart.args.len() {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }

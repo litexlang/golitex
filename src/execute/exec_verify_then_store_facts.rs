@@ -5,11 +5,11 @@ impl Runtime {
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<InferResult, ExecStmtError> {
+    ) -> Result<InferResult, RuntimeErrorStruct> {
         let stmt_for_fact_errors = Stmt::Fact(fact.clone().to_fact());
         self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
-                ExecStmtError::new_with_stmt(
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors.clone(),
                     "".to_string(),
                     Some(well_defined_error.into()),
@@ -20,7 +20,7 @@ impl Runtime {
             fact.clone(),
         )
         .map_err(|store_fact_error| {
-            ExecStmtError::new_with_stmt(
+            RuntimeErrorStruct::exec_stmt_new_with_stmt(
                 stmt_for_fact_errors,
                 "".to_string(),
                 Some(store_fact_error.into()),
@@ -33,11 +33,11 @@ impl Runtime {
         &mut self,
         fact: &OrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<InferResult, ExecStmtError> {
+    ) -> Result<InferResult, RuntimeErrorStruct> {
         let stmt_for_fact_errors = Stmt::Fact(fact.clone().to_fact());
         self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
-                ExecStmtError::new_with_stmt(
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors.clone(),
                     "".to_string(),
                     Some(well_defined_error.into()),
@@ -46,7 +46,7 @@ impl Runtime {
             })?;
         self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact.clone())
             .map_err(|store_fact_error| {
-                ExecStmtError::new_with_stmt(
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors,
                     "".to_string(),
                     Some(store_fact_error.into()),
@@ -59,11 +59,11 @@ impl Runtime {
         &mut self,
         fact: Fact,
         verify_state: &VerifyState,
-    ) -> Result<InferResult, ExecStmtError> {
+    ) -> Result<InferResult, RuntimeErrorStruct> {
         let stmt_for_fact_errors = Stmt::Fact(fact.clone());
         self.verify_fact_well_defined(&fact, verify_state)
             .map_err(|well_defined_error| {
-                ExecStmtError::new_with_stmt(
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors.clone(),
                     "".to_string(),
                     Some(well_defined_error.into()),
@@ -72,7 +72,7 @@ impl Runtime {
             })?;
         self.store_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new_with_stmt(
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors,
                     "".to_string(),
                     Some(store_fact_error.into()),

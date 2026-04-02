@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::OrFact(or_fact.clone()))
         {
@@ -15,7 +15,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::OrFact(or_fact.clone()),
                     String::new(),
                     or_fact.line_file.clone(),
@@ -58,7 +58,7 @@ impl Runtime {
     pub fn verify_or_fact_with_known_or_facts(
         &mut self,
         or_fact: &OrFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let args_in_or_fact = or_fact.get_args_from_fact();
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in args_in_or_fact.iter() {
@@ -88,7 +88,7 @@ impl Runtime {
         environment: &Environment,
         or_fact: &OrFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(known_or_facts) = environment.known_or_facts.get(&or_fact.key()) {
             for known_or_fact in known_or_facts.iter() {
                 let result = Self::_verify_or_fact_the_same_type_and_return_matched_args(

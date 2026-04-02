@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut result =
             self.verify_non_equational_atomic_fact_with_builtin_rules(atomic_fact, verify_state)?;
         if result.is_true() {
@@ -52,7 +52,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if atomic_fact.number_of_args() == 1 {
             self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact)
         } else if atomic_fact.number_of_args() == 2 {
@@ -66,7 +66,7 @@ impl Runtime {
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut all_objs_equal_to_arg =
             self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
 
@@ -95,7 +95,7 @@ impl Runtime {
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut all_objs_equal_to_arg0 =
             self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
         if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[0]) {
@@ -132,7 +132,7 @@ impl Runtime {
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in atomic_fact.args().iter() {
             let mut all_objs_equal_to_current_arg =
@@ -161,7 +161,7 @@ impl Runtime {
         environment: &Environment,
         atomic_fact: &AtomicFact,
         all_objs_equal_to_arg: &Vec<String>,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .known_atomic_facts_with_1_arg
             .get(&(atomic_fact.key(), atomic_fact.is_true()))
@@ -190,7 +190,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         all_objs_equal_to_arg0: &Vec<String>,
         all_objs_equal_to_arg1: &Vec<String>,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .known_atomic_facts_with_2_args
             .get(&(atomic_fact.key(), atomic_fact.is_true()))
@@ -222,7 +222,7 @@ impl Runtime {
         environment: &Environment,
         atomic_fact: &AtomicFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(known_facts) = environment
             .known_atomic_facts_with_0_or_more_than_2_args
             .get(&(atomic_fact.key(), atomic_fact.is_true()))
@@ -234,11 +234,11 @@ impl Runtime {
                         known_fact.to_string(),
                         atomic_fact.to_string()
                     );
-                    return Err(VerifyError::new(
+                    return Err(RuntimeError::verify_error(
                         Fact::AtomicFact(atomic_fact.clone()),
                         message.clone(),
                         atomic_fact.line_file(),
-                        Some(UnknownError::new(
+                        Some(RuntimeError::unknown_error(
                             message,
                             atomic_fact.line_file(),
                             Some(Fact::AtomicFact(atomic_fact.clone())),
@@ -276,7 +276,7 @@ impl Runtime {
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
             Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
@@ -294,7 +294,7 @@ impl Runtime {
         &mut self,
         subset_fact: &SubsetFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let bound_param_name = self.generate_a_random_unused_name();
         let membership_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamDefWithParamType(
@@ -329,7 +329,7 @@ impl Runtime {
         &mut self,
         superset_fact: &SupersetFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let bound_param_name = self.generate_a_random_unused_name();
         let membership_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamDefWithParamType(
@@ -364,7 +364,7 @@ impl Runtime {
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         if predicate_name.as_str() == SUBSET {
             if normal_atomic_fact.body.len() != 2 {
@@ -405,7 +405,7 @@ impl Runtime {
             verify_state_for_definition_clauses,
         ) {
             Ok(_) => {}
-            Err(RuntimeError::VerifyError(e)) => return Err(VerifyError::from(e)),
+            Err(RuntimeError::VerifyError(e)) => return Err(RuntimeError::VerifyError(e)),
             Err(_) => return Ok(None),
         }
 
@@ -425,7 +425,7 @@ impl Runtime {
             let instantiated_iff_fact = self
                 .inst_fact(iff_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    VerifyError::new(
+                    RuntimeError::verify_error(
                         Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal_atomic_fact.clone())),
                         String::new(),
                         normal_atomic_fact.line_file.clone(),
@@ -471,7 +471,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         match fact {
             AtomicFact::SubsetFact(subset_fact) => {
                 if let Some(verified_by_subset_definition) = self

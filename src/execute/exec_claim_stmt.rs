@@ -8,10 +8,10 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.define_params_with_type(&forall_fact.params_def_with_type, false)
             .map_err(|define_params_error| {
-                ExecStmtError::new_with_stmt(
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     Stmt::ClaimStmt(stmt.clone()),
                     "".to_string(),
-                    Some(define_params_error.into()),
+                    Some(define_params_error),
                     vec![],
                 )})?;
 
@@ -31,7 +31,7 @@ impl Runtime {
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(then_fact, &VerifyState::new(0, false))?;
             if result.is_unknown() {
-                return Err(UnknownError::new(
+                return Err(RuntimeError::unknown_error(
                     format!("claim failed: cannot prove `{}`", stmt.fact),
                     stmt.line_file.clone(),
                     Some(stmt.fact.clone()),
@@ -81,7 +81,7 @@ impl Runtime {
             Fact::ForallFact(forall_fact) => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::from(ExecStmtError::with_message_and_cause(
+                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::ClaimStmt(stmt.clone()),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
@@ -99,7 +99,7 @@ impl Runtime {
                     Err(runtime_error) => return Err(runtime_error),
                 };
                 if non_err_after_body.is_unknown() {
-                    return Err(UnknownError::new(
+                    return Err(RuntimeError::unknown_error(
                         format!("claim failed: cannot prove `{}`", stmt.fact),
                         stmt.line_file.clone(),
                         Some(stmt.fact.clone()),
@@ -115,7 +115,7 @@ impl Runtime {
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::from(ExecStmtError::with_message_and_cause(
+                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::ClaimStmt(stmt.clone()),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),

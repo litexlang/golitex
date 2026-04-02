@@ -8,7 +8,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_exist_fact_with_known_forall_facts_in_envs(exist_fact, verify_state)?
         {
@@ -28,7 +28,7 @@ impl Runtime {
             Option<HashMap<String, Obj>>,
             Option<(ExistFact, Rc<KnownForallFactParamsAndDom>)>,
         ),
-        VerifyError,
+        RuntimeError,
     > {
         let lookup_key = given_exist_fact.key();
 
@@ -64,7 +64,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactualStmtSuccess>, VerifyError> {
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
@@ -103,7 +103,7 @@ impl Runtime {
         arg_map: HashMap<String, Obj>,
         given_exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactualStmtSuccess>, VerifyError> {
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         // exist param matches exist param
         let given_exist_param_names =
             ParamDefWithParamType::collect_param_names(&given_exist_fact.params_def_with_type);
@@ -186,7 +186,7 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|e| {
-                VerifyError::new(
+                RuntimeError::verify_error(
                     Fact::ExistFact(given_exist_fact.clone()),
                     String::new(),
                     Fact::ExistFact(given_exist_fact.clone()).line_file(),
@@ -206,7 +206,7 @@ impl Runtime {
             let instantiated_dom_fact = self
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    VerifyError::new(
+                    RuntimeError::verify_error(
                         Fact::ExistFact(given_exist_fact.clone()),
                         String::new(),
                         Fact::ExistFact(given_exist_fact.clone()).line_file(),

@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
             AtomicFact::NotEqualFact(not_equal_fact) => {
@@ -121,7 +121,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
 
@@ -167,7 +167,7 @@ impl Runtime {
         &mut self,
         operand: &Obj,
         line_file: LineFile,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let operand_not_equal_zero_fact =
             AtomicFact::NotEqualFact(NotEqualFact::new(operand.clone(), zero_obj, line_file));
@@ -183,7 +183,7 @@ impl Runtime {
         left_operand: &Obj,
         right_operand: &Obj,
         line_file: LineFile,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let left_nonzero = self
             .operand_is_not_equal_to_zero_by_known_non_equational_facts(left_operand, line_file.clone())?;
         if !left_nonzero {
@@ -196,7 +196,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let verify_result = self.verify_non_equational_atomic_fact(atomic_fact, verify_state)?;
         Ok(verify_result.is_true())
     }
@@ -207,7 +207,7 @@ impl Runtime {
         right_operand: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let left_greater_than_zero = AtomicFact::GreaterFact(GreaterFact::new(
             left_operand.clone(),
@@ -234,7 +234,7 @@ impl Runtime {
         right_operand: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let left_less_than_zero = AtomicFact::LessFact(LessFact::new(
             left_operand.clone(),
@@ -261,7 +261,7 @@ impl Runtime {
         right_factor: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let left_less_than_zero = AtomicFact::LessFact(LessFact::new(
             left_factor.clone(),
@@ -306,7 +306,7 @@ impl Runtime {
         subtrahend: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let minuend_greater_than_zero = AtomicFact::GreaterFact(GreaterFact::new(
             minuend.clone(),
@@ -346,7 +346,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let expression_obj =
             if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
@@ -434,7 +434,7 @@ impl Runtime {
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match &is_nonempty_set_fact.set {
             Obj::StandardSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
@@ -505,7 +505,7 @@ impl Runtime {
         &mut self,
         is_finite_set_fact: &IsFiniteSetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match &is_finite_set_fact.set {
             Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
@@ -523,7 +523,7 @@ impl Runtime {
         &mut self,
         is_cart_fact: &IsCartFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match &is_cart_fact.set {
             Obj::Cart(_) => {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(
@@ -543,7 +543,7 @@ impl Runtime {
         &mut self,
         is_tuple_fact: &IsTupleFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match &is_tuple_fact.set {
             Obj::Tuple(_) => {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(

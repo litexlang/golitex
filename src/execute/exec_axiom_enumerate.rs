@@ -6,7 +6,7 @@ impl Runtime {
         stmt: &EnumerateAxiomStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::from(ExecStmtError::with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 Stmt::EnumerateAxiomStmt(stmt.clone()),
                 msg,
                 None,
@@ -16,7 +16,7 @@ impl Runtime {
 
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::from(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::EnumerateAxiomStmt(stmt.clone()),
                     format!(
                         "by enumerate: corresponding forall `{}` is not well-defined",
@@ -37,7 +37,7 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(ExecStmtError::with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::EnumerateAxiomStmt(stmt.clone()),
                         format!(
                             "by enumerate: failed to store corresponding forall `{}`",
@@ -81,7 +81,7 @@ impl Runtime {
                 corresponding_forall_fact.clone(),
             )
             .map_err(|store_fact_error| {
-                RuntimeError::from(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::EnumerateAxiomStmt(stmt.clone()),
                     format!(
                         "by enumerate: failed to store corresponding forall `{}`",
@@ -186,7 +186,7 @@ impl Runtime {
                 }
                 Err(statement_error) => {
                     return Err(RuntimeError::from(
-                        ExecStmtError::with_message_and_cause(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EnumerateAxiomStmt(stmt.clone()),
                             proof_stmt.to_string(),
                             Some(statement_error),
@@ -204,7 +204,7 @@ impl Runtime {
             )?;
             if verified_result.is_unknown() {
                 return Err(RuntimeError::from(
-                    ExecStmtError::with_message_and_cause(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::EnumerateAxiomStmt(stmt.clone()),
                         format!("by enumerate: failed to prove `{}`", fact_to_prove),
                         None,

@@ -82,8 +82,7 @@ where
         ) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
-                let stmt_error = parse_block_error.into();
-                let error_string = runtime.display_error_json_string(&stmt_error);
+                let error_string = runtime.display_error_json_string(&parse_block_error);
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
                 writeln!(stdout_writer)?;
@@ -96,8 +95,7 @@ where
             let stmt: Stmt = match runtime.parse_stmt(&mut block) {
                 Ok(statement) => statement,
                 Err(parse_stmt_error) => {
-                    let runtime_error = parse_stmt_error.into();
-                    let message = runtime.display_error_json_string(&runtime_error);
+                    let message = runtime.display_error_json_string(&parse_stmt_error);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }

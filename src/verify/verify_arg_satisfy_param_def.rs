@@ -6,7 +6,7 @@ impl Runtime {
         obj: Obj,
         param_type: &ParamType,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match param_type {
             ParamType::Struct(struct_ty) => {
                 self.verify_obj_satisfies_struct_param_type(obj, struct_ty, verify_state)
@@ -60,7 +60,7 @@ impl Runtime {
                 .verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)
                 .map_err(RuntimeError::from)?;
             if verify_result.is_unknown() {
-                return Err(UnknownError::new(
+                return Err(RuntimeError::unknown_error(
                     format!(
                         "argument {} does not satisfy parameter type (unknown): {}",
                         arg,

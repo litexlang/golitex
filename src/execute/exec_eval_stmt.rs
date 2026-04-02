@@ -22,7 +22,7 @@ impl Runtime {
                 match calculated_number {
                     Some(number) => Ok(Obj::Number(number)),
                     None => Err(RuntimeError::from(
-                        ExecStmtError::with_message_and_cause(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EvalStmt(eval_stmt.clone()),
                             "eval: failed to calculate add expression".to_string(),
                             None,
@@ -44,7 +44,7 @@ impl Runtime {
                 match calculated_number {
                     Some(number) => Ok(Obj::Number(number)),
                     None => Err(RuntimeError::from(
-                        ExecStmtError::with_message_and_cause(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EvalStmt(eval_stmt.clone()),
                             "eval: failed to calculate sub expression".to_string(),
                             None,
@@ -66,7 +66,7 @@ impl Runtime {
                 match calculated_number {
                     Some(number) => Ok(Obj::Number(number)),
                     None => Err(RuntimeError::from(
-                        ExecStmtError::with_message_and_cause(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EvalStmt(eval_stmt.clone()),
                             "eval: failed to calculate mul expression".to_string(),
                             None,
@@ -88,7 +88,7 @@ impl Runtime {
                 match calculated_number {
                     Some(number) => Ok(Obj::Number(number)),
                     None => Err(RuntimeError::from(
-                        ExecStmtError::with_message_and_cause(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EvalStmt(eval_stmt.clone()),
                             "eval: failed to calculate div expression".to_string(),
                             None,
@@ -117,7 +117,7 @@ impl Runtime {
                     }
                     _ => {
                         return Err(RuntimeError::from(
-                            ExecStmtError::with_message_and_cause(
+                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 Stmt::EvalStmt(eval_stmt.clone()),
                                 "eval: function arguments must evaluate to Number".to_string(),
                                 None,
@@ -133,7 +133,7 @@ impl Runtime {
             Some(definition) => definition.clone(),
             None => {
                 return Err(RuntimeError::from(
-                    ExecStmtError::with_message_and_cause(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::EvalStmt(eval_stmt.clone()),
                         format!("eval: algorithm `{}` is not defined", fn_name),
                         None,
@@ -145,7 +145,7 @@ impl Runtime {
 
         if flattened_number_args.len() != algo_definition.params.len() {
             return Err(RuntimeError::from(
-                ExecStmtError::with_message_and_cause(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::EvalStmt(eval_stmt.clone()),
                     format!(
                         "eval: argument count mismatch (expected {}, got {})",
@@ -173,10 +173,10 @@ impl Runtime {
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::from(ExecStmtError::with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::EvalStmt(eval_stmt.clone()),
                         "eval: failed to verify case condition".to_string(),
-                        Some(verify_error.into()),
+                        Some(verify_error),
                         vec![],
                     ))
                 })?;
@@ -192,16 +192,16 @@ impl Runtime {
                 let verify_reversed_result = self
                     .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
-                        RuntimeError::from(ExecStmtError::with_message_and_cause(
+                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EvalStmt(eval_stmt.clone()),
                             "eval: failed to verify reversed case condition".to_string(),
-                            Some(verify_error.into()),
+                            Some(verify_error),
                             vec![],
                         ))
                     })?;
                 if verify_reversed_result.is_unknown() {
                     return Err(RuntimeError::from(
-                        ExecStmtError::with_message_and_cause(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EvalStmt(eval_stmt.clone()),
                             format!(
                                 "eval: case `{}` is unknown and its reverse is also unknown",
@@ -221,7 +221,7 @@ impl Runtime {
             self.evaluate_symbol_obj_recursively(&instantiated_default_symbol, eval_stmt)
         } else {
             Err(RuntimeError::from(
-                ExecStmtError::with_message_and_cause(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::EvalStmt(eval_stmt.clone()),
                     "eval: no case matched and no default return".to_string(),
                     None,
@@ -242,7 +242,7 @@ impl Runtime {
 
         if !matches!(stmt.obj_to_eval, Obj::FnObj(_)) {
             return Err(RuntimeError::from(
-                ExecStmtError::with_message_and_cause(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::EvalStmt(stmt.clone()),
                     "eval: obj_to_eval must be a fnObj".to_string(),
                     None,

@@ -28,7 +28,7 @@ fn ends_with_colon(s: &str) -> bool {
 }
 
 impl TokenBlock {
-    pub fn parse_blocks(s: &str, current_file_path: Rc<str>) -> Result<Vec<TokenBlock>, ParseBlockError> {
+    pub fn parse_blocks(s: &str, current_file_path: Rc<str>) -> Result<Vec<TokenBlock>, RuntimeError> {
         let stripped_source_code = strip_triple_quote_comment_blocks(s);
         let lines: Vec<_> = stripped_source_code.lines().collect();
         let mut i = 0;
@@ -68,7 +68,7 @@ fn parse_level(
     i: &mut usize,
     base_indent: usize,
     current_file_path: Rc<str>,
-) -> Result<Vec<TokenBlock>, ParseBlockError> {
+) -> Result<Vec<TokenBlock>, RuntimeError> {
     let remaining_line_count_upper_bound = lines.len().saturating_sub(*i);
     let mut items = Vec::with_capacity(remaining_line_count_upper_bound);
     let mut body_indent = None;
@@ -89,7 +89,7 @@ fn parse_level(
         }
 
         if indent > base_indent {
-            return Err(ParseBlockError::UnexpectedIndent(
+            return Err(RuntimeError::parse_block_unexpected_indent(
                 line_no,
                 current_file_path.clone(),
             ));
@@ -107,12 +107,18 @@ fn parse_level(
         if ends_with_colon(content) {
             // 必须有 body
             if *i >= lines.len() {
-                return Err(ParseBlockError::MissingBody(line_no, current_file_path.clone()));
+                return Err(RuntimeError::parse_block_missing_body(
+                    line_no,
+                    current_file_path.clone(),
+                ));
             }
 
             let next_indent = indent_level(lines[*i]);
             if next_indent <= indent {
-                return Err(ParseBlockError::ExpectedIndent(*i + 1, current_file_path.clone()));
+                return Err(RuntimeError::parse_block_expected_indent(
+                    *i + 1,
+                    current_file_path.clone(),
+                ));
             }
 
             let body = parse_level(lines, i, next_indent, current_file_path.clone())?;
@@ -131,7 +137,7 @@ fn parse_level(
 
         if let Some(expected) = body_indent {
             if indent != expected {
-                return Err(ParseBlockError::InconsistentIndent(
+                return Err(RuntimeError::parse_block_inconsistent_indent(
                     line_no,
                     current_file_path.clone(),
                 ));
@@ -146,21 +152,21 @@ fn parse_level(
 
 impl TokenBlock {
     /// 返回当前 token；若已读完则返回 Error。
-    pub fn current(&self) -> Result<&str, ParsingError> {
+    pub fn current(&self) -> Result<&str, RuntimeError> {
         self.header
             .get(self.parse_index)
             .map(|s| s.as_str())
             .ok_or_else(|| {
-                ParsingError::new("Unexpected end of tokens".to_string(), self.line_file.clone(), None)
+                RuntimeError::parse_error("Unexpected end of tokens".to_string(), self.line_file.clone(), None)
             })
     }
 
-    pub fn skip_token(self: &mut Self, token: &str) -> Result<(), ParsingError> {
+    pub fn skip_token(self: &mut Self, token: &str) -> Result<(), RuntimeError> {
         if self.current()? == token {
             self.parse_index += 1;
             Ok(())
         } else {
-            Err(ParsingError::new(
+            Err(RuntimeError::parse_error(
                 format!("Expected token: {}", token),
                 self.line_file.clone(),
                 None,
@@ -168,13 +174,13 @@ impl TokenBlock {
         }
     }
 
-    pub fn advance(&mut self) -> Result<String, ParsingError> {
+    pub fn advance(&mut self) -> Result<String, RuntimeError> {
         let t = self.current()?.to_string();
         self.parse_index += 1;
         Ok(t)
     }
 
-    pub fn skip(&mut self) -> Result<(), ParsingError> {
+    pub fn skip(&mut self) -> Result<(), RuntimeError> {
         self.current()?;
         self.parse_index += 1;
         Ok(())
@@ -187,11 +193,11 @@ impl TokenBlock {
     pub fn skip_token_and_colon_and_exceed_end_of_head(
         &mut self,
         token: &str,
-    ) -> Result<(), ParsingError> {
+    ) -> Result<(), RuntimeError> {
         self.skip_token(token)?;
         self.skip_token(COLON)?;
         if !self.exceed_end_of_head() {
-            return Err(ParsingError::new(
+            return Err(RuntimeError::parse_error(
                 "Expected token: at head".to_string(),
                 self.line_file.clone(),
                 None,
@@ -200,9 +206,9 @@ impl TokenBlock {
         Ok(())
     }
 
-    pub fn token_at_index(&self, index: usize) -> Result<&str, ParsingError> {
+    pub fn token_at_index(&self, index: usize) -> Result<&str, RuntimeError> {
         self.header.get(index).map(|s| s.as_str()).ok_or_else(|| {
-            ParsingError::new(
+            RuntimeError::parse_error(
                 format!("Expected token: at index {}", index),
                 self.line_file.clone(),
                 None,

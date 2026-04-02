@@ -33,7 +33,7 @@ impl Runtime {
             Stmt::RunFileStmt(s) => self.exec_run_file_stmt(s),
             Stmt::EvalStmt(s) => {
                 self._exec_eval_stmt(s)?;
-                return Err(RuntimeError::from(ExecStmtError::new_with_stmt(
+                return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     Stmt::EvalStmt(s.clone()),
                     "eval: obj_to_eval must be a fnObj".to_string(),
                     None,
@@ -55,7 +55,7 @@ impl Runtime {
 
     pub fn stmt_unsupported(stmt: Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
         Err(RuntimeError::from(
-            ExecStmtError::with_message_and_cause(stmt, "unimplemented".to_string(), None, vec![]),
+            RuntimeErrorStruct::exec_stmt_with_message_and_cause(stmt, "unimplemented".to_string(), None, vec![]),
         ))
     }
 }

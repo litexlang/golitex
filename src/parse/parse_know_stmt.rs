@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(KNOW)?;
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;

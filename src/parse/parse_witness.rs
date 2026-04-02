@@ -1,14 +1,14 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(WITNESS)?;
         if tb.current_token_is_equal_to(EXIST) {
             self.parse_witness_exist_fact(tb)
         } else if tb.current_token_is_equal_to(FACT_PREFIX) {
             self.parse_witness_nonempty_set(tb)
         } else {
-            return Err(ParsingError::new(
+            return Err(RuntimeError::parse_error(
                 "witness expects a exist or nonempty set".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -17,7 +17,7 @@ impl Runtime {
     }
 
     // witness exist x, y R st {x > y} from 1, 0:
-    pub fn parse_witness_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_witness_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         let exist_fact_in_witness = self.parse_exist_fact(tb)?;
         tb.skip_token(FROM)?;
         let equal_tos = self.parse_obj_list(tb)?;
@@ -38,7 +38,7 @@ impl Runtime {
     pub fn parse_witness_nonempty_set(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Stmt, ParsingError> {
+    ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(FACT_PREFIX)?;
         tb.skip_token(IS_NONEMPTY_SET)?;
         tb.skip_token(LEFT_BRACE)?;

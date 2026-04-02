@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_prove_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_prove_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(PROVE)?;
         tb.skip_token(COLON)?;
         self.push_parsing_time_name_scope();
@@ -13,7 +13,7 @@ impl Runtime {
         }
     }
 
-    fn parse_prove_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Vec<Stmt>, ParsingError> {
+    fn parse_prove_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Vec<Stmt>, RuntimeError> {
         let mut proof = Vec::with_capacity(tb.body.len());
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);

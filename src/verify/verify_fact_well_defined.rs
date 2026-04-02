@@ -7,45 +7,37 @@ impl Runtime {
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
-        let result = match fact {
-            Fact::AtomicFact(atomic_fact) => self
-                .verify_atomic_fact_well_defined(atomic_fact, verify_state)
-                .map_err(WellDefinedError::from),
-            Fact::AndFact(and_fact) => self
-                .verify_and_fact_well_defined(and_fact, verify_state)
-                .map_err(WellDefinedError::from),
-            Fact::ChainFact(chain_fact) => self
-                .verify_chain_fact_well_defined(chain_fact, verify_state)
-                .map_err(WellDefinedError::from),
-            Fact::OrFact(or_fact) => self
-                .verify_or_fact_well_defined(or_fact, verify_state)
-                .map_err(WellDefinedError::from),
-            Fact::ExistFact(exist_fact) => self
-                .verify_exist_fact_well_defined(exist_fact, verify_state)
-                .map_err(WellDefinedError::from),
-            Fact::ForallFact(forall_fact) => self
-                .verify_forall_fact_well_defined(forall_fact, verify_state)
-                .map_err(WellDefinedError::from),
+    ) -> Result<(), RuntimeError> {
+        match fact {
+            Fact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact_well_defined(atomic_fact, verify_state)
+            }
+            Fact::AndFact(and_fact) => self.verify_and_fact_well_defined(and_fact, verify_state),
+            Fact::ChainFact(chain_fact) => {
+                self.verify_chain_fact_well_defined(chain_fact, verify_state)
+            }
+            Fact::OrFact(or_fact) => self.verify_or_fact_well_defined(or_fact, verify_state),
+            Fact::ExistFact(exist_fact) => {
+                self.verify_exist_fact_well_defined(exist_fact, verify_state)
+            }
+            Fact::ForallFact(forall_fact) => {
+                self.verify_forall_fact_well_defined(forall_fact, verify_state)
+            }
             Fact::ForallFactWithIff(forall_fact_with_iff) => self
-                .verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state)
-                .map_err(WellDefinedError::from),
-        };
-        result
+                .verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state),
+        }
     }
 
     pub fn verify_atomic_fact_well_defined(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact_well_defined(equal_fact, verify_state)
             }
-            _ => self
-                .verify_non_equational_atomic_fact_well_defined(atomic_fact, verify_state)
-                .map_err(WellDefinedError::from),
+            _ => self.verify_non_equational_atomic_fact_well_defined(atomic_fact, verify_state),
         }
     }
 
@@ -53,7 +45,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&equal_fact.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&equal_fact.right, verify_state)?;
         Ok(())
@@ -63,14 +55,14 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         // 1. predicate is defined, expected args length is equal to actual args length
         let name_string = atomic_fact.key();
         if is_builtin_predicate(&name_string) {
             let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!(
                         "fact `{}` expects {} argument(s), but got {}",
                         name_string,
@@ -91,7 +83,7 @@ impl Runtime {
             {
                 abstract_prop_definition.params.len()
             } else {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!("fact `{}` not defined", name_string),
                     None,
                     atomic_fact.line_file(),
@@ -100,7 +92,7 @@ impl Runtime {
 
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     format!(
                         "fact `{}` expects {} argument(s), but got {}",
                         name_string,
@@ -125,7 +117,7 @@ impl Runtime {
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         for fact in and_fact.facts.iter() {
             self.verify_atomic_fact_well_defined(fact, verify_state)?;
         }
@@ -136,7 +128,7 @@ impl Runtime {
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         let facts = chain_fact.facts()?;
         for fact in facts.iter() {
             self.verify_atomic_fact_well_defined(fact, verify_state)?;
@@ -148,7 +140,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         for fact in or_fact.facts.iter() {
             self.verify_and_chain_atomic_fact_well_defined(fact, verify_state)?;
         }
@@ -159,7 +151,7 @@ impl Runtime {
         &mut self,
         fact: &AndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         match fact {
             AndChainAtomicFact::AtomicFact(a) => {
                 self.verify_atomic_fact_well_defined(a, verify_state)?
@@ -176,7 +168,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.push_env();
         let result = self.verify_exist_fact_well_defined_body(&exist_fact, verify_state);
         self.pop_env();
@@ -187,11 +179,11 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         for param_def in exist_fact.params_def_with_type().iter() {
             let result = self.define_params_with_type(std::slice::from_ref(param_def), false);
             if let Err(e) = result {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     "failed to define parameters in exist fact".to_string(),
                     Some(e.into()),
                     exist_fact.line_file(),
@@ -209,7 +201,7 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.push_env();
         let result = self.verify_forall_fact_well_defined_body(&forall_fact, verify_state);
         self.pop_env();
@@ -220,9 +212,9 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         if let Err(e) = self.define_params_with_type(&forall_fact.params_def_with_type, false) {
-            return Err(WellDefinedError::new(
+            return Err(RuntimeError::well_defined_error(
                 "failed to define parameters in forall fact".to_string(),
                 Some(e.into()),
                 forall_fact.line_file.clone(),
@@ -236,7 +228,7 @@ impl Runtime {
                     verify_state,
                 )
             {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     String::new(),
                     Some(RuntimeError::from(exec_stmt_error)),
                     fact.line_file(),
@@ -250,7 +242,7 @@ impl Runtime {
                     verify_state,
                 )
             {
-                return Err(WellDefinedError::new(
+                return Err(RuntimeError::well_defined_error(
                     String::new(),
                     Some(RuntimeError::from(exec_stmt_error)),
                     fact.line_file(),
@@ -264,7 +256,7 @@ impl Runtime {
         &mut self,
         fact: &OrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         match fact {
             OrAndChainAtomicFact::AtomicFact(a) => {
                 self.verify_atomic_fact_well_defined(a, verify_state)?
@@ -284,7 +276,7 @@ impl Runtime {
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(a) => {
                 self.verify_atomic_fact_well_defined(a, verify_state)?
@@ -309,7 +301,7 @@ impl Runtime {
         &mut self,
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.push_env();
         let result =
             self.verify_forall_fact_with_iff_well_defined_body(forall_fact_with_iff, verify_state);
@@ -321,7 +313,7 @@ impl Runtime {
         &mut self,
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
+    ) -> Result<(), RuntimeError> {
         self.verify_forall_fact_well_defined_body(&forall_fact_with_iff.forall_fact, verify_state)?;
         for fact in forall_fact_with_iff.iff_facts.iter() {
             self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;

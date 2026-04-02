@@ -19,8 +19,8 @@ fn fn_set_equality_verify_error(
     line_file: LineFile,
     message: String,
     cause: Option<RuntimeError>,
-) -> VerifyError {
-    VerifyError::new(
+) -> RuntimeError {
+    RuntimeError::verify_error(
         fn_set_equality_fact(left, right, line_file.clone()),
         message,
         line_file,
@@ -48,7 +48,7 @@ impl Runtime {
         right: &FnSetWithParams,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if ParamDefWithParamSet::number_of_params(&left.params_def_with_set)
             != ParamDefWithParamSet::number_of_params(&right.params_def_with_set)
         {
@@ -88,7 +88,7 @@ impl Runtime {
         target: &FnSetWithParams,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         self.push_env();
         let result = self.verify_fn_set_with_params_directionally_in_local_env_body(
             source,
@@ -106,7 +106,7 @@ impl Runtime {
         target: &FnSetWithParams,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let target_flat_param_names = ParamDefWithParamSet::collect_param_names(&target.params_def_with_set);
         let generated_param_names =
             self.generate_non_duplicated_random_param_names(target_flat_param_names.len());
@@ -209,7 +209,7 @@ impl Runtime {
         generated_param_names: &[String],
         target: &FnSetWithParams,
         line_file: LineFile,
-    ) -> Result<HashMap<String, Obj>, VerifyError> {
+    ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let mut source_param_to_generated_arg_map: HashMap<String, Obj> =
             HashMap::with_capacity(generated_param_names.len());
         let mut flat_index: usize = 0;
@@ -239,7 +239,7 @@ impl Runtime {
                         line_file.clone(),
                         "failed to define fresh params for directional fnset equality verification"
                             .to_string(),
-                        Some(RuntimeError::DefineParamsError(e)),
+                        Some(e),
                     )
                 })?;
 
@@ -265,7 +265,7 @@ impl Runtime {
         source_param_to_generated_arg_map: &HashMap<String, Obj>,
         target: &FnSetWithParams,
         line_file: LineFile,
-    ) -> Result<(), VerifyError> {
+    ) -> Result<(), RuntimeError> {
         for dom_fact in source.dom_facts.iter() {
             let instantiated_dom_fact = self
                 .inst_or_and_chain_atomic_fact(dom_fact, source_param_to_generated_arg_map)
@@ -302,7 +302,7 @@ impl Runtime {
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         for param_def_with_set in target.params_def_with_set.iter() {
             let instantiated_param_set = self
                 .inst_obj(&param_def_with_set.1, target_param_to_generated_arg_map)
@@ -350,7 +350,7 @@ impl Runtime {
         line_file: LineFile,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         verify_state: &VerifyState,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         for dom_fact in target.dom_facts.iter() {
             let instantiated_dom_fact = self
                 .inst_or_and_chain_atomic_fact(dom_fact, target_param_to_generated_arg_map)
