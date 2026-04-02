@@ -13,12 +13,13 @@ struct group(s set):
     add fn(x, y s) s
     inv fn(x s) s
     <=>:
-        $group_property(self.s, self.zero, self.add, self.inv)
+        $group_property(s, self.zero, self.add, self.inv)
 
 prop is_R_group(g struct group(R)):
-    $group_property(g.s, g.zero, g.add, g.inv)
+    $group_property(R, g.zero, g.add, g.inv)
 
 let a, b, c set:
     $is_R_group((R, a, b, c))
 
 $group_property(R, a, b, c)
+

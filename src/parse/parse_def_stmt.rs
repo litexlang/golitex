@@ -486,16 +486,6 @@ impl Runtime {
             }
         }
 
-        let fields = merge_struct_fields_with_implicit_type_params(
-            &name,
-            &param_defs,
-            fields,
-            tb.line_file,
-        )?;
-        let mut implicit_param_projection_facts =
-            build_struct_implicit_param_projection_facts(&param_defs, tb.line_file);
-        implicit_param_projection_facts.extend(facts);
-        facts = implicit_param_projection_facts;
 
         let mut seen = HashSet::new();
         for (field_name, _) in fields.iter() {
@@ -586,54 +576,3 @@ impl Runtime {
     }
 }
 
-/// `struct` 头部每个类型参数在 AST 里自动对应一条 field（排在用户写字段之前），以便 `self.s` 等与形参对齐。
-/// 若用户又显式写了同名字段，报错。
-fn merge_struct_fields_with_implicit_type_params(
-    struct_name: &str,
-    param_defs: &[ParamDefWithStructFieldType],
-    user_fields: Vec<(String, StructFieldType)>,
-    line_file: (usize, usize),
-) -> Result<Vec<(String, StructFieldType)>, ParsingError> {
-    let mut implicit: Vec<(String, StructFieldType)> = Vec::new();
-    for pd in param_defs {
-        for name in &pd.0 {
-            if user_fields.iter().any(|(n, _)| n == name) {
-                return Err(ParsingError::new(
-                    format!(
-                        "struct `{}`: field `{}` duplicates a type parameter; remove the explicit field line",
-                        struct_name, name
-                    ),
-                    line_file,
-                    None,
-                ));
-            }
-            implicit.push((name.clone(), pd.1.clone()));
-        }
-    }
-    implicit.extend(user_fields);
-    Ok(implicit)
-}
-
-fn build_struct_implicit_param_projection_facts(
-    param_defs: &[ParamDefWithStructFieldType],
-    line_file: (usize, usize),
-) -> Vec<OrAndChainAtomicFact> {
-    let mut facts = Vec::with_capacity(ParamDefWithStructFieldType::number_of_params(
-        &param_defs.to_vec(),
-    ));
-    for param_def in param_defs {
-        for param_name in &param_def.0 {
-            facts.push(OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                EqualFact::new(
-                    Obj::FieldAccess(FieldAccess::new(
-                        SELF.to_string(),
-                        param_name.clone(),
-                    )),
-                    Obj::Identifier(Identifier::new(param_name.clone())),
-                    line_file,
-                ),
-            )));
-        }
-    }
-    facts
-}
