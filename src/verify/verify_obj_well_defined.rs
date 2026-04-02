@@ -104,7 +104,7 @@ impl Runtime {
     }
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
-        let Some(def) = self.get_param_type_struct_definition_by_name(&x.name.to_string()) else {
+        let Some(def) = self.get_definition_of_struct_where_object_satisfies(&IdentifierOrIdentifierWithMod::Identifier(Identifier::new(x.name.to_string()))) else {
             return Err(WellDefinedError::new(
                 format!("field access `{}` unknown, `{}` is not a struct", x.to_string(), x.name.to_string()),
                 None,
