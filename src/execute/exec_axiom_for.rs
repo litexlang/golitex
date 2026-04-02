@@ -126,7 +126,7 @@ impl Runtime {
     fn integer_string_from_number_like_obj_for_for(
         self: &Self,
         number_like_obj: &Obj,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Result<String, RuntimeError> {
         let calculated_string = {
             let value = self.resolve_obj_to_number(number_like_obj);
@@ -176,10 +176,10 @@ impl Runtime {
                 }
             };
             let start_integer_string = self
-                .integer_string_from_number_like_obj_for_for(start_obj, stmt.line_file)
+                .integer_string_from_number_like_obj_for_for(start_obj, stmt.line_file.clone())
                 .map_err(|e| e.to_string())?;
             let end_integer_string = self
-                .integer_string_from_number_like_obj_for_for(end_obj, stmt.line_file)
+                .integer_string_from_number_like_obj_for_for(end_obj, stmt.line_file.clone())
                 .map_err(|e| e.to_string())?;
             let start_integer_i128 = start_integer_string.parse::<i128>().map_err(|_| {
                 format!(
@@ -273,7 +273,7 @@ impl Runtime {
             let parameter_in_z_atomic_fact = AtomicFact::InFact(crate::fact::InFact::new(
                 Obj::Identifier(Identifier::new(parameter_name.clone())),
                 Obj::StandardSet(StandardSet::Z),
-                stmt.line_file,
+                stmt.line_file.clone(),
             ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_in_z_atomic_fact,
@@ -284,7 +284,7 @@ impl Runtime {
                 AtomicFact::EqualFact(crate::fact::EqualFact::new(
                     Obj::Identifier(Identifier::new(parameter_name.clone())),
                     Obj::Number(Number::new(assigned_integer_string)),
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,

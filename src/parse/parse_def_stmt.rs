@@ -11,11 +11,11 @@ impl Runtime {
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -29,11 +29,11 @@ impl Runtime {
     ) -> Result<DefPropWithMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -46,12 +46,12 @@ impl Runtime {
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &all_param_names,
-            tb.line_file,
+            tb.line_file.clone(),
         )
         .map_err(|e| {
             ParsingError::new(
                 e.to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 Some(RuntimeError::ParseBlockError(e)),
             )
         })?;
@@ -60,7 +60,7 @@ impl Runtime {
             name,
             param_defs,
             facts,
-            tb.line_file,
+            tb.line_file.clone(),
         ))
     }
 
@@ -73,11 +73,11 @@ impl Runtime {
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -90,11 +90,11 @@ impl Runtime {
     ) -> Result<DefAbstractPropStmt, ParsingError> {
         tb.skip_token(ABSTRACT_PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -108,16 +108,16 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_BRACE)?;
 
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     e.to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
 
-        Ok(DefAbstractPropStmt::new(name, params, tb.line_file))
+        Ok(DefAbstractPropStmt::new(name, params, tb.line_file.clone()))
     }
 
     pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -137,7 +137,7 @@ impl Runtime {
             if !tb.exceed_end_of_head() {
                 return Err(ParsingError::new(
                     "expect end of line after `:` in let statement".to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             } else {
@@ -149,19 +149,19 @@ impl Runtime {
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &all_param_names,
-            tb.line_file,
+            tb.line_file.clone(),
         )
         .map_err(|e| {
             ParsingError::new(
                 e.to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 Some(RuntimeError::ParseBlockError(e)),
             )
         })?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -180,26 +180,26 @@ impl Runtime {
         if param_defs.is_empty() {
             return Err(ParsingError::new(
                 "have expects at least one param type pair".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
         let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &have_param_names,
-            tb.line_file,
+            tb.line_file.clone(),
         )
         .map_err(|e| {
             ParsingError::new(
                 e.to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 Some(RuntimeError::ParseBlockError(e)),
             )
         })?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             Ok(Stmt::HaveObjInNonemptySetStmt(
-                HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file),
+                HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file.clone()),
             ))
         } else {
             tb.skip_token(EQUAL)?;
@@ -211,7 +211,7 @@ impl Runtime {
             Ok(Stmt::HaveObjEqualStmt(HaveObjEqualStmt::new(
                 param_defs,
                 objs_equal_to,
-                tb.line_file,
+                tb.line_file.clone(),
             )))
         }
     }
@@ -221,11 +221,11 @@ impl Runtime {
         tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
         let name = tb.advance()?;
 
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -244,7 +244,7 @@ impl Runtime {
                 equal_tos.push(self.parse_obj(block)?);
             }
             Ok(Stmt::HaveFnEqualCaseByCaseStmt(
-                HaveFnEqualCaseByCaseStmt::new(name, fs, cases, equal_tos, tb.line_file),
+                HaveFnEqualCaseByCaseStmt::new(name, fs, cases, equal_tos, tb.line_file.clone()),
             ))
         } else {
             let equal_to = self.parse_obj(tb)?;
@@ -252,7 +252,7 @@ impl Runtime {
                 name,
                 fs,
                 equal_to,
-                tb.line_file,
+                tb.line_file.clone(),
             )))
         }
     }
@@ -273,11 +273,11 @@ impl Runtime {
             }
         }
 
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     e.to_string(),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -285,7 +285,7 @@ impl Runtime {
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
             equal_tos,
             true_fact,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -301,12 +301,12 @@ impl Runtime {
         let param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &param_names,
-            tb.line_file,
+            tb.line_file.clone(),
         )
         .map_err(|e| {
             ParsingError::new(
                 e.to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 Some(RuntimeError::ParseBlockError(e)),
             )
         })?;
@@ -339,12 +339,12 @@ impl Runtime {
         let param_names = ParamDefWithStructFieldType::collect_param_names(&param_defs);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &param_names,
-            tb.line_file,
+            tb.line_file.clone(),
         )
         .map_err(|e| {
             ParsingError::new(
                 e.to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 Some(RuntimeError::ParseBlockError(e)),
             )
         })?;
@@ -368,11 +368,11 @@ impl Runtime {
     pub fn parse_def_family_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(FAMILY)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -392,7 +392,7 @@ impl Runtime {
         if !tb.current_token_is_equal_to(EQUAL) {
             return Err(ParsingError::new(
                 "family definition expects `=` after `}`".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -403,7 +403,7 @@ impl Runtime {
             params_def_with_type,
             dom_facts,
             equal_to,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -413,11 +413,11 @@ impl Runtime {
     ) -> Result<Stmt, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
                 ParsingError::new(
                     RuntimeError::duplicate_used_name_error_msg_without_line_file(&name),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
@@ -439,7 +439,7 @@ impl Runtime {
             return Err(ParsingError::new(
                 "use `family` for set-style definitions (`... {} = ...`); `struct` requires field definitions after `:`"
                     .to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -448,7 +448,7 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(ParsingError::new(
                 "struct with fields expects body".to_string(),
-                tb.line_file,
+                tb.line_file.clone(),
                 None,
             ));
         }
@@ -460,7 +460,7 @@ impl Runtime {
         let last_index = body_len - 1;
         let last_is_equiv = {
             let last = tb.body.get(last_index).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+                ParsingError::new("Expected body".to_string(), tb.line_file.clone(), None)
             })?;
             last.current_token_is_equal_to(EQUIVALENT_SIGN)
         };
@@ -469,7 +469,7 @@ impl Runtime {
 
         for i in 0..field_end {
             let block = tb.body.get_mut(i).ok_or_else(|| {
-                ParsingError::new("Expected field block".to_string(), tb.line_file, None)
+                ParsingError::new("Expected field block".to_string(), tb.line_file.clone(), None)
             })?;
             let field_name = block.advance()?;
             let cond = self.parse_struct_field_type(block)?;
@@ -478,7 +478,7 @@ impl Runtime {
 
         if last_is_equiv {
             let last = tb.body.get_mut(last_index).ok_or_else(|| {
-                ParsingError::new("Expected <=>: block".to_string(), tb.line_file, None)
+                ParsingError::new("Expected <=>: block".to_string(), tb.line_file.clone(), None)
             })?;
             last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
             for block in last.body.iter_mut() {
@@ -495,7 +495,7 @@ impl Runtime {
                         "struct `{}`: duplicate field `{}`",
                         name, field_name
                     ),
-                    tb.line_file,
+                    tb.line_file.clone(),
                     None,
                 ));
             }
@@ -507,7 +507,7 @@ impl Runtime {
             dom_facts,
             fields,
             facts,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -555,7 +555,7 @@ impl Runtime {
             params,
             algo_cases,
             default_return,
-            tb.line_file,
+            tb.line_file.clone(),
         )))
     }
 
@@ -566,13 +566,13 @@ impl Runtime {
         block.skip_token(COLON)?;
 
         let return_stmt = self.parse_algo_return(block)?;
-        Ok(AlgoCase::new(condition, return_stmt, block.line_file))
+        Ok(AlgoCase::new(condition, return_stmt, block.line_file.clone()))
     }
 
     /// head 里是 return，后跟 obj。
     fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
         let value = self.parse_obj(block)?;
-        Ok(AlgoReturn::new(value, block.line_file))
+        Ok(AlgoReturn::new(value, block.line_file.clone()))
     }
 }
 

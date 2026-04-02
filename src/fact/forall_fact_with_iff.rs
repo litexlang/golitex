@@ -5,14 +5,14 @@ use std::fmt;
 pub struct ForallFactWithIff {
     pub forall_fact: ForallFact,
     pub iff_facts: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl ForallFactWithIff {
     pub fn new(
         forall_fact: ForallFact,
         iff_facts: Vec<ExistOrAndChainAtomicFact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         ForallFactWithIff {
             forall_fact,
@@ -51,7 +51,7 @@ impl ForallFactWithIff {
             params_def_with_type.clone(),
             dom_then,
             iff_facts.clone(),
-            line_file,
+            line_file.clone(),
         );
 
         let mut dom_iff = dom_facts;

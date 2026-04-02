@@ -19,7 +19,7 @@ impl Runtime {
                 return Err(VerifyError::new(
                     Fact::ForallFact(forall_fact.clone()),
                     String::new(),
-                    forall_fact.line_file,
+                    forall_fact.line_file.clone(),
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }
@@ -48,10 +48,10 @@ impl Runtime {
                     VerifyError::new(
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
-                        forall_fact.line_file,
+                        forall_fact.line_file.clone(),
                         Some(RuntimeError::UnknownError(UnknownError::new(
                             message,
-                            forall_fact.line_file,
+                            forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
                             Some(RuntimeError::DefineParamsError(e)),
                         ))),
@@ -70,10 +70,10 @@ impl Runtime {
                     VerifyError::new(
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
-                        forall_fact.line_file,
+                        forall_fact.line_file.clone(),
                         Some(RuntimeError::UnknownError(UnknownError::new(
                             message,
-                            forall_fact.line_file,
+                            forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
                             Some(RuntimeError::StoreFactError(e)),
                         ))),
@@ -154,7 +154,7 @@ impl Runtime {
                 infer_result,
                 "".to_string(),
                 None,
-                Some(forall_fact.line_file),
+                Some(forall_fact.line_file.clone()),
                 Vec::new(),
             ),
         ))
@@ -178,7 +178,7 @@ impl Runtime {
                 return Err(VerifyError::new(
                     Fact::ForallFactWithIff(forall_iff.clone()),
                     String::new(),
-                    forall_iff.line_file,
+                    forall_iff.line_file.clone(),
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }
@@ -194,7 +194,7 @@ impl Runtime {
             f.params_def_with_type.clone(),
             dom_then,
             forall_iff.iff_facts.clone(),
-            forall_iff.line_file,
+            forall_iff.line_file.clone(),
         );
         let result1 =
             self.verify_forall_fact(&forall_then_implies_iff, &verify_state_for_children)?;
@@ -208,7 +208,7 @@ impl Runtime {
             f.params_def_with_type.clone(),
             dom_iff,
             f.then_facts.clone(),
-            forall_iff.line_file,
+            forall_iff.line_file.clone(),
         );
         let result2 =
             self.verify_forall_fact(&forall_iff_implies_then, &verify_state_for_children)?;
@@ -222,7 +222,7 @@ impl Runtime {
                 InferResult::new(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 None,
-                Some(DEFAULT_LINE_FILE),
+                Some(default_line_file()),
                 Vec::new(),
             ),
         ))

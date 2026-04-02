@@ -1,19 +1,20 @@
 use crate::prelude::*;
 use std::fmt;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct RuntimeErrorStruct {
     pub statement: Option<Stmt>,
     pub msg: String,
     pub conflict_with: Option<ConflictMsg>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
     pub previous_error: Option<Box<RuntimeError>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ConflictMsg {
     pub msg: String,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
     pub stmt: Option<Stmt>,
 }
 
@@ -21,7 +22,7 @@ impl RuntimeErrorStruct {
     pub fn new(
         statement: Option<Stmt>,
         msg: String,
-        line_file: (usize, usize),
+        line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
         RuntimeErrorStruct::new_with_conflict(statement, msg, line_file, None, previous_error)
@@ -30,7 +31,7 @@ impl RuntimeErrorStruct {
     pub fn new_with_conflict(
         statement: Option<Stmt>,
         msg: String,
-        line_file: (usize, usize),
+        line_file: LineFile,
         conflict_with: Option<ConflictMsg>,
         previous_error: Option<RuntimeError>,
     ) -> Self {
@@ -44,7 +45,7 @@ impl RuntimeErrorStruct {
     }
 
     pub fn new_with_msg_previous_error(msg: String, previous_error: Option<RuntimeError>) -> Self {
-        RuntimeErrorStruct::new(None, msg, DEFAULT_LINE_FILE, previous_error)
+        RuntimeErrorStruct::new(None, msg, default_line_file(), previous_error)
     }
 }
 
@@ -68,27 +69,27 @@ pub enum RuntimeError {
 impl std::error::Error for RuntimeError {}
 
 impl RuntimeError {
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
-            RuntimeError::ArithmeticError(e) => e.line_file,
-            RuntimeError::NewAtomicFactError(e) => e.line_file,
-            RuntimeError::StoreFactError(e) => e.line_file,
+            RuntimeError::ArithmeticError(e) => e.line_file.clone(),
+            RuntimeError::NewAtomicFactError(e) => e.line_file.clone(),
+            RuntimeError::StoreFactError(e) => e.line_file.clone(),
             RuntimeError::ParseBlockError(e) => e.line_file(),
-            RuntimeError::ParsingError(e) => e.line_file,
+            RuntimeError::ParsingError(e) => e.line_file.clone(),
             RuntimeError::ExecStmtError(e) => {
                 if let Some(stmt) = &e.stmt {
                     stmt.line_file()
                 } else {
-                    DEFAULT_LINE_FILE
+                    default_line_file()
                 }
             }
-            RuntimeError::WellDefinedError(e) => e.line_file,
-            RuntimeError::VerifyError(e) => e.line_file,
-            RuntimeError::UnknownError(e) => e.line_file,
-            RuntimeError::InferError(e) => e.line_file,
-            RuntimeError::NameAlreadyUsedError(e) => e.line_file,
-            RuntimeError::DefineParamsError(e) => e.line_file,
-            RuntimeError::InstantiateError(e) => e.line_file,
+            RuntimeError::WellDefinedError(e) => e.line_file.clone(),
+            RuntimeError::VerifyError(e) => e.line_file.clone(),
+            RuntimeError::UnknownError(e) => e.line_file.clone(),
+            RuntimeError::InferError(e) => e.line_file.clone(),
+            RuntimeError::NameAlreadyUsedError(e) => e.line_file.clone(),
+            RuntimeError::DefineParamsError(e) => e.line_file.clone(),
+            RuntimeError::InstantiateError(e) => e.line_file.clone(),
         }
     }
 
@@ -184,15 +185,15 @@ impl std::error::Error for RuntimeErrorStruct {}
 
 #[derive(Debug)]
 pub enum ParseBlockError {
-    ExpectedIndent(usize, usize),
-    UnexpectedIndent(usize, usize),
-    InconsistentIndent(usize, usize),
-    MissingBody(usize, usize),
+    ExpectedIndent(usize, Rc<str>),
+    UnexpectedIndent(usize, Rc<str>),
+    InconsistentIndent(usize, Rc<str>),
+    MissingBody(usize, Rc<str>),
     InvalidName(String),
     NameAlreadyUsed {
         name: String,
-        name_already_used_on_line_file: (usize, usize),
-        line_file: (usize, usize),
+        name_already_used_on_line_file: LineFile,
+        line_file: LineFile,
     },
 }
 
@@ -205,14 +206,14 @@ impl fmt::Display for ParseBlockError {
 }
 
 impl ParseBlockError {
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
-            ParseBlockError::ExpectedIndent(line, file) => (*line, *file),
-            ParseBlockError::UnexpectedIndent(line, file) => (*line, *file),
-            ParseBlockError::InconsistentIndent(line, file) => (*line, *file),
-            ParseBlockError::MissingBody(line, file) => (*line, *file),
-            ParseBlockError::InvalidName(_) => DEFAULT_LINE_FILE.clone(),
-            ParseBlockError::NameAlreadyUsed { line_file, .. } => *line_file,
+            ParseBlockError::ExpectedIndent(line, path) => (*line, path.clone()),
+            ParseBlockError::UnexpectedIndent(line, path) => (*line, path.clone()),
+            ParseBlockError::InconsistentIndent(line, path) => (*line, path.clone()),
+            ParseBlockError::MissingBody(line, path) => (*line, path.clone()),
+            ParseBlockError::InvalidName(_) => default_line_file(),
+            ParseBlockError::NameAlreadyUsed { line_file, .. } => line_file.clone(),
         }
     }
 }
@@ -226,7 +227,7 @@ impl From<ParseBlockError> for RuntimeError {
 #[derive(Debug)]
 pub struct ParsingError {
     pub msg: String,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
     pub previous_error: Option<Box<RuntimeError>>,
 }
 
@@ -241,7 +242,7 @@ impl fmt::Display for ParsingError {
 impl ParsingError {
     pub fn new(
         msg: String,
-        line_file: (usize, usize),
+        line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
         ParsingError {
@@ -335,7 +336,7 @@ impl From<ExecStmtError> for RuntimeError {
 pub struct WellDefinedError {
     pub msg: String,
     pub previous_error: Option<Box<RuntimeError>>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl std::error::Error for WellDefinedError {}
@@ -350,7 +351,7 @@ impl WellDefinedError {
     pub fn new(
         msg: String,
         previous_error: Option<RuntimeError>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         WellDefinedError {
             msg,
@@ -377,7 +378,7 @@ impl RuntimeErrorStruct {
         let conflict_with_for_outer = self.conflict_with.clone();
         let statement_for_outer_store_fact_error_layer = self.statement.clone();
         let msg_for_outer_store_fact_error_layer = self.msg.clone();
-        let line_file = self.line_file;
+        let line_file = self.line_file.clone();
         let wrapped_new_atomic_runtime_error = RuntimeError::NewAtomicFactError(self);
         RuntimeErrorStruct::new_with_conflict(
             statement_for_outer_store_fact_error_layer,
@@ -389,7 +390,7 @@ impl RuntimeErrorStruct {
     }
 
     pub fn into_well_defined_wrapping_new_atomic(self) -> WellDefinedError {
-        let line_file = self.line_file;
+        let line_file = self.line_file.clone();
         let msg_for_well_defined_error = self.msg.clone();
         let wrapped_runtime_error = RuntimeError::NewAtomicFactError(self);
         WellDefinedError::new(
@@ -422,7 +423,7 @@ impl From<WellDefinedError> for RuntimeError {
 pub struct VerifyError {
     pub fact: Fact,
     pub msg: String,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
     pub previous_error: Option<Box<RuntimeError>>,
 }
 
@@ -438,7 +439,7 @@ impl VerifyError {
     pub fn new(
         fact: Fact,
         msg: String,
-        line_file: (usize, usize),
+        line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
         VerifyError {
@@ -458,7 +459,7 @@ impl From<VerifyError> for RuntimeError {
 
 impl From<VerifyError> for WellDefinedError {
     fn from(e: VerifyError) -> Self {
-        let line_file = e.line_file;
+        let line_file = e.line_file.clone();
         let msg_for_well_defined = if e.msg.is_empty() {
             "verify fact error:".to_string()
         } else {
@@ -475,7 +476,7 @@ impl From<VerifyError> for WellDefinedError {
 #[derive(Debug)]
 pub struct UnknownError {
     pub msg: String,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
     pub fact: Option<Fact>,
     pub previous_error: Option<Box<RuntimeError>>,
 }
@@ -491,7 +492,7 @@ impl fmt::Display for UnknownError {
 impl UnknownError {
     pub fn new(
         msg: String,
-        line_file: (usize, usize),
+        line_file: LineFile,
         fact: Option<Fact>,
         previous_error: Option<RuntimeError>,
     ) -> Self {
@@ -523,7 +524,7 @@ impl From<UnknownError> for RuntimeError {
 #[derive(Debug)]
 pub struct InferError {
     pub msg: String,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
     pub previous_error: Option<Box<RuntimeError>>,
 }
 
@@ -538,7 +539,7 @@ impl fmt::Display for InferError {
 impl InferError {
     pub fn new(
         msg: String,
-        line_file: (usize, usize),
+        line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
         InferError {
@@ -558,8 +559,8 @@ impl From<InferError> for RuntimeError {
 #[derive(Debug)]
 pub struct NameAlreadyUsedError {
     pub name: String,
-    pub name_already_used_on_line_file: (usize, usize),
-    pub line_file: (usize, usize),
+    pub name_already_used_on_line_file: LineFile,
+    pub line_file: LineFile,
 }
 
 impl std::error::Error for NameAlreadyUsedError {}
@@ -573,8 +574,8 @@ impl fmt::Display for NameAlreadyUsedError {
 impl NameAlreadyUsedError {
     pub fn new(
         name: String,
-        name_already_used_on_line_file: (usize, usize),
-        line_file: (usize, usize),
+        name_already_used_on_line_file: LineFile,
+        line_file: LineFile,
     ) -> Self {
         NameAlreadyUsedError {
             name,
@@ -588,7 +589,7 @@ impl NameAlreadyUsedError {
 pub struct DefineParamsError {
     pub msg: String,
     pub previous_error: Option<Box<RuntimeError>>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl std::error::Error for DefineParamsError {}
@@ -603,7 +604,7 @@ impl DefineParamsError {
     pub fn new(
         msg: String,
         previous_error: Option<RuntimeError>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         DefineParamsError {
             msg,

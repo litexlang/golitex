@@ -21,7 +21,7 @@ impl Runtime {
                 ImportRelativePathStmt {
                     path,
                     as_mod_name,
-                    line_file: tb.line_file,
+                    line_file: tb.line_file.clone(),
                 },
             )))
         } else {
@@ -36,7 +36,7 @@ impl Runtime {
                 ImportGlobalModuleStmt {
                     mod_name,
                     as_mod_name,
-                    line_file: tb.line_file,
+                    line_file: tb.line_file.clone(),
                 },
             )))
         }
@@ -45,7 +45,7 @@ impl Runtime {
     pub fn parse_do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(DO_NOTHING)?;
         Ok(Stmt::DoNothingStmt(DoNothingStmt {
-            line_file: tb.line_file,
+            line_file: tb.line_file.clone(),
         }))
     }
 
@@ -60,7 +60,7 @@ impl Runtime {
         let file_path = path_parts.join("");
         Ok(Stmt::RunFileStmt(RunFileStmt {
             file_path,
-            line_file: tb.line_file,
+            line_file: tb.line_file.clone(),
         }))
     }
 }

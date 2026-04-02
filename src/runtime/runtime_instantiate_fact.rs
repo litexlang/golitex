@@ -200,7 +200,7 @@ impl Runtime {
         Ok(NormalAtomicFact {
             predicate: normal_atomic_fact.predicate.clone(),
             body,
-            line_file: normal_atomic_fact.line_file,
+            line_file: normal_atomic_fact.line_file.clone(),
         })
     }
 
@@ -212,7 +212,7 @@ impl Runtime {
         Ok(EqualFact {
             left: self.inst_obj(&equal_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&equal_fact.right, param_to_arg_map)?,
-            line_file: equal_fact.line_file,
+            line_file: equal_fact.line_file.clone(),
         })
     }
 
@@ -224,7 +224,7 @@ impl Runtime {
         Ok(LessFact {
             left: self.inst_obj(&less_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&less_fact.right, param_to_arg_map)?,
-            line_file: less_fact.line_file,
+            line_file: less_fact.line_file.clone(),
         })
     }
 
@@ -236,7 +236,7 @@ impl Runtime {
         Ok(GreaterFact {
             left: self.inst_obj(&greater_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&greater_fact.right, param_to_arg_map)?,
-            line_file: greater_fact.line_file,
+            line_file: greater_fact.line_file.clone(),
         })
     }
 
@@ -248,7 +248,7 @@ impl Runtime {
         Ok(LessEqualFact {
             left: self.inst_obj(&less_equal_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&less_equal_fact.right, param_to_arg_map)?,
-            line_file: less_equal_fact.line_file,
+            line_file: less_equal_fact.line_file.clone(),
         })
     }
 
@@ -260,7 +260,7 @@ impl Runtime {
         Ok(GreaterEqualFact {
             left: self.inst_obj(&greater_equal_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&greater_equal_fact.right, param_to_arg_map)?,
-            line_file: greater_equal_fact.line_file,
+            line_file: greater_equal_fact.line_file.clone(),
         })
     }
 
@@ -271,7 +271,7 @@ impl Runtime {
     ) -> Result<IsSetFact, RuntimeError> {
         Ok(IsSetFact {
             set: self.inst_obj(&is_set_fact.set, param_to_arg_map)?,
-            line_file: is_set_fact.line_file,
+            line_file: is_set_fact.line_file.clone(),
         })
     }
 
@@ -282,7 +282,7 @@ impl Runtime {
     ) -> Result<IsNonemptySetFact, RuntimeError> {
         Ok(IsNonemptySetFact {
             set: self.inst_obj(&is_nonempty_set_fact.set, param_to_arg_map)?,
-            line_file: is_nonempty_set_fact.line_file,
+            line_file: is_nonempty_set_fact.line_file.clone(),
         })
     }
 
@@ -293,7 +293,7 @@ impl Runtime {
     ) -> Result<IsFiniteSetFact, RuntimeError> {
         Ok(IsFiniteSetFact {
             set: self.inst_obj(&is_finite_set_fact.set, param_to_arg_map)?,
-            line_file: is_finite_set_fact.line_file,
+            line_file: is_finite_set_fact.line_file.clone(),
         })
     }
 
@@ -305,7 +305,7 @@ impl Runtime {
         Ok(InFact {
             element: self.inst_obj(&in_fact.element, param_to_arg_map)?,
             set: self.inst_obj(&in_fact.set, param_to_arg_map)?,
-            line_file: in_fact.line_file,
+            line_file: in_fact.line_file.clone(),
         })
     }
 
@@ -316,7 +316,7 @@ impl Runtime {
     ) -> Result<IsCartFact, RuntimeError> {
         Ok(IsCartFact {
             set: self.inst_obj(&is_cart_fact.set, param_to_arg_map)?,
-            line_file: is_cart_fact.line_file,
+            line_file: is_cart_fact.line_file.clone(),
         })
     }
 
@@ -327,7 +327,7 @@ impl Runtime {
     ) -> Result<IsTupleFact, RuntimeError> {
         Ok(IsTupleFact {
             set: self.inst_obj(&is_tuple_fact.set, param_to_arg_map)?,
-            line_file: is_tuple_fact.line_file,
+            line_file: is_tuple_fact.line_file.clone(),
         })
     }
 
@@ -339,7 +339,7 @@ impl Runtime {
         Ok(SubsetFact {
             left: self.inst_obj(&subset_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&subset_fact.right, param_to_arg_map)?,
-            line_file: subset_fact.line_file,
+            line_file: subset_fact.line_file.clone(),
         })
     }
 
@@ -351,7 +351,7 @@ impl Runtime {
         Ok(SupersetFact {
             left: self.inst_obj(&superset_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&superset_fact.right, param_to_arg_map)?,
-            line_file: superset_fact.line_file,
+            line_file: superset_fact.line_file.clone(),
         })
     }
 
@@ -367,7 +367,7 @@ impl Runtime {
         Ok(NotNormalAtomicFact {
             predicate: not_normal_atomic_fact.predicate.clone(),
             body,
-            line_file: not_normal_atomic_fact.line_file,
+            line_file: not_normal_atomic_fact.line_file.clone(),
         })
     }
 
@@ -379,7 +379,7 @@ impl Runtime {
         Ok(NotEqualFact {
             left: self.inst_obj(&not_equal_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&not_equal_fact.right, param_to_arg_map)?,
-            line_file: not_equal_fact.line_file,
+            line_file: not_equal_fact.line_file.clone(),
         })
     }
 
@@ -391,7 +391,7 @@ impl Runtime {
         Ok(NotLessFact {
             left: self.inst_obj(&not_less_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&not_less_fact.right, param_to_arg_map)?,
-            line_file: not_less_fact.line_file,
+            line_file: not_less_fact.line_file.clone(),
         })
     }
 
@@ -403,7 +403,7 @@ impl Runtime {
         Ok(NotGreaterFact {
             left: self.inst_obj(&not_greater_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&not_greater_fact.right, param_to_arg_map)?,
-            line_file: not_greater_fact.line_file,
+            line_file: not_greater_fact.line_file.clone(),
         })
     }
 
@@ -415,7 +415,7 @@ impl Runtime {
         Ok(NotLessEqualFact {
             left: self.inst_obj(&not_less_equal_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&not_less_equal_fact.right, param_to_arg_map)?,
-            line_file: not_less_equal_fact.line_file,
+            line_file: not_less_equal_fact.line_file.clone(),
         })
     }
 
@@ -427,7 +427,7 @@ impl Runtime {
         Ok(NotGreaterEqualFact {
             left: self.inst_obj(&not_greater_equal_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&not_greater_equal_fact.right, param_to_arg_map)?,
-            line_file: not_greater_equal_fact.line_file,
+            line_file: not_greater_equal_fact.line_file.clone(),
         })
     }
 
@@ -438,7 +438,7 @@ impl Runtime {
     ) -> Result<NotIsSetFact, RuntimeError> {
         Ok(NotIsSetFact {
             set: self.inst_obj(&not_is_set_fact.set, param_to_arg_map)?,
-            line_file: not_is_set_fact.line_file,
+            line_file: not_is_set_fact.line_file.clone(),
         })
     }
 
@@ -449,7 +449,7 @@ impl Runtime {
     ) -> Result<NotIsNonemptySetFact, RuntimeError> {
         Ok(NotIsNonemptySetFact {
             set: self.inst_obj(&not_is_nonempty_set_fact.set, param_to_arg_map)?,
-            line_file: not_is_nonempty_set_fact.line_file,
+            line_file: not_is_nonempty_set_fact.line_file.clone(),
         })
     }
 
@@ -460,7 +460,7 @@ impl Runtime {
     ) -> Result<NotIsFiniteSetFact, RuntimeError> {
         Ok(NotIsFiniteSetFact {
             set: self.inst_obj(&not_is_finite_set_fact.set, param_to_arg_map)?,
-            line_file: not_is_finite_set_fact.line_file,
+            line_file: not_is_finite_set_fact.line_file.clone(),
         })
     }
 
@@ -472,7 +472,7 @@ impl Runtime {
         Ok(NotInFact {
             element: self.inst_obj(&not_in_fact.element, param_to_arg_map)?,
             set: self.inst_obj(&not_in_fact.set, param_to_arg_map)?,
-            line_file: not_in_fact.line_file,
+            line_file: not_in_fact.line_file.clone(),
         })
     }
 
@@ -483,7 +483,7 @@ impl Runtime {
     ) -> Result<NotIsCartFact, RuntimeError> {
         Ok(NotIsCartFact {
             set: self.inst_obj(&not_is_cart_fact.set, param_to_arg_map)?,
-            line_file: not_is_cart_fact.line_file,
+            line_file: not_is_cart_fact.line_file.clone(),
         })
     }
 
@@ -494,7 +494,7 @@ impl Runtime {
     ) -> Result<NotIsTupleFact, RuntimeError> {
         Ok(NotIsTupleFact {
             set: self.inst_obj(&not_is_tuple_fact.set, param_to_arg_map)?,
-            line_file: not_is_tuple_fact.line_file,
+            line_file: not_is_tuple_fact.line_file.clone(),
         })
     }
 
@@ -506,7 +506,7 @@ impl Runtime {
         Ok(NotSubsetFact {
             left: self.inst_obj(&not_subset_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&not_subset_fact.right, param_to_arg_map)?,
-            line_file: not_subset_fact.line_file,
+            line_file: not_subset_fact.line_file.clone(),
         })
     }
 
@@ -518,7 +518,7 @@ impl Runtime {
         Ok(NotSupersetFact {
             left: self.inst_obj(&not_superset_fact.left, param_to_arg_map)?,
             right: self.inst_obj(&not_superset_fact.right, param_to_arg_map)?,
-            line_file: not_superset_fact.line_file,
+            line_file: not_superset_fact.line_file.clone(),
         })
     }
 
@@ -541,7 +541,7 @@ impl Runtime {
         Ok(ExistFact {
             params_def_with_type,
             facts,
-            line_file: exist_fact.line_file,
+            line_file: exist_fact.line_file.clone(),
         })
     }
 
@@ -556,7 +556,7 @@ impl Runtime {
         }
         Ok(OrFact {
             facts,
-            line_file: or_fact.line_file,
+            line_file: or_fact.line_file.clone(),
         })
     }
 
@@ -571,7 +571,7 @@ impl Runtime {
         }
         Ok(AndFact {
             facts,
-            line_file: and_fact.line_file,
+            line_file: and_fact.line_file.clone(),
         })
     }
 
@@ -587,7 +587,7 @@ impl Runtime {
         Ok(ChainFact {
             objs,
             prop_names: chain_fact.prop_names.clone(),
-            line_file: chain_fact.line_file,
+            line_file: chain_fact.line_file.clone(),
         })
     }
 
@@ -615,7 +615,7 @@ impl Runtime {
             params_def_with_type,
             dom_facts,
             then_facts,
-            line_file: forall_fact.line_file,
+            line_file: forall_fact.line_file.clone(),
         })
     }
 
@@ -632,7 +632,7 @@ impl Runtime {
         Ok(ForallFactWithIff {
             forall_fact,
             iff_facts,
-            line_file: forall_fact_with_iff.line_file,
+            line_file: forall_fact_with_iff.line_file.clone(),
         })
     }
 
@@ -645,7 +645,7 @@ impl Runtime {
             obj: self.inst_obj(&restrict_fact.obj, param_to_arg_map)?,
             obj_can_restrict_to_fn_set: self
                 .inst_obj(&restrict_fact.obj_can_restrict_to_fn_set, param_to_arg_map)?,
-            line_file: restrict_fact.line_file,
+            line_file: restrict_fact.line_file.clone(),
         })
     }
 
@@ -658,7 +658,7 @@ impl Runtime {
             obj: self.inst_obj(&not_restrict_fact.obj, param_to_arg_map)?,
             obj_cannot_restrict_to_fn_set: self
                 .inst_obj(&not_restrict_fact.obj_cannot_restrict_to_fn_set, param_to_arg_map)?,
-            line_file: not_restrict_fact.line_file,
+            line_file: not_restrict_fact.line_file.clone(),
         })
     }
 }

@@ -15,14 +15,14 @@ impl Runtime {
                 return Err(VerifyError::new(
                     Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                     String::new(),
-                    restrict_fact.line_file,
+                    restrict_fact.line_file.clone(),
                     Some(RuntimeError::WellDefinedError(WellDefinedError::new(
                         format!(
                             "function `{}` belongs to what function set is unknown",
                             function.to_string()
                         ),
                         None,
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     ))),
                 ));
             }
@@ -87,13 +87,13 @@ impl Runtime {
             original_fn_set,
             &original_to_restrict_param_map,
             &restrict_flat_param_names,
-            restrict_fact.line_file,
+            restrict_fact.line_file.clone(),
         )
         .map_err(|e| {
             VerifyError::new(
                 Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                 String::new(),
-                restrict_fact.line_file,
+                restrict_fact.line_file.clone(),
                 Some(e),
             )
         })?;
@@ -132,7 +132,7 @@ impl Runtime {
         original_fn_set: &FnSetWithParams,
         original_to_restrict_param_map: &HashMap<String, Obj>,
         restrict_flat_param_names: &Vec<String>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeError> {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
@@ -146,7 +146,7 @@ impl Runtime {
                     InFact::new(
                         Obj::Identifier(Identifier::new(restrict_param_name)),
                         instantiated_original_set.clone(),
-                        line_file,
+                        line_file.clone(),
                     ),
                 )));
                 index += 1;
@@ -173,7 +173,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
         let params_in_original_sets_forall =
-            ForallFact::new(forall_params, forall_dom_facts, then_facts, restrict_fact.line_file);
+            ForallFact::new(forall_params, forall_dom_facts, then_facts, restrict_fact.line_file.clone());
         let forall_result =
             self.verify_forall_fact(&params_in_original_sets_forall, verify_state)?;
         if !forall_result.is_true() {
@@ -183,7 +183,7 @@ impl Runtime {
         let ret_equal_fact = EqualFact::new(
             restrict_ret_set.clone(),
             original_ret_set.clone(),
-            restrict_fact.line_file,
+            restrict_fact.line_file.clone(),
         );
         let ret_equal_result = self.verify_equal_fact(&ret_equal_fact, verify_state)?;
         if !ret_equal_result.is_true() {

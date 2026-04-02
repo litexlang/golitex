@@ -6,7 +6,7 @@ pub struct WitnessNonemptySet {
     pub obj: Obj,
     pub set: Obj,
     pub proof: Vec<Stmt>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
@@ -14,7 +14,7 @@ pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
     pub exist_fact_in_witness: ExistFact,
     pub proof: Vec<Stmt>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl WitnessExistFact {
@@ -22,7 +22,7 @@ impl WitnessExistFact {
         equal_tos: Vec<Obj>,
         exist_fact_in_witness: ExistFact,
         proof: Vec<Stmt>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         WitnessExistFact {
             equal_tos,
@@ -80,7 +80,7 @@ impl fmt::Display for WitnessNonemptySet {
 }
 
 impl WitnessNonemptySet {
-    pub fn new(obj: Obj, set: Obj, proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
+    pub fn new(obj: Obj, set: Obj, proof: Vec<Stmt>, line_file: LineFile) -> Self {
         WitnessNonemptySet {
             obj,
             set,

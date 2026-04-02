@@ -16,10 +16,10 @@ impl Runtime {
                     Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                         obj.clone(),
                         Obj::Identifier(Identifier::new(String::from("_"))),
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     ))),
                     format!("struct `{}` is not defined", struct_name),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                     None,
                 ));
             }
@@ -31,7 +31,7 @@ impl Runtime {
                 Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     obj.clone(),
                     Obj::Identifier(Identifier::new(String::from("_"))),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ))),
                 format!(
                     "struct `{}` definition expects {} parameter(s), but struct type has {} argument(s)",
@@ -39,7 +39,7 @@ impl Runtime {
                     number_of_params_in_def,
                     struct_ty.args.len()
                 ),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 None,
             ));
         }
@@ -67,10 +67,10 @@ impl Runtime {
                             Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                                 obj.clone(),
                                 Obj::Identifier(Identifier::new(String::from("_"))),
-                                DEFAULT_LINE_FILE.clone(),
+                                default_line_file(),
                             ))),
                             format!("{} satisfies struct `{}`, but it should satisfy struct `{}`", obj.to_string(), def.name.to_string(), struct_ty.name.to_string()),
-                            DEFAULT_LINE_FILE,
+                            default_line_file(),
                             None,
                         ));
                     }
@@ -81,12 +81,12 @@ impl Runtime {
                             Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                                 obj.clone(),
                                 Obj::Identifier(Identifier::new(String::from("_"))),
-                                DEFAULT_LINE_FILE.clone(),
+                                default_line_file(),
                             ))),
                             InferResult::new(),
                             "".to_string(),
                             None,
-                            Some(DEFAULT_LINE_FILE),
+                            Some(default_line_file()),
                             vec![],
                         ),
                     ));
@@ -112,7 +112,7 @@ impl Runtime {
                 Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     Obj::Tuple(tuple.clone()),
                     Obj::Identifier(Identifier::new(String::from("_"))),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ))),
                 format!(
                     "tuple for struct `{}` should have {} component(s), got {}",
@@ -120,7 +120,7 @@ impl Runtime {
                     expected_tuple_len,
                     tuple.args.len()
                 ),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 None,
             ));
         }
@@ -141,7 +141,7 @@ impl Runtime {
         for (i, tuple_arg) in tuple_args_for_struct_param_type_args.iter().enumerate() {
             let struct_type_arg = struct_param_type.args[i].clone();
             let result = self.verify_equal_fact(
-                &EqualFact::new(tuple_arg.clone(), struct_type_arg.clone(), DEFAULT_LINE_FILE),
+                &EqualFact::new(tuple_arg.clone(), struct_type_arg.clone(), default_line_file()),
                 verify_state,
             )?;
             if result.is_unknown() {
@@ -149,13 +149,13 @@ impl Runtime {
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         tuple_arg.clone(),
                         struct_type_arg.clone(),
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     ))),
                     format!(
                         "cannot verify tuple component {} equals struct type argument `{}`",
                         i, struct_type_arg
                     ),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                     None,
                 ));
             }
@@ -182,13 +182,13 @@ impl Runtime {
                         Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                             tuple_field_arg.clone(),
                             Obj::Identifier(Identifier::new(String::from("_"))),
-                            DEFAULT_LINE_FILE.clone(),
+                            default_line_file(),
                         ))),
                         format!(
                             "failed to instantiate field type {} of struct `{}`",
                             i, struct_def.name
                         ),
-                        DEFAULT_LINE_FILE,
+                        default_line_file(),
                         Some(e),
                     )
                 })?;
@@ -216,13 +216,13 @@ impl Runtime {
                         Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                             Obj::Tuple(tuple.clone()),
                             Obj::Identifier(Identifier::new(String::from("_"))),
-                            DEFAULT_LINE_FILE.clone(),
+                            default_line_file(),
                         ))),
                         format!(
                             "struct `{}`: failed to instantiate `<=>:` fact: {}",
                             struct_def.name, e
                         ),
-                        DEFAULT_LINE_FILE,
+                        default_line_file(),
                         Some(e),
                     )
                 })?;
@@ -236,7 +236,7 @@ impl Runtime {
 
         Ok(last_result.unwrap_or_else(|| {
             NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
-                Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE)),
+                Stmt::DoNothingStmt(DoNothingStmt::new(default_line_file())),
                 InferResult::new(),
                 vec![],
             ))

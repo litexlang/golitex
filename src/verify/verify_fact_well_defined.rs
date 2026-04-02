@@ -225,7 +225,7 @@ impl Runtime {
             return Err(WellDefinedError::new(
                 "failed to define parameters in forall fact".to_string(),
                 Some(e.into()),
-                forall_fact.line_file,
+                forall_fact.line_file.clone(),
             ));
         }
 

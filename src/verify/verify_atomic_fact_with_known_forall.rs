@@ -58,7 +58,7 @@ impl Runtime {
             }
         }
 
-        Ok((DEFAULT_LINE_FILE, None, None))
+        Ok(((0, 0), None, None))
     }
 
     fn try_verify_with_known_forall_facts_in_envs(

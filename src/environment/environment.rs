@@ -30,14 +30,14 @@ pub struct Environment {
     pub known_or_facts_in_forall_facts:
         HashMap<OrFactKey, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_obj_is_well_defined: HashMap<ObjString, ()>,
-    pub known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, (usize, usize))>,
-    pub known_cart_objs: HashMap<ObjString, (Cart, (usize, usize))>,
+    pub known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
+    pub known_cart_objs: HashMap<ObjString, (Cart, LineFile)>,
     pub known_normalized_decimal_number_value_of_obj: HashMap<ObjString, Number>,
     pub known_set_equal_to_set_builder: HashMap<ObjString, SetBuilder>,
     pub known_obj_in_fn_set: HashMap<ObjString, FnSetWithParams>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
-    pub cache_known_fact: HashMap<FactString, (usize, usize)>,
+    pub cache_known_fact: HashMap<FactString, LineFile>,
 }
 
 impl Environment {
@@ -79,11 +79,11 @@ impl Environment {
             Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
         >,
         known_obj_is_well_defined: HashMap<ObjString, ()>,
-        known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, (usize, usize))>,
-        known_cart_objs: HashMap<ObjString, (Cart, (usize, usize))>,
+        known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
+        known_cart_objs: HashMap<ObjString, (Cart, LineFile)>,
         known_calculated_value_of_obj: HashMap<ObjString, Number>,
         cache_known_valid_obj: HashMap<ObjString, ()>,
-        cache_known_fact: HashMap<FactString, (usize, usize)>,
+        cache_known_fact: HashMap<FactString, LineFile>,
     ) -> Self {
         Environment {
             defined_identifiers: objs,
@@ -393,7 +393,7 @@ impl Environment {
         let forall_params_and_dom = Rc::new(KnownForallFactParamsAndDom::new(
             forall_fact.params_def_with_type.clone(),
             forall_fact.dom_facts.clone(),
-            forall_fact.line_file,
+            forall_fact.line_file.clone(),
         ));
 
         for fact in forall_fact.then_facts.iter() {
@@ -684,7 +684,7 @@ impl Environment {
     pub fn store_fact_to_cache_known_fact(
         &mut self,
         fact_key: FactString,
-        fact_line_file: (usize, usize),
+        fact_line_file: LineFile,
     ) -> Result<(), RuntimeErrorStruct> {
         self.cache_known_fact.insert(fact_key, fact_line_file);
         Ok(())
@@ -694,14 +694,14 @@ impl Environment {
 pub struct KnownForallFactParamsAndDom {
     pub params_def: Vec<ParamDefWithParamType>,
     pub dom: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl KnownForallFactParamsAndDom {
     pub fn new(
         params: Vec<ParamDefWithParamType>,
         dom: Vec<ExistOrAndChainAtomicFact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         KnownForallFactParamsAndDom {
             params_def: params,

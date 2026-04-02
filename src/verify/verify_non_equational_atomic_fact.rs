@@ -306,10 +306,10 @@ impl Runtime {
                 InFact::new(
                     Obj::Identifier(Identifier::new(bound_param_name)),
                     subset_fact.right.clone(),
-                    subset_fact.line_file,
+                    subset_fact.line_file.clone(),
                 ),
             ))],
-            subset_fact.line_file,
+            subset_fact.line_file.clone(),
         ));
         let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
@@ -341,10 +341,10 @@ impl Runtime {
                 InFact::new(
                     Obj::Identifier(Identifier::new(bound_param_name)),
                     superset_fact.left.clone(),
-                    superset_fact.line_file,
+                    superset_fact.line_file.clone(),
                 ),
             ))],
-            superset_fact.line_file,
+            superset_fact.line_file.clone(),
         ));
         let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
@@ -373,7 +373,7 @@ impl Runtime {
             let subset_fact = SubsetFact::new(
                 normal_atomic_fact.body[0].clone(),
                 normal_atomic_fact.body[1].clone(),
-                normal_atomic_fact.line_file,
+                normal_atomic_fact.line_file.clone(),
             );
             return self
                 .verify_subset_fact_by_membership_forall_definition(&subset_fact, verify_state);
@@ -385,7 +385,7 @@ impl Runtime {
             let superset_fact = SupersetFact::new(
                 normal_atomic_fact.body[0].clone(),
                 normal_atomic_fact.body[1].clone(),
-                normal_atomic_fact.line_file,
+                normal_atomic_fact.line_file.clone(),
             );
             return self.verify_superset_fact_by_membership_forall_definition(
                 &superset_fact,
@@ -428,11 +428,11 @@ impl Runtime {
                     VerifyError::new(
                         Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal_atomic_fact.clone())),
                         String::new(),
-                        normal_atomic_fact.line_file,
+                        normal_atomic_fact.line_file.clone(),
                         Some(e),
                     )
                 })?
-                .with_new_line_file(normal_atomic_fact.line_file);
+                .with_new_line_file(normal_atomic_fact.line_file.clone());
             let iff_clause_verify_result =
                 self.verify_fact(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;
             if iff_clause_verify_result.is_unknown() {
@@ -461,7 +461,7 @@ impl Runtime {
                 infer_result,
                 verified_by_text,
                 None,
-                Some(normal_atomic_fact.line_file),
+                Some(normal_atomic_fact.line_file.clone()),
                 Vec::new(),
             ),
         )))

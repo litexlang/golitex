@@ -66,7 +66,7 @@ impl Runtime {
         stmt: &ByCasesAxiomStmt,
     ) -> Result<(), ExecStmtError> {
         let all_cases_or_fact =
-            Fact::OrFact(crate::fact::OrFact::new(stmt.cases.clone(), stmt.line_file));
+            Fact::OrFact(crate::fact::OrFact::new(stmt.cases.clone(), stmt.line_file.clone()));
         self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 ExecStmtError::with_message_and_cause(

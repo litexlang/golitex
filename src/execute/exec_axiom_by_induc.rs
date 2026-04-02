@@ -76,7 +76,7 @@ impl Runtime {
         let induc_from_in_z_fact = AtomicFact::InFact(InFact::new(
             stmt.induc_from.clone(),
             Obj::StandardSet(StandardSet::Z),
-            stmt.line_file,
+            stmt.line_file.clone(),
         ));
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
@@ -119,13 +119,13 @@ impl Runtime {
                     GreaterEqualFact::new(
                         param_as_identifier,
                         stmt.induc_from.clone(),
-                        stmt.line_file,
+                        stmt.line_file.clone(),
                     ),
                 )),
                 fact.clone(),
             ],
             vec![next_fact_of_induction_step],
-            stmt.line_file,
+            stmt.line_file.clone(),
         ));
 
         self.verify_fact_return_err_if_not_true(

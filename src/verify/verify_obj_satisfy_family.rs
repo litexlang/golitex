@@ -15,10 +15,10 @@ impl Runtime {
                     Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                         obj.clone(),
                         Obj::Identifier(Identifier::new(String::from("_"))),
-                        DEFAULT_LINE_FILE.clone(),
+                        default_line_file(),
                     ))),
                     format!("family `{}` is not defined", family_name),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                     None,
                 ));
             }
@@ -30,7 +30,7 @@ impl Runtime {
                 Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     obj.clone(),
                     Obj::Identifier(Identifier::new(String::from("_"))),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ))),
                 format!(
                     "family `{}` expects {} type argument(s), got {}",
@@ -38,7 +38,7 @@ impl Runtime {
                     expected_count,
                     family_ty.params.len()
                 ),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 None,
             ));
         }
@@ -51,17 +51,17 @@ impl Runtime {
                 Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     obj.clone(),
                     Obj::Identifier(Identifier::new(String::from("_"))),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                 ))),
                 String::new(),
-                DEFAULT_LINE_FILE,
+                default_line_file(),
                 Some(e),
             )
         })?;
         let fact = AtomicFact::InFact(InFact::new(
             obj,
             member_set,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         ));
         self.verify_atomic_fact(&fact, verify_state)
     }

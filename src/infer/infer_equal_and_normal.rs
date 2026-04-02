@@ -16,7 +16,7 @@ impl Runtime {
                         "failed to store inferred {} while inferring `{}`",
                         infer_step_description, equal_fact
                     ),
-                    equal_fact.line_file,
+                    equal_fact.line_file.clone(),
                     Some(previous_error.into()),
                 )
             })?;
@@ -34,7 +34,7 @@ impl Runtime {
     ) -> Result<(), InferError> {
         let target_is_cart_fact = Fact::AtomicFact(AtomicFact::IsCartFact(IsCartFact::new(
             target_obj.clone(),
-            equal_fact.line_file,
+            equal_fact.line_file.clone(),
         )));
         self.store_inferred_fact_and_record_result(
             target_is_cart_fact,
@@ -50,7 +50,7 @@ impl Runtime {
         let cart_dim_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
             target_cart_dim_obj,
             known_cart_dim_obj,
-            equal_fact.line_file,
+            equal_fact.line_file.clone(),
         )));
         self.store_inferred_fact_and_record_result(
             cart_dim_equal_fact,
@@ -61,12 +61,12 @@ impl Runtime {
         self.store_known_cart_obj(
             &known_cart_obj_as_symbol.to_string(),
             known_cart_obj.clone(),
-            equal_fact.line_file,
+            equal_fact.line_file.clone(),
         );
         self.store_known_cart_obj(
             &target_obj.to_string(),
             known_cart_obj.clone(),
-            equal_fact.line_file,
+            equal_fact.line_file.clone(),
         );
         Ok(())
     }
@@ -80,7 +80,7 @@ impl Runtime {
     ) -> Result<(), InferError> {
         let target_is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact::new(
             target_obj.clone(),
-            equal_fact.line_file,
+            equal_fact.line_file.clone(),
         )));
         self.store_inferred_fact_and_record_result(
             target_is_tuple_fact,
@@ -96,7 +96,7 @@ impl Runtime {
         let tuple_dim_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
             target_tuple_dim_obj,
             known_tuple_dim_obj,
-            equal_fact.line_file,
+            equal_fact.line_file.clone(),
         )));
         self.store_inferred_fact_and_record_result(
             tuple_dim_equal_fact,
@@ -109,7 +109,7 @@ impl Runtime {
             &target_obj.to_string(),
             Some(known_tuple_obj.clone()),
             None,
-            equal_fact.line_file,
+            equal_fact.line_file.clone(),
         );
         Ok(())
     }
@@ -222,7 +222,7 @@ impl Runtime {
             .store_args_satisfy_param_def(
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
-                normal_atomic_fact.line_file,
+                normal_atomic_fact.line_file.clone(),
             )
             .map_err(|previous_error| {
                 InferError::new(
@@ -230,7 +230,7 @@ impl Runtime {
                         "failed to verify parameter types for `{}`",
                         normal_atomic_fact
                     ),
-                    normal_atomic_fact.line_file,
+                    normal_atomic_fact.line_file.clone(),
                     Some(previous_error),
                 )
             })?;
@@ -249,13 +249,13 @@ impl Runtime {
                             "failed to instantiate iff fact while inferring `{}`",
                             normal_atomic_fact
                         ),
-                        normal_atomic_fact.line_file,
+                        normal_atomic_fact.line_file.clone(),
                         Some(e),
                     )
                 },
             )?;
             let fact_to_store =
-                instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file);
+                instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file.clone());
             infer_result.new_fact(&fact_to_store);
             self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
                 .map_err(|previous_error| {
@@ -264,7 +264,7 @@ impl Runtime {
                             "failed to store instantiated iff fact while inferring `{}`",
                             normal_atomic_fact
                         ),
-                        normal_atomic_fact.line_file,
+                        normal_atomic_fact.line_file.clone(),
                         Some(previous_error.into()),
                     )
                 })?;

@@ -11,24 +11,24 @@ pub enum ImportStmt {
 pub struct ImportRelativePathStmt {
     pub path: String,
     pub as_mod_name: Option<String>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct ImportGlobalModuleStmt {
     pub mod_name: String,
     pub as_mod_name: Option<String>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct RunFileStmt {
     pub file_path: String,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl RunFileStmt {
-    pub fn new(file_path: String, line_file: (usize, usize)) -> Self {
+    pub fn new(file_path: String, line_file: LineFile) -> Self {
         RunFileStmt {
             file_path,
             line_file,
@@ -54,7 +54,7 @@ impl fmt::Display for ImportStmt {
 }
 
 impl ImportRelativePathStmt {
-    pub fn new(path: String, as_mod_name: Option<String>, line_file: (usize, usize)) -> Self {
+    pub fn new(path: String, as_mod_name: Option<String>, line_file: LineFile) -> Self {
         ImportRelativePathStmt {
             path,
             as_mod_name,
@@ -64,7 +64,7 @@ impl ImportRelativePathStmt {
 }
 
 impl ImportGlobalModuleStmt {
-    pub fn new(mod_name: String, as_mod_name: Option<String>, line_file: (usize, usize)) -> Self {
+    pub fn new(mod_name: String, as_mod_name: Option<String>, line_file: LineFile) -> Self {
         ImportGlobalModuleStmt {
             mod_name,
             as_mod_name,
@@ -100,21 +100,21 @@ impl fmt::Display for ImportGlobalModuleStmt {
 }
 
 impl ImportStmt {
-    pub fn line_file(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> LineFile {
         match self {
-            ImportStmt::ImportRelativePath(import_relative_path) => import_relative_path.line_file,
-            ImportStmt::ImportGlobalModule(import_global_mod) => import_global_mod.line_file,
+            ImportStmt::ImportRelativePath(import_relative_path) => import_relative_path.line_file.clone(),
+            ImportStmt::ImportGlobalModule(import_global_mod) => import_global_mod.line_file.clone(),
         }
     }
 }
 
 #[derive(Clone)]
 pub struct DoNothingStmt {
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl DoNothingStmt {
-    pub fn new(line_file: (usize, usize)) -> Self {
+    pub fn new(line_file: LineFile) -> Self {
         DoNothingStmt { line_file }
     }
 }

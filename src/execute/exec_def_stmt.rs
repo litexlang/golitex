@@ -190,7 +190,7 @@ impl Runtime {
             None => {
                 return Err(RuntimeError::UnknownError(UnknownError::new(
                     format!("family `{}` is not defined", family_name),
-                    DEFAULT_LINE_FILE.clone(),
+                    default_line_file(),
                     None,
                     None,
                 )));
@@ -205,7 +205,7 @@ impl Runtime {
                     expected_count,
                     family_ty.params.len()
                 ),
-                DEFAULT_LINE_FILE.clone(),
+                default_line_file(),
                 None,
                 None,
             )));
@@ -218,7 +218,7 @@ impl Runtime {
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
             member_set,
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -228,7 +228,7 @@ impl Runtime {
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
             obj.clone(),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -237,7 +237,7 @@ impl Runtime {
     fn define_param_binding_set(&mut self, name: &str, _set: &Set) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -250,7 +250,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -263,7 +263,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
-            DEFAULT_LINE_FILE.clone(),
+            default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
@@ -279,7 +279,7 @@ impl Runtime {
             self.verify_param_type_well_defined(&param_def.1, &VerifyState::new(0, false))
                 .map_err(|well_defined_error| {
                     let param_names_text = param_def.0.join(", ");
-                    let error_line_file = well_defined_error.line_file;
+                    let error_line_file = well_defined_error.line_file.clone();
                     DefineParamsError::new(
                         format!(
                             "define params with type: failed to verify type well-defined for params [{}] with type {}",
@@ -298,7 +298,7 @@ impl Runtime {
                             param_names_text, param_def.1
                         ),
                         Some(RuntimeError::ExecStmtError(inner_exec_error)),
-                        DEFAULT_LINE_FILE,
+                        default_line_file(),
                     )
                 })?;
 
@@ -310,7 +310,7 @@ impl Runtime {
                             name
                         ),
                         Some(RuntimeError::ExecStmtError(runtime_error)),
-                        DEFAULT_LINE_FILE,
+                        default_line_file(),
                     )
                 })?;
                 let fact_infer_result = self
@@ -322,7 +322,7 @@ impl Runtime {
                                 name, param_def.1
                             ),
                             Some(runtime_error),
-                            DEFAULT_LINE_FILE,
+                            default_line_file(),
                         )
                     })?;
                 infer_result.new_infer_result_inside(fact_infer_result);
@@ -361,7 +361,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&param_def.1, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 let param_names_text = param_def.0.join(", ");
-                let error_line_file = well_defined_error.line_file;
+                let error_line_file = well_defined_error.line_file.clone();
                 DefineParamsError::new(
                     format!(
                         "define params with set: failed to verify set well-defined for params [{}] with set {}",
@@ -381,7 +381,7 @@ impl Runtime {
                         name
                     ),
                     Some(RuntimeError::ExecStmtError(runtime_error)),
-                    DEFAULT_LINE_FILE,
+                    default_line_file(),
                 )
             })?;
             let fact_infer_result = self
@@ -393,7 +393,7 @@ impl Runtime {
                             name
                         ),
                         Some(store_fact_error.into()),
-                        DEFAULT_LINE_FILE,
+                        default_line_file(),
                     )
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
@@ -489,7 +489,7 @@ impl Runtime {
             let equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
                 Obj::Identifier(Identifier::new(name.clone())),
                 obj.clone(),
-                have_obj_equal_stmt.line_file,
+                have_obj_equal_stmt.line_file.clone(),
             ));
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
@@ -565,7 +565,7 @@ impl Runtime {
             .store_args_satisfy_param_def(
                 &exist_fact_in_have_obj_stmt.params_def_with_type,
                 &new_obj_names_as_identifier_objs,
-                have_exist_obj_stmt.line_file,
+                have_exist_obj_stmt.line_file.clone(),
             )
             .map_err(|e| {
                 ExecStmtError::new_with_stmt(
@@ -637,7 +637,7 @@ impl Runtime {
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,
             function_set_obj,
-            have_fn_equal_stmt.line_file,
+            have_fn_equal_stmt.line_file.clone(),
         )));
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
@@ -661,7 +661,7 @@ impl Runtime {
         let function_equals_equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
             function_obj,
             have_fn_equal_stmt.equal_to.clone(),
-            have_fn_equal_stmt.line_file,
+            have_fn_equal_stmt.line_file.clone(),
         ));
         let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> =
             Vec::with_capacity(have_fn_equal_stmt.fn_set_with_params.dom_facts.len());
@@ -674,7 +674,7 @@ impl Runtime {
             vec![crate::fact::ExistOrAndChainAtomicFact::AtomicFact(
                 function_equals_equal_to_fact,
             )],
-            have_fn_equal_stmt.line_file,
+            have_fn_equal_stmt.line_file.clone(),
         );
         let forall_as_fact = Fact::ForallFact(forall_fact);
         let forall_infer_result = self
@@ -766,7 +766,7 @@ impl Runtime {
                 .ret_set
                 .as_ref()
                 .clone(),
-            have_fn_equal_stmt.line_file,
+            have_fn_equal_stmt.line_file.clone(),
         ));
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
@@ -833,7 +833,7 @@ impl Runtime {
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,
             function_set_obj,
-            have_fn_equal_case_by_case_stmt.line_file,
+            have_fn_equal_case_by_case_stmt.line_file.clone(),
         )));
 
         let mut infer_result = self
@@ -883,7 +883,7 @@ impl Runtime {
             let function_equals_equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
                 function_obj.clone(),
                 equal_to.clone(),
-                have_fn_equal_case_by_case_stmt.line_file,
+                have_fn_equal_case_by_case_stmt.line_file.clone(),
             ));
             let forall_fact = ForallFact::new(
                 param_defs_with_type.clone(),
@@ -891,7 +891,7 @@ impl Runtime {
                 vec![ExistOrAndChainAtomicFact::AtomicFact(
                     function_equals_equal_to_fact,
                 )],
-                have_fn_equal_case_by_case_stmt.line_file,
+                have_fn_equal_case_by_case_stmt.line_file.clone(),
             );
             let forall_as_fact = Fact::ForallFact(forall_fact);
 
@@ -1033,7 +1033,7 @@ impl Runtime {
                 .ret_set
                 .as_ref()
                 .clone(),
-            have_fn_equal_case_by_case_stmt.line_file,
+            have_fn_equal_case_by_case_stmt.line_file.clone(),
         ));
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)

@@ -40,7 +40,7 @@ impl Runtime {
                 InferResult::new(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
-                Some(DEFAULT_LINE_FILE),
+                Some(default_line_file()),
                 Vec::new(),
             ),
         ))
@@ -93,7 +93,7 @@ impl Runtime {
                 InferResult::new(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
-                Some(DEFAULT_LINE_FILE),
+                Some(default_line_file()),
                 Vec::new(),
             ),
         ))

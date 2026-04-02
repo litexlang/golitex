@@ -10,7 +10,7 @@ impl Runtime {
         &mut self,
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Obj>,
-        _line_file: (usize, usize),
+        _line_file: LineFile,
     ) -> Result<InferResult, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args)?;

@@ -78,7 +78,7 @@ where
 
         let blocks = match TokenBlock::parse_blocks(
             normalized_source.as_str(),
-            runtime.module_manager.current_file_index,
+            runtime.module_manager.current_file_path_rc(),
         ) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {

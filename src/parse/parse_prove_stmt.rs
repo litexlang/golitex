@@ -8,7 +8,7 @@ impl Runtime {
         let result = self.parse_prove_stmt_body(tb);
         self.pop_parsing_time_name_scope();
         match result {
-            Ok(proof) => Ok(Stmt::ProveStmt(ProveStmt::new(proof, tb.line_file))),
+            Ok(proof) => Ok(Stmt::ProveStmt(ProveStmt::new(proof, tb.line_file.clone()))),
             Err(e) => Err(e),
         }
     }

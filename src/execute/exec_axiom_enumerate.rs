@@ -171,7 +171,7 @@ impl Runtime {
                 AtomicFact::EqualFact(EqualFact::new(
                     Obj::Identifier(Identifier::new(parameter_name.clone())),
                     assigned_obj.clone(),
-                    stmt.line_file,
+                    stmt.line_file.clone(),
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,

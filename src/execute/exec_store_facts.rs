@@ -15,7 +15,7 @@ impl Runtime {
                 "failed to store forall fact with iff:\n{}",
                 coverage_error_detail_lines.join("\n")
             ),
-            forall_fact_with_iff.line_file,
+            forall_fact_with_iff.line_file.clone(),
             None,
         ))
     }
@@ -185,7 +185,7 @@ fn return_err_if_forall_fact_then_or_iff_clauses_miss_some_parameter_name(
             "failed to store forall fact:\n{}",
             coverage_error_detail_lines.join("\n")
         ),
-        forall_fact.line_file,
+        forall_fact.line_file.clone(),
         None,
     ))
 }

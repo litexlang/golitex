@@ -6,7 +6,7 @@ pub struct ForallFact {
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<ExistOrAndChainAtomicFact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file: (usize, usize),
+    pub line_file: LineFile,
 }
 
 impl ForallFact {
@@ -14,7 +14,7 @@ impl ForallFact {
         params_def_with_type: Vec<ParamDefWithParamType>,
         dom_facts: Vec<ExistOrAndChainAtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
-        line_file: (usize, usize),
+        line_file: LineFile,
     ) -> Self {
         ForallFact {
             params_def_with_type,

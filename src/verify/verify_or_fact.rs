@@ -18,7 +18,7 @@ impl Runtime {
                 return Err(VerifyError::new(
                     Fact::OrFact(or_fact.clone()),
                     String::new(),
-                    or_fact.line_file,
+                    or_fact.line_file.clone(),
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }

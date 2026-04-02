@@ -284,7 +284,7 @@ impl Runtime {
             AtomicFact::EqualFact(EqualFact::new(
                 fn_call_obj.clone(),
                 algo_case.return_stmt.value.clone(),
-                algo_case.line_file,
+                algo_case.line_file.clone(),
             )),
         )];
 
@@ -292,7 +292,7 @@ impl Runtime {
             algo_param_defs_with_type.to_vec(),
             case_dom_facts,
             case_then_facts,
-            algo_case.line_file,
+            algo_case.line_file.clone(),
         ))
     }
 
@@ -351,12 +351,12 @@ impl Runtime {
         for algo_case in def_algo_stmt.cases.iter() {
             case_conditions.push(AndChainAtomicFact::AtomicFact(algo_case.condition.clone()));
         }
-        let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file);
+        let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file.clone());
         let coverage_forall_fact = Fact::ForallFact(ForallFact::new(
             algo_param_defs_with_type.to_vec(),
             requirement_dom_facts.to_vec(),
             vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
-            def_algo_stmt.line_file,
+            def_algo_stmt.line_file.clone(),
         ));
 
         let verify_state = VerifyState::new(0, false);
