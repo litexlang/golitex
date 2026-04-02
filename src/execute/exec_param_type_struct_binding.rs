@@ -126,14 +126,14 @@ impl Runtime {
         }
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
-        if struct_ty.params.len() != expected_count {
+        if struct_ty.args.len() != expected_count {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "struct `{}` expects {} type argument(s) in `struct {}(...)`, got {}",
                     struct_name,
                     expected_count,
                     struct_name,
-                    struct_ty.params.len()
+                    struct_ty.args.len()
                 ),
                 DEFAULT_LINE_FILE.clone(),
                 None,
@@ -141,12 +141,12 @@ impl Runtime {
             )));
         }
 
-        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.params.clone());
+        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.args.clone());
         self.register_param_as_struct_instance(name, inst);
 
         let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
             &def.param_defs,
-            &struct_ty.params,
+            &struct_ty.args,
         );
 
         let mut infer_result =
@@ -206,13 +206,13 @@ impl Runtime {
         };
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
-        if struct_ty.params.len() != expected_count {
+        if struct_ty.args.len() != expected_count {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "struct `{}` expects {} type argument(s), got {}",
                     struct_name,
                     expected_count,
-                    struct_ty.params.len()
+                    struct_ty.args.len()
                 ),
                 DEFAULT_LINE_FILE.clone(),
                 None,
@@ -220,12 +220,12 @@ impl Runtime {
             )));
         }
 
-        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.params.clone());
+        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.args.clone());
         self.register_param_as_struct_instance(&field_access.to_string(), inst);
 
         let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
             &def.param_defs,
-            &struct_ty.params,
+            &struct_ty.args,
         );
 
         let mut infer_result = InferResult::new();
@@ -278,13 +278,13 @@ impl Runtime {
         }
 
         let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
-        if struct_ty.params.len() != expected_count {
+        if struct_ty.args.len() != expected_count {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "struct `{}` expects {} type argument(s), got {}",
                     struct_name,
                     expected_count,
-                    struct_ty.params.len()
+                    struct_ty.args.len()
                 ),
                 DEFAULT_LINE_FILE.clone(),
                 None,
@@ -308,10 +308,10 @@ impl Runtime {
 
         let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
             &def.param_defs,
-            &struct_ty.params,
+            &struct_ty.args,
         );
 
-        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.params.clone());
+        let inst = InstStructObj::new(struct_ty.name.clone(), struct_ty.args.clone());
         self.register_param_as_struct_instance(SELF, inst);
 
         let mut infer_result = InferResult::new();

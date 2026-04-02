@@ -136,6 +136,6 @@ impl Runtime {
         tb.skip_token(STRUCT)?;
         let name = self.parse_identifier_or_identifier_with_mod(tb)?;
         let params = self.parse_braced_objs(tb)?;
-        Ok(ParamType::Struct(StructParamType { name, params }))
+        Ok(ParamType::Struct(StructParamType { name, args: params }))
     }
 }
