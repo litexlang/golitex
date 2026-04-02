@@ -368,6 +368,25 @@ impl Runtime {
                     json_string_literal(&e.msg)
                 ));
             }
+            RuntimeError::InstantiateError(e) => {
+                field_lines.push(format!(
+                    "{}\"{}\": {}",
+                    indent_inner,
+                    JSON_KEY_MESSAGE,
+                    json_string_literal(&e.msg)
+                ));
+                push_optional_statement_json_field_lines(
+                    &mut field_lines,
+                    indent_inner.as_str(),
+                    &e.statement,
+                );
+                push_optional_conflict_with_json_field_lines(
+                    self,
+                    &mut field_lines,
+                    indent_inner.as_str(),
+                    &e.conflict_with,
+                );
+            }
         }
 
         let previous_error_line = self.build_previous_error_field_line(
@@ -458,6 +477,10 @@ impl Runtime {
                 None => None,
             },
             RuntimeError::InferError(e) => match &e.previous_error {
+                Some(previous_error) => Some(previous_error.as_ref()),
+                None => None,
+            },
+            RuntimeError::InstantiateError(e) => match &e.previous_error {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },

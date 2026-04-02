@@ -93,7 +93,20 @@ impl Runtime {
 
         let mut last_result: Option<NonErrStmtExecResult> = None;
         for (field_name, field_pt) in def.fields.iter() {
-            let instantiated = field_pt.instantiate(&param_to_arg_map);
+            let instantiated = self.inst_param_type(field_pt, &param_to_arg_map).map_err(
+                |e| {
+                    VerifyError::new(
+                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                            obj.clone(),
+                            Obj::Identifier(Identifier::new(String::from("_"))),
+                            DEFAULT_LINE_FILE.clone(),
+                        ))),
+                        String::new(),
+                        DEFAULT_LINE_FILE,
+                        Some(e),
+                    )
+                },
+            )?;
             let Some(fa) = field_access_append_field(&obj, field_name) else {
                 return Err(VerifyError::new(
                     Fact::AtomicFact(AtomicFact::InFact(InFact::new(
@@ -175,7 +188,18 @@ impl Runtime {
                     &def.params_def_with_type,
                     &family_ty.params,
                 );
-                let member_set = def.equal_to.instantiate(&param_to_arg_map);
+                let member_set = self.inst_obj(&def.equal_to, &param_to_arg_map).map_err(|e| {
+                    VerifyError::new(
+                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                            obj.clone(),
+                            Obj::Identifier(Identifier::new(String::from("_"))),
+                            DEFAULT_LINE_FILE.clone(),
+                        ))),
+                        String::new(),
+                        DEFAULT_LINE_FILE,
+                        Some(e),
+                    )
+                })?;
                 let fact = AtomicFact::InFact(InFact::new(
                     obj,
                     member_set,
@@ -218,7 +242,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeError> {
         let instantiated_types =
-            ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
+            self.inst_param_def_with_type_one_by_one(param_defs, args)?;
         let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
             param_defs,
             &instantiated_types,

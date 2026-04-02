@@ -1,6 +1,5 @@
 use super::standard_set::StandardSet;
 use crate::prelude::*;
-use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
@@ -863,42 +862,3 @@ impl Identifier {
     }
 }
 
-impl Obj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        match self {
-            Obj::Identifier(inner) => inner.instantiate(param_to_arg_map),
-            Obj::IdentifierWithMod(inner) => inner.instantiate(param_to_arg_map),
-            Obj::FieldAccess(inner) => inner.instantiate(param_to_arg_map),
-            Obj::FieldAccessWithMod(inner) => inner.instantiate(param_to_arg_map),
-            Obj::FnObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Number(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Add(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Sub(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Mul(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Div(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Mod(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Pow(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Union(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Intersect(inner) => inner.instantiate(param_to_arg_map),
-            Obj::SetMinus(inner) => inner.instantiate(param_to_arg_map),
-            Obj::SetDiff(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Cup(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Cap(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ListSet(inner) => inner.instantiate(param_to_arg_map),
-            Obj::SetBuilder(inner) => inner.instantiate(param_to_arg_map),
-            Obj::FnSetWithParams(inner) => inner.instantiate(param_to_arg_map),
-            Obj::StandardSet(standard_set) => Obj::StandardSet(standard_set.clone()),
-            Obj::Cart(inner) => inner.instantiate(param_to_arg_map),
-            Obj::CartDim(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Proj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::TupleDim(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Tuple(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Count(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Range(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ClosedRange(inner) => inner.instantiate(param_to_arg_map),
-            Obj::PowerSet(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Choose(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
-        }
-    }
-}

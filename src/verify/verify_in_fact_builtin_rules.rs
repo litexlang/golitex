@@ -2,11 +2,15 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 /// `fn(x N_pos) R` 与 `fn(y N_pos) R`：将两侧形参名统一为 `##0`, `##1`, …，对 `params_def_with_set` / `dom_facts` / `ret_set` 做代入后比较 `Display`。
-fn fn_set_with_params_equal_modulo_param_rename(a: &FnSetWithParams, b: &FnSetWithParams) -> bool {
+fn fn_set_with_params_equal_modulo_param_rename(
+    runtime: &Runtime,
+    a: &FnSetWithParams,
+    b: &FnSetWithParams,
+) -> Result<bool, RuntimeError> {
     let pa = a.params();
     let pb = b.params();
     if pa.len() != pb.len() {
-        return false;
+        return Ok(false);
     }
 
     let mut pa_map = HashMap::new();
@@ -28,13 +32,13 @@ fn fn_set_with_params_equal_modulo_param_rename(a: &FnSetWithParams, b: &FnSetWi
     let a_dom: Vec<OrAndChainAtomicFact> = a
         .dom_facts
         .iter()
-        .map(|dom_fact| dom_fact.instantiate(&pa_map))
-        .collect();
+        .map(|dom_fact| runtime.inst_or_and_chain_atomic_fact(dom_fact, &pa_map))
+        .collect::<Result<Vec<_>, _>>()?;
     let b_dom: Vec<OrAndChainAtomicFact> = b
         .dom_facts
         .iter()
-        .map(|dom_fact| dom_fact.instantiate(&pb_map))
-        .collect();
+        .map(|dom_fact| runtime.inst_or_and_chain_atomic_fact(dom_fact, &pb_map))
+        .collect::<Result<Vec<_>, _>>()?;
 
     let a_ret = a.ret_set.as_ref().clone();
     let b_ret = b.ret_set.as_ref().clone();
@@ -42,7 +46,7 @@ fn fn_set_with_params_equal_modulo_param_rename(a: &FnSetWithParams, b: &FnSetWi
     let a_instantiated = FnSetWithParams::new(a_params, a_dom, a_ret);
     let b_instantiated = FnSetWithParams::new(b_params, b_dom, b_ret);
 
-    a_instantiated.to_string() == b_instantiated.to_string()
+    Ok(a_instantiated.to_string() == b_instantiated.to_string())
 }
 
 fn param_def_with_set_rename_params_to_placeholders(
@@ -517,7 +521,16 @@ impl Runtime {
         let Some(stored_fn_set) = self.get_cloned_fn_set_where_fn_belongs_to(&element_obj) else {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         };
-        if fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set) {
+        if fn_set_with_params_equal_modulo_param_rename(self, &stored_fn_set, expected_fn_set)
+            .map_err(|e| {
+                VerifyError::new(
+                    Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                    String::new(),
+                    in_fact.line_file,
+                    Some(e),
+                )
+            })?
+        {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),

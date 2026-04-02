@@ -13,7 +13,7 @@ impl Runtime {
         _line_file: (usize, usize),
     ) -> Result<InferResult, RuntimeError> {
         let instantiated_types =
-            ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
+            self.inst_param_def_with_type_one_by_one(param_defs, args)?;
         let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
             param_defs,
             &instantiated_types,

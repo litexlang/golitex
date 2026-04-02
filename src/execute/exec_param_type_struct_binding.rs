@@ -25,7 +25,7 @@
 //! - 嵌套在 field 上（如 `g.h` 又是某个 struct）：`self ↦ FieldAccess(g.h)`。
 //!
 //! 该映射与形参代入 `param_to_arg_map` **合并**后，对 [`DefParamTypeStructStmt::facts`] 中每条
-//! [`OrAndChainAtomicFact`] 调用 [`OrAndChainAtomicFact::instantiate`]，再写入环境（见
+//! [`OrAndChainAtomicFact`] 经 [`Runtime::inst_or_and_chain_atomic_fact`] 代入后，再写入环境（见
 //! [`Runtime::store_instantiated_struct_def_facts_with_self`]）。
 //!
 //! ## [`Environment::cache_well_defined_obj`]
@@ -169,7 +169,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for (field_name, field_param_type) in def.fields.iter() {
-            let instantiated = field_param_type.instantiate(param_to_arg_map);
+            let instantiated = self.inst_param_type(field_param_type, param_to_arg_map)?;
             let fa = FieldAccess::new(root_param_name.to_string(), vec![field_name.clone()]);
             let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
             infer_result.new_infer_result_inside(fr);
@@ -230,7 +230,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         for (field_name, field_param_type) in def.fields.iter() {
-            let instantiated = field_param_type.instantiate(&param_to_arg_map);
+            let instantiated = self.inst_param_type(field_param_type, &param_to_arg_map)?;
             let fa = append_field_to_field_access(field_access, field_name);
             let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
             infer_result.new_infer_result_inside(fr);
@@ -265,7 +265,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         for fact in def.facts.iter() {
-            let instantiated = fact.instantiate(&extended);
+            let instantiated = self.inst_or_and_chain_atomic_fact(fact, &extended)?;
             let fr = self
                 .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(instantiated)
                 .map_err(RuntimeError::from)?;
@@ -321,7 +321,7 @@ impl Runtime {
             &def.params_def_with_type,
             &family_ty.params,
         );
-        let member_set = def.equal_to.instantiate(&param_to_arg_map);
+        let member_set = self.inst_obj(&def.equal_to, &param_to_arg_map)?;
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             subject,
             member_set,

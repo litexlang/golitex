@@ -131,7 +131,8 @@ impl Runtime {
             &stmt.exist_fact_in_witness.params_def_with_type,
             &stmt.equal_tos,
         );
-        let instantiated_exist_fact = stmt.exist_fact_in_witness.instantiate(&param_to_obj_map);
+        let instantiated_exist_fact =
+            self.inst_exist_fact(&stmt.exist_fact_in_witness, &param_to_obj_map)?;
 
         let verify_state_for_proof_check = VerifyState::new(0, false);
         for internal_fact_template in instantiated_exist_fact.facts.iter() {
