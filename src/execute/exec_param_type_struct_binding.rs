@@ -292,7 +292,7 @@ impl Runtime {
             )));
         }
 
-        if tuple.args.len() != def.fields.len() {
+        if tuple.args.len() != def.fields.len() + def.number_of_params() {
             return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "struct `{}`: tuple has {} component(s), definition has {} field(s) (must match)",
@@ -317,7 +317,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for (i, (_field_name, field_pt)) in def.fields.iter().enumerate() {
             let instantiated = self.inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)?;
-            let component = (*tuple.args[i]).clone();
+            let component = (*tuple.args[i + def.number_of_params()]).clone();
             let ir = self.define_param_binding_for_param_type_on_obj(component, &instantiated)?;
             infer_result.new_infer_result_inside(ir);
         }
