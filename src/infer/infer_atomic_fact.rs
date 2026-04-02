@@ -6,7 +6,7 @@ impl Runtime {
     pub(crate) fn infer_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<InferResult, InferError> {
+    ) -> Result<InferResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => self.infer_equal_fact(equal_fact),
             AtomicFact::InFact(in_fact) => self.infer_in_fact(in_fact),

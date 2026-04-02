@@ -31,27 +31,45 @@ impl Runtime {
         &mut self,
         name: &str,
         current_line_file: LineFile,
-    ) -> Result<(), ParseBlockError> {
+    ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(ParseBlockError::InvalidName(invalid_name_message));
+            return Err(RuntimeError::parse_error(
+                invalid_name_message,
+                default_line_file(),
+                None,
+            ));
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
             if let Some(name_already_defined_on_line_file) = names_in_scope.get(name) {
-                return Err(ParseBlockError::NameAlreadyUsed {
-                    name: name.to_string(),
-                    name_already_used_on_line_file: name_already_defined_on_line_file.clone(),
-                    line_file: current_line_file,
-                });
+                return Err(RuntimeError::parse_error(
+                    format!(
+                        "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
+                        name,
+                        name_already_defined_on_line_file.0,
+                        name_already_defined_on_line_file.1.as_ref(),
+                        current_line_file.0,
+                        current_line_file.1.as_ref(),
+                    ),
+                    current_line_file,
+                    None,
+                ));
             }
         }
 
         if self.is_name_used(name) {
-            return Err(ParseBlockError::NameAlreadyUsed {
-                name: name.to_string(),
-                name_already_used_on_line_file: default_line_file(),
-                line_file: current_line_file,
-            });
+            return Err(RuntimeError::parse_error(
+                format!(
+                    "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
+                    name,
+                    default_line_file().0,
+                    default_line_file().1.as_ref(),
+                    current_line_file.0,
+                    current_line_file.1.as_ref(),
+                ),
+                current_line_file,
+                None,
+            ));
         }
 
         Ok(())
@@ -65,7 +83,7 @@ impl Runtime {
         &mut self,
         names: &Vec<String>,
         line_file: LineFile,
-    ) -> Result<(), ParseBlockError> {
+    ) -> Result<(), RuntimeError> {
         for name in names {
             self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file.clone())?;
         }
@@ -76,7 +94,7 @@ impl Runtime {
         &mut self,
         name: &str,
         (line, path): LineFile,
-    ) -> Result<(), ParseBlockError> {
+    ) -> Result<(), RuntimeError> {
         self.validate_name(name, (line, path.clone()))?;
         if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
             names_in_top_scope.insert(name.to_string(), (line, path.clone()));

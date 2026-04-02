@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     /// Dispatch infer by fact kind.
     /// Example: `a $subset b` enters atomic infer branch.
-    pub fn infer(&mut self, fact: &Fact) -> Result<InferResult, InferError> {
+    pub fn infer(&mut self, fact: &Fact) -> Result<InferResult, RuntimeError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.infer_atomic_fact(atomic_fact),
             Fact::ExistFact(exist_fact) => self.infer_exist_fact(exist_fact),
@@ -20,7 +20,7 @@ impl Runtime {
     pub fn infer_exist_or_and_chain_atomic_fact(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
-    ) -> Result<InferResult, InferError> {
+    ) -> Result<InferResult, RuntimeError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.infer_atomic_fact(atomic_fact)
@@ -35,7 +35,7 @@ impl Runtime {
     pub fn infer_or_and_chain_atomic_fact(
         &mut self,
         fact: &OrAndChainAtomicFact,
-    ) -> Result<InferResult, InferError> {
+    ) -> Result<InferResult, RuntimeError> {
         match fact {
             OrAndChainAtomicFact::AtomicFact(atomic_fact) => self.infer_atomic_fact(atomic_fact),
             OrAndChainAtomicFact::AndFact(and_fact) => self.infer_and_fact(and_fact),
@@ -44,30 +44,30 @@ impl Runtime {
         }
     }
 
-    fn infer_exist_fact(&mut self, _exist_fact: &ExistFact) -> Result<InferResult, InferError> {
+    fn infer_exist_fact(&mut self, _exist_fact: &ExistFact) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }
 
-    fn infer_or_fact(&mut self, _or_fact: &OrFact) -> Result<InferResult, InferError> {
+    fn infer_or_fact(&mut self, _or_fact: &OrFact) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }
 
-    fn infer_and_fact(&mut self, _and_fact: &AndFact) -> Result<InferResult, InferError> {
+    fn infer_and_fact(&mut self, _and_fact: &AndFact) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }
 
-    fn infer_chain_fact(&mut self, _chain_fact: &ChainFact) -> Result<InferResult, InferError> {
+    fn infer_chain_fact(&mut self, _chain_fact: &ChainFact) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }
 
-    fn infer_forall_fact(&mut self, _forall_fact: &ForallFact) -> Result<InferResult, InferError> {
+    fn infer_forall_fact(&mut self, _forall_fact: &ForallFact) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }
 
     fn infer_forall_fact_with_iff(
         &mut self,
         _forall_fact_with_iff: &ForallFactWithIff,
-    ) -> Result<InferResult, InferError> {
+    ) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }
 }

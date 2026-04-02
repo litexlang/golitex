@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_know_stmt(
         &mut self,
         know_stmt: &KnowStmt,
-    ) -> Result<NonErrStmtExecResult, ExecStmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
         let mut infer_result = InferResult::new();
         for fact in know_stmt.facts.iter() {
             let fact_infer_result = self
@@ -13,7 +13,7 @@ impl Runtime {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|e| {
-                    ExecStmtError::new_with_stmt(
+                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         Stmt::KnowStmt(know_stmt.clone()),
                         "".to_string(),
                         Some(e.into()),

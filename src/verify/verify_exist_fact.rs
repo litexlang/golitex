@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::ExistFact(exist_fact.clone()))
         {
@@ -16,7 +16,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
-                return Err(VerifyError::new(
+                return Err(RuntimeError::verify_error(
                     Fact::ExistFact(exist_fact.clone()),
                     String::new(),
                     exist_fact.line_file(),
@@ -42,7 +42,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFact,
         known_exist_fact: &ExistFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
                 self,
@@ -63,12 +63,12 @@ impl Runtime {
         environment: &Environment,
         exist_fact: &ExistFact,
         known_exist_fact: &ExistFact,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key())
         {
             let target_string = Self::exist_fact_normalized_string(runtime, exist_fact)
                 .map_err(|e| {
-                    VerifyError::new(
+                    RuntimeError::verify_error(
                         Fact::ExistFact(exist_fact.clone()),
                         String::new(),
                         exist_fact.line_file(),
@@ -78,7 +78,7 @@ impl Runtime {
             for known_fact in known_exist_facts.iter() {
                 let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
                     .map_err(|e| {
-                        VerifyError::new(
+                        RuntimeError::verify_error(
                             Fact::ExistFact(exist_fact.clone()),
                             String::new(),
                             exist_fact.line_file(),

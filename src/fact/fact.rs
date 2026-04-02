@@ -57,6 +57,10 @@ impl Fact {
             Fact::ForallFactWithIff(f) => f.line_file.clone(),
         }
     }
+
+    pub fn into_stmt(self) -> Stmt {
+        return Stmt::Fact(self);
+    }
 }
 
 impl Fact {

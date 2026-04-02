@@ -7,7 +7,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if stmt.params.len() != stmt.param_sets.len() {
             return Err(RuntimeError::from(
-                ExecStmtError::with_message_and_cause(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     "by for: number of params does not match number of ranges".to_string(),
                     None,
@@ -17,7 +17,7 @@ impl Runtime {
         }
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::from(ExecStmtError::with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 Stmt::ForAxiomStmt(stmt.clone()),
                 msg,
                 None,
@@ -26,7 +26,7 @@ impl Runtime {
         })?;
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::from(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     format!(
                         "by for: corresponding forall `{}` is not well-defined",
@@ -40,7 +40,7 @@ impl Runtime {
         let param_value_strings_of_each_param = self
             .for_param_value_strings_of_each_param(stmt)
             .map_err(|msg| {
-                RuntimeError::from(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     msg,
                     None,
@@ -56,7 +56,7 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(ExecStmtError::with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
                         format!(
                             "by for: failed to store corresponding forall `{}`",
@@ -101,7 +101,7 @@ impl Runtime {
                 corresponding_forall_fact.clone(),
             )
             .map_err(|store_fact_error| {
-                RuntimeError::from(ExecStmtError::with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForAxiomStmt(stmt.clone()),
                     format!(
                         "by for: failed to store corresponding forall `{}`",
@@ -134,7 +134,7 @@ impl Runtime {
             match value {
                 Some(number) => number.normalized_value,
                 _ => {
-                    return Err(UnknownError::new(
+                    return Err(RuntimeError::unknown_error(
                         format!(
                             "by for: range boundary `{}` must be a calculable number expression",
                             number_like_obj
@@ -148,7 +148,7 @@ impl Runtime {
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(UnknownError::new(
+            return Err(RuntimeError::unknown_error(
                 format!(
                     "by for: range boundary `{}` is not an integer number",
                     number_like_obj
@@ -305,7 +305,7 @@ impl Runtime {
                 let verify_reversed_dom_result =
                     self.verify_atomic_fact(&reversed, &VerifyState::new(0, false))?;
                 if verify_reversed_dom_result.is_unknown() {
-                    return Err(RuntimeError::from(ExecStmtError::with_message_and_cause(
+                    return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
                         format!(
                             "by for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown",
@@ -336,7 +336,7 @@ impl Runtime {
             )?;
             if verified_result.is_unknown() {
                 return Err(RuntimeError::from(
-                    ExecStmtError::with_message_and_cause(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ForAxiomStmt(stmt.clone()),
                         format!("by for: failed to prove `{}`", fact_to_prove),
                         None,

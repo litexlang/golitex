@@ -32,7 +32,7 @@ impl Runtime {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
                     return Err(RuntimeError::from(
-                        ExecStmtError::with_message_and_cause(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::ProveStmt(stmt.clone()),
                             proof_stmt.to_string(),
                             Some(statement_error),

@@ -7,12 +7,12 @@ impl Runtime {
         obj: Obj,
         struct_ty: &StructParamType,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let struct_name = struct_ty.name.to_string();
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(VerifyError::new_message_only(
+                return Err(RuntimeError::verify_error_message_only(
                     format!("struct `{}` is not defined", struct_name),
                     default_line_file(),
                     None,
@@ -22,7 +22,7 @@ impl Runtime {
 
         let number_of_params_in_def = def.number_of_params();
         if number_of_params_in_def != struct_ty.args.len() {
-            return Err(VerifyError::new_message_only(
+            return Err(RuntimeError::verify_error_message_only(
                 format!(
                     "struct `{}` definition expects {} parameter(s), but struct type has {} argument(s)",
                     def.name,
@@ -53,7 +53,7 @@ impl Runtime {
                 {
                     if def.name.to_string() != struct_ty.name.to_string() {
                         // TODO
-                        return Err(VerifyError::new_message_only(
+                        return Err(RuntimeError::verify_error_message_only(
                             format!("{} satisfies struct `{}`, but it should satisfy struct `{}`", obj.to_string(), def.name.to_string(), struct_ty.name.to_string()),
                             default_line_file(),
                             None,
@@ -88,11 +88,11 @@ impl Runtime {
         struct_param_type: &StructParamType,
         struct_def: &DefParamTypeStructStmt,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let args_of_struct_param_type = &struct_param_type.args;
         let expected_tuple_len = args_of_struct_param_type.len() + struct_def.fields.len();
         if expected_tuple_len != tuple.args.len() {
-            return Err(VerifyError::new_message_only(
+            return Err(RuntimeError::verify_error_message_only(
                 format!(
                     "tuple for struct `{}` should have {} component(s), got {}",
                     struct_param_type.name,
@@ -145,7 +145,7 @@ impl Runtime {
             let instantiated_field_type = self
                 .inst_param_type(&field_type.to_param_type(), &param_arg_map)
                 .map_err(|e| {
-                    VerifyError::new_message_only(
+                    RuntimeError::verify_error_message_only(
                         format!(
                             "failed to instantiate field type {} of struct `{}`",
                             i, struct_def.name
@@ -174,7 +174,7 @@ impl Runtime {
             let instantiated = self
                 .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map)
                 .map_err(|e| {
-                    VerifyError::new_message_only(
+                    RuntimeError::verify_error_message_only(
                         format!(
                             "struct `{}`: failed to instantiate `<=>:` fact: {}",
                             struct_def.name, e

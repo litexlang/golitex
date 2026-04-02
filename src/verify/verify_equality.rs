@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.verify_objs_are_equal(
             &equal_fact.left,
             &equal_fact.right,
@@ -21,7 +21,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut result =
             self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
         if result.is_true() {
@@ -76,7 +76,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let left_string = left.to_string();
         let right_string = right.to_string();
 
@@ -128,7 +128,7 @@ impl Runtime {
         right_right: &Obj,
         verify_state: &VerifyState,
         equality_line_file: LineFile,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
             left_left,
             right_left,
@@ -156,7 +156,7 @@ impl Runtime {
         right_value: &Obj,
         verify_state: &VerifyState,
         equality_line_file: LineFile,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
             left_value,
             right_value,
@@ -175,7 +175,7 @@ impl Runtime {
         right_values: &Vec<Box<Obj>>,
         verify_state: &VerifyState,
         equality_line_file: LineFile,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         if left_values.len() != right_values.len() {
             return Ok(false);
         }
@@ -202,7 +202,7 @@ impl Runtime {
         right_fn_obj: &FnObj,
         verify_state: &VerifyState,
         equality_line_file: LineFile,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         if left_fn_obj.body.len() != right_fn_obj.body.len() {
             return Ok(false);
         }
@@ -232,7 +232,7 @@ impl Runtime {
         right_fn_obj: &FnObj,
         verify_state: &VerifyState,
         equality_line_file: LineFile,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         let mut remaining_left_group_count = left_fn_obj.body.len();
         let mut remaining_right_group_count = right_fn_obj.body.len();
 
@@ -269,7 +269,7 @@ impl Runtime {
         right_obj: &Obj,
         verify_state: &VerifyState,
         equality_line_file: LineFile,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<bool, RuntimeError> {
         match (left_obj, right_obj) {
             (Obj::FnObj(left_fn_obj), Obj::FnObj(right_fn_obj)) => {
                 if left_fn_obj.body.len() == right_fn_obj.body.len()
@@ -496,7 +496,7 @@ impl Runtime {
         right_obj: &Obj,
         verify_state: &VerifyState,
         equality_line_file: LineFile,
-    ) -> Result<NonErrStmtExecResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut result = self.verify_equality_by_builtin_rules(
             left_obj,
             right_obj,
