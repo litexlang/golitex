@@ -51,6 +51,26 @@ impl Runtime {
         .map_err(|e| {
             parsing_error_from_parse_block_error(e, tb.line_file.clone(), None)
         })?;
+
+        if tb.current_token_is_equal_to(COLON) {
+            tb.skip_token(COLON)?;
+        } else {
+            if !tb.exceed_end_of_head() {
+                return Err(ParsingError::new(
+                    "expect `:` after `}` in prop statement".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ));
+            } else {
+                return Ok(DefPropWithMeaningStmt::new(
+                    name,
+                    param_defs,
+                    vec![],
+                    tb.line_file.clone(),
+                ));
+            }
+        }
+        
         let facts = self.parse_facts_in_body(tb)?;
         Ok(DefPropWithMeaningStmt::new(
             name,
