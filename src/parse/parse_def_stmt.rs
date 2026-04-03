@@ -13,14 +13,12 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
-                tb.line_file.clone(),
-                Some(
-                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(
-                        &stmt_ok.name,
-                    ),
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                RuntimeError::message_text_for_duplicate_used_name_without_line_file(
+                    &stmt_ok.name,
                 ),
+                tb.line_file.clone(),
+                Some(e),
             )
         })?;
 
@@ -35,10 +33,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                    e,
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
                     tb.line_file.clone(),
-                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
+                    Some(e),
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
@@ -53,10 +51,10 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                String::new(),
                 tb.line_file.clone(),
-                None,
+                Some(e),
             )
         })?;
 
@@ -104,14 +102,12 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
-                tb.line_file.clone(),
-                Some(
-                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(
-                        &stmt_ok.name,
-                    ),
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                RuntimeError::message_text_for_duplicate_used_name_without_line_file(
+                    &stmt_ok.name,
                 ),
+                tb.line_file.clone(),
+                Some(e),
             )
         })?;
         Ok(Stmt::DefAbstractPropStmt(stmt_ok))
@@ -125,10 +121,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                    e,
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
                     tb.line_file.clone(),
-                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
+                    Some(e),
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
@@ -146,10 +142,10 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                String::new(),
                 tb.line_file.clone(),
-                None,
+                Some(e),
             )
         })?;
 
@@ -190,10 +186,10 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                String::new(),
                 tb.line_file.clone(),
-                None,
+                Some(e),
             )
         })?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
@@ -230,10 +226,10 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                String::new(),
                 tb.line_file.clone(),
-                None,
+                Some(e),
             )
         })?;
 
@@ -263,10 +259,10 @@ impl Runtime {
 
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                    e,
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
                     tb.line_file.clone(),
-                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
+                    Some(e),
                 )
             })?;
 
@@ -318,10 +314,10 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                String::new(),
                 tb.line_file.clone(),
-                None,
+                Some(e),
             )
         })?;
 
@@ -347,10 +343,10 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                String::new(),
                 tb.line_file.clone(),
-                None,
+                Some(e),
             )
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
@@ -385,10 +381,10 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                e,
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                String::new(),
                 tb.line_file.clone(),
-                None,
+                Some(e),
             )
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
@@ -413,10 +409,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                    e,
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
                     tb.line_file.clone(),
-                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
+                    Some(e),
                 )
             })?;
 
@@ -461,10 +457,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                    e,
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
                     tb.line_file.clone(),
-                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
+                    Some(e),
                 )
             })?;
 

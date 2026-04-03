@@ -1,0 +1,175 @@
+# --- Fact ---
+1 + 1 = 2
+forall a R, b R:
+    (a + b) ^ 2 = a ^ 2 + 2 * a * b + b ^ 2
+2 $in Q
+1 < 2
+$is_set(R)
+$is_nonempty_set(R)
+$is_finite_set({1, 2})
+
+# --- DefLetStmt ---
+let tmp_x R:
+    tmp_x = 1
+
+# --- DefAbstractPropStmt ---（括号内为参数名列表，无 `a R` 这种类型标注）
+abstract_prop tmp_q(a, b)
+
+# --- DefPropStmt ---
+prop tmp_p(z R):
+    $tmp_q(z, z)
+
+# --- HaveObjInNonemptySetStmt ---
+have tmp_y R
+
+# --- HaveObjEqualStmt ---
+have tmp_z R = 1
+
+# --- KnowStmt（单行原子事实链）---
+know tmp_x = 1
+
+# --- HaveExistObjStmt（exist 需为已知；`have by exist ... : name1, name2` 整句在同一标题行）---
+witness exist tmp_u, tmp_v R st {tmp_u > tmp_v} from 1, 0:
+    1 > 0
+exist tmp_u, tmp_v R st {tmp_u > tmp_v}
+
+have by exist tmp_u2, tmp_v2 R st {tmp_u2 > tmp_v2}: tmp_u2, tmp_v2
+
+# --- ProveStmt + DoNothingStmt ---
+prove:
+    have a R = 1
+    a = 1
+
+do_nothing
+
+# --- ClaimStmt ---
+claim:
+    prove:
+        tmp_z = 1
+    tmp_z = 1
+
+# --- HaveFnEqualStmt（在 proof 里常见）---
+prove:
+    have fn tmp_id(a R) R = a
+    tmp_id(1) = 1
+
+# --- HaveFnEqualCaseByCaseStmt（见 examples/comprehensive_examples/have.lit）---
+prove:
+    have fn tmp_piece(x R) R =:
+        case x = 2: 3
+        case x != 2: 4
+    tmp_piece(2) = 3
+
+# --- DefFamilyStmt ---
+family tmp_seq(s set) = fn(x N_pos) s
+
+forall a family tmp_seq(R):
+    a(1) = a(1)
+
+# --- DefAlgoStmt（极简：先 have fn 再走 algo；多分支时见 examples/algo.lit）---
+prove:
+    have fn tmp_f_algo(x R) R = 1
+
+    algo tmp_f_algo(x):
+        1
+
+# --- DefParamTypeStructStmt（常放在 prove 里；依赖 prop 约束）---
+prove:
+    abstract_prop tmp_sg(s, u, v)
+    struct tmp_group(s set):
+        one s
+        op fn(a s, b s) s
+        <=>:
+            $tmp_sg(s, self.one, self.op)
+
+    forall a tmp_group(R):
+        a.one $in R
+        a.op $in fn(R, R)R
+        $tmp_sg(R, a.one, a.op)
+
+# --- WitnessNonemptySet ---
+have tmp_s set = {1, 2}
+witness $is_nonempty_set(tmp_s) from 1:
+    1 $in {1, 2}
+    1 $in tmp_s
+
+# --- by cases / contra / enumerate / induc / for / extension ---
+by cases:
+    prove:
+        1 = 1
+    case 1 = 1:
+        do_nothing
+
+abstract_prop tmp_pc(w)
+have tmp_b R, tmp_c R
+know forall t R:
+    $tmp_pc(t + tmp_b)
+    =>:
+        $tmp_pc(t)
+know not $tmp_pc(tmp_c)
+by contra:
+    prove:
+        not $tmp_pc(tmp_c + tmp_b)
+    impossible $tmp_pc(tmp_c)
+
+by enumerate tmp_e {1, 2}:
+    prove:
+        tmp_e = 1 or tmp_e = 2
+    do_nothing
+
+abstract_prop tmp_pi(n)
+know:
+    $tmp_pi(0)
+    forall tmp_n Z:
+        tmp_n >= 0
+        $tmp_pi(tmp_n)
+        =>:
+            $tmp_pi(tmp_n + 1)
+by induc tmp_k from 0:
+    $tmp_pi(tmp_k)
+
+by for tmp_i range(0, 3):
+    prove:
+        tmp_i < 3
+    do_nothing
+
+by extension:
+    prove:
+        {1, 2} = {2, 1}
+    by enumerate tmp_x {1, 2}:
+        prove:
+            tmp_x $in {2, 1}
+        do_nothing
+    by enumerate tmp_y {2, 1}:
+        prove:
+            tmp_y $in {1, 2}
+        do_nothing
+
+# --- by fn_def / by_cart_def（语法示意；当前内核 exec 对 ByFnDefAxiomStmt 等可能为 unimplemented，勿与下面可跑段落混跑）---
+"
+prove:
+    have fn tmp_inc(a R) R = a + 1
+    by fn_def tmp_inc
+
+prove:
+    by cart_def cart(R, N)
+"
+
+# --- EvalStmt（解析器：`eval <obj>`；当前内核对非 fnObj 常抛 ExecStmtError，示例先注释）---
+# eval 1 + 2
+
+# --- ImportStmt / RunFileStmt（路径随环境变化；需要时再解开注释）---
+# import "examples/atomic_fact.lit"
+# run_file "examples/runfile2.lit"
+
+# --- WitnessExistFact 已在上方与 have by exist 一起出现 ---
+
+# ========== 备用片段（整段在 """ """ 之间，不被 tokenizer 吃进）==========
+"
+# ProveStmt 等价最小形：
+prove:
+    know 2 = 2
+
+# RunFileStmt 语法：
+# run_file \"./examples/runfile2.lit\"
+"
