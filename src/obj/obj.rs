@@ -188,7 +188,7 @@ pub struct SetBuilder {
 
 #[derive(Clone)]
 pub struct FnSetWithParams {
-    pub params_def_with_set: Vec<ParamDefWithParamSet>,
+    pub params_def_with_set: Vec<ParamGroupWithSet>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Box<Obj>,
 }
@@ -351,7 +351,7 @@ impl SetBuilder {
 
 impl FnSetWithParams {
     pub fn new(
-        params_and_their_sets: Vec<ParamDefWithParamSet>,
+        params_and_their_sets: Vec<ParamGroupWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Self {
@@ -363,11 +363,11 @@ impl FnSetWithParams {
     }
 
     pub fn params(&self) -> Vec<String> {
-        let mut ret = Vec::with_capacity(ParamDefWithParamSet::number_of_params(
+        let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
             &self.params_def_with_set,
         ));
         for param_def_with_set in &self.params_def_with_set {
-            ret.extend(param_def_with_set.0.iter().cloned());
+            ret.extend(param_def_with_set.params.iter().cloned());
         }
         ret
     }

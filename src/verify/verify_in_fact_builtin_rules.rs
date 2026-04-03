@@ -51,9 +51,9 @@ fn fn_set_with_params_equal_modulo_param_rename(
 }
 
 fn param_def_with_set_rename_params_to_placeholders(
-    groups: &[ParamDefWithParamSet],
+    groups: &[ParamGroupWithSet],
     flat_param_names: &[String],
-) -> Vec<ParamDefWithParamSet> {
+) -> Vec<ParamGroupWithSet> {
     let mut name_to_i: HashMap<String, usize> = HashMap::new();
     for (i, n) in flat_param_names.iter().enumerate() {
         name_to_i.insert(n.clone(), i);
@@ -61,15 +61,15 @@ fn param_def_with_set_rename_params_to_placeholders(
     let mut out = Vec::with_capacity(groups.len());
     for g in groups {
         let new_names: Vec<String> = g
-            .0
+            .params
             .iter()
             .map(|n| {
                 let i = name_to_i[n];
                 format!("##{}", i)
             })
             .collect();
-        let set_obj = g.1.clone();
-        out.push(ParamDefWithParamSet(new_names, set_obj));
+        let set_obj = g.set.clone();
+        out.push(ParamGroupWithSet::new(new_names, set_obj));
     }
     out
 }

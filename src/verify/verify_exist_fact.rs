@@ -108,12 +108,12 @@ impl Runtime {
         exist_fact: &ExistFact,
     ) -> Result<String, RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        let mut normalized_params: Vec<ParamDefWithParamTypeTuple> = Vec::new();
+        let mut normalized_params: Vec<ParamGroupWithParamType> = Vec::new();
         let mut param_index: usize = 0;
 
         for param_def_with_type in exist_fact.params_def_with_type().iter() {
             let mut new_param_names: Vec<String> = Vec::new();
-            for original_name in param_def_with_type.0.iter() {
+            for original_name in param_def_with_type.params.iter() {
                 let normalized_name = format!("#{}", param_index);
                 param_index += 1;
 
@@ -125,8 +125,8 @@ impl Runtime {
             }
 
             let instantiated_param_type =
-                runtime.inst_param_type(&param_def_with_type.1, &param_to_arg_map)?;
-            normalized_params.push(ParamDefWithParamTypeTuple(
+                runtime.inst_param_type(&param_def_with_type.param_type, &param_to_arg_map)?;
+            normalized_params.push(ParamGroupWithParamType::new(
                 new_param_names,
                 instantiated_param_type,
             ));
@@ -144,8 +144,8 @@ impl Runtime {
         for param_def_with_type in normalized_params.iter() {
             params_string_parts.push(format!(
                 "{} {}",
-                param_def_with_type.0.join(","),
-                param_def_with_type.1
+                param_def_with_type.params.join(","),
+                param_def_with_type.param_type
             ));
         }
         let params_string = params_string_parts.join("; ");
