@@ -13,10 +13,10 @@ impl Runtime {
         let stmt_ok = stmt?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
                     e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name)),
+                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&stmt_ok.name)),
                 )
             })?;
 
@@ -31,10 +31,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
                     e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
+                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
@@ -49,14 +49,14 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
         })?;
 
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
         } else {
             if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::parse_error(
+                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                     "expect `:` or end of line after `)` in prop statement".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -91,10 +91,10 @@ impl Runtime {
         let stmt_ok = stmt?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
                     e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&stmt_ok.name)),
+                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&stmt_ok.name)),
                 )
             })?;
         Ok(Stmt::DefAbstractPropStmt(stmt_ok))
@@ -108,10 +108,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
                     e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
+                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
@@ -126,7 +126,7 @@ impl Runtime {
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
             })?;
 
         Ok(DefAbstractPropStmt::new(name, params, tb.line_file.clone()))
@@ -147,7 +147,7 @@ impl Runtime {
             tb.skip_token(COLON)?;
 
             if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::parse_error(
+                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                     "expect end of line after `:` in let statement".to_string(),
                     tb.line_file.clone(),
                     None,
@@ -164,7 +164,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
         })?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
@@ -186,7 +186,7 @@ impl Runtime {
             }
         }
         if param_defs.is_empty() {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "have expects at least one param type pair".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -198,7 +198,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
         })?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
@@ -227,10 +227,10 @@ impl Runtime {
 
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
                     e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
+                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
                 )
             })?;
 
@@ -279,7 +279,7 @@ impl Runtime {
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
             })?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
@@ -304,7 +304,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -338,7 +338,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -362,10 +362,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
                     e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
+                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
                 )
             })?;
 
@@ -382,7 +382,7 @@ impl Runtime {
     ) -> Result<Stmt, RuntimeError> {
         let (params_def_with_type, dom_facts) = self.parse_braced_params_and_optional_dom_facts(tb)?;
         if !tb.current_token_is_equal_to(EQUAL) {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "family definition expects `=` after `}`".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -407,10 +407,10 @@ impl Runtime {
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
             .map_err(|e| {
-                RuntimeError::parse_error_wrap(
+                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
                     e,
                     tb.line_file.clone(),
-                    Some(RuntimeError::duplicate_used_name_error_msg_without_line_file(&name)),
+                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name)),
                 )
             })?;
 
@@ -428,7 +428,7 @@ impl Runtime {
         let (param_defs, dom_facts) =
             self.parse_braced_struct_field_params_and_optional_dom_facts(tb)?;
         if tb.current_token_is_equal_to(EQUAL) {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "use `family` for set-style definitions (`... {} = ...`); `struct` requires field definitions after `:`"
                     .to_string(),
                 tb.line_file.clone(),
@@ -438,7 +438,7 @@ impl Runtime {
         tb.skip_token(COLON)?;
 
         if tb.body.is_empty() {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "struct with fields expects body".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -452,7 +452,7 @@ impl Runtime {
         let last_index = body_len - 1;
         let last_is_equiv = {
             let last = tb.body.get(last_index).ok_or_else(|| {
-                RuntimeError::parse_error("Expected body".to_string(), tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_with_msg_position_previous_error("Expected body".to_string(), tb.line_file.clone(), None)
             })?;
             last.current_token_is_equal_to(EQUIVALENT_SIGN)
         };
@@ -461,7 +461,7 @@ impl Runtime {
 
         for i in 0..field_end {
             let block = tb.body.get_mut(i).ok_or_else(|| {
-                RuntimeError::parse_error("Expected field block".to_string(), tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_with_msg_position_previous_error("Expected field block".to_string(), tb.line_file.clone(), None)
             })?;
             let field_name = block.advance()?;
             let cond = self.parse_struct_field_type(block)?;
@@ -470,7 +470,7 @@ impl Runtime {
 
         if last_is_equiv {
             let last = tb.body.get_mut(last_index).ok_or_else(|| {
-                RuntimeError::parse_error("Expected <=>: block".to_string(), tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_with_msg_position_previous_error("Expected <=>: block".to_string(), tb.line_file.clone(), None)
             })?;
             last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
             for block in last.body.iter_mut() {
@@ -482,7 +482,7 @@ impl Runtime {
         let mut seen = HashSet::new();
         for (field_name, _) in fields.iter() {
             if !seen.insert(field_name.clone()) {
-                return Err(RuntimeError::parse_error(
+                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                     format!(
                         "struct `{}`: duplicate field `{}`",
                         name, field_name

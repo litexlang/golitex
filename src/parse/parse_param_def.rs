@@ -50,7 +50,7 @@ impl Runtime {
                     ParamType::Family(f) => StructFieldType::Family(f),
                     _ => unreachable!(),
                 }),
-            STRUCT => Err(RuntimeError::parse_error(
+            STRUCT => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "nested `struct` types are not allowed in struct parameter and field types".to_string(),
                 tb.line_file.clone(),
                 None,

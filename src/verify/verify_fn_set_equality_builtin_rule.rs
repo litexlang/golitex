@@ -20,7 +20,7 @@ fn fn_set_equality_verify_error(
     message: String,
     cause: Option<RuntimeError>,
 ) -> RuntimeError {
-    RuntimeError::verify_error(
+    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
         fn_set_equality_fact(left, right, line_file.clone()),
         message,
         line_file,
