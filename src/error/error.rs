@@ -233,23 +233,6 @@ impl RuntimeError {
         ))
     }
 
-    pub fn new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-        inner: RuntimeError,
-        outer_line_file: LineFile,
-        outer_summary: Option<String>,
-    ) -> Self {
-        let RuntimeError::ParseError(inner_struct) = inner else {
-            return inner;
-        };
-        let summary = outer_summary.unwrap_or_else(|| inner_struct.msg.clone());
-        RuntimeError::ParseError(RuntimeErrorStruct::new(
-            None,
-            summary,
-            outer_line_file,
-            Some(RuntimeError::ParseError(inner_struct)),
-        ))
-    }
-
     pub fn new_parse_error_for_block_unexpected_indent_at_line_file(line_file: LineFile) -> Self {
         let (line_no, path) = (line_file.0, line_file.1.as_ref());
         Self::new_parse_error_with_msg_position_previous_error(
