@@ -19,7 +19,7 @@ impl Runtime {
             }
         };
         let expected_count =
-            ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+            ParamDefWithParamTypeTuple::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
             return Err(RuntimeError::new_verify_error_with_msg_position_previous_error(
                 format!(
@@ -32,7 +32,7 @@ impl Runtime {
                 None,
             ));
         }
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_ty.params,
         );

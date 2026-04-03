@@ -144,6 +144,30 @@ pub fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &st
     }
 }
 
+/// 带符号加法 a + b（系数合并用；`add_decimal_str_and_normalize` 仅适用于非负操作数）
+pub fn add_signed_decimal_str(a: &str, b: &str) -> String {
+    let (a_neg, a_mag) = split_sign_and_magnitude(a);
+    let (b_neg, b_mag) = split_sign_and_magnitude(b);
+    match (a_neg, b_neg) {
+        (false, false) => add_decimal_str_and_normalize(&a_mag, &b_mag),
+        (true, true) => {
+            let sum_mag = add_decimal_str_and_normalize(&a_mag, &b_mag);
+            if sum_mag == "0" {
+                "0".to_string()
+            } else {
+                normalize_decimal_number_string(&format!("-{}", sum_mag))
+            }
+        }
+        (false, true) => sub_decimal_str_and_normalize(&a_mag, &b_mag),
+        (true, false) => sub_decimal_str_and_normalize(&b_mag, &a_mag),
+    }
+}
+
+/// 带符号减法 a - b
+pub fn sub_signed_decimal_str(a: &str, b: &str) -> String {
+    add_signed_decimal_str(a, &mul_signed_decimal_str(b, "-1"))
+}
+
 impl Obj {
     pub fn replace_with_numeric_result_if_can_be_calculated(&self) -> (Obj, bool) {
         if let Some(calculated_number) = self.evaluate_to_normalized_decimal_number() {

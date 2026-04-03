@@ -27,11 +27,11 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<Fact, RuntimeError> {
         tb.skip_token(FORALL)?;
-        let mut param_def: Vec<ParamDefWithParamType> = vec![];
+        let mut param_def: Vec<ParamDefWithParamTypeTuple> = vec![];
         while tb.current()? != COLON {
             param_def.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
-        let forall_param_names = ParamDefWithParamType::collect_param_names(&param_def);
+        let forall_param_names = ParamDefWithParamTypeTuple::collect_param_names(&param_def);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &forall_param_names,
             tb.line_file.clone(),
@@ -62,7 +62,7 @@ impl Runtime {
     fn parse_forall_with_iff(
         &mut self,
         tb: &mut TokenBlock,
-        param_def: Vec<ParamDefWithParamType>,
+        param_def: Vec<ParamDefWithParamTypeTuple>,
     ) -> Result<Fact, RuntimeError> {
         if tb.body.len() < 2 {
             return Err(
@@ -120,7 +120,7 @@ impl Runtime {
     fn parse_forall(
         &mut self,
         tb: &mut TokenBlock,
-        param_def: Vec<ParamDefWithParamType>,
+        param_def: Vec<ParamDefWithParamTypeTuple>,
     ) -> Result<Fact, RuntimeError> {
         let last_body = tb.body.last().ok_or_else(|| {
             RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -204,11 +204,11 @@ impl Runtime {
 
     fn parse_exist_fact_body(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, RuntimeError> {
         tb.skip_token(EXIST)?;
-        let mut param_def: Vec<ParamDefWithParamType> = vec![];
+        let mut param_def: Vec<ParamDefWithParamTypeTuple> = vec![];
         while tb.current()? != ST {
             param_def.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
-        let exist_param_names = ParamDefWithParamType::collect_param_names(&param_def);
+        let exist_param_names = ParamDefWithParamTypeTuple::collect_param_names(&param_def);
         self.push_parsing_time_name_scope();
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &exist_param_names,

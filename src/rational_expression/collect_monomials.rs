@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::rational_expression::evaluate::{
-    add_decimal_str_and_normalize, mul_decimal_str_and_normalize, sub_decimal_str_and_normalize,
+    add_signed_decimal_str, mul_signed_decimal_str, sub_signed_decimal_str,
 };
 use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 
@@ -53,7 +53,7 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
             }
 
             if left_monomial.operands_equal(right_monomial) {
-                let new_scalar = sub_decimal_str_and_normalize(
+                let new_scalar = sub_signed_decimal_str(
                     &left_monomial.non_zero_scalar,
                     &right_monomial.non_zero_scalar,
                 );
@@ -80,7 +80,8 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
         if already_processed_indexes.contains(&j) {
             continue;
         }
-        let negated_scalar = sub_decimal_str_and_normalize("0", &right_monomial.non_zero_scalar);
+        let negated_scalar =
+            sub_signed_decimal_str("0", &right_monomial.non_zero_scalar);
         if let Some(m) =
             MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
                 negated_scalar,
@@ -121,7 +122,7 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
             }
 
             if left_monomial.operands_equal(right_monomial) {
-                let new_scalar = add_decimal_str_and_normalize(
+                let new_scalar = add_signed_decimal_str(
                     &left_monomial.non_zero_scalar,
                     &right_monomial.non_zero_scalar,
                 );
@@ -222,7 +223,7 @@ fn collect_monomials_of_mul_of_monomial_vec(
         for j in (i + 1)..collect_monomials_after_mul.len() {
             let current_right_monomial = &collect_monomials_after_mul[j];
             if monomial.operands_equal(current_right_monomial) {
-                current_scalar = add_decimal_str_and_normalize(
+                current_scalar = add_signed_decimal_str(
                     current_scalar.as_str(),
                     current_right_monomial.non_zero_scalar.as_str(),
                 );
@@ -314,7 +315,7 @@ fn multiply_numbers_to_monomial(
     left: &str,
     right: &MonomialWithNonZeroScalarAndOrderedOperands,
 ) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {
-    let scalar = mul_decimal_str_and_normalize(left, right.non_zero_scalar.as_str());
+    let scalar = mul_signed_decimal_str(left, right.non_zero_scalar.as_str());
     MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
         scalar,
         right.ordered_operands.clone(),
@@ -334,7 +335,7 @@ fn multiply_two_non_zero_monomials_with_operands(
         .as_ref()
         .map_or(0, |ordered_operands| ordered_operands.len());
     let mut new_operands = Vec::with_capacity(left_operand_count + right_operand_count);
-    let new_scalar = mul_decimal_str_and_normalize(&left.non_zero_scalar, &right.non_zero_scalar);
+    let new_scalar = mul_signed_decimal_str(&left.non_zero_scalar, &right.non_zero_scalar);
     if let Some(operands) = left.ordered_operands.as_ref() {
         for operand in operands.iter() {
             let obj = operand.0.clone();

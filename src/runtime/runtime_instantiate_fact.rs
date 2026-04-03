@@ -529,7 +529,7 @@ impl Runtime {
     ) -> Result<ExistFact, RuntimeError> {
         let mut params_def_with_type = Vec::with_capacity(exist_fact.params_def_with_type.len());
         for param_def_with_type in exist_fact.params_def_with_type.iter() {
-            params_def_with_type.push(ParamDefWithParamType(
+            params_def_with_type.push(ParamDefWithParamTypeTuple(
                 param_def_with_type.0.clone(),
                 self.inst_param_type(&param_def_with_type.1, param_to_arg_map)?,
             ));
@@ -598,7 +598,7 @@ impl Runtime {
     ) -> Result<ForallFact, RuntimeError> {
         let mut params_def_with_type = Vec::with_capacity(forall_fact.params_def_with_type.len());
         for param_def_with_type in forall_fact.params_def_with_type.iter() {
-            params_def_with_type.push(ParamDefWithParamType(
+            params_def_with_type.push(ParamDefWithParamTypeTuple(
                 param_def_with_type.0.clone(),
                 self.inst_param_type(&param_def_with_type.1, param_to_arg_map)?,
             ));

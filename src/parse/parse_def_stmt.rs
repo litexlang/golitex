@@ -40,12 +40,12 @@ impl Runtime {
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
-        let mut param_defs: Vec<ParamDefWithParamType> = vec![];
+        let mut param_defs: Vec<ParamDefWithParamTypeTuple> = vec![];
         while tb.current()? != RIGHT_BRACE {
             param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
-        let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
+        let all_param_names = ParamDefWithParamTypeTuple::collect_param_names(&param_defs);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &all_param_names,
             tb.line_file.clone(),
@@ -154,7 +154,7 @@ impl Runtime {
 
     pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(LET)?;
-        let mut param_def: Vec<ParamDefWithParamType> = vec![];
+        let mut param_def: Vec<ParamDefWithParamTypeTuple> = vec![];
         loop {
             match tb.current() {
                 Ok(t) if t == COLON => break,
@@ -180,7 +180,7 @@ impl Runtime {
         } else {
             vec![]
         };
-        let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
+        let all_param_names = ParamDefWithParamTypeTuple::collect_param_names(&param_def);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &all_param_names,
             tb.line_file.clone(),
@@ -202,7 +202,7 @@ impl Runtime {
     // return HaveObjInNonemptySetOrParamTypeStmt or HaveObjEqualStmt
     pub fn parse_have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
-        let mut param_defs: Vec<ParamDefWithParamType> = vec![];
+        let mut param_defs: Vec<ParamDefWithParamTypeTuple> = vec![];
         loop {
             param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
             match tb.current() {
@@ -220,7 +220,7 @@ impl Runtime {
                 ),
             );
         }
-        let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
+        let have_param_names = ParamDefWithParamTypeTuple::collect_param_names(&param_defs);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &have_param_names,
             tb.line_file.clone(),
@@ -331,13 +331,13 @@ impl Runtime {
     fn parse_braced_params_and_optional_dom_facts(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<(Vec<ParamDefWithParamType>, Vec<OrAndChainAtomicFact>), RuntimeError> {
+    ) -> Result<(Vec<ParamDefWithParamTypeTuple>, Vec<OrAndChainAtomicFact>), RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
-        let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
+        let mut params_def_with_type: Vec<ParamDefWithParamTypeTuple> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
             params_def_with_type.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
-        let param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
+        let param_names = ParamDefWithParamTypeTuple::collect_param_names(&params_def_with_type);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &param_names,
             tb.line_file.clone(),
@@ -369,13 +369,13 @@ impl Runtime {
     fn parse_braced_struct_field_params_and_optional_dom_facts(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<(Vec<ParamDefWithStructFieldType>, Vec<OrAndChainAtomicFact>), RuntimeError> {
+    ) -> Result<(Vec<ParamDefWithStructFieldTypeTuple>, Vec<OrAndChainAtomicFact>), RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
-        let mut param_defs: Vec<ParamDefWithStructFieldType> = vec![];
+        let mut param_defs: Vec<ParamDefWithStructFieldTypeTuple> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
             param_defs.push(self.parse_param_def_with_struct_field_type_and_skip_comma(tb)?);
         }
-        let param_names = ParamDefWithStructFieldType::collect_param_names(&param_defs);
+        let param_names = ParamDefWithStructFieldTypeTuple::collect_param_names(&param_defs);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &param_names,
             tb.line_file.clone(),
