@@ -1,44 +1,6 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn _verify_exist_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
-        fact: &ExistOrAndChainAtomicFact,
-        other: &ExistOrAndChainAtomicFact,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
-        match fact {
-            ExistOrAndChainAtomicFact::ChainFact(f) => match other {
-                ExistOrAndChainAtomicFact::ChainFact(other) => {
-                    Self::_verify_chain_fact_the_same_type_and_return_matched_args(f, other)
-                }
-                _ => Ok(None),
-            },
-            ExistOrAndChainAtomicFact::AndFact(f) => match other {
-                ExistOrAndChainAtomicFact::AndFact(other) => {
-                    Self::_verify_and_fact_the_same_type_and_return_matched_args(f, other)
-                }
-                _ => Ok(None),
-            },
-            ExistOrAndChainAtomicFact::OrFact(f) => match other {
-                ExistOrAndChainAtomicFact::OrFact(other) => {
-                    Self::_verify_or_fact_the_same_type_and_return_matched_args(f, other)
-                }
-                _ => Ok(None),
-            },
-            ExistOrAndChainAtomicFact::ExistFact(f) => match other {
-                ExistOrAndChainAtomicFact::ExistFact(other) => {
-                    Self::_verify_exist_fact_the_same_type_and_return_matched_args(f, other)
-                }
-                _ => Ok(None),
-            },
-            ExistOrAndChainAtomicFact::AtomicFact(f) => match other {
-                ExistOrAndChainAtomicFact::AtomicFact(other) => {
-                    Self::_verify_atomic_fact_the_same_type_and_return_matched_args(f, other)
-                }
-                _ => Ok(None),
-            },
-        }
-    }
-
     pub fn _verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
         fact: &OrAndChainAtomicFact,
         other: &OrAndChainAtomicFact,

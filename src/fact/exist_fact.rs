@@ -22,14 +22,14 @@ impl OrAndChainAtomicFact {
 
 #[derive(Clone)]
 pub struct ExistFact {
-    pub params_def_with_type: Vec<ParamDefWithParamType>,
+    pub params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
 
 impl ExistFact {
     pub fn new(
-        params_def_with_type: Vec<ParamDefWithParamType>,
+        params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {
@@ -64,7 +64,7 @@ impl ExistFact {
         self.line_file.clone()
     }
 
-    pub fn params_def_with_type(&self) -> &Vec<ParamDefWithParamType> {
+    pub fn params_def_with_type(&self) -> &Vec<ParamDefWithParamTypeTuple> {
         &self.params_def_with_type
     }
 
@@ -74,7 +74,7 @@ impl ExistFact {
 }
 
 fn exist_fact_string_without_exist_as_prefix(
-    param_defs: &Vec<ParamDefWithParamType>,
+    param_defs: &Vec<ParamDefWithParamTypeTuple>,
     facts: &Vec<OrAndChainAtomicFact>,
 ) -> String {
     format!(

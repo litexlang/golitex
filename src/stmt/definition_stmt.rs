@@ -1,6 +1,6 @@
 use crate::{
     prelude::*,
-    stmt::parameter_def::{ParamDefWithStructFieldType, StructFieldType},
+    stmt::parameter_def::{ParamDefWithStructFieldTypeTuple, StructFieldType},
 };
 use std::fmt;
 
@@ -24,7 +24,7 @@ impl DefAbstractPropStmt {
 #[derive(Clone)]
 pub struct DefParamTypeStructStmt {
     pub name: String,
-    pub param_defs: Vec<ParamDefWithStructFieldType>,
+    pub param_defs: Vec<ParamDefWithStructFieldTypeTuple>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub fields: Vec<(String, StructFieldType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
@@ -34,7 +34,7 @@ pub struct DefParamTypeStructStmt {
 #[derive(Clone)]
 pub struct DefFamilyStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamType>,
+    pub params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub equal_to: Obj,
     pub line_file: LineFile,
@@ -66,28 +66,28 @@ pub struct HaveExistObjStmt {
 
 #[derive(Clone)]
 pub struct HaveObjEqualStmt {
-    pub param_def: Vec<ParamDefWithParamType>,
+    pub param_def: Vec<ParamDefWithParamTypeTuple>,
     pub objs_equal_to: Vec<Obj>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
-    pub param_def: Vec<ParamDefWithParamType>,
+    pub param_def: Vec<ParamDefWithParamTypeTuple>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct DefLetStmt {
-    pub param_def: Vec<ParamDefWithParamType>,
+    pub param_def: Vec<ParamDefWithParamTypeTuple>,
     pub facts: Vec<Fact>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
-pub struct DefPropWithMeaningStmt {
+pub struct DefPropStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamType>,
+    pub params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
     pub iff_facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -110,7 +110,8 @@ impl fmt::Display for DefParamTypeStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
-        let implicit_prefix_len = ParamDefWithStructFieldType::number_of_params(&self.param_defs);
+        let implicit_prefix_len =
+            ParamDefWithStructFieldTypeTuple::number_of_params(&self.param_defs);
         let fields_str: String = self
             .fields
             .iter()
@@ -122,7 +123,12 @@ impl fmt::Display for DefParamTypeStructStmt {
             to_string_and_add_four_spaces_at_beginning_of_each_line(&fields_str, 1);
         let equiv_line = add_four_spaces_at_beginning(format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
         let facts_indented = vec_to_string_add_four_spaces_at_beginning_of_each_line(
-            &self.facts.iter().skip(implicit_prefix_len).cloned().collect(),
+            &self
+                .facts
+                .iter()
+                .skip(implicit_prefix_len)
+                .cloned()
+                .collect(),
             1,
         );
         write!(
@@ -141,14 +147,14 @@ impl fmt::Display for DefParamTypeStructStmt {
     }
 }
 
-impl DefPropWithMeaningStmt {
+impl DefPropStmt {
     pub fn new(
         name: String,
-        params_def_with_type: Vec<ParamDefWithParamType>,
+        params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
         iff_facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
-        DefPropWithMeaningStmt {
+        DefPropStmt {
             name,
             params_def_with_type,
             iff_facts,
@@ -157,7 +163,7 @@ impl DefPropWithMeaningStmt {
     }
 }
 
-impl fmt::Display for DefPropWithMeaningStmt {
+impl fmt::Display for DefPropStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.iff_facts.len() {
             0 => write!(
@@ -182,7 +188,7 @@ impl fmt::Display for DefPropWithMeaningStmt {
 
 impl DefLetStmt {
     pub fn new(
-        param_def: Vec<ParamDefWithParamType>,
+        param_def: Vec<ParamDefWithParamTypeTuple>,
         facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
@@ -212,7 +218,7 @@ impl fmt::Display for DefLetStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(param_def: Vec<ParamDefWithParamType>, line_file: LineFile) -> Self {
+    pub fn new(param_def: Vec<ParamDefWithParamTypeTuple>, line_file: LineFile) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt {
             param_def,
             line_file,
@@ -233,7 +239,7 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
 
 impl HaveObjEqualStmt {
     pub fn new(
-        param_def: Vec<ParamDefWithParamType>,
+        param_def: Vec<ParamDefWithParamTypeTuple>,
         objs_equal_to: Vec<Obj>,
         line_file: LineFile,
     ) -> Self {
@@ -381,7 +387,7 @@ impl HaveFnEqualCaseByCaseStmt {
 impl DefFamilyStmt {
     pub fn new(
         name: String,
-        params_def_with_type: Vec<ParamDefWithParamType>,
+        params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         equal_to: Obj,
         line_file: LineFile,
@@ -417,7 +423,7 @@ impl fmt::Display for DefFamilyStmt {
 impl DefParamTypeStructStmt {
     pub fn new(
         name: String,
-        param_defs: Vec<ParamDefWithStructFieldType>,
+        param_defs: Vec<ParamDefWithStructFieldTypeTuple>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         fields: Vec<(String, StructFieldType)>,
         facts: Vec<OrAndChainAtomicFact>,
@@ -436,11 +442,11 @@ impl DefParamTypeStructStmt {
 
 impl DefParamTypeStructStmt {
     pub fn number_of_params(&self) -> usize {
-        ParamDefWithStructFieldType::number_of_params(&self.param_defs)
+        ParamDefWithStructFieldTypeTuple::number_of_params(&self.param_defs)
     }
 
     /// 按定义顺序展开所有类型形参名（与 `struct T(...)` 中参数顺序一致）。
     pub fn get_params(&self) -> Vec<String> {
-        ParamDefWithStructFieldType::collect_param_names(&self.param_defs)
+        ParamDefWithStructFieldTypeTuple::collect_param_names(&self.param_defs)
     }
 }

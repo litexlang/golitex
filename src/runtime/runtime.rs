@@ -33,7 +33,7 @@ impl Runtime {
         current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 invalid_name_message,
                 default_line_file(),
                 None,
@@ -42,7 +42,7 @@ impl Runtime {
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
             if let Some(name_already_defined_on_line_file) = names_in_scope.get(name) {
-                return Err(RuntimeError::parse_error(
+                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                     format!(
                         "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
                         name,
@@ -58,7 +58,7 @@ impl Runtime {
         }
 
         if self.is_name_used(name) {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 format!(
                     "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
                     name,
@@ -213,10 +213,8 @@ impl Runtime {
         false
     }
 
-    pub fn is_name_used_for_predicate_with_meaning(&self, name: &str) -> bool {
-        return self
-            .get_predicate_with_meaning_definition_by_name(name)
-            .is_some();
+    pub fn is_name_used_for_def_prop(&self, name: &str) -> bool {
+        return self.get_def_prop_definition_by_name(name).is_some();
     }
 
     pub fn is_name_used_for_abstract_prop(&self, name: &str) -> bool {

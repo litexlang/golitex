@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         match tb.current()? {
-            PROP => self.parse_def_prop_with_meaning_stmt(tb),
+            PROP => self.parse_def_prop_stmt(tb),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
             LET => self.parse_def_let_stmt(tb),
             HAVE => {

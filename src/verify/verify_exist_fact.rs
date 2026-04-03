@@ -16,7 +16,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::ExistFact(exist_fact.clone()),
                     String::new(),
                     exist_fact.line_file(),
@@ -68,7 +68,7 @@ impl Runtime {
         {
             let target_string = Self::exist_fact_normalized_string(runtime, exist_fact)
                 .map_err(|e| {
-                    RuntimeError::verify_error(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::ExistFact(exist_fact.clone()),
                         String::new(),
                         exist_fact.line_file(),
@@ -78,7 +78,7 @@ impl Runtime {
             for known_fact in known_exist_facts.iter() {
                 let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
                     .map_err(|e| {
-                        RuntimeError::verify_error(
+                        RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                             Fact::ExistFact(exist_fact.clone()),
                             String::new(),
                             exist_fact.line_file(),
@@ -108,7 +108,7 @@ impl Runtime {
         exist_fact: &ExistFact,
     ) -> Result<String, RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        let mut normalized_params: Vec<ParamDefWithParamType> = Vec::new();
+        let mut normalized_params: Vec<ParamDefWithParamTypeTuple> = Vec::new();
         let mut param_index: usize = 0;
 
         for param_def_with_type in exist_fact.params_def_with_type().iter() {
@@ -126,7 +126,7 @@ impl Runtime {
 
             let instantiated_param_type =
                 runtime.inst_param_type(&param_def_with_type.1, &param_to_arg_map)?;
-            normalized_params.push(ParamDefWithParamType(
+            normalized_params.push(ParamDefWithParamTypeTuple(
                 new_param_names,
                 instantiated_param_type,
             ));

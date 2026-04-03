@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ()>,
-    pub defined_props_with_meaning: HashMap<PropName, DefPropWithMeaningStmt>,
+    pub defined_def_props: HashMap<PropName, DefPropStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub defined_structs: HashMap<StructName, DefParamTypeStructStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
@@ -43,7 +43,7 @@ pub struct Environment {
 impl Environment {
     pub fn new(
         objs: HashMap<IdentifierName, ()>,
-        props: HashMap<PropName, DefPropWithMeaningStmt>,
+        def_props: HashMap<PropName, DefPropStmt>,
         param_type_structs: HashMap<StructName, DefParamTypeStructStmt>,
         families: HashMap<FamilyName, DefFamilyStmt>,
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
@@ -87,7 +87,7 @@ impl Environment {
     ) -> Self {
         Environment {
             defined_identifiers: objs,
-            defined_props_with_meaning: props,
+            defined_def_props: def_props,
             defined_structs: param_type_structs,
             defined_families: families,
             defined_abstract_props: abstract_props,
@@ -118,21 +118,13 @@ impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Environment {{\n")?;
         write!(f, "    objs: {:?}\n", self.defined_identifiers.len())?;
-        write!(
-            f,
-            "    props_with_meaning: {:?}\n",
-            self.defined_props_with_meaning.len()
-        )?;
+        write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;
         write!(
             f,
             "    param_type_structs: {:?}\n",
             self.defined_structs.len()
         )?;
-        write!(
-            f,
-            "    families: {:?}\n",
-            self.defined_families.len()
-        )?;
+        write!(f, "    families: {:?}\n", self.defined_families.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
         write!(
@@ -349,7 +341,16 @@ impl Environment {
     ) -> Result<(), RuntimeErrorStruct> {
         for fact in chain_fact
             .facts()
-            .map_err(RuntimeErrorStruct::into_store_fact_wrapping_new_atomic)?
+            .map_err(|e| {
+                RuntimeErrorStruct::new_with_conflict(
+                    e.statement.clone(),
+                    e.msg.clone(),
+                    e.line_file.clone(),
+                    e.conflict_with.clone(),
+                    Some(RuntimeError::NewAtomicFactError(e)),
+                    vec![],
+                )
+            })?
             .iter()
         {
             self.store_a_fact_in_forall_fact(
@@ -480,9 +481,16 @@ impl Environment {
     }
 
     fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeErrorStruct> {
-        let atomic_facts = chain_fact
-            .facts()
-            .map_err(RuntimeErrorStruct::into_store_fact_wrapping_new_atomic)?;
+        let atomic_facts = chain_fact.facts().map_err(|e| {
+            RuntimeErrorStruct::new_with_conflict(
+                e.statement.clone(),
+                e.msg.clone(),
+                e.line_file.clone(),
+                e.conflict_with.clone(),
+                Some(RuntimeError::NewAtomicFactError(e)),
+                vec![],
+            )
+        })?;
         for atomic_fact in atomic_facts {
             self.store_atomic_fact(atomic_fact)?;
         }
@@ -692,14 +700,14 @@ impl Environment {
 }
 
 pub struct KnownForallFactParamsAndDom {
-    pub params_def: Vec<ParamDefWithParamType>,
+    pub params_def: Vec<ParamDefWithParamTypeTuple>,
     pub dom: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
 
 impl KnownForallFactParamsAndDom {
     pub fn new(
-        params: Vec<ParamDefWithParamType>,
+        params: Vec<ParamDefWithParamTypeTuple>,
         dom: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {
