@@ -12,11 +12,11 @@ impl Runtime {
         let original_fn_set = match self.get_cloned_fn_set_where_fn_belongs_to(function) {
             Some(fn_set) => fn_set,
             None => {
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                     String::new(),
                     restrict_fact.line_file.clone(),
-                    Some(RuntimeError::well_defined_error(
+                    Some(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                         format!(
                             "function `{}` belongs to what function set is unknown",
                             function.to_string()
@@ -69,9 +69,9 @@ impl Runtime {
             &restrict_flat_param_names,
         );
 
-        let mut forall_params: Vec<ParamDefWithParamType> = Vec::new();
+        let mut forall_params: Vec<ParamDefWithParamTypeTuple> = Vec::new();
         for param_def_with_set in &restrict_to_ref.params_def_with_set {
-            forall_params.push(ParamDefWithParamType(
+            forall_params.push(ParamDefWithParamTypeTuple(
                 param_def_with_set.0.clone(),
                 ParamType::Obj(param_def_with_set.1.clone()),
             ));
@@ -90,7 +90,7 @@ impl Runtime {
             restrict_fact.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::verify_error(
+            RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                 Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                 String::new(),
                 restrict_fact.line_file.clone(),
@@ -165,7 +165,7 @@ impl Runtime {
     fn verify_forall_and_return_restrict_success(
         &mut self,
         restrict_fact: &RestrictFact,
-        forall_params: Vec<ParamDefWithParamType>,
+        forall_params: Vec<ParamDefWithParamTypeTuple>,
         forall_dom_facts: Vec<ExistOrAndChainAtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         restrict_ret_set: &Obj,

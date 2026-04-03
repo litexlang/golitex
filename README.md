@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://publisher.litexlang.org/logo.PNG" alt="The Litex Logo" width="300">
+<img src="assets/logo.PNG" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">

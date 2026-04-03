@@ -8,13 +8,13 @@ impl Runtime {
     /// 将形参类型事实落库：与 [`define_param_binding_for_param_type`](crate::execute::exec_def_stmt::Runtime::define_param_binding_for_param_type) 同构，但左端为任意已求值实参 [`Obj`]。
     pub fn store_args_satisfy_param_def(
         &mut self,
-        param_defs: &Vec<ParamDefWithParamType>,
+        param_defs: &Vec<ParamDefWithParamTypeTuple>,
         args: &Vec<Obj>,
         _line_file: LineFile,
     ) -> Result<InferResult, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args)?;
-        let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
+        let flat_types = ParamDefWithParamTypeTuple::flat_instantiated_types_for_args(
             param_defs,
             &instantiated_types,
         );

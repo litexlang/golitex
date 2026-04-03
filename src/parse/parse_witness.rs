@@ -8,7 +8,7 @@ impl Runtime {
         } else if tb.current_token_is_equal_to(FACT_PREFIX) {
             self.parse_witness_nonempty_set(tb)
         } else {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "witness expects a exist or nonempty set".to_string(),
                 tb.line_file.clone(),
                 None,

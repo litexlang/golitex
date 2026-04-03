@@ -50,7 +50,7 @@ impl Runtime {
                 let unused_name = self.generate_a_random_unused_name();
 
                 let left_to_right_forall_fact = Fact::ForallFact(ForallFact::new(
-                    vec![ParamDefWithParamType(
+                    vec![ParamDefWithParamTypeTuple(
                         vec![unused_name.clone()],
                         ParamType::Obj(stmt.left.clone()),
                     )],
@@ -81,7 +81,7 @@ impl Runtime {
                 })?;
 
                 let right_to_left_forall_fact = Fact::ForallFact(ForallFact::new(
-                    vec![ParamDefWithParamType(
+                    vec![ParamDefWithParamTypeTuple(
                         vec![unused_name.clone()],
                         ParamType::Obj(stmt.right.clone()),
                     )],
