@@ -392,7 +392,7 @@ impl Runtime {
                 verify_state,
             );
         }
-        let definition = match self.get_predicate_with_meaning_definition_by_name(&predicate_name) {
+        let definition = match self.get_def_prop_definition_by_name(&predicate_name) {
             Some(definition_reference) => definition_reference.clone(),
             None => return Ok(None),
         };

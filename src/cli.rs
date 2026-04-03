@@ -11,11 +11,8 @@ pub fn run_cli() {
     let args: Vec<String> = env::args().skip(1).collect();
     let mut index: usize = 0;
 
-    while index < args.len() {
-        let head = match args.get(index) {
-            Some(value) => value.as_str(),
-            None => break,
-        };
+    if !args.is_empty() {
+        let head = args[index].as_str();
 
         match head {
             "-help" => {

@@ -213,10 +213,8 @@ impl Runtime {
         false
     }
 
-    pub fn is_name_used_for_predicate_with_meaning(&self, name: &str) -> bool {
-        return self
-            .get_predicate_with_meaning_definition_by_name(name)
-            .is_some();
+    pub fn is_name_used_for_def_prop(&self, name: &str) -> bool {
+        return self.get_def_prop_definition_by_name(name).is_some();
     }
 
     pub fn is_name_used_for_abstract_prop(&self, name: &str) -> bool {

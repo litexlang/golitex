@@ -1,17 +1,17 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn get_predicate_with_meaning_definition_by_name(
+    pub fn get_def_prop_definition_by_name(
         &self,
         predicate_name: &str,
-    ) -> Option<&DefPropWithMeaningStmt> {
+    ) -> Option<&DefPropStmt> {
         let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.defined_props_with_meaning.get(predicate_name) {
+            if let Some(definition) = environment.defined_def_props.get(predicate_name) {
                 return Some(definition);
             }
         }
