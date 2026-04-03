@@ -118,21 +118,13 @@ impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Environment {{\n")?;
         write!(f, "    objs: {:?}\n", self.defined_identifiers.len())?;
-        write!(
-            f,
-            "    def_props: {:?}\n",
-            self.defined_def_props.len()
-        )?;
+        write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;
         write!(
             f,
             "    param_type_structs: {:?}\n",
             self.defined_structs.len()
         )?;
-        write!(
-            f,
-            "    families: {:?}\n",
-            self.defined_families.len()
-        )?;
+        write!(f, "    families: {:?}\n", self.defined_families.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
         write!(
@@ -708,14 +700,14 @@ impl Environment {
 }
 
 pub struct KnownForallFactParamsAndDom {
-    pub params_def: Vec<ParamDefWithParamType>,
+    pub params_def: Vec<ParamDefWithParamTypeTuple>,
     pub dom: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
 
 impl KnownForallFactParamsAndDom {
     pub fn new(
-        params: Vec<ParamDefWithParamType>,
+        params: Vec<ParamDefWithParamTypeTuple>,
         dom: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {

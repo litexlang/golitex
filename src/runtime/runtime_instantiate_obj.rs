@@ -548,10 +548,10 @@ impl Runtime {
 
     pub fn inst_param_def_with_type_one_by_one(
         &self,
-        param_defs: &Vec<ParamDefWithParamType>,
+        param_defs: &Vec<ParamDefWithParamTypeTuple>,
         args: &Vec<Obj>,
     ) -> Result<Vec<ParamType>, RuntimeError> {
-        let total_param_count = ParamDefWithParamType::number_of_params(param_defs);
+        let total_param_count = ParamDefWithParamTypeTuple::number_of_params(param_defs);
         if total_param_count != args.len() {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,

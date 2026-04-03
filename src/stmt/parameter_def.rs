@@ -5,11 +5,26 @@ use std::fmt;
 #[derive(Clone)]
 pub struct ParamDefWithParamSet(pub Vec<String>, pub Obj);
 
-#[derive(Clone)]
-pub struct ParamDefWithParamType(pub Vec<String>, pub ParamType);
+pub struct ParamGroupWithSet {
+    pub params: Vec<String>,
+    pub set: Obj,
+}
+
+pub struct ParamGroupWithParamType {
+    pub params: Vec<String>,
+    pub param_type: ParamType,
+}
+
+pub struct ParamGroupWithStructFieldType {
+    pub params: Vec<String>,
+    pub struct_field_type: StructFieldType,
+}
 
 #[derive(Clone)]
-pub struct ParamDefWithStructFieldType(pub Vec<String>, pub StructFieldType);
+pub struct ParamDefWithParamTypeTuple(pub Vec<String>, pub ParamType);
+
+#[derive(Clone)]
+pub struct ParamDefWithStructFieldTypeTuple(pub Vec<String>, pub StructFieldType);
 
 #[derive(Clone)]
 pub enum StructFieldType {
@@ -38,14 +53,14 @@ impl fmt::Display for StructFieldType {
     }
 }
 
-impl fmt::Display for ParamDefWithStructFieldType {
+impl fmt::Display for ParamDefWithStructFieldTypeTuple {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", vec_to_string_join_by_comma(&self.0), self.1)
     }
 }
 
-impl ParamDefWithStructFieldType {
-    pub fn number_of_params(defs: &Vec<ParamDefWithStructFieldType>) -> usize {
+impl ParamDefWithStructFieldTypeTuple {
+    pub fn number_of_params(defs: &Vec<ParamDefWithStructFieldTypeTuple>) -> usize {
         let mut total_param_count: usize = 0;
         for p in defs.iter() {
             total_param_count += p.0.len();
@@ -53,11 +68,13 @@ impl ParamDefWithStructFieldType {
         total_param_count
     }
 
-    pub fn to_param_def_with_param_type(&self) -> ParamDefWithParamType {
-        ParamDefWithParamType(self.0.clone(), self.1.to_param_type())
+    pub fn to_param_def_with_param_type(&self) -> ParamDefWithParamTypeTuple {
+        ParamDefWithParamTypeTuple(self.0.clone(), self.1.to_param_type())
     }
 
-    pub fn to_param_defs_with_param_type(defs: &[ParamDefWithStructFieldType]) -> Vec<ParamDefWithParamType> {
+    pub fn to_param_defs_with_param_type(
+        defs: &[ParamDefWithStructFieldTypeTuple],
+    ) -> Vec<ParamDefWithParamTypeTuple> {
         defs.iter()
             .map(|d| d.to_param_def_with_param_type())
             .collect()
@@ -67,7 +84,7 @@ impl ParamDefWithStructFieldType {
         &self.0
     }
 
-    pub fn collect_param_names(param_defs: &Vec<ParamDefWithStructFieldType>) -> Vec<String> {
+    pub fn collect_param_names(param_defs: &Vec<ParamDefWithStructFieldTypeTuple>) -> Vec<String> {
         let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
@@ -78,7 +95,7 @@ impl ParamDefWithStructFieldType {
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamDefWithStructFieldType>,
+        param_defs: &Vec<ParamDefWithStructFieldTypeTuple>,
         args: &Vec<Obj>,
     ) -> HashMap<String, Obj> {
         let param_names = Self::collect_param_names(param_defs);
@@ -210,14 +227,14 @@ impl fmt::Display for ParamDefWithParamSet {
     }
 }
 
-impl fmt::Display for ParamDefWithParamType {
+impl fmt::Display for ParamDefWithParamTypeTuple {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", vec_to_string_join_by_comma(&self.0), self.1)
     }
 }
 
 impl ParamType {
-    pub fn get_all_param_names(param_def: &Vec<ParamDefWithParamType>) -> Vec<String> {
+    pub fn get_all_param_names(param_def: &Vec<ParamDefWithParamTypeTuple>) -> Vec<String> {
         let mut names = vec![];
         for param_def in param_def.iter() {
             for name in param_def.0.iter() {
@@ -226,11 +243,10 @@ impl ParamType {
         }
         names
     }
-
 }
 
-impl ParamDefWithParamType {
-    pub fn number_of_params(defs: &Vec<ParamDefWithParamType>) -> usize {
+impl ParamDefWithParamTypeTuple {
+    pub fn number_of_params(defs: &Vec<ParamDefWithParamTypeTuple>) -> usize {
         let mut total_param_count: usize = 0;
         for p in defs.iter() {
             total_param_count += p.0.len();
@@ -293,16 +309,14 @@ impl ParamDefWithParamSet {
         }
         result
     }
-
 }
 
-impl ParamDefWithParamType {
+impl ParamDefWithParamTypeTuple {
     pub fn flat_instantiated_types_for_args(
-        param_defs: &Vec<ParamDefWithParamType>,
+        param_defs: &Vec<ParamDefWithParamTypeTuple>,
         instantiated_types: &Vec<ParamType>,
     ) -> Vec<ParamType> {
-        let mut result =
-            Vec::with_capacity(Self::number_of_params(param_defs));
+        let mut result = Vec::with_capacity(Self::number_of_params(param_defs));
         for (param_def, param_type) in param_defs.iter().zip(instantiated_types.iter()) {
             for _ in param_def.0.iter() {
                 result.push(param_type.clone());
@@ -315,10 +329,8 @@ impl ParamDefWithParamType {
         &self.0
     }
 
-    pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamType>) -> Vec<String> {
-        let mut names: Vec<String> = Vec::with_capacity(
-            Self::number_of_params(param_defs),
-        );
+    pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamTypeTuple>) -> Vec<String> {
+        let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
                 names.push(name.clone());
@@ -328,7 +340,7 @@ impl ParamDefWithParamType {
     }
 
     pub fn param_def_params_to_arg_map(
-        param_defs: &Vec<ParamDefWithParamType>,
+        param_defs: &Vec<ParamDefWithParamTypeTuple>,
         arg_map: &HashMap<String, Obj>,
     ) -> Option<HashMap<String, Obj>> {
         let param_names = Self::collect_param_names(param_defs);
@@ -345,7 +357,7 @@ impl ParamDefWithParamType {
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamDefWithParamType>,
+        param_defs: &Vec<ParamDefWithParamTypeTuple>,
         args: &Vec<Obj>,
     ) -> HashMap<String, Obj> {
         let param_names = Self::collect_param_names(param_defs);

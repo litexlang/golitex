@@ -3,11 +3,11 @@ use std::collections::HashMap;
 
 fn param_defs_with_type_from_fn_set_with_dom(
     fn_set_with_params: &crate::obj::FnSetWithParams,
-) -> Vec<ParamDefWithParamType> {
-    let mut param_defs_with_type: Vec<ParamDefWithParamType> =
+) -> Vec<ParamDefWithParamTypeTuple> {
+    let mut param_defs_with_type: Vec<ParamDefWithParamTypeTuple> =
         Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
     for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
-        param_defs_with_type.push(ParamDefWithParamType(
+        param_defs_with_type.push(ParamDefWithParamTypeTuple(
             param_def_with_set.0.clone(),
             ParamType::Obj(param_def_with_set.1.clone()),
         ));
@@ -195,7 +195,7 @@ impl Runtime {
                 ).into());
             }
         };
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamDefWithParamTypeTuple::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
             return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                 format!(
@@ -209,7 +209,7 @@ impl Runtime {
                 None,
             ).into());
         }
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_ty.params,
         );
@@ -270,7 +270,7 @@ impl Runtime {
 
     pub fn define_params_with_type(
         &mut self,
-        param_defs: &[ParamDefWithParamType],
+        param_defs: &[ParamDefWithParamTypeTuple],
         check_type_nonempty: bool,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
@@ -405,7 +405,7 @@ impl Runtime {
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
-        if ParamDefWithParamType::number_of_params(&have_obj_equal_stmt.param_def)
+        if ParamDefWithParamTypeTuple::number_of_params(&have_obj_equal_stmt.param_def)
             != have_obj_equal_stmt.objs_equal_to.len()
         {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -538,7 +538,7 @@ impl Runtime {
             ));
         }
 
-        if ParamDefWithParamType::number_of_params(
+        if ParamDefWithParamTypeTuple::number_of_params(
             &exist_fact_in_have_obj_stmt.params_def_with_type,
         ) != have_exist_obj_stmt.equal_tos.len()
         {
@@ -575,7 +575,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_obj_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_obj_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
             &exist_fact_in_have_obj_stmt.params_def_with_type,
             &new_obj_names_as_identifier_objs,
         );

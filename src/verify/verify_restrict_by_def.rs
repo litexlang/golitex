@@ -69,9 +69,9 @@ impl Runtime {
             &restrict_flat_param_names,
         );
 
-        let mut forall_params: Vec<ParamDefWithParamType> = Vec::new();
+        let mut forall_params: Vec<ParamDefWithParamTypeTuple> = Vec::new();
         for param_def_with_set in &restrict_to_ref.params_def_with_set {
-            forall_params.push(ParamDefWithParamType(
+            forall_params.push(ParamDefWithParamTypeTuple(
                 param_def_with_set.0.clone(),
                 ParamType::Obj(param_def_with_set.1.clone()),
             ));
@@ -165,7 +165,7 @@ impl Runtime {
     fn verify_forall_and_return_restrict_success(
         &mut self,
         restrict_fact: &RestrictFact,
-        forall_params: Vec<ParamDefWithParamType>,
+        forall_params: Vec<ParamDefWithParamTypeTuple>,
         forall_dom_facts: Vec<ExistOrAndChainAtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         restrict_ret_set: &Obj,

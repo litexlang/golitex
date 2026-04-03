@@ -103,7 +103,7 @@ impl Runtime {
         given_or_fact: &OrFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params_def);
+        let param_names = ParamDefWithParamTypeTuple::collect_param_names(&known_forall.params_def);
 
         if !param_names
             .iter()
@@ -148,7 +148,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(
+        let param_to_arg_map = match ParamDefWithParamTypeTuple::param_def_params_to_arg_map(
             &known_forall.params_def,
             &arg_map,
         ) {
