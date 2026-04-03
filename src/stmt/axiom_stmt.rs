@@ -103,9 +103,9 @@ impl EnumerateAxiomStmt {
                 "by enumerate: number of params does not match number of list sets".to_string(),
             );
         }
-        let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
+        let mut params_def_with_type: Vec<ParamDefWithParamTypeTuple> = Vec::new();
         for (param_name, list_set_obj) in self.params.iter().zip(self.param_sets.iter()) {
-            params_def_with_type.push(ParamDefWithParamType(
+            params_def_with_type.push(ParamDefWithParamTypeTuple(
                 vec![param_name.clone()],
                 ParamType::Obj(Obj::ListSet(list_set_obj.clone())),
             ));
@@ -318,7 +318,7 @@ impl ForAxiomStmt {
         if self.params.len() != self.param_sets.len() {
             return Err("by for: number of params does not match number of param sets".to_string());
         }
-        let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
+        let mut params_def_with_type: Vec<ParamDefWithParamTypeTuple> = Vec::new();
         for (param_name, param_set) in self.params.iter().zip(self.param_sets.iter()) {
             let param_set_as_obj = match param_set {
                 ClosedRangeOrRange::ClosedRange(closed_range) => {
@@ -326,7 +326,7 @@ impl ForAxiomStmt {
                 }
                 ClosedRangeOrRange::Range(range) => Obj::Range(range.clone()),
             };
-            params_def_with_type.push(ParamDefWithParamType(
+            params_def_with_type.push(ParamDefWithParamTypeTuple(
                 vec![param_name.clone()],
                 ParamType::Obj(param_set_as_obj),
             ));
@@ -433,8 +433,8 @@ impl ByCartDefAxiomStmt {
 
 impl ByInducAxiomStmt {
     pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
-        let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
-        params_def_with_type.push(ParamDefWithParamType(
+        let mut params_def_with_type: Vec<ParamDefWithParamTypeTuple> = Vec::new();
+        params_def_with_type.push(ParamDefWithParamTypeTuple(
             vec![self.param.clone()],
             ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
         ));

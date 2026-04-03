@@ -108,7 +108,7 @@ impl Runtime {
         exist_fact: &ExistFact,
     ) -> Result<String, RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        let mut normalized_params: Vec<ParamDefWithParamType> = Vec::new();
+        let mut normalized_params: Vec<ParamDefWithParamTypeTuple> = Vec::new();
         let mut param_index: usize = 0;
 
         for param_def_with_type in exist_fact.params_def_with_type().iter() {
@@ -126,7 +126,7 @@ impl Runtime {
 
             let instantiated_param_type =
                 runtime.inst_param_type(&param_def_with_type.1, &param_to_arg_map)?;
-            normalized_params.push(ParamDefWithParamType(
+            normalized_params.push(ParamDefWithParamTypeTuple(
                 new_param_names,
                 instantiated_param_type,
             ));

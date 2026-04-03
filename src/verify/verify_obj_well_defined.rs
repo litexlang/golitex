@@ -1140,7 +1140,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamDefWithParamTypeTuple::number_of_params(&def.params_def_with_type);
         if family_param_type.params.len() != expected_count {
             return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                 format!(
@@ -1175,7 +1175,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_param_type.params,
         );
@@ -1245,7 +1245,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
+        let expected_count = ParamDefWithStructFieldTypeTuple::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
             return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                 format!(
@@ -1264,7 +1264,7 @@ impl Runtime {
         }
 
         let param_defs_pt =
-            ParamDefWithStructFieldType::to_param_defs_with_param_type(&def.param_defs);
+            ParamDefWithStructFieldTypeTuple::to_param_defs_with_param_type(&def.param_defs);
         let _: InferResult = self
             .verify_args_satisfy_param_def_flat_types(
                 &param_defs_pt,
@@ -1282,7 +1282,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamDefWithStructFieldTypeTuple::param_defs_and_args_to_param_to_arg_map(
             &def.param_defs,
             &struct_ty.args,
         );

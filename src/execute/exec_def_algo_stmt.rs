@@ -105,7 +105,7 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_where_algo_belongs: &FnSetWithParams,
-    ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamType>), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamTypeTuple>), RuntimeErrorStruct> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
             fn_set_where_algo_belongs,
@@ -116,7 +116,7 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_with_dom: &FnSetWithParams,
-    ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamType>), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamTypeTuple>), RuntimeErrorStruct> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
             args_for_algo_params.push(Obj::Identifier(Identifier::new(param_name.clone())));
@@ -162,7 +162,7 @@ impl Runtime {
         }
 
         let mut requirement_facts: Vec<Fact> = Vec::new();
-        let mut algo_param_defs_with_type: Vec<ParamDefWithParamType> =
+        let mut algo_param_defs_with_type: Vec<ParamDefWithParamTypeTuple> =
             Vec::with_capacity(fn_set_with_dom.params_def_with_set.len());
 
         for param_def_with_set in fn_set_with_dom.params_def_with_set.iter() {
@@ -193,7 +193,7 @@ impl Runtime {
                         Some(runtime_error),
                     )
                 })?;
-            algo_param_defs_with_type.push(ParamDefWithParamType(
+            algo_param_defs_with_type.push(ParamDefWithParamTypeTuple(
                 mapped_param_names,
                 ParamType::Obj(instantiated_param_set),
             ));
@@ -266,7 +266,7 @@ impl Runtime {
     }
 
     fn forall_fact_for_def_algo_case(
-        algo_param_defs_with_type: &[ParamDefWithParamType],
+        algo_param_defs_with_type: &[ParamDefWithParamTypeTuple],
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_case: &AlgoCase,
         fn_call_obj: &Obj,
@@ -299,7 +299,7 @@ impl Runtime {
     fn verify_each_def_algo_case_implies_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &[ParamDefWithParamType],
+        algo_param_defs_with_type: &[ParamDefWithParamTypeTuple],
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
     ) -> Result<(), RuntimeErrorStruct> {
@@ -329,7 +329,7 @@ impl Runtime {
     fn verify_def_algo_case_coverage_when_no_default_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &[ParamDefWithParamType],
+        algo_param_defs_with_type: &[ParamDefWithParamTypeTuple],
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
     ) -> Result<(), RuntimeErrorStruct> {
         if def_algo_stmt.default_return.is_some() {
