@@ -1,14 +1,14 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn store_def_prop_with_meaning(
+    pub fn store_def_prop(
         &mut self,
-        def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
+        def_prop_stmt: &DefPropStmt,
     ) -> Result<(), RuntimeErrorStruct> {
-        let name = def_prop_with_meaning_stmt.name.clone();
+        let name = def_prop_stmt.name.clone();
         self.top_level_env()
-            .defined_props_with_meaning
-            .insert(name, def_prop_with_meaning_stmt.clone());
+            .defined_def_props
+            .insert(name, def_prop_stmt.clone());
         Ok(())
     }
 

@@ -75,7 +75,7 @@ impl Runtime {
             }
         } else {
             let expected_len = if let Some(predicate_definition) =
-                self.get_predicate_with_meaning_definition_by_name(&name_string)
+                self.get_def_prop_definition_by_name(&name_string)
             {
                 ParamDefWithParamType::number_of_params(&predicate_definition.params_def_with_type)
             } else if let Some(abstract_prop_definition) =

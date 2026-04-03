@@ -114,7 +114,7 @@ pub use crate::stmt::define_algorithm_stmt::AlgoReturn;
 pub use crate::stmt::define_algorithm_stmt::AlgoReturnOrAlgoCase;
 pub use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 pub use crate::stmt::definition_stmt::DefLetStmt;
-pub use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
+pub use crate::stmt::definition_stmt::DefPropStmt;
 pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
 pub use crate::stmt::definition_stmt::DefParamTypeStructStmt;
 pub use crate::stmt::definition_stmt::DefFamilyStmt;

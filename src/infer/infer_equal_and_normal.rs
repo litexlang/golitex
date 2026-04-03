@@ -212,7 +212,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let predicate_definition =
-            match self.get_predicate_with_meaning_definition_by_name(&predicate_name) {
+            match self.get_def_prop_definition_by_name(&predicate_name) {
                 Some(predicate_definition) => predicate_definition.clone(),
                 None => return Ok(InferResult::new()),
             };

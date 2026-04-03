@@ -5,7 +5,7 @@ use std::fmt;
 pub enum Stmt {
     Fact(Fact),
     DefLetStmt(DefLetStmt),
-    DefPropWithMeaningStmt(DefPropWithMeaningStmt),
+    DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
@@ -45,7 +45,7 @@ impl fmt::Display for Stmt {
         match self {
             Stmt::Fact(x) => write!(f, "{}", x),
             Stmt::DefLetStmt(x) => write!(f, "{}", x),
-            Stmt::DefPropWithMeaningStmt(x) => write!(f, "{}", x),
+            Stmt::DefPropStmt(x) => write!(f, "{}", x),
             Stmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
@@ -81,7 +81,7 @@ impl Stmt {
         match self {
             Stmt::Fact(fact) => fact.line_file(),
             Stmt::DefLetStmt(stmt) => stmt.line_file.clone(),
-            Stmt::DefPropWithMeaningStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefAbstractPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.line_file.clone(),
@@ -115,7 +115,7 @@ impl Stmt {
         match self {
             Stmt::Fact(_) => "Fact".to_string(),
             Stmt::DefLetStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefPropWithMeaningStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjInNonemptySetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveObjEqualStmt(stmt) => stmt.stmt_type_name(),

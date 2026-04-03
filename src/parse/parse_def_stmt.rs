@@ -2,31 +2,35 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 impl Runtime {
-    pub fn parse_def_prop_with_meaning_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Stmt, RuntimeError> {
+    pub fn parse_def_prop_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_prop_with_meaning_stmt_body(tb);
+        let stmt = self.parse_def_prop_stmt_body(tb);
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                    e,
-                    tb.line_file.clone(),
-                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&stmt_ok.name)),
-                )
-            })?;
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(
+            &stmt_ok.name,
+            tb.line_file.clone(),
+        )
+        .map_err(|e| {
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                Some(
+                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(
+                        &stmt_ok.name,
+                    ),
+                ),
+            )
+        })?;
 
-        Ok(Stmt::DefPropWithMeaningStmt(stmt_ok))
+        Ok(Stmt::DefPropStmt(stmt_ok))
     }
 
-    fn parse_def_prop_with_meaning_stmt_body(
+    fn parse_def_prop_stmt_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<DefPropWithMeaningStmt, RuntimeError> {
+    ) -> Result<DefPropStmt, RuntimeError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
@@ -49,20 +53,26 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                None,
+            )
         })?;
 
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
         } else {
             if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "expect `:` or end of line after `)` in prop statement".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                ));
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "expect `:` or end of line after `)` in prop statement".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
             } else {
-                return Ok(DefPropWithMeaningStmt::new(
+                return Ok(DefPropStmt::new(
                     name,
                     param_defs,
                     vec![],
@@ -70,9 +80,9 @@ impl Runtime {
                 ));
             }
         }
-        
+
         let facts = self.parse_facts_in_body(tb)?;
-        Ok(DefPropWithMeaningStmt::new(
+        Ok(DefPropStmt::new(
             name,
             param_defs,
             facts,
@@ -89,14 +99,21 @@ impl Runtime {
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
-                    e,
-                    tb.line_file.clone(),
-                    Some(RuntimeError::message_text_for_duplicate_used_name_without_line_file(&stmt_ok.name)),
-                )
-            })?;
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(
+            &stmt_ok.name,
+            tb.line_file.clone(),
+        )
+        .map_err(|e| {
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                Some(
+                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(
+                        &stmt_ok.name,
+                    ),
+                ),
+            )
+        })?;
         Ok(Stmt::DefAbstractPropStmt(stmt_ok))
     }
 
@@ -124,10 +141,17 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_BRACE)?;
 
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
-            })?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &params,
+            tb.line_file.clone(),
+        )
+        .map_err(|e| {
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                None,
+            )
+        })?;
 
         Ok(DefAbstractPropStmt::new(name, params, tb.line_file.clone()))
     }
@@ -147,11 +171,13 @@ impl Runtime {
             tb.skip_token(COLON)?;
 
             if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "expect end of line after `:` in let statement".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                ));
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "expect end of line after `:` in let statement".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
             } else {
                 self.parse_facts_in_body(tb)?
             }
@@ -164,7 +190,11 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                None,
+            )
         })?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
@@ -186,11 +216,13 @@ impl Runtime {
             }
         }
         if param_defs.is_empty() {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                "have expects at least one param type pair".to_string(),
-                tb.line_file.clone(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "have expects at least one param type pair".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
         }
         let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
@@ -198,7 +230,11 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                None,
+            )
         })?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
@@ -277,10 +313,17 @@ impl Runtime {
             }
         }
 
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
-            })?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &equal_tos,
+            tb.line_file.clone(),
+        )
+        .map_err(|e| {
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                None,
+            )
+        })?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
             equal_tos,
@@ -304,7 +347,11 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                None,
+            )
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -338,7 +385,11 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(
+                e,
+                tb.line_file.clone(),
+                None,
+            )
         })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -380,13 +431,16 @@ impl Runtime {
         name: String,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
-        let (params_def_with_type, dom_facts) = self.parse_braced_params_and_optional_dom_facts(tb)?;
+        let (params_def_with_type, dom_facts) =
+            self.parse_braced_params_and_optional_dom_facts(tb)?;
         if !tb.current_token_is_equal_to(EQUAL) {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                "family definition expects `=` after `}`".to_string(),
-                tb.line_file.clone(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "family definition expects `=` after `}`".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
         }
         tb.skip_token(EQUAL)?;
         let equal_to = self.parse_obj(tb)?;
@@ -438,11 +492,13 @@ impl Runtime {
         tb.skip_token(COLON)?;
 
         if tb.body.is_empty() {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                "struct with fields expects body".to_string(),
-                tb.line_file.clone(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "struct with fields expects body".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
         }
 
         let mut fields: Vec<(String, StructFieldType)> = vec![];
@@ -452,7 +508,11 @@ impl Runtime {
         let last_index = body_len - 1;
         let last_is_equiv = {
             let last = tb.body.get(last_index).ok_or_else(|| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error("Expected body".to_string(), tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "Expected body".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                )
             })?;
             last.current_token_is_equal_to(EQUIVALENT_SIGN)
         };
@@ -461,7 +521,11 @@ impl Runtime {
 
         for i in 0..field_end {
             let block = tb.body.get_mut(i).ok_or_else(|| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error("Expected field block".to_string(), tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "Expected field block".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                )
             })?;
             let field_name = block.advance()?;
             let cond = self.parse_struct_field_type(block)?;
@@ -470,7 +534,11 @@ impl Runtime {
 
         if last_is_equiv {
             let last = tb.body.get_mut(last_index).ok_or_else(|| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error("Expected <=>: block".to_string(), tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "Expected <=>: block".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                )
             })?;
             last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
             for block in last.body.iter_mut() {
@@ -478,18 +546,16 @@ impl Runtime {
             }
         }
 
-
         let mut seen = HashSet::new();
         for (field_name, _) in fields.iter() {
             if !seen.insert(field_name.clone()) {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!(
-                        "struct `{}`: duplicate field `{}`",
-                        name, field_name
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        format!("struct `{}`: duplicate field `{}`", name, field_name),
+                        tb.line_file.clone(),
+                        None,
                     ),
-                    tb.line_file.clone(),
-                    None,
-                ));
+                );
             }
         }
 
@@ -558,7 +624,11 @@ impl Runtime {
         block.skip_token(COLON)?;
 
         let return_stmt = self.parse_algo_return(block)?;
-        Ok(AlgoCase::new(condition, return_stmt, block.line_file.clone()))
+        Ok(AlgoCase::new(
+            condition,
+            return_stmt,
+            block.line_file.clone(),
+        ))
     }
 
     /// head 里是 return，后跟 obj。
@@ -567,4 +637,3 @@ impl Runtime {
         Ok(AlgoReturn::new(value, block.line_file.clone()))
     }
 }
-

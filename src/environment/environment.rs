@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ()>,
-    pub defined_props_with_meaning: HashMap<PropName, DefPropWithMeaningStmt>,
+    pub defined_def_props: HashMap<PropName, DefPropStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub defined_structs: HashMap<StructName, DefParamTypeStructStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
@@ -43,7 +43,7 @@ pub struct Environment {
 impl Environment {
     pub fn new(
         objs: HashMap<IdentifierName, ()>,
-        props: HashMap<PropName, DefPropWithMeaningStmt>,
+        def_props: HashMap<PropName, DefPropStmt>,
         param_type_structs: HashMap<StructName, DefParamTypeStructStmt>,
         families: HashMap<FamilyName, DefFamilyStmt>,
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
@@ -87,7 +87,7 @@ impl Environment {
     ) -> Self {
         Environment {
             defined_identifiers: objs,
-            defined_props_with_meaning: props,
+            defined_def_props: def_props,
             defined_structs: param_type_structs,
             defined_families: families,
             defined_abstract_props: abstract_props,
@@ -120,8 +120,8 @@ impl fmt::Display for Environment {
         write!(f, "    objs: {:?}\n", self.defined_identifiers.len())?;
         write!(
             f,
-            "    props_with_meaning: {:?}\n",
-            self.defined_props_with_meaning.len()
+            "    def_props: {:?}\n",
+            self.defined_def_props.len()
         )?;
         write!(
             f,

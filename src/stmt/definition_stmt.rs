@@ -85,7 +85,7 @@ pub struct DefLetStmt {
 }
 
 #[derive(Clone)]
-pub struct DefPropWithMeaningStmt {
+pub struct DefPropStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub iff_facts: Vec<Fact>,
@@ -141,14 +141,14 @@ impl fmt::Display for DefParamTypeStructStmt {
     }
 }
 
-impl DefPropWithMeaningStmt {
+impl DefPropStmt {
     pub fn new(
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
         iff_facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
-        DefPropWithMeaningStmt {
+        DefPropStmt {
             name,
             params_def_with_type,
             iff_facts,
@@ -157,7 +157,7 @@ impl DefPropWithMeaningStmt {
     }
 }
 
-impl fmt::Display for DefPropWithMeaningStmt {
+impl fmt::Display for DefPropStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.iff_facts.len() {
             0 => write!(

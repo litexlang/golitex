@@ -56,7 +56,7 @@ e.g.
 ```json
 {
   "result": "success",
-  "stmt_type": "DefPropWithMeaningStmt",
+  "stmt_type": "DefPropStmt",
   "line": 1,
   "source": "~/tmp.lit",
   "stmt": "prop group_property(s set, zero s, add fn (x, y s) s, inv fn (x s) s):\n    forall x, y, z s:\n        add(x, add(y, z)) = add(add(x, y), z)\n    forall x s:\n        add(x, zero) = x\n        add(zero, x) = x\n        add(x, inv(x)) = zero\n        add(inv(x), x) = zero",

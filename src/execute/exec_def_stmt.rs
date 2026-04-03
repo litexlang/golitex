@@ -33,64 +33,63 @@ impl Runtime {
         Obj::FnObj(FnObj::new(fn_head_atom, fn_body_groups))
     }
 
-    pub fn def_prop_with_meaning_stmt(
+    pub fn def_prop_stmt(
         &mut self,
-        def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
+        def_prop_stmt: &DefPropStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
-        self.def_prop_with_meaning_stmt_check_well_defined(def_prop_with_meaning_stmt)
+        self.def_prop_stmt_check_well_defined(def_prop_stmt)
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+                    Stmt::DefPropStmt(def_prop_stmt.clone()),
                     "".to_string(),
                     Some(e.into()),
                     vec![],
                 )
             })?;
-        self.store_def_prop_with_meaning(def_prop_with_meaning_stmt)?;
+        self.store_def_prop(def_prop_stmt)?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+                Stmt::DefPropStmt(def_prop_stmt.clone()),
                 InferResult::new(),
                 vec![],
             ),
         ))
     }
 
-    fn def_prop_with_meaning_stmt_check_well_defined(
+    fn def_prop_stmt_check_well_defined(
         &mut self,
-        def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
+        def_prop_stmt: &DefPropStmt,
     ) -> Result<(), RuntimeErrorStruct> {
         self.push_env();
 
-        let result =
-            self.def_prop_with_meaning_stmt_check_well_defined_body(def_prop_with_meaning_stmt);
+        let result = self.def_prop_stmt_check_well_defined_body(def_prop_stmt);
 
         self.pop_env();
         result
     }
 
-    fn def_prop_with_meaning_stmt_check_well_defined_body(
+    fn def_prop_stmt_check_well_defined_body(
         &mut self,
-        def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
+        def_prop_stmt: &DefPropStmt,
     ) -> Result<(), RuntimeErrorStruct> {
-        self.define_params_with_type(&def_prop_with_meaning_stmt.params_def_with_type, false)
+        self.define_params_with_type(&def_prop_stmt.params_def_with_type, false)
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+                    Stmt::DefPropStmt(def_prop_stmt.clone()),
                     "".to_string(),
                     Some(e.into()),
                     vec![],
                 )
             })?;
 
-        for fact in def_prop_with_meaning_stmt.iff_facts.iter() {
+        for fact in def_prop_stmt.iff_facts.iter() {
             self.verify_fact_well_defined_and_store_and_infer(
                 fact.clone(),
                 &VerifyState::new(0, false),
             )
                 .map_err(|inner_exec_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+                        Stmt::DefPropStmt(def_prop_stmt.clone()),
                         "".to_string(),
                         Some(RuntimeError::from(inner_exec_error)),
                         vec![],
