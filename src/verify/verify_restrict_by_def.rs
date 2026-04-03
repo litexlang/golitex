@@ -12,11 +12,11 @@ impl Runtime {
         let original_fn_set = match self.get_cloned_fn_set_where_fn_belongs_to(function) {
             Some(fn_set) => fn_set,
             None => {
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                     String::new(),
                     restrict_fact.line_file.clone(),
-                    Some(RuntimeError::well_defined_error(
+                    Some(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                         format!(
                             "function `{}` belongs to what function set is unknown",
                             function.to_string()
@@ -90,7 +90,7 @@ impl Runtime {
             restrict_fact.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::verify_error(
+            RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                 Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                 String::new(),
                 restrict_fact.line_file.clone(),

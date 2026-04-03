@@ -188,7 +188,7 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::unknown_error(
+                return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                     format!("family `{}` is not defined", family_name),
                     default_line_file(),
                     None,
@@ -198,7 +198,7 @@ impl Runtime {
         };
         let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
-            return Err(RuntimeError::unknown_error(
+            return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                 format!(
                     "family `{}` expects {} type argument(s), got {}",
                     family_name,
@@ -280,7 +280,7 @@ impl Runtime {
                 .map_err(|well_defined_error| {
                     let param_names_text = param_def.0.join(", ");
                     let error_line_file = well_defined_error.line_file().clone();
-                    RuntimeError::define_params_error(
+                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
                         format!(
                             "define params with type: failed to verify type well-defined for params [{}] with type {}",
                             param_names_text, param_def.1
@@ -292,7 +292,7 @@ impl Runtime {
             self.verify_param_type_nonempty_if_required(&param_def.1, check_type_nonempty)
                 .map_err(|inner_exec_error| {
                     let param_names_text = param_def.0.join(", ");
-                    RuntimeError::define_params_error(
+                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
                         format!(
                             "define params with type: nonempty check failed for params [{}] with type {}",
                             param_names_text, param_def.1
@@ -304,7 +304,7 @@ impl Runtime {
 
             for name in param_def.0.iter() {
                 self.store_identifier_obj(name).map_err(|runtime_error| {
-                    RuntimeError::define_params_error(
+                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
                         format!(
                             "define params with type: failed to declare parameter `{}`",
                             name
@@ -316,7 +316,7 @@ impl Runtime {
                 let fact_infer_result = self
                     .define_param_binding_for_param_type(name, &param_def.1)
                     .map_err(|runtime_error| {
-                        RuntimeError::define_params_error(
+                        RuntimeError::new_define_params_error_with_msg_previous_error_position(
                             format!(
                                 "define params with type: failed to apply param type for parameter `{}` with type {}",
                                 name, param_def.1
@@ -362,7 +362,7 @@ impl Runtime {
             .map_err(|well_defined_error| {
                 let param_names_text = param_def.0.join(", ");
                 let error_line_file = well_defined_error.line_file().clone();
-                RuntimeError::define_params_error(
+                RuntimeError::new_define_params_error_with_msg_previous_error_position(
                     format!(
                         "define params with set: failed to verify set well-defined for params [{}] with set {}",
                         param_names_text, param_def.1
@@ -375,7 +375,7 @@ impl Runtime {
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.store_identifier_obj(name).map_err(|runtime_error| {
-                RuntimeError::define_params_error(
+                RuntimeError::new_define_params_error_with_msg_previous_error_position(
                     format!(
                         "define params with set: failed to declare parameter `{}`",
                         name
@@ -387,7 +387,7 @@ impl Runtime {
             let fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(fact.clone())
                 .map_err(|store_fact_error| {
-                    RuntimeError::define_params_error(
+                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
                         format!(
                             "define params with set: failed to store in-set fact for parameter `{}`",
                             name

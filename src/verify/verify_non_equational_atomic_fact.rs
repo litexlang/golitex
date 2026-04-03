@@ -234,11 +234,11 @@ impl Runtime {
                         known_fact.to_string(),
                         atomic_fact.to_string()
                     );
-                    return Err(RuntimeError::verify_error(
+                    return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::AtomicFact(atomic_fact.clone()),
                         message.clone(),
                         atomic_fact.line_file(),
-                        Some(RuntimeError::unknown_error(
+                        Some(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                             message,
                             atomic_fact.line_file(),
                             Some(Fact::AtomicFact(atomic_fact.clone())),
@@ -425,7 +425,7 @@ impl Runtime {
             let instantiated_iff_fact = self
                 .inst_fact(iff_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    RuntimeError::verify_error(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal_atomic_fact.clone())),
                         String::new(),
                         normal_atomic_fact.line_file.clone(),

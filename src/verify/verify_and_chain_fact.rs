@@ -15,7 +15,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AndFact(and_fact.clone()),
                     String::new(),
                     and_fact.line_file(),
@@ -59,7 +59,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::ChainFact(chain_fact.clone()),
                     String::new(),
                     chain_fact.line_file(),
@@ -71,7 +71,7 @@ impl Runtime {
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
         let facts = chain_fact.facts().map_err(|e| {
-            RuntimeError::verify_error(
+            RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                 Fact::ChainFact(chain_fact.clone()),
                 String::new(),
                 Fact::ChainFact(chain_fact.clone()).line_file(),

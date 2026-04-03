@@ -142,7 +142,7 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|e| {
-                RuntimeError::verify_error(
+                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AtomicFact(given_atomic_fact.clone()),
                     String::new(),
                     Fact::AtomicFact(given_atomic_fact.clone()).line_file(),
@@ -162,7 +162,7 @@ impl Runtime {
             let instantiated_dom_fact = self
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    RuntimeError::verify_error(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::AtomicFact(given_atomic_fact.clone()),
                         String::new(),
                         Fact::AtomicFact(given_atomic_fact.clone()).line_file(),

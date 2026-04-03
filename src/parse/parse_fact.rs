@@ -37,14 +37,14 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
         })?;
         tb.skip_token(COLON)?;
 
         let last_body = tb
             .body
             .last()
-            .ok_or_else(|| RuntimeError::parse_error("Expected body".to_string(), tb.line_file.clone(), None))?;
+            .ok_or_else(|| RuntimeError::new_parse_error_with_msg_position_previous_error("Expected body".to_string(), tb.line_file.clone(), None))?;
         if last_body.current()? == EQUIVALENT_SIGN {
             self.parse_forall_with_iff(tb, param_def)
         } else {
@@ -58,7 +58,7 @@ impl Runtime {
         param_def: Vec<ParamDefWithParamType>,
     ) -> Result<Fact, RuntimeError> {
         if tb.body.len() < 2 {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "Expected at least 2 body blocks".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -72,7 +72,7 @@ impl Runtime {
         let body_len = tb.body.len();
 
         let iff_block = tb.body.get_mut(body_len - 1).ok_or_else(|| {
-            RuntimeError::parse_error(
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "Expected <=>: block in forall body".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -84,7 +84,7 @@ impl Runtime {
         }
 
         let then_block = tb.body.get_mut(body_len - 2).ok_or_else(|| {
-            RuntimeError::parse_error(
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "Expected =>: block in forall body".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -116,7 +116,7 @@ impl Runtime {
         let last_body = tb
             .body
             .last()
-            .ok_or_else(|| RuntimeError::parse_error("Expected body".to_string(), tb.line_file.clone(), None))?;
+            .ok_or_else(|| RuntimeError::new_parse_error_with_msg_position_previous_error("Expected body".to_string(), tb.line_file.clone(), None))?;
         if last_body.current()? == RIGHT_ARROW {
             let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
             let n = tb.body.len();
@@ -124,7 +124,7 @@ impl Runtime {
                 dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
             let last = tb.body.last_mut().ok_or_else(|| {
-                RuntimeError::parse_error("Expected body".to_string(), tb.line_file.clone(), None)
+                RuntimeError::new_parse_error_with_msg_position_previous_error("Expected body".to_string(), tb.line_file.clone(), None)
             })?;
             last.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
@@ -199,7 +199,7 @@ impl Runtime {
             tb.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::parse_error_wrap(e, tb.line_file.clone(), None)
+            RuntimeError::new_parse_error_wrapping_inner_with_outer_position_optional_outer_summary(e, tb.line_file.clone(), None)
         })?;
         tb.skip_token(ST)?;
 
@@ -267,13 +267,13 @@ impl Runtime {
             let prop = self.parse_identifier_or_identifier_with_mod(tb)?;
             let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: RuntimeErrorStruct| RuntimeError::parse_error(e.msg.clone(), tb.line_file.clone(), None),
+                |e: RuntimeErrorStruct| RuntimeError::new_parse_error_with_msg_position_previous_error(e.msg.clone(), tb.line_file.clone(), None),
             )?;
             return Ok(atomic);
         }
         let first_obj = self.parse_obj(tb)?;
         if tb.exceed_end_of_head() {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "Expected operator or $prop in atomic fact".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -287,7 +287,7 @@ impl Runtime {
             tb.skip_token(FACT_PREFIX)?;
             self.parse_identifier_or_identifier_with_mod(tb)?
         } else {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "Expected operator or $prop in atomic fact".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -296,7 +296,7 @@ impl Runtime {
         let next_obj = self.parse_obj(tb)?;
         let args = vec![first_obj, next_obj];
         let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-            |e: RuntimeErrorStruct| RuntimeError::parse_error(e.msg.clone(), tb.line_file.clone(), None),
+            |e: RuntimeErrorStruct| RuntimeError::new_parse_error_with_msg_position_previous_error(e.msg.clone(), tb.line_file.clone(), None),
         )?;
         Ok(atomic)
     }
@@ -336,7 +336,7 @@ impl Runtime {
             let prop = self.parse_identifier_or_identifier_with_mod(tb)?;
             let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: RuntimeErrorStruct| RuntimeError::parse_error(e.msg.clone(), tb.line_file.clone(), None),
+                |e: RuntimeErrorStruct| RuntimeError::new_parse_error_with_msg_position_previous_error(e.msg.clone(), tb.line_file.clone(), None),
             )?;
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
@@ -359,14 +359,14 @@ impl Runtime {
             objs.push(next_obj);
         }
         if prop_names.is_empty() {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "Expected operator or $prop in fact".to_string(),
                 tb.line_file.clone(),
                 None,
             ));
         }
         if !is_true && (objs.len() > 2 || prop_names.len() > 1) {
-            return Err(RuntimeError::parse_error(
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "Negated fact must be single atomic (one operator)".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -376,7 +376,7 @@ impl Runtime {
             let prop = prop_names.remove(0);
             let args = objs;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: RuntimeErrorStruct| RuntimeError::parse_error(e.msg.clone(), tb.line_file.clone(), None),
+                |e: RuntimeErrorStruct| RuntimeError::new_parse_error_with_msg_position_previous_error(e.msg.clone(), tb.line_file.clone(), None),
             )?;
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
