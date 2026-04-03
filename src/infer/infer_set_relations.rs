@@ -28,7 +28,7 @@ impl Runtime {
         infer_result.new_fact(&inferred_forall_fact);
         self.store_fact_without_well_defined_verified_and_infer(inferred_forall_fact)
             .map_err(|previous_error| {
-                RuntimeError::infer_error(
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
                     format!(
                         "failed to store inferred forall fact while inferring `{}`",
                         subset_fact
@@ -67,7 +67,7 @@ impl Runtime {
         infer_result.new_fact(&inferred_forall_fact);
         self.store_fact_without_well_defined_verified_and_infer(inferred_forall_fact)
             .map_err(|previous_error| {
-                RuntimeError::infer_error(
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
                     format!(
                         "failed to store inferred forall fact while inferring `{}`",
                         superset_fact

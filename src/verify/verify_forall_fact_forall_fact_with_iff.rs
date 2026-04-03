@@ -16,7 +16,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::ForallFact(forall_fact.clone()),
                     String::new(),
                     forall_fact.line_file.clone(),
@@ -45,11 +45,11 @@ impl Runtime {
                 .define_params_with_type(std::slice::from_ref(param_def), false)
                 .map_err(|e| {
                     let message = "failed to define params in forall".to_string();
-                    RuntimeError::verify_error(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
                         forall_fact.line_file.clone(),
-                        Some(RuntimeError::unknown_error(
+                        Some(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
@@ -67,11 +67,11 @@ impl Runtime {
                 )
                 .map_err(|e| {
                     let message = "failed to assume dom fact in forall".to_string();
-                    RuntimeError::verify_error(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::ForallFact(forall_fact.clone()),
                         message.clone(),
                         forall_fact.line_file.clone(),
-                        Some(RuntimeError::unknown_error(
+                        Some(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
@@ -91,7 +91,7 @@ impl Runtime {
             if result.is_unknown() {
                 let then_one_based = then_index + 1;
                 let then_line_file = then_fact.line_file();
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::ForallFact(forall_fact.clone()),
                     format!(
                         "forall: then-fact {}/{} could not be verified (unknown):\n{}",
@@ -175,7 +175,7 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_forall_fact_with_iff_well_defined(forall_iff, verify_state)
             {
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::ForallFactWithIff(forall_iff.clone()),
                     String::new(),
                     forall_iff.line_file.clone(),

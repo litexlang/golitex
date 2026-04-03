@@ -60,7 +60,7 @@ impl Runtime {
                 .verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)
                 .map_err(RuntimeError::from)?;
             if verify_result.is_unknown() {
-                return Err(RuntimeError::unknown_error(
+                return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                     format!(
                         "argument {} does not satisfy parameter type (unknown): {}",
                         arg,

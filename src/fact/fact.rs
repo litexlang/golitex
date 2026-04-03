@@ -64,6 +64,7 @@ impl Fact {
 }
 
 impl Fact {
+    // TODO 未来删了比较好，因为默认所有stmt里的东西都不能变化了
     pub fn with_new_line_file(self, line_file: LineFile) -> Fact {
         match self {
             Fact::AtomicFact(atomic_fact) => {

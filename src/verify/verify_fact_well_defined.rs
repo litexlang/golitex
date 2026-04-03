@@ -62,7 +62,7 @@ impl Runtime {
             let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(RuntimeError::well_defined_error(
+                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     format!(
                         "fact `{}` expects {} argument(s), but got {}",
                         name_string,
@@ -83,7 +83,7 @@ impl Runtime {
             {
                 abstract_prop_definition.params.len()
             } else {
-                return Err(RuntimeError::well_defined_error(
+                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     format!("fact `{}` not defined", name_string),
                     None,
                     atomic_fact.line_file(),
@@ -92,7 +92,7 @@ impl Runtime {
 
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(RuntimeError::well_defined_error(
+                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     format!(
                         "fact `{}` expects {} argument(s), but got {}",
                         name_string,
@@ -183,7 +183,7 @@ impl Runtime {
         for param_def in exist_fact.params_def_with_type().iter() {
             let result = self.define_params_with_type(std::slice::from_ref(param_def), false);
             if let Err(e) = result {
-                return Err(RuntimeError::well_defined_error(
+                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     "failed to define parameters in exist fact".to_string(),
                     Some(e.into()),
                     exist_fact.line_file(),
@@ -214,7 +214,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         if let Err(e) = self.define_params_with_type(&forall_fact.params_def_with_type, false) {
-            return Err(RuntimeError::well_defined_error(
+            return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                 "failed to define parameters in forall fact".to_string(),
                 Some(e.into()),
                 forall_fact.line_file.clone(),
@@ -228,7 +228,7 @@ impl Runtime {
                     verify_state,
                 )
             {
-                return Err(RuntimeError::well_defined_error(
+                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     String::new(),
                     Some(RuntimeError::from(exec_stmt_error)),
                     fact.line_file(),
@@ -242,7 +242,7 @@ impl Runtime {
                     verify_state,
                 )
             {
-                return Err(RuntimeError::well_defined_error(
+                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     String::new(),
                     Some(RuntimeError::from(exec_stmt_error)),
                     fact.line_file(),

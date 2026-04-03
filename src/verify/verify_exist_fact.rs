@@ -16,7 +16,7 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
-                return Err(RuntimeError::verify_error(
+                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::ExistFact(exist_fact.clone()),
                     String::new(),
                     exist_fact.line_file(),
@@ -68,7 +68,7 @@ impl Runtime {
         {
             let target_string = Self::exist_fact_normalized_string(runtime, exist_fact)
                 .map_err(|e| {
-                    RuntimeError::verify_error(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::ExistFact(exist_fact.clone()),
                         String::new(),
                         exist_fact.line_file(),
@@ -78,7 +78,7 @@ impl Runtime {
             for known_fact in known_exist_facts.iter() {
                 let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
                     .map_err(|e| {
-                        RuntimeError::verify_error(
+                        RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                             Fact::ExistFact(exist_fact.clone()),
                             String::new(),
                             exist_fact.line_file(),
