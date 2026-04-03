@@ -105,7 +105,7 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_where_algo_belongs: &FnSetWithParams,
-    ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamTypeTuple>), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
             fn_set_where_algo_belongs,
@@ -116,14 +116,14 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_with_dom: &FnSetWithParams,
-    ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamTypeTuple>), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
             args_for_algo_params.push(Obj::Identifier(Identifier::new(param_name.clone())));
         }
 
         let param_satisfy_fn_param_set_facts_atomic =
-            ParamDefWithParamSet::facts_for_args_satisfy_param_def_with_set_vec(
+            ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
                 self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_for_algo_params,
@@ -162,13 +162,13 @@ impl Runtime {
         }
 
         let mut requirement_facts: Vec<Fact> = Vec::new();
-        let mut algo_param_defs_with_type: Vec<ParamDefWithParamTypeTuple> =
+        let mut algo_param_defs_with_type: Vec<ParamGroupWithParamType> =
             Vec::with_capacity(fn_set_with_dom.params_def_with_set.len());
 
         for param_def_with_set in fn_set_with_dom.params_def_with_set.iter() {
             let mut mapped_param_names: Vec<String> =
-                Vec::with_capacity(param_def_with_set.0.len());
-            for fn_set_param_name in param_def_with_set.0.iter() {
+                Vec::with_capacity(param_def_with_set.params.len());
+            for fn_set_param_name in param_def_with_set.params.iter() {
                 match fn_set_param_name_to_algo_arg_obj.get(fn_set_param_name) {
                     Some(Obj::Identifier(identifier)) => {
                         mapped_param_names.push(identifier.name.clone());
@@ -185,7 +185,7 @@ impl Runtime {
                 }
             }
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.1, &fn_set_param_name_to_algo_arg_obj)
+                .inst_obj(&param_def_with_set.set, &fn_set_param_name_to_algo_arg_obj)
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                         def_algo_stmt,
@@ -193,7 +193,7 @@ impl Runtime {
                         Some(runtime_error),
                     )
                 })?;
-            algo_param_defs_with_type.push(ParamDefWithParamTypeTuple(
+            algo_param_defs_with_type.push(ParamGroupWithParamType::new(
                 mapped_param_names,
                 ParamType::Obj(instantiated_param_set),
             ));
@@ -266,7 +266,7 @@ impl Runtime {
     }
 
     fn forall_fact_for_def_algo_case(
-        algo_param_defs_with_type: &[ParamDefWithParamTypeTuple],
+        algo_param_defs_with_type: &[ParamGroupWithParamType],
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_case: &AlgoCase,
         fn_call_obj: &Obj,
@@ -299,7 +299,7 @@ impl Runtime {
     fn verify_each_def_algo_case_implies_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &[ParamDefWithParamTypeTuple],
+        algo_param_defs_with_type: &[ParamGroupWithParamType],
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
     ) -> Result<(), RuntimeErrorStruct> {
@@ -329,7 +329,7 @@ impl Runtime {
     fn verify_def_algo_case_coverage_when_no_default_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &[ParamDefWithParamTypeTuple],
+        algo_param_defs_with_type: &[ParamGroupWithParamType],
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
     ) -> Result<(), RuntimeErrorStruct> {
         if def_algo_stmt.default_return.is_some() {

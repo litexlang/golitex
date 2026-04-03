@@ -7,7 +7,7 @@ impl Runtime {
         subset_fact: &SubsetFact,
     ) -> Result<InferResult, RuntimeError> {
         let generated_param_name = self.generate_a_random_unused_name();
-        let parameter_definition = ParamDefWithParamTypeTuple(
+        let parameter_definition = ParamGroupWithParamType::new(
             vec![generated_param_name.clone()],
             ParamType::Obj(subset_fact.left.clone()),
         );
@@ -46,7 +46,7 @@ impl Runtime {
         superset_fact: &SupersetFact,
     ) -> Result<InferResult, RuntimeError> {
         let generated_param_name = self.generate_a_random_unused_name();
-        let parameter_definition = ParamDefWithParamTypeTuple(
+        let parameter_definition = ParamGroupWithParamType::new(
             vec![generated_param_name.clone()],
             ParamType::Obj(superset_fact.right.clone()),
         );

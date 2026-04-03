@@ -153,30 +153,30 @@ impl Runtime {
             .iter()
             .zip(other.params_def_with_type.iter())
         {
-            if fact_param_def.0.len() != other_param_def.0.len() {
+            if fact_param_def.params.len() != other_param_def.params.len() {
                 return Ok(None);
             }
 
-            match &fact_param_def.1 {
-                ParamType::Obj(ref obj) => match &other_param_def.1 {
+            match &fact_param_def.param_type {
+                ParamType::Obj(ref obj) => match &other_param_def.param_type {
                     ParamType::Obj(other_obj) => {
                         matched_args.push((obj.clone(), other_obj.clone()));
                     }
                     _ => return Ok(None),
                 },
-                ParamType::Set(_) => match &other_param_def.1 {
+                ParamType::Set(_) => match &other_param_def.param_type {
                     ParamType::Set(_) => {}
                     _ => return Ok(None),
                 },
-                ParamType::NonemptySet(_) => match &other_param_def.1 {
+                ParamType::NonemptySet(_) => match &other_param_def.param_type {
                     ParamType::NonemptySet(_) => {}
                     _ => return Ok(None),
                 },
-                ParamType::FiniteSet(_) => match &other_param_def.1 {
+                ParamType::FiniteSet(_) => match &other_param_def.param_type {
                     ParamType::FiniteSet(_) => {}
                     _ => return Ok(None),
                 },
-                ParamType::Family(ref family) => match &other_param_def.1 {
+                ParamType::Family(ref family) => match &other_param_def.param_type {
                     ParamType::Family(other_family) => {
                         if family.name.to_string() != other_family.name.to_string() {
                             return Ok(None);
@@ -192,7 +192,7 @@ impl Runtime {
                     }
                     _ => return Ok(None),
                 },
-                ParamType::Struct(ref struct_ty) => match &other_param_def.1 {
+                ParamType::Struct(ref struct_ty) => match &other_param_def.param_type {
                     ParamType::Struct(other_struct) => {
                         if struct_ty.name.to_string() != other_struct.name.to_string() {
                             return Ok(None);

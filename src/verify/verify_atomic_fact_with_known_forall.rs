@@ -103,7 +103,7 @@ impl Runtime {
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let param_names = ParamDefWithParamTypeTuple::collect_param_names(&known_forall.params_def);
+        let param_names = ParamGroupWithParamType::collect_param_names(&known_forall.params_def);
 
         if !param_names
             .iter()
@@ -150,7 +150,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = match ParamDefWithParamTypeTuple::param_def_params_to_arg_map(
+        let param_to_arg_map = match ParamGroupWithParamType::param_def_params_to_arg_map(
             &known_forall.params_def,
             &arg_map,
         ) {
@@ -680,8 +680,8 @@ impl Runtime {
     ) -> Vec<Box<Obj>> {
         let mut flat_param_sets: Vec<Box<Obj>> = Vec::new();
         for param_def_with_set in &fn_set.params_def_with_set {
-            for _param_name in param_def_with_set.0.iter() {
-                flat_param_sets.push(Box::new(param_def_with_set.1.clone()));
+            for _param_name in param_def_with_set.params.iter() {
+                flat_param_sets.push(Box::new(param_def_with_set.set.clone()));
             }
         }
         flat_param_sets
