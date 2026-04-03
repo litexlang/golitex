@@ -4,8 +4,7 @@ impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
         match stmt {
             Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(RuntimeError::from),
-            Stmt::DefPropWithMeaningStmt(d) => self
-                .def_prop_with_meaning_stmt(d)
+            Stmt::DefPropStmt(d) => self.def_prop_stmt(d)
                 .map_err(RuntimeError::from),
             Stmt::DefAbstractPropStmt(d) => self
                 .def_abstract_prop_stmt(d)

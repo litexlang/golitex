@@ -11,7 +11,7 @@ impl Runtime {
         let inferred_fact_display = inferred_fact.to_string();
         self.store_fact_without_well_defined_verified_and_infer(inferred_fact)
             .map_err(|previous_error| {
-                RuntimeError::infer_error(
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
                     format!(
                         "failed to store inferred {} while inferring `{}`",
                         infer_step_description, equal_fact
@@ -211,11 +211,10 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
     ) -> Result<InferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
-        let predicate_definition =
-            match self.get_predicate_with_meaning_definition_by_name(&predicate_name) {
-                Some(predicate_definition) => predicate_definition.clone(),
-                None => return Ok(InferResult::new()),
-            };
+        let predicate_definition = match self.get_def_prop_definition_by_name(&predicate_name) {
+            Some(predicate_definition) => predicate_definition.clone(),
+            None => return Ok(InferResult::new()),
+        };
         let mut infer_result = InferResult::new();
 
         let param_type_infer = self
@@ -225,7 +224,7 @@ impl Runtime {
                 normal_atomic_fact.line_file.clone(),
             )
             .map_err(|previous_error| {
-                RuntimeError::infer_error(
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
                     format!(
                         "failed to verify parameter types for `{}`",
                         normal_atomic_fact
@@ -236,15 +235,15 @@ impl Runtime {
             })?;
         infer_result.new_infer_result_inside(param_type_infer);
 
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
             &predicate_definition.params_def_with_type,
             &normal_atomic_fact.body,
         );
 
         for iff_fact in predicate_definition.iff_facts.iter() {
-            let instantiated_iff_fact = self.inst_fact(iff_fact, &param_to_arg_map).map_err(
-                |e| {
-                    RuntimeError::infer_error(
+            let instantiated_iff_fact =
+                self.inst_fact(iff_fact, &param_to_arg_map).map_err(|e| {
+                    RuntimeError::new_infer_error_with_msg_position_previous_error(
                         format!(
                             "failed to instantiate iff fact while inferring `{}`",
                             normal_atomic_fact
@@ -252,14 +251,13 @@ impl Runtime {
                         normal_atomic_fact.line_file.clone(),
                         Some(e),
                     )
-                },
-            )?;
+                })?;
             let fact_to_store =
                 instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file.clone());
             infer_result.new_fact(&fact_to_store);
             self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
                 .map_err(|previous_error| {
-                    RuntimeError::infer_error(
+                    RuntimeError::new_infer_error_with_msg_position_previous_error(
                         format!(
                             "failed to store instantiated iff fact while inferring `{}`",
                             normal_atomic_fact

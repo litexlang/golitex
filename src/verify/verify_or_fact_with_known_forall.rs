@@ -103,7 +103,7 @@ impl Runtime {
         given_or_fact: &OrFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params_def);
+        let param_names = ParamDefWithParamTypeTuple::collect_param_names(&known_forall.params_def);
 
         if !param_names
             .iter()
@@ -140,7 +140,7 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|e| {
-                RuntimeError::verify_error(
+                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::OrFact(given_or_fact.clone()),
                     String::new(),
                     given_or_fact.line_file.clone(),
@@ -148,7 +148,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(
+        let param_to_arg_map = match ParamDefWithParamTypeTuple::param_def_params_to_arg_map(
             &known_forall.params_def,
             &arg_map,
         ) {
@@ -160,7 +160,7 @@ impl Runtime {
             let instantiated_dom_fact = self
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    RuntimeError::verify_error(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::OrFact(given_or_fact.clone()),
                         String::new(),
                         given_or_fact.line_file.clone(),

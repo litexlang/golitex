@@ -31,7 +31,7 @@ impl Runtime {
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(then_fact, &VerifyState::new(0, false))?;
             if result.is_unknown() {
-                return Err(RuntimeError::unknown_error(
+                return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                     format!("claim failed: cannot prove `{}`", stmt.fact),
                     stmt.line_file.clone(),
                     Some(stmt.fact.clone()),
@@ -99,7 +99,7 @@ impl Runtime {
                     Err(runtime_error) => return Err(runtime_error),
                 };
                 if non_err_after_body.is_unknown() {
-                    return Err(RuntimeError::unknown_error(
+                    return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                         format!("claim failed: cannot prove `{}`", stmt.fact),
                         stmt.line_file.clone(),
                         Some(stmt.fact.clone()),

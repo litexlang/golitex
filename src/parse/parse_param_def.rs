@@ -4,10 +4,10 @@ impl Runtime {
     pub fn parse_param_def_with_struct_field_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithStructFieldType, RuntimeError> {
+    ) -> Result<ParamDefWithStructFieldTypeTuple, RuntimeError> {
         let param = tb.advance()?;
         let param_def = if tb.current()? != COMMA {
-            ParamDefWithStructFieldType(vec![param], self.parse_struct_field_type(tb)?)
+            ParamDefWithStructFieldTypeTuple(vec![param], self.parse_struct_field_type(tb)?)
         } else {
             let mut vec_of_params = vec![param];
 
@@ -17,7 +17,7 @@ impl Runtime {
             }
             let param_type = self.parse_struct_field_type(tb)?;
 
-            ParamDefWithStructFieldType(vec_of_params, param_type)
+            ParamDefWithStructFieldTypeTuple(vec_of_params, param_type)
         };
         if tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
@@ -50,7 +50,7 @@ impl Runtime {
                     ParamType::Family(f) => StructFieldType::Family(f),
                     _ => unreachable!(),
                 }),
-            STRUCT => Err(RuntimeError::parse_error(
+            STRUCT => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 "nested `struct` types are not allowed in struct parameter and field types".to_string(),
                 tb.line_file.clone(),
                 None,
@@ -67,10 +67,10 @@ impl Runtime {
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithParamType, RuntimeError> {
+    ) -> Result<ParamDefWithParamTypeTuple, RuntimeError> {
         let param = tb.advance()?;
         let param_def_with_param_type = if tb.current()? != COMMA {
-            ParamDefWithParamType(vec![param], self.parse_param_type(tb)?)
+            ParamDefWithParamTypeTuple(vec![param], self.parse_param_type(tb)?)
         } else {
             let mut vec_of_params = vec![param];
 
@@ -80,7 +80,7 @@ impl Runtime {
             }
             let param_type = self.parse_param_type(tb)?;
 
-            ParamDefWithParamType(vec_of_params, param_type)
+            ParamDefWithParamTypeTuple(vec_of_params, param_type)
         };
         if tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;

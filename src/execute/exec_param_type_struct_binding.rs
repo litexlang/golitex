@@ -100,7 +100,7 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::unknown_error(
+                return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                     format!(
                         "struct `{}` is not defined (needed for field `{}` of type `struct {}(...)`)",
                         struct_name,
@@ -114,32 +114,37 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
+        let expected_count = ParamDefWithStructFieldTypeTuple::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::unknown_error(
-                format!(
-                    "struct `{}` expects {} type argument(s), got {}",
-                    struct_name,
-                    expected_count,
-                    struct_ty.args.len()
-                ),
-                default_line_file(),
-                None,
-                None,
-            ).into());
+            return Err(
+                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    format!(
+                        "struct `{}` expects {} type argument(s), got {}",
+                        struct_name,
+                        expected_count,
+                        struct_ty.args.len()
+                    ),
+                    default_line_file(),
+                    None,
+                    None,
+                )
+                .into(),
+            );
         }
 
-        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
-            &def.param_defs,
-            &struct_ty.args,
-        );
+        let param_to_arg_map =
+            ParamDefWithStructFieldTypeTuple::param_defs_and_args_to_param_to_arg_map(
+                &def.param_defs,
+                &struct_ty.args,
+            );
 
         let mut infer_result = InferResult::new();
         for (field_name, field_param_type) in def.fields.iter() {
             let instantiated =
                 self.inst_param_type(&field_param_type.to_param_type(), &param_to_arg_map)?;
             let fa = append_field_to_field_access(field_access, field_name);
-            let fr = self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
+            let fr =
+                self.define_param_binding_for_param_type_on_field_access(&fa, &instantiated)?;
             infer_result.new_infer_result_inside(fr);
         }
         let fact_infer = self.store_instantiated_struct_def_facts_with_self(
@@ -163,43 +168,52 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::unknown_error(
-                    format!("struct `{}` is not defined", struct_name),
-                    default_line_file(),
-                    None,
-                    None,
-                ).into());
+                return Err(
+                    RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                        format!("struct `{}` is not defined", struct_name),
+                        default_line_file(),
+                        None,
+                        None,
+                    )
+                    .into(),
+                );
             }
         };
         if def.name != struct_name {
-            return Err(RuntimeError::unknown_error(
-                format!(
-                    "struct type name `{}` does not match definition name `{}`",
-                    struct_name, def.name
-                ),
-                default_line_file(),
-                None,
-                None,
-            ).into());
+            return Err(
+                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    format!(
+                        "struct type name `{}` does not match definition name `{}`",
+                        struct_name, def.name
+                    ),
+                    default_line_file(),
+                    None,
+                    None,
+                )
+                .into(),
+            );
         }
 
-        let expected_count = ParamDefWithStructFieldType::number_of_params(&def.param_defs);
+        let expected_count = ParamDefWithStructFieldTypeTuple::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::unknown_error(
-                format!(
-                    "struct `{}` expects {} type argument(s), got {}",
-                    struct_name,
-                    expected_count,
-                    struct_ty.args.len()
-                ),
-                default_line_file(),
-                None,
-                None,
-            ).into());
+            return Err(
+                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    format!(
+                        "struct `{}` expects {} type argument(s), got {}",
+                        struct_name,
+                        expected_count,
+                        struct_ty.args.len()
+                    ),
+                    default_line_file(),
+                    None,
+                    None,
+                )
+                .into(),
+            );
         }
 
         if tuple.args.len() != def.fields.len() + def.number_of_params() {
-            return Err(RuntimeError::unknown_error(
+            return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                 format!(
                     "struct `{}`: tuple has {} component(s), definition has {} field(s) (must match)",
                     struct_name,
@@ -212,14 +226,16 @@ impl Runtime {
             ).into());
         }
 
-        let param_to_arg_map = ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
-            &def.param_defs,
-            &struct_ty.args,
-        );
+        let param_to_arg_map =
+            ParamDefWithStructFieldTypeTuple::param_defs_and_args_to_param_to_arg_map(
+                &def.param_defs,
+                &struct_ty.args,
+            );
 
         let mut infer_result = InferResult::new();
         for (i, (_field_name, field_pt)) in def.fields.iter().enumerate() {
-            let instantiated = self.inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)?;
+            let instantiated =
+                self.inst_param_type(&field_pt.to_param_type(), &param_to_arg_map)?;
             let component = (*tuple.args[i + def.number_of_params()]).clone();
             let ir = self.define_param_binding_for_param_type_on_obj(component, &instantiated)?;
             infer_result.new_infer_result_inside(ir);
@@ -257,7 +273,9 @@ impl Runtime {
         for fact in def.facts.iter() {
             let instantiated = self.inst_or_and_chain_atomic_fact(fact, &extended)?;
             let fr = self
-                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(instantiated)
+                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    instantiated,
+                )
                 .map_err(RuntimeError::from)?;
             infer_result.new_infer_result_inside(fr);
         }
@@ -269,9 +287,7 @@ impl Runtime {
         self.top_level_env()
             .defined_field_access_name
             .insert(key.clone(), inst);
-        self.top_level_env()
-            .cache_well_defined_obj
-            .insert(key, ());
+        self.top_level_env().cache_well_defined_obj.insert(key, ());
     }
 
     fn define_param_binding_family_on_obj(
@@ -283,29 +299,36 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::unknown_error(
-                    format!("family `{}` is not defined", family_name),
+                return Err(
+                    RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                        format!("family `{}` is not defined", family_name),
+                        default_line_file(),
+                        None,
+                        None,
+                    )
+                    .into(),
+                );
+            }
+        };
+        let expected_count =
+            ParamDefWithParamTypeTuple::number_of_params(&def.params_def_with_type);
+        if family_ty.params.len() != expected_count {
+            return Err(
+                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    format!(
+                        "family `{}` expects {} type argument(s), got {}",
+                        family_name,
+                        expected_count,
+                        family_ty.params.len()
+                    ),
                     default_line_file(),
                     None,
                     None,
-                ).into());
-            }
-        };
-        let expected_count = ParamDefWithParamType::number_of_params(&def.params_def_with_type);
-        if family_ty.params.len() != expected_count {
-            return Err(RuntimeError::unknown_error(
-                format!(
-                    "family `{}` expects {} type argument(s), got {}",
-                    family_name,
-                    expected_count,
-                    family_ty.params.len()
-                ),
-                default_line_file(),
-                None,
-                None,
-            ).into());
+                )
+                .into(),
+            );
         }
-        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_ty.params,
         );
@@ -388,7 +411,7 @@ impl Runtime {
                 if let ParamType::Struct(struct_ty) = param_type {
                     self.define_param_binding_struct_from_tuple(tuple, struct_ty)
                 } else {
-                    Err(RuntimeError::unknown_error(
+                    Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                         format!(
                             "tuple as subject is only supported for struct parameter type, got {}",
                             param_type
@@ -400,7 +423,7 @@ impl Runtime {
                 }
             }
             _ => match param_type {
-                ParamType::Struct(_) => Err(RuntimeError::unknown_error(
+                ParamType::Struct(_) => Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                     format!(
                         "struct parameter type requires an identifier, field access, or tuple matching struct fields, got {}",
                         subject

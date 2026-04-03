@@ -46,7 +46,7 @@ impl Runtime {
         let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
         let verify_state_for_well_defined = VerifyState::new(0, false);
 
-        let expected_param_count = ParamDefWithParamType::number_of_params(
+        let expected_param_count = ParamDefWithParamTypeTuple::number_of_params(
             &stmt.exist_fact_in_witness.params_def_with_type,
         );
         if expected_param_count != stmt.equal_tos.len() {
@@ -127,7 +127,7 @@ impl Runtime {
         }
 
         // 5) Substitute equal_tos into exist_fact_in_witness and check internal facts.
-        let param_to_obj_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_obj_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
             &stmt.exist_fact_in_witness.params_def_with_type,
             &stmt.equal_tos,
         );

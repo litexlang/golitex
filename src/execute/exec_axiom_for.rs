@@ -134,7 +134,7 @@ impl Runtime {
             match value {
                 Some(number) => number.normalized_value,
                 _ => {
-                    return Err(RuntimeError::unknown_error(
+                    return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                         format!(
                             "by for: range boundary `{}` must be a calculable number expression",
                             number_like_obj
@@ -148,7 +148,7 @@ impl Runtime {
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(RuntimeError::unknown_error(
+            return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                 format!(
                     "by for: range boundary `{}` is not an integer number",
                     number_like_obj

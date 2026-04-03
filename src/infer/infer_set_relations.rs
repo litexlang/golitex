@@ -7,7 +7,7 @@ impl Runtime {
         subset_fact: &SubsetFact,
     ) -> Result<InferResult, RuntimeError> {
         let generated_param_name = self.generate_a_random_unused_name();
-        let parameter_definition = ParamDefWithParamType(
+        let parameter_definition = ParamDefWithParamTypeTuple(
             vec![generated_param_name.clone()],
             ParamType::Obj(subset_fact.left.clone()),
         );
@@ -28,7 +28,7 @@ impl Runtime {
         infer_result.new_fact(&inferred_forall_fact);
         self.store_fact_without_well_defined_verified_and_infer(inferred_forall_fact)
             .map_err(|previous_error| {
-                RuntimeError::infer_error(
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
                     format!(
                         "failed to store inferred forall fact while inferring `{}`",
                         subset_fact
@@ -46,7 +46,7 @@ impl Runtime {
         superset_fact: &SupersetFact,
     ) -> Result<InferResult, RuntimeError> {
         let generated_param_name = self.generate_a_random_unused_name();
-        let parameter_definition = ParamDefWithParamType(
+        let parameter_definition = ParamDefWithParamTypeTuple(
             vec![generated_param_name.clone()],
             ParamType::Obj(superset_fact.right.clone()),
         );
@@ -67,7 +67,7 @@ impl Runtime {
         infer_result.new_fact(&inferred_forall_fact);
         self.store_fact_without_well_defined_verified_and_infer(inferred_forall_fact)
             .map_err(|previous_error| {
-                RuntimeError::infer_error(
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
                     format!(
                         "failed to store inferred forall fact while inferring `{}`",
                         superset_fact

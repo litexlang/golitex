@@ -427,7 +427,7 @@ fn mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
 impl ForallFact {
     pub fn error_messages_if_forall_param_missing_in_some_then_clause(&self) -> Vec<String> {
         let forall_param_names =
-            ParamDefWithParamType::collect_param_names(&self.params_def_with_type);
+            ParamDefWithParamTypeTuple::collect_param_names(&self.params_def_with_type);
         if forall_param_names.is_empty() {
             return Vec::new();
         }
@@ -472,7 +472,7 @@ impl ForallFactWithIff {
             .forall_fact
             .error_messages_if_forall_param_missing_in_some_then_clause();
         let forall_param_names =
-            ParamDefWithParamType::collect_param_names(&self.forall_fact.params_def_with_type);
+            ParamDefWithParamTypeTuple::collect_param_names(&self.forall_fact.params_def_with_type);
         if forall_param_names.is_empty() {
             return error_messages;
         }

@@ -524,7 +524,7 @@ impl Runtime {
         };
         if fn_set_with_params_equal_modulo_param_rename(self, &stored_fn_set, expected_fn_set)
             .map_err(|e| {
-                RuntimeError::verify_error(
+                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
                     String::new(),
                     in_fact.line_file.clone(),

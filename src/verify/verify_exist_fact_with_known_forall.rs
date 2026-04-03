@@ -106,9 +106,9 @@ impl Runtime {
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         // exist param matches exist param
         let given_exist_param_names =
-            ParamDefWithParamType::collect_param_names(&given_exist_fact.params_def_with_type);
+            ParamDefWithParamTypeTuple::collect_param_names(&given_exist_fact.params_def_with_type);
 
-        let known_exist_param_names = ParamDefWithParamType::collect_param_names(
+        let known_exist_param_names = ParamDefWithParamTypeTuple::collect_param_names(
             &exist_fact_in_known_forall.params_def_with_type,
         );
         if !known_exist_param_names
@@ -149,7 +149,7 @@ impl Runtime {
         }
 
         // arg that matches forall params
-        let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params_def);
+        let param_names = ParamDefWithParamTypeTuple::collect_param_names(&known_forall.params_def);
 
         if !param_names
             .iter()
@@ -186,7 +186,7 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|e| {
-                RuntimeError::verify_error(
+                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::ExistFact(given_exist_fact.clone()),
                     String::new(),
                     Fact::ExistFact(given_exist_fact.clone()).line_file(),
@@ -194,7 +194,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(
+        let param_to_arg_map = match ParamDefWithParamTypeTuple::param_def_params_to_arg_map(
             &known_forall.params_def,
             &arg_map,
         ) {
@@ -206,7 +206,7 @@ impl Runtime {
             let instantiated_dom_fact = self
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    RuntimeError::verify_error(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         Fact::ExistFact(given_exist_fact.clone()),
                         String::new(),
                         Fact::ExistFact(given_exist_fact.clone()).line_file(),
