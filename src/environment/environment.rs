@@ -700,14 +700,14 @@ impl Environment {
 }
 
 pub struct KnownForallFactParamsAndDom {
-    pub params_def: Vec<ParamDefWithParamTypeTuple>,
+    pub params_def: Vec<ParamGroupWithParamType>,
     pub dom: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
 
 impl KnownForallFactParamsAndDom {
     pub fn new(
-        params: Vec<ParamDefWithParamTypeTuple>,
+        params: Vec<ParamGroupWithParamType>,
         dom: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {

@@ -49,8 +49,8 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        if ParamDefWithParamSet::number_of_params(&left.params_def_with_set)
-            != ParamDefWithParamSet::number_of_params(&right.params_def_with_set)
+        if ParamGroupWithSet::number_of_params(&left.params_def_with_set)
+            != ParamGroupWithSet::number_of_params(&right.params_def_with_set)
         {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
@@ -107,7 +107,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        let target_flat_param_names = ParamDefWithParamSet::collect_param_names(&target.params_def_with_set);
+        let target_flat_param_names = ParamGroupWithSet::collect_param_names(&target.params_def_with_set);
         let generated_param_names =
             self.generate_non_duplicated_random_param_names(target_flat_param_names.len());
         let source_param_to_generated_arg_map = self
@@ -215,11 +215,11 @@ impl Runtime {
         let mut flat_index: usize = 0;
 
         for param_def_with_set in source.params_def_with_set.iter() {
-            let next_flat_index = flat_index + param_def_with_set.0.len();
+            let next_flat_index = flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_param_names[flat_index..next_flat_index].to_vec();
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.1, &source_param_to_generated_arg_map)
+                .inst_obj(&param_def_with_set.set, &source_param_to_generated_arg_map)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,
@@ -230,7 +230,7 @@ impl Runtime {
                     )
                 })?;
             let generated_param_def =
-                ParamDefWithParamSet::new(generated_names_for_current_group.clone(), instantiated_param_set);
+                ParamGroupWithSet::new(generated_names_for_current_group.clone(), instantiated_param_set);
             self.define_params_with_set(&generated_param_def)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
@@ -244,7 +244,7 @@ impl Runtime {
                 })?;
 
             for (source_param_name, generated_param_name) in param_def_with_set
-                .0
+                .params
                 .iter()
                 .zip(generated_names_for_current_group.iter())
             {
@@ -305,7 +305,7 @@ impl Runtime {
     ) -> Result<bool, RuntimeError> {
         for param_def_with_set in target.params_def_with_set.iter() {
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.1, target_param_to_generated_arg_map)
+                .inst_obj(&param_def_with_set.set, target_param_to_generated_arg_map)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,
@@ -315,7 +315,7 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
-            for param_name in param_def_with_set.0.iter() {
+            for param_name in param_def_with_set.params.iter() {
                 let Some(generated_param_obj) =
                     target_param_to_generated_arg_map.get(param_name).cloned()
                 else {

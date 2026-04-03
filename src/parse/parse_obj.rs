@@ -121,7 +121,7 @@ impl Runtime {
         }
     }
 
-    /// 主元：{ }、@、fn、数字、括号、关键字、atom
+    /// 主元：{ }、fn、数字、括号、关键字、atom
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
@@ -150,7 +150,7 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<FnSetWithParams, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
-        let mut params_def_with_set: Vec<ParamDefWithParamSet> = vec![];
+        let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
         loop {
             let param = tb.advance()?;
             let mut current_params = vec![param];
@@ -161,7 +161,7 @@ impl Runtime {
             }
 
             let set = self.parse_obj(tb)?;
-            params_def_with_set.push(ParamDefWithParamSet(current_params, set));
+            params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
             if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
                 continue;
@@ -180,7 +180,7 @@ impl Runtime {
             }
         }
 
-        let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
+        let fn_set_param_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
         self.validate_names_and_insert_into_top_parsing_time_name_scope(
             &fn_set_param_names,
             tb.line_file.clone(),
