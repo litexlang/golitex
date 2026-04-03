@@ -154,7 +154,6 @@ impl RuntimeError {
         }
     }
 
-    /// Short label for display (e.g. "ExecError", "VerifyUnknownError").
     pub fn display_label(&self) -> &'static str {
         match self {
             RuntimeError::ArithmeticError(_) => "ArithmeticError",

@@ -129,9 +129,9 @@ impl DefAbstractPropStmt {
     }
 }
 
-impl DefPropWithMeaningStmt {
+impl DefPropStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefPropWithMeaningStmt".to_string()
+        "DefPropStmt".to_string()
     }
 }
 
