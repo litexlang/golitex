@@ -1,3 +1,28 @@
+# manual.md — Abstract Proposition (p,q renamed: Litex forbids two abstract_prop with same name)
+abstract_prop r()
+abstract_prop p_manual1(x)
+abstract_prop q_manual3(x, y, z)
+
+# manual.md — by cases (x -> x_demo: avoid clashing with formal parameter x in by contra abstract_prop p(x,y))
+have fn g(x_demo R) R =:
+    case x_demo = 2: 3
+    case x_demo != 2: 4
+
+have x_demo R
+
+x_demo = 2 or x_demo != 2
+
+by cases:
+    prove:
+        g(x_demo) > 2
+    case x_demo = 2:
+        g(x_demo) = 3
+        g(x_demo) > 2
+    case x_demo != 2:
+        g(x_demo) = 4
+        g(x_demo) > 2
+
+# manual.md — by contra (exact names as in manual)
 abstract_prop p(x, y)
 abstract_prop q(x, y)
 
@@ -13,3 +38,70 @@ by contra:
         not $p(1, 2)
     $p(1, 2)
     impossible $q(1,2 )
+
+# manual.md — witness exist … from …
+witness exist x, y R st {x > y} from 1, 0:
+    1 > 0
+
+exist x, y R st {x > y}
+
+# manual.md — witness nonempty set
+have s set
+
+witness $is_nonempty_set(s) from 1:
+    know 1 $in s
+
+$is_nonempty_set(s)
+
+# manual.md — by enumerate (a -> a_en: avoid clash with abstract_prop p_ind(a) below)
+let a_en R:
+    a_en $in {1, 2}
+
+a_en = 1 or a_en = 2
+
+by enumerate a_en {1, 2, 3}:
+    prove:
+        a_en < 4
+
+# manual.md — by induc
+abstract_prop p_ind(a)
+
+know:
+    $p_ind(0)
+    forall n Z:
+        n >= 0
+        $p_ind(n)
+        =>:
+            $p_ind(n + 1)
+
+by induc n from 0:
+    $p_ind(n)
+
+forall n Z:
+    n >= 0
+    =>:
+        $p_ind(n)
+
+# manual.md — by for
+by for n range(0, 10):
+    prove:
+        n < 10
+    do_nothing
+
+by for n closed_range(0, 10):
+    prove:
+        n <= 10
+    do_nothing
+
+# manual.md — by extension
+by extension:
+    prove:
+        {1, 2} = {2, 1}
+    by enumerate x {1, 2}:
+        prove:
+            x $in {2, 1}
+    by enumerate y {2, 1}:
+        prove:
+            y $in {1, 2}
+
+{1, 2} = {2, 1}
