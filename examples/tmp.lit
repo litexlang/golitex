@@ -1,0 +1,17 @@
+have fn g(x R) R =:
+    case x = 2: 3
+    case x != 2: 4
+
+have x R
+
+x = 2 or x != 2
+
+by cases:
+    prove:
+        g(x) > 2
+    case x = 2:
+        g(x) = 3
+        g(x) > 2
+    case x != 2:
+        g(x) = 4
+        g(x) > 2

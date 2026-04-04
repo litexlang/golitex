@@ -26,6 +26,26 @@ impl Runtime {
 
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
+        if or_fact.facts.len() == 2 {
+            if let (
+                AndChainAtomicFact::AtomicFact(first_atomic),
+                AndChainAtomicFact::AtomicFact(second_atomic),
+            ) = (&or_fact.facts[0], &or_fact.facts[1])
+            {
+                if first_atomic.make_reversed().to_string() == second_atomic.to_string() {
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                            Fact::OrFact(or_fact.clone()),
+                            InferResult::new(),
+                            "or: complementary atomic facts (make_reversed first equals second)"
+                                .to_string(),
+                            Vec::new(),
+                        ),
+                    ));
+                }
+            }
+        }
+
         for fact in or_fact.facts.iter() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn verify_obj_satisfies_struct_param_type(
@@ -12,11 +12,13 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::new_verify_error_with_msg_position_previous_error(
-                    format!("struct `{}` is not defined", struct_name),
-                    default_line_file(),
-                    None,
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_msg_position_previous_error(
+                        format!("struct `{}` is not defined", struct_name),
+                        default_line_file(),
+                        None,
+                    ),
+                );
             }
         };
 
@@ -33,50 +35,64 @@ impl Runtime {
                 None,
             ));
         }
-        
+
         match &obj {
             Obj::Tuple(tuple) => {
                 self.push_env();
-                let result = self.verify_tuple_satisfy_struct(
-                    tuple,
-                    struct_ty,
-                    &def,
-                    verify_state,
-                );
+                let result = self.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state);
                 self.pop_env();
                 result
             }
             Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
-                let _ =
-                if let Some(def) =
-                    self.get_definition_of_struct_where_object_satisfies(&IdentifierOrIdentifierWithMod::Identifier(Identifier::new(obj.to_string())))
-                {
-                    if def.name.to_string() != struct_ty.name.to_string() {
-                        // TODO
-                        return Err(RuntimeError::new_verify_error_with_msg_position_previous_error(
-                            format!("{} satisfies struct `{}`, but it should satisfy struct `{}`", obj.to_string(), def.name.to_string(), struct_ty.name.to_string()),
-                            default_line_file(),
-                            None,
-                        ));
+                let id_key = match &obj {
+                    Obj::Identifier(i) => IdentifierOrIdentifierWithMod::Identifier(i.clone()),
+                    Obj::IdentifierWithMod(m) => {
+                        IdentifierOrIdentifierWithMod::IdentifierWithMod(m.clone())
                     }
-                    
-                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        // TODO: 这其实是有问题的 因为这种 satisfy 不是正常意义的 fact
-                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
-                            Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                                obj.clone(),
-                                Obj::Identifier(Identifier::new(String::from("_"))),
-                                default_line_file(),
-                            ))),
-                            InferResult::new(),
-                            "".to_string(),
-                            None,
-                            Some(default_line_file()),
-                            vec![],
-                        ),
-                    ));
+                    _ => {
+                        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    }
                 };
-                Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+
+                let Some(satisfied_struct) =
+                    self.get_struct_that_object_satisfies(&id_key).cloned()
+                else {
+                    return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                };
+
+                if satisfied_struct.name.to_string() != struct_ty.name.to_string() {
+                    return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                }
+
+                if satisfied_struct.args.len() != struct_ty.args.len() {
+                    return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                }
+
+                for (env_arg, given_arg) in satisfied_struct.args.iter().zip(struct_ty.args.iter())
+                {
+                    let result = self.verify_equal_fact(
+                        &EqualFact::new(env_arg.clone(), given_arg.clone(), default_line_file()),
+                        verify_state,
+                    )?;
+                    if !result.is_true() {
+                        return Ok(result);
+                    }
+                }
+
+                Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                            obj.clone(),
+                            Obj::Identifier(Identifier::new(String::from("_"))),
+                            default_line_file(),
+                        ))),
+                        InferResult::new(),
+                        "".to_string(),
+                        None,
+                        Some(default_line_file()),
+                        vec![],
+                    ),
+                ))
             }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
@@ -92,16 +108,18 @@ impl Runtime {
         let args_of_struct_param_type = &struct_param_type.args;
         let expected_tuple_len = args_of_struct_param_type.len() + struct_def.fields.len();
         if expected_tuple_len != tuple.args.len() {
-            return Err(RuntimeError::new_verify_error_with_msg_position_previous_error(
-                format!(
-                    "tuple for struct `{}` should have {} component(s), got {}",
-                    struct_param_type.name,
-                    expected_tuple_len,
-                    tuple.args.len()
+            return Err(
+                RuntimeError::new_verify_error_with_msg_position_previous_error(
+                    format!(
+                        "tuple for struct `{}` should have {} component(s), got {}",
+                        struct_param_type.name,
+                        expected_tuple_len,
+                        tuple.args.len()
+                    ),
+                    default_line_file(),
+                    None,
                 ),
-                default_line_file(),
-                None,
-            ));
+            );
         }
 
         let mut tuple_args_for_struct_param_type_args: Vec<Obj> = vec![];
@@ -120,7 +138,11 @@ impl Runtime {
         for (i, tuple_arg) in tuple_args_for_struct_param_type_args.iter().enumerate() {
             let struct_type_arg = struct_param_type.args[i].clone();
             let result = self.verify_equal_fact(
-                &EqualFact::new(tuple_arg.clone(), struct_type_arg.clone(), default_line_file()),
+                &EqualFact::new(
+                    tuple_arg.clone(),
+                    struct_type_arg.clone(),
+                    default_line_file(),
+                ),
                 verify_state,
             )?;
             if result.is_unknown() {
@@ -130,10 +152,13 @@ impl Runtime {
 
         let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
         for (i, key) in struct_def.get_params().iter().enumerate() {
-            param_arg_map.insert(key.clone(), tuple_args_for_struct_param_type_args[i].clone());
+            param_arg_map.insert(
+                key.clone(),
+                tuple_args_for_struct_param_type_args[i].clone(),
+            );
         }
 
-        // 验证：tuple_args_for_struct_param_type_fields 满足 field 对应的 实例化的 struct_type 
+        // 验证：tuple_args_for_struct_param_type_fields 满足 field 对应的 实例化的 struct_type
         // e.g. (R, 0, +, neg) 中 (0, +, neg) 满足 struct group(R): zero: R, add: fn(x, y R) R, inv: fn(x R) R 中: 0 满足 zero:R, + 满足 add: fn(x, y R) R, neg 满足 inv: fn(x R) R
         let mut last_result: Option<NonErrStmtExecResult> = None;
         for (i, ((_, field_type), tuple_field_arg)) in struct_def
@@ -169,7 +194,7 @@ impl Runtime {
 
         // TODO TODO: 让 self 对应这个 def ，否则 无法 instantiate
         self.register_param_as_struct_instance(SELF, struct_param_type.clone());
-        
+
         for iff_fact in struct_def.facts.iter() {
             let instantiated = self
                 .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map)
@@ -183,7 +208,7 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
-            println!("instantiated: {:?}", instantiated.to_string());
+
             let result = self.verify_or_and_chain_atomic_fact(&instantiated, verify_state)?;
             if result.is_unknown() {
                 return Ok(result);
@@ -198,5 +223,5 @@ impl Runtime {
                 vec![],
             ))
         }))
-    }   
+    }
 }
