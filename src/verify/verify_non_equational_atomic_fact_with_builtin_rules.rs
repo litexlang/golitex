@@ -14,6 +14,9 @@ impl Runtime {
             AtomicFact::InFact(in_fact) => {
                 self.verify_in_fact_with_builtin_rules(in_fact, verify_state)
             }
+            AtomicFact::NotInFact(not_in_fact) => {
+                self.verify_not_in_fact_with_builtin_rules(not_in_fact, verify_state)
+            }
             AtomicFact::SubsetFact(subset_fact) => {
                 self.verify_subset_fact_with_builtin_rules(subset_fact, verify_state)
             }
