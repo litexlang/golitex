@@ -365,14 +365,14 @@ impl Runtime {
         fn_set_with_params: &FnSetWithParams,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        let param_names = ParamDefWithParamSet::collect_param_names(&fn_set_with_params.params_def_with_set);
+        let param_names = ParamGroupWithSet::collect_param_names(&fn_set_with_params.params_def_with_set);
         let filtered_param_to_arg_map =
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
         let mut params_def_with_set = Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
         for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
-            params_def_with_set.push(ParamDefWithParamSet(
-                param_def_with_set.0.clone(),
-                self.inst_obj(&param_def_with_set.1, &filtered_param_to_arg_map)?,
+            params_def_with_set.push(ParamGroupWithSet::new(
+                param_def_with_set.params.clone(),
+                self.inst_obj(&param_def_with_set.set, &filtered_param_to_arg_map)?,
             ));
         }
         let mut dom_facts = Vec::with_capacity(fn_set_with_params.dom_facts.len());
@@ -509,10 +509,10 @@ impl Runtime {
 
     pub fn inst_param_def_with_set_one_by_one(
         &self,
-        param_defs: &Vec<ParamDefWithParamSet>,
+        param_defs: &Vec<ParamGroupWithSet>,
         args: &Vec<Obj>,
     ) -> Result<Vec<Obj>, RuntimeError> {
-        let total_param_count = ParamDefWithParamSet::number_of_params(param_defs);
+        let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
         if total_param_count != args.len() {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
@@ -531,13 +531,13 @@ impl Runtime {
         let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
             let instantiated_param_set = if arg_index != 0 {
-                self.inst_obj(&param_def.1, &param_to_arg_map)?
+                self.inst_obj(&param_def.set, &param_to_arg_map)?
             } else {
-                param_def.1.clone()
+                param_def.set.clone()
             };
             instantiated_param_sets.push(instantiated_param_set);
 
-            for param_name in param_def.0.iter() {
+            for param_name in param_def.params.iter() {
                 param_to_arg_map.insert(param_name.clone(), args[arg_index].clone());
                 arg_index += 1;
             }
@@ -548,10 +548,10 @@ impl Runtime {
 
     pub fn inst_param_def_with_type_one_by_one(
         &self,
-        param_defs: &Vec<ParamDefWithParamTypeTuple>,
+        param_defs: &Vec<ParamGroupWithParamType>,
         args: &Vec<Obj>,
     ) -> Result<Vec<ParamType>, RuntimeError> {
-        let total_param_count = ParamDefWithParamTypeTuple::number_of_params(param_defs);
+        let total_param_count = ParamGroupWithParamType::number_of_params(param_defs);
         if total_param_count != args.len() {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
@@ -570,13 +570,13 @@ impl Runtime {
         let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
             let new_type = if arg_index != 0 {
-                self.inst_param_type(&param_def.1, &param_arg_map)?
+                self.inst_param_type(&param_def.param_type, &param_arg_map)?
             } else {
-                param_def.1.clone()
+                param_def.param_type.clone()
             };
             new_types.push(new_type);
 
-            for param_name in param_def.0.iter() {
+            for param_name in param_def.params.iter() {
                 param_arg_map.insert(param_name.clone(), args[arg_index].clone());
                 arg_index += 1;
             }

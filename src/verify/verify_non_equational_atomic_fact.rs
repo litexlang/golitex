@@ -297,7 +297,7 @@ impl Runtime {
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let bound_param_name = self.generate_a_random_unused_name();
         let membership_forall_fact = Fact::ForallFact(ForallFact::new(
-            vec![ParamDefWithParamTypeTuple(
+            vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
                 ParamType::Obj(subset_fact.left.clone()),
             )],
@@ -332,7 +332,7 @@ impl Runtime {
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let bound_param_name = self.generate_a_random_unused_name();
         let membership_forall_fact = Fact::ForallFact(ForallFact::new(
-            vec![ParamDefWithParamTypeTuple(
+            vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
                 ParamType::Obj(superset_fact.right.clone()),
             )],
@@ -413,7 +413,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
             &definition.params_def_with_type,
             &normal_atomic_fact.body,
         );

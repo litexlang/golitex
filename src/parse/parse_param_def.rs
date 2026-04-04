@@ -4,10 +4,10 @@ impl Runtime {
     pub fn parse_param_def_with_struct_field_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithStructFieldTypeTuple, RuntimeError> {
+    ) -> Result<ParamGroupWithStructFieldType, RuntimeError> {
         let param = tb.advance()?;
         let param_def = if tb.current()? != COMMA {
-            ParamDefWithStructFieldTypeTuple(vec![param], self.parse_struct_field_type(tb)?)
+            ParamGroupWithStructFieldType::new(vec![param], self.parse_struct_field_type(tb)?)
         } else {
             let mut vec_of_params = vec![param];
 
@@ -17,7 +17,7 @@ impl Runtime {
             }
             let param_type = self.parse_struct_field_type(tb)?;
 
-            ParamDefWithStructFieldTypeTuple(vec_of_params, param_type)
+            ParamGroupWithStructFieldType::new(vec_of_params, param_type)
         };
         if tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
@@ -67,10 +67,10 @@ impl Runtime {
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithParamTypeTuple, RuntimeError> {
+    ) -> Result<ParamGroupWithParamType, RuntimeError> {
         let param = tb.advance()?;
         let param_def_with_param_type = if tb.current()? != COMMA {
-            ParamDefWithParamTypeTuple(vec![param], self.parse_param_type(tb)?)
+            ParamGroupWithParamType::new(vec![param], self.parse_param_type(tb)?)
         } else {
             let mut vec_of_params = vec![param];
 
@@ -80,7 +80,7 @@ impl Runtime {
             }
             let param_type = self.parse_param_type(tb)?;
 
-            ParamDefWithParamTypeTuple(vec_of_params, param_type)
+            ParamGroupWithParamType::new(vec_of_params, param_type)
         };
         if tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;

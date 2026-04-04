@@ -3,28 +3,22 @@ use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct ParamDefWithParamSet(pub Vec<String>, pub Obj);
-
 pub struct ParamGroupWithSet {
     pub params: Vec<String>,
     pub set: Obj,
 }
 
+#[derive(Clone)]
 pub struct ParamGroupWithParamType {
     pub params: Vec<String>,
     pub param_type: ParamType,
 }
 
+#[derive(Clone)]
 pub struct ParamGroupWithStructFieldType {
     pub params: Vec<String>,
     pub struct_field_type: StructFieldType,
 }
-
-#[derive(Clone)]
-pub struct ParamDefWithParamTypeTuple(pub Vec<String>, pub ParamType);
-
-#[derive(Clone)]
-pub struct ParamDefWithStructFieldTypeTuple(pub Vec<String>, pub StructFieldType);
 
 #[derive(Clone)]
 pub enum StructFieldType {
@@ -53,38 +47,50 @@ impl fmt::Display for StructFieldType {
     }
 }
 
-impl fmt::Display for ParamDefWithStructFieldTypeTuple {
+impl fmt::Display for ParamGroupWithStructFieldType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", vec_to_string_join_by_comma(&self.0), self.1)
+        write!(
+            f,
+            "{} {}",
+            vec_to_string_join_by_comma(&self.params),
+            self.struct_field_type
+        )
     }
 }
 
-impl ParamDefWithStructFieldTypeTuple {
-    pub fn number_of_params(defs: &Vec<ParamDefWithStructFieldTypeTuple>) -> usize {
+impl ParamGroupWithStructFieldType {
+    pub fn new(params: Vec<String>, struct_field_type: StructFieldType) -> Self {
+        ParamGroupWithStructFieldType {
+            params,
+            struct_field_type,
+        }
+    }
+
+    pub fn number_of_params(defs: &Vec<ParamGroupWithStructFieldType>) -> usize {
         let mut total_param_count: usize = 0;
         for p in defs.iter() {
-            total_param_count += p.0.len();
+            total_param_count += p.params.len();
         }
         total_param_count
     }
 
-    pub fn to_param_def_with_param_type(&self) -> ParamDefWithParamTypeTuple {
-        ParamDefWithParamTypeTuple(self.0.clone(), self.1.to_param_type())
+    pub fn to_param_group_with_param_type(&self) -> ParamGroupWithParamType {
+        ParamGroupWithParamType::new(self.params.clone(), self.struct_field_type.to_param_type())
     }
 
-    pub fn to_param_defs_with_param_type(
-        defs: &[ParamDefWithStructFieldTypeTuple],
-    ) -> Vec<ParamDefWithParamTypeTuple> {
+    pub fn to_param_groups_with_param_type(
+        defs: &[ParamGroupWithStructFieldType],
+    ) -> Vec<ParamGroupWithParamType> {
         defs.iter()
-            .map(|d| d.to_param_def_with_param_type())
+            .map(|d| d.to_param_group_with_param_type())
             .collect()
     }
 
     pub fn param_names(&self) -> &Vec<String> {
-        &self.0
+        &self.params
     }
 
-    pub fn collect_param_names(param_defs: &Vec<ParamDefWithStructFieldTypeTuple>) -> Vec<String> {
+    pub fn collect_param_names(param_defs: &Vec<ParamGroupWithStructFieldType>) -> Vec<String> {
         let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
@@ -95,7 +101,7 @@ impl ParamDefWithStructFieldTypeTuple {
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamDefWithStructFieldTypeTuple>,
+        param_defs: &Vec<ParamGroupWithStructFieldType>,
         args: &Vec<Obj>,
     ) -> HashMap<String, Obj> {
         let param_names = Self::collect_param_names(param_defs);
@@ -221,23 +227,33 @@ impl fmt::Display for FiniteSet {
     }
 }
 
-impl fmt::Display for ParamDefWithParamSet {
+impl fmt::Display for ParamGroupWithSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", vec_to_string_join_by_comma(&self.0), self.1)
+        write!(
+            f,
+            "{} {}",
+            vec_to_string_join_by_comma(&self.params),
+            self.set
+        )
     }
 }
 
-impl fmt::Display for ParamDefWithParamTypeTuple {
+impl fmt::Display for ParamGroupWithParamType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", vec_to_string_join_by_comma(&self.0), self.1)
+        write!(
+            f,
+            "{} {}",
+            vec_to_string_join_by_comma(&self.params),
+            self.param_type
+        )
     }
 }
 
 impl ParamType {
-    pub fn get_all_param_names(param_def: &Vec<ParamDefWithParamTypeTuple>) -> Vec<String> {
+    pub fn get_all_param_names(param_def: &Vec<ParamGroupWithParamType>) -> Vec<String> {
         let mut names = vec![];
         for param_def in param_def.iter() {
-            for name in param_def.0.iter() {
+            for name in param_def.params.iter() {
                 names.push(name.clone());
             }
         }
@@ -245,80 +261,26 @@ impl ParamType {
     }
 }
 
-impl ParamDefWithParamTypeTuple {
-    pub fn number_of_params(defs: &Vec<ParamDefWithParamTypeTuple>) -> usize {
+impl ParamGroupWithParamType {
+    pub fn new(params: Vec<String>, param_type: ParamType) -> Self {
+        ParamGroupWithParamType { params, param_type }
+    }
+
+    pub fn number_of_params(defs: &Vec<ParamGroupWithParamType>) -> usize {
         let mut total_param_count: usize = 0;
         for p in defs.iter() {
-            total_param_count += p.0.len();
+            total_param_count += p.params.len();
         }
         return total_param_count;
     }
-}
 
-impl ParamDefWithParamSet {
-    pub fn facts(&self) -> Vec<Fact> {
-        let mut facts = Vec::with_capacity(self.0.len());
-        for name in self.0.iter() {
-            let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(name.clone())),
-                self.1.clone(),
-                default_line_file(),
-            )));
-            facts.push(fact);
-        }
-        facts
-    }
-}
-
-impl ParamDefWithParamSet {
-    pub fn new(param: Vec<String>, param_set: Obj) -> Self {
-        ParamDefWithParamSet(param, param_set)
-    }
-
-    // Example: given fn(x R, y Q), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q.
-    // 与 [`ParamDefWithParamType`] 不同：此处每个参数必须属于**事先确定**的集合（不能用 `set` / `nonempty_set` / `finite_set` 等语法糖），且该集合不能依赖更早的参数。例如 `x R, y f(x)` 不允许。
-    pub fn facts_for_args_satisfy_param_def_with_set_vec(
-        runtime: &Runtime,
-        param_defs: &Vec<ParamDefWithParamSet>,
-        args: &Vec<Obj>,
-    ) -> Result<Vec<AtomicFact>, RuntimeError> {
-        let instantiated_param_sets =
-            runtime.inst_param_def_with_set_one_by_one(param_defs, args)?;
-        let flat_param_sets =
-            Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
-        let mut facts = Vec::with_capacity(args.len());
-        for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
-            facts.push(AtomicFact::InFact(InFact::new(
-                arg.clone(),
-                param_set.clone(),
-                default_line_file(),
-            )));
-        }
-        Ok(facts)
-    }
-
-    fn flat_instantiated_param_sets_for_args(
-        param_defs: &Vec<ParamDefWithParamSet>,
-        instantiated_param_sets: &Vec<Obj>,
-    ) -> Vec<Obj> {
-        let mut result = Vec::with_capacity(Self::number_of_params(param_defs));
-        for (param_def, param_set) in param_defs.iter().zip(instantiated_param_sets.iter()) {
-            for _ in param_def.0.iter() {
-                result.push(param_set.clone());
-            }
-        }
-        result
-    }
-}
-
-impl ParamDefWithParamTypeTuple {
     pub fn flat_instantiated_types_for_args(
-        param_defs: &Vec<ParamDefWithParamTypeTuple>,
+        param_defs: &Vec<ParamGroupWithParamType>,
         instantiated_types: &Vec<ParamType>,
     ) -> Vec<ParamType> {
         let mut result = Vec::with_capacity(Self::number_of_params(param_defs));
         for (param_def, param_type) in param_defs.iter().zip(instantiated_types.iter()) {
-            for _ in param_def.0.iter() {
+            for _ in param_def.params.iter() {
                 result.push(param_type.clone());
             }
         }
@@ -326,10 +288,10 @@ impl ParamDefWithParamTypeTuple {
     }
 
     pub fn param_names(&self) -> &Vec<String> {
-        &self.0
+        &self.params
     }
 
-    pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamTypeTuple>) -> Vec<String> {
+    pub fn collect_param_names(param_defs: &Vec<ParamGroupWithParamType>) -> Vec<String> {
         let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
@@ -340,7 +302,7 @@ impl ParamDefWithParamTypeTuple {
     }
 
     pub fn param_def_params_to_arg_map(
-        param_defs: &Vec<ParamDefWithParamTypeTuple>,
+        param_defs: &Vec<ParamGroupWithParamType>,
         arg_map: &HashMap<String, Obj>,
     ) -> Option<HashMap<String, Obj>> {
         let param_names = Self::collect_param_names(param_defs);
@@ -357,7 +319,7 @@ impl ParamDefWithParamTypeTuple {
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamDefWithParamTypeTuple>,
+        param_defs: &Vec<ParamGroupWithParamType>,
         args: &Vec<Obj>,
     ) -> HashMap<String, Obj> {
         let param_names = Self::collect_param_names(param_defs);
@@ -377,12 +339,64 @@ impl ParamDefWithParamTypeTuple {
     }
 }
 
-impl ParamDefWithParamSet {
-    pub fn param_names(&self) -> &Vec<String> {
-        &self.0
+impl ParamGroupWithSet {
+    pub fn new(params: Vec<String>, set: Obj) -> Self {
+        ParamGroupWithSet { params, set }
     }
 
-    pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamSet>) -> Vec<String> {
+    pub fn facts(&self) -> Vec<Fact> {
+        let mut facts = Vec::with_capacity(self.params.len());
+        for name in self.params.iter() {
+            let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                Obj::Identifier(Identifier::new(name.clone())),
+                self.set.clone(),
+                default_line_file(),
+            )));
+            facts.push(fact);
+        }
+        facts
+    }
+
+    // Example: given fn(x R, y Q), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q.
+    // 与 [`ParamGroupWithParamType`] 不同：此处每个参数必须属于**事先确定**的集合（不能用 `set` / `nonempty_set` / `finite_set` 等语法糖），且该集合不能依赖更早的参数。例如 `x R, y f(x)` 不允许。
+    pub fn facts_for_args_satisfy_param_def_with_set_vec(
+        runtime: &Runtime,
+        param_defs: &Vec<ParamGroupWithSet>,
+        args: &Vec<Obj>,
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
+        let instantiated_param_sets =
+            runtime.inst_param_def_with_set_one_by_one(param_defs, args)?;
+        let flat_param_sets =
+            Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
+        let mut facts = Vec::with_capacity(args.len());
+        for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
+            facts.push(AtomicFact::InFact(InFact::new(
+                arg.clone(),
+                param_set.clone(),
+                default_line_file(),
+            )));
+        }
+        Ok(facts)
+    }
+
+    fn flat_instantiated_param_sets_for_args(
+        param_defs: &Vec<ParamGroupWithSet>,
+        instantiated_param_sets: &Vec<Obj>,
+    ) -> Vec<Obj> {
+        let mut result = Vec::with_capacity(Self::number_of_params(param_defs));
+        for (param_def, param_set) in param_defs.iter().zip(instantiated_param_sets.iter()) {
+            for _ in param_def.params.iter() {
+                result.push(param_set.clone());
+            }
+        }
+        result
+    }
+
+    pub fn param_names(&self) -> &Vec<String> {
+        &self.params
+    }
+
+    pub fn collect_param_names(param_defs: &Vec<ParamGroupWithSet>) -> Vec<String> {
         let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
@@ -392,16 +406,16 @@ impl ParamDefWithParamSet {
         names
     }
 
-    pub fn number_of_params(param_defs: &Vec<ParamDefWithParamSet>) -> usize {
+    pub fn number_of_params(param_defs: &Vec<ParamGroupWithSet>) -> usize {
         let mut total_param_count: usize = 0;
         for p in param_defs.iter() {
-            total_param_count += p.0.len();
+            total_param_count += p.params.len();
         }
         return total_param_count;
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamDefWithParamSet>,
+        param_defs: &Vec<ParamGroupWithSet>,
         args: &Vec<Obj>,
     ) -> HashMap<String, Obj> {
         let param_names = Self::collect_param_names(param_defs);
