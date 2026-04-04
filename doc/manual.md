@@ -10,20 +10,6 @@ The emphasis is on **how ideas relate**: constructs are **woven together** so yo
 
 **This manual** is a compact reference to **syntax and semantics** across Litex.
 
-# Syntax Rules
-
-# Proposition
-
-Syntax:
-
-prop 
-
-Functionalities:
-
-Explanation:
-
-Examples:
-
 # Abstract Proposition
 
 Syntax:
@@ -43,7 +29,7 @@ abstract_prop p(x)
 abstract_prop q(x, y, z)
 ```
 
-# by_cases
+# by cases
 
 Syntax:
 
@@ -83,4 +69,40 @@ by cases:
     case x != 2:
         g(x) = 4
         g(x) > 2
+```
+
+# by contra
+
+Syntax:
+
+```text
+by contra:
+    prove:
+        fact
+    proof
+    ...
+    impossible impossible_fact
+```
+
+1. The goal is to prove `fact`. In the body, `fact` is handled as if its negation were true; you then derive a contradiction: the fact after `impossible` must be both true and false at once.
+2. `impossible_fact` must be false and true at the same time.
+
+e.g.
+
+```litex
+abstract_prop p(x, y)
+abstract_prop q(x, y)
+
+know forall a, b R:
+    $p(a, b)
+    =>:
+        $q(a, b)
+
+know not $q(1, 2)
+
+by contra:
+    prove:
+        not $p(1, 2)
+    $p(1, 2)
+    impossible $q(1,2 )
 ```
