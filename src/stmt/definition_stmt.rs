@@ -1,6 +1,6 @@
 use crate::{
     prelude::*,
-    stmt::parameter_def::{ParamDefWithStructFieldTypeTuple, StructFieldType},
+    stmt::parameter_def::{ParamGroupWithStructFieldType, StructFieldType},
 };
 use std::fmt;
 
@@ -24,7 +24,7 @@ impl DefAbstractPropStmt {
 #[derive(Clone)]
 pub struct DefParamTypeStructStmt {
     pub name: String,
-    pub param_defs: Vec<ParamDefWithStructFieldTypeTuple>,
+    pub param_defs: Vec<ParamGroupWithStructFieldType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub fields: Vec<(String, StructFieldType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
@@ -34,7 +34,7 @@ pub struct DefParamTypeStructStmt {
 #[derive(Clone)]
 pub struct DefFamilyStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
+    pub params_def_with_type: Vec<ParamGroupWithParamType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub equal_to: Obj,
     pub line_file: LineFile,
@@ -66,20 +66,20 @@ pub struct HaveExistObjStmt {
 
 #[derive(Clone)]
 pub struct HaveObjEqualStmt {
-    pub param_def: Vec<ParamDefWithParamTypeTuple>,
+    pub param_def: Vec<ParamGroupWithParamType>,
     pub objs_equal_to: Vec<Obj>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
-    pub param_def: Vec<ParamDefWithParamTypeTuple>,
+    pub param_def: Vec<ParamGroupWithParamType>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct DefLetStmt {
-    pub param_def: Vec<ParamDefWithParamTypeTuple>,
+    pub param_def: Vec<ParamGroupWithParamType>,
     pub facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -87,7 +87,7 @@ pub struct DefLetStmt {
 #[derive(Clone)]
 pub struct DefPropStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
+    pub params_def_with_type: Vec<ParamGroupWithParamType>,
     pub iff_facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -111,7 +111,7 @@ impl fmt::Display for DefParamTypeStructStmt {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
         let implicit_prefix_len =
-            ParamDefWithStructFieldTypeTuple::number_of_params(&self.param_defs);
+            ParamGroupWithStructFieldType::number_of_params(&self.param_defs);
         let fields_str: String = self
             .fields
             .iter()
@@ -150,7 +150,7 @@ impl fmt::Display for DefParamTypeStructStmt {
 impl DefPropStmt {
     pub fn new(
         name: String,
-        params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
+        params_def_with_type: Vec<ParamGroupWithParamType>,
         iff_facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
@@ -188,7 +188,7 @@ impl fmt::Display for DefPropStmt {
 
 impl DefLetStmt {
     pub fn new(
-        param_def: Vec<ParamDefWithParamTypeTuple>,
+        param_def: Vec<ParamGroupWithParamType>,
         facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
@@ -218,7 +218,7 @@ impl fmt::Display for DefLetStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(param_def: Vec<ParamDefWithParamTypeTuple>, line_file: LineFile) -> Self {
+    pub fn new(param_def: Vec<ParamGroupWithParamType>, line_file: LineFile) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt {
             param_def,
             line_file,
@@ -239,7 +239,7 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
 
 impl HaveObjEqualStmt {
     pub fn new(
-        param_def: Vec<ParamDefWithParamTypeTuple>,
+        param_def: Vec<ParamGroupWithParamType>,
         objs_equal_to: Vec<Obj>,
         line_file: LineFile,
     ) -> Self {
@@ -387,7 +387,7 @@ impl HaveFnEqualCaseByCaseStmt {
 impl DefFamilyStmt {
     pub fn new(
         name: String,
-        params_def_with_type: Vec<ParamDefWithParamTypeTuple>,
+        params_def_with_type: Vec<ParamGroupWithParamType>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         equal_to: Obj,
         line_file: LineFile,
@@ -423,7 +423,7 @@ impl fmt::Display for DefFamilyStmt {
 impl DefParamTypeStructStmt {
     pub fn new(
         name: String,
-        param_defs: Vec<ParamDefWithStructFieldTypeTuple>,
+        param_defs: Vec<ParamGroupWithStructFieldType>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         fields: Vec<(String, StructFieldType)>,
         facts: Vec<OrAndChainAtomicFact>,
@@ -442,11 +442,11 @@ impl DefParamTypeStructStmt {
 
 impl DefParamTypeStructStmt {
     pub fn number_of_params(&self) -> usize {
-        ParamDefWithStructFieldTypeTuple::number_of_params(&self.param_defs)
+        ParamGroupWithStructFieldType::number_of_params(&self.param_defs)
     }
 
     /// 按定义顺序展开所有类型形参名（与 `struct T(...)` 中参数顺序一致）。
     pub fn get_params(&self) -> Vec<String> {
-        ParamDefWithStructFieldTypeTuple::collect_param_names(&self.param_defs)
+        ParamGroupWithStructFieldType::collect_param_names(&self.param_defs)
     }
 }

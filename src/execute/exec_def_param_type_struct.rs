@@ -46,7 +46,7 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
 
         self.define_params_with_type(
-            &ParamDefWithStructFieldTypeTuple::to_param_defs_with_param_type(
+            &ParamGroupWithStructFieldType::to_param_groups_with_param_type(
                 &def_param_type_struct_stmt.param_defs,
             ),
             false,
@@ -98,7 +98,7 @@ impl Runtime {
 
         let mut struct_params = vec![];
         for param_def in def_param_type_struct_stmt.param_defs.iter() {
-            for field in param_def.0.iter() {
+            for field in param_def.params.iter() {
                 struct_params.push(Obj::Identifier(Identifier::new(field.clone())));
             }
         }

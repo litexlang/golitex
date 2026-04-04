@@ -48,14 +48,14 @@ impl Runtime {
 
         let mut restrict_flat_param_names: Vec<String> = Vec::new();
         for param_def_with_set in &restrict_to_ref.params_def_with_set {
-            for param_name in param_def_with_set.0.iter() {
+            for param_name in param_def_with_set.params.iter() {
                 restrict_flat_param_names.push(param_name.clone());
             }
         }
 
         let mut original_flat_param_names: Vec<String> = Vec::new();
         for param_def_with_set in &original_fn_set.params_def_with_set {
-            for param_name in param_def_with_set.0.iter() {
+            for param_name in param_def_with_set.params.iter() {
                 original_flat_param_names.push(param_name.clone());
             }
         }
@@ -69,11 +69,11 @@ impl Runtime {
             &restrict_flat_param_names,
         );
 
-        let mut forall_params: Vec<ParamDefWithParamTypeTuple> = Vec::new();
+        let mut forall_params: Vec<ParamGroupWithParamType> = Vec::new();
         for param_def_with_set in &restrict_to_ref.params_def_with_set {
-            forall_params.push(ParamDefWithParamTypeTuple(
-                param_def_with_set.0.clone(),
-                ParamType::Obj(param_def_with_set.1.clone()),
+            forall_params.push(ParamGroupWithParamType::new(
+                param_def_with_set.params.clone(),
+                ParamType::Obj(param_def_with_set.set.clone()),
             ));
         }
 
@@ -139,8 +139,8 @@ impl Runtime {
         let mut index: usize = 0;
         for param_def_with_set in &original_fn_set.params_def_with_set {
             let instantiated_original_set =
-                runtime.inst_obj(&param_def_with_set.1, original_to_restrict_param_map)?;
-            for _param_name in param_def_with_set.0.iter() {
+                runtime.inst_obj(&param_def_with_set.set, original_to_restrict_param_map)?;
+            for _param_name in param_def_with_set.params.iter() {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
                 then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                     InFact::new(
@@ -165,7 +165,7 @@ impl Runtime {
     fn verify_forall_and_return_restrict_success(
         &mut self,
         restrict_fact: &RestrictFact,
-        forall_params: Vec<ParamDefWithParamTypeTuple>,
+        forall_params: Vec<ParamGroupWithParamType>,
         forall_dom_facts: Vec<ExistOrAndChainAtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         restrict_ret_set: &Obj,

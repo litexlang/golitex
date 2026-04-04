@@ -10,20 +10,6 @@ The emphasis is on **how ideas relate**: constructs are **woven together** so yo
 
 **This manual** is a compact reference to **syntax and semantics** across Litex.
 
-# Syntax Rules
-
-# Proposition
-
-Syntax:
-
-prop 
-
-Functionalities:
-
-Explanation:
-
-Examples:
-
 # Abstract Proposition
 
 Syntax:
@@ -41,4 +27,261 @@ abstract_prop <proposition_name> ( [ <parameter> [, <parameter> ]… ] )
 abstract_prop r()
 abstract_prop p(x)
 abstract_prop q(x, y, z)
+```
+
+# by cases
+
+Syntax:
+
+```text
+by cases:
+    prove:
+        fact
+    case fact1:
+        proof_of_case_1
+    case fact2:
+        proof_of_case_2
+    ...
+    case factn:
+        proof_of_case_n
+```
+
+1. fact1 or fact2 or ... or factn must be true.
+2. under each case, proof_of_case_i must be a valid proof of facti.
+
+e.g.
+
+```litex
+have fn g(x R) R =:
+    case x = 2: 3
+    case x != 2: 4
+
+have x R
+
+x = 2 or x != 2
+
+by cases:
+    prove:
+        g(x) > 2
+    case x = 2:
+        g(x) = 3
+        g(x) > 2
+    case x != 2:
+        g(x) = 4
+        g(x) > 2
+```
+
+# by contra
+
+Syntax:
+
+```text
+by contra:
+    prove:
+        fact
+    proof
+    ...
+    impossible impossible_fact
+```
+
+1. The goal is to prove `fact`. In the body, `fact` is handled as if its negation were true; you then derive a contradiction: the fact after `impossible` must be both true and false at once.
+2. `impossible_fact` must be false and true at the same time.
+
+e.g.
+
+```litex
+abstract_prop p(x, y)
+abstract_prop q(x, y)
+
+know forall a, b R:
+    $p(a, b)
+    =>:
+        $q(a, b)
+
+know not $q(1, 2)
+
+by contra:
+    prove:
+        not $p(1, 2)
+    $p(1, 2)
+    impossible $q(1,2 )
+```
+
+# witness exist … from …
+
+Witness an existential statement by naming concrete objects equal to the existentially quantified witnesses, then checking the body.
+
+Syntax:
+
+```text
+witness exist <params_and_types> st { … } from <obj> [, <obj> ]…:
+    <proof statements>
+```
+
+1. `exist … st { … }` has the same shape as an `exist` fact (parameters, optional type constraints, facts in braces).
+2. After `from`, give one object per bound parameter, in order; they must make the `st { … }` facts true.
+3. The indented block is the proof obligation (e.g. inequalities, membership).
+
+e.g.
+
+```litex
+witness exist x, y R st {x > y} from 1, 0:
+    1 > 0
+
+exist x, y R st {x > y}
+```
+
+# witness nonempty set
+
+Witness that a set is nonempty by exhibiting a member.
+
+Syntax:
+
+```text
+witness $is_nonempty_set( <set> ) from <obj>:
+    <proof statements>
+```
+
+1. `<obj>` should lie in `<set>` (typically proved in the block, e.g. `know obj $in set`).
+2. After verification, `$is_nonempty_set(<set>)` may be used.
+
+e.g.
+
+```litex
+have s set
+
+witness $is_nonempty_set(s) from 1:
+    know 1 $in s
+
+$is_nonempty_set(s)
+```
+
+# by enumerate
+
+Prove facts for parameters ranging over **finite list sets** (`{ … }`).
+
+Syntax:
+
+```text
+by enumerate <param> <list_set> [, <param> <list_set> ]…:
+    prove:
+        <facts to prove (exist / or / chain atomic facts)>
+    <optional further proof statements>
+```
+
+1. Each parameter is constrained to the given list set.
+2. The `prove:` block lists what must hold for all those combinations (corresponds to a `forall` over those list sets).
+3. Extra statements after `prove:` complete the proof.
+
+e.g.
+
+```litex
+let a R:
+    a $in {1, 2}
+
+a = 1 or a = 2
+
+by enumerate a {1, 2, 3}:
+    prove:
+        a < 4
+```
+
+# by induc
+
+Induction on an integer parameter from a given lower bound (domain is integers greater than or equal to that bound, as in the corresponding `forall`).
+
+Syntax:
+
+```text
+by induc <param> from <obj>:
+    <facts to prove (exist / or / chain atomic facts), one block each>
+```
+
+1. `<param>` is the induction variable; `<obj>` is the start (e.g. `0`).
+2. Each body block under the header is part of what the induction establishes (base + step are verified according to the kernel rules).
+3. Requires a supporting `forall`‑style hypothesis in context when used in full proofs.
+
+e.g.
+
+```litex
+abstract_prop p(a)
+
+know:
+    $p(0)
+    forall n Z:
+        n >= 0
+        $p(n)
+        =>:
+            $p(n + 1)
+
+by induc n from 0:
+    $p(n)
+
+forall n Z:
+    n >= 0
+    =>:
+        $p(n)
+```
+
+# by for
+
+Prove facts for parameters ranging over **`range(…)`** or **`closed_range(…)`** only.
+
+Syntax (common pattern):
+
+```text
+by for <param> <range_or_closed_range> [, <param> <range_or_closed_range> ]…:
+    prove:
+        <facts to prove>
+    <proof statements>
+```
+
+1. Each `<param>` is paired with a half-open `range(a, b)` or a closed `closed_range(a, b)` object.
+2. Optional **domain** atomic facts plus a `prove:` block of conclusions can appear in more elaborate forms (same structure as a `forall` with `=>:` in the surface grammar); the minimal pattern above matches `examples/for.lit`.
+3. Proof statements after `prove:` discharge the obligation.
+
+e.g.
+
+```litex
+by for n range(0, 10):
+    prove:
+        n < 10
+    do_nothing
+
+by for n closed_range(0, 10):
+    prove:
+        n <= 10
+    do_nothing
+```
+
+# by extension
+
+Prove **set equality** by **extensionality**: show mutual inclusion (typically via `by enumerate` or other means of proving each element of one side lies in the other).
+
+Syntax:
+
+```text
+by extension:
+    prove:
+        <left> = <right>
+    <proof statements>
+```
+
+1. The `prove:` block must contain a single **equality** atomic fact between two sets (or set‑denoting objects).
+2. The following statements prove subset both ways (whatever the verifier expects for the proof body).
+
+e.g.
+
+```litex
+by extension:
+    prove:
+        {1, 2} = {2, 1}
+    by enumerate x {1, 2}:
+        prove:
+            x $in {2, 1}
+    by enumerate y {2, 1}:
+        prove:
+            y $in {1, 2}
+
+{1, 2} = {2, 1}
 ```

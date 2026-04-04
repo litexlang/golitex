@@ -3,13 +3,13 @@ use std::collections::HashMap;
 
 fn param_defs_with_type_from_fn_set_with_dom(
     fn_set_with_params: &crate::obj::FnSetWithParams,
-) -> Vec<ParamDefWithParamTypeTuple> {
-    let mut param_defs_with_type: Vec<ParamDefWithParamTypeTuple> =
+) -> Vec<ParamGroupWithParamType> {
+    let mut param_defs_with_type: Vec<ParamGroupWithParamType> =
         Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
     for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
-        param_defs_with_type.push(ParamDefWithParamTypeTuple(
-            param_def_with_set.0.clone(),
-            ParamType::Obj(param_def_with_set.1.clone()),
+        param_defs_with_type.push(ParamGroupWithParamType::new(
+            param_def_with_set.params.clone(),
+            ParamType::Obj(param_def_with_set.set.clone()),
         ));
     }
     param_defs_with_type
@@ -195,7 +195,7 @@ impl Runtime {
                 ).into());
             }
         };
-        let expected_count = ParamDefWithParamTypeTuple::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
             return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                 format!(
@@ -209,7 +209,7 @@ impl Runtime {
                 None,
             ).into());
         }
-        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_ty.params,
         );
@@ -270,38 +270,38 @@ impl Runtime {
 
     pub fn define_params_with_type(
         &mut self,
-        param_defs: &[ParamDefWithParamTypeTuple],
+        param_defs: &[ParamGroupWithParamType],
         check_type_nonempty: bool,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for param_def in param_defs.iter() {
-            self.verify_param_type_well_defined(&param_def.1, &VerifyState::new(0, false))
+            self.verify_param_type_well_defined(&param_def.param_type, &VerifyState::new(0, false))
                 .map_err(|well_defined_error| {
-                    let param_names_text = param_def.0.join(", ");
+                    let param_names_text = param_def.params.join(", ");
                     let error_line_file = well_defined_error.line_file().clone();
                     RuntimeError::new_define_params_error_with_msg_previous_error_position(
                         format!(
                             "define params with type: failed to verify type well-defined for params [{}] with type {}",
-                            param_names_text, param_def.1
+                            param_names_text, param_def.param_type
                         ),
                         Some(well_defined_error.into()),
                         error_line_file,
                     )
                 })?;
-            self.verify_param_type_nonempty_if_required(&param_def.1, check_type_nonempty)
+            self.verify_param_type_nonempty_if_required(&param_def.param_type, check_type_nonempty)
                 .map_err(|inner_exec_error| {
-                    let param_names_text = param_def.0.join(", ");
+                    let param_names_text = param_def.params.join(", ");
                     RuntimeError::new_define_params_error_with_msg_previous_error_position(
                         format!(
                             "define params with type: nonempty check failed for params [{}] with type {}",
-                            param_names_text, param_def.1
+                            param_names_text, param_def.param_type
                         ),
                         Some(RuntimeError::from(inner_exec_error)),
                         default_line_file(),
                     )
                 })?;
 
-            for name in param_def.0.iter() {
+            for name in param_def.params.iter() {
                 self.store_identifier_obj(name).map_err(|runtime_error| {
                     RuntimeError::new_define_params_error_with_msg_previous_error_position(
                         format!(
@@ -313,12 +313,12 @@ impl Runtime {
                     )
                 })?;
                 let fact_infer_result = self
-                    .define_param_binding_for_param_type(name, &param_def.1)
+                    .define_param_binding_for_param_type(name, &param_def.param_type)
                     .map_err(|runtime_error| {
                         RuntimeError::new_define_params_error_with_msg_previous_error_position(
                             format!(
                                 "define params with type: failed to apply param type for parameter `{}` with type {}",
-                                name, param_def.1
+                                name, param_def.param_type
                             ),
                             Some(runtime_error),
                             default_line_file(),
@@ -355,16 +355,16 @@ impl Runtime {
 
     pub fn define_params_with_set(
         &mut self,
-        param_def: &ParamDefWithParamSet,
+        param_def: &ParamGroupWithSet,
     ) -> Result<InferResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&param_def.1, &VerifyState::new(0, false))
+        self.verify_obj_well_defined_and_store_cache(&param_def.set, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                let param_names_text = param_def.0.join(", ");
+                let param_names_text = param_def.params.join(", ");
                 let error_line_file = well_defined_error.line_file().clone();
                 RuntimeError::new_define_params_error_with_msg_previous_error_position(
                     format!(
                         "define params with set: failed to verify set well-defined for params [{}] with set {}",
-                        param_names_text, param_def.1
+                        param_names_text, param_def.set
                     ),
                     Some(well_defined_error.into()),
                     error_line_file,
@@ -372,7 +372,7 @@ impl Runtime {
             })?;
         let mut infer_result = InferResult::new();
         let facts = param_def.facts();
-        for (name, fact) in param_def.0.iter().zip(facts.iter()) {
+        for (name, fact) in param_def.params.iter().zip(facts.iter()) {
             self.store_identifier_obj(name).map_err(|runtime_error| {
                 RuntimeError::new_define_params_error_with_msg_previous_error_position(
                     format!(
@@ -405,7 +405,7 @@ impl Runtime {
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
-        if ParamDefWithParamTypeTuple::number_of_params(&have_obj_equal_stmt.param_def)
+        if ParamGroupWithParamType::number_of_params(&have_obj_equal_stmt.param_def)
             != have_obj_equal_stmt.objs_equal_to.len()
         {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -419,7 +419,7 @@ impl Runtime {
         let mut current_index = 0;
         let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         for param_def in have_obj_equal_stmt.param_def.iter() {
-            let current_type_holder = self.inst_param_type(&param_def.1, &param_to_obj_map).map_err(
+            let current_type_holder = self.inst_param_type(&param_def.param_type, &param_to_obj_map).map_err(
                 |runtime_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
@@ -430,7 +430,7 @@ impl Runtime {
                 },
             )?;
             let current_type = &current_type_holder;
-            for name in param_def.0.iter() {
+            for name in param_def.params.iter() {
                 let current_param_equal_to = &have_obj_equal_stmt.objs_equal_to[current_index];
 
                 let verify_result = self
@@ -538,7 +538,7 @@ impl Runtime {
             ));
         }
 
-        if ParamDefWithParamTypeTuple::number_of_params(
+        if ParamGroupWithParamType::number_of_params(
             &exist_fact_in_have_obj_stmt.params_def_with_type,
         ) != have_exist_obj_stmt.equal_tos.len()
         {
@@ -575,7 +575,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_obj_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
+        let param_to_obj_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
             &exist_fact_in_have_obj_stmt.params_def_with_type,
             &new_obj_names_as_identifier_objs,
         );
@@ -651,7 +651,7 @@ impl Runtime {
 
         let param_defs_with_type =
             param_defs_with_type_from_fn_set_with_dom(&have_fn_equal_stmt.fn_set_with_params);
-        let param_names = ParamDefWithParamSet::collect_param_names(
+        let param_names = ParamGroupWithSet::collect_param_names(
             &have_fn_equal_stmt.fn_set_with_params.params_def_with_set,
         );
         let function_obj =
@@ -849,7 +849,7 @@ impl Runtime {
         let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(
             &have_fn_equal_case_by_case_stmt.fn_set_with_params,
         );
-        let param_names = ParamDefWithParamSet::collect_param_names(
+        let param_names = ParamGroupWithSet::collect_param_names(
             &have_fn_equal_case_by_case_stmt
                 .fn_set_with_params
                 .params_def_with_set,
