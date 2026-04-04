@@ -237,7 +237,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let param_count =
-            ParamDefWithParamSet::number_of_params(&fn_set_with_dom.params_def_with_set);
+            ParamGroupWithSet::number_of_params(&fn_set_with_dom.params_def_with_set);
         if args.len() != param_count {
             return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                 format!(
@@ -260,7 +260,7 @@ impl Runtime {
         }
 
         let args_satisfy_fn_set_params_set_facts =
-            ParamDefWithParamSet::facts_for_args_satisfy_param_def_with_set_vec(
+            ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
                 self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_as_obj,
@@ -295,7 +295,7 @@ impl Runtime {
             }
         }
 
-        let param_to_arg_map = ParamDefWithParamSet::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
             &fn_set_with_dom.params_def_with_set,
             &args_as_obj,
         );
@@ -681,7 +681,7 @@ impl Runtime {
         x: &SetBuilder,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        if let Err(e) = self.define_params_with_set(&ParamDefWithParamSet::new(
+        if let Err(e) = self.define_params_with_set(&ParamGroupWithSet::new(
             vec![x.param.clone()],
             *x.param_set.clone(),
         )) {
@@ -1140,7 +1140,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithParamTypeTuple::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
         if family_param_type.params.len() != expected_count {
             return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                 format!(
@@ -1175,7 +1175,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_param_type.params,
         );
@@ -1245,7 +1245,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithStructFieldTypeTuple::number_of_params(&def.param_defs);
+        let expected_count = ParamGroupWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
             return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                 format!(
@@ -1264,7 +1264,7 @@ impl Runtime {
         }
 
         let param_defs_pt =
-            ParamDefWithStructFieldTypeTuple::to_param_defs_with_param_type(&def.param_defs);
+            ParamGroupWithStructFieldType::to_param_groups_with_param_type(&def.param_defs);
         let _: InferResult = self
             .verify_args_satisfy_param_def_flat_types(
                 &param_defs_pt,
@@ -1282,7 +1282,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = ParamDefWithStructFieldTypeTuple::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
             &def.param_defs,
             &struct_ty.args,
         );

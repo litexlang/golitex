@@ -114,7 +114,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamDefWithStructFieldTypeTuple::number_of_params(&def.param_defs);
+        let expected_count = ParamGroupWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
             return Err(
                 RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
@@ -133,7 +133,7 @@ impl Runtime {
         }
 
         let param_to_arg_map =
-            ParamDefWithStructFieldTypeTuple::param_defs_and_args_to_param_to_arg_map(
+            ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
                 &def.param_defs,
                 &struct_ty.args,
             );
@@ -194,7 +194,7 @@ impl Runtime {
             );
         }
 
-        let expected_count = ParamDefWithStructFieldTypeTuple::number_of_params(&def.param_defs);
+        let expected_count = ParamGroupWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
             return Err(
                 RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
@@ -227,7 +227,7 @@ impl Runtime {
         }
 
         let param_to_arg_map =
-            ParamDefWithStructFieldTypeTuple::param_defs_and_args_to_param_to_arg_map(
+            ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
                 &def.param_defs,
                 &struct_ty.args,
             );
@@ -252,7 +252,7 @@ impl Runtime {
 
     /// 将 `struct` 定义中 `<=>:` 下的 [`DefParamTypeStructStmt::facts`] 做形参代入，并把 `self` 换成当前实例后存库。
     ///
-    /// `param_to_arg_map` 来自 [`ParamDefWithStructFieldType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
+    /// `param_to_arg_map` 来自 [`ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
     /// `instantiate` 使用同一张表）。在此之上插入 `SELF` → `self_replacement`：
     /// - 根绑定：`Obj::Identifier(g)`；
     /// - [`define_param_binding_struct_at_field_access`]（即「在某一 field access 上绑定嵌套 struct」，与
@@ -311,7 +311,7 @@ impl Runtime {
             }
         };
         let expected_count =
-            ParamDefWithParamTypeTuple::number_of_params(&def.params_def_with_type);
+            ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
             return Err(
                 RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
@@ -328,7 +328,7 @@ impl Runtime {
                 .into(),
             );
         }
-        let param_to_arg_map = ParamDefWithParamTypeTuple::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_ty.params,
         );
