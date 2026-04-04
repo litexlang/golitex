@@ -86,6 +86,18 @@ fn number_in_set_verified_by_builtin_rules_result(
     ))
 }
 
+fn not_in_fact_verified_by_builtin_rules_result(
+    not_in_fact: &NotInFact,
+    reason: &str,
+) -> NonErrStmtExecResult {
+    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
+        Fact::AtomicFact(AtomicFact::NotInFact(not_in_fact.clone())),
+        InferResult::new(),
+        reason.to_string(),
+        Vec::new(),
+    ))
+}
+
 fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
         Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
@@ -187,7 +199,124 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     }
 }
 
+fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+    not_in_fact: &NotInFact,
+    evaluated_number: &Number,
+    standard_set: &StandardSet,
+) -> NonErrStmtExecResult {
+    match standard_set {
+        StandardSet::R | StandardSet::Q => NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()),
+        StandardSet::RPos => {
+            if !number_is_in_r_pos(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_pos")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::RNeg => {
+            if !number_is_in_r_neg(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_neg")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::RNz => {
+            if !number_is_in_r_nz(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_nz")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::QPos => {
+            if !number_is_in_q_pos(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_pos")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::QNeg => {
+            if !number_is_in_q_neg(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_neg")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::QNz => {
+            if !number_is_in_q_nz(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Q_nz")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::Z => {
+            if !number_is_in_z(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::ZNeg => {
+            if !number_is_in_z_neg(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z_neg")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::ZNz => {
+            if !number_is_in_z_nz(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in Z_nz")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::N => {
+            if !number_is_in_n(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in N")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::NPos => {
+            if !number_is_in_n_pos(evaluated_number) {
+                not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in N_pos")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+    }
+}
+
 impl Runtime {
+    pub fn verify_not_in_fact_with_builtin_rules(
+        &mut self,
+        not_in_fact: &NotInFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+        if let Obj::StandardSet(standard_set) = &not_in_fact.set {
+            if !matches!(&not_in_fact.element, Obj::Number(_)) {
+                if let Some(evaluated_number) =
+                    not_in_fact.element.evaluate_to_normalized_decimal_number()
+                {
+                    return Ok(builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+                        not_in_fact,
+                        &evaluated_number,
+                        standard_set,
+                    ));
+                }
+            }
+        }
+        match (&not_in_fact.element, &not_in_fact.set) {
+            (Obj::Number(num), Obj::StandardSet(standard_set)) => Ok(
+                builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+                    not_in_fact,
+                    num,
+                    standard_set,
+                ),
+            ),
+            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+        }
+    }
+
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,
