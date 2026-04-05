@@ -233,7 +233,7 @@ impl Runtime {
     fn verify_fn_obj_well_defined_against_fn_set_with_dom(
         &mut self,
         args: &Vec<Box<Obj>>,
-        fn_set_with_dom: &FnSetWithParams,
+        fn_set_with_dom: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let param_count =
@@ -716,7 +716,7 @@ impl Runtime {
 
     fn verify_fn_set_with_dom_well_defined(
         &mut self,
-        x: &FnSetWithParams,
+        x: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.push_env();
@@ -727,7 +727,7 @@ impl Runtime {
 
     fn verify_fn_set_with_dom_well_defined_body(
         &mut self,
-        x: &FnSetWithParams,
+        x: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {

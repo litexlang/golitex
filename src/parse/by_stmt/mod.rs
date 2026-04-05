@@ -23,7 +23,7 @@ impl Runtime {
             INDUC => self.parse_by_induc_stmt(tb),
             FOR => self.parse_by_for_stmt(tb),
             EXTENSION => self.parse_by_extension_stmt(tb),
-            FN_FOR_FN_WITH_PARAMS => self.parse_by_fn_stmt(tb),
+            FN => self.parse_by_fn_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
             _ => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 format!(

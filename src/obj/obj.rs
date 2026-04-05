@@ -25,7 +25,7 @@ pub enum Obj {
     PowerSet(PowerSet),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
-    FnSetWithParams(FnSetWithParams),
+    FnSetWithParams(FnSet),
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
@@ -187,12 +187,11 @@ pub struct SetBuilder {
 }
 
 #[derive(Clone)]
-pub struct FnSetWithParams {
+pub struct FnSet {
     pub params_def_with_set: Vec<ParamGroupWithSet>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Box<Obj>,
 }
-
 
 #[derive(Clone)]
 pub struct Cart {
@@ -349,13 +348,13 @@ impl SetBuilder {
     }
 }
 
-impl FnSetWithParams {
+impl FnSet {
     pub fn new(
         params_and_their_sets: Vec<ParamGroupWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Self {
-        FnSetWithParams {
+        FnSet {
             params_def_with_set: params_and_their_sets,
             dom_facts,
             ret_set: Box::new(ret_set),
@@ -372,7 +371,6 @@ impl FnSetWithParams {
         ret
     }
 }
-
 
 impl PowerSet {
     pub fn new(set: Obj) -> Self {
@@ -789,19 +787,17 @@ impl fmt::Display for SetBuilder {
     }
 }
 
-impl fmt::Display for FnSetWithParams {
+impl fmt::Display for FnSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {} {}",
-            FN_FOR_FN_WITH_PARAMS,
+            FN,
             brace_vec_colon_vec_to_string(&self.params_def_with_set, &self.dom_facts),
             self.ret_set
         )
     }
 }
-
-
 
 impl fmt::Display for Cart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -837,4 +833,3 @@ impl Identifier {
         Obj::Identifier(Identifier { name })
     }
 }
-

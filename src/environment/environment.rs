@@ -36,7 +36,7 @@ pub struct Environment {
 
     pub known_identifier_satisfy_struct: HashMap<FieldAccessName, StructParamType>,
 
-    pub known_objs_in_fn_sets: HashMap<ObjString, FnSetWithParams>,
+    pub known_objs_in_fn_sets: HashMap<ObjString, FnSet>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
@@ -52,7 +52,7 @@ impl Environment {
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
         field_access_name: HashMap<FieldAccessName, StructParamType>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
-        known_fn_in_fn_set: HashMap<ObjString, FnSetWithParams>,
+        known_fn_in_fn_set: HashMap<ObjString, FnSet>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
             (AtomicFactKey, bool),
             Vec<AtomicFact>,

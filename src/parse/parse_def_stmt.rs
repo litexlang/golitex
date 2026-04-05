@@ -120,10 +120,7 @@ impl Runtime {
             vec![]
         };
         let all_param_names = ParamGroupWithParamType::collect_param_names(&param_def);
-        self.register_collected_param_names_for_def_parse(
-            &all_param_names,
-            tb.line_file.clone(),
-        )?;
+        self.register_collected_param_names_for_def_parse(&all_param_names, tb.line_file.clone())?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
@@ -153,10 +150,7 @@ impl Runtime {
             );
         }
         let have_param_names = ParamGroupWithParamType::collect_param_names(&param_defs);
-        self.register_collected_param_names_for_def_parse(
-            &have_param_names,
-            tb.line_file.clone(),
-        )?;
+        self.register_collected_param_names_for_def_parse(&have_param_names, tb.line_file.clone())?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             Ok(Stmt::HaveObjInNonemptySetStmt(
@@ -179,7 +173,7 @@ impl Runtime {
 
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
-        tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
+        tb.skip_token(FN)?;
         if tb.current_token_is_equal_to(BY) {
             tb.skip_token(BY)?;
             tb.skip_token(INDUC)?;
@@ -209,11 +203,14 @@ impl Runtime {
                     tb.line_file.clone(),
                 )))
             } else {
-                Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "have fn by induc from ...: expected '=' ':' before case blocks".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                ))
+                Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "have fn by induc from ...: expected '=' ':' before case blocks"
+                            .to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                )
             }
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
@@ -232,7 +229,13 @@ impl Runtime {
                     equal_tos.push(self.parse_obj(block)?);
                 }
                 Ok(Stmt::HaveFnEqualCaseByCaseStmt(
-                    HaveFnEqualCaseByCaseStmt::new(name, fs, cases, equal_tos, tb.line_file.clone()),
+                    HaveFnEqualCaseByCaseStmt::new(
+                        name,
+                        fs,
+                        cases,
+                        equal_tos,
+                        tb.line_file.clone(),
+                    ),
                 ))
             } else {
                 let equal_to = self.parse_obj(tb)?;
