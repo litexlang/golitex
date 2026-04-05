@@ -9,3 +9,5 @@ abstract_prop p(a, b)
 have f fn(x, y R: x < y) R
 
 by fn: f
+
+by fn set: fn (x, y R: x < y) R
