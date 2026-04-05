@@ -1,18 +1,7 @@
 """
 have fn by induc from 0: f(x Z: x >= 0) R:
-    case 0: 1
-    case 1: 1
-    case x: f(x - 1) + f(x - 2)
+    case x = 0: 1
+    case x = 1: 1
+    case x >= 2: f(x - 1) + f(x - 2)
 """
 
-abstract_prop p(a, b)
-
-f $in fn(x, y R: x < y) R
-
-forall x, y R:
-    x < y
-    =>:
-        {{(x, y)}, {(x, y), f(x, y)}} $in f
-
-forall t f:
-    exist x, y R: x < y st {t = {{(x, y)}, {(x, y), f(x, y)}}}

@@ -5,6 +5,16 @@ use crate::{
 use std::fmt;
 
 #[derive(Clone)]
+pub struct HaveFnByInducStmt {
+    pub name: String,
+    pub fn_set_with_params: FnSetWithParams,
+    pub induc_from: Obj,
+    pub cases: Vec<AndChainAtomicFact>,
+    pub equal_tos: Vec<Obj>,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
 pub struct DefAbstractPropStmt {
     pub name: String,
     pub params: Vec<String>,
@@ -110,8 +120,7 @@ impl fmt::Display for DefParamTypeStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
-        let implicit_prefix_len =
-            ParamGroupWithStructFieldType::number_of_params(&self.param_defs);
+        let implicit_prefix_len = ParamGroupWithStructFieldType::number_of_params(&self.param_defs);
         let fields_str: String = self
             .fields
             .iter()
@@ -377,6 +386,71 @@ impl HaveFnEqualCaseByCaseStmt {
         HaveFnEqualCaseByCaseStmt {
             name,
             fn_set_with_params,
+            cases,
+            equal_tos,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for HaveFnByInducStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let cases_and_proofs = self
+            .cases
+            .iter()
+            .enumerate()
+            .map(|(i, case)| {
+                to_string_and_add_four_spaces_at_beginning_of_each_line(
+                    &format!(
+                        "{} {}{} {}{} {} {}",
+                        CASE,
+                        case,
+                        COMMA,
+                        self.name,
+                        braced_vec_to_string(&self.fn_set_with_params.params()),
+                        EQUAL,
+                        self.equal_tos[i]
+                    ),
+                    1,
+                )
+            })
+            .collect::<Vec<String>>();
+
+        write!(
+            f,
+            "{} {} {} {} {} {}{} {}{} {} {}\n{}",
+            HAVE,
+            FN_FOR_FN_WITH_PARAMS,
+            BY,
+            INDUC,
+            FROM,
+            self.induc_from,
+            COLON,
+            self.name,
+            brace_vec_colon_vec_to_string(
+                &self.fn_set_with_params.params_def_with_set,
+                &self.fn_set_with_params.dom_facts
+            ),
+            EQUAL,
+            COLON,
+            vec_to_string_with_sep(&cases_and_proofs, "\n".to_string())
+        )
+    }
+}
+
+impl HaveFnByInducStmt {
+    pub fn new(
+        name: String,
+        fn_set_with_params: FnSetWithParams,
+        induc_from: Obj,
+        cases: Vec<AndChainAtomicFact>,
+        equal_tos: Vec<Obj>,
+        line_file: LineFile,
+    ) -> Self {
+        HaveFnByInducStmt {
+            name,
+            fn_set_with_params,
+            induc_from,
             cases,
             equal_tos,
             line_file,
