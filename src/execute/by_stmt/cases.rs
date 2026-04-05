@@ -1,4 +1,4 @@
-use super::exec_axiom_helpers::impossible_proof_error_message;
+use super::helpers::impossible_proof_error_message;
 use crate::prelude::*;
 
 impl Runtime {

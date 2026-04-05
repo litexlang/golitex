@@ -218,8 +218,8 @@ impl Runtime {
         false
     }
 
-    pub fn is_name_used_for_def_prop(&self, name: &str) -> bool {
-        return self.get_def_prop_definition_by_name(name).is_some();
+    pub fn is_name_used_for_prop(&self, name: &str) -> bool {
+        return self.get_prop_definition_by_name(name).is_some();
     }
 
     pub fn is_name_used_for_abstract_prop(&self, name: &str) -> bool {
@@ -230,8 +230,8 @@ impl Runtime {
         return self.get_abstract_prop_definition_by_name(name).is_some();
     }
 
-    pub fn is_name_used_for_param_type_struct(&self, name: &str) -> bool {
-        return self.get_cloned_definition_of_struct(name).is_some();
+    pub fn is_name_used_for_struct(&self, name: &str) -> bool {
+        return self.get_definition_of_struct_by_name(name).is_some();
     }
 
     pub fn is_name_used_for_family(&self, name: &str) -> bool {

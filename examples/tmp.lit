@@ -1,1 +1,7 @@
-by tuple: (1, 2, 3)
+"""
+have fn by induc from 0: f(x Z: x >= 0) R:
+    case 0:  
+    case x:
+"""
+
+abstract_prop p(a, b)

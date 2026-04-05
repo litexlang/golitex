@@ -23,8 +23,9 @@ impl Runtime {
             Fact::ForallFact(forall_fact) => {
                 self.verify_forall_fact_well_defined(forall_fact, verify_state)
             }
-            Fact::ForallFactWithIff(forall_fact_with_iff) => self
-                .verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => {
+                self.verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state)
+            }
         }
     }
 
@@ -62,46 +63,54 @@ impl Runtime {
             let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                    format!(
-                        "fact `{}` expects {} argument(s), but got {}",
-                        name_string,
-                        expected_len,
-                        actual_args.len()
+                return Err(
+                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                        format!(
+                            "fact `{}` expects {} argument(s), but got {}",
+                            name_string,
+                            expected_len,
+                            actual_args.len()
+                        ),
+                        None,
+                        atomic_fact.line_file(),
                     ),
-                    None,
-                    atomic_fact.line_file(),
-                ));
+                );
             }
         } else {
             let expected_len = if let Some(predicate_definition) =
-                self.get_def_prop_definition_by_name(&name_string)
+                self.get_prop_definition_by_name(&name_string)
             {
-                ParamGroupWithParamType::number_of_params(&predicate_definition.params_def_with_type)
+                ParamGroupWithParamType::number_of_params(
+                    &predicate_definition.params_def_with_type,
+                )
             } else if let Some(abstract_prop_definition) =
                 self.get_abstract_prop_definition_by_name(&name_string)
             {
                 abstract_prop_definition.params.len()
             } else {
-                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                    format!("fact `{}` not defined", name_string),
-                    None,
-                    atomic_fact.line_file(),
-                ));
+                return Err(
+                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                        format!("fact `{}` not defined", name_string),
+                        None,
+                        atomic_fact.line_file(),
+                    ),
+                );
             };
 
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                    format!(
-                        "fact `{}` expects {} argument(s), but got {}",
-                        name_string,
-                        expected_len,
-                        actual_args.len()
+                return Err(
+                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                        format!(
+                            "fact `{}` expects {} argument(s), but got {}",
+                            name_string,
+                            expected_len,
+                            actual_args.len()
+                        ),
+                        None,
+                        atomic_fact.line_file(),
                     ),
-                    None,
-                    atomic_fact.line_file(),
-                ));
+                );
             }
         }
 
@@ -183,11 +192,13 @@ impl Runtime {
         for param_def in exist_fact.params_def_with_type().iter() {
             let result = self.define_params_with_type(std::slice::from_ref(param_def), false);
             if let Err(e) = result {
-                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                    "failed to define parameters in exist fact".to_string(),
-                    Some(e.into()),
-                    exist_fact.line_file(),
-                ));
+                return Err(
+                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                        "failed to define parameters in exist fact".to_string(),
+                        Some(e.into()),
+                        exist_fact.line_file(),
+                    ),
+                );
             }
         }
 
@@ -214,11 +225,13 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         if let Err(e) = self.define_params_with_type(&forall_fact.params_def_with_type, false) {
-            return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                "failed to define parameters in forall fact".to_string(),
-                Some(e.into()),
-                forall_fact.line_file.clone(),
-            ));
+            return Err(
+                RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                    "failed to define parameters in forall fact".to_string(),
+                    Some(e.into()),
+                    forall_fact.line_file.clone(),
+                ),
+            );
         }
 
         for fact in forall_fact.dom_facts.iter() {
@@ -228,11 +241,13 @@ impl Runtime {
                     verify_state,
                 )
             {
-                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                    String::new(),
-                    Some(RuntimeError::from(exec_stmt_error)),
-                    fact.line_file(),
-                ));
+                return Err(
+                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                        String::new(),
+                        Some(RuntimeError::from(exec_stmt_error)),
+                        fact.line_file(),
+                    ),
+                );
             }
         }
         for fact in forall_fact.then_facts.iter() {
@@ -242,11 +257,13 @@ impl Runtime {
                     verify_state,
                 )
             {
-                return Err(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                    String::new(),
-                    Some(RuntimeError::from(exec_stmt_error)),
-                    fact.line_file(),
-                ));
+                return Err(
+                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                        String::new(),
+                        Some(RuntimeError::from(exec_stmt_error)),
+                        fact.line_file(),
+                    ),
+                );
             }
         }
         Ok(())

@@ -8,9 +8,13 @@ Litex gives you a **lean, set-theoretic** idiom for mathematics—**just enough*
 
 The emphasis is on **how ideas relate**: constructs are **woven together** so you can say what depends on what, in the same spirit as the mathematics itself, rather than as isolated syntax rules. 
 
-**This manual** is a compact reference to **syntax and semantics** across Litex.
+**This manual** is a compact reference to **syntax and semantics** across Litex. Go to [Litex](litexlang.com), [Litex Github](https://github.com/litexlang/golitex) for more details.
 
 # Abstract Proposition
+
+Purpose:
+
+Define a proposition symbol without giving it a body. Such a proposition has no built-in defining equivalence to unfold. Use it when you want to talk about a proposition abstractly without committing to its internal meaning.
 
 Syntax:
 
@@ -30,6 +34,10 @@ abstract_prop q(x, y, z)
 ```
 
 # by cases
+
+Purpose:
+
+Prove a target fact by splitting the proof into exhaustive cases and proving the target separately in each case.
 
 Syntax:
 
@@ -73,6 +81,10 @@ by cases:
 
 # by contra
 
+Purpose:
+
+Prove a target fact indirectly by assuming its negation and deriving a contradiction.
+
 Syntax:
 
 ```text
@@ -109,7 +121,9 @@ by contra:
 
 # witness exist … from …
 
-Witness an existential statement by naming concrete objects equal to the existentially quantified witnesses, then checking the body.
+Purpose:
+
+Prove an existential statement by explicitly giving witnesses and then verifying that they satisfy the required conditions.
 
 Syntax:
 
@@ -133,7 +147,9 @@ exist x, y R st {x > y}
 
 # witness nonempty set
 
-Witness that a set is nonempty by exhibiting a member.
+Purpose:
+
+Prove that a set is nonempty by exhibiting a concrete element of that set.
 
 Syntax:
 
@@ -158,7 +174,9 @@ $is_nonempty_set(s)
 
 # by enumerate
 
-Prove facts for parameters ranging over **finite list sets** (`{ … }`).
+Purpose:
+
+Prove facts by checking all cases for parameters ranging over **finite list sets** (`{ … }`).
 
 Syntax:
 
@@ -188,7 +206,9 @@ by enumerate a {1, 2, 3}:
 
 # by induc
 
-Induction on an integer parameter from a given lower bound (domain is integers greater than or equal to that bound, as in the corresponding `forall`).
+Purpose:
+
+Prove facts by induction on an integer parameter starting from a given lower bound.
 
 Syntax:
 
@@ -225,7 +245,9 @@ forall n Z:
 
 # by for
 
-Prove facts for parameters ranging over **`range(…)`** or **`closed_range(…)`** only.
+Purpose:
+
+Prove facts uniformly for parameters ranging over **`range(…)`** or **`closed_range(…)`**.
 
 Syntax (common pattern):
 
@@ -256,7 +278,9 @@ by for n closed_range(0, 10):
 
 # by extension
 
-Prove **set equality** by **extensionality**: show mutual inclusion (typically via `by enumerate` or other means of proving each element of one side lies in the other).
+Purpose:
+
+Prove **set equality** by **extensionality**: show that each side is a subset of the other.
 
 Syntax:
 

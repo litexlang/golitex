@@ -1,10 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_for_stmt(
-        &mut self,
-        stmt: &ForStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    pub fn exec_for_stmt(&mut self, stmt: &ForStmt) -> Result<NonErrStmtExecResult, RuntimeError> {
         if stmt.params.len() != stmt.param_sets.len() {
             return Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -56,15 +53,17 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ForStmt(stmt.clone()),
-                        format!(
-                            "by for: failed to store corresponding forall `{}`",
-                            corresponding_forall_fact
+                    RuntimeError::ExecStmtError(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            Stmt::ForStmt(stmt.clone()),
+                            format!(
+                                "by for: failed to store corresponding forall `{}`",
+                                corresponding_forall_fact
+                            ),
+                            Some(store_fact_error.into()),
+                            vec![],
                         ),
-                        Some(store_fact_error.into()),
-                        vec![],
-                    ))
+                    )
                 })?;
             return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
@@ -97,9 +96,7 @@ impl Runtime {
         }
 
         let infer_result_from_stored_forall_fact = self
-            .store_fact_without_well_defined_verified_and_infer(
-                corresponding_forall_fact.clone(),
-            )
+            .store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact.clone())
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ForStmt(stmt.clone()),
@@ -148,15 +145,18 @@ impl Runtime {
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-                format!(
-                    "by for: range boundary `{}` is not an integer number",
-                    number_like_obj
-                ),
-                line_file,
-                None,
-                None,
-            ).into());
+            return Err(
+                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    format!(
+                        "by for: range boundary `{}` is not an integer number",
+                        number_like_obj
+                    ),
+                    line_file,
+                    None,
+                    None,
+                )
+                .into(),
+            );
         }
         Ok(calculated_string)
     }
