@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_enumerate_stmt(
+    pub fn parse_by_enumerate_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
@@ -58,7 +58,7 @@ impl Runtime {
             proof.push(self.parse_stmt(block)?);
         }
 
-        Ok(Stmt::EnumerateStmt(EnumerateStmt::new(
+        Ok(Stmt::ByEnumerateStmt(ByEnumerateStmt::new(
             params,
             param_sets,
             to_prove,

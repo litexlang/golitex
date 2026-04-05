@@ -9,4 +9,3 @@ mod helpers;
 mod induc;
 mod kuratowski;
 mod tuple_stmt;
-mod unsupported;
