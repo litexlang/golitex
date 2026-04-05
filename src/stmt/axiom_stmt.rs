@@ -15,6 +15,13 @@ pub struct ByCartDefAxiomStmt {
     pub line_file: LineFile,
 }
 
+/// Introduce facts from the built-in ordered-pair / tuple encoding (executor TBD).
+#[derive(Clone)]
+pub struct ByTupleStmt {
+    pub obj: Obj,
+    pub line_file: LineFile,
+}
+
 // prove that a set is equal to another set by proving that they are subsets of each other
 #[derive(Clone)]
 pub struct ByExtensionAxiomStmt {
@@ -428,6 +435,18 @@ impl fmt::Display for ByCartDefAxiomStmt {
 impl ByCartDefAxiomStmt {
     pub fn new(cart: Cart, line_file: LineFile) -> Self {
         ByCartDefAxiomStmt { cart, line_file }
+    }
+}
+
+impl fmt::Display for ByTupleStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{} {}", BY, TUPLE, COLON, self.obj)
+    }
+}
+
+impl ByTupleStmt {
+    pub fn new(obj: Obj, line_file: LineFile) -> Self {
+        ByTupleStmt { obj, line_file }
     }
 }
 

@@ -31,12 +31,12 @@ pub struct Environment {
     pub known_or_facts_in_forall_facts:
         HashMap<OrFactKey, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
 
-    pub known_obj_is_well_defined: HashMap<ObjString, ()>,
-    pub known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
-    pub known_cart_objs: HashMap<ObjString, (Cart, LineFile)>,
-    pub known_normalized_decimal_number_value_of_obj: HashMap<ObjString, Number>,
-    pub known_set_equal_to_set_builder: HashMap<ObjString, SetBuilder>,
-    pub known_obj_in_fn_set: HashMap<ObjString, FnSetWithParams>,
+    pub known_objs_equal_to_tuple: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
+    pub known_objs_equal_to_cart: HashMap<ObjString, (Cart, LineFile)>,
+    pub known_objs_equal_to_normalized_decimal_number: HashMap<ObjString, Number>,
+    pub known_objs_equal_to_set_builder: HashMap<ObjString, SetBuilder>,
+
+    pub known_objs_in_fn_sets: HashMap<ObjString, FnSetWithParams>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
@@ -80,7 +80,6 @@ impl Environment {
             OrFactKey,
             Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
         >,
-        known_obj_is_well_defined: HashMap<ObjString, ()>,
         known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
         known_cart_objs: HashMap<ObjString, (Cart, LineFile)>,
         known_calculated_value_of_obj: HashMap<ObjString, Number>,
@@ -96,8 +95,8 @@ impl Environment {
             defined_algorithms: algorithms,
             defined_field_access_name: field_access_name,
             known_equality,
-            known_obj_in_fn_set: known_fn_in_fn_set,
-            known_set_equal_to_set_builder,
+            known_objs_in_fn_sets: known_fn_in_fn_set,
+            known_objs_equal_to_set_builder: known_set_equal_to_set_builder,
             known_atomic_facts_with_0_or_more_than_2_args,
             known_atomic_facts_with_1_arg: known_atomic_facts_with_1_arg,
             known_atomic_facts_with_2_args: known_atomic_facts_with_2_args,
@@ -106,10 +105,9 @@ impl Environment {
             known_exist_facts_in_forall_facts,
             known_or_facts,
             known_or_facts_in_forall_facts,
-            known_obj_is_well_defined,
-            known_tuple_objs: known_tuple_objs,
-            known_cart_objs,
-            known_normalized_decimal_number_value_of_obj: known_calculated_value_of_obj,
+            known_objs_equal_to_tuple: known_tuple_objs,
+            known_objs_equal_to_cart: known_cart_objs,
+            known_objs_equal_to_normalized_decimal_number: known_calculated_value_of_obj,
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
         }
@@ -132,12 +130,12 @@ impl fmt::Display for Environment {
         write!(
             f,
             "    known_fn_in_fn_set: {:?}\n",
-            self.known_obj_in_fn_set.len()
+            self.known_objs_in_fn_sets.len()
         )?;
         write!(
             f,
             "    known_set_equal_to_set_builder: {:?}\n",
-            self.known_set_equal_to_set_builder.len()
+            self.known_objs_equal_to_set_builder.len()
         )?;
         write!(
             f,
@@ -178,11 +176,6 @@ impl fmt::Display for Environment {
             f,
             "    known_or_facts_in_forall_facts: {:?}\n",
             self.known_or_facts_in_forall_facts.len()
-        )?;
-        write!(
-            f,
-            "    known_obj_is_well_defined: {:?}\n",
-            self.known_obj_is_well_defined.len()
         )?;
         write!(
             f,
@@ -662,7 +655,6 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
-            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

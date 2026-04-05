@@ -191,13 +191,13 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         if let Some(right_calculated_value) = self.resolve_obj_to_number(&equal_fact.right) {
             self.top_level_env()
-                .known_normalized_decimal_number_value_of_obj
+                .known_objs_equal_to_normalized_decimal_number
                 .insert(equal_fact.left.to_string(), right_calculated_value);
         }
 
         if let Some(left_calculated_value) = self.resolve_obj_to_number(&equal_fact.left) {
             self.top_level_env()
-                .known_normalized_decimal_number_value_of_obj
+                .known_objs_equal_to_normalized_decimal_number
                 .insert(equal_fact.right.to_string(), left_calculated_value);
         }
 
