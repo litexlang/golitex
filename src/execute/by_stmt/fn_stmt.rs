@@ -2,20 +2,6 @@ use super::kuratowski::{kuratowski_encode_tuple_boxes, kuratowski_pair_tagged_se
 use crate::prelude::*;
 use std::collections::HashMap;
 
-fn param_defs_with_type_from_fn_set_with_dom(
-    fn_set_with_params: &FnSetWithParams,
-) -> Vec<ParamGroupWithParamType> {
-    let mut param_defs_with_type: Vec<ParamGroupWithParamType> =
-        Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
-    for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
-        param_defs_with_type.push(ParamGroupWithParamType::new(
-            param_def_with_set.params.clone(),
-            ParamType::Obj(param_def_with_set.set.clone()),
-        ));
-    }
-    param_defs_with_type
-}
-
 fn boxed_objs_from_args(args: &[Obj]) -> Vec<Box<Obj>> {
     args.iter().cloned().map(Box::new).collect()
 }
@@ -71,46 +57,84 @@ impl Runtime {
             ));
         }
 
-        let tuple_elements: Vec<Obj> = param_names
-            .iter()
-            .map(|n| Obj::Identifier(Identifier::new(n.clone())))
-            .collect();
-        let tuple_struct = Tuple::new(tuple_elements);
-        let encoded_arg_tuple = match kuratowski_encode_tuple_boxes(&tuple_struct.args) {
-            Ok(o) => o,
-            Err(_) => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt_exec,
-                        "by fn: could not encode parameter tuple".to_string(),
-                        None,
+        let generated_forall_param_names = self.generate_random_unused_names(param_names.len());
+        let mut original_param_to_forall_obj: HashMap<String, Obj> =
+            HashMap::with_capacity(param_names.len());
+        let mut forall_param_defs_with_type: Vec<ParamGroupWithParamType> =
+            Vec::with_capacity(fn_set.params_def_with_set.len());
+        let mut flat_index: usize = 0;
+        for param_def_with_set in fn_set.params_def_with_set.iter() {
+            let next_flat_index = flat_index + param_def_with_set.params.len();
+            let generated_names_for_current_group =
+                generated_forall_param_names[flat_index..next_flat_index].to_vec();
+            let instantiated_set = self
+                .inst_obj(&param_def_with_set.set, &original_param_to_forall_obj)
+                .map_err(|inst_error| {
+                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                        stmt_exec.clone(),
+                        "by fn: failed to instantiate generated parameter set".to_string(),
+                        Some(inst_error.into()),
                         vec![],
-                    ),
-                ));
+                    ))
+                })?;
+            forall_param_defs_with_type.push(ParamGroupWithParamType::new(
+                generated_names_for_current_group.clone(),
+                ParamType::Obj(instantiated_set),
+            ));
+            for (original_name, generated_name) in param_def_with_set
+                .params
+                .iter()
+                .zip(generated_names_for_current_group.iter())
+            {
+                original_param_to_forall_obj.insert(
+                    original_name.clone(),
+                    Obj::Identifier(Identifier::new(generated_name.clone())),
+                );
             }
-        };
-
-        let mut function_args: Vec<Box<Obj>> = Vec::with_capacity(param_names.len());
-        for param_name in param_names.iter() {
-            function_args.push(Box::new(Obj::Identifier(Identifier::new(
-                param_name.clone(),
-            ))));
+            flat_index = next_flat_index;
         }
-        let fn_body_groups = vec![function_args];
-        let fn_call = Obj::FnObj(FnObj::new(fn_head_atom.clone(), fn_body_groups));
 
-        let pair_in_fn = kuratowski_pair_tagged_set(encoded_arg_tuple, fn_call.clone());
+        let forall_args: Vec<Obj> = param_names
+            .iter()
+            .map(|param_name| original_param_to_forall_obj.get(param_name).unwrap().clone())
+            .collect();
+        let forall_tuple_struct = Tuple::new(forall_args.clone());
+        let encoded_arg_tuple = kuratowski_encode_tuple_boxes(&forall_tuple_struct.args).map_err(|_| {
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                stmt_exec.clone(),
+                "by fn: could not encode generated parameter tuple".to_string(),
+                None,
+                vec![],
+            ))
+        })?;
 
-        let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(&fn_set);
+        let fn_call = Obj::FnObj(FnObj::new(
+            fn_head_atom.clone(),
+            vec![boxed_objs_from_args(&forall_args)],
+        ));
+
+        let pair_in_fn = kuratowski_pair_tagged_set(encoded_arg_tuple, fn_call);
+
         let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> =
             Vec::with_capacity(fn_set.dom_facts.len());
         for dom_fact in fn_set.dom_facts.iter() {
-            forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
+            forall_dom_facts.push(
+                self.inst_or_and_chain_atomic_fact(dom_fact, &original_param_to_forall_obj)
+                    .map_err(|inst_error| {
+                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            stmt_exec.clone(),
+                            "by fn: failed to instantiate generated domain fact".to_string(),
+                            Some(inst_error.into()),
+                            vec![],
+                        ))
+                    })?
+                    .to_exist_or_and_chain_atomic_fact(),
+            );
         }
 
         let forall_in = ForallFact::new(
-            param_defs_with_type.clone(),
-            forall_dom_facts.clone(),
+            forall_param_defs_with_type,
+            forall_dom_facts,
             vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                 InFact::new(pair_in_fn, stmt.function.clone(), stmt.line_file.clone()),
             ))],
