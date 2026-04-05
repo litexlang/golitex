@@ -120,6 +120,7 @@ pub use crate::stmt::definition_stmt::DefParamTypeStructStmt;
 pub use crate::stmt::definition_stmt::DefPropStmt;
 pub use crate::stmt::definition_stmt::HaveExistObjStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
+pub use crate::stmt::definition_stmt::HaveFnByInducStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualStmt;
 pub use crate::stmt::definition_stmt::HaveObjEqualStmt;
 pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;

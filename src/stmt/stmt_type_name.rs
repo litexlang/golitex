@@ -171,6 +171,12 @@ impl HaveFnEqualCaseByCaseStmt {
     }
 }
 
+impl HaveFnByInducStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveFnByInducStmt".to_string()
+    }
+}
+
 impl DefFamilyStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefFamilyStmt".to_string()

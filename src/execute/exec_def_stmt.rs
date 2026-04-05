@@ -931,6 +931,58 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    pub fn have_fn_by_induc_stmt(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+    ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
+        self.verify_obj_well_defined_and_store_cache(
+            &stmt.induc_from,
+            &VerifyState::new(0, false),
+        )
+        .map_err(|well_defined_error| {
+            RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                Stmt::HaveFnByInducStmt(stmt.clone()),
+                "".to_string(),
+                Some(well_defined_error.into()),
+                vec![],
+            )
+        })?;
+
+        let equiv = HaveFnEqualCaseByCaseStmt::new(
+            stmt.name.clone(),
+            stmt.fn_set_with_params.clone(),
+            stmt.cases.clone(),
+            stmt.equal_tos.clone(),
+            stmt.line_file.clone(),
+        );
+        self.verify_have_fn_equal_case_by_case_stmt(&equiv)
+            .map_err(|e| {
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    Stmt::HaveFnByInducStmt(stmt.clone()),
+                    "have_fn_by_induc_stmt: verify well-defined failed".to_string(),
+                    Some(e.into()),
+                    vec![],
+                )
+            })?;
+
+        let infer_result = self.store_have_fn_equal_case_by_case(&equiv).map_err(|e| {
+            RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                Stmt::HaveFnByInducStmt(stmt.clone()),
+                "".to_string(),
+                Some(e.into()),
+                vec![],
+            )
+        })?;
+
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            NonFactualStmtSuccess::new(
+                Stmt::HaveFnByInducStmt(stmt.clone()),
+                infer_result,
+                vec![],
+            ),
+        ))
+    }
+
     fn verify_have_fn_equal_case_by_case_stmt(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
