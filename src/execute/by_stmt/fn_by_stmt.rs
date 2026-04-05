@@ -1,4 +1,4 @@
-use super::kuratowski::{kuratowski_encode_tuple_boxes, kuratowski_pair_tagged_set};
+use super::kuratowski_by_stmt::{kuratowski_encode_tuple_boxes, kuratowski_pair_tagged_set};
 use crate::prelude::*;
 use std::collections::HashMap;
 
