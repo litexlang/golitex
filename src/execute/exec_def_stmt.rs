@@ -87,14 +87,14 @@ impl Runtime {
                 fact.clone(),
                 &VerifyState::new(0, false),
             )
-                .map_err(|inner_exec_error| {
-                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::DefPropStmt(def_prop_stmt.clone()),
-                        "".to_string(),
-                        Some(RuntimeError::from(inner_exec_error)),
-                        vec![],
-                    )
-                })?;
+            .map_err(|inner_exec_error| {
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                    Stmt::DefPropStmt(def_prop_stmt.clone()),
+                    "".to_string(),
+                    Some(RuntimeError::from(inner_exec_error)),
+                    vec![],
+                )
+            })?;
         }
         Ok(())
     }
@@ -161,24 +161,30 @@ impl Runtime {
     }
 
     /// After `store_identifier_obj`, run param-type-specific work (type facts, storage, and later hooks).
-    pub(crate) fn define_param_binding_for_param_type(
+    pub(crate) fn define_parameter_by_binding_param_type(
         &mut self,
         name: &str,
         param_type: &ParamType,
     ) -> Result<InferResult, RuntimeError> {
         match param_type {
-            ParamType::Family(family_ty) => self.define_param_binding_family(name, family_ty),
-            ParamType::Obj(obj) => self.define_param_binding_obj(name, obj),
-            ParamType::Set(set) => self.define_param_binding_set(name, set),
-            ParamType::NonemptySet(nonempty_set) => {
-                self.define_param_binding_nonempty_set(name, nonempty_set)
+            ParamType::Family(family_ty) => {
+                self.define_parameter_by_binding_family(name, family_ty)
             }
-            ParamType::FiniteSet(finite_set) => self.define_param_binding_finite_set(name, finite_set),
-            ParamType::Struct(struct_ty) => self.define_param_binding_struct(name, struct_ty),
+            ParamType::Obj(obj) => self.define_parameter_by_binding_obj(name, obj),
+            ParamType::Set(set) => self.define_parameter_by_binding_set(name, set),
+            ParamType::NonemptySet(nonempty_set) => {
+                self.define_parameter_by_binding_nonempty_set(name, nonempty_set)
+            }
+            ParamType::FiniteSet(finite_set) => {
+                self.define_parameter_by_binding_finite_set(name, finite_set)
+            }
+            ParamType::Struct(struct_ty) => {
+                self.define_parameter_by_binding_struct(name, struct_ty)
+            }
         }
     }
 
-    fn define_param_binding_family(
+    fn define_parameter_by_binding_family(
         &mut self,
         name: &str,
         family_ty: &FamilyParamType,
@@ -187,27 +193,33 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-                    format!("family `{}` is not defined", family_name),
-                    default_line_file(),
-                    None,
-                    None,
-                ).into());
+                return Err(
+                    RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                        format!("family `{}` is not defined", family_name),
+                        default_line_file(),
+                        None,
+                        None,
+                    )
+                    .into(),
+                );
             }
         };
         let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
-            return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-                format!(
-                    "family `{}` expects {} type argument(s), got {}",
-                    family_name,
-                    expected_count,
-                    family_ty.params.len()
-                ),
-                default_line_file(),
-                None,
-                None,
-            ).into());
+            return Err(
+                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    format!(
+                        "family `{}` expects {} type argument(s), got {}",
+                        family_name,
+                        expected_count,
+                        family_ty.params.len()
+                    ),
+                    default_line_file(),
+                    None,
+                    None,
+                )
+                .into(),
+            );
         }
         let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
@@ -223,7 +235,11 @@ impl Runtime {
             .map_err(RuntimeError::from)
     }
 
-    fn define_param_binding_obj(&mut self, name: &str, obj: &Obj) -> Result<InferResult, RuntimeError> {
+    fn define_parameter_by_binding_obj(
+        &mut self,
+        name: &str,
+        obj: &Obj,
+    ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
             obj.clone(),
@@ -233,7 +249,11 @@ impl Runtime {
             .map_err(RuntimeError::from)
     }
 
-    fn define_param_binding_set(&mut self, name: &str, _set: &Set) -> Result<InferResult, RuntimeError> {
+    fn define_parameter_by_binding_set(
+        &mut self,
+        name: &str,
+        _set: &Set,
+    ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
             default_line_file(),
@@ -242,7 +262,7 @@ impl Runtime {
             .map_err(RuntimeError::from)
     }
 
-    fn define_param_binding_nonempty_set(
+    fn define_parameter_by_binding_nonempty_set(
         &mut self,
         name: &str,
         _nonempty_set: &NonemptySet,
@@ -255,7 +275,7 @@ impl Runtime {
             .map_err(RuntimeError::from)
     }
 
-    fn define_param_binding_finite_set(
+    fn define_parameter_by_binding_finite_set(
         &mut self,
         name: &str,
         _finite_set: &FiniteSet,
@@ -313,7 +333,7 @@ impl Runtime {
                     )
                 })?;
                 let fact_infer_result = self
-                    .define_param_binding_for_param_type(name, &param_def.param_type)
+                    .define_parameter_by_binding_param_type(name, &param_def.param_type)
                     .map_err(|runtime_error| {
                         RuntimeError::new_define_params_error_with_msg_previous_error_position(
                             format!(
@@ -419,16 +439,16 @@ impl Runtime {
         let mut current_index = 0;
         let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         for param_def in have_obj_equal_stmt.param_def.iter() {
-            let current_type_holder = self.inst_param_type(&param_def.param_type, &param_to_obj_map).map_err(
-                |runtime_error| {
+            let current_type_holder = self
+                .inst_param_type(&param_def.param_type, &param_to_obj_map)
+                .map_err(|runtime_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
                         "".to_string(),
                         Some(runtime_error),
                         vec![],
                     )
-                },
-            )?;
+                })?;
             let current_type = &current_type_holder;
             for name in param_def.params.iter() {
                 let current_param_equal_to = &have_obj_equal_stmt.objs_equal_to[current_index];
