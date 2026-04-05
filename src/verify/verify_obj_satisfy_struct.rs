@@ -54,8 +54,7 @@ impl Runtime {
                     }
                 };
 
-                let Some(satisfied_struct) =
-                    self.get_struct_that_object_satisfies(&id_key).cloned()
+                let Some(satisfied_struct) = self.get_object_satisfy_struct(&id_key).cloned()
                 else {
                     return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
                 };
@@ -102,7 +101,7 @@ impl Runtime {
         &mut self,
         tuple: &Tuple,
         struct_param_type: &StructParamType,
-        struct_def: &DefParamTypeStructStmt,
+        struct_def: &DefStructStmt,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let args_of_struct_param_type = &struct_param_type.args;

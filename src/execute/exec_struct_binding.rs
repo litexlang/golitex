@@ -24,7 +24,7 @@
 //! - 根参数 `g`：`self ↦ Identifier(g)`；
 //! - 嵌套在 field 上（如 `g.h` 又是某个 struct）：`self ↦ FieldAccess(g.h)`。
 //!
-//! 该映射与形参代入 `param_to_arg_map` **合并**后，对 [`DefParamTypeStructStmt::facts`] 中每条
+//! 该映射与形参代入 `param_to_arg_map` **合并**后，对 [`DefStructStmt::facts`] 中每条
 //! [`OrAndChainAtomicFact`] 经 [`Runtime::inst_or_and_chain_atomic_fact`] 代入后，再写入环境（见
 //! [`Runtime::store_instantiated_struct_def_facts_with_self`]）。
 //!
@@ -156,7 +156,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// 元组实参与 `struct T(...)` 一一对应 [`DefParamTypeStructStmt::fields`]（含头部形参对应的隐式 field），
+    /// 元组实参与 `struct T(...)` 一一对应 [`DefStructStmt::fields`]（含头部形参对应的隐式 field），
     /// 各分量再按字段类型做 [`define_param_binding_for_param_type_on_obj`]；`<=>:` 下事实里 `self` 代换为整段 tuple，
     /// 并临时登记 `SELF` → [`InstStructObj`] 以便实例化时 `self.<field>` 能投影到分量。
     fn define_param_binding_struct_from_tuple(
@@ -250,7 +250,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// 将 `struct` 定义中 `<=>:` 下的 [`DefParamTypeStructStmt::facts`] 做形参代入，并把 `self` 换成当前实例后存库。
+    /// 将 `struct` 定义中 `<=>:` 下的 [`DefStructStmt::facts`] 做形参代入，并把 `self` 换成当前实例后存库。
     ///
     /// `param_to_arg_map` 来自 [`ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map`]（与字段类型
     /// `instantiate` 使用同一张表）。在此之上插入 `SELF` → `self_replacement`：
@@ -262,7 +262,7 @@ impl Runtime {
     /// 这样定义里写的 `self ∈ ...`、`P(self, ...)` 等会在实例化后变成关于 `g` 或 `g.h` 的事实。
     fn store_instantiated_struct_def_facts_with_self(
         &mut self,
-        def: &DefParamTypeStructStmt,
+        def: &DefStructStmt,
         param_to_arg_map: &HashMap<String, Obj>,
         self_replacement: Obj,
     ) -> Result<InferResult, RuntimeError> {

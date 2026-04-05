@@ -183,8 +183,8 @@ impl DefFamilyStmt {
     }
 }
 
-impl DefParamTypeStructStmt {
+impl DefStructStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefParamTypeStructStmt".to_string()
+        "DefStructStmt".to_string()
     }
 }

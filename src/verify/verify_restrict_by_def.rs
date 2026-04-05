@@ -10,7 +10,7 @@ impl Runtime {
         let function = &restrict_fact.obj;
 
         let original_fn_set =
-            match self.get_cloned_fn_set_where_fn_belongs_to(function) {
+            match self.get_cloned_object_in_fn_set(function) {
                 Some(fn_set) => fn_set,
                 None => {
                     return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(

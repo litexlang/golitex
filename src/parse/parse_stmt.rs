@@ -24,7 +24,7 @@ impl Runtime {
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             FAMILY => self.parse_def_family_stmt(tb),
-            STRUCT => self.parse_def_param_type_struct_stmt(tb),
+            STRUCT => self.parse_def_struct_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
             BY => self.parse_by_prefixed_stmt(tb),
             _ => {
