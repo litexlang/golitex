@@ -1,14 +1,14 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_for_axiom_stmt(
+    pub fn exec_for_stmt(
         &mut self,
-        stmt: &ForAxiomStmt,
+        stmt: &ForStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if stmt.params.len() != stmt.param_sets.len() {
             return Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ForAxiomStmt(stmt.clone()),
+                    Stmt::ForStmt(stmt.clone()),
                     "by for: number of params does not match number of ranges".to_string(),
                     None,
                     vec![],
@@ -18,7 +18,7 @@ impl Runtime {
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::ForAxiomStmt(stmt.clone()),
+                Stmt::ForStmt(stmt.clone()),
                 msg,
                 None,
                 vec![],
@@ -27,7 +27,7 @@ impl Runtime {
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ForAxiomStmt(stmt.clone()),
+                    Stmt::ForStmt(stmt.clone()),
                     format!(
                         "by for: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
@@ -41,7 +41,7 @@ impl Runtime {
             .for_param_value_strings_of_each_param(stmt)
             .map_err(|msg| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ForAxiomStmt(stmt.clone()),
+                    Stmt::ForStmt(stmt.clone()),
                     msg,
                     None,
                     vec![],
@@ -57,7 +57,7 @@ impl Runtime {
                 )
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ForAxiomStmt(stmt.clone()),
+                        Stmt::ForStmt(stmt.clone()),
                         format!(
                             "by for: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
@@ -68,7 +68,7 @@ impl Runtime {
                 })?;
             return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    Stmt::ForAxiomStmt(stmt.clone()),
+                    Stmt::ForStmt(stmt.clone()),
                     infer_result_from_stored_forall_fact,
                     vec![],
                 ),
@@ -78,7 +78,7 @@ impl Runtime {
         let mut all_inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         let mut current_parameter_index_assignment = Self::for_start_index_assignment(stmt);
         loop {
-            let mut one_assignment_inside_results = self.exec_for_axiom_stmt_for_one_assignment(
+            let mut one_assignment_inside_results = self.exec_for_stmt_for_one_assignment(
                 stmt,
                 &current_parameter_index_assignment,
                 &param_value_strings_of_each_param,
@@ -102,7 +102,7 @@ impl Runtime {
             )
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ForAxiomStmt(stmt.clone()),
+                    Stmt::ForStmt(stmt.clone()),
                     format!(
                         "by for: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
@@ -114,7 +114,7 @@ impl Runtime {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::ForAxiomStmt(stmt.clone()),
+                Stmt::ForStmt(stmt.clone()),
                 infer_result_from_stored_forall_fact,
                 all_inside_results,
             ),
@@ -163,15 +163,15 @@ impl Runtime {
 
     fn for_param_value_strings_of_each_param(
         self: &Self,
-        stmt: &ForAxiomStmt,
+        stmt: &ForStmt,
     ) -> Result<Vec<Vec<String>>, String> {
         let mut param_value_strings_of_each_param: Vec<Vec<String>> = Vec::new();
         for param_set in stmt.param_sets.iter() {
             let (start_obj, end_obj, is_closed_range) = match param_set {
-                crate::stmt::axiom_stmt::ClosedRangeOrRange::ClosedRange(closed_range) => {
+                crate::stmt::by_stmt::ClosedRangeOrRange::ClosedRange(closed_range) => {
                     (closed_range.start.as_ref(), closed_range.end.as_ref(), true)
                 }
-                crate::stmt::axiom_stmt::ClosedRangeOrRange::Range(range) => {
+                crate::stmt::by_stmt::ClosedRangeOrRange::Range(range) => {
                     (range.start.as_ref(), range.end.as_ref(), false)
                 }
             };
@@ -214,7 +214,7 @@ impl Runtime {
         Ok(param_value_strings_of_each_param)
     }
 
-    fn for_start_index_assignment(stmt: &ForAxiomStmt) -> Vec<usize> {
+    fn for_start_index_assignment(stmt: &ForStmt) -> Vec<usize> {
         let mut start_index_assignment: Vec<usize> = Vec::new();
         for _ in stmt.param_sets.iter() {
             start_index_assignment.push(0);
@@ -240,14 +240,14 @@ impl Runtime {
         None
     }
 
-    fn exec_for_axiom_stmt_for_one_assignment(
+    fn exec_for_stmt_for_one_assignment(
         &mut self,
-        stmt: &ForAxiomStmt,
+        stmt: &ForStmt,
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
     ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
         self.push_env();
-        let execute_result = self.exec_for_axiom_stmt_for_one_assignment_body(
+        let execute_result = self.exec_for_stmt_for_one_assignment_body(
             stmt,
             parameter_index_assignment,
             param_value_strings_of_each_param,
@@ -256,9 +256,9 @@ impl Runtime {
         execute_result
     }
 
-    fn exec_for_axiom_stmt_for_one_assignment_body(
+    fn exec_for_stmt_for_one_assignment_body(
         &mut self,
-        stmt: &ForAxiomStmt,
+        stmt: &ForStmt,
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
     ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
@@ -306,7 +306,7 @@ impl Runtime {
                     self.verify_atomic_fact(&reversed, &VerifyState::new(0, false))?;
                 if verify_reversed_dom_result.is_unknown() {
                     return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ForAxiomStmt(stmt.clone()),
+                        Stmt::ForStmt(stmt.clone()),
                         format!(
                             "by for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown",
                             dom_fact, reversed
@@ -337,7 +337,7 @@ impl Runtime {
             if verified_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ForAxiomStmt(stmt.clone()),
+                        Stmt::ForStmt(stmt.clone()),
                         format!("by for: failed to prove `{}`", fact_to_prove),
                         None,
                         inside_results,

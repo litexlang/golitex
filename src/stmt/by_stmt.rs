@@ -3,14 +3,14 @@ use std::fmt;
 
 // view fn set as a subset of a cartesian product set
 #[derive(Clone)]
-pub struct ByFnDefAxiomStmt {
+pub struct ByFnStmt {
     pub function: Obj,
     pub line_file: LineFile,
 }
 
 // view a cartesian product set as a set (ordered pairs)
 #[derive(Clone)]
-pub struct ByCartDefAxiomStmt {
+pub struct ByCartStmt {
     pub cart: Cart,
     pub line_file: LineFile,
 }
@@ -24,7 +24,7 @@ pub struct ByTupleStmt {
 
 // prove that a set is equal to another set by proving that they are subsets of each other
 #[derive(Clone)]
-pub struct ByExtensionAxiomStmt {
+pub struct ByExtensionStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
@@ -39,7 +39,7 @@ pub enum ClosedRangeOrRange {
 
 // prove fact is true for a range of integers
 #[derive(Clone)]
-pub struct ForAxiomStmt {
+pub struct ForStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ClosedRangeOrRange>,
     pub dom_facts: Vec<AtomicFact>,
@@ -50,7 +50,7 @@ pub struct ForAxiomStmt {
 
 // prove fact is true by induction
 #[derive(Clone)]
-pub struct ByInducAxiomStmt {
+pub struct ByInducStmt {
     pub to_prove: Vec<ExistOrAndChainAtomicFact>,
     pub param: String,
     pub induc_from: Obj,
@@ -59,7 +59,7 @@ pub struct ByInducAxiomStmt {
 
 // prove fact is true for a set of values by enumeration
 #[derive(Clone)]
-pub struct EnumerateAxiomStmt {
+pub struct EnumerateStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ListSet>,
     pub to_prove: Vec<ExistOrAndChainAtomicFact>,
@@ -69,7 +69,7 @@ pub struct EnumerateAxiomStmt {
 
 // prove fact is true case by case
 #[derive(Clone)]
-pub struct ByCasesAxiomStmt {
+pub struct ByCasesStmt {
     pub cases: Vec<AndChainAtomicFact>,
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
@@ -79,14 +79,14 @@ pub struct ByCasesAxiomStmt {
 
 // prove fact is true by contradiction
 #[derive(Clone)]
-pub struct ByContraAxiomStmt {
+pub struct ByContraStmt {
     pub to_prove: AtomicFact,
     pub proof: Vec<Stmt>,
     pub impossible_fact: AtomicFact,
     pub line_file: LineFile,
 }
 
-impl EnumerateAxiomStmt {
+impl EnumerateStmt {
     pub fn new(
         params: Vec<String>,
         param_sets: Vec<ListSet>,
@@ -94,7 +94,7 @@ impl EnumerateAxiomStmt {
         proof: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
-        EnumerateAxiomStmt {
+        EnumerateStmt {
             params,
             param_sets,
             to_prove,
@@ -127,7 +127,7 @@ impl EnumerateAxiomStmt {
     }
 }
 
-impl ByCasesAxiomStmt {
+impl ByCasesStmt {
     pub fn new(
         cases: Vec<AndChainAtomicFact>,
         then_facts: Vec<Fact>,
@@ -135,7 +135,7 @@ impl ByCasesAxiomStmt {
         impossible_facts: Vec<Option<AtomicFact>>,
         line_file: LineFile,
     ) -> Self {
-        ByCasesAxiomStmt {
+        ByCasesStmt {
             cases,
             then_facts,
             proofs,
@@ -145,7 +145,7 @@ impl ByCasesAxiomStmt {
     }
 }
 
-impl fmt::Display for ByCasesAxiomStmt {
+impl fmt::Display for ByCasesStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let case_and_proof_of_each_case = self
             .cases
@@ -189,14 +189,14 @@ impl fmt::Display for ByCasesAxiomStmt {
     }
 }
 
-impl ByContraAxiomStmt {
+impl ByContraStmt {
     pub fn new(
         to_prove: AtomicFact,
         proof: Vec<Stmt>,
         impossible_fact: AtomicFact,
         line_file: LineFile,
     ) -> Self {
-        ByContraAxiomStmt {
+        ByContraStmt {
             to_prove,
             proof,
             impossible_fact,
@@ -205,7 +205,7 @@ impl ByContraAxiomStmt {
     }
 }
 
-impl fmt::Display for ByContraAxiomStmt {
+impl fmt::Display for ByContraStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -233,7 +233,7 @@ impl fmt::Display for ByContraAxiomStmt {
     }
 }
 
-impl fmt::Display for EnumerateAxiomStmt {
+impl fmt::Display for EnumerateStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -250,14 +250,14 @@ impl fmt::Display for EnumerateAxiomStmt {
     }
 }
 
-impl ByInducAxiomStmt {
+impl ByInducStmt {
     pub fn new(
         fact: Vec<ExistOrAndChainAtomicFact>,
         param: String,
         induc_from: Obj,
         line_file: LineFile,
     ) -> Self {
-        ByInducAxiomStmt {
+        ByInducStmt {
             to_prove: fact,
             param,
             induc_from,
@@ -266,7 +266,7 @@ impl ByInducAxiomStmt {
     }
 }
 
-impl fmt::Display for ByInducAxiomStmt {
+impl fmt::Display for ByInducStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -282,7 +282,7 @@ impl fmt::Display for ByInducAxiomStmt {
     }
 }
 
-impl fmt::Display for ForAxiomStmt {
+impl fmt::Display for ForStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let head = match self.dom_facts.len() {
             0 => format!(
@@ -320,7 +320,7 @@ impl fmt::Display for ForAxiomStmt {
     }
 }
 
-impl ForAxiomStmt {
+impl ForStmt {
     pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
         if self.params.len() != self.param_sets.len() {
             return Err("by for: number of params does not match number of param sets".to_string());
@@ -357,7 +357,7 @@ impl ForAxiomStmt {
         proof: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
-        ForAxiomStmt {
+        ForStmt {
             params,
             param_sets,
             dom_facts,
@@ -377,7 +377,7 @@ impl fmt::Display for ClosedRangeOrRange {
     }
 }
 
-impl fmt::Display for ByExtensionAxiomStmt {
+impl fmt::Display for ByExtensionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.proof.len() {
             0 => write!(
@@ -400,9 +400,9 @@ impl fmt::Display for ByExtensionAxiomStmt {
     }
 }
 
-impl ByExtensionAxiomStmt {
+impl ByExtensionStmt {
     pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file: LineFile) -> Self {
-        ByExtensionAxiomStmt {
+        ByExtensionStmt {
             left,
             right,
             proof,
@@ -411,30 +411,30 @@ impl ByExtensionAxiomStmt {
     }
 }
 
-impl fmt::Display for ByFnDefAxiomStmt {
+impl fmt::Display for ByFnStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", BY, FN_DEF, self.function)
+        write!(f, "{} {} {}", BY, FN_FOR_FN_WITH_PARAMS, self.function)
     }
 }
 
-impl ByFnDefAxiomStmt {
+impl ByFnStmt {
     pub fn new(function: Obj, line_file: LineFile) -> Self {
-        ByFnDefAxiomStmt {
+        ByFnStmt {
             function,
             line_file,
         }
     }
 }
 
-impl fmt::Display for ByCartDefAxiomStmt {
+impl fmt::Display for ByCartStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", BY, CART_DEF, self.cart)
+        write!(f, "{} {} {}", BY, CART, self.cart)
     }
 }
 
-impl ByCartDefAxiomStmt {
+impl ByCartStmt {
     pub fn new(cart: Cart, line_file: LineFile) -> Self {
-        ByCartDefAxiomStmt { cart, line_file }
+        ByCartStmt { cart, line_file }
     }
 }
 
@@ -450,7 +450,7 @@ impl ByTupleStmt {
     }
 }
 
-impl ByInducAxiomStmt {
+impl ByInducStmt {
     pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
         let mut params_def_with_type: Vec<ParamGroupWithParamType> = Vec::new();
         params_def_with_type.push(ParamGroupWithParamType::new(

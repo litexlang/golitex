@@ -1,4 +1,4 @@
-pub mod axiom_stmt;
+pub mod by_stmt;
 pub mod claim_stmt;
 pub mod define_algorithm_stmt;
 pub mod definition_stmt;
