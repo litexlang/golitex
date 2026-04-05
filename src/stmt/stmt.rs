@@ -32,6 +32,7 @@ pub enum Stmt {
     ByExtensionAxiomStmt(ByExtensionAxiomStmt),
     ByFnDefAxiomStmt(ByFnDefAxiomStmt),
     ByCartDefAxiomStmt(ByCartDefAxiomStmt),
+    ByTuple(ByTupleStmt),
 }
 
 impl fmt::Debug for Stmt {
@@ -72,6 +73,7 @@ impl fmt::Display for Stmt {
             Stmt::ByExtensionAxiomStmt(x) => write!(f, "{}", x),
             Stmt::ByFnDefAxiomStmt(x) => write!(f, "{}", x),
             Stmt::ByCartDefAxiomStmt(x) => write!(f, "{}", x),
+            Stmt::ByTuple(x) => write!(f, "{}", x),
         }
     }
 }
@@ -108,6 +110,7 @@ impl Stmt {
             Stmt::ByExtensionAxiomStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnDefAxiomStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByCartDefAxiomStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByTuple(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -142,6 +145,7 @@ impl Stmt {
             Stmt::ByExtensionAxiomStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnDefAxiomStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByCartDefAxiomStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
         }
     }
 }

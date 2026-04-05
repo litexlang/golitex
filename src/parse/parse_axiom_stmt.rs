@@ -16,9 +16,10 @@ impl Runtime {
             EXTENSION => self.parse_by_extension_axiom_stmt(tb),
             FN_DEF => self.parse_by_fn_def_axiom_stmt(tb),
             CART_DEF => self.parse_by_cart_def_axiom_stmt(tb),
+            TUPLE => self.parse_by_tuple_axiom_stmt(tb),
             _ => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 format!(
-                    "by: expected cases, contra, enumerate, induc, for, extension, fn_def, or cart_def after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate, induc, for, extension, fn_def, cart_def, or tuple after `by`, got `{}`",
                     second_keyword
                 ),
                 tb.line_file.clone(),
@@ -446,5 +447,13 @@ impl Runtime {
             cart,
             tb.line_file.clone(),
         )))
+    }
+
+    /// `by tuple: <obj>` — surface syntax for tuple / ordered-pair definitional expansion (execution TBD).
+    pub fn parse_by_tuple_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(TUPLE)?;
+        tb.skip_token(COLON)?;
+        let obj = self.parse_obj(tb)?;
+        Ok(Stmt::ByTuple(ByTupleStmt::new(obj, tb.line_file.clone())))
     }
 }

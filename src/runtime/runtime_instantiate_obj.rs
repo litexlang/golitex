@@ -65,31 +65,35 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Atom, RuntimeError> {
         match atom {
-            Atom::Identifier(identifier) => match self.inst_identifier(identifier, param_to_arg_map)? {
-                Obj::Identifier(new_identifier) => Ok(Atom::Identifier(new_identifier)),
-                Obj::IdentifierWithMod(new_identifier_with_mod) => {
-                    Ok(Atom::IdentifierWithMod(new_identifier_with_mod))
+            Atom::Identifier(identifier) => {
+                match self.inst_identifier(identifier, param_to_arg_map)? {
+                    Obj::Identifier(new_identifier) => Ok(Atom::Identifier(new_identifier)),
+                    Obj::IdentifierWithMod(new_identifier_with_mod) => {
+                        Ok(Atom::IdentifierWithMod(new_identifier_with_mod))
+                    }
+                    Obj::FieldAccess(new_field_access) => Ok(Atom::FieldAccess(new_field_access)),
+                    Obj::FieldAccessWithMod(new_field_access_with_mod) => {
+                        Ok(Atom::FieldAccessWithMod(new_field_access_with_mod))
+                    }
+                    _ => Ok(Atom::Identifier(identifier.clone())),
                 }
-                Obj::FieldAccess(new_field_access) => Ok(Atom::FieldAccess(new_field_access)),
-                Obj::FieldAccessWithMod(new_field_access_with_mod) => {
-                    Ok(Atom::FieldAccessWithMod(new_field_access_with_mod))
-                }
-                _ => Ok(Atom::Identifier(identifier.clone())),
-            },
+            }
             Atom::IdentifierWithMod(identifier_with_mod) => {
                 Ok(Atom::IdentifierWithMod(identifier_with_mod.clone()))
             }
-            Atom::FieldAccess(field_access) => match self.inst_field_access(field_access, param_to_arg_map)? {
-                Obj::Identifier(new_identifier) => Ok(Atom::Identifier(new_identifier)),
-                Obj::IdentifierWithMod(new_identifier_with_mod) => {
-                    Ok(Atom::IdentifierWithMod(new_identifier_with_mod))
+            Atom::FieldAccess(field_access) => {
+                match self.inst_field_access(field_access, param_to_arg_map)? {
+                    Obj::Identifier(new_identifier) => Ok(Atom::Identifier(new_identifier)),
+                    Obj::IdentifierWithMod(new_identifier_with_mod) => {
+                        Ok(Atom::IdentifierWithMod(new_identifier_with_mod))
+                    }
+                    Obj::FieldAccess(new_field_access) => Ok(Atom::FieldAccess(new_field_access)),
+                    Obj::FieldAccessWithMod(new_field_access_with_mod) => {
+                        Ok(Atom::FieldAccessWithMod(new_field_access_with_mod))
+                    }
+                    _ => Ok(Atom::FieldAccess(field_access.clone())),
                 }
-                Obj::FieldAccess(new_field_access) => Ok(Atom::FieldAccess(new_field_access)),
-                Obj::FieldAccessWithMod(new_field_access_with_mod) => {
-                    Ok(Atom::FieldAccessWithMod(new_field_access_with_mod))
-                }
-                _ => Ok(Atom::FieldAccess(field_access.clone())),
-            },
+            }
             Atom::FieldAccessWithMod(field_access_with_mod) => {
                 Ok(Atom::FieldAccessWithMod(field_access_with_mod.clone()))
             }
@@ -136,16 +140,21 @@ impl Runtime {
             Some(obj) => {
                 let tuple_opt = match obj {
                     Obj::Tuple(t) => Some(t.clone()),
-                    _ => self.get_known_tuple_obj_of_obj(&obj.to_string()),
+                    _ => self.get_obj_equal_to_tuple(&obj.to_string()),
                 };
                 match tuple_opt {
                     Some(t) => self.inst_field_access_on_struct_tuple(field_access, &t),
-                    None => return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                        None,
-                        format!("field `{}` of struct `{}` is not a tuple", field_access.field, field_access.name),
-                        default_line_file(),
-                        None,
-                    ))),
+                    None => {
+                        return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "field `{}` of struct `{}` is not a tuple",
+                                field_access.field, field_access.name
+                            ),
+                            default_line_file(),
+                            None,
+                        )))
+                    }
                 }
             }
             None => Ok(Obj::FieldAccess(field_access.clone())),
@@ -157,8 +166,9 @@ impl Runtime {
         field_access: &FieldAccess,
         tuple: &Tuple,
     ) -> Result<Obj, RuntimeError> {
-        let Some(def) = self.get_definition_of_struct_where_object_satisfies(&IdentifierOrIdentifierWithMod::Identifier(Identifier::new(field_access.name.clone())))
-        else {
+        let Some(def) = self.get_definition_of_struct_where_object_satisfies(
+            &IdentifierOrIdentifierWithMod::Identifier(Identifier::new(field_access.name.clone())),
+        ) else {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
                 format!("struct `{}` is not defined", field_access.name),
@@ -174,7 +184,10 @@ impl Runtime {
         else {
             return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
                 None,
-                format!("field `{}` of struct `{}` is not defined", field_access.field, field_access.name),
+                format!(
+                    "field `{}` of struct `{}` is not defined",
+                    field_access.field, field_access.name
+                ),
                 default_line_file(),
                 None,
             )));
@@ -230,44 +243,87 @@ impl Runtime {
         Ok(Obj::Number(number.clone()))
     }
 
-    pub fn inst_add(&self, add: &Add, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_add(
+        &self,
+        add: &Add,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map)?;
-        Ok(Obj::Add(Add::new(instantiated_left_obj, instantiated_right_obj)))
+        Ok(Obj::Add(Add::new(
+            instantiated_left_obj,
+            instantiated_right_obj,
+        )))
     }
 
-    pub fn inst_sub(&self, sub: &Sub, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_sub(
+        &self,
+        sub: &Sub,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&sub.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&sub.right, param_to_arg_map)?;
-        Ok(Obj::Sub(Sub::new(instantiated_left_obj, instantiated_right_obj)))
+        Ok(Obj::Sub(Sub::new(
+            instantiated_left_obj,
+            instantiated_right_obj,
+        )))
     }
 
-    pub fn inst_mul(&self, mul: &Mul, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_mul(
+        &self,
+        mul: &Mul,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mul.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&mul.right, param_to_arg_map)?;
-        Ok(Obj::Mul(Mul::new(instantiated_left_obj, instantiated_right_obj)))
+        Ok(Obj::Mul(Mul::new(
+            instantiated_left_obj,
+            instantiated_right_obj,
+        )))
     }
 
-    pub fn inst_div(&self, div: &Div, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_div(
+        &self,
+        div: &Div,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         Ok(Obj::Div(Div {
             left: Box::new(self.inst_obj(&div.left, param_to_arg_map)?),
             right: Box::new(self.inst_obj(&div.right, param_to_arg_map)?),
         }))
     }
 
-    pub fn inst_mod(&self, mod_obj: &Mod, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_mod(
+        &self,
+        mod_obj: &Mod,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mod_obj.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&mod_obj.right, param_to_arg_map)?;
-        Ok(Obj::Mod(Mod::new(instantiated_left_obj, instantiated_right_obj)))
+        Ok(Obj::Mod(Mod::new(
+            instantiated_left_obj,
+            instantiated_right_obj,
+        )))
     }
 
-    pub fn inst_pow(&self, pow: &Pow, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_pow(
+        &self,
+        pow: &Pow,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         let instantiated_base_obj = self.inst_obj(&pow.base, param_to_arg_map)?;
         let instantiated_exponent_obj = self.inst_obj(&pow.exponent, param_to_arg_map)?;
-        Ok(Obj::Pow(Pow::new(instantiated_base_obj, instantiated_exponent_obj)))
+        Ok(Obj::Pow(Pow::new(
+            instantiated_base_obj,
+            instantiated_exponent_obj,
+        )))
     }
 
-    pub fn inst_union(&self, union: &Union, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_union(
+        &self,
+        union: &Union,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         Ok(Obj::Union(Union {
             left: Box::new(self.inst_obj(&union.left, param_to_arg_map)?),
             right: Box::new(self.inst_obj(&union.right, param_to_arg_map)?),
@@ -307,13 +363,21 @@ impl Runtime {
         }))
     }
 
-    pub fn inst_cup(&self, cup: &Cup, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_cup(
+        &self,
+        cup: &Cup,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         Ok(Obj::Cup(Cup {
             left: Box::new(self.inst_obj(&cup.left, param_to_arg_map)?),
         }))
     }
 
-    pub fn inst_cap(&self, cap: &Cap, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_cap(
+        &self,
+        cap: &Cap,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         Ok(Obj::Cap(Cap {
             left: Box::new(self.inst_obj(&cap.left, param_to_arg_map)?),
         }))
@@ -365,10 +429,12 @@ impl Runtime {
         fn_set_with_params: &FnSetWithParams,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        let param_names = ParamGroupWithSet::collect_param_names(&fn_set_with_params.params_def_with_set);
+        let param_names =
+            ParamGroupWithSet::collect_param_names(&fn_set_with_params.params_def_with_set);
         let filtered_param_to_arg_map =
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
-        let mut params_def_with_set = Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
+        let mut params_def_with_set =
+            Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
         for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
             params_def_with_set.push(ParamGroupWithSet::new(
                 param_def_with_set.params.clone(),
@@ -377,16 +443,23 @@ impl Runtime {
         }
         let mut dom_facts = Vec::with_capacity(fn_set_with_params.dom_facts.len());
         for dom_fact in fn_set_with_params.dom_facts.iter() {
-            dom_facts.push(self.inst_or_and_chain_atomic_fact(dom_fact, &filtered_param_to_arg_map)?);
+            dom_facts
+                .push(self.inst_or_and_chain_atomic_fact(dom_fact, &filtered_param_to_arg_map)?);
         }
         Ok(Obj::FnSetWithParams(FnSetWithParams {
             params_def_with_set,
             dom_facts,
-            ret_set: Box::new(self.inst_obj(&fn_set_with_params.ret_set, &filtered_param_to_arg_map)?),
+            ret_set: Box::new(
+                self.inst_obj(&fn_set_with_params.ret_set, &filtered_param_to_arg_map)?,
+            ),
         }))
     }
 
-    pub fn inst_cart(&self, cart: &Cart, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_cart(
+        &self,
+        cart: &Cart,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         let mut args = Vec::with_capacity(cart.args.len());
         for arg in cart.args.iter() {
             args.push(Box::new(self.inst_obj(arg, param_to_arg_map)?));
@@ -404,7 +477,11 @@ impl Runtime {
         }))
     }
 
-    pub fn inst_proj(&self, proj: &Proj, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_proj(
+        &self,
+        proj: &Proj,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         Ok(Obj::Proj(Proj {
             set: Box::new(self.inst_obj(&proj.set, param_to_arg_map)?),
             dim: Box::new(self.inst_obj(&proj.dim, param_to_arg_map)?),
@@ -421,7 +498,11 @@ impl Runtime {
         }))
     }
 
-    pub fn inst_tuple(&self, tuple: &Tuple, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_tuple(
+        &self,
+        tuple: &Tuple,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         let mut elements = Vec::with_capacity(tuple.args.len());
         for element in tuple.args.iter() {
             elements.push(Box::new(self.inst_obj(element, param_to_arg_map)?));
@@ -429,13 +510,21 @@ impl Runtime {
         Ok(Obj::Tuple(Tuple { args: elements }))
     }
 
-    pub fn inst_count(&self, count: &Count, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_count(
+        &self,
+        count: &Count,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         Ok(Obj::Count(Count {
             set: Box::new(self.inst_obj(&count.set, param_to_arg_map)?),
         }))
     }
 
-    pub fn inst_range(&self, range: &Range, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_range(
+        &self,
+        range: &Range,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         Ok(Obj::Range(Range {
             start: Box::new(self.inst_obj(&range.start, param_to_arg_map)?),
             end: Box::new(self.inst_obj(&range.end, param_to_arg_map)?),
@@ -453,7 +542,11 @@ impl Runtime {
         }))
     }
 
-    pub fn inst_choose(&self, choose: &Choose, param_to_arg_map: &HashMap<String, Obj>) -> Result<Obj, RuntimeError> {
+    pub fn inst_choose(
+        &self,
+        choose: &Choose,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
         Ok(Obj::Choose(Choose {
             set: Box::new(self.inst_obj(&choose.set, param_to_arg_map)?),
         }))

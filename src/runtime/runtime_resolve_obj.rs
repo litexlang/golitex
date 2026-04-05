@@ -160,7 +160,7 @@ impl Runtime {
                 }
                 _ => {
                     let known_tuple_obj =
-                        self.get_known_tuple_obj_of_obj(&obj_at_index.obj.to_string());
+                        self.get_obj_equal_to_tuple(&obj_at_index.obj.to_string());
                     if let Some(known_tuple_obj) = known_tuple_obj {
                         let tuple_index_number = self.resolve_obj_to_number(&obj_at_index.index);
                         if let Some(tuple_index_number) = tuple_index_number {
