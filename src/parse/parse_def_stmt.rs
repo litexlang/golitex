@@ -180,32 +180,69 @@ impl Runtime {
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
-        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-
-        let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
-        tb.skip_token(EQUAL)?;
-        if tb.current_token_is_equal_to(COLON) {
+        if tb.current_token_is_equal_to(BY) {
+            tb.skip_token(BY)?;
+            tb.skip_token(INDUC)?;
+            tb.skip_token(FROM)?;
+            let induc_from = self.parse_obj(tb)?;
             tb.skip_token(COLON)?;
-            let case_block_count = tb.body.len();
-            let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
-            let mut equal_tos: Vec<crate::obj::Obj> = Vec::with_capacity(case_block_count);
-            for block in tb.body.iter_mut() {
-                block.skip_token(CASE)?;
-                cases.push(self.parse_and_chain_atomic_fact(block)?);
-                block.skip_token(COLON)?;
-                equal_tos.push(self.parse_obj(block)?);
+            let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+            let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
+            tb.skip_token(EQUAL)?;
+            if tb.current_token_is_equal_to(COLON) {
+                tb.skip_token(COLON)?;
+                let case_block_count = tb.body.len();
+                let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
+                let mut equal_tos: Vec<crate::obj::Obj> = Vec::with_capacity(case_block_count);
+                for block in tb.body.iter_mut() {
+                    block.skip_token(CASE)?;
+                    cases.push(self.parse_and_chain_atomic_fact(block)?);
+                    block.skip_token(COLON)?;
+                    equal_tos.push(self.parse_obj(block)?);
+                }
+                Ok(Stmt::HaveFnByInducStmt(HaveFnByInducStmt::new(
+                    name,
+                    fs,
+                    induc_from,
+                    cases,
+                    equal_tos,
+                    tb.line_file.clone(),
+                )))
+            } else {
+                Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "have fn by induc from ...: expected '=' ':' before case blocks".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ))
             }
-            Ok(Stmt::HaveFnEqualCaseByCaseStmt(
-                HaveFnEqualCaseByCaseStmt::new(name, fs, cases, equal_tos, tb.line_file.clone()),
-            ))
         } else {
-            let equal_to = self.parse_obj(tb)?;
-            Ok(Stmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
-                name,
-                fs,
-                equal_to,
-                tb.line_file.clone(),
-            )))
+            let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+
+            let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
+            tb.skip_token(EQUAL)?;
+            if tb.current_token_is_equal_to(COLON) {
+                tb.skip_token(COLON)?;
+                let case_block_count = tb.body.len();
+                let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
+                let mut equal_tos: Vec<crate::obj::Obj> = Vec::with_capacity(case_block_count);
+                for block in tb.body.iter_mut() {
+                    block.skip_token(CASE)?;
+                    cases.push(self.parse_and_chain_atomic_fact(block)?);
+                    block.skip_token(COLON)?;
+                    equal_tos.push(self.parse_obj(block)?);
+                }
+                Ok(Stmt::HaveFnEqualCaseByCaseStmt(
+                    HaveFnEqualCaseByCaseStmt::new(name, fs, cases, equal_tos, tb.line_file.clone()),
+                ))
+            } else {
+                let equal_to = self.parse_obj(tb)?;
+                Ok(Stmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
+                    name,
+                    fs,
+                    equal_to,
+                    tb.line_file.clone(),
+                )))
+            }
         }
     }
 
