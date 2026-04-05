@@ -9,7 +9,7 @@ pub enum ClosedRangeOrRange {
 
 /// Prove facts for parameters ranging over `range` / `closed_range` (`by for …`).
 #[derive(Clone)]
-pub struct ForStmt {
+pub struct ByForStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ClosedRangeOrRange>,
     pub dom_facts: Vec<AtomicFact>,
@@ -18,7 +18,7 @@ pub struct ForStmt {
     pub line_file: LineFile,
 }
 
-impl fmt::Display for ForStmt {
+impl fmt::Display for ByForStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let head = match self.dom_facts.len() {
             0 => format!(
@@ -56,7 +56,7 @@ impl fmt::Display for ForStmt {
     }
 }
 
-impl ForStmt {
+impl ByForStmt {
     pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
         if self.params.len() != self.param_sets.len() {
             return Err("by for: number of params does not match number of param sets".to_string());
@@ -93,7 +93,7 @@ impl ForStmt {
         proof: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
-        ForStmt {
+        ByForStmt {
             params,
             param_sets,
             dom_facts,

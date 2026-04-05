@@ -1,4 +1,4 @@
-use super::kuratowski::kuratowski_encode_tuple_boxes;
+use super::kuratowski_by_stmt::kuratowski_encode_tuple_boxes;
 use crate::prelude::*;
 
 impl Runtime {

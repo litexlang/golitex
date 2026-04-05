@@ -1,4 +1,4 @@
-use super::helpers::impossible_proof_error_message;
+use super::helpers_by_stmt::impossible_proof_error_message;
 use crate::prelude::*;
 
 impl Runtime {

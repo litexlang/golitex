@@ -1,7 +1,8 @@
 """
 have fn by induc from 0: f(x Z: x >= 0) R:
-    case 0:  
-    case x:
+    case 0: 1
+    case 1: 1
+    case x: f(x - 1) + f(x - 2)
 """
 
 abstract_prop p(a, b)

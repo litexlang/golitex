@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_for_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    pub fn parse_by_for_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(FOR)?;
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<ClosedRangeOrRange> = vec![];
@@ -95,7 +95,7 @@ impl Runtime {
             (dom_facts, then_facts, proof)
         };
 
-        Ok(Stmt::ForStmt(ForStmt::new(
+        Ok(Stmt::ByForStmt(ByForStmt::new(
             params,
             param_sets,
             dom_facts,

@@ -1,11 +1,11 @@
 //! Execution for `by …` statements (one file per form).
-mod cases;
-mod contra;
-mod enumerate;
-mod extension;
-mod fn_stmt;
-mod for_stmt;
-mod helpers;
-mod induc;
-mod kuratowski;
-mod tuple_stmt;
+mod cases_by_stmt;
+mod contra_by_stmt;
+mod enumerate_by_stmt;
+mod extension_by_stmt;
+mod fn_by_stmt;
+mod for_by_stmt;
+mod helpers_by_stmt;
+mod induc_by_stmt;
+mod kuratowski_by_stmt;
+mod tuple_by_stmt;

@@ -99,9 +99,9 @@ impl ByInducStmt {
     }
 }
 
-impl ForStmt {
+impl ByForStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ForStmt".to_string()
+        "ByForStmt".to_string()
     }
 }
 

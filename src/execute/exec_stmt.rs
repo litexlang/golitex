@@ -46,7 +46,7 @@ impl Runtime {
             Stmt::ByContraStmt(s) => self.exec_by_contra_stmt(s),
             Stmt::ByEnumerateStmt(s) => self.exec_by_enumerate_stmt(s),
             Stmt::ByInducStmt(s) => self.exec_by_induc_stmt(s),
-            Stmt::ForStmt(s) => self.exec_for_stmt(s),
+            Stmt::ByForStmt(s) => self.exec_by_for_stmt(s),
             Stmt::ByExtensionStmt(s) => self.exec_by_extension_stmt(s),
             Stmt::ByFnStmt(s) => self.exec_by_fn_stmt(s),
             Stmt::ByTuple(s) => self.exec_by_tuple_stmt(s),
