@@ -6,6 +6,7 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
+        tb.skip_token(COLON)?;
         let function = self.parse_obj(tb)?;
         Ok(Stmt::ByFnStmt(ByFnStmt::new(
             function,

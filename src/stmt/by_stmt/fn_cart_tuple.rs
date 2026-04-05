@@ -24,7 +24,14 @@ pub struct ByTupleStmt {
 
 impl fmt::Display for ByFnStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", BY, FN_FOR_FN_WITH_PARAMS, self.function)
+        write!(
+            f,
+            "{} {}{} {}",
+            BY,
+            FN_FOR_FN_WITH_PARAMS,
+            COLON,
+            self.function
+        )
     }
 }
 
