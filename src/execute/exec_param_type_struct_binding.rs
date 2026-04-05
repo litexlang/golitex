@@ -82,7 +82,7 @@ impl Runtime {
             .insert(field_access.to_string(), ());
     }
 
-    pub(crate) fn define_param_binding_struct(
+    pub(crate) fn define_parameter_by_binding_struct(
         &mut self,
         name: &str,
         struct_ty: &StructParamType,
@@ -405,7 +405,7 @@ impl Runtime {
         param_type: &ParamType,
     ) -> Result<InferResult, RuntimeError> {
         match &subject {
-            Obj::Identifier(id) => self.define_param_binding_for_param_type(&id.name, param_type),
+            Obj::Identifier(id) => self.define_parameter_by_binding_param_type(&id.name, param_type),
             Obj::FieldAccess(fa) => {
                 self.define_param_binding_for_param_type_on_field_access(fa, param_type)
             }

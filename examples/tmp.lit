@@ -5,3 +5,15 @@ have fn by induc from 0: f(x Z: x >= 0) R:
 """
 
 abstract_prop p(a, b)
+
+f $in fn(x, y R: x < y) R
+
+forall x, y R:
+    x < y
+    =>:
+        {{(x, y)}, {(x, y), f(x, y)}} $in f
+
+forall x, y R:
+    x < y
+    =>:
+        exist random_obj R st {f(x, y) = random_obj}
