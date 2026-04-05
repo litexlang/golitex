@@ -2,7 +2,7 @@ mod token_block;
 mod tokenizer;
 pub use token_block::TokenBlock;
 
-mod parse_axiom_stmt;
+mod parse_by_stmt;
 mod parse_claim_stmt;
 mod parse_def_stmt;
 mod parse_eval_stmt;

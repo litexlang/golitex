@@ -31,18 +31,18 @@ fn kuratowski_encode_tuple_args(
 }
 
 impl Runtime {
-    pub fn exec_by_fn_def_axiom_stmt(
+    pub fn exec_by_fn_stmt(
         &mut self,
-        stmt: &ByFnDefAxiomStmt,
+        stmt: &ByFnStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(Stmt::ByFnDefAxiomStmt(stmt.clone()))
+        Self::stmt_unsupported(Stmt::ByFnStmt(stmt.clone()))
     }
 
-    pub fn exec_by_cart_def_axiom_stmt(
+    pub fn exec_by_cart_stmt(
         &mut self,
-        stmt: &ByCartDefAxiomStmt,
+        stmt: &ByCartStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(Stmt::ByCartDefAxiomStmt(stmt.clone()))
+        Self::stmt_unsupported(Stmt::ByCartStmt(stmt.clone()))
     }
 
     pub fn exec_by_tuple_stmt(

@@ -1,14 +1,14 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_extension_axiom_stmt(
+    pub fn exec_by_extension_stmt(
         &mut self,
-        stmt: &ByExtensionAxiomStmt,
+        stmt: &ByExtensionStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                    Stmt::ByExtensionStmt(stmt.clone()),
                     format!("by extension: left set `{}` is not well-defined", stmt.left),
                     Some(well_defined_error.into()),
                     vec![],
@@ -17,7 +17,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                    Stmt::ByExtensionStmt(stmt.clone()),
                     format!(
                         "by extension: right set `{}` is not well-defined",
                         stmt.right
@@ -35,7 +35,7 @@ impl Runtime {
                     let one_proof_stmt_exec_result =
                         self.exec_stmt(proof_stmt).map_err(|stmt_error| {
                             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                                Stmt::ByExtensionStmt(stmt.clone()),
                                 format!(
                                     "by extension: failed to execute proof stmt `{}`",
                                     proof_stmt
@@ -70,7 +70,7 @@ impl Runtime {
                 )
                 .map_err(|verify_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                        Stmt::ByExtensionStmt(stmt.clone()),
                         format!(
                             "by extension: failed to prove left subset right `{}`",
                             left_to_right_forall_fact
@@ -101,7 +101,7 @@ impl Runtime {
                 )
                 .map_err(|verify_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                        Stmt::ByExtensionStmt(stmt.clone()),
                         format!(
                             "by extension: failed to prove right subset left `{}`",
                             right_to_left_forall_fact
@@ -134,7 +134,7 @@ impl Runtime {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                Stmt::ByExtensionStmt(stmt.clone()),
                 infer_result,
                 inside_results,
             ),

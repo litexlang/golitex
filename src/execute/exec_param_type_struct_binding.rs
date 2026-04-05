@@ -285,9 +285,12 @@ impl Runtime {
     pub fn register_param_as_struct_instance(&mut self, env_key: &str, inst: StructParamType) {
         let key = env_key.to_string();
         self.top_level_env()
-            .defined_field_access_name
+            .known_identifier_satisfy_struct
             .insert(key.clone(), inst);
-        self.top_level_env().cache_well_defined_obj.insert(key, ());
+        self.top_level_env()
+            .cache_well_defined_obj
+            .insert(key.clone(), ());
+        self.top_level_env().defined_identifiers.insert(key, ());
     }
 
     fn define_param_binding_family_on_obj(
@@ -310,8 +313,7 @@ impl Runtime {
                 );
             }
         };
-        let expected_count =
-            ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
             return Err(
                 RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
