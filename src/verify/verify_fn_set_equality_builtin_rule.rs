@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 fn fn_set_equality_fact(
     left: &FnSetWithParams,
@@ -108,8 +108,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let target_flat_param_names = ParamGroupWithSet::collect_param_names(&target.params_def_with_set);
-        let generated_param_names =
-            self.generate_non_duplicated_random_param_names(target_flat_param_names.len());
+        let generated_param_names = self.generate_random_unused_names(target_flat_param_names.len());
         let source_param_to_generated_arg_map = self
             .define_directional_source_fn_set_params_in_local_env(
                 source,
@@ -172,18 +171,6 @@ impl Runtime {
         let ret_equal_fact = EqualFact::new(source_ret_set, target_ret_set, line_file);
         let ret_equal_result = self.verify_equal_fact(&ret_equal_fact, verify_state)?;
         Ok(ret_equal_result.is_true())
-    }
-
-    fn generate_non_duplicated_random_param_names(&self, number_of_params: usize) -> Vec<String> {
-        let mut generated_param_names: Vec<String> = Vec::with_capacity(number_of_params);
-        let mut generated_param_name_set: HashSet<String> = HashSet::with_capacity(number_of_params);
-        while generated_param_names.len() < number_of_params {
-            let generated_param_name = self.generate_a_random_unused_name();
-            if generated_param_name_set.insert(generated_param_name.clone()) {
-                generated_param_names.push(generated_param_name);
-            }
-        }
-        generated_param_names
     }
 
     fn build_param_to_generated_arg_map(
