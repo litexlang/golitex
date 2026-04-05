@@ -8,13 +8,6 @@ pub struct ByFnStmt {
     pub line_file: LineFile,
 }
 
-// view a cartesian product set as a set (ordered pairs)
-#[derive(Clone)]
-pub struct ByCartStmt {
-    pub cart: Cart,
-    pub line_file: LineFile,
-}
-
 /// Introduce facts from the built-in ordered-pair / tuple encoding.
 #[derive(Clone)]
 pub struct ByTupleStmt {
@@ -41,18 +34,6 @@ impl ByFnStmt {
             function,
             line_file,
         }
-    }
-}
-
-impl fmt::Display for ByCartStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", BY, CART, self.cart)
-    }
-}
-
-impl ByCartStmt {
-    pub fn new(cart: Cart, line_file: LineFile) -> Self {
-        ByCartStmt { cart, line_file }
     }
 }
 

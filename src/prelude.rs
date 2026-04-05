@@ -1,6 +1,6 @@
 pub use crate::common::name_types::{
-    AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, FieldAccessName,
-    IdentifierName, ObjString, OrFactKey, PropName, StructName, FamilyName,
+    AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, FamilyName,
+    FieldAccessName, IdentifierName, ObjString, OrFactKey, PropName, StructName,
 };
 pub use crate::environment::{Environment, KnownForallFactParamsAndDom};
 pub use crate::error::ConflictMsg;
@@ -50,10 +50,6 @@ pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::infer::InferResult;
 pub use crate::module_manager::ModuleManager;
-pub use crate::pipeline::{
-    render_run_source_code_output, run_repl, run_source_code, run_source_code_in_file,
-    run_source_code_in_file_with_ok, run_stmt_at_global_env,
-};
 pub use crate::obj::Add;
 pub use crate::obj::Atom;
 pub use crate::obj::Cap;
@@ -91,6 +87,10 @@ pub use crate::obj::Tuple;
 pub use crate::obj::TupleDim;
 pub use crate::obj::Union;
 pub use crate::parse::TokenBlock;
+pub use crate::pipeline::{
+    render_run_source_code_output, run_repl, run_source_code, run_source_code_in_file,
+    run_source_code_in_file_with_ok, run_stmt_at_global_env,
+};
 pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 pub use crate::result::FactualStmtSuccess;
@@ -99,26 +99,25 @@ pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::StmtUnknown;
 pub use crate::runtime::builtin_env_code;
 pub use crate::runtime::Runtime;
-pub use crate::stmt::by_stmt::ByCartStmt;
-pub use crate::stmt::by_stmt::ByTupleStmt;
 pub use crate::stmt::by_stmt::ByCasesStmt;
 pub use crate::stmt::by_stmt::ByContraStmt;
 pub use crate::stmt::by_stmt::ByExtensionStmt;
 pub use crate::stmt::by_stmt::ByFnStmt;
 pub use crate::stmt::by_stmt::ByInducStmt;
+pub use crate::stmt::by_stmt::ByTupleStmt;
 pub use crate::stmt::by_stmt::ClosedRangeOrRange;
-pub use crate::stmt::by_stmt::EnumerateStmt;
+pub use crate::stmt::by_stmt::ByEnumerateStmt;
 pub use crate::stmt::by_stmt::ForStmt;
 pub use crate::stmt::claim_stmt::ClaimStmt;
 pub use crate::stmt::define_algorithm_stmt::AlgoCase;
 pub use crate::stmt::define_algorithm_stmt::AlgoReturn;
 pub use crate::stmt::define_algorithm_stmt::AlgoReturnOrAlgoCase;
 pub use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
-pub use crate::stmt::definition_stmt::DefLetStmt;
-pub use crate::stmt::definition_stmt::DefPropStmt;
 pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
-pub use crate::stmt::definition_stmt::DefParamTypeStructStmt;
 pub use crate::stmt::definition_stmt::DefFamilyStmt;
+pub use crate::stmt::definition_stmt::DefLetStmt;
+pub use crate::stmt::definition_stmt::DefParamTypeStructStmt;
+pub use crate::stmt::definition_stmt::DefPropStmt;
 pub use crate::stmt::definition_stmt::HaveExistObjStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualStmt;
@@ -126,16 +125,16 @@ pub use crate::stmt::definition_stmt::HaveObjEqualStmt;
 pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
 pub use crate::stmt::know_stmt::KnowStmt;
-pub use crate::stmt::parameter_def::FiniteSet;
 pub use crate::stmt::parameter_def::FamilyParamType;
-pub use crate::stmt::parameter_def::StructParamType;
+pub use crate::stmt::parameter_def::FiniteSet;
 pub use crate::stmt::parameter_def::NonemptySet;
 pub use crate::stmt::parameter_def::ParamGroupWithParamType;
 pub use crate::stmt::parameter_def::ParamGroupWithSet;
 pub use crate::stmt::parameter_def::ParamGroupWithStructFieldType;
 pub use crate::stmt::parameter_def::ParamType;
-pub use crate::stmt::parameter_def::StructFieldType;
 pub use crate::stmt::parameter_def::Set;
+pub use crate::stmt::parameter_def::StructFieldType;
+pub use crate::stmt::parameter_def::StructParamType;
 pub use crate::stmt::prove_stmt::ProveStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
 pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
@@ -172,10 +171,10 @@ pub use crate::common::keywords::is_comparison_str;
 pub use crate::common::keywords::is_key_symbol_or_keyword;
 pub use crate::common::keywords::is_keyword;
 pub use crate::common::keywords::key_symbols_sorted_by_len_desc;
+pub use crate::common::keywords::ABSTRACT_PROP;
 pub use crate::common::keywords::ADD;
 pub use crate::common::keywords::ALGO;
 pub use crate::common::keywords::AND;
-pub use crate::common::keywords::ABSTRACT_PROP;
 pub use crate::common::keywords::AS;
 pub use crate::common::keywords::BUILTIN_CODE_PATH;
 pub use crate::common::keywords::BY;
@@ -204,6 +203,7 @@ pub use crate::common::keywords::EVAL;
 pub use crate::common::keywords::EXIST;
 pub use crate::common::keywords::EXTENSION;
 pub use crate::common::keywords::FACT_PREFIX;
+pub use crate::common::keywords::FAMILY;
 pub use crate::common::keywords::FINITE_SET;
 pub use crate::common::keywords::FN_FOR_FN_WITH_PARAMS;
 pub use crate::common::keywords::FOR;
@@ -259,12 +259,11 @@ pub use crate::common::keywords::RUN_FILE;
 pub use crate::common::keywords::R_NEG;
 pub use crate::common::keywords::R_NZ;
 pub use crate::common::keywords::R_POS;
+pub use crate::common::keywords::SELF;
 pub use crate::common::keywords::SET;
 pub use crate::common::keywords::SET_DIFF;
 pub use crate::common::keywords::SET_MINUS;
-pub use crate::common::keywords::SELF;
 pub use crate::common::keywords::ST;
-pub use crate::common::keywords::FAMILY;
 pub use crate::common::keywords::STRUCT;
 pub use crate::common::keywords::SUB;
 pub use crate::common::keywords::SUBSET;

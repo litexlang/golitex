@@ -75,9 +75,9 @@ impl WitnessNonemptySet {
     }
 }
 
-impl EnumerateStmt {
+impl ByEnumerateStmt {
     pub fn stmt_type_name(&self) -> String {
-        "EnumerateStmt".to_string()
+        "ByEnumerateStmt".to_string()
     }
 }
 
@@ -114,12 +114,6 @@ impl ByExtensionStmt {
 impl ByFnStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByFnStmt".to_string()
-    }
-}
-
-impl ByCartStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByCartStmt".to_string()
     }
 }
 

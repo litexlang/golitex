@@ -6,8 +6,12 @@ have fn by induc from 0: f(x Z: x >= 0) R:
 
 abstract_prop p(a, b)
 
-have f fn(x, y R: x < y) R
+f $in fn(x, y R: x < y) R
 
-by fn: f
+forall x, y R:
+    x < y
+    =>:
+        {{(x, y)}, {(x, y), f(x, y)}} $in f
 
-by fn set: fn (x, y R: x < y) R
+forall t f:
+    exist x, y R: x < y st {t = {{(x, y)}, {(x, y), f(x, y)}}}

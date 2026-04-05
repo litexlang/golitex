@@ -3,7 +3,7 @@ use std::fmt;
 
 /// Prove by finite enumeration (`by enumerate …`).
 #[derive(Clone)]
-pub struct EnumerateStmt {
+pub struct ByEnumerateStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ListSet>,
     pub to_prove: Vec<ExistOrAndChainAtomicFact>,
@@ -11,7 +11,7 @@ pub struct EnumerateStmt {
     pub line_file: LineFile,
 }
 
-impl EnumerateStmt {
+impl ByEnumerateStmt {
     pub fn new(
         params: Vec<String>,
         param_sets: Vec<ListSet>,
@@ -19,7 +19,7 @@ impl EnumerateStmt {
         proof: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
-        EnumerateStmt {
+        ByEnumerateStmt {
             params,
             param_sets,
             to_prove,
@@ -52,7 +52,7 @@ impl EnumerateStmt {
     }
 }
 
-impl fmt::Display for EnumerateStmt {
+impl fmt::Display for ByEnumerateStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

@@ -10,7 +10,6 @@ pub struct Environment {
     pub defined_structs: HashMap<StructName, DefParamTypeStructStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
-    pub known_identifier_satisfy_struct: HashMap<FieldAccessName, StructParamType>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -34,7 +33,8 @@ pub struct Environment {
     pub known_objs_equal_to_tuple: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
     pub known_objs_equal_to_cart: HashMap<ObjString, (Cart, LineFile)>,
     pub known_objs_equal_to_normalized_decimal_number: HashMap<ObjString, Number>,
-    pub known_objs_equal_to_set_builder: HashMap<ObjString, SetBuilder>,
+
+    pub known_identifier_satisfy_struct: HashMap<FieldAccessName, StructParamType>,
 
     pub known_objs_in_fn_sets: HashMap<ObjString, FnSetWithParams>,
 
@@ -53,7 +53,6 @@ impl Environment {
         field_access_name: HashMap<FieldAccessName, StructParamType>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, FnSetWithParams>,
-        known_set_equal_to_set_builder: HashMap<ObjString, SetBuilder>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
             (AtomicFactKey, bool),
             Vec<AtomicFact>,
@@ -96,7 +95,6 @@ impl Environment {
             known_identifier_satisfy_struct: field_access_name,
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
-            known_objs_equal_to_set_builder: known_set_equal_to_set_builder,
             known_atomic_facts_with_0_or_more_than_2_args,
             known_atomic_facts_with_1_arg: known_atomic_facts_with_1_arg,
             known_atomic_facts_with_2_args: known_atomic_facts_with_2_args,
@@ -131,11 +129,6 @@ impl fmt::Display for Environment {
             f,
             "    known_fn_in_fn_set: {:?}\n",
             self.known_objs_in_fn_sets.len()
-        )?;
-        write!(
-            f,
-            "    known_set_equal_to_set_builder: {:?}\n",
-            self.known_objs_equal_to_set_builder.len()
         )?;
         write!(
             f,
@@ -655,7 +648,6 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
-            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
