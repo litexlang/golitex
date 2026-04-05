@@ -9,8 +9,8 @@ mod induc;
 
 pub use cases::ByCasesStmt;
 pub use contra::ByContraStmt;
-pub use enumerate::EnumerateStmt;
+pub use enumerate::ByEnumerateStmt;
 pub use extension::ByExtensionStmt;
-pub use fn_cart_tuple::{ByCartStmt, ByFnStmt, ByTupleStmt};
+pub use fn_cart_tuple::{ByFnStmt, ByTupleStmt};
 pub use for_stmt::{ClosedRangeOrRange, ForStmt};
 pub use induc::ByInducStmt;

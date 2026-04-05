@@ -26,12 +26,11 @@ pub enum Stmt {
     WitnessNonemptySet(WitnessNonemptySet),
     ByCasesStmt(ByCasesStmt),
     ByContraStmt(ByContraStmt),
-    EnumerateStmt(EnumerateStmt),
+    ByEnumerateStmt(ByEnumerateStmt),
     ByInducStmt(ByInducStmt),
     ForStmt(ForStmt),
     ByExtensionStmt(ByExtensionStmt),
     ByFnStmt(ByFnStmt),
-    ByCartStmt(ByCartStmt),
     ByTuple(ByTupleStmt),
 }
 
@@ -67,12 +66,11 @@ impl fmt::Display for Stmt {
             Stmt::WitnessNonemptySet(x) => write!(f, "{}", x),
             Stmt::ByCasesStmt(x) => write!(f, "{}", x),
             Stmt::ByContraStmt(x) => write!(f, "{}", x),
-            Stmt::EnumerateStmt(x) => write!(f, "{}", x),
+            Stmt::ByEnumerateStmt(x) => write!(f, "{}", x),
             Stmt::ByInducStmt(x) => write!(f, "{}", x),
             Stmt::ForStmt(x) => write!(f, "{}", x),
             Stmt::ByExtensionStmt(x) => write!(f, "{}", x),
             Stmt::ByFnStmt(x) => write!(f, "{}", x),
-            Stmt::ByCartStmt(x) => write!(f, "{}", x),
             Stmt::ByTuple(x) => write!(f, "{}", x),
         }
     }
@@ -104,12 +102,11 @@ impl Stmt {
             Stmt::WitnessNonemptySet(stmt) => stmt.line_file.clone(),
             Stmt::ByCasesStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByContraStmt(stmt) => stmt.line_file.clone(),
-            Stmt::EnumerateStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByEnumerateStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByInducStmt(stmt) => stmt.line_file.clone(),
             Stmt::ForStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByExtensionStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByCartStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTuple(stmt) => stmt.line_file.clone(),
         }
     }
@@ -139,12 +136,11 @@ impl Stmt {
             Stmt::WitnessNonemptySet(stmt) => stmt.stmt_type_name(),
             Stmt::ByCasesStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByContraStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::EnumerateStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByEnumerateStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByInducStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ForStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByExtensionStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByCartStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
         }
     }

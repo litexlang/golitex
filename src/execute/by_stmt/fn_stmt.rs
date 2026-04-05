@@ -238,7 +238,7 @@ impl Runtime {
             stmt.line_file.clone(),
         );
 
-        // `infer` on forall facts is empty; mirror `enumerate` so pipeline JSON shows the facts.
+        // `infer` on forall facts is empty; mirror `by_enumerate` so pipeline JSON shows the facts.
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&Fact::ForallFact(forall_in.clone()));
         let infer_in = self

@@ -11,7 +11,6 @@ mod exec_param_type_struct_binding;
 mod exec_prove_stmt;
 mod exec_stmt;
 mod exec_store_definitions;
-mod exec_store_facts;
 mod exec_tooling_stmt;
 mod exec_verify_then_store_facts;
 mod exec_witness_stmt;

@@ -14,28 +14,6 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_by_cart_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(CART)?;
-        let obj = self.parse_obj(tb)?;
-        let cart = match obj {
-            Obj::Cart(cart_value) => cart_value,
-            _ => {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "by cart: expected cart(...) object".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                ));
-            }
-        };
-        Ok(Stmt::ByCartStmt(ByCartStmt::new(
-            cart,
-            tb.line_file.clone(),
-        )))
-    }
-
     /// `by tuple: <obj>` — tuple / ordered-pair definitional expansion.
     pub fn parse_by_tuple_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TUPLE)?;
