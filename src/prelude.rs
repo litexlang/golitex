@@ -107,7 +107,7 @@ pub use crate::stmt::by_stmt::ByInducStmt;
 pub use crate::stmt::by_stmt::ByTupleStmt;
 pub use crate::stmt::by_stmt::ClosedRangeOrRange;
 pub use crate::stmt::by_stmt::ByEnumerateStmt;
-pub use crate::stmt::by_stmt::ForStmt;
+pub use crate::stmt::by_stmt::ByForStmt;
 pub use crate::stmt::claim_stmt::ClaimStmt;
 pub use crate::stmt::define_algorithm_stmt::AlgoCase;
 pub use crate::stmt::define_algorithm_stmt::AlgoReturn;
