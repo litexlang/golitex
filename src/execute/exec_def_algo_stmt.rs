@@ -35,18 +35,17 @@ impl Runtime {
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
         let function_name_obj = Obj::Identifier(Identifier::new(def_algo_stmt.name.clone()));
-        let fn_set_where_algo_belongs =
-            match self.get_fn_set_where_fn_belongs_to(&function_name_obj) {
-                Some(fn_set) => fn_set,
-                None => {
-                    return Err(Self::def_algo_verify_exec_error_without_message(
-                        def_algo_stmt,
-                    ));
-                }
-            };
+        let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
+            Some(fn_set) => fn_set,
+            None => {
+                return Err(Self::def_algo_verify_exec_error_without_message(
+                    def_algo_stmt,
+                ));
+            }
+        };
 
-        let (requirement_facts_for_param, algo_param_defs_with_type) =
-            self.collect_requirement_facts_and_algo_param_defs(
+        let (requirement_facts_for_param, algo_param_defs_with_type) = self
+            .collect_requirement_facts_and_algo_param_defs(
                 def_algo_stmt,
                 &fn_set_where_algo_belongs,
             )?;
@@ -79,7 +78,9 @@ impl Runtime {
         ))
     }
 
-    fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> RuntimeErrorStruct {
+    fn def_algo_verify_exec_error_without_message(
+        def_algo_stmt: &DefAlgoStmt,
+    ) -> RuntimeErrorStruct {
         RuntimeErrorStruct::exec_stmt_new_with_stmt(
             Stmt::DefAlgoStmt(def_algo_stmt.clone()),
             "".to_string(),

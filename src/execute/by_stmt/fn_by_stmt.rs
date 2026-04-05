@@ -13,7 +13,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let stmt_exec = Stmt::ByFnStmt(stmt.clone());
 
-        let fn_set = match self.get_cloned_fn_set_where_fn_belongs_to(&stmt.function) {
+        let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
             Some(fs) => fs,
             None => {
                 return Err(RuntimeError::ExecStmtError(
@@ -96,17 +96,23 @@ impl Runtime {
 
         let forall_args: Vec<Obj> = param_names
             .iter()
-            .map(|param_name| original_param_to_forall_obj.get(param_name).unwrap().clone())
+            .map(|param_name| {
+                original_param_to_forall_obj
+                    .get(param_name)
+                    .unwrap()
+                    .clone()
+            })
             .collect();
         let forall_tuple_struct = Tuple::new(forall_args.clone());
-        let encoded_arg_tuple = kuratowski_encode_tuple_boxes(&forall_tuple_struct.args).map_err(|_| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                stmt_exec.clone(),
-                "by fn: could not encode generated parameter tuple".to_string(),
-                None,
-                vec![],
-            ))
-        })?;
+        let encoded_arg_tuple =
+            kuratowski_encode_tuple_boxes(&forall_tuple_struct.args).map_err(|_| {
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt_exec.clone(),
+                    "by fn: could not encode generated parameter tuple".to_string(),
+                    None,
+                    vec![],
+                ))
+            })?;
 
         let fn_call = Obj::FnObj(FnObj::new(
             fn_head_atom.clone(),
@@ -142,7 +148,9 @@ impl Runtime {
         );
 
         let generated_name_count = 1 + param_names.len();
-        let mut generated_names = self.generate_random_unused_names(generated_name_count).into_iter();
+        let mut generated_names = self
+            .generate_random_unused_names(generated_name_count)
+            .into_iter();
         let element_name = generated_names.next().unwrap();
         let mut exist_param_defs_with_type: Vec<ParamGroupWithParamType> =
             Vec::with_capacity(fn_set.params_def_with_set.len());
@@ -189,14 +197,15 @@ impl Runtime {
             .map(|param_name| original_param_to_exist_obj.get(param_name).unwrap().clone())
             .collect();
         let exist_tuple_struct = Tuple::new(exist_args.clone());
-        let exist_encoded_arg_tuple = kuratowski_encode_tuple_boxes(&exist_tuple_struct.args).map_err(|_| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                stmt_exec.clone(),
-                "by fn: could not encode existential witness tuple".to_string(),
-                None,
-                vec![],
-            ))
-        })?;
+        let exist_encoded_arg_tuple = kuratowski_encode_tuple_boxes(&exist_tuple_struct.args)
+            .map_err(|_| {
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt_exec.clone(),
+                    "by fn: could not encode existential witness tuple".to_string(),
+                    None,
+                    vec![],
+                ))
+            })?;
         let exist_fn_call = Obj::FnObj(FnObj::new(
             fn_head_atom.clone(),
             vec![boxed_objs_from_args(&exist_args)],
@@ -226,7 +235,11 @@ impl Runtime {
             ),
         )));
 
-        let exist_fact = ExistFact::new(exist_param_defs_with_type, exist_facts, stmt.line_file.clone());
+        let exist_fact = ExistFact::new(
+            exist_param_defs_with_type,
+            exist_facts,
+            stmt.line_file.clone(),
+        );
 
         let forall_exist = ForallFact::new(
             vec![ParamGroupWithParamType::new(

@@ -32,7 +32,7 @@ impl DefAbstractPropStmt {
 }
 
 #[derive(Clone)]
-pub struct DefParamTypeStructStmt {
+pub struct DefStructStmt {
     pub name: String,
     pub param_defs: Vec<ParamGroupWithStructFieldType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
@@ -116,7 +116,7 @@ impl fmt::Display for DefAbstractPropStmt {
     }
 }
 
-impl fmt::Display for DefParamTypeStructStmt {
+impl fmt::Display for DefStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
@@ -491,7 +491,7 @@ impl fmt::Display for DefFamilyStmt {
     }
 }
 
-impl DefParamTypeStructStmt {
+impl DefStructStmt {
     pub fn new(
         name: String,
         param_defs: Vec<ParamGroupWithStructFieldType>,
@@ -500,7 +500,7 @@ impl DefParamTypeStructStmt {
         facts: Vec<OrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {
-        DefParamTypeStructStmt {
+        DefStructStmt {
             name,
             param_defs,
             dom_facts,
@@ -509,9 +509,7 @@ impl DefParamTypeStructStmt {
             line_file,
         }
     }
-}
 
-impl DefParamTypeStructStmt {
     pub fn number_of_params(&self) -> usize {
         ParamGroupWithStructFieldType::number_of_params(&self.param_defs)
     }

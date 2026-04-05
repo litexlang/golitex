@@ -77,8 +77,8 @@ impl Runtime {
     pub fn get_definition_of_struct_where_object_satisfies(
         &self,
         obj: &IdentifierOrIdentifierWithMod,
-    ) -> Option<&DefParamTypeStructStmt> {
-        let Some(struct_object_satisfies) = self.get_struct_that_object_satisfies(obj) else {
+    ) -> Option<&DefStructStmt> {
+        let Some(struct_object_satisfies) = self.get_object_satisfy_struct(obj) else {
             return None;
         };
 
@@ -94,7 +94,7 @@ impl Runtime {
     pub fn get_definition_of_struct_by_name(
         &self,
         struct_name: &str,
-    ) -> Option<&DefParamTypeStructStmt> {
+    ) -> Option<&DefStructStmt> {
         let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
@@ -110,9 +110,9 @@ impl Runtime {
 
     pub fn get_cloned_definition_of_struct(
         &self,
-        param_type_struct_name: &str,
-    ) -> Option<DefParamTypeStructStmt> {
-        let parts = param_type_struct_name
+        struct_name: &str,
+    ) -> Option<DefStructStmt> {
+        let parts = struct_name
             .split(MOD_SIGN)
             .collect::<Vec<&str>>();
         if parts.len() != 1 {
@@ -120,7 +120,7 @@ impl Runtime {
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.defined_structs.get(param_type_struct_name) {
+            if let Some(definition) = environment.defined_structs.get(struct_name) {
                 return Some(definition.clone());
             }
         }

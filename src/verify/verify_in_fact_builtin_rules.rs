@@ -18,17 +18,12 @@ fn fn_set_with_params_equal_modulo_param_rename(
     let mut pb_map = HashMap::new();
     for i in 0..pa.len() {
         let ph = format!("##{}", i);
-        pa_map.insert(
-            pa[i].clone(),
-            Obj::Identifier(Identifier::new(ph.clone())),
-        );
+        pa_map.insert(pa[i].clone(), Obj::Identifier(Identifier::new(ph.clone())));
         pb_map.insert(pb[i].clone(), Obj::Identifier(Identifier::new(ph)));
     }
 
-    let a_params =
-        param_def_with_set_rename_params_to_placeholders(&a.params_def_with_set, &pa);
-    let b_params =
-        param_def_with_set_rename_params_to_placeholders(&b.params_def_with_set, &pb);
+    let a_params = param_def_with_set_rename_params_to_placeholders(&a.params_def_with_set, &pa);
+    let b_params = param_def_with_set_rename_params_to_placeholders(&b.params_def_with_set, &pb);
 
     let a_dom: Vec<OrAndChainAtomicFact> = a
         .dom_facts
@@ -78,33 +73,39 @@ fn number_in_set_verified_by_builtin_rules_result(
     in_fact: &InFact,
     reason: &str,
 ) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-        Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-        InferResult::new(),
-        reason.to_string(),
-        Vec::new(),
-    ))
+    NonErrStmtExecResult::FactualStmtSuccess(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+            InferResult::new(),
+            reason.to_string(),
+            Vec::new(),
+        ),
+    )
 }
 
 fn not_in_fact_verified_by_builtin_rules_result(
     not_in_fact: &NotInFact,
     reason: &str,
 ) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-        Fact::AtomicFact(AtomicFact::NotInFact(not_in_fact.clone())),
-        InferResult::new(),
-        reason.to_string(),
-        Vec::new(),
-    ))
+    NonErrStmtExecResult::FactualStmtSuccess(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            Fact::AtomicFact(AtomicFact::NotInFact(not_in_fact.clone())),
+            InferResult::new(),
+            reason.to_string(),
+            Vec::new(),
+        ),
+    )
 }
 
 fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-        Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-        InferResult::new(),
-        "arithmetic expression is in R".to_string(),
-        Vec::new(),
-    ))
+    NonErrStmtExecResult::FactualStmtSuccess(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+            InferResult::new(),
+            "arithmetic expression is in R".to_string(),
+            Vec::new(),
+        ),
+    )
 }
 
 fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -113,9 +114,7 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     standard_set: &StandardSet,
 ) -> NonErrStmtExecResult {
     match standard_set {
-        StandardSet::R => {
-            number_in_set_verified_by_builtin_rules_result(in_fact, "number in R")
-        }
+        StandardSet::R => number_in_set_verified_by_builtin_rules_result(in_fact, "number in R"),
         StandardSet::RPos => {
             if number_is_in_r_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_pos")
@@ -137,9 +136,7 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
             }
         }
-        StandardSet::Q => {
-            number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q")
-        }
+        StandardSet::Q => number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q"),
         StandardSet::QPos => {
             if number_is_in_q_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_pos")
@@ -297,11 +294,13 @@ impl Runtime {
                 if let Some(evaluated_number) =
                     not_in_fact.element.evaluate_to_normalized_decimal_number()
                 {
-                    return Ok(builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
-                        not_in_fact,
-                        &evaluated_number,
-                        standard_set,
-                    ));
+                    return Ok(
+                        builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+                            not_in_fact,
+                            &evaluated_number,
+                            standard_set,
+                        ),
+                    );
                 }
             }
         }
@@ -346,13 +345,13 @@ impl Runtime {
                     verify_state,
                 );
             }
-            (Obj::Number(num), Obj::StandardSet(standard_set)) => Ok(
-                builtin_in_fact_result_for_evaluated_number_in_standard_set(
+            (Obj::Number(num), Obj::StandardSet(standard_set)) => {
+                Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                     in_fact,
                     num,
                     standard_set,
-                ),
-            ),
+                ))
+            }
             (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::RNeg),
@@ -435,12 +434,14 @@ impl Runtime {
         )? {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
-        if !self.mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
-            &mul.left,
-            &mul.right,
-            in_fact.line_file.clone(),
-            verify_state,
-        )? {
+        if !self
+            .mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+                &mul.left,
+                &mul.right,
+                in_fact.line_file.clone(),
+                verify_state,
+            )?
+        {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
         match target_negative_standard_set {
@@ -511,8 +512,11 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for element_box in list_set.list.iter() {
             let element_obj = *element_box.clone();
-            let element_in_base_fact =
-                AtomicFact::InFact(InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()));
+            let element_in_base_fact = AtomicFact::InFact(InFact::new(
+                element_obj,
+                base_set.clone(),
+                in_fact.line_file.clone(),
+            ));
             let verify_one_element_result =
                 self.verify_atomic_fact(&element_in_base_fact, verify_state)?;
             if !verify_one_element_result.is_true() {
@@ -648,7 +652,7 @@ impl Runtime {
         in_fact: &InFact,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let element_obj = Obj::Identifier(Identifier::new(identifier.name.clone()));
-        let Some(stored_fn_set) = self.get_cloned_fn_set_where_fn_belongs_to(&element_obj) else {
+        let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(&element_obj) else {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         };
         if fn_set_with_params_equal_modulo_param_rename(self, &stored_fn_set, expected_fn_set)
@@ -665,7 +669,8 @@ impl Runtime {
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
                     InferResult::new(),
-                    "fn membership: stored fn signature matches RHS (α-renamed compare)".to_string(),
+                    "fn membership: stored fn signature matches RHS (α-renamed compare)"
+                        .to_string(),
                     Vec::new(),
                 ),
             ));
