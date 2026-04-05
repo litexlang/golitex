@@ -7,7 +7,7 @@ pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ()>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
-    pub defined_structs: HashMap<StructName, DefParamTypeStructStmt>,
+    pub defined_structs: HashMap<StructName, DefStructStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
 
@@ -46,7 +46,7 @@ impl Environment {
     pub fn new(
         objs: HashMap<IdentifierName, ()>,
         def_props: HashMap<PropName, DefPropStmt>,
-        param_type_structs: HashMap<StructName, DefParamTypeStructStmt>,
+        struct_defs: HashMap<StructName, DefStructStmt>,
         families: HashMap<FamilyName, DefFamilyStmt>,
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
@@ -88,7 +88,7 @@ impl Environment {
         Environment {
             defined_identifiers: objs,
             defined_def_props: def_props,
-            defined_structs: param_type_structs,
+            defined_structs: struct_defs,
             defined_families: families,
             defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
@@ -119,7 +119,7 @@ impl fmt::Display for Environment {
         write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;
         write!(
             f,
-            "    param_type_structs: {:?}\n",
+            "    defined_structs: {:?}\n",
             self.defined_structs.len()
         )?;
         write!(f, "    families: {:?}\n", self.defined_families.len())?;

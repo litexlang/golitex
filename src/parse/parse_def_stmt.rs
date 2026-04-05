@@ -468,7 +468,7 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_def_param_type_struct_stmt(
+    pub fn parse_def_struct_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
@@ -476,12 +476,12 @@ impl Runtime {
         let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
         self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_param_type_struct_stmt_body(name, tb);
+        let stmt = self.parse_def_struct_stmt_body(name, tb);
         self.pop_parsing_time_name_scope();
         stmt
     }
 
-    fn parse_def_param_type_struct_stmt_body(
+    fn parse_def_struct_stmt_body(
         &mut self,
         name: String,
         tb: &mut TokenBlock,
@@ -566,7 +566,7 @@ impl Runtime {
             }
         }
 
-        Ok(Stmt::DefParamTypeStructStmt(DefParamTypeStructStmt::new(
+        Ok(Stmt::DefStructStmt(DefStructStmt::new(
             name,
             param_defs,
             dom_facts,

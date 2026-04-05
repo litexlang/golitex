@@ -5,7 +5,7 @@ impl Runtime {
         if let Some(number) = obj.evaluate_to_normalized_decimal_number() {
             return Some(number);
         }
-        self.get_normalized_decimal_number_value_of_obj(&obj.to_string())
+        self.get_object_equal_to_normalized_decimal_number(&obj.to_string())
     }
 
     pub fn resolve_obj(&self, obj: &Obj) -> Obj {
@@ -123,7 +123,7 @@ impl Runtime {
                     obj.clone()
                 }
                 _ => {
-                    let known_cart_obj = self.get_known_cart_obj_of_obj(&proj.set.to_string());
+                    let known_cart_obj = self.get_object_equal_to_cart(&proj.set.to_string());
                     if let Some(known_cart_obj) = known_cart_obj {
                         let projection_index_number = self.resolve_obj_to_number(&proj.dim);
                         if let Some(projection_index_number) = projection_index_number {

@@ -20,9 +20,7 @@ impl Runtime {
             Stmt::HaveFnByInducStmt(d) => self
                 .have_fn_by_induc_stmt(d)
                 .map_err(RuntimeError::from),
-            Stmt::DefParamTypeStructStmt(d) => self
-                .def_param_type_struct_stmt(d)
-                .map_err(RuntimeError::from),
+            Stmt::DefStructStmt(d) => self.def_struct_stmt(d).map_err(RuntimeError::from),
             Stmt::DefFamilyStmt(d) => self.def_family_stmt(d).map_err(RuntimeError::from),
             Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d).map_err(RuntimeError::from),
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt).map_err(RuntimeError::from),

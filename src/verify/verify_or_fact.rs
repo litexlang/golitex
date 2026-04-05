@@ -15,12 +15,14 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::OrFact(or_fact.clone()),
-                    String::new(),
-                    or_fact.line_file.clone(),
-                    Some(e.into()),
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        Fact::OrFact(or_fact.clone()),
+                        String::new(),
+                        or_fact.line_file.clone(),
+                        Some(e.into()),
+                    ),
+                );
             }
         }
 
@@ -83,7 +85,7 @@ impl Runtime {
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in args_in_or_fact.iter() {
             let mut all_objs_equal_to_current_arg =
-                self.get_all_objs_equal_to_arg(&arg.to_string());
+                self.get_all_objs_equal_to_given(&arg.to_string());
             if all_objs_equal_to_current_arg.is_empty() {
                 all_objs_equal_to_current_arg.push(arg.to_string());
             }
