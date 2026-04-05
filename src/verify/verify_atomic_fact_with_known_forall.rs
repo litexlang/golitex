@@ -675,9 +675,7 @@ impl Runtime {
         }
     }
 
-    fn flatten_fn_set_with_params_param_sets_for_match(
-        fn_set: &FnSetWithParams,
-    ) -> Vec<Box<Obj>> {
+    fn flatten_fn_set_with_params_param_sets_for_match(fn_set: &FnSet) -> Vec<Box<Obj>> {
         let mut flat_param_sets: Vec<Box<Obj>> = Vec::new();
         for param_def_with_set in &fn_set.params_def_with_set {
             for _param_name in param_def_with_set.params.iter() {
@@ -688,7 +686,7 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_fn_set_with_params(
-        left: &FnSetWithParams,
+        left: &FnSet,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {

@@ -7,7 +7,7 @@ use std::fmt;
 #[derive(Clone)]
 pub struct HaveFnByInducStmt {
     pub name: String,
-    pub fn_set_with_params: FnSetWithParams,
+    pub fn_set: FnSet,
     pub induc_from: Obj,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
@@ -53,7 +53,7 @@ pub struct DefFamilyStmt {
 #[derive(Clone)]
 pub struct HaveFnEqualCaseByCaseStmt {
     pub name: String,
-    pub fn_set_with_params: FnSetWithParams,
+    pub fn_set_with_params: FnSet,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
     pub line_file: LineFile,
@@ -62,7 +62,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
 #[derive(Clone)]
 pub struct HaveFnEqualStmt {
     pub name: String,
-    pub fn_set_with_params: FnSetWithParams,
+    pub fn_set_with_params: FnSet,
     pub equal_to: Obj,
     pub line_file: LineFile,
 }
@@ -304,7 +304,7 @@ impl fmt::Display for HaveExistObjStmt {
 impl HaveFnEqualStmt {
     pub fn new(
         name: String,
-        fn_set_with_params: FnSetWithParams,
+        fn_set_with_params: FnSet,
         equal_to: Obj,
         line_file: LineFile,
     ) -> Self {
@@ -323,7 +323,7 @@ impl fmt::Display for HaveFnEqualStmt {
             f,
             "{} {} {}{} {} {}",
             HAVE,
-            FN_FOR_FN_WITH_PARAMS,
+            FN,
             self.name,
             brace_vec_colon_vec_to_string(
                 &self.fn_set_with_params.params_def_with_set,
@@ -362,7 +362,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             f,
             "{} {} {}{} {} {}\n{}",
             HAVE,
-            FN_FOR_FN_WITH_PARAMS,
+            FN,
             self.name,
             brace_vec_colon_vec_to_string(
                 &self.fn_set_with_params.params_def_with_set,
@@ -378,7 +378,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 impl HaveFnEqualCaseByCaseStmt {
     pub fn new(
         name: String,
-        fn_set_with_params: FnSetWithParams,
+        fn_set_with_params: FnSet,
         cases: Vec<AndChainAtomicFact>,
         equal_tos: Vec<Obj>,
         line_file: LineFile,
@@ -407,7 +407,7 @@ impl fmt::Display for HaveFnByInducStmt {
                         case,
                         COMMA,
                         self.name,
-                        braced_vec_to_string(&self.fn_set_with_params.params()),
+                        braced_vec_to_string(&self.fn_set.params()),
                         EQUAL,
                         self.equal_tos[i]
                     ),
@@ -420,17 +420,14 @@ impl fmt::Display for HaveFnByInducStmt {
             f,
             "{} {} {} {} {} {}{} {}{} {} {}\n{}",
             HAVE,
-            FN_FOR_FN_WITH_PARAMS,
+            FN,
             BY,
             INDUC,
             FROM,
             self.induc_from,
             COLON,
             self.name,
-            brace_vec_colon_vec_to_string(
-                &self.fn_set_with_params.params_def_with_set,
-                &self.fn_set_with_params.dom_facts
-            ),
+            brace_vec_colon_vec_to_string(&self.fn_set.params_def_with_set, &self.fn_set.dom_facts),
             EQUAL,
             COLON,
             vec_to_string_with_sep(&cases_and_proofs, "\n".to_string())
@@ -441,7 +438,7 @@ impl fmt::Display for HaveFnByInducStmt {
 impl HaveFnByInducStmt {
     pub fn new(
         name: String,
-        fn_set_with_params: FnSetWithParams,
+        fn_set_with_params: FnSet,
         induc_from: Obj,
         cases: Vec<AndChainAtomicFact>,
         equal_tos: Vec<Obj>,
@@ -449,7 +446,7 @@ impl HaveFnByInducStmt {
     ) -> Self {
         HaveFnByInducStmt {
             name,
-            fn_set_with_params,
+            fn_set: fn_set_with_params,
             induc_from,
             cases,
             equal_tos,

@@ -7,7 +7,7 @@ impl Runtime {
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
             LET => self.parse_def_let_stmt(tb),
             HAVE => {
-                if tb.token_at_index(1)? == FN_FOR_FN_WITH_PARAMS {
+                if tb.token_at_index(1)? == FN {
                     self.parse_have_fn_stmt(tb)
                 } else if tb.token_at_index(1)? == BY && tb.token_at_index(2)? == EXIST {
                     self.parse_have_exist(tb)
