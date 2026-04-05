@@ -24,7 +24,8 @@ impl Runtime {
 
                 let key = in_fact.element.to_string();
                 let env = self.top_level_env();
-                env.known_obj_in_fn_set.insert(key, fn_set_with_dom.clone());
+                env.known_objs_in_fn_sets
+                    .insert(key, fn_set_with_dom.clone());
                 Ok(InferResult::new())
             }
             Obj::ListSet(list_set) => {

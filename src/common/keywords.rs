@@ -85,6 +85,7 @@ pub const FOR: &str = "for";
 pub const EXTENSION: &str = "extension";
 pub const FN_DEF: &str = "fn_def";
 pub const CART_DEF: &str = "cart_def";
+pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
 pub const IMPORT: &str = "import";
@@ -220,6 +221,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         IMPOSSIBLE,
         FN_DEF,
         CART_DEF,
+        TUPLE,
         ALGO,
         Q_POS,
         R_POS,

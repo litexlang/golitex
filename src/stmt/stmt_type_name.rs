@@ -123,6 +123,12 @@ impl ByCartDefAxiomStmt {
     }
 }
 
+impl ByTupleStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByTupleStmt".to_string()
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAbstractPropStmt".to_string()

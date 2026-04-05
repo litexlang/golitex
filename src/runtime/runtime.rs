@@ -33,11 +33,13 @@ impl Runtime {
         current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                invalid_name_message,
-                default_line_file(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    invalid_name_message,
+                    default_line_file(),
+                    None,
+                ),
+            );
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
@@ -85,7 +87,10 @@ impl Runtime {
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         for name in names {
-            self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file.clone())?;
+            self.validate_name_and_insert_into_top_parsing_time_name_scope(
+                name,
+                line_file.clone(),
+            )?;
         }
         Ok(())
     }
@@ -222,15 +227,11 @@ impl Runtime {
             return true;
         }
 
-        return self
-            .get_abstract_prop_definition_by_name(name)
-            .is_some();
+        return self.get_abstract_prop_definition_by_name(name).is_some();
     }
 
     pub fn is_name_used_for_param_type_struct(&self, name: &str) -> bool {
-        return self
-            .get_cloned_definition_of_struct(name)
-            .is_some();
+        return self.get_cloned_definition_of_struct(name).is_some();
     }
 
     pub fn is_name_used_for_family(&self, name: &str) -> bool {
@@ -261,7 +262,7 @@ impl Runtime {
         cart: Option<Cart>,
         line_file: LineFile,
     ) {
-        let known_tuple_objs = &mut self.top_level_env().known_tuple_objs;
+        let known_tuple_objs = &mut self.top_level_env().known_objs_equal_to_tuple;
         let old_tuple_and_cart = known_tuple_objs.get(name).cloned();
 
         let merged_tuple = match (tuple, old_tuple_and_cart.as_ref()) {
@@ -284,7 +285,7 @@ impl Runtime {
 
     pub fn store_known_cart_obj(&mut self, name: &str, cart: Cart, line_file: LineFile) {
         self.top_level_env()
-            .known_cart_objs
+            .known_objs_equal_to_cart
             .insert(name.to_string(), (cart, line_file));
     }
 }

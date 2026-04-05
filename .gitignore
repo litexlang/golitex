@@ -10,6 +10,9 @@ examples/hidden
 .vscode
 .cursor
 
+# Personal Cursor output preferences (local only)
+cursor-output.local.md
+
 # Local / secrets
 .dist
 
