@@ -23,12 +23,14 @@ pub struct Environment {
 
     pub known_exist_facts: HashMap<ExistFactKey, Vec<ExistFact>>,
     pub known_or_facts: HashMap<OrFactKey, Vec<OrFact>>,
+
     pub known_atomic_facts_in_forall_facts:
         HashMap<(AtomicFactKey, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_exist_facts_in_forall_facts:
         HashMap<ExistFactKey, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_or_facts_in_forall_facts:
         HashMap<OrFactKey, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
+
     pub known_obj_is_well_defined: HashMap<ObjString, ()>,
     pub known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
     pub known_cart_objs: HashMap<ObjString, (Cart, LineFile)>,

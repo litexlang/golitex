@@ -181,17 +181,10 @@ impl Runtime {
         }
 
         let fn_set_param_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+        self.register_collected_param_names_for_def_parse(
             &fn_set_param_names,
             tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        )?;
 
         let mut dom_facts = vec![];
         if tb.current_token_is_equal_to(COLON) {
@@ -838,17 +831,7 @@ impl Runtime {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, RuntimeError> {
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(
-            &a.name,
-            tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                RuntimeError::message_text_for_duplicate_used_name_without_line_file(&a.name),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        self.insert_parsed_name_into_top_parsing_time_name_scope(&a.name, tb.line_file.clone())?;
 
         let second = self.parse_obj(tb)?;
         if tb.current()? == COLON {
