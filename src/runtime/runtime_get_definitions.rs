@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn get_def_prop_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
+    pub fn get_prop_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
         let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
@@ -82,7 +82,8 @@ impl Runtime {
             return None;
         };
 
-        let Some(def) = self.get_definition_of_struct(&struct_object_satisfies.name.to_string())
+        let Some(def) =
+            self.get_definition_of_struct_by_name(&struct_object_satisfies.name.to_string())
         else {
             return None;
         };
@@ -90,7 +91,10 @@ impl Runtime {
         Some(def)
     }
 
-    fn get_definition_of_struct(&self, struct_name: &str) -> Option<&DefParamTypeStructStmt> {
+    pub fn get_definition_of_struct_by_name(
+        &self,
+        struct_name: &str,
+    ) -> Option<&DefParamTypeStructStmt> {
         let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
