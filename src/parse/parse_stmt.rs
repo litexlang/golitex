@@ -26,7 +26,7 @@ impl Runtime {
             FAMILY => self.parse_def_family_stmt(tb),
             STRUCT => self.parse_def_param_type_struct_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
-            BY => self.parse_by_prefixed_axiom_stmt(tb),
+            BY => self.parse_by_prefixed_stmt(tb),
             _ => {
                 let fact = self.parse_fact(tb)?;
                 Ok(Stmt::Fact(fact))

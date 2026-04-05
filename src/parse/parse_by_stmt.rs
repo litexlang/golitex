@@ -1,25 +1,25 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_by_prefixed_axiom_stmt(
+    pub fn parse_by_prefixed_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(BY)?;
         let second_keyword = tb.current()?;
         match second_keyword {
-            CASES => self.parse_by_cases_axiom_stmt(tb),
-            CONTRA => self.parse_by_contra_axiom_stmt(tb),
-            ENUMERATE => self.parse_enumerate_axiom_stmt(tb),
-            INDUC => self.parse_by_induc_axiom_stmt(tb),
-            FOR => self.parse_for_axiom_stmt(tb),
-            EXTENSION => self.parse_by_extension_axiom_stmt(tb),
-            FN_DEF => self.parse_by_fn_def_axiom_stmt(tb),
-            CART_DEF => self.parse_by_cart_def_axiom_stmt(tb),
-            TUPLE => self.parse_by_tuple_axiom_stmt(tb),
+            CASES => self.parse_by_cases_stmt(tb),
+            CONTRA => self.parse_by_contra_stmt(tb),
+            ENUMERATE => self.parse_enumerate_stmt(tb),
+            INDUC => self.parse_by_induc_stmt(tb),
+            FOR => self.parse_for_stmt(tb),
+            EXTENSION => self.parse_by_extension_stmt(tb),
+            FN_FOR_FN_WITH_PARAMS => self.parse_by_fn_stmt(tb),
+            CART => self.parse_by_cart_stmt(tb),
+            TUPLE => self.parse_by_tuple_stmt(tb),
             _ => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 format!(
-                    "by: expected cases, contra, enumerate, induc, for, extension, fn_def, cart_def, or tuple after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate, induc, for, extension, fn, cart, or tuple after `by`, got `{}`",
                     second_keyword
                 ),
                 tb.line_file.clone(),
@@ -28,7 +28,7 @@ impl Runtime {
         }
     }
 
-    pub fn parse_by_cases_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    pub fn parse_by_cases_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CASES)?;
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
@@ -94,7 +94,7 @@ impl Runtime {
             proofs.push(proof_stmts);
             impossible_facts.push(impossible);
         }
-        Ok(Stmt::ByCasesAxiomStmt(ByCasesAxiomStmt::new(
+        Ok(Stmt::ByCasesStmt(ByCasesStmt::new(
             cases,
             then_facts,
             proofs,
@@ -104,7 +104,7 @@ impl Runtime {
     }
 
     /// `by contra:` then `prove:` block with exactly one atomic fact, optional proof statements, then `impossible` atomic fact.
-    pub fn parse_by_contra_axiom_stmt(
+    pub fn parse_by_contra_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
@@ -153,7 +153,7 @@ impl Runtime {
             .ok_or_else(|| RuntimeError::new_parse_error_with_msg_position_previous_error("Expected body".to_string(), tb.line_file.clone(), None))?;
         last_block.skip_token(IMPOSSIBLE)?;
         let impossible_fact = self.parse_atomic_fact(&mut last_block, true)?;
-        Ok(Stmt::ByContraAxiomStmt(ByContraAxiomStmt::new(
+        Ok(Stmt::ByContraStmt(ByContraStmt::new(
             to_prove,
             proof,
             impossible_fact,
@@ -161,7 +161,7 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_enumerate_axiom_stmt(
+    pub fn parse_enumerate_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
@@ -218,7 +218,7 @@ impl Runtime {
             proof.push(self.parse_stmt(block)?);
         }
 
-        Ok(Stmt::EnumerateAxiomStmt(EnumerateAxiomStmt::new(
+        Ok(Stmt::EnumerateStmt(EnumerateStmt::new(
             params,
             param_sets,
             to_prove,
@@ -227,7 +227,7 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_by_induc_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    pub fn parse_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(INDUC)?;
         let param = tb.advance()?;
         tb.skip_token(FROM)?;
@@ -246,7 +246,7 @@ impl Runtime {
             to_prove.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
         }
 
-        Ok(Stmt::ByInducAxiomStmt(ByInducAxiomStmt::new(
+        Ok(Stmt::ByInducStmt(ByInducStmt::new(
             to_prove,
             param,
             induc_from,
@@ -254,7 +254,7 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_for_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    pub fn parse_for_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(FOR)?;
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<ClosedRangeOrRange> = vec![];
@@ -350,7 +350,7 @@ impl Runtime {
             (dom_facts, then_facts, proof)
         };
 
-        Ok(Stmt::ForAxiomStmt(ForAxiomStmt::new(
+        Ok(Stmt::ForStmt(ForStmt::new(
             params,
             param_sets,
             dom_facts,
@@ -360,7 +360,7 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_by_extension_axiom_stmt(
+    pub fn parse_by_extension_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
@@ -407,7 +407,7 @@ impl Runtime {
             proof.push(self.parse_stmt(block)?);
         }
 
-        Ok(Stmt::ByExtensionAxiomStmt(ByExtensionAxiomStmt::new(
+        Ok(Stmt::ByExtensionStmt(ByExtensionStmt::new(
             left,
             right,
             proof,
@@ -415,42 +415,42 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_by_fn_def_axiom_stmt(
+    pub fn parse_by_fn_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(FN_DEF)?;
+        tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
         let function = self.parse_obj(tb)?;
-        Ok(Stmt::ByFnDefAxiomStmt(ByFnDefAxiomStmt::new(
+        Ok(Stmt::ByFnStmt(ByFnStmt::new(
             function,
             tb.line_file.clone(),
         )))
     }
 
-    pub fn parse_by_cart_def_axiom_stmt(
+    pub fn parse_by_cart_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(CART_DEF)?;
+        tb.skip_token(CART)?;
         let obj = self.parse_obj(tb)?;
         let cart = match obj {
             Obj::Cart(cart_value) => cart_value,
             _ => {
                 return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "by cart_def: expected cart(...) object".to_string(),
+                    "by cart: expected cart(...) object".to_string(),
                     tb.line_file.clone(),
                     None,
                 ));
             }
         };
-        Ok(Stmt::ByCartDefAxiomStmt(ByCartDefAxiomStmt::new(
+        Ok(Stmt::ByCartStmt(ByCartStmt::new(
             cart,
             tb.line_file.clone(),
         )))
     }
 
     /// `by tuple: <obj>` — surface syntax for tuple / ordered-pair definitional expansion (execution TBD).
-    pub fn parse_by_tuple_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    pub fn parse_by_tuple_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TUPLE)?;
         tb.skip_token(COLON)?;
         let obj = self.parse_obj(tb)?;

@@ -11,7 +11,7 @@ impl Runtime {
     ) -> Option<&StructParamType> {
         let key = obj.to_string();
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.defined_field_access_name.get(&key) {
+            if let Some(definition) = env.known_identifier_satisfy_struct.get(&key) {
                 return Some(definition);
             }
         }

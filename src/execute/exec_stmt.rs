@@ -42,14 +42,14 @@ impl Runtime {
             }
             Stmt::WitnessExistFact(s) => self.exec_witness_exist_fact(s),
             Stmt::WitnessNonemptySet(s) => self.exec_witness_nonempty_set(s),
-            Stmt::ByCasesAxiomStmt(s) => self.exec_by_cases_axiom_stmt(s),
-            Stmt::ByContraAxiomStmt(s) => self.exec_by_contra_axiom_stmt(s),
-            Stmt::EnumerateAxiomStmt(s) => self.exec_enumerate_axiom_stmt(s),
-            Stmt::ByInducAxiomStmt(s) => self.exec_by_induc_axiom_stmt(s),
-            Stmt::ForAxiomStmt(s) => self.exec_for_axiom_stmt(s),
-            Stmt::ByExtensionAxiomStmt(s) => self.exec_by_extension_axiom_stmt(s),
-            Stmt::ByFnDefAxiomStmt(s) => self.exec_by_fn_def_axiom_stmt(s),
-            Stmt::ByCartDefAxiomStmt(s) => self.exec_by_cart_def_axiom_stmt(s),
+            Stmt::ByCasesStmt(s) => self.exec_by_cases_stmt(s),
+            Stmt::ByContraStmt(s) => self.exec_by_contra_stmt(s),
+            Stmt::EnumerateStmt(s) => self.exec_enumerate_stmt(s),
+            Stmt::ByInducStmt(s) => self.exec_by_induc_stmt(s),
+            Stmt::ForStmt(s) => self.exec_for_stmt(s),
+            Stmt::ByExtensionStmt(s) => self.exec_by_extension_stmt(s),
+            Stmt::ByFnStmt(s) => self.exec_by_fn_stmt(s),
+            Stmt::ByCartStmt(s) => self.exec_by_cart_stmt(s),
             Stmt::ByTuple(s) => self.exec_by_tuple_stmt(s),
         }
     }

@@ -10,7 +10,7 @@ pub struct Environment {
     pub defined_structs: HashMap<StructName, DefParamTypeStructStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
-    pub defined_field_access_name: HashMap<FieldAccessName, StructParamType>,
+    pub known_identifier_satisfy_struct: HashMap<FieldAccessName, StructParamType>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -93,7 +93,7 @@ impl Environment {
             defined_families: families,
             defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
-            defined_field_access_name: field_access_name,
+            known_identifier_satisfy_struct: field_access_name,
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
             known_objs_equal_to_set_builder: known_set_equal_to_set_builder,
