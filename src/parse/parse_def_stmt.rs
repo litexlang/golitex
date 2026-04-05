@@ -8,19 +8,10 @@ impl Runtime {
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(
+        self.insert_parsed_name_into_top_parsing_time_name_scope(
             &stmt_ok.name,
             tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                RuntimeError::message_text_for_duplicate_used_name_without_line_file(
-                    &stmt_ok.name,
-                ),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        )?;
 
         Ok(Stmt::DefPropStmt(stmt_ok))
     }
@@ -30,33 +21,8 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<DefPropStmt, RuntimeError> {
         tb.skip_token(PROP)?;
-        let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
-                    tb.line_file.clone(),
-                    Some(e),
-                )
-            })?;
-        tb.skip_token(LEFT_BRACE)?;
-        let mut param_defs: Vec<ParamGroupWithParamType> = vec![];
-        while tb.current()? != RIGHT_BRACE {
-            param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
-        }
-        tb.skip_token(RIGHT_BRACE)?;
-        let all_param_names = ParamGroupWithParamType::collect_param_names(&param_defs);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
-            &all_param_names,
-            tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+        let param_defs = self.parse_def_braced_param_groups_with_param_type(tb)?;
 
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -97,19 +63,10 @@ impl Runtime {
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(
+        self.insert_parsed_name_into_top_parsing_time_name_scope(
             &stmt_ok.name,
             tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                RuntimeError::message_text_for_duplicate_used_name_without_line_file(
-                    &stmt_ok.name,
-                ),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        )?;
         Ok(Stmt::DefAbstractPropStmt(stmt_ok))
     }
 
@@ -118,15 +75,7 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<DefAbstractPropStmt, RuntimeError> {
         tb.skip_token(ABSTRACT_PROP)?;
-        let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
-                    tb.line_file.clone(),
-                    Some(e),
-                )
-            })?;
+        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -137,17 +86,7 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_BRACE)?;
 
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
-            &params,
-            tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        self.register_collected_param_names_for_def_parse(&params, tb.line_file.clone())?;
 
         Ok(DefAbstractPropStmt::new(name, params, tb.line_file.clone()))
     }
@@ -181,17 +120,10 @@ impl Runtime {
             vec![]
         };
         let all_param_names = ParamGroupWithParamType::collect_param_names(&param_def);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+        self.register_collected_param_names_for_def_parse(
             &all_param_names,
             tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        )?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
@@ -221,17 +153,10 @@ impl Runtime {
             );
         }
         let have_param_names = ParamGroupWithParamType::collect_param_names(&param_defs);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+        self.register_collected_param_names_for_def_parse(
             &have_param_names,
             tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        )?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             Ok(Stmt::HaveObjInNonemptySetStmt(
@@ -255,16 +180,7 @@ impl Runtime {
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
-        let name = tb.advance()?;
-
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
-                    tb.line_file.clone(),
-                    Some(e),
-                )
-            })?;
+        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
         let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
         tb.skip_token(EQUAL)?;
@@ -309,17 +225,7 @@ impl Runtime {
             }
         }
 
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
-            &equal_tos,
-            tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
             equal_tos,
@@ -333,22 +239,8 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<(Vec<ParamGroupWithParamType>, Vec<OrAndChainAtomicFact>), RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
-        let mut params_def_with_type: Vec<ParamGroupWithParamType> = vec![];
-        while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
-            params_def_with_type.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
-        }
-        let param_names = ParamGroupWithParamType::collect_param_names(&params_def_with_type);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
-            &param_names,
-            tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        let params_def_with_type =
+            self.parse_def_param_type_groups_until_colon_or_right_brace(tb)?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
@@ -369,24 +261,15 @@ impl Runtime {
     fn parse_braced_struct_field_params_and_optional_dom_facts(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<(Vec<ParamGroupWithStructFieldType>, Vec<OrAndChainAtomicFact>), RuntimeError> {
+    ) -> Result<
+        (
+            Vec<ParamGroupWithStructFieldType>,
+            Vec<OrAndChainAtomicFact>,
+        ),
+        RuntimeError,
+    > {
         tb.skip_token(LEFT_BRACE)?;
-        let mut param_defs: Vec<ParamGroupWithStructFieldType> = vec![];
-        while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
-            param_defs.push(self.parse_param_def_with_struct_field_type_and_skip_comma(tb)?);
-        }
-        let param_names = ParamGroupWithStructFieldType::collect_param_names(&param_defs);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
-            &param_names,
-            tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
+        let param_defs = self.parse_def_struct_field_groups_until_colon_or_right_brace(tb)?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
@@ -406,15 +289,7 @@ impl Runtime {
 
     pub fn parse_def_family_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(FAMILY)?;
-        let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
-                    tb.line_file.clone(),
-                    Some(e),
-                )
-            })?;
+        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
         self.push_parsing_time_name_scope();
         let stmt = self.parse_def_family_stmt_body(name, tb);
@@ -454,15 +329,7 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(STRUCT)?;
-        let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file.clone())
-            .map_err(|e| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(&name),
-                    tb.line_file.clone(),
-                    Some(e),
-                )
-            })?;
+        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
         self.push_parsing_time_name_scope();
         let stmt = self.parse_def_param_type_struct_stmt_body(name, tb);
@@ -631,5 +498,90 @@ impl Runtime {
     fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, RuntimeError> {
         let value = self.parse_obj(block)?;
         Ok(AlgoReturn::new(value, block.line_file.clone()))
+    }
+}
+
+impl Runtime {
+    pub(crate) fn register_collected_param_names_for_def_parse(
+        &mut self,
+        names: &Vec<String>,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(names, line_file.clone())
+            .map_err(|e| {
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    String::new(),
+                    line_file,
+                    Some(e),
+                )
+            })
+    }
+
+    /// `prop name` / similar: consumes `{` … `}` of `ParamGroupWithParamType` entries and registers names.
+    fn parse_def_braced_param_groups_with_param_type(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Vec<ParamGroupWithParamType>, RuntimeError> {
+        tb.skip_token(LEFT_BRACE)?;
+        let mut param_defs = Vec::new();
+        while tb.current()? != RIGHT_BRACE {
+            param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
+        }
+        tb.skip_token(RIGHT_BRACE)?;
+        let names = ParamGroupWithParamType::collect_param_names(&param_defs);
+        self.register_collected_param_names_for_def_parse(&names, tb.line_file.clone())?;
+        Ok(param_defs)
+    }
+
+    /// After `{` is consumed: param-type groups until `:` or `}` (family / struct header); registers names.
+    fn parse_def_param_type_groups_until_colon_or_right_brace(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Vec<ParamGroupWithParamType>, RuntimeError> {
+        let mut params_def_with_type = vec![];
+        while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
+            params_def_with_type.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
+        }
+        let param_names = ParamGroupWithParamType::collect_param_names(&params_def_with_type);
+        self.register_collected_param_names_for_def_parse(&param_names, tb.line_file.clone())?;
+        Ok(params_def_with_type)
+    }
+
+    /// After `{` is consumed: struct-field param groups until `:` or `}`; registers names.
+    fn parse_def_struct_field_groups_until_colon_or_right_brace(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Vec<ParamGroupWithStructFieldType>, RuntimeError> {
+        let mut param_defs = vec![];
+        while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
+            param_defs.push(self.parse_param_def_with_struct_field_type_and_skip_comma(tb)?);
+        }
+        let param_names = ParamGroupWithStructFieldType::collect_param_names(&param_defs);
+        self.register_collected_param_names_for_def_parse(&param_names, tb.line_file.clone())?;
+        Ok(param_defs)
+    }
+
+    pub fn insert_parsed_name_into_top_parsing_time_name_scope(
+        &mut self,
+        name: &str,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file.clone())
+            .map_err(|e| {
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(name),
+                    line_file,
+                    Some(e),
+                )
+            })
+    }
+
+    pub fn parse_name_and_insert_into_top_parsing_time_name_scope(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<String, RuntimeError> {
+        let name = tb.advance()?;
+        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
+        Ok(name)
     }
 }
