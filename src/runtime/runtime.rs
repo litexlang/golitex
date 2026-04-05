@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -109,7 +109,50 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn generate_a_random_unused_name(&self) -> String {
+    fn generated_name_is_available_with_reserved(
+        &self,
+        candidate_name: &str,
+        reserved_names: &HashSet<String>,
+    ) -> bool {
+        if is_valid_litex_name(candidate_name).is_err() {
+            return false;
+        }
+        if reserved_names.contains(candidate_name) {
+            return false;
+        }
+        if self.is_name_used(candidate_name) {
+            return false;
+        }
+        for names_in_scope in self.parsing_time_name_scope_stack.iter() {
+            if names_in_scope.contains_key(candidate_name) {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn generate_one_unused_name_with_reserved(&self, reserved_names: &HashSet<String>) -> String {
+        const READABLE_GENERATED_NAME_CHARS: &str = "abcdefghijklmnopqrstuvwxyz";
+
+        for readable_round in 0..4096usize {
+            let readable_char = READABLE_GENERATED_NAME_CHARS
+                .chars()
+                .nth(readable_round % READABLE_GENERATED_NAME_CHARS.len())
+                .unwrap();
+            let candidate_name = if readable_round < READABLE_GENERATED_NAME_CHARS.len() {
+                format!("_{}_", readable_char)
+            } else {
+                format!(
+                    "_{}{}_",
+                    readable_char,
+                    readable_round / READABLE_GENERATED_NAME_CHARS.len()
+                )
+            };
+            if self.generated_name_is_available_with_reserved(&candidate_name, reserved_names) {
+                return candidate_name;
+            }
+        }
+
         let available_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz0123456789".chars().collect();
         let first_char_candidates: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
         let mut try_index: usize = 0;
@@ -136,27 +179,23 @@ impl Runtime {
             }
 
             let candidate_name: String = generated_chars.into_iter().collect();
-            if is_valid_litex_name(&candidate_name).is_err() {
-                try_index += 1;
-                continue;
-            }
-            if self.is_name_used(&candidate_name) {
-                try_index += 1;
-                continue;
-            }
-            let mut used_in_parsing_time_name_scope = false;
-            for names_in_scope in self.parsing_time_name_scope_stack.iter() {
-                if names_in_scope.contains_key(&candidate_name) {
-                    used_in_parsing_time_name_scope = true;
-                    break;
-                }
-            }
-            if used_in_parsing_time_name_scope {
+            if !self.generated_name_is_available_with_reserved(&candidate_name, reserved_names) {
                 try_index += 1;
                 continue;
             }
             return candidate_name;
         }
+    }
+
+    pub fn generate_random_unused_names(&self, count: usize) -> Vec<String> {
+        let mut reserved_names: HashSet<String> = HashSet::with_capacity(count);
+        let mut generated_names: Vec<String> = Vec::with_capacity(count);
+        for _ in 0..count {
+            let generated_name = self.generate_one_unused_name_with_reserved(&reserved_names);
+            reserved_names.insert(generated_name.clone());
+            generated_names.push(generated_name);
+        }
+        generated_names
     }
 
     pub fn new_file_path_new_env_new_name_scope(&mut self, path: &str) {

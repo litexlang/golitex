@@ -295,7 +295,11 @@ impl Runtime {
         subset_fact: &SubsetFact,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
-        let bound_param_name = self.generate_a_random_unused_name();
+        let bound_param_name = self
+            .generate_random_unused_names(1)
+            .into_iter()
+            .next()
+            .unwrap();
         let membership_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
@@ -330,7 +334,11 @@ impl Runtime {
         superset_fact: &SupersetFact,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
-        let bound_param_name = self.generate_a_random_unused_name();
+        let bound_param_name = self
+            .generate_random_unused_names(1)
+            .into_iter()
+            .next()
+            .unwrap();
         let membership_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],

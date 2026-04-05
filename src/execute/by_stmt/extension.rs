@@ -47,7 +47,11 @@ impl Runtime {
                     inside_results.push(one_proof_stmt_exec_result);
                 }
 
-                let unused_name = self.generate_a_random_unused_name();
+                let unused_name = self
+                    .generate_random_unused_names(1)
+                    .into_iter()
+                    .next()
+                    .unwrap();
 
                 let left_to_right_forall_fact = Fact::ForallFact(ForallFact::new(
                     vec![ParamGroupWithParamType::new(
