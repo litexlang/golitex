@@ -21,7 +21,7 @@ impl fmt::Display for ByFnStmt {
             f,
             "{} {}{} {}",
             BY,
-            FN_FOR_FN_WITH_PARAMS,
+            FN,
             COLON,
             self.function
         )

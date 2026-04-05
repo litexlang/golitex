@@ -104,7 +104,7 @@ impl Runtime {
     fn collect_requirement_facts_and_algo_param_defs(
         &self,
         def_algo_stmt: &DefAlgoStmt,
-        fn_set_where_algo_belongs: &FnSetWithParams,
+        fn_set_where_algo_belongs: &FnSet,
     ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
@@ -115,7 +115,7 @@ impl Runtime {
     fn requirement_facts_and_param_defs_for_fn_set_with_dom(
         &self,
         def_algo_stmt: &DefAlgoStmt,
-        fn_set_with_dom: &FnSetWithParams,
+        fn_set_with_dom: &FnSet,
     ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {

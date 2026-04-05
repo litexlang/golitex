@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 fn param_defs_with_type_from_fn_set_with_dom(
-    fn_set_with_params: &crate::obj::FnSetWithParams,
+    fn_set_with_params: &crate::obj::FnSet,
 ) -> Vec<ParamGroupWithParamType> {
     let mut param_defs_with_type: Vec<ParamGroupWithParamType> =
         Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
@@ -935,22 +935,19 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
-        self.verify_obj_well_defined_and_store_cache(
-            &stmt.induc_from,
-            &VerifyState::new(0, false),
-        )
-        .map_err(|well_defined_error| {
-            RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                Stmt::HaveFnByInducStmt(stmt.clone()),
-                "".to_string(),
-                Some(well_defined_error.into()),
-                vec![],
-            )
-        })?;
+        self.verify_obj_well_defined_and_store_cache(&stmt.induc_from, &VerifyState::new(0, false))
+            .map_err(|well_defined_error| {
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                    Stmt::HaveFnByInducStmt(stmt.clone()),
+                    "".to_string(),
+                    Some(well_defined_error.into()),
+                    vec![],
+                )
+            })?;
 
         let equiv = HaveFnEqualCaseByCaseStmt::new(
             stmt.name.clone(),
-            stmt.fn_set_with_params.clone(),
+            stmt.fn_set.clone(),
             stmt.cases.clone(),
             stmt.equal_tos.clone(),
             stmt.line_file.clone(),
@@ -975,11 +972,7 @@ impl Runtime {
         })?;
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
-                Stmt::HaveFnByInducStmt(stmt.clone()),
-                infer_result,
-                vec![],
-            ),
+            NonFactualStmtSuccess::new(Stmt::HaveFnByInducStmt(stmt.clone()), infer_result, vec![]),
         ))
     }
 

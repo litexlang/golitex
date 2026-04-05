@@ -426,7 +426,7 @@ impl Runtime {
 
     pub fn inst_fn_set_with_params(
         &self,
-        fn_set_with_params: &FnSetWithParams,
+        fn_set_with_params: &FnSet,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
         let param_names =
@@ -446,7 +446,7 @@ impl Runtime {
             dom_facts
                 .push(self.inst_or_and_chain_atomic_fact(dom_fact, &filtered_param_to_arg_map)?);
         }
-        Ok(Obj::FnSetWithParams(FnSetWithParams {
+        Ok(Obj::FnSetWithParams(FnSet {
             params_def_with_set,
             dom_facts,
             ret_set: Box::new(

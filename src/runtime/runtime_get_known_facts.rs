@@ -18,7 +18,7 @@ impl Runtime {
         None
     }
 
-    pub fn get_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<&FnSetWithParams> {
+    pub fn get_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<&FnSet> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
@@ -30,7 +30,7 @@ impl Runtime {
         None
     }
 
-    pub fn get_cloned_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<FnSetWithParams> {
+    pub fn get_cloned_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<FnSet> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {

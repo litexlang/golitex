@@ -2,8 +2,8 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 fn fn_set_equality_fact(
-    left: &FnSetWithParams,
-    right: &FnSetWithParams,
+    left: &FnSet,
+    right: &FnSet,
     line_file: LineFile,
 ) -> Fact {
     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -14,8 +14,8 @@ fn fn_set_equality_fact(
 }
 
 fn fn_set_equality_verify_error(
-    left: &FnSetWithParams,
-    right: &FnSetWithParams,
+    left: &FnSet,
+    right: &FnSet,
     line_file: LineFile,
     message: String,
     cause: Option<RuntimeError>,
@@ -29,8 +29,8 @@ fn fn_set_equality_verify_error(
 }
 
 fn fn_set_equality_verified_by_builtin_rules_result(
-    left: &FnSetWithParams,
-    right: &FnSetWithParams,
+    left: &FnSet,
+    right: &FnSet,
     line_file: LineFile,
 ) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
@@ -44,8 +44,8 @@ fn fn_set_equality_verified_by_builtin_rules_result(
 impl Runtime {
     pub(crate) fn verify_fn_set_with_params_equality_by_builtin_rules(
         &mut self,
-        left: &FnSetWithParams,
-        right: &FnSetWithParams,
+        left: &FnSet,
+        right: &FnSet,
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
@@ -84,8 +84,8 @@ impl Runtime {
 
     fn verify_fn_set_with_params_directionally_in_local_env(
         &mut self,
-        source: &FnSetWithParams,
-        target: &FnSetWithParams,
+        source: &FnSet,
+        target: &FnSet,
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
@@ -102,8 +102,8 @@ impl Runtime {
 
     fn verify_fn_set_with_params_directionally_in_local_env_body(
         &mut self,
-        source: &FnSetWithParams,
-        target: &FnSetWithParams,
+        source: &FnSet,
+        target: &FnSet,
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
@@ -192,9 +192,9 @@ impl Runtime {
 
     fn define_directional_source_fn_set_params_in_local_env(
         &mut self,
-        source: &FnSetWithParams,
+        source: &FnSet,
         generated_param_names: &[String],
-        target: &FnSetWithParams,
+        target: &FnSet,
         line_file: LineFile,
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let mut source_param_to_generated_arg_map: HashMap<String, Obj> =
@@ -248,9 +248,9 @@ impl Runtime {
 
     fn assume_directional_source_fn_set_dom_facts_in_local_env(
         &mut self,
-        source: &FnSetWithParams,
+        source: &FnSet,
         source_param_to_generated_arg_map: &HashMap<String, Obj>,
-        target: &FnSetWithParams,
+        target: &FnSet,
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         for dom_fact in source.dom_facts.iter() {
@@ -284,8 +284,8 @@ impl Runtime {
 
     fn verify_directional_target_fn_set_param_membership_facts(
         &mut self,
-        source: &FnSetWithParams,
-        target: &FnSetWithParams,
+        source: &FnSet,
+        target: &FnSet,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         line_file: LineFile,
         verify_state: &VerifyState,
@@ -332,8 +332,8 @@ impl Runtime {
 
     fn verify_directional_target_fn_set_dom_facts(
         &mut self,
-        source: &FnSetWithParams,
-        target: &FnSetWithParams,
+        source: &FnSet,
+        target: &FnSet,
         line_file: LineFile,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         verify_state: &VerifyState,

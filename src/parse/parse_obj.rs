@@ -125,8 +125,8 @@ impl Runtime {
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
-        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS) {
-            tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
+        } else if tb.current_token_is_equal_to(FN) {
+            tb.skip_token(FN)?;
             Ok(Obj::FnSetWithParams(
                 self.parse_fn_set_with_dom_without_fn_prefix(tb)?,
             ))
@@ -138,7 +138,7 @@ impl Runtime {
     pub fn parse_fn_set_with_dom_without_fn_prefix(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<FnSetWithParams, RuntimeError> {
+    ) -> Result<FnSet, RuntimeError> {
         self.push_parsing_time_name_scope();
         let fn_set = self.parse_fn_set_with_dom_without_fn_prefix_body(tb);
         self.pop_parsing_time_name_scope();
@@ -148,7 +148,7 @@ impl Runtime {
     fn parse_fn_set_with_dom_without_fn_prefix_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<FnSetWithParams, RuntimeError> {
+    ) -> Result<FnSet, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
         loop {
@@ -198,7 +198,7 @@ impl Runtime {
 
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set = self.parse_obj(tb)?;
-        Ok(FnSetWithParams::new(
+        Ok(FnSet::new(
             params_def_with_set,
             dom_facts,
             ret_set,
