@@ -176,42 +176,7 @@ impl Runtime {
         tb.skip_token(FN)?;
         if tb.current_token_is_equal_to(BY) {
             tb.skip_token(BY)?;
-            tb.skip_token(INDUC)?;
-            tb.skip_token(FROM)?;
-            let induc_from = self.parse_obj(tb)?;
-            tb.skip_token(COLON)?;
-            let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-            let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
-            tb.skip_token(EQUAL)?;
-            if tb.current_token_is_equal_to(COLON) {
-                tb.skip_token(COLON)?;
-                let case_block_count = tb.body.len();
-                let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
-                let mut equal_tos: Vec<crate::obj::Obj> = Vec::with_capacity(case_block_count);
-                for block in tb.body.iter_mut() {
-                    block.skip_token(CASE)?;
-                    cases.push(self.parse_and_chain_atomic_fact(block)?);
-                    block.skip_token(COLON)?;
-                    equal_tos.push(self.parse_obj(block)?);
-                }
-                Ok(Stmt::HaveFnByInducStmt(HaveFnByInducStmt::new(
-                    name,
-                    fs,
-                    induc_from,
-                    cases,
-                    equal_tos,
-                    tb.line_file.clone(),
-                )))
-            } else {
-                Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from ...: expected '=' ':' before case blocks"
-                            .to_string(),
-                        tb.line_file.clone(),
-                        None,
-                    ),
-                )
-            }
+            self.parse_have_fn_by_induc_stmt(tb)
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
@@ -247,6 +212,145 @@ impl Runtime {
                 )))
             }
         }
+    }
+
+    /// `have fn by` 已消费；解析 `induc from <Obj>: <name> { ... } ret = : case ...`。
+    fn parse_have_fn_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(INDUC)?;
+        tb.skip_token(FROM)?;
+        let induc_from = self.parse_obj(tb)?;
+        tb.skip_token(COLON)?;
+        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+        let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
+        tb.skip_token(EQUAL)?;
+        if tb.current_token_is_equal_to(COLON) {
+            tb.skip_token(COLON)?;
+            let case_block_count = tb.body.len();
+            let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
+            let mut equal_tos: Vec<crate::obj::Obj> = Vec::with_capacity(case_block_count);
+            for block in tb.body.iter_mut() {
+                block.skip_token(CASE)?;
+                cases.push(self.parse_and_chain_atomic_fact(block)?);
+                block.skip_token(COLON)?;
+                equal_tos.push(self.parse_obj(block)?);
+            }
+
+            Self::verify_have_fn_by_induc_fn_set_constraints(
+                &fs,
+                &induc_from,
+                tb.line_file.clone(),
+            )?;
+
+            Ok(Stmt::HaveFnByInducStmt(HaveFnByInducStmt::new(
+                name,
+                fs,
+                induc_from,
+                cases,
+                equal_tos,
+                tb.line_file.clone(),
+            )))
+        } else {
+            Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "have fn by induc from ...: expected '=' ':' before case blocks".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            )
+        }
+    }
+
+    /// `have fn by induc from`：要求 fn 只有一个参数、参数域为 `Z`、恰有一条 dom，且为 `param >= from_obj`（`from_obj` 与 `from` 子句解析结果一致）。
+    fn verify_have_fn_by_induc_fn_set_constraints(
+        fs: &FnSet,
+        induc_from: &Obj,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        if fs.params_def_with_set.len() != 1 {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "have fn by induc from: expected exactly one parameter group".to_string(),
+                    line_file,
+                    None,
+                ),
+            );
+        }
+        let group = &fs.params_def_with_set[0];
+        if group.params.len() != 1 {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "have fn by induc from: expected exactly one parameter".to_string(),
+                    line_file,
+                    None,
+                ),
+            );
+        }
+        if !matches!(group.set, Obj::StandardSet(StandardSet::Z)) {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "have fn by induc from: parameter domain must be Z".to_string(),
+                    line_file,
+                    None,
+                ),
+            );
+        }
+        if fs.dom_facts.len() != 1 {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "have fn by induc from: expected exactly one dom fact".to_string(),
+                    line_file,
+                    None,
+                ),
+            );
+        }
+        let ge = match &fs.dom_facts[0] {
+            OrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(ge)) => ge,
+            _ => {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "have fn by induc from: dom fact must be a single >= fact".to_string(),
+                        line_file,
+                        None,
+                    ),
+                );
+            }
+        };
+        let param_name = &group.params[0];
+        match &ge.left {
+            Obj::Identifier(id) => {
+                if id.name != *param_name {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            "have fn by induc from: >= fact left must be the parameter name"
+                                .to_string(),
+                            line_file,
+                            None,
+                        ),
+                    );
+                }
+            }
+            _ => {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "have fn by induc from: >= fact left must be the parameter name"
+                            .to_string(),
+                        line_file,
+                        None,
+                    ),
+                );
+            }
+        }
+        if ge.right.to_string() != induc_from.to_string() {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "have fn by induc from: >= fact right must match the object after `from`"
+                        .to_string(),
+                    line_file,
+                    None,
+                ),
+            );
+        }
+        Ok(())
     }
 
     pub fn parse_have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
