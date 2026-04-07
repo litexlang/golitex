@@ -1,13 +1,12 @@
 mod by_stmt;
 mod exec_claim_stmt;
 mod exec_def_algo_stmt;
-mod exec_def_struct;
 mod exec_def_stmt;
+mod exec_def_struct;
 mod exec_eval_stmt;
 mod exec_fact_stmt;
 mod exec_family_def;
 mod exec_know_stmt;
-mod exec_struct_binding;
 mod exec_prove_stmt;
 mod exec_stmt;
 mod exec_store_definitions;
