@@ -14,28 +14,28 @@ impl Runtime {
             let new_fact: Fact = match param_type {
                 ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
                     arg.clone(),
-                    default_line_file(),
+                    _line_file.clone(),
                 ))),
                 ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                    IsNonemptySetFact::new(arg.clone(), default_line_file()),
+                    IsNonemptySetFact::new(arg.clone(), _line_file.clone()),
                 )),
                 ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(
-                    IsFiniteSetFact::new(arg.clone(), default_line_file()),
+                    IsFiniteSetFact::new(arg.clone(), _line_file.clone()),
                 )),
                 ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     arg.clone(),
                     obj.clone(),
-                    default_line_file(),
+                    _line_file.clone(),
                 ))),
                 ParamType::Family(family) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     arg.clone(),
                     Obj::FamilyObj(family.clone()),
-                    default_line_file(),
+                    _line_file.clone(),
                 ))),
                 ParamType::Struct(struct_ty) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     arg.clone(),
                     Obj::StructObj(struct_ty.clone()),
-                    default_line_file(),
+                    _line_file.clone(),
                 ))),
             };
             infer_result.new_infer_result_inside(
