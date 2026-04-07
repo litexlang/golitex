@@ -7,12 +7,8 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
 
-        self.push_env();
-
-        let inside_results_when_verify = self.exec_witness_exist_fact_body(stmt);
-
-        // End verification: pop local environment.
-        self.pop_env();
+        let inside_results_when_verify =
+            self.run_in_local_env(|rt| rt.exec_witness_exist_fact_body(stmt));
 
         let inside_results = match inside_results_when_verify {
             Ok(proof_inside_results) => proof_inside_results,
@@ -153,12 +149,8 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
 
-        self.push_env();
-
-        let inside_results_when_verify = self.exec_witness_nonempty_set_body(stmt);
-
-        // End verification: pop local environment.
-        self.pop_env();
+        let inside_results_when_verify =
+            self.run_in_local_env(|rt| rt.exec_witness_nonempty_set_body(stmt));
 
         let inside_results = match inside_results_when_verify {
             Ok(proof_inside_results) => proof_inside_results,

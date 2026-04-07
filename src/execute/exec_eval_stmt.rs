@@ -276,9 +276,9 @@ impl Runtime {
             ));
         }
 
-        self.push_env();
-        let eval_result = self.evaluate_symbol_obj_iterative(stmt.obj_to_eval.clone(), stmt);
-        self.pop_env();
+        let eval_result = self.run_in_local_env(|rt| {
+            rt.evaluate_symbol_obj_iterative(stmt.obj_to_eval.clone(), stmt)
+        });
 
         let evaluated_obj = eval_result?;
         let evaluated_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(

@@ -17,16 +17,11 @@ impl Runtime {
                 ))
             })?;
 
-        let mut last_error: Option<RuntimeError> = None;
-        let exec_proof_inside_results = {
+        let (exec_proof_inside_results, last_error) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
 
-            self.push_env();
-
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
-                reverse_to_prove_fact,
-            )
+            rt.store_atomic_fact_without_well_defined_verified_and_infer(reverse_to_prove_fact)
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ByContraStmt(stmt.clone()),
@@ -36,8 +31,9 @@ impl Runtime {
                     ))
                 })?;
 
+            let mut last_error: Option<RuntimeError> = None;
             for proof_stmt in stmt.proof.iter() {
-                let exec_stmt_result = self.exec_stmt(proof_stmt);
+                let exec_stmt_result = rt.exec_stmt(proof_stmt);
                 match exec_stmt_result {
                     Ok(result) => inside_results.push(result),
                     Err(statement_error) => {
@@ -48,7 +44,7 @@ impl Runtime {
             }
 
             let verify_impossible_fact_result =
-                self.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
+                rt.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
             if verify_impossible_fact_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -60,7 +56,7 @@ impl Runtime {
                 ));
             }
 
-            let verify_reversed_impossible_fact_result = self.verify_atomic_fact(
+            let verify_reversed_impossible_fact_result = rt.verify_atomic_fact(
                 &stmt.impossible_fact.make_reversed(),
                 &VerifyState::new(0, false),
             )?;
@@ -75,9 +71,8 @@ impl Runtime {
                 ));
             }
 
-            self.pop_env();
-            inside_results
-        };
+            Ok((inside_results, last_error))
+        })?;
 
         if let Some(last_error) = last_error {
             return Err(RuntimeError::from(

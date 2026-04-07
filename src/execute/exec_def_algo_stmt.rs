@@ -21,13 +21,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
-        self.push_env();
-
-        let result = self.exec_def_algo_stmt_verify_process_body(def_algo_stmt);
-
-        self.pop_env();
-
-        result
+        self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process_body(def_algo_stmt))
     }
 
     fn exec_def_algo_stmt_verify_process_body(

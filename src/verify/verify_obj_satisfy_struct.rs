@@ -38,10 +38,9 @@ impl Runtime {
 
         match &obj {
             Obj::Tuple(tuple) => {
-                self.push_env();
-                let result = self.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state);
-                self.pop_env();
-                result
+                self.run_in_local_env(|rt| {
+                    rt.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state)
+                })
             }
             Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
                 let id_key = match &obj {

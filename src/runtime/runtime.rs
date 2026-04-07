@@ -219,12 +219,12 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn push_env(&mut self) {
+    fn push_env(&mut self) {
         let new_env = Box::new(Environment::new_empty_env());
         self.environment_stack.push(new_env);
     }
 
-    pub fn pop_env(&mut self) {
+    fn pop_env(&mut self) {
         let last_env = self.environment_stack.last();
 
         match last_env {
@@ -235,6 +235,18 @@ impl Runtime {
                 self.environment_stack.pop();
             }
         }
+    }
+
+    /// 在临时子环境中执行闭包：`push_env` → `f` → `pop_env`；`Ok`/`Err` 都会弹出。
+    /// 与手写 `push`/`pop` 等价；若闭包 panic，栈不会恢复（与手写相同）。
+    pub fn run_in_local_env<T, E, F>(&mut self, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+    {
+        self.push_env();
+        let result = f(self);
+        self.pop_env();
+        result
     }
 }
 

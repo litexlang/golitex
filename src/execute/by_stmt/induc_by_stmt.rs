@@ -9,9 +9,9 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         let all_inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for fact in stmt.to_prove.iter() {
-            self.push_env();
-            let one_fact_infer_result = self.exec_by_induc_stmt_for_one_fact(stmt, fact);
-            self.pop_env();
+            let one_fact_infer_result = self.run_in_local_env(|rt| {
+                rt.exec_by_induc_stmt_for_one_fact(stmt, fact)
+            });
 
             match one_fact_infer_result {
                 Ok(one_fact_infer_result) => {

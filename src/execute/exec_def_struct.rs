@@ -28,10 +28,7 @@ impl Runtime {
         &mut self,
         stmt: &DefStructStmt,
     ) -> Result<(), RuntimeErrorStruct> {
-        self.push_env();
-        let struct_check_well_defined_result = self.def_struct_stmt_check_well_defined_body(stmt);
-        self.pop_env();
-        struct_check_well_defined_result
+        self.run_in_local_env(|rt| rt.def_struct_stmt_check_well_defined_body(stmt))
     }
 
     fn def_struct_stmt_check_well_defined_body(
