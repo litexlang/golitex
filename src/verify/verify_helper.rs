@@ -58,20 +58,26 @@ impl Runtime {
                     }
                 }
             }
-            ParamType::Family(_) => Err(RuntimeErrorStruct::exec_stmt_new(
-                None,
-                "family param type is not supported yet in verify_param_type_nonempty_if_required"
-                    .to_string(),
-                None,
-                vec![],
-            )),
-            ParamType::Struct(_) => Err(RuntimeErrorStruct::exec_stmt_new(
-                None,
-                "struct param type is not supported yet in verify_param_type_nonempty_if_required"
-                    .to_string(),
-                None,
-                vec![],
-            )),
+            ParamType::Family(family_obj) => {
+                let is_nonempty_set = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+                    IsNonemptySetFact::new(Obj::FamilyObj(family_obj.clone()), default_line_file()),
+                ));
+                self.verify_fact_well_defined_and_store_and_infer(
+                    is_nonempty_set,
+                    &VerifyState::new(0, false),
+                )?;
+                Ok(())
+            }
+            ParamType::Struct(struct_obj) => {
+                let is_nonempty_set = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+                    IsNonemptySetFact::new(Obj::StructObj(struct_obj.clone()), default_line_file()),
+                ));
+                self.verify_fact_well_defined_and_store_and_infer(
+                    is_nonempty_set,
+                    &VerifyState::new(0, false),
+                )?;
+                Ok(())
+            }
         }
     }
 }

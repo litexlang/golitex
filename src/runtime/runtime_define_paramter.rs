@@ -28,7 +28,7 @@ impl Runtime {
     fn define_parameter_by_binding_family(
         &mut self,
         name: &str,
-        family_ty: &FamilyParamType,
+        family_ty: &FamilyObj,
     ) -> Result<InferResult, RuntimeError> {
         let family_name = family_ty.name.to_string();
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
@@ -132,7 +132,7 @@ impl Runtime {
     pub(crate) fn define_parameter_by_binding_struct(
         &mut self,
         name: &str,
-        struct_ty: &StructParamType,
+        struct_ty: &StructObj,
     ) -> Result<InferResult, RuntimeError> {
         self.register_param_as_struct_instance(name, struct_ty.clone());
 
@@ -147,7 +147,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub fn register_param_as_struct_instance(&mut self, env_key: &str, inst: StructParamType) {
+    pub fn register_param_as_struct_instance(&mut self, env_key: &str, inst: StructObj) {
         let key = env_key.to_string();
         self.top_level_env()
             .known_identifier_satisfy_struct
