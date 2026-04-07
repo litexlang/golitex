@@ -377,8 +377,8 @@ impl fmt::Display for RuntimeErrorStruct {
 impl std::error::Error for RuntimeErrorStruct {}
 
 impl From<RuntimeErrorStruct> for RuntimeError {
-    fn from(store_or_infer_runtime_error_struct: RuntimeErrorStruct) -> Self {
-        RuntimeError::StoreFactError(store_or_infer_runtime_error_struct)
+    fn from(runtime_error_struct: RuntimeErrorStruct) -> Self {
+        RuntimeError::ExecStmtError(runtime_error_struct)
     }
 }
 

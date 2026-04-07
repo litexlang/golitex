@@ -38,8 +38,8 @@ mod lit_file_runner_tests {
 
         let status_label = if run_succeeded { "OK" } else { "FAILED" };
         println!(
-            "\n=== [{}] {:?} ({:.2} ms) ===\n{}\n",
-            status_label, tmp_lit_path, duration_ms, run_output
+            "{}\n=== [{}] {:?} ({:.2} ms) ===\n",
+            run_output, path_str, status_label, duration_ms
         );
     }
 

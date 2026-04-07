@@ -16,12 +16,14 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::ForallFact(forall_fact.clone()),
-                    String::new(),
-                    forall_fact.line_file.clone(),
-                    Some(e.into()),
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        Fact::ForallFact(forall_fact.clone()),
+                        String::new(),
+                        forall_fact.line_file.clone(),
+                        Some(e.into()),
+                    ),
+                );
             }
         }
 
@@ -75,7 +77,7 @@ impl Runtime {
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::ForallFact(forall_fact.clone())),
-                            Some(RuntimeError::StoreFactError(e)),
+                            Some(RuntimeError::ExecStmtError(e)),
                         ).into()),
                     )
                 })?;
@@ -91,18 +93,23 @@ impl Runtime {
             if result.is_unknown() {
                 let then_one_based = then_index + 1;
                 let then_line_file = then_fact.line_file();
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::ForallFact(forall_fact.clone()),
-                    format!(
-                        "forall: then-fact {}/{} could not be verified (unknown):\n{}",
-                        then_one_based,
-                        then_count,
-                        then_fact
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        Fact::ForallFact(forall_fact.clone()),
+                        format!(
+                            "forall: then-fact {}/{} could not be verified (unknown):\n{}",
+                            then_one_based, then_count, then_fact
+                        ),
+                        then_line_file,
+                        None,
                     ),
-                    then_line_file,
-                    None,
-                ));
+                );
             }
+
+            // 存then
+            self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                then_fact.clone(),
+            )?;
 
             match &result {
                 NonErrStmtExecResult::FactualStmtSuccess(factual_verification_result)
@@ -122,9 +129,9 @@ impl Runtime {
                     all_then_facts_are_verified_by_builtin_rules = false;
                     infer_result.new_infer_result_inside(non_factual_success.infers.clone());
                 }
-                NonErrStmtExecResult::StmtUnknown(_) => unreachable!(
-                    "stmt unknown is handled above before this match"
-                ),
+                NonErrStmtExecResult::StmtUnknown(_) => {
+                    unreachable!("stmt unknown is handled above before this match")
+                }
             }
         }
 
@@ -175,12 +182,14 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_forall_fact_with_iff_well_defined(forall_iff, verify_state)
             {
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::ForallFactWithIff(forall_iff.clone()),
-                    String::new(),
-                    forall_iff.line_file.clone(),
-                    Some(e.into()),
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        Fact::ForallFactWithIff(forall_iff.clone()),
+                        String::new(),
+                        forall_iff.line_file.clone(),
+                        Some(e.into()),
+                    ),
+                );
             }
         }
 

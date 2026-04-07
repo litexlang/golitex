@@ -1,5 +1,18 @@
-forall r, s Q:
-    s + 3 >= r
-    s + r <= 3
-    =>:
-        (s + r) - (s + 3) <= 3 - r
+have factorial fn(x R) R
+
+know:
+    forall x R:
+        x = 0
+        =>:
+            factorial(x) = 1
+
+    forall x R:
+        x > 0
+        =>:
+            factorial(x) = factorial(x - 1) * x
+
+algo factorial(x):
+    case x = 0: 1
+    factorial(x - 1) * x
+
+eval factorial(15)
