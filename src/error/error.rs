@@ -204,22 +204,6 @@ impl RuntimeError {
         ))
     }
 
-    pub fn new_name_already_used_error_with_name_previous_position_current_position(
-        name: String,
-        name_already_used_on_line_file: LineFile,
-        line_file: LineFile,
-    ) -> Self {
-        let msg = format!(
-            "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
-            name,
-            name_already_used_on_line_file.0,
-            name_already_used_on_line_file.1.as_ref(),
-            line_file.0,
-            line_file.1.as_ref(),
-        );
-        RuntimeError::NameAlreadyUsedError(RuntimeErrorStruct::new(None, msg, line_file, None))
-    }
-
     pub fn new_parse_error_with_msg_position_previous_error(
         msg: String,
         line_file: LineFile,

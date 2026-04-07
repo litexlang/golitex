@@ -42,35 +42,25 @@ impl Runtime {
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
-            if let Some(name_already_defined_on_line_file) = names_in_scope.get(name) {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!(
-                        "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
-                        name,
-                        name_already_defined_on_line_file.0,
-                        name_already_defined_on_line_file.1.as_ref(),
-                        current_line_file.0,
-                        current_line_file.1.as_ref(),
+            if let Some(_) = names_in_scope.get(name) {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        format!("name `{}` is already used", name),
+                        current_line_file,
+                        None,
                     ),
-                    current_line_file,
-                    None,
-                ));
+                );
             }
         }
 
         if self.is_name_used(name) {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                format!(
-                    "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
-                    name,
-                    default_line_file().0,
-                    default_line_file().1.as_ref(),
-                    current_line_file.0,
-                    current_line_file.1.as_ref(),
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    format!("name `{}` is already used", name),
+                    current_line_file,
+                    None,
                 ),
-                current_line_file,
-                None,
-            ));
+            );
         }
 
         Ok(())
@@ -92,35 +82,25 @@ impl Runtime {
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
-            if let Some(name_already_defined_on_line_file) = names_in_scope.get(name) {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!(
-                        "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
-                        name,
-                        name_already_defined_on_line_file.0,
-                        name_already_defined_on_line_file.1.as_ref(),
-                        current_line_file.0,
-                        current_line_file.1.as_ref(),
+            if let Some(_) = names_in_scope.get(name) {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        format!("name `{}` is already used", name,),
+                        current_line_file,
+                        None,
                     ),
-                    current_line_file,
-                    None,
-                ));
+                );
             }
         }
 
         if self.is_name_used(name) {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                format!(
-                    "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
-                    name,
-                    default_line_file().0,
-                    default_line_file().1.as_ref(),
-                    current_line_file.0,
-                    current_line_file.1.as_ref(),
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    format!("name `{}` is already used", name),
+                    current_line_file,
+                    None,
                 ),
-                current_line_file,
-                None,
-            ));
+            );
         }
 
         Ok(())
