@@ -4,13 +4,17 @@ use crate::{
 };
 use std::fmt;
 
+/// `have fn by induc from`：前若干条须为 `param = from`, `param = from + 1`, …；最后一条须为
+/// `param >= from + len(special_cases_equal_tos)`，且要么 `: obj`（`last_case_equal_to`），要么无右值而
+/// 跟子 `case` 列表（`last_case_cases`）。
 #[derive(Clone)]
 pub struct HaveFnByInducStmt {
+    pub induc_from: Obj,
     pub name: String,
     pub fn_set: FnSet,
-    pub induc_from: Obj,
-    pub cases: Vec<AndChainAtomicFact>,
-    pub equal_tos: Vec<Obj>,
+    pub special_cases_equal_tos: Vec<Obj>,
+    pub last_case_equal_to: Option<Obj>,
+    pub last_case_cases: Option<Vec<(AndChainAtomicFact, Obj)>>,
     pub line_file: LineFile,
 }
 
@@ -395,7 +399,8 @@ impl HaveFnEqualCaseByCaseStmt {
 
 impl fmt::Display for HaveFnByInducStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let cases_and_proofs = self
+        let flat = self.to_have_fn_equal_case_by_case_stmt();
+        let cases_and_proofs = flat
             .cases
             .iter()
             .enumerate()
@@ -409,7 +414,7 @@ impl fmt::Display for HaveFnByInducStmt {
                         self.name,
                         braced_vec_to_string(&self.fn_set.params()),
                         EQUAL,
-                        self.equal_tos[i]
+                        flat.equal_tos[i]
                     ),
                     1,
                 )
@@ -435,23 +440,108 @@ impl fmt::Display for HaveFnByInducStmt {
     }
 }
 
+pub(crate) fn induc_obj_plus_offset(induc_from: &Obj, offset: usize) -> Obj {
+    if offset == 0 {
+        induc_from.clone()
+    } else {
+        Obj::Add(Add::new(
+            induc_from.clone(),
+            Obj::Number(Number::new(offset.to_string())),
+        ))
+    }
+}
+
+fn flatten_and_chain_to_atomic_facts(c: &AndChainAtomicFact) -> Vec<AtomicFact> {
+    match c {
+        AndChainAtomicFact::AtomicFact(a) => vec![a.clone()],
+        AndChainAtomicFact::AndFact(af) => af.facts.clone(),
+        AndChainAtomicFact::ChainFact(cf) => cf.facts().unwrap(),
+    }
+}
+
+fn merge_two_and_chain_clauses(
+    a: AndChainAtomicFact,
+    b: AndChainAtomicFact,
+    line_file: LineFile,
+) -> AndChainAtomicFact {
+    let mut atoms = flatten_and_chain_to_atomic_facts(&a);
+    atoms.extend(flatten_and_chain_to_atomic_facts(&b));
+    AndChainAtomicFact::AndFact(AndFact::new(atoms, line_file))
+}
+
 impl HaveFnByInducStmt {
     pub fn new(
         name: String,
         fn_set_with_params: FnSet,
         induc_from: Obj,
-        cases: Vec<AndChainAtomicFact>,
-        equal_tos: Vec<Obj>,
+        special_cases_equal_tos: Vec<Obj>,
+        last_case_equal_to: Option<Obj>,
+        last_case_cases: Option<Vec<(AndChainAtomicFact, Obj)>>,
         line_file: LineFile,
     ) -> Self {
         HaveFnByInducStmt {
             name,
             fn_set: fn_set_with_params,
             induc_from,
+            special_cases_equal_tos,
+            last_case_equal_to,
+            last_case_cases,
+            line_file,
+        }
+    }
+
+    /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（含归纳步上 `>=` 与可选子条件的合取）。
+    pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
+        let line_file = self.line_file.clone();
+        let param_name = self.fn_set.params()[0].clone();
+        let left_id = Obj::Identifier(Identifier::new(param_name));
+        let n = self.special_cases_equal_tos.len();
+        let mut cases: Vec<AndChainAtomicFact> = Vec::new();
+        let mut equal_tos: Vec<Obj> = Vec::new();
+        for i in 0..n {
+            let when = AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                left_id.clone(),
+                induc_obj_plus_offset(&self.induc_from, i),
+                line_file.clone(),
+            )));
+            cases.push(when);
+            equal_tos.push(self.special_cases_equal_tos[i].clone());
+        }
+        let ge = GreaterEqualFact::new(
+            left_id.clone(),
+            induc_obj_plus_offset(&self.induc_from, n),
+            line_file.clone(),
+        );
+        let ge_chain = AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(ge));
+        match (&self.last_case_equal_to, &self.last_case_cases) {
+            (Some(eq), None) => {
+                cases.push(ge_chain);
+                equal_tos.push(eq.clone());
+            }
+            (None, Some(last_pairs)) => {
+                for (when, eq_to) in last_pairs {
+                    let merged = merge_two_and_chain_clauses(
+                        ge_chain.clone(),
+                        when.clone(),
+                        line_file.clone(),
+                    );
+                    cases.push(merged);
+                    equal_tos.push(eq_to.clone());
+                }
+            }
+            (None, None) | (Some(_), Some(_)) => {
+                unreachable!(
+                    "HaveFnByInducStmt: last case must be either `: obj` or nested `case` blocks, not both or neither"
+                );
+            }
+        }
+        HaveFnEqualCaseByCaseStmt::new(
+            self.name.clone(),
+            self.fn_set.clone(),
             cases,
             equal_tos,
             line_file,
-        }
+        )
     }
 }
 

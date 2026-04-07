@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
@@ -183,22 +182,8 @@ impl Runtime {
 
         let fn_set_param_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
 
-        let new_param_names: Vec<String> = fn_set_param_names
-            .iter()
-            .map(|u| format!("__{}", u))
-            .collect();
-        let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
-        for (user_written, stored) in fn_set_param_names.iter().zip(new_param_names.iter()) {
-            param_arg_map.insert(
-                user_written.clone(),
-                Obj::Identifier(Identifier::new(stored.clone())),
-            );
-        }
-
-        self.register_collected_mangled_fn_param_names_for_def_parse(
-            &new_param_names,
-            tb.line_file.clone(),
-        )?;
+        let (new_param_names, param_arg_map) =
+            self.register_mangled_fn_param_binding(&fn_set_param_names, tb.line_file.clone())?;
 
         let mut dom_facts = vec![];
         if tb.current_token_is_equal_to(COLON) {
@@ -872,19 +857,10 @@ impl Runtime {
             }
             tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-            let user_written = a.name.clone();
-            let stored = format!("__{}", user_written);
-
-            let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
-            param_arg_map.insert(
-                user_written.clone(),
-                Obj::Identifier(Identifier::new(stored.clone())),
-            );
-
-            self.register_collected_mangled_fn_param_names_for_def_parse(
-                &vec![stored.clone()],
-                tb.line_file.clone(),
-            )?;
+            let user_names = vec![a.name.clone()];
+            let (mangled_names, param_arg_map) =
+                self.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
+            let stored = mangled_names[0].clone();
 
             let mut facts_inst = Vec::with_capacity(facts.len());
             for f in facts.iter() {
