@@ -63,7 +63,8 @@ impl Runtime {
                         };
                         let right_eval =
                             self.evaluate_symbol_obj_iterative(right_obj, eval_stmt)?;
-                        acc = self.combine_two_numeric_objs(acc, right_eval, combine_op, eval_stmt)?;
+                        acc =
+                            self.combine_two_numeric_objs(acc, right_eval, combine_op, eval_stmt)?;
                     }
                     return Ok(acc);
                 }
@@ -74,7 +75,8 @@ impl Runtime {
                     return Err(RuntimeError::from(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EvalStmt(eval_stmt.clone()),
-                            "eval: non-numeric intermediate with pending binary operation".to_string(),
+                            "eval: non-numeric intermediate with pending binary operation"
+                                .to_string(),
                             None,
                             vec![],
                         ),
@@ -103,7 +105,7 @@ impl Runtime {
             None => Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::EvalStmt(eval_stmt.clone()),
-                    "eval: failed to combine numeric subexpression".to_string(),
+                    "eval: failed to combine numeric sub-expression".to_string(),
                     None,
                     vec![],
                 ),
@@ -197,12 +199,14 @@ impl Runtime {
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::EvalStmt(eval_stmt.clone()),
-                        "eval: failed to verify case condition".to_string(),
-                        Some(verify_error),
-                        vec![],
-                    ))
+                    RuntimeError::ExecStmtError(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            Stmt::EvalStmt(eval_stmt.clone()),
+                            "eval: failed to verify case condition".to_string(),
+                            Some(verify_error),
+                            vec![],
+                        ),
+                    )
                 })?;
 
             if verify_result.is_true() {
@@ -213,12 +217,14 @@ impl Runtime {
                 let verify_reversed_result = self
                     .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
-                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EvalStmt(eval_stmt.clone()),
-                            "eval: failed to verify reversed case condition".to_string(),
-                            Some(verify_error),
-                            vec![],
-                        ))
+                        RuntimeError::ExecStmtError(
+                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                                Stmt::EvalStmt(eval_stmt.clone()),
+                                "eval: failed to verify reversed case condition".to_string(),
+                                Some(verify_error),
+                                vec![],
+                            ),
+                        )
                     })?;
                 if verify_reversed_result.is_unknown() {
                     return Err(RuntimeError::from(

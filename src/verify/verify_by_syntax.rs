@@ -217,6 +217,14 @@ impl Runtime {
                 Obj::StandardSet(StandardSet::RNz) => true,
                 _ => false,
             },
+            Obj::FamilyObj(a) => match right {
+                Obj::FamilyObj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::StructObj(a) => match right {
+                Obj::StructObj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
         }
     }
 }
