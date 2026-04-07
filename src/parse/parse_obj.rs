@@ -392,18 +392,13 @@ impl Runtime {
             return Ok(Obj::StandardSet(StandardSet::RNz));
         }
 
-        // `family p(R)` / `struct T(...)` 作为 Obj（与 `family p(a set) =` 定义区分：定义在 `=` 前用 `family name` + 形参块）
         if tok == FAMILY {
-            tb.skip()?;
-            let name = self.parse_identifier_or_identifier_with_mod(tb)?;
-            let params = self.parse_braced_objs(tb)?;
-            return Ok(Obj::FamilyObj(FamilyObj { name, params }));
+            let family = self.parse_family_obj(tb)?;
+            return Ok(Obj::FamilyObj(family));
         }
         if tok == STRUCT {
-            tb.skip()?;
-            let name = self.parse_identifier_or_identifier_with_mod(tb)?;
-            let args = self.parse_braced_objs(tb)?;
-            return Ok(Obj::StructObj(StructObj { name, args }));
+            let struct_obj = self.parse_struct_obj(tb)?;
+            return Ok(Obj::StructObj(struct_obj.into()));
         }
 
         // 多元关键字：吃关键字 + 括号里若干 obj
@@ -989,6 +984,20 @@ impl Runtime {
                 left,
             )))
         }
+    }
+
+    pub fn parse_family_obj(&mut self, tb: &mut TokenBlock) -> Result<FamilyObj, RuntimeError> {
+        tb.skip_token(FAMILY)?;
+        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let params = self.parse_braced_objs(tb)?;
+        Ok(FamilyObj { name, params })
+    }
+
+    pub fn parse_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<StructObj, RuntimeError> {
+        tb.skip_token(STRUCT)?;
+        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let params = self.parse_braced_objs(tb)?;
+        Ok(StructObj { name, args: params })
     }
 }
 
