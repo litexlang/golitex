@@ -37,31 +37,31 @@ pub enum Obj {
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
-    FamilyObj(FamilyParamType),
-    StructObj(StructParamType),
+    FamilyObj(FamilyObj),
+    StructObj(StructObj),
 }
 
 /// Instantiated family type: `family` name followed by argument objects (often sets).
 #[derive(Clone)]
-pub struct FamilyParamType {
+pub struct FamilyObj {
     pub name: IdentifierOrIdentifierWithMod,
     pub params: Vec<Obj>,
 }
 
 /// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
 #[derive(Clone)]
-pub struct StructParamType {
+pub struct StructObj {
     pub name: IdentifierOrIdentifierWithMod,
     pub args: Vec<Obj>,
 }
 
-impl StructParamType {
+impl StructObj {
     pub fn new(name: IdentifierOrIdentifierWithMod, args: Vec<Obj>) -> Self {
-        StructParamType { name, args }
+        StructObj { name, args }
     }
 }
 
-impl fmt::Display for FamilyParamType {
+impl fmt::Display for FamilyObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -73,7 +73,7 @@ impl fmt::Display for FamilyParamType {
     }
 }
 
-impl fmt::Display for StructParamType {
+impl fmt::Display for StructObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

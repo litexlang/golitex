@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_obj_satisfies_struct_param_type(
         &mut self,
         obj: Obj,
-        struct_ty: &StructParamType,
+        struct_ty: &StructObj,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let struct_name = struct_ty.name.to_string();
@@ -100,7 +100,7 @@ impl Runtime {
     fn verify_tuple_satisfy_struct(
         &mut self,
         tuple: &Tuple,
-        struct_param_type: &StructParamType,
+        struct_param_type: &StructObj,
         struct_def: &DefStructStmt,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {

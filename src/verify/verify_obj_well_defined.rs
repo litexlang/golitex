@@ -1180,7 +1180,7 @@ impl Runtime {
 
     fn verify_param_type_family_well_defined(
         &mut self,
-        family_param_type: &FamilyParamType,
+        family_param_type: &FamilyObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let family_name = family_param_type.name.to_string();
@@ -1297,7 +1297,7 @@ impl Runtime {
 
     fn verify_param_type_struct_well_defined(
         &mut self,
-        struct_ty: &StructParamType,
+        struct_ty: &StructObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let struct_name = struct_ty.name.to_string();

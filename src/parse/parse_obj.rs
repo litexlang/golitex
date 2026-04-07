@@ -397,13 +397,13 @@ impl Runtime {
             tb.skip()?;
             let name = self.parse_identifier_or_identifier_with_mod(tb)?;
             let params = self.parse_braced_objs(tb)?;
-            return Ok(Obj::FamilyObj(FamilyParamType { name, params }));
+            return Ok(Obj::FamilyObj(FamilyObj { name, params }));
         }
         if tok == STRUCT {
             tb.skip()?;
             let name = self.parse_identifier_or_identifier_with_mod(tb)?;
             let args = self.parse_braced_objs(tb)?;
-            return Ok(Obj::StructObj(StructParamType { name, args }));
+            return Ok(Obj::StructObj(StructObj { name, args }));
         }
 
         // 多元关键字：吃关键字 + 括号里若干 obj

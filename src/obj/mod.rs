@@ -7,8 +7,8 @@ pub use atom::{
     IdentifierOrIdentifierWithMod, IdentifierWithMod,
 };
 pub use obj::{
-    fn_obj_to_string, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FamilyParamType,
-    FnObj, FnSet, Intersect, ListSet, Mod, Mul, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, Range,
-    SetBuilder, SetDiff, SetMinus, StructParamType, Sub, Tuple, TupleDim, Union,
+    fn_obj_to_string, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FamilyObj,
+    FnObj, FnSet, Intersect, ListSet, Mod, Mul, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj,
+    Range, SetBuilder, SetDiff, SetMinus, StructObj, Sub, Tuple, TupleDim, Union,
 };
 pub use standard_set::StandardSet;

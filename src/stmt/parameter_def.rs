@@ -3,21 +3,13 @@ use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct ParamGroupWithSet {
-    pub params: Vec<String>,
-    pub set: Obj,
-}
-
-#[derive(Clone)]
-pub struct ParamGroupWithParamType {
-    pub params: Vec<String>,
-    pub param_type: ParamType,
-}
-
-#[derive(Clone)]
-pub struct ParamGroupWithStructFieldType {
-    pub params: Vec<String>,
-    pub struct_field_type: StructFieldType,
+pub enum ParamType {
+    Set(Set),
+    NonemptySet(NonemptySet),
+    FiniteSet(FiniteSet),
+    Obj(Obj),
+    Family(FamilyObj),
+    Struct(StructObj),
 }
 
 #[derive(Clone)]
@@ -26,7 +18,7 @@ pub enum StructFieldType {
     Set(Set),
     FiniteSet(FiniteSet),
     NonemptySet(NonemptySet),
-    Family(FamilyParamType),
+    Family(FamilyObj),
 }
 
 impl StructFieldType {
@@ -45,6 +37,24 @@ impl fmt::Display for StructFieldType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.to_param_type())
     }
+}
+
+#[derive(Clone)]
+pub struct ParamGroupWithSet {
+    pub params: Vec<String>,
+    pub set: Obj,
+}
+
+#[derive(Clone)]
+pub struct ParamGroupWithParamType {
+    pub params: Vec<String>,
+    pub param_type: ParamType,
+}
+
+#[derive(Clone)]
+pub struct ParamGroupWithStructFieldType {
+    pub params: Vec<String>,
+    pub struct_field_type: StructFieldType,
 }
 
 impl fmt::Display for ParamGroupWithStructFieldType {
@@ -119,16 +129,6 @@ impl ParamGroupWithStructFieldType {
         }
         result
     }
-}
-
-#[derive(Clone)]
-pub enum ParamType {
-    Set(Set),
-    NonemptySet(NonemptySet),
-    FiniteSet(FiniteSet),
-    Obj(Obj),
-    Family(FamilyParamType),
-    Struct(StructParamType),
 }
 
 #[derive(Clone)]

@@ -130,7 +130,7 @@ impl Runtime {
         tb.skip_token(FAMILY)?;
         let name = self.parse_identifier_or_identifier_with_mod(tb)?;
         let params = self.parse_braced_objs(tb)?;
-        Ok(ParamType::Family(FamilyParamType { name, params }))
+        Ok(ParamType::Family(FamilyObj { name, params }))
     }
 
     pub fn parse_param_type_struct(
@@ -140,6 +140,6 @@ impl Runtime {
         tb.skip_token(STRUCT)?;
         let name = self.parse_identifier_or_identifier_with_mod(tb)?;
         let params = self.parse_braced_objs(tb)?;
-        Ok(ParamType::Struct(StructParamType { name, args: params }))
+        Ok(ParamType::Struct(StructObj { name, args: params }))
     }
 }
