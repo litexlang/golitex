@@ -85,15 +85,14 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        self.push_env();
-        let result = self.verify_fn_set_with_params_directionally_in_local_env_body(
-            source,
-            target,
-            line_file,
-            verify_state,
-        );
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| {
+            rt.verify_fn_set_with_params_directionally_in_local_env_body(
+                source,
+                target,
+                line_file,
+                verify_state,
+            )
+        })
     }
 
     fn verify_fn_set_with_params_directionally_in_local_env_body(

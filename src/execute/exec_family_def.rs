@@ -31,11 +31,7 @@ impl Runtime {
         &mut self,
         def_family_stmt: &DefFamilyStmt,
     ) -> Result<InferResult, RuntimeErrorStruct> {
-        self.push_env();
-        let family_check_well_defined_result =
-            self.def_family_stmt_check_well_defined_body(def_family_stmt);
-        self.pop_env();
-        family_check_well_defined_result
+        self.run_in_local_env(|rt| rt.def_family_stmt_check_well_defined_body(def_family_stmt))
     }
 
     fn def_family_stmt_check_well_defined_body(

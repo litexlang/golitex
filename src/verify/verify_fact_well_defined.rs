@@ -178,10 +178,9 @@ impl Runtime {
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.push_env();
-        let result = self.verify_exist_fact_well_defined_body(&exist_fact, verify_state);
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| {
+            rt.verify_exist_fact_well_defined_body(exist_fact, verify_state)
+        })
     }
 
     fn verify_exist_fact_well_defined_body(
@@ -213,10 +212,9 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.push_env();
-        let result = self.verify_forall_fact_well_defined_body(&forall_fact, verify_state);
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| {
+            rt.verify_forall_fact_well_defined_body(forall_fact, verify_state)
+        })
     }
 
     fn verify_forall_fact_well_defined_body(
@@ -319,11 +317,9 @@ impl Runtime {
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.push_env();
-        let result =
-            self.verify_forall_fact_with_iff_well_defined_body(forall_fact_with_iff, verify_state);
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| {
+            rt.verify_forall_fact_with_iff_well_defined_body(forall_fact_with_iff, verify_state)
+        })
     }
 
     fn verify_forall_fact_with_iff_well_defined_body(

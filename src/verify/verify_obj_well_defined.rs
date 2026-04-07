@@ -707,10 +707,7 @@ impl Runtime {
         x: &SetBuilder,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.push_env();
-        let result = self.verify_set_builder_well_defined_body(x, verify_state);
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| rt.verify_set_builder_well_defined_body(x, verify_state))
     }
 
     fn verify_set_builder_well_defined_body(
@@ -760,10 +757,7 @@ impl Runtime {
         x: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.push_env();
-        let result = self.verify_fn_set_with_dom_well_defined_body(x, verify_state);
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| rt.verify_fn_set_with_dom_well_defined_body(x, verify_state))
     }
 
     fn verify_fn_set_with_dom_well_defined_body(
