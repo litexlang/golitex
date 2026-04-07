@@ -117,8 +117,8 @@ impl Runtime {
                 Obj::SetBuilder(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::FnSetWithParams(a) => match right {
-                Obj::FnSetWithParams(b) => a.to_string() == b.to_string(),
+            Obj::FnSet(a) => match right {
+                Obj::FnSet(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::StandardSet(StandardSet::NPos) => match right {

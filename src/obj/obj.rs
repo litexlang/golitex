@@ -25,7 +25,7 @@ pub enum Obj {
     PowerSet(PowerSet),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
-    FnSetWithParams(FnSet),
+    FnSet(FnSet),
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
@@ -407,7 +407,7 @@ impl FnSet {
         }
     }
 
-    pub fn params(&self) -> Vec<String> {
+    pub fn get_params(&self) -> Vec<String> {
         let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
             &self.params_def_with_set,
         ));
@@ -564,7 +564,7 @@ impl Obj {
             Obj::Number(x) => write!(f, "{}", x)?,
             Obj::ListSet(x) => write!(f, "{}", x)?,
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
-            Obj::FnSetWithParams(x) => write!(f, "{}", x)?,
+            Obj::FnSet(x) => write!(f, "{}", x)?,
             Obj::StandardSet(standard_set) => write!(f, "{}", standard_set)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,

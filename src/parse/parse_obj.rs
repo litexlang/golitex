@@ -127,7 +127,7 @@ impl Runtime {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(FN) {
             tb.skip_token(FN)?;
-            Ok(Obj::FnSetWithParams(
+            Ok(Obj::FnSet(
                 self.parse_fn_set_with_dom_without_fn_prefix(tb)?,
             ))
         } else {

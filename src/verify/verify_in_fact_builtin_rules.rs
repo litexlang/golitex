@@ -8,8 +8,8 @@ fn fn_set_with_params_equal_modulo_param_rename(
     a: &FnSet,
     b: &FnSet,
 ) -> Result<bool, RuntimeError> {
-    let pa = a.params();
-    let pb = b.params();
+    let pa = a.get_params();
+    let pb = b.get_params();
     if pa.len() != pb.len() {
         return Ok(false);
     }
@@ -394,17 +394,15 @@ impl Runtime {
                 list_set,
                 verify_state,
             ),
-            (Obj::Identifier(identifier), Obj::FnSetWithParams(expected_fn_set)) => self
+            (Obj::Identifier(identifier), Obj::FnSet(expected_fn_set)) => self
                 .verify_in_fact_identifier_in_fn_set_by_stored_definition(
                     identifier,
                     expected_fn_set,
                     in_fact,
                 ),
-            (_, Obj::FamilyObj(family_ty)) => self.verify_obj_satisfies_family(
-                in_fact.element.clone(),
-                family_ty,
-                verify_state,
-            ),
+            (_, Obj::FamilyObj(family_ty)) => {
+                self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
+            }
             (_, Obj::StructObj(struct_ty)) => self.verify_obj_satisfies_struct_param_type(
                 in_fact.element.clone(),
                 struct_ty,

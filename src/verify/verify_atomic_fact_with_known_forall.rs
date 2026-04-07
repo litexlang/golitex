@@ -272,7 +272,7 @@ impl Runtime {
             Obj::Cap(ref a) => Self::match_arg_when_left_is_cap(&a.left, given_arg),
             Obj::ListSet(ref left) => Self::match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(_) => Self::match_arg_when_left_is_set_builder(given_arg),
-            Obj::FnSetWithParams(ref left) => {
+            Obj::FnSet(ref left) => {
                 Self::match_arg_when_left_is_fn_set_with_params(left, given_arg)
             }
             Obj::StandardSet(StandardSet::NPos) => {
@@ -692,7 +692,7 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::FnSetWithParams(ref given) => {
+            Obj::FnSet(ref given) => {
                 if !left.dom_facts.is_empty() || !given.dom_facts.is_empty() {
                     return Self::match_arg_type_not_implemented("FnSetWithParams with dom_facts");
                 }
