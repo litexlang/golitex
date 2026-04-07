@@ -25,23 +25,12 @@ impl Runtime {
         true
     }
 
-    pub(crate) fn generate_one_unused_name_with_reserved(&self, reserved_names: &HashSet<String>) -> String {
-        const READABLE_GENERATED_NAME_CHARS: &str = "abcdefghijklmnopqrstuvwxyz";
-
-        for readable_round in 0..4096usize {
-            let readable_char = READABLE_GENERATED_NAME_CHARS
-                .chars()
-                .nth(readable_round % READABLE_GENERATED_NAME_CHARS.len())
-                .unwrap();
-            let candidate_name = if readable_round < READABLE_GENERATED_NAME_CHARS.len() {
-                format!("_{}_", readable_char)
-            } else {
-                format!(
-                    "_{}{}_",
-                    readable_char,
-                    readable_round / READABLE_GENERATED_NAME_CHARS.len()
-                )
-            };
+    pub(crate) fn generate_one_unused_name_with_reserved(
+        &self,
+        reserved_names: &HashSet<String>,
+    ) -> String {
+        for i in 1..=4096usize {
+            let candidate_name = format!("x{}", i);
             if self.generated_name_is_available_with_reserved(&candidate_name, reserved_names) {
                 return candidate_name;
             }
