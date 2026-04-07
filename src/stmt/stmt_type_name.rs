@@ -117,6 +117,18 @@ impl ByFnStmt {
     }
 }
 
+impl ByFamilyStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByFamilyStmt".to_string()
+    }
+}
+
+impl ByStructStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByStructStmt".to_string()
+    }
+}
+
 impl ByTupleStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByTupleStmt".to_string()

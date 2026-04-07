@@ -32,6 +32,8 @@ pub enum Stmt {
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),
     ByFnStmt(ByFnStmt),
+    ByFamilyStmt(ByFamilyStmt),
+    ByStructStmt(ByStructStmt),
     ByTuple(ByTupleStmt),
 }
 
@@ -73,6 +75,8 @@ impl fmt::Display for Stmt {
             Stmt::ByForStmt(x) => write!(f, "{}", x),
             Stmt::ByExtensionStmt(x) => write!(f, "{}", x),
             Stmt::ByFnStmt(x) => write!(f, "{}", x),
+            Stmt::ByFamilyStmt(x) => write!(f, "{}", x),
+            Stmt::ByStructStmt(x) => write!(f, "{}", x),
             Stmt::ByTuple(x) => write!(f, "{}", x),
         }
     }
@@ -110,6 +114,8 @@ impl Stmt {
             Stmt::ByForStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByExtensionStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByFamilyStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByStructStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTuple(stmt) => stmt.line_file.clone(),
         }
     }
@@ -145,6 +151,8 @@ impl Stmt {
             Stmt::ByForStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByExtensionStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByFamilyStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByStructStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
         }
     }
