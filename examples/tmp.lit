@@ -1,6 +1,4 @@
-abstract_prop p(a)
+struct p(a set):
+    s set
 
-fn(x R: x $in fn(x R)R) R = fn(x R: x $in fn(x R)R) R
-
-fn(x R: x $in {x R: x > 0}) = fn(x R: x $in {x R: x > 0})
-
+by struct: struct p(R)
