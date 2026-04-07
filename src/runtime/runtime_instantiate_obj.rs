@@ -43,7 +43,7 @@ impl Runtime {
             Obj::Cap(inner) => self.inst_cap(inner, param_to_arg_map),
             Obj::ListSet(inner) => self.inst_list_set(inner, param_to_arg_map),
             Obj::SetBuilder(inner) => self.inst_set_builder(inner, param_to_arg_map),
-            Obj::FnSetWithParams(inner) => self.inst_fn_set_with_params(inner, param_to_arg_map),
+            Obj::FnSet(inner) => self.inst_fn_set_with_params(inner, param_to_arg_map),
             Obj::StandardSet(standard_set) => self.inst_standard_set(standard_set),
             Obj::Cart(inner) => self.inst_cart(inner, param_to_arg_map),
             Obj::CartDim(inner) => self.inst_cart_dim(inner, param_to_arg_map),
@@ -466,7 +466,7 @@ impl Runtime {
             dom_facts
                 .push(self.inst_or_and_chain_atomic_fact(dom_fact, &filtered_param_to_arg_map)?);
         }
-        Ok(Obj::FnSetWithParams(FnSet {
+        Ok(Obj::FnSet(FnSet {
             params_def_with_set,
             dom_facts,
             ret_set: Box::new(

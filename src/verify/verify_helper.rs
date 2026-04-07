@@ -37,7 +37,7 @@ impl Runtime {
             ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(param_set) => {
                 match param_set {
-                    Obj::FnSetWithParams(_) | Obj::SetBuilder(_) => Err(
+                    Obj::FnSet(_) | Obj::SetBuilder(_) => Err(
                         RuntimeErrorStruct::exec_stmt_new(
                             None,
                             "fn set / set builder param type is not supported yet in verify_param_type_nonempty_if_required"

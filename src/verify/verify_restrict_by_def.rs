@@ -43,7 +43,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let restrict_to_ref = match &restrict_fact.obj_can_restrict_to_fn_set {
-            Obj::FnSetWithParams(r) => r,
+            Obj::FnSet(r) => r,
             _ => return Ok(None),
         };
 

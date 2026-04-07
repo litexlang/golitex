@@ -22,7 +22,7 @@ impl Runtime {
             return Ok(());
         }
 
-        let use_cache = !matches!(obj, Obj::FnSetWithParams(_) | Obj::SetBuilder(_));
+        let use_cache = !matches!(obj, Obj::FnSet(_) | Obj::SetBuilder(_));
 
         match obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
@@ -45,7 +45,7 @@ impl Runtime {
             Obj::Cap(x) => self.verify_cap_well_defined(x, verify_state),
             Obj::ListSet(x) => self.verify_list_set_well_defined(x, verify_state),
             Obj::SetBuilder(x) => self.verify_set_builder_well_defined(x, verify_state),
-            Obj::FnSetWithParams(x) => self.verify_fn_set_with_dom_well_defined(x, verify_state),
+            Obj::FnSet(x) => self.verify_fn_set_with_dom_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::NPos) => self.verify_n_pos_obj_well_defined(),
             Obj::StandardSet(StandardSet::N) => self.verify_n_obj_well_defined(),
             Obj::StandardSet(StandardSet::Q) => self.verify_q_obj_well_defined(),
@@ -233,7 +233,7 @@ impl Runtime {
             }
 
             the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
-                Obj::FnSetWithParams(e) => e,
+                Obj::FnSet(e) => e,
                 _ => {
                     return Err(
                         RuntimeError::new_well_defined_error_with_msg_previous_error_position(

@@ -97,7 +97,7 @@ impl Runtime {
         in_fact: &InFact,
     ) -> Result<InferResult, RuntimeError> {
         match &in_fact.set {
-            Obj::FnSetWithParams(fn_set_with_dom) => {
+            Obj::FnSet(fn_set_with_dom) => {
                 self.infer_membership_in_fn_set_from_in_fact(in_fact, fn_set_with_dom)
             }
             Obj::ListSet(list_set) => {
@@ -313,7 +313,7 @@ mod infer_membership_fn_set_tests {
         );
         let in_fact = InFact::new(
             Obj::Identifier(Identifier::new("f".to_string())),
-            Obj::FnSetWithParams(fn_set.clone()),
+            Obj::FnSet(fn_set.clone()),
             default_line_file(),
         );
         let infer = rt

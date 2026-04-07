@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 fn fn_set_equality_fact(left: &FnSet, right: &FnSet, line_file: LineFile) -> Fact {
     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Obj::FnSetWithParams(left.clone()),
-        Obj::FnSetWithParams(right.clone()),
+        Obj::FnSet(left.clone()),
+        Obj::FnSet(right.clone()),
         line_file,
     )))
 }
