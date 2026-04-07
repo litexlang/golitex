@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashSet;
 
 impl Runtime {
     pub fn exec_def_struct_stmt(
@@ -51,6 +52,22 @@ impl Runtime {
                 vec![],
             )
         })?;
+
+        // struct 的参数和 field 不应该冲突, 比如 struct p(a set): a set 这样。虽然本质上好像不影响，但这样会看起来很怪。
+        let param_names: HashSet<String> = stmt.get_params().into_iter().collect();
+        for (field_name, _) in stmt.fields.iter() {
+            if param_names.contains(field_name) {
+                return Err(RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                    Stmt::DefStructStmt(stmt.clone()),
+                    format!(
+                        "struct `{}`: field `{}` must not reuse a type parameter name",
+                        stmt.name, field_name
+                    ),
+                    None,
+                    vec![],
+                ));
+            }
+        }
 
         for dom_fact in stmt.dom_facts.iter() {
             self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
