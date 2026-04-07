@@ -1,15 +1,5 @@
-"""
-have fn by induc from 0: f(x Z: x >= 0) R:
-    case x = 0: 1
-    case x = 1: 1
-    case x = param_2 + 2: f(x - 1) + f(x - 2)
-"""
-
-have fn by induc from 0: f(x Z: x >= 0) R:
-    case x = 0: 1
-    case x = 1: 1
-    case x = param_2 + 2:
-        case x % 2 = 0: f(x / 2)
-        case x % 2 = 1: f(x / 2) + f(x / 2 + 1)
-
-    
+forall r, s Q:
+    s + 3 >= r
+    s + r <= 3
+    =>:
+        (s + r) - (s + 3) <= 3 - r

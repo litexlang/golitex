@@ -9,10 +9,17 @@ impl Obj {
                 let left_number = add.left.evaluate_to_normalized_decimal_number();
                 let right_number = add.right.evaluate_to_normalized_decimal_number();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    Some(Number::new(add_decimal_str_and_normalize(
-                        &left_number.normalized_value,
-                        &right_number.normalized_value,
-                    )))
+                    let a = &left_number.normalized_value;
+                    let b = &right_number.normalized_value;
+                    let sum = if normalized_decimal_str_is_non_negative(a)
+                        && normalized_decimal_str_is_non_negative(b)
+                    {
+                        // `add_decimal_str_and_normalize` 仅适用于两操作数非负（见函数注释）
+                        add_decimal_str_and_normalize(a, b)
+                    } else {
+                        add_signed_decimal_str(a, b)
+                    };
+                    Some(Number::new(sum))
                 } else {
                     None
                 }
@@ -21,10 +28,17 @@ impl Obj {
                 let left_number = sub.left.evaluate_to_normalized_decimal_number();
                 let right_number = sub.right.evaluate_to_normalized_decimal_number();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    Some(Number::new(sub_decimal_str_and_normalize(
-                        &left_number.normalized_value,
-                        &right_number.normalized_value,
-                    )))
+                    let a = &left_number.normalized_value;
+                    let b = &right_number.normalized_value;
+                    let diff = if normalized_decimal_str_is_non_negative(a)
+                        && normalized_decimal_str_is_non_negative(b)
+                    {
+                        // `sub_decimal_str_and_normalize` 的竖式比较同样按非负量设计
+                        sub_decimal_str_and_normalize(a, b)
+                    } else {
+                        sub_signed_decimal_str(a, b)
+                    };
+                    Some(Number::new(diff))
                 } else {
                     None
                 }
@@ -115,6 +129,11 @@ impl Obj {
             _ => return false,
         }
     }
+}
+
+/// 规范化后的十进制串是否表示非负数（无 `-` 前缀；`-0` 若已规范为 `0` 亦视为非负）。
+fn normalized_decimal_str_is_non_negative(s: &str) -> bool {
+    !s.trim().starts_with('-')
 }
 
 fn split_sign_and_magnitude(number_string: &str) -> (bool, String) {
