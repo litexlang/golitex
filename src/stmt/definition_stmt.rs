@@ -7,6 +7,13 @@ use std::fmt;
 /// `have fn by induc from`：前若干条须为 `param = from`, `param = from + 1`, …；最后一条须为
 /// `param = param_2 + len(special_cases_equal_tos)`（`param_2` 与 `from` 同侧），且要么 `: obj`（`last_case_equal_to`），要么无右值而
 /// 跟子 `case` 列表（`last_case_cases`）。
+/// have fn by induc from 0: f(x Z: x >= 0) R:
+// case x = 0: 1
+// case x = 1: 1
+// case x = param_2 + 2:
+//     case x % 2 = 0: f(x / 2)
+//     case x % 2 = 1: f(x / 2) + f(x / 2 + 1)
+
 #[derive(Clone)]
 pub struct HaveFnByInducStmt {
     pub induc_from: Obj,
@@ -519,11 +526,8 @@ impl HaveFnByInducStmt {
             }
             (None, Some(last_pairs)) => {
                 for (when, eq_to) in last_pairs {
-                    let merged = merge_two_and_chain_clauses(
-                        step.clone(),
-                        when.clone(),
-                        line_file.clone(),
-                    );
+                    let merged =
+                        merge_two_and_chain_clauses(step.clone(), when.clone(), line_file.clone());
                     cases.push(merged);
                     equal_tos.push(eq_to.clone());
                 }

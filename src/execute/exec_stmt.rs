@@ -3,25 +3,29 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
         match stmt {
-            Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(RuntimeError::from),
-            Stmt::DefPropStmt(d) => self.def_prop_stmt(d).map_err(RuntimeError::from),
-            Stmt::DefAbstractPropStmt(d) => {
-                self.def_abstract_prop_stmt(d).map_err(RuntimeError::from)
-            }
-            Stmt::HaveObjInNonemptySetStmt(d) => self
-                .have_obj_in_nonempty_set_or_param_type_stmt(d)
+            Stmt::DefLetStmt(d) => self.exec_let_stmt(d).map_err(RuntimeError::from),
+            Stmt::DefPropStmt(d) => self.exec_def_prop_stmt(d).map_err(RuntimeError::from),
+            Stmt::DefAbstractPropStmt(d) => self
+                .exec_def_abstract_prop_stmt(d)
                 .map_err(RuntimeError::from),
-            Stmt::HaveObjEqualStmt(d) => self.have_obj_equal_stmt(d).map_err(RuntimeError::from),
-            Stmt::HaveExistObjStmt(d) => self.have_exist_obj_stmt(d).map_err(RuntimeError::from),
-            Stmt::HaveFnEqualStmt(d) => self.have_fn_equal_stmt(d).map_err(RuntimeError::from),
+            Stmt::HaveObjInNonemptySetStmt(d) => self
+                .exec_have_obj_in_nonempty_set_or_param_type_stmt(d)
+                .map_err(RuntimeError::from),
+            Stmt::HaveObjEqualStmt(d) => {
+                self.exec_have_obj_equal_stmt(d).map_err(RuntimeError::from)
+            }
+            Stmt::HaveExistObjStmt(d) => {
+                self.exec_have_exist_obj_stmt(d).map_err(RuntimeError::from)
+            }
+            Stmt::HaveFnEqualStmt(d) => self.exec_have_fn_equal_stmt(d).map_err(RuntimeError::from),
             Stmt::HaveFnEqualCaseByCaseStmt(d) => self
-                .have_fn_equal_case_by_case_stmt(d)
+                .exec_have_fn_equal_case_by_case_stmt(d)
                 .map_err(RuntimeError::from),
             Stmt::HaveFnByInducStmt(d) => self
-                .have_fn_by_induc_stmt(d)
+                .exec_have_fn_by_induc_stmt(d)
                 .map_err(RuntimeError::from),
-            Stmt::DefStructStmt(d) => self.def_struct_stmt(d).map_err(RuntimeError::from),
-            Stmt::DefFamilyStmt(d) => self.def_family_stmt(d).map_err(RuntimeError::from),
+            Stmt::DefStructStmt(d) => self.exec_def_struct_stmt(d).map_err(RuntimeError::from),
+            Stmt::DefFamilyStmt(d) => self.exec_def_family_stmt(d).map_err(RuntimeError::from),
             Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d).map_err(RuntimeError::from),
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt).map_err(RuntimeError::from),
             Stmt::Fact(fact) => self.exec_fact(fact).map_err(RuntimeError::from),

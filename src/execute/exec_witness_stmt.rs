@@ -99,7 +99,7 @@ impl Runtime {
             line_file: stmt.line_file.clone(),
         };
 
-        match self.have_obj_equal_stmt(&have_obj_equal_stmt) {
+        match self.exec_have_obj_equal_stmt(&have_obj_equal_stmt) {
             Ok(_binding_result) => {}
             Err(exec_stmt_error) => {
                 return Err(RuntimeError::from(exec_stmt_error));

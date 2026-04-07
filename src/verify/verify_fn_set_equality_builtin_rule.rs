@@ -1,11 +1,7 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-fn fn_set_equality_fact(
-    left: &FnSet,
-    right: &FnSet,
-    line_file: LineFile,
-) -> Fact {
+fn fn_set_equality_fact(left: &FnSet, right: &FnSet, line_file: LineFile) -> Fact {
     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::FnSetWithParams(left.clone()),
         Obj::FnSetWithParams(right.clone()),
@@ -33,12 +29,14 @@ fn fn_set_equality_verified_by_builtin_rules_result(
     right: &FnSet,
     line_file: LineFile,
 ) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-        fn_set_equality_fact(left, right, line_file),
-        InferResult::new(),
-        "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
-        Vec::new(),
-    ))
+    NonErrStmtExecResult::FactualStmtSuccess(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            fn_set_equality_fact(left, right, line_file),
+            InferResult::new(),
+            "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
+            Vec::new(),
+        ),
+    )
 }
 
 impl Runtime {
@@ -55,24 +53,22 @@ impl Runtime {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
 
-        let left_implies_right = self
-            .verify_fn_set_with_params_directionally_in_local_env(
-                left,
-                right,
-                line_file.clone(),
-                verify_state,
-            )?;
+        let left_implies_right = self.verify_fn_set_with_params_directionally_in_local_env(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )?;
         if !left_implies_right {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
 
-        let right_implies_left = self
-            .verify_fn_set_with_params_directionally_in_local_env(
-                right,
-                left,
-                line_file.clone(),
-                verify_state,
-            )?;
+        let right_implies_left = self.verify_fn_set_with_params_directionally_in_local_env(
+            right,
+            left,
+            line_file.clone(),
+            verify_state,
+        )?;
         if !right_implies_left {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
@@ -107,8 +103,10 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        let target_flat_param_names = ParamGroupWithSet::collect_param_names(&target.params_def_with_set);
-        let generated_param_names = self.generate_random_unused_names(target_flat_param_names.len());
+        let target_flat_param_names =
+            ParamGroupWithSet::collect_param_names(&target.params_def_with_set);
+        let generated_param_names =
+            self.generate_random_unused_names(target_flat_param_names.len());
         let source_param_to_generated_arg_map = self
             .define_directional_source_fn_set_params_in_local_env(
                 source,
@@ -116,8 +114,10 @@ impl Runtime {
                 target,
                 line_file.clone(),
             )?;
-        let target_param_to_generated_arg_map =
-            Self::build_param_to_generated_arg_map(&target_flat_param_names, &generated_param_names);
+        let target_param_to_generated_arg_map = Self::build_param_to_generated_arg_map(
+            &target_flat_param_names,
+            &generated_param_names,
+        );
 
         self.assume_directional_source_fn_set_dom_facts_in_local_env(
             source,
@@ -146,8 +146,9 @@ impl Runtime {
             return Ok(false);
         }
 
-        let source_ret_set = self.inst_obj(&source.ret_set, &source_param_to_generated_arg_map).map_err(
-            |e| {
+        let source_ret_set = self
+            .inst_obj(&source.ret_set, &source_param_to_generated_arg_map)
+            .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
                     target,
@@ -155,10 +156,10 @@ impl Runtime {
                     "failed to instantiate source ret set for fnset equality check".to_string(),
                     Some(e),
                 )
-            },
-        )?;
-        let target_ret_set = self.inst_obj(&target.ret_set, &target_param_to_generated_arg_map).map_err(
-            |e| {
+            })?;
+        let target_ret_set = self
+            .inst_obj(&target.ret_set, &target_param_to_generated_arg_map)
+            .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
                     target,
@@ -166,8 +167,7 @@ impl Runtime {
                     "failed to instantiate target ret set for fnset equality check".to_string(),
                     Some(e),
                 )
-            },
-        )?;
+            })?;
         let ret_equal_fact = EqualFact::new(source_ret_set, target_ret_set, line_file);
         let ret_equal_result = self.verify_equal_fact(&ret_equal_fact, verify_state)?;
         Ok(ret_equal_result.is_true())
@@ -216,8 +216,10 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
-            let generated_param_def =
-                ParamGroupWithSet::new(generated_names_for_current_group.clone(), instantiated_param_set);
+            let generated_param_def = ParamGroupWithSet::new(
+                generated_names_for_current_group.clone(),
+                instantiated_param_set,
+            );
             self.define_params_with_set(&generated_param_def)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
@@ -350,10 +352,8 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
-            let verify_result = self.verify_or_and_chain_atomic_fact(
-                &instantiated_dom_fact,
-                verify_state,
-            )?;
+            let verify_result =
+                self.verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
             if !verify_result.is_true() {
                 return Ok(false);
             }
