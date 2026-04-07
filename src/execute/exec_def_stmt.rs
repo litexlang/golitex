@@ -581,7 +581,7 @@ impl Runtime {
             .collect();
 
         let mut infer_result = self
-            .store_args_satisfy_param_def(
+            .store_args_satisfy_param_type_when_not_defining_new_identifiers(
                 &exist_fact_in_have_obj_stmt.params_def_with_type,
                 &new_obj_names_as_identifier_objs,
                 have_exist_obj_stmt.line_file.clone(),

@@ -218,7 +218,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
 
         let param_type_infer = self
-            .store_args_satisfy_param_def(
+            .store_args_satisfy_param_type_when_not_defining_new_identifiers(
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 normal_atomic_fact.line_file.clone(),
