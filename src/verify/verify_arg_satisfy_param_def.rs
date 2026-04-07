@@ -9,10 +9,20 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match param_type {
             ParamType::Struct(struct_ty) => {
-                self.verify_obj_satisfies_struct_param_type(obj, struct_ty, verify_state)
+                let fact = AtomicFact::InFact(InFact::new(
+                    obj,
+                    Obj::StructObj(struct_ty.clone()),
+                    default_line_file(),
+                ));
+                self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::Family(family_ty) => {
-                self.verify_obj_satisfies_family(obj, family_ty, verify_state)
+                let fact = AtomicFact::InFact(InFact::new(
+                    obj,
+                    Obj::FamilyObj(family_ty.clone()),
+                    default_line_file(),
+                ));
+                self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::Obj(set_obj) => {
                 let fact =

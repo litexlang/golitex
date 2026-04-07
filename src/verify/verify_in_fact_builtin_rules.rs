@@ -400,6 +400,16 @@ impl Runtime {
                     expected_fn_set,
                     in_fact,
                 ),
+            (_, Obj::FamilyObj(family_ty)) => self.verify_obj_satisfies_family(
+                in_fact.element.clone(),
+                family_ty,
+                verify_state,
+            ),
+            (_, Obj::StructObj(struct_ty)) => self.verify_obj_satisfies_struct_param_type(
+                in_fact.element.clone(),
+                struct_ty,
+                verify_state,
+            ),
             (_, target_set_obj) => {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
