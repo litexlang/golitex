@@ -2,6 +2,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt;
 
+// 虽然family 和 struct 本质上也是Obj，但他们的作为parameter type 出现用来定义新的identifier的时候，太特殊了，所以单独定义一个enum来表示。
 #[derive(Clone)]
 pub enum ParamType {
     Set(Set),
