@@ -27,9 +27,6 @@ pub enum StructFieldType {
     FiniteSet(FiniteSet),
     NonemptySet(NonemptySet),
     Family(FamilyParamType),
-    /// 函数空间类型（仅出现在字段 / 参数类型位置，不由 `ParamType::Obj` 包装）。
-    FnSet(FnSet),
-    SetBuilder(SetBuilder),
 }
 
 impl StructFieldType {
@@ -40,8 +37,6 @@ impl StructFieldType {
             StructFieldType::FiniteSet(f) => ParamType::FiniteSet(f.clone()),
             StructFieldType::NonemptySet(n) => ParamType::NonemptySet(n.clone()),
             StructFieldType::Family(f) => ParamType::Family(f.clone()),
-            StructFieldType::FnSet(f) => ParamType::FnSet(f.clone()),
-            StructFieldType::SetBuilder(s) => ParamType::SetBuilder(s.clone()),
         }
     }
 }
@@ -134,30 +129,6 @@ pub enum ParamType {
     Obj(Obj),
     Family(FamilyParamType),
     Struct(StructParamType),
-    /// 函数空间类型（仅出现在参数 / 字段类型位置）。
-    FnSet(FnSet),
-    /// 内涵集 `{x S : ...}`（仅出现在参数 / 字段类型位置）。
-    SetBuilder(SetBuilder),
-}
-
-/// Instantiated family type: `family` name followed by argument objects (often sets).
-#[derive(Clone)]
-pub struct FamilyParamType {
-    pub name: IdentifierOrIdentifierWithMod,
-    pub params: Vec<Obj>,
-}
-
-/// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
-#[derive(Clone)]
-pub struct StructParamType {
-    pub name: IdentifierOrIdentifierWithMod,
-    pub args: Vec<Obj>,
-}
-
-impl StructParamType {
-    pub fn new(name: IdentifierOrIdentifierWithMod, args: Vec<Obj>) -> Self {
-        StructParamType { name, args }
-    }
 }
 
 #[derive(Clone)]
@@ -194,26 +165,8 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
-            ParamType::Family(family) => {
-                write!(
-                    f,
-                    "{} {}({})",
-                    FAMILY,
-                    family.name,
-                    vec_to_string_join_by_comma(&family.params)
-                )
-            }
-            ParamType::Struct(struct_ty) => {
-                write!(
-                    f,
-                    "{} {}({})",
-                    STRUCT,
-                    struct_ty.name,
-                    vec_to_string_join_by_comma(&struct_ty.args)
-                )
-            }
-            ParamType::FnSet(fn_set) => write!(f, "{}", fn_set),
-            ParamType::SetBuilder(sb) => write!(f, "{}", sb),
+            ParamType::Family(family) => write!(f, "{}", family),
+            ParamType::Struct(struct_ty) => write!(f, "{}", struct_ty),
         }
     }
 }

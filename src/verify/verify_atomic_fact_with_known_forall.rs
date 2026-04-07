@@ -325,6 +325,8 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNz) => Self::match_arg_when_left_is_q_nz(given_arg),
             Obj::StandardSet(StandardSet::ZNz) => Self::match_arg_when_left_is_z_nz(given_arg),
             Obj::StandardSet(StandardSet::RNz) => Self::match_arg_when_left_is_r_nz(given_arg),
+            Obj::FamilyObj(_) => Self::match_arg_type_not_implemented("FamilyObj"),
+            Obj::StructObj(_) => Self::match_arg_type_not_implemented("StructObj"),
         }
     }
 

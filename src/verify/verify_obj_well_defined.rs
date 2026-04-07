@@ -70,6 +70,12 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNz) => self.verify_q_nz_well_defined(),
             Obj::StandardSet(StandardSet::ZNz) => self.verify_z_nz_well_defined(),
             Obj::StandardSet(StandardSet::RNz) => self.verify_r_nz_well_defined(),
+            Obj::FamilyObj(family) => {
+                self.verify_param_type_family_well_defined(family, verify_state)
+            }
+            Obj::StructObj(struct_ty) => {
+                self.verify_param_type_struct_well_defined(struct_ty, verify_state)
+            }
         }?;
 
         if use_cache {
@@ -1169,14 +1175,6 @@ impl Runtime {
             ParamType::Struct(struct_ty) => {
                 return self.verify_param_type_struct_well_defined(struct_ty, verify_state)
             }
-            ParamType::FnSet(fn_set) => self.verify_obj_well_defined_and_store_cache(
-                &Obj::FnSetWithParams(fn_set.clone()),
-                verify_state,
-            ),
-            ParamType::SetBuilder(sb) => self.verify_obj_well_defined_and_store_cache(
-                &Obj::SetBuilder(sb.clone()),
-                verify_state,
-            ),
         }
     }
 
