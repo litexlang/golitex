@@ -5,7 +5,7 @@ use crate::{
 use std::fmt;
 
 /// `have fn by induc from`：前若干条须为 `param = from`, `param = from + 1`, …；最后一条须为
-/// `param >= from + len(special_cases_equal_tos)`，且要么 `: obj`（`last_case_equal_to`），要么无右值而
+/// `param = param_2 + len(special_cases_equal_tos)`（`param_2` 与 `from` 同侧），且要么 `: obj`（`last_case_equal_to`），要么无右值而
 /// 跟子 `case` 列表（`last_case_cases`）。
 #[derive(Clone)]
 pub struct HaveFnByInducStmt {
@@ -490,7 +490,7 @@ impl HaveFnByInducStmt {
         }
     }
 
-    /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（含归纳步上 `>=` 与可选子条件的合取）。
+    /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（归纳步为 `param = from + n` 与可选子条件的合取）。
     pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
         let param_name = self.fn_set.params()[0].clone();
@@ -507,21 +507,20 @@ impl HaveFnByInducStmt {
             cases.push(when);
             equal_tos.push(self.special_cases_equal_tos[i].clone());
         }
-        let ge = GreaterEqualFact::new(
+        let step = AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
             left_id.clone(),
             induc_obj_plus_offset(&self.induc_from, n),
             line_file.clone(),
-        );
-        let ge_chain = AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(ge));
+        )));
         match (&self.last_case_equal_to, &self.last_case_cases) {
             (Some(eq), None) => {
-                cases.push(ge_chain);
+                cases.push(step);
                 equal_tos.push(eq.clone());
             }
             (None, Some(last_pairs)) => {
                 for (when, eq_to) in last_pairs {
                     let merged = merge_two_and_chain_clauses(
-                        ge_chain.clone(),
+                        step.clone(),
                         when.clone(),
                         line_file.clone(),
                     );
