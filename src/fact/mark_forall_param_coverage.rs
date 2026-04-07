@@ -142,7 +142,7 @@ fn mark_forall_param_coverage_in_obj(
                 );
             }
         }
-        Obj::FnSetWithParams(fn_set) => {
+        Obj::FnSet(fn_set) => {
             for param_def_with_set in fn_set.params_def_with_set.iter() {
                 mark_forall_param_coverage_in_obj(
                     &param_def_with_set.set,

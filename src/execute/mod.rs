@@ -6,6 +6,7 @@ mod exec_def_struct;
 mod exec_eval_stmt;
 mod exec_fact_stmt;
 mod exec_family_def;
+mod exec_have_fn_by_induc;
 mod exec_know_stmt;
 mod exec_prove_stmt;
 mod exec_stmt;

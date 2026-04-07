@@ -462,7 +462,7 @@ impl Runtime {
 
         let function_identifier_obj =
             Obj::Identifier(Identifier::new(have_fn_equal_stmt.name.clone()));
-        let function_set_obj = Obj::FnSetWithParams(have_fn_equal_stmt.fn_set_with_params.clone());
+        let function_set_obj = Obj::FnSet(have_fn_equal_stmt.fn_set_with_params.clone());
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,
             function_set_obj,
@@ -546,7 +546,7 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
 
         // 证明 fn_set 是 well-defined 的
-        let function_set_obj = Obj::FnSetWithParams(have_fn_equal_stmt.fn_set_with_params.clone());
+        let function_set_obj = Obj::FnSet(have_fn_equal_stmt.fn_set_with_params.clone());
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
@@ -658,7 +658,7 @@ impl Runtime {
             have_fn_equal_case_by_case_stmt.name.clone(),
         ));
         let function_set_obj =
-            Obj::FnSetWithParams(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());
+            Obj::FnSet(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,
             function_set_obj,
@@ -771,7 +771,7 @@ impl Runtime {
 
         // 证明 fn_set 是 well-defined 的
         let function_set_obj =
-            Obj::FnSetWithParams(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());
+            Obj::FnSet(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());
         self.verify_obj_well_defined_and_store_cache(
             &function_set_obj,
             &VerifyState::new(0, false),

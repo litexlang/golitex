@@ -216,8 +216,8 @@ impl Runtime {
     }
 
     /// `have fn by` 已消费；解析 `induc from <Obj>: <name> { ... } ret = : case ...`。
-    /// 前若干条须为 `param = from`, `param = from + 1`, …；最后一条须为 `param = param_2 + n`（n 为特殊 case 个数），
-    /// 其中 `param_2` 为固定辅助名；且要么行末 `: obj`，要么 `:` 后换行跟子块 `case when: obj`。
+    /// 前若干条须为 `param = from`, `param = from + 1`, …；最后一条须为 `param >= induc_from + n`（n 为特殊 case 个数）；
+    /// 且要么行末 `: obj`，要么 `:` 后换行跟子块 `case when: obj`。
     fn parse_have_fn_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(INDUC)?;
         tb.skip_token(FROM)?;
@@ -300,19 +300,14 @@ impl Runtime {
             }
         }
 
-        self.insert_parsed_name_into_top_parsing_time_name_scope(
-            INDUC_PARAM_2_NAME,
-            tb.line_file.clone(),
-        )?;
-
         let last_block = &mut tb.body[num_blocks - 1];
         last_block.skip_token(CASE)?;
-        // `INDUC_PARAM_2_NAME` 已写入 `parsing_time_name_scope`（见上），此处解析的 `when` 里可出现 `param_2`。
         let last_when = self.parse_and_chain_atomic_fact(last_block)?;
         last_block.skip_token(COLON)?;
-        Self::verify_have_fn_by_induc_last_equal_when(
+        Self::verify_have_fn_by_induc_last_greater_equal_when(
             &last_when,
             &param_name,
+            &induc_from,
             num_special,
             last_block.line_file.clone(),
         )?;
@@ -455,45 +450,21 @@ impl Runtime {
         Ok(())
     }
 
-    fn verify_have_fn_by_induc_last_equal_when(
+    fn verify_have_fn_by_induc_last_greater_equal_when(
         when: &AndChainAtomicFact,
         param_name: &str,
+        induc_from: &Obj,
         len_special: usize,
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        let eq = match when {
-            AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(eq)) => eq,
-            _ => {
-                return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: last case `when` must be `param = param_2 + n`"
-                            .to_string(),
-                        line_file,
-                        None,
-                    ),
-                );
-            }
-        };
-        match &eq.left {
-            Obj::Identifier(id) if id.name == param_name => {}
-            _ => {
-                return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: last case equality left must be the parameter name"
-                            .to_string(),
-                        line_file,
-                        None,
-                    ),
-                );
-            }
-        }
-        let (base_id, offset_num) = match &eq.right {
-            Obj::Add(a) => match (&*a.left, &*a.right) {
-                (Obj::Identifier(id), Obj::Number(num)) => (id, num),
+        let ge = match when {
+            AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(ge)) => ge,
+            AndChainAtomicFact::AndFact(af) if af.facts.len() == 1 => match &af.facts[0] {
+                AtomicFact::GreaterEqualFact(ge) => ge,
                 _ => {
                     return Err(
                         RuntimeError::new_parse_error_with_msg_position_previous_error(
-                            "have fn by induc from: last case right must be `param_2 + <n>`"
+                            "have fn by induc from: last case `when` must be `param >= induc_from + <len_of_special_cases>`"
                                 .to_string(),
                             line_file,
                             None,
@@ -504,7 +475,7 @@ impl Runtime {
             _ => {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: last case right must be `param_2 + <n>`"
+                        "have fn by induc from: last case `when` must be `param >= induc_from + <len_of_special_cases>`"
                             .to_string(),
                         line_file,
                         None,
@@ -512,25 +483,26 @@ impl Runtime {
                 );
             }
         };
-        if base_id.name != INDUC_PARAM_2_NAME {
-            return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!(
-                        "have fn by induc from: last case must use `{}` as the base (got {})",
-                        INDUC_PARAM_2_NAME, base_id.name
+        match &ge.left {
+            Obj::Identifier(id) if id.name == param_name => {}
+            _ => {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "have fn by induc from: last case `>=` left must be the parameter name"
+                            .to_string(),
+                        line_file,
+                        None,
                     ),
-                    line_file,
-                    None,
-                ),
-            );
+                );
+            }
         }
-        if offset_num.normalized_value != len_special.to_string() {
+        let expected = induc_obj_plus_offset(induc_from, len_special);
+        if ge.right.to_string() != expected.to_string() {
             return Err(
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
                     format!(
-                        "have fn by induc from: last case offset must be {} (special case count) (got {})",
-                        len_special,
-                        offset_num.normalized_value
+                        "have fn by induc from: last case must be `{} >= {}` (got right-hand side {})",
+                        param_name, expected, ge.right
                     ),
                     line_file,
                     None,

@@ -4,16 +4,6 @@ use crate::{
 };
 use std::fmt;
 
-/// `have fn by induc from`：前若干条须为 `param = from`, `param = from + 1`, …；最后一条须为
-/// `param = param_2 + len(special_cases_equal_tos)`（`param_2` 与 `from` 同侧），且要么 `: obj`（`last_case_equal_to`），要么无右值而
-/// 跟子 `case` 列表（`last_case_cases`）。
-/// have fn by induc from 0: f(x Z: x >= 0) R:
-// case x = 0: 1
-// case x = 1: 1
-// case x = param_2 + 2:
-//     case x % 2 = 0: f(x / 2)
-//     case x % 2 = 1: f(x / 2) + f(x / 2 + 1)
-
 #[derive(Clone)]
 pub struct HaveFnByInducStmt {
     pub induc_from: Obj,
@@ -360,7 +350,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
                         case,
                         COMMA,
                         self.name,
-                        braced_vec_to_string(&self.fn_set_with_params.params()),
+                        braced_vec_to_string(&self.fn_set_with_params.get_params()),
                         EQUAL,
                         self.equal_tos[i]
                     ),
@@ -419,7 +409,7 @@ impl fmt::Display for HaveFnByInducStmt {
                         case,
                         COMMA,
                         self.name,
-                        braced_vec_to_string(&self.fn_set.params()),
+                        braced_vec_to_string(&self.fn_set.get_params()),
                         EQUAL,
                         flat.equal_tos[i]
                     ),
@@ -497,10 +487,10 @@ impl HaveFnByInducStmt {
         }
     }
 
-    /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（归纳步为 `param = from + n` 与可选子条件的合取）。
+    /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（源码最后一条为 `param >= from + n`，此处仍展开为 `param = from + n` 与可选子条件的合取）。
     pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
-        let param_name = self.fn_set.params()[0].clone();
+        let param_name = self.fn_set.get_params()[0].clone();
         let left_id = Obj::Identifier(Identifier::new(param_name));
         let n = self.special_cases_equal_tos.len();
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();

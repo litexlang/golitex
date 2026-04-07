@@ -137,7 +137,7 @@ impl Runtime {
                 )
             })?;
 
-        let fn_set_param_names = fn_set_with_dom.params();
+        let fn_set_param_names = fn_set_with_dom.get_params();
         if fn_set_param_names.len() != def_algo_stmt.params.len() {
             return Err(
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
