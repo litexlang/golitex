@@ -37,6 +37,52 @@ pub enum Obj {
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
+    FamilyObj(FamilyParamType),
+    StructObj(StructParamType),
+}
+
+/// Instantiated family type: `family` name followed by argument objects (often sets).
+#[derive(Clone)]
+pub struct FamilyParamType {
+    pub name: IdentifierOrIdentifierWithMod,
+    pub params: Vec<Obj>,
+}
+
+/// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
+#[derive(Clone)]
+pub struct StructParamType {
+    pub name: IdentifierOrIdentifierWithMod,
+    pub args: Vec<Obj>,
+}
+
+impl StructParamType {
+    pub fn new(name: IdentifierOrIdentifierWithMod, args: Vec<Obj>) -> Self {
+        StructParamType { name, args }
+    }
+}
+
+impl fmt::Display for FamilyParamType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}({})",
+            FAMILY,
+            self.name,
+            vec_to_string_join_by_comma(&self.params)
+        )
+    }
+}
+
+impl fmt::Display for StructParamType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}({})",
+            STRUCT,
+            self.name,
+            vec_to_string_join_by_comma(&self.args)
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -531,6 +577,8 @@ impl Obj {
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
+            Obj::FamilyObj(x) => write!(f, "{}", x)?,
+            Obj::StructObj(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;

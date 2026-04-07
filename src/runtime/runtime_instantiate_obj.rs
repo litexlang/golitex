@@ -56,6 +56,26 @@ impl Runtime {
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map),
             Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map),
             Obj::ObjAtIndex(inner) => self.inst_obj_at_index(inner, param_to_arg_map),
+            Obj::FamilyObj(family) => {
+                let mut params = Vec::with_capacity(family.params.len());
+                for p in family.params.iter() {
+                    params.push(self.inst_obj(p, param_to_arg_map)?);
+                }
+                Ok(Obj::FamilyObj(FamilyParamType {
+                    name: family.name.clone(),
+                    params,
+                }))
+            }
+            Obj::StructObj(s) => {
+                let mut args = Vec::with_capacity(s.args.len());
+                for a in s.args.iter() {
+                    args.push(self.inst_obj(a, param_to_arg_map)?);
+                }
+                Ok(Obj::StructObj(StructParamType {
+                    name: s.name.clone(),
+                    args,
+                }))
+            }
         }
     }
 
@@ -596,31 +616,6 @@ impl Runtime {
                     name: struct_ty.name.clone(),
                     args: params,
                 }))
-            }
-            ParamType::FnSet(fn_set) => {
-                let inst = self.inst_fn_set_with_params(fn_set, param_to_arg_map)?;
-                match inst {
-                    Obj::FnSetWithParams(f) => Ok(ParamType::FnSet(f)),
-                    _ => Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                        None,
-                        "inst_param_type: inst_fn_set_with_params did not return FnSetWithParams"
-                            .to_string(),
-                        default_line_file(),
-                        None,
-                    ))),
-                }
-            }
-            ParamType::SetBuilder(sb) => {
-                let inst = self.inst_set_builder(sb, param_to_arg_map)?;
-                match inst {
-                    Obj::SetBuilder(s) => Ok(ParamType::SetBuilder(s)),
-                    _ => Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                        None,
-                        "inst_param_type: inst_set_builder did not return SetBuilder".to_string(),
-                        default_line_file(),
-                        None,
-                    ))),
-                }
             }
         }
     }

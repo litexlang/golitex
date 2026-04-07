@@ -208,22 +208,6 @@ impl Runtime {
                     }
                     _ => return Ok(None),
                 },
-                ParamType::FnSet(ref f) => match &other_param_def.param_type {
-                    ParamType::FnSet(other_f) => {
-                        matched_args.push((
-                            Obj::FnSetWithParams(f.clone()),
-                            Obj::FnSetWithParams(other_f.clone()),
-                        ));
-                    }
-                    _ => return Ok(None),
-                },
-                ParamType::SetBuilder(ref s) => match &other_param_def.param_type {
-                    ParamType::SetBuilder(other_s) => {
-                        matched_args
-                            .push((Obj::SetBuilder(s.clone()), Obj::SetBuilder(other_s.clone())));
-                    }
-                    _ => return Ok(None),
-                },
             }
         }
         for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {

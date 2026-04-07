@@ -1,4 +1,0 @@
-struct p(a set):
-    s set
-
-by struct: struct p(R)

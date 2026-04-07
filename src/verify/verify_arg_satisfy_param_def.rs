@@ -33,22 +33,6 @@ impl Runtime {
                     AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(obj, default_line_file()));
                 self.verify_atomic_fact(&fact, verify_state)
             }
-            ParamType::FnSet(fn_set) => {
-                let fact = AtomicFact::InFact(InFact::new(
-                    obj,
-                    Obj::FnSetWithParams(fn_set.clone()),
-                    default_line_file(),
-                ));
-                self.verify_atomic_fact(&fact, verify_state)
-            }
-            ParamType::SetBuilder(sb) => {
-                let fact = AtomicFact::InFact(InFact::new(
-                    obj,
-                    Obj::SetBuilder(sb.clone()),
-                    default_line_file(),
-                ));
-                self.verify_atomic_fact(&fact, verify_state)
-            }
         }
     }
 

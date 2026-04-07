@@ -181,39 +181,7 @@ impl Runtime {
             ParamType::Struct(struct_ty) => {
                 self.define_parameter_by_binding_struct(name, struct_ty)
             }
-            ParamType::FnSet(fn_set) => self.define_parameter_by_binding_fn_set(name, fn_set),
-            ParamType::SetBuilder(set_builder) => {
-                self.define_parameter_by_binding_set_builder(name, set_builder)
-            }
         }
-    }
-
-    fn define_parameter_by_binding_fn_set(
-        &mut self,
-        name: &str,
-        fn_set: &FnSet,
-    ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
-            Obj::FnSetWithParams(fn_set.clone()),
-            default_line_file(),
-        )));
-        self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
-    }
-
-    fn define_parameter_by_binding_set_builder(
-        &mut self,
-        name: &str,
-        set_builder: &SetBuilder,
-    ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
-            Obj::SetBuilder(set_builder.clone()),
-            default_line_file(),
-        )));
-        self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
     }
 
     fn define_parameter_by_binding_family(

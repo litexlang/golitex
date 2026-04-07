@@ -36,14 +36,27 @@ impl Runtime {
         match param_type {
             ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(param_set) => {
-                let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                    IsNonemptySetFact::new(param_set.clone(), default_line_file()),
-                ));
-                self.verify_fact_well_defined_and_store_and_infer(
-                    nonempty_fact,
-                    &VerifyState::new(0, false),
-                )?;
-                Ok(())
+                match param_set {
+                    Obj::FnSetWithParams(_) | Obj::SetBuilder(_) => Err(
+                        RuntimeErrorStruct::exec_stmt_new(
+                            None,
+                            "fn set / set builder param type is not supported yet in verify_param_type_nonempty_if_required"
+                                .to_string(),
+                            None,
+                            vec![],
+                        ),
+                    ),
+                    _ => {
+                        let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+                            IsNonemptySetFact::new(param_set.clone(), default_line_file()),
+                        ));
+                        self.verify_fact_well_defined_and_store_and_infer(
+                            nonempty_fact,
+                            &VerifyState::new(0, false),
+                        )?;
+                        Ok(())
+                    }
+                }
             }
             ParamType::Family(_) => Err(RuntimeErrorStruct::exec_stmt_new(
                 None,
@@ -55,13 +68,6 @@ impl Runtime {
             ParamType::Struct(_) => Err(RuntimeErrorStruct::exec_stmt_new(
                 None,
                 "struct param type is not supported yet in verify_param_type_nonempty_if_required"
-                    .to_string(),
-                None,
-                vec![],
-            )),
-            ParamType::FnSet(_) | ParamType::SetBuilder(_) => Err(RuntimeErrorStruct::exec_stmt_new(
-                None,
-                "fn set / set builder param type is not supported yet in verify_param_type_nonempty_if_required"
                     .to_string(),
                 None,
                 vec![],

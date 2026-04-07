@@ -35,18 +35,6 @@ fn mark_forall_param_coverage_in_param_type(
                 mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
             }
         }
-        ParamType::FnSet(fn_set) => {
-            mark_forall_param_coverage_in_obj(
-                &Obj::FnSetWithParams(fn_set.clone()),
-                coverage_by_forall_param,
-            );
-        }
-        ParamType::SetBuilder(sb) => {
-            mark_forall_param_coverage_in_obj(
-                &Obj::SetBuilder(sb.clone()),
-                coverage_by_forall_param,
-            );
-        }
     }
 }
 
@@ -212,6 +200,16 @@ fn mark_forall_param_coverage_in_obj(
                 obj_at_index.index.as_ref(),
                 coverage_by_forall_param,
             );
+        }
+        Obj::FamilyObj(family) => {
+            for param_obj in family.params.iter() {
+                mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
+            }
+        }
+        Obj::StructObj(struct_ty) => {
+            for param_obj in struct_ty.args.iter() {
+                mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
+            }
         }
     }
 }
