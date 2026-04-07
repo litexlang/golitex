@@ -597,6 +597,31 @@ impl Runtime {
                     args: params,
                 }))
             }
+            ParamType::FnSet(fn_set) => {
+                let inst = self.inst_fn_set_with_params(fn_set, param_to_arg_map)?;
+                match inst {
+                    Obj::FnSetWithParams(f) => Ok(ParamType::FnSet(f)),
+                    _ => Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                        None,
+                        "inst_param_type: inst_fn_set_with_params did not return FnSetWithParams"
+                            .to_string(),
+                        default_line_file(),
+                        None,
+                    ))),
+                }
+            }
+            ParamType::SetBuilder(sb) => {
+                let inst = self.inst_set_builder(sb, param_to_arg_map)?;
+                match inst {
+                    Obj::SetBuilder(s) => Ok(ParamType::SetBuilder(s)),
+                    _ => Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                        None,
+                        "inst_param_type: inst_set_builder did not return SetBuilder".to_string(),
+                        default_line_file(),
+                        None,
+                    ))),
+                }
+            }
         }
     }
 

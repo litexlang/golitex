@@ -25,7 +25,7 @@ impl Runtime {
         true
     }
 
-    fn generate_one_unused_name_with_reserved(&self, reserved_names: &HashSet<String>) -> String {
+    pub(crate) fn generate_one_unused_name_with_reserved(&self, reserved_names: &HashSet<String>) -> String {
         const READABLE_GENERATED_NAME_CHARS: &str = "abcdefghijklmnopqrstuvwxyz";
 
         for readable_round in 0..4096usize {

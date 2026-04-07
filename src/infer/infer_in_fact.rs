@@ -2,6 +2,94 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    /// [`InFact`] 右侧为函数空间时：登记 `known_objs_in_fn_sets`（与 satisfy/store 路径可共用此副作用）。
+    pub(crate) fn infer_membership_in_fn_set_from_in_fact(
+        &mut self,
+        in_fact: &InFact,
+        fn_set_with_dom: &FnSet,
+    ) -> Result<InferResult, RuntimeError> {
+        let is_element_atom = match &in_fact.element {
+            Obj::Identifier(_)
+            | Obj::IdentifierWithMod(_)
+            | Obj::FieldAccess(_)
+            | Obj::FieldAccessWithMod(_) => true,
+            _ => false,
+        };
+
+        if !is_element_atom {
+            return Ok(InferResult::new());
+        }
+
+        let key = in_fact.element.to_string();
+        let env = self.top_level_env();
+        env.known_objs_in_fn_sets
+            .insert(key, fn_set_with_dom.clone());
+        Ok(InferResult::new())
+    }
+
+    /// [`InFact`] 右侧为内涵集时：推出 `element ∈ param_set` 及实例化后的约束事实。
+    pub(crate) fn infer_membership_in_set_builder_from_in_fact(
+        &mut self,
+        in_fact: &InFact,
+        set_builder: &SetBuilder,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+        param_to_arg_map.insert(set_builder.param.clone(), in_fact.element.clone());
+
+        let element_in_param_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            in_fact.element.clone(),
+            *set_builder.param_set.clone(),
+            in_fact.line_file.clone(),
+        )));
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&element_in_param_set_fact);
+        self.store_fact_without_well_defined_verified_and_infer(element_in_param_set_fact)
+            .map_err(|previous_error| {
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
+                    format!(
+                        "failed to store inferred in fact while inferring `{}`",
+                        in_fact
+                    ),
+                    in_fact.line_file.clone(),
+                    Some(previous_error.into()),
+                )
+            })?;
+
+        for fact_in_set_builder in set_builder.facts.iter() {
+            let instantiated_fact_in_set_builder: OrAndChainAtomicFact = self
+                .inst_or_and_chain_atomic_fact(fact_in_set_builder, &param_to_arg_map)
+                .map_err(|e| {
+                    RuntimeError::new_infer_error_with_msg_position_previous_error(
+                        format!(
+                            "failed to instantiate set builder fact while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file.clone(),
+                        Some(e),
+                    )
+                })?;
+            let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
+            let fact_to_store =
+                instantiated_fact_as_fact.with_new_line_file(in_fact.line_file.clone());
+
+            infer_result.new_fact(&fact_to_store);
+            self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
+                .map_err(|previous_error| {
+                    RuntimeError::new_infer_error_with_msg_position_previous_error(
+                        format!(
+                            "failed to store inferred set builder fact while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file.clone(),
+                        Some(previous_error.into()),
+                    )
+                })?;
+        }
+
+        Ok(infer_result)
+    }
+
     /// Infer consequences from membership facts `x in S`.
     /// Example: `x in {1,2}` infers `x = 1 or x = 2`.
     pub(in crate::infer) fn infer_in_fact(
@@ -10,23 +98,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         match &in_fact.set {
             Obj::FnSetWithParams(fn_set_with_dom) => {
-                let is_element_atom = match &in_fact.element {
-                    Obj::Identifier(_)
-                    | Obj::IdentifierWithMod(_)
-                    | Obj::FieldAccess(_)
-                    | Obj::FieldAccessWithMod(_) => true,
-                    _ => false,
-                };
-
-                if !is_element_atom {
-                    return Ok(InferResult::new());
-                }
-
-                let key = in_fact.element.to_string();
-                let env = self.top_level_env();
-                env.known_objs_in_fn_sets
-                    .insert(key, fn_set_with_dom.clone());
-                Ok(InferResult::new())
+                self.infer_membership_in_fn_set_from_in_fact(in_fact, fn_set_with_dom)
             }
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
@@ -61,61 +133,7 @@ impl Runtime {
                 Ok(infer_result)
             }
             Obj::SetBuilder(set_builder) => {
-                let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-                param_to_arg_map.insert(set_builder.param.clone(), in_fact.element.clone());
-
-                let element_in_param_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                    in_fact.element.clone(),
-                    *set_builder.param_set.clone(),
-                    in_fact.line_file.clone(),
-                )));
-
-                let mut infer_result = InferResult::new();
-                infer_result.new_fact(&element_in_param_set_fact);
-                self.store_fact_without_well_defined_verified_and_infer(element_in_param_set_fact)
-                    .map_err(|previous_error| {
-                        RuntimeError::new_infer_error_with_msg_position_previous_error(
-                            format!(
-                                "failed to store inferred in fact while inferring `{}`",
-                                in_fact
-                            ),
-                            in_fact.line_file.clone(),
-                            Some(previous_error.into()),
-                        )
-                    })?;
-
-                for fact_in_set_builder in set_builder.facts.iter() {
-                    let instantiated_fact_in_set_builder: OrAndChainAtomicFact = self
-                        .inst_or_and_chain_atomic_fact(fact_in_set_builder, &param_to_arg_map)
-                        .map_err(|e| {
-                            RuntimeError::new_infer_error_with_msg_position_previous_error(
-                                format!(
-                                    "failed to instantiate set builder fact while inferring `{}`",
-                                    in_fact
-                                ),
-                                in_fact.line_file.clone(),
-                                Some(e),
-                            )
-                        })?;
-                    let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
-                    let fact_to_store =
-                        instantiated_fact_as_fact.with_new_line_file(in_fact.line_file.clone());
-
-                    infer_result.new_fact(&fact_to_store);
-                    self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
-                        .map_err(|previous_error| {
-                            RuntimeError::new_infer_error_with_msg_position_previous_error(
-                                format!(
-                                    "failed to store inferred set builder fact while inferring `{}`",
-                                    in_fact
-                                ),
-                                in_fact.line_file.clone(),
-                                Some(previous_error.into()),
-                            )
-                        })?;
-                }
-
-                Ok(infer_result)
+                self.infer_membership_in_set_builder_from_in_fact(in_fact, set_builder)
             }
             Obj::Cart(cart) => {
                 let mut infer_result = InferResult::new();
@@ -278,3 +296,37 @@ impl Runtime {
         }
     }
 }
+#[cfg(test)]
+mod infer_membership_fn_set_tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn infer_fn_set_registers_element_in_known_objs_in_fn_sets() {
+        let mut rt = Runtime::new();
+        let fn_set = FnSet::new(
+            vec![ParamGroupWithSet::new(
+                vec!["x".to_string()],
+                Obj::StandardSet(StandardSet::Z),
+            )],
+            vec![],
+            Obj::StandardSet(StandardSet::Z),
+        );
+        let in_fact = InFact::new(
+            Obj::Identifier(Identifier::new("f".to_string())),
+            Obj::FnSetWithParams(fn_set.clone()),
+            default_line_file(),
+        );
+        let infer = rt
+            .infer_membership_in_fn_set_from_in_fact(&in_fact, &fn_set)
+            .unwrap();
+        assert!(infer.infer_facts.is_empty());
+        let key = "f".to_string();
+        assert!(
+            rt.top_level_env()
+                .known_objs_in_fn_sets
+                .get(&key)
+                .is_some()
+        );
+    }
+}
+
