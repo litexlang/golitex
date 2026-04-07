@@ -61,7 +61,7 @@ impl Runtime {
                 for p in family.params.iter() {
                     params.push(self.inst_obj(p, param_to_arg_map)?);
                 }
-                Ok(Obj::FamilyObj(FamilyParamType {
+                Ok(Obj::FamilyObj(FamilyObj {
                     name: family.name.clone(),
                     params,
                 }))
@@ -71,7 +71,7 @@ impl Runtime {
                 for a in s.args.iter() {
                     args.push(self.inst_obj(a, param_to_arg_map)?);
                 }
-                Ok(Obj::StructObj(StructParamType {
+                Ok(Obj::StructObj(StructObj {
                     name: s.name.clone(),
                     args,
                 }))
@@ -602,7 +602,7 @@ impl Runtime {
                 for param in family.params.iter() {
                     params.push(self.inst_obj(param, param_to_arg_map)?);
                 }
-                Ok(ParamType::Family(FamilyParamType {
+                Ok(ParamType::Family(FamilyObj {
                     name: family.name.clone(),
                     params,
                 }))
@@ -612,7 +612,7 @@ impl Runtime {
                 for param in struct_ty.args.iter() {
                     params.push(self.inst_obj(param, param_to_arg_map)?);
                 }
-                Ok(ParamType::Struct(StructParamType {
+                Ok(ParamType::Struct(StructObj {
                     name: struct_ty.name.clone(),
                     args: params,
                 }))

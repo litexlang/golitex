@@ -114,7 +114,7 @@ impl Runtime {
 
         self.register_param_as_struct_instance(
             SELF,
-            StructParamType::new(
+            StructObj::new(
                 IdentifierOrIdentifierWithMod::Identifier(Identifier::new(stmt.name.clone())),
                 struct_params,
             ),

@@ -34,7 +34,7 @@ pub struct Environment {
     pub known_objs_equal_to_cart: HashMap<ObjString, (Cart, LineFile)>,
     pub known_objs_equal_to_normalized_decimal_number: HashMap<ObjString, Number>,
 
-    pub known_identifier_satisfy_struct: HashMap<FieldAccessName, StructParamType>,
+    pub known_identifier_satisfy_struct: HashMap<FieldAccessName, StructObj>,
 
     pub known_objs_in_fn_sets: HashMap<ObjString, FnSet>,
 
@@ -50,7 +50,7 @@ impl Environment {
         families: HashMap<FamilyName, DefFamilyStmt>,
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
-        field_access_name: HashMap<FieldAccessName, StructParamType>,
+        field_access_name: HashMap<FieldAccessName, StructObj>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, FnSet>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
