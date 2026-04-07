@@ -82,11 +82,13 @@ impl Runtime {
         current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_mangled_fn_param_name(name) {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                invalid_name_message,
-                default_line_file(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    invalid_name_message,
+                    default_line_file(),
+                    None,
+                ),
+            );
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
@@ -152,6 +154,32 @@ impl Runtime {
                 })?;
         }
         Ok(())
+    }
+
+    pub(crate) fn register_mangled_fn_param_binding(
+        &mut self,
+        user_written_names: &[String],
+        line_file: LineFile,
+    ) -> Result<(Vec<String>, HashMap<String, Obj>), RuntimeError> {
+        // 虽然本质上存的是 __param，但param本身也要符合litex命名规则，比如你不能让 param 是 1
+        for name in user_written_names {
+            if let Err(e) = is_valid_litex_name(name) {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        e,
+                        line_file.clone(),
+                        None,
+                    ),
+                );
+            }
+        }
+
+        let (mangled, map) = crate::common::mangled_fn_param::mangled_fn_param_binding(
+            user_written_names,
+            crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX,
+        );
+        self.register_collected_mangled_fn_param_names_for_def_parse(&mangled, line_file)?;
+        Ok((mangled, map))
     }
 
     pub fn pop_parsing_time_name_scope(&mut self) {

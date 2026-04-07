@@ -977,13 +977,7 @@ impl Runtime {
                 )
             })?;
 
-        let equiv = HaveFnEqualCaseByCaseStmt::new(
-            stmt.name.clone(),
-            stmt.fn_set.clone(),
-            stmt.cases.clone(),
-            stmt.equal_tos.clone(),
-            stmt.line_file.clone(),
-        );
+        let equiv = stmt.to_have_fn_equal_case_by_case_stmt();
         self.verify_have_fn_equal_case_by_case_stmt(&equiv)
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(

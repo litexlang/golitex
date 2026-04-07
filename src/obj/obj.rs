@@ -776,7 +776,7 @@ impl fmt::Display for SetBuilder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let param_display = self
             .param
-            .strip_prefix("__")
+            .strip_prefix(crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX)
             .unwrap_or(self.param.as_str());
         write!(
             f,
