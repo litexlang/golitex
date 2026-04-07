@@ -68,6 +68,14 @@ impl Runtime {
             ParamType::Struct(struct_ty) => {
                 self.define_param_binding_struct_at_field_access(field_access, struct_ty)
             }
+            ParamType::FnSet(fn_set) => self.define_param_binding_obj_on_obj(
+                subject,
+                &Obj::FnSetWithParams(fn_set.clone()),
+            ),
+            ParamType::SetBuilder(set_builder) => self.define_param_binding_obj_on_obj(
+                subject,
+                &Obj::SetBuilder(set_builder.clone()),
+            ),
         };
         if result.is_ok() {
             self.cache_well_defined_for_field_access_path(field_access);
@@ -445,6 +453,14 @@ impl Runtime {
                 ParamType::FiniteSet(finite_set) => {
                     self.define_param_binding_finite_set_on_obj(subject.clone(), finite_set)
                 }
+                ParamType::FnSet(fn_set) => self.define_param_binding_obj_on_obj(
+                    subject.clone(),
+                    &Obj::FnSetWithParams(fn_set.clone()),
+                ),
+                ParamType::SetBuilder(set_builder) => self.define_param_binding_obj_on_obj(
+                    subject.clone(),
+                    &Obj::SetBuilder(set_builder.clone()),
+                ),
             },
         }
     }

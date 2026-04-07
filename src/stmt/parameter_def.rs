@@ -27,6 +27,9 @@ pub enum StructFieldType {
     FiniteSet(FiniteSet),
     NonemptySet(NonemptySet),
     Family(FamilyParamType),
+    /// 函数空间类型（仅出现在字段 / 参数类型位置，不由 `ParamType::Obj` 包装）。
+    FnSet(FnSet),
+    SetBuilder(SetBuilder),
 }
 
 impl StructFieldType {
@@ -37,6 +40,8 @@ impl StructFieldType {
             StructFieldType::FiniteSet(f) => ParamType::FiniteSet(f.clone()),
             StructFieldType::NonemptySet(n) => ParamType::NonemptySet(n.clone()),
             StructFieldType::Family(f) => ParamType::Family(f.clone()),
+            StructFieldType::FnSet(f) => ParamType::FnSet(f.clone()),
+            StructFieldType::SetBuilder(s) => ParamType::SetBuilder(s.clone()),
         }
     }
 }
@@ -127,10 +132,12 @@ pub enum ParamType {
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
     Obj(Obj),
-    /// Parameterized type family, e.g. `family seq(S)` — no record fields, indexed by type/set args.
     Family(FamilyParamType),
-    /// Product/record-style type, e.g. `struct Point(R, R)` — named fields live in struct definitions.
     Struct(StructParamType),
+    /// 函数空间类型（仅出现在参数 / 字段类型位置）。
+    FnSet(FnSet),
+    /// 内涵集 `{x S : ...}`（仅出现在参数 / 字段类型位置）。
+    SetBuilder(SetBuilder),
 }
 
 /// Instantiated family type: `family` name followed by argument objects (often sets).
@@ -205,6 +212,8 @@ impl fmt::Display for ParamType {
                     vec_to_string_join_by_comma(&struct_ty.args)
                 )
             }
+            ParamType::FnSet(fn_set) => write!(f, "{}", fn_set),
+            ParamType::SetBuilder(sb) => write!(f, "{}", sb),
         }
     }
 }
@@ -232,7 +241,7 @@ impl fmt::Display for ParamGroupWithSet {
         write!(
             f,
             "{} {}",
-            vec_to_string_join_by_comma(&self.params),
+            comma_separated_stored_fn_params_as_user_source(&self.params),
             self.set
         )
     }

@@ -73,6 +73,19 @@ pub fn vec_to_string_join_by_comma<T: fmt::Display>(vec: &Vec<T>) -> String {
         .join(", ")
 }
 
+/// `fn` / 内涵集 AST 中形参存为 `__` + 用户符面；打印时去掉此前缀。
+pub fn comma_separated_stored_fn_params_as_user_source(params: &[String]) -> String {
+    params
+        .iter()
+        .map(|p| {
+            p.strip_prefix("__")
+                .map(String::from)
+                .unwrap_or_else(|| p.clone())
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 pub fn vec_to_string_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(
     vec: &Vec<T>,
     number_of_four_spaces: usize,
