@@ -153,6 +153,7 @@ pub use crate::common::defaults::LineFile;
 pub use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
 pub use crate::common::helper::add_four_spaces_at_beginning;
 pub use crate::common::helper::brace_vec_colon_vec_to_string;
+pub use crate::common::helper::comma_separated_stored_fn_params_as_user_source;
 pub use crate::common::helper::braced_string;
 pub use crate::common::helper::braced_vec_to_string;
 pub use crate::common::helper::curly_braced_vec_to_string;
@@ -166,6 +167,7 @@ pub use crate::common::helper::vec_to_string_add_four_spaces_at_beginning_of_eac
 pub use crate::common::helper::vec_to_string_join_by_comma;
 pub use crate::common::helper::vec_to_string_with_sep;
 pub use crate::common::is_valid_litex_name::is_valid_litex_name;
+pub use crate::common::is_valid_litex_name::is_valid_mangled_fn_param_name;
 pub use crate::common::keywords::is_builtin_identifier_name;
 pub use crate::common::keywords::is_builtin_predicate;
 pub use crate::common::keywords::is_comparison_str;

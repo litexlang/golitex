@@ -774,11 +774,15 @@ impl fmt::Display for ListSet {
 
 impl fmt::Display for SetBuilder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let param_display = self
+            .param
+            .strip_prefix("__")
+            .unwrap_or(self.param.as_str());
         write!(
             f,
             "{}{} {}{} {}{}",
             LEFT_CURLY_BRACE,
-            self.param,
+            param_display,
             self.param_set,
             COLON,
             vec_to_string_join_by_comma(&self.facts),

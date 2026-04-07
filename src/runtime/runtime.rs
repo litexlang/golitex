@@ -76,6 +76,84 @@ impl Runtime {
         Ok(())
     }
 
+    pub(crate) fn validate_name_for_mangled_fn_param(
+        &mut self,
+        name: &str,
+        current_line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        if let Err(invalid_name_message) = is_valid_mangled_fn_param_name(name) {
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+                invalid_name_message,
+                default_line_file(),
+                None,
+            ));
+        }
+
+        for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
+            if let Some(name_already_defined_on_line_file) = names_in_scope.get(name) {
+                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    format!(
+                        "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
+                        name,
+                        name_already_defined_on_line_file.0,
+                        name_already_defined_on_line_file.1.as_ref(),
+                        current_line_file.0,
+                        current_line_file.1.as_ref(),
+                    ),
+                    current_line_file,
+                    None,
+                ));
+            }
+        }
+
+        if self.is_name_used(name) {
+            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+                format!(
+                    "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
+                    name,
+                    default_line_file().0,
+                    default_line_file().1.as_ref(),
+                    current_line_file.0,
+                    current_line_file.1.as_ref(),
+                ),
+                current_line_file,
+                None,
+            ));
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn validate_name_and_insert_mangled_fn_param(
+        &mut self,
+        name: &str,
+        (line, path): LineFile,
+    ) -> Result<(), RuntimeError> {
+        self.validate_name_for_mangled_fn_param(name, (line, path.clone()))?;
+        if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
+            names_in_top_scope.insert(name.to_string(), (line, path.clone()));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn register_collected_mangled_fn_param_names_for_def_parse(
+        &mut self,
+        names: &Vec<String>,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        for name in names {
+            self.validate_name_and_insert_mangled_fn_param(name, line_file.clone())
+                .map_err(|e| {
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        String::new(),
+                        line_file.clone(),
+                        Some(e),
+                    )
+                })?;
+        }
+        Ok(())
+    }
+
     pub fn pop_parsing_time_name_scope(&mut self) {
         self.parsing_time_name_scope_stack.pop();
     }

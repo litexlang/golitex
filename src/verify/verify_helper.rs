@@ -59,6 +59,13 @@ impl Runtime {
                 None,
                 vec![],
             )),
+            ParamType::FnSet(_) | ParamType::SetBuilder(_) => Err(RuntimeErrorStruct::exec_stmt_new(
+                None,
+                "fn set / set builder param type is not supported yet in verify_param_type_nonempty_if_required"
+                    .to_string(),
+                None,
+                vec![],
+            )),
         }
     }
 }

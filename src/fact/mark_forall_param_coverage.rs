@@ -35,6 +35,18 @@ fn mark_forall_param_coverage_in_param_type(
                 mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
             }
         }
+        ParamType::FnSet(fn_set) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::FnSetWithParams(fn_set.clone()),
+                coverage_by_forall_param,
+            );
+        }
+        ParamType::SetBuilder(sb) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::SetBuilder(sb.clone()),
+                coverage_by_forall_param,
+            );
+        }
     }
 }
 
@@ -144,7 +156,10 @@ fn mark_forall_param_coverage_in_obj(
         }
         Obj::FnSetWithParams(fn_set) => {
             for param_def_with_set in fn_set.params_def_with_set.iter() {
-                mark_forall_param_coverage_in_obj(&param_def_with_set.set, coverage_by_forall_param);
+                mark_forall_param_coverage_in_obj(
+                    &param_def_with_set.set,
+                    coverage_by_forall_param,
+                );
             }
             for dom_fact in fn_set.dom_facts.iter() {
                 mark_forall_param_coverage_in_or_and_chain_atomic_fact(
@@ -382,7 +397,10 @@ fn mark_forall_param_coverage_in_exist_fact(
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
 ) {
     for param_def_with_type in exist_fact.params_def_with_type.iter() {
-        mark_forall_param_coverage_in_param_type(&param_def_with_type.param_type, coverage_by_forall_param);
+        mark_forall_param_coverage_in_param_type(
+            &param_def_with_type.param_type,
+            coverage_by_forall_param,
+        );
     }
     for inner_fact in exist_fact.facts.iter() {
         mark_forall_param_coverage_in_or_and_chain_atomic_fact(

@@ -6,6 +6,9 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
     if s.is_empty() {
         return Err("name cannot be empty".to_string());
     }
+    if s.starts_with("__") {
+        return Err("name cannot start with two underscores".to_string());
+    }
     if s.len() > MAX_NAME_LEN {
         return Err(format!(
             "name length cannot be greater than {}, current length is {}",
@@ -37,6 +40,18 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
         return Err(format!("cannot use keyword as name: {}", s));
     }
     Ok(())
+}
+
+/// `fn` / 内涵集形参在 AST 中存为 `__` + 用户符面；仅用于注册与校验这类实现侧名字。
+pub fn is_valid_mangled_fn_param_name(s: &str) -> Result<(), String> {
+    if !s.starts_with("__") {
+        return Err("internal: mangled fn/set-builder param must start with __".to_string());
+    }
+    let rest = &s[2..];
+    if rest.is_empty() {
+        return Err("internal: mangled param suffix is empty".to_string());
+    }
+    is_valid_litex_name(rest)
 }
 
 #[cfg(test)]
@@ -81,6 +96,22 @@ mod tests {
         assert!(is_valid_litex_name(&ok_255).is_ok());
         let bad_256: String = "a".chars().cycle().take(256).collect();
         assert!(is_valid_litex_name(&bad_256).is_err());
+    }
+
+    #[test]
+    fn double_underscore_prefix_rejected() {
+        assert!(is_valid_litex_name("__").is_err());
+        assert!(is_valid_litex_name("__x").is_err());
+        assert!(is_valid_litex_name("__foo").is_err());
+    }
+
+    #[test]
+    fn mangled_fn_param_name_validity() {
+        assert!(is_valid_mangled_fn_param_name("__x").is_ok());
+        assert!(is_valid_mangled_fn_param_name("__foo_bar").is_ok());
+        assert!(is_valid_mangled_fn_param_name("x").is_err());
+        assert!(is_valid_mangled_fn_param_name("__").is_err());
+        assert!(is_valid_mangled_fn_param_name("__let").is_err());
     }
 
     #[test]

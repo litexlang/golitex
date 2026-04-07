@@ -1169,6 +1169,14 @@ impl Runtime {
             ParamType::Struct(struct_ty) => {
                 return self.verify_param_type_struct_well_defined(struct_ty, verify_state)
             }
+            ParamType::FnSet(fn_set) => self.verify_obj_well_defined_and_store_cache(
+                &Obj::FnSetWithParams(fn_set.clone()),
+                verify_state,
+            ),
+            ParamType::SetBuilder(sb) => self.verify_obj_well_defined_and_store_cache(
+                &Obj::SetBuilder(sb.clone()),
+                verify_state,
+            ),
         }
     }
 

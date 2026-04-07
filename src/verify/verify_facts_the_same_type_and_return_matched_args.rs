@@ -200,13 +200,27 @@ impl Runtime {
                         if struct_ty.args.len() != other_struct.args.len() {
                             return Ok(None);
                         }
-                        for (param, other_param) in struct_ty
-                            .args
-                            .iter()
-                            .zip(other_struct.args.iter())
+                        for (param, other_param) in
+                            struct_ty.args.iter().zip(other_struct.args.iter())
                         {
                             matched_args.push((param.clone(), other_param.clone()));
                         }
+                    }
+                    _ => return Ok(None),
+                },
+                ParamType::FnSet(ref f) => match &other_param_def.param_type {
+                    ParamType::FnSet(other_f) => {
+                        matched_args.push((
+                            Obj::FnSetWithParams(f.clone()),
+                            Obj::FnSetWithParams(other_f.clone()),
+                        ));
+                    }
+                    _ => return Ok(None),
+                },
+                ParamType::SetBuilder(ref s) => match &other_param_def.param_type {
+                    ParamType::SetBuilder(other_s) => {
+                        matched_args
+                            .push((Obj::SetBuilder(s.clone()), Obj::SetBuilder(other_s.clone())));
                     }
                     _ => return Ok(None),
                 },

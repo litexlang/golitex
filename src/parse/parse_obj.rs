@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
@@ -181,28 +182,59 @@ impl Runtime {
         }
 
         let fn_set_param_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-        self.register_collected_param_names_for_def_parse(
-            &fn_set_param_names,
+
+        let new_param_names: Vec<String> = fn_set_param_names
+            .iter()
+            .map(|u| format!("__{}", u))
+            .collect();
+        let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
+        for (user_written, stored) in fn_set_param_names.iter().zip(new_param_names.iter()) {
+            param_arg_map.insert(
+                user_written.clone(),
+                Obj::Identifier(Identifier::new(stored.clone())),
+            );
+        }
+
+        self.register_collected_mangled_fn_param_names_for_def_parse(
+            &new_param_names,
             tb.line_file.clone(),
         )?;
 
         let mut dom_facts = vec![];
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
-            dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+            let cur = self.parse_or_and_chain_atomic_fact(tb)?;
+            let inst = self.inst_or_and_chain_atomic_fact(&cur, &param_arg_map)?;
+            dom_facts.push(inst);
             while tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
-                dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+                let cur = self.parse_or_and_chain_atomic_fact(tb)?;
+                let inst = self.inst_or_and_chain_atomic_fact(&cur, &param_arg_map)?;
+                dom_facts.push(inst);
             }
         }
 
+        let mut flat_stored_idx: usize = 0;
+        let new_def_with_set: Vec<ParamGroupWithSet> = params_def_with_set
+            .iter()
+            .map(|param_group| {
+                let new_params: Vec<String> = param_group
+                    .params
+                    .iter()
+                    .map(|_| {
+                        let s = new_param_names[flat_stored_idx].clone();
+                        flat_stored_idx += 1;
+                        s
+                    })
+                    .collect();
+                ParamGroupWithSet::new(new_params, param_group.set.clone())
+            })
+            .collect();
+
         tb.skip_token(RIGHT_BRACE)?;
-        let ret_set = self.parse_obj(tb)?;
-        Ok(FnSet::new(
-            params_def_with_set,
-            dom_facts,
-            ret_set,
-        ))
+        let ret_set_parsed = self.parse_obj(tb)?;
+        let ret_set = self.inst_obj(&ret_set_parsed, &param_arg_map)?;
+        Ok(FnSet::new(new_def_with_set, dom_facts, ret_set))
     }
 
     pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(
@@ -831,8 +863,6 @@ impl Runtime {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, RuntimeError> {
-        self.insert_parsed_name_into_top_parsing_time_name_scope(&a.name, tb.line_file.clone())?;
-
         let second = self.parse_obj(tb)?;
         if tb.current()? == COLON {
             tb.skip_token(COLON)?;
@@ -841,8 +871,38 @@ impl Runtime {
                 facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
             }
             tb.skip_token(RIGHT_CURLY_BRACE)?;
-            Ok(Obj::SetBuilder(SetBuilder::new(a.name, second, facts)))
+
+            let user_written = a.name.clone();
+            let stored = format!("__{}", user_written);
+
+            let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
+            param_arg_map.insert(
+                user_written.clone(),
+                Obj::Identifier(Identifier::new(stored.clone())),
+            );
+
+            self.register_collected_mangled_fn_param_names_for_def_parse(
+                &vec![stored.clone()],
+                tb.line_file.clone(),
+            )?;
+
+            let mut facts_inst = Vec::with_capacity(facts.len());
+            for f in facts.iter() {
+                facts_inst.push(self.inst_or_and_chain_atomic_fact(f, &param_arg_map)?);
+            }
+            let second_inst = self.inst_obj(&second, &param_arg_map)?;
+
+            Ok(Obj::SetBuilder(SetBuilder::new(
+                stored,
+                second_inst,
+                facts_inst,
+            )))
         } else {
+            self.insert_parsed_name_into_top_parsing_time_name_scope(
+                &a.name,
+                tb.line_file.clone(),
+            )?;
+
             let mut objs = Vec::with_capacity(2);
             objs.push(Obj::Identifier(a));
             objs.push(second);
