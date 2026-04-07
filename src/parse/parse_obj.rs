@@ -392,6 +392,20 @@ impl Runtime {
             return Ok(Obj::StandardSet(StandardSet::RNz));
         }
 
+        // `family p(R)` / `struct T(...)` 作为 Obj（与 `family p(a set) =` 定义区分：定义在 `=` 前用 `family name` + 形参块）
+        if tok == FAMILY {
+            tb.skip()?;
+            let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+            let params = self.parse_braced_objs(tb)?;
+            return Ok(Obj::FamilyObj(FamilyParamType { name, params }));
+        }
+        if tok == STRUCT {
+            tb.skip()?;
+            let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+            let args = self.parse_braced_objs(tb)?;
+            return Ok(Obj::StructObj(StructParamType { name, args }));
+        }
+
         // 多元关键字：吃关键字 + 括号里若干 obj
         if tok == UNION {
             tb.skip()?;
