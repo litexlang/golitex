@@ -8,7 +8,10 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
         return Err("name cannot be empty".to_string());
     }
     if s.starts_with(DEFAULT_MANGLED_FN_PARAM_PREFIX) {
-        return Err("name cannot start with two underscores".to_string());
+        return Err(format!(
+            "user defined name cannot start with two underscores because it is reserved for internal use: `{}`.",
+            s
+        ));
     }
     if s.len() > MAX_NAME_LEN {
         return Err(format!(

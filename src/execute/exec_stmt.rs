@@ -34,17 +34,7 @@ impl Runtime {
             Stmt::ImportStmt(s) => self.exec_import_stmt(s),
             Stmt::DoNothingStmt(s) => self.exec_do_nothing_stmt(s),
             Stmt::RunFileStmt(s) => self.exec_run_file_stmt(s),
-            Stmt::EvalStmt(s) => {
-                self._exec_eval_stmt(s)?;
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::EvalStmt(s.clone()),
-                        "eval: obj_to_eval must be a fnObj".to_string(),
-                        None,
-                        vec![],
-                    ),
-                ));
-            }
+            Stmt::EvalStmt(s) => self._exec_eval_stmt(s).map_err(RuntimeError::from),
             Stmt::WitnessExistFact(s) => self.exec_witness_exist_fact(s),
             Stmt::WitnessNonemptySet(s) => self.exec_witness_nonempty_set(s),
             Stmt::ByCasesStmt(s) => self.exec_by_cases_stmt(s),
