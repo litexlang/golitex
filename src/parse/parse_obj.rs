@@ -851,22 +851,20 @@ impl Runtime {
         let second = self.parse_obj(tb)?;
         if tb.current()? == COLON {
             tb.skip_token(COLON)?;
-            let mut facts = vec![];
-            while tb.current()? != RIGHT_CURLY_BRACE {
-                facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
-            }
-            tb.skip_token(RIGHT_CURLY_BRACE)?;
 
+            // 先登记形参 mangling，再解析域与条件（与 fn 集一致：先绑定再读体）
             let user_names = vec![a.name.clone()];
             let (mangled_names, param_arg_map) =
                 self.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
             let stored = mangled_names[0].clone();
-
-            let mut facts_inst = Vec::with_capacity(facts.len());
-            for f in facts.iter() {
-                facts_inst.push(self.inst_or_and_chain_atomic_fact(f, &param_arg_map)?);
-            }
             let second_inst = self.inst_obj(&second, &param_arg_map)?;
+
+            let mut facts_inst = Vec::new();
+            while tb.current()? != RIGHT_CURLY_BRACE {
+                let f = self.parse_or_and_chain_atomic_fact(tb)?;
+                facts_inst.push(self.inst_or_and_chain_atomic_fact(&f, &param_arg_map)?);
+            }
+            tb.skip_token(RIGHT_CURLY_BRACE)?;
 
             Ok(Obj::SetBuilder(SetBuilder::new(
                 stored,
@@ -874,22 +872,13 @@ impl Runtime {
                 facts_inst,
             )))
         } else {
-            self.insert_parsed_name_into_top_parsing_time_name_scope(
-                &a.name,
-                tb.line_file.clone(),
-            )?;
-
-            let mut objs = Vec::with_capacity(2);
-            objs.push(Obj::Identifier(a));
-            objs.push(second);
-            while tb.current()? != RIGHT_CURLY_BRACE {
-                if tb.current_token_is_equal_to(COMMA) {
-                    tb.skip_token(COMMA)?;
-                }
-                objs.push(self.parse_obj(tb)?);
-            }
-            tb.skip_token(RIGHT_CURLY_BRACE)?;
-            Ok(Obj::ListSet(ListSet::new(objs)))
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "expected colon after first argument".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
         }
     }
 

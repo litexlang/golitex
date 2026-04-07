@@ -51,3 +51,23 @@ prove:
         
     eval fib(10)
     fib(10) = 55
+
+prove:
+    have factorial fn(x R) R
+
+    know:
+        forall x R:
+            x = 0
+            =>:
+                factorial(x) = 1
+
+        forall x R:
+            x > 0
+            =>:
+                factorial(x) = factorial(x - 1) * x
+
+    algo factorial(x):
+        case x = 0: 1
+        factorial(x - 1) * x
+
+    eval factorial(15)
