@@ -48,32 +48,10 @@ impl Runtime {
         ))
     }
 
-    fn have_fn_by_induc_flatten_and_chain_to_atomic_facts(
-        c: &AndChainAtomicFact,
-    ) -> Result<Vec<AtomicFact>, RuntimeErrorStruct> {
-        match c {
-            AndChainAtomicFact::AtomicFact(a) => Ok(vec![a.clone()]),
-            AndChainAtomicFact::AndFact(af) => Ok(af.facts.clone()),
-            AndChainAtomicFact::ChainFact(cf) => cf.facts(),
-        }
-    }
-
-    fn have_fn_by_induc_merge_step_and_when(
-        step: AndChainAtomicFact,
-        when: AndChainAtomicFact,
-        line_file: LineFile,
-    ) -> Result<AndChainAtomicFact, RuntimeErrorStruct> {
-        let mut atoms = Self::have_fn_by_induc_flatten_and_chain_to_atomic_facts(&step)?;
-        atoms.extend(Self::have_fn_by_induc_flatten_and_chain_to_atomic_facts(
-            &when,
-        )?);
-        Ok(AndChainAtomicFact::AndFact(AndFact::new(atoms, line_file)))
-    }
-
     // have fn by induc from 0: f(x Z: x >= 0) R
     /// 先按 `stmt.fn_set` 声明归纳参数 `param_name`，再登记 `stmt.name` 属于一个形式参数为**新生成名字**的 `FnSet`，
     /// 其定义域满足 `random_param < param_name` 且 `random_param >= param_name - len(special_cases)`（与特例下标区间一致）。
-    fn have_fn_by_induc_verify_last_case_register_fn_and_store_dom(
+    fn have_fn_by_induc_verify_last_case_register_fn(
         &mut self,
         stmt: &HaveFnByInducStmt,
         param_name: &str,
@@ -175,27 +153,23 @@ impl Runtime {
 
         let param_name_str = stmt.fn_set.get_params()[0].clone();
         let left_id = Obj::Identifier(Identifier::new(param_name_str.clone()));
-        let step = AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-            left_id,
-            induc_obj_plus_offset(&stmt.induc_from, n),
-            line_file.clone(),
-        )));
+        let step =
+            AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                left_id,
+                induc_obj_plus_offset(&stmt.induc_from, n),
+                line_file.clone(),
+            )));
+
+        self.store_fact_without_well_defined_verified_and_infer(step.to_fact())
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+
+        self.have_fn_by_induc_verify_last_case_register_fn(stmt, &param_name_str)?;
 
         match (&stmt.last_case_equal_to, &stmt.last_case_cases) {
             (Some(eq), None) => {
-                self.have_fn_by_induc_verify_last_case_register_fn_and_store_dom(
-                    stmt,
-                    &param_name_str,
-                )?;
-                self.store_fact_without_well_defined_verified_and_infer(step.to_fact())
-                    .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
                 self.have_fn_by_induc_verify_one_equal_to_well_defined(stmt, eq, &verify_state)?;
             }
             (None, Some(last_pairs)) if !last_pairs.is_empty() => {
-                self.have_fn_by_induc_verify_last_case_register_fn_and_store_dom(
-                    stmt,
-                    &param_name_str,
-                )?;
                 self.store_fact_without_well_defined_verified_and_infer(step.to_fact())
                     .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
 
@@ -218,17 +192,7 @@ impl Runtime {
                 for (when, eq_to) in last_pairs.iter() {
                     self.push_env();
                     let branch = (|| -> Result<(), RuntimeError> {
-                        self.have_fn_by_induc_verify_last_case_register_fn_and_store_dom(
-                            stmt,
-                            &param_name_str,
-                        )?;
-                        let merged = Self::have_fn_by_induc_merge_step_and_when(
-                            step.clone(),
-                            when.clone(),
-                            line_file.clone(),
-                        )
-                        .map_err(RuntimeError::from)?;
-                        self.store_fact_without_well_defined_verified_and_infer(merged.to_fact())
+                        self.store_fact_without_well_defined_verified_and_infer(when.to_fact())
                             .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
                         self.have_fn_by_induc_verify_one_equal_to_well_defined(
                             stmt,
