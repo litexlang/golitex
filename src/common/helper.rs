@@ -1,3 +1,4 @@
+use super::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
 use super::keywords::{
     COLON, DOT_AKA_FIELD_ACCESS_SIGN, LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE,
 };
@@ -78,7 +79,7 @@ pub fn comma_separated_stored_fn_params_as_user_source(params: &[String]) -> Str
     params
         .iter()
         .map(|p| {
-            p.strip_prefix("__")
+            p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
                 .map(String::from)
                 .unwrap_or_else(|| p.clone())
         })

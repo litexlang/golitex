@@ -1,3 +1,4 @@
+use super::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
 use super::keywords::is_keyword;
 
 const MAX_NAME_LEN: usize = 255;
@@ -6,7 +7,7 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
     if s.is_empty() {
         return Err("name cannot be empty".to_string());
     }
-    if s.starts_with("__") {
+    if s.starts_with(DEFAULT_MANGLED_FN_PARAM_PREFIX) {
         return Err("name cannot start with two underscores".to_string());
     }
     if s.len() > MAX_NAME_LEN {
@@ -44,10 +45,12 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
 
 /// `fn` / 内涵集形参在 AST 中存为 `__` + 用户符面；仅用于注册与校验这类实现侧名字。
 pub fn is_valid_mangled_fn_param_name(s: &str) -> Result<(), String> {
-    if !s.starts_with("__") {
+    if !s.starts_with(DEFAULT_MANGLED_FN_PARAM_PREFIX) {
         return Err("internal: mangled fn/set-builder param must start with __".to_string());
     }
-    let rest = &s[2..];
+    let rest = s
+        .strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
+        .unwrap_or("");
     if rest.is_empty() {
         return Err("internal: mangled param suffix is empty".to_string());
     }
