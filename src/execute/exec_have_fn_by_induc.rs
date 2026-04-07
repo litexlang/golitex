@@ -56,9 +56,6 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         param_name: &str,
     ) -> Result<(), RuntimeError> {
-        let n = stmt.special_cases_equal_tos.len();
-        let line_file = stmt.line_file.clone();
-
         self.store_identifier_obj(&stmt.name)
             .map_err(RuntimeError::from)?;
 
@@ -66,19 +63,19 @@ impl Runtime {
 
         let param_minus_n = Obj::Sub(Sub::new(
             Obj::Identifier(Identifier::new(param_name.to_string())),
-            Obj::Number(Number::new(n.to_string())),
+            Obj::Number(Number::new(stmt.special_cases_equal_tos.len().to_string())),
         ));
 
         let dom_facts: Vec<OrAndChainAtomicFact> = vec![
-            OrAndChainAtomicFact::AtomicFact(AtomicFact::LessFact(LessFact::new(
-                Obj::Identifier(Identifier::new(random_param.clone())),
-                Obj::Identifier(Identifier::new(param_name.to_string())),
-                line_file.clone(),
-            ))),
             OrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
                 Obj::Identifier(Identifier::new(random_param.to_string())),
                 param_minus_n,
-                line_file.clone(),
+                stmt.line_file.clone(),
+            ))),
+            OrAndChainAtomicFact::AtomicFact(AtomicFact::LessFact(LessFact::new(
+                Obj::Identifier(Identifier::new(random_param.clone())),
+                Obj::Identifier(Identifier::new(param_name.to_string())),
+                stmt.line_file.clone(),
             ))),
         ];
 
@@ -91,11 +88,10 @@ impl Runtime {
             stmt.fn_set.ret_set.as_ref().clone(),
         );
 
-        let function_identifier_obj = Obj::Identifier(Identifier::new(stmt.name.clone()));
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            function_identifier_obj,
+            Obj::Identifier(Identifier::new(stmt.name.clone())),
             Obj::FnSet(restricted_fn_set),
-            line_file.clone(),
+            stmt.line_file.clone(),
         )));
 
         self.store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
@@ -153,15 +149,17 @@ impl Runtime {
 
         let param_name_str = stmt.fn_set.get_params()[0].clone();
         let left_id = Obj::Identifier(Identifier::new(param_name_str.clone()));
-        let step =
+        let param_larger_than_induc_plus_offset =
             AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
                 left_id,
                 induc_obj_plus_offset(&stmt.induc_from, n),
                 line_file.clone(),
             )));
 
-        self.store_fact_without_well_defined_verified_and_infer(step.to_fact())
-            .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+        self.store_fact_without_well_defined_verified_and_infer(
+            param_larger_than_induc_plus_offset.to_fact(),
+        )
+        .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
 
         self.have_fn_by_induc_verify_last_case_register_fn(stmt, &param_name_str)?;
 
@@ -170,9 +168,6 @@ impl Runtime {
                 self.have_fn_by_induc_verify_one_equal_to_well_defined(stmt, eq, &verify_state)?;
             }
             (None, Some(last_pairs)) if !last_pairs.is_empty() => {
-                self.store_fact_without_well_defined_verified_and_infer(step.to_fact())
-                    .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
-
                 let coverage_cases: Vec<AndChainAtomicFact> =
                     last_pairs.iter().map(|(w, _)| w.clone()).collect();
                 let coverage = Fact::OrFact(OrFact::new(coverage_cases, line_file.clone()));
@@ -192,13 +187,18 @@ impl Runtime {
                 for (when, eq_to) in last_pairs.iter() {
                     self.push_env();
                     let branch = (|| -> Result<(), RuntimeError> {
-                        self.store_fact_without_well_defined_verified_and_infer(when.to_fact())
-                            .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
-                        self.have_fn_by_induc_verify_one_equal_to_well_defined(
-                            stmt,
-                            eq_to,
-                            &verify_state,
-                        )
+                        let result = self
+                            .store_fact_without_well_defined_verified_and_infer(when.to_fact())
+                            .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()));
+                        if let Err(e) = result {
+                            Err(e)
+                        } else {
+                            self.have_fn_by_induc_verify_one_equal_to_well_defined(
+                                stmt,
+                                eq_to,
+                                &verify_state,
+                            )
+                        }
                     })();
                     self.pop_env();
                     branch?;
