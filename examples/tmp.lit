@@ -1,3 +1,6 @@
 abstract_prop p(a)
 
-{x R: $p({x R: x > 0})} = {x R: $p({x R: x > 0})}
+fn(x R: x $in fn(x R)R) R = fn(x R: x $in fn(x R)R) R
+
+fn(x R: x $in {x R: x > 0}) = fn(x R: x $in {x R: x > 0})
+
