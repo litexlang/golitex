@@ -36,19 +36,15 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
     let left_monomial_collections = collect_monomials_in_obj(&sub.left);
     let right_monomial_collections = collect_monomials_in_obj(&sub.right);
 
-    let mut already_processed_indexes: Vec<usize> =
-        Vec::with_capacity(left_monomial_collections.len() + right_monomial_collections.len());
+    let mut processed_right_indexes: Vec<usize> =
+        Vec::with_capacity(right_monomial_collections.len());
     let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
         Vec::with_capacity(left_monomial_collections.len() + right_monomial_collections.len());
-    for (i, left_monomial) in left_monomial_collections.iter().enumerate() {
-        if already_processed_indexes.contains(&i) {
-            continue;
-        }
-
+    for (_, left_monomial) in left_monomial_collections.iter().enumerate() {
         let mut already_pushed = false;
 
         for (j, right_monomial) in right_monomial_collections.iter().enumerate() {
-            if already_processed_indexes.contains(&j) {
+            if processed_right_indexes.contains(&j) {
                 continue;
             }
 
@@ -57,7 +53,7 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
                     &left_monomial.non_zero_scalar,
                     &right_monomial.non_zero_scalar,
                 );
-                already_processed_indexes.push(j);
+                processed_right_indexes.push(j);
                 let current_monomial =
                     MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
                         new_scalar,
@@ -77,7 +73,7 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
     }
 
     for (j, right_monomial) in right_monomial_collections.iter().enumerate() {
-        if already_processed_indexes.contains(&j) {
+        if processed_right_indexes.contains(&j) {
             continue;
         }
         let negated_scalar =
@@ -105,19 +101,15 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
     let left_monomial_collections = collect_monomials_in_obj(&add.left);
     let right_monomial_collections = collect_monomials_in_obj(&add.right);
 
-    let mut already_processed_indexes: Vec<usize> =
-        Vec::with_capacity(left_monomial_collections.len() + right_monomial_collections.len());
+    let mut processed_right_indexes: Vec<usize> =
+        Vec::with_capacity(right_monomial_collections.len());
     let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
         Vec::with_capacity(left_monomial_collections.len() + right_monomial_collections.len());
-    for (i, left_monomial) in left_monomial_collections.iter().enumerate() {
-        if already_processed_indexes.contains(&i) {
-            continue;
-        }
-
+    for (_, left_monomial) in left_monomial_collections.iter().enumerate() {
         let mut already_pushed = false;
 
         for (j, right_monomial) in right_monomial_collections.iter().enumerate() {
-            if already_processed_indexes.contains(&j) {
+            if processed_right_indexes.contains(&j) {
                 continue;
             }
 
@@ -126,7 +118,7 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
                     &left_monomial.non_zero_scalar,
                     &right_monomial.non_zero_scalar,
                 );
-                already_processed_indexes.push(j);
+                processed_right_indexes.push(j);
                 let current_monomial =
                     MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
                         new_scalar,
@@ -146,7 +138,7 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
     }
 
     for (j, right_monomial) in right_monomial_collections.iter().enumerate() {
-        if already_processed_indexes.contains(&j) {
+        if processed_right_indexes.contains(&j) {
             continue;
         }
         result.push(right_monomial.clone());
@@ -369,5 +361,38 @@ fn from_number_obj_to_monomial(
         vec![current_monomial]
     } else {
         vec![]
+    }
+}
+
+#[cfg(test)]
+mod collect_monomials_add_merge_tests {
+    use super::*;
+    use crate::obj::Obj;
+    use crate::parse::tokenize_line;
+    use crate::parse::TokenBlock;
+    use crate::runtime::Runtime;
+    use std::rc::Rc;
+
+    fn parse_obj_line(line: &str) -> Obj {
+        let tokens = tokenize_line(line);
+        let mut tb = TokenBlock::new(tokens, vec![], (1, Rc::from("test.lit")));
+        let mut rt = Runtime::new();
+        rt.parse_obj(&mut tb).expect("parse")
+    }
+
+    /// Regression: `already_processed_indexes` stores **right** indices `j`; it must not be
+    /// checked against the **left** loop index `i`. When `i == j` (e.g. left[1] and right[1]
+    /// merged earlier), skipping `i` dropped unrelated left monomials (e.g. the `4abmn` term).
+    #[test]
+    fn add_merges_left_and_right_without_skipping_left_by_right_index_collision() {
+        let sum = parse_obj_line(
+            r#"2 * ( a * m + b * n ) ^ 2 + ( m ^ 2 - 2 * n ^ 2 ) * ( b ^ 2 - 2 * a ^ 2 )"#,
+        );
+        let monomials = collect_monomials_in_obj(&sum);
+        assert_eq!(
+            monomials.len(),
+            3,
+            "expect 4abmn + b^2 m^2 + 4 a^2 n^2 after a^2m^2/m^2a^2 and b^2n^2/n^2b^2 cancellation"
+        );
     }
 }

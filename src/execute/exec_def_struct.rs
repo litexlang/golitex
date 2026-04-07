@@ -1,30 +1,25 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn def_struct_stmt(
+    pub fn exec_def_struct_stmt(
         &mut self,
         stmt: &DefStructStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
         self.def_struct_stmt_check_well_defined(stmt)?;
 
-        self.store_struct_def(stmt)
-            .map_err(|store_error| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefStructStmt(stmt.clone()),
-                    "".to_string(),
-                    Some(store_error.into()),
-                    vec![],
-                )
-            })?;
+        self.store_struct_def(stmt).map_err(|store_error| {
+            RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                Stmt::DefStructStmt(stmt.clone()),
+                "".to_string(),
+                Some(store_error.into()),
+                vec![],
+            )
+        })?;
 
         let infer_result = InferResult::new();
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
-                Stmt::DefStructStmt(stmt.clone()),
-                infer_result,
-                vec![],
-            ),
+            NonFactualStmtSuccess::new(Stmt::DefStructStmt(stmt.clone()), infer_result, vec![]),
         ))
     }
 
@@ -33,8 +28,7 @@ impl Runtime {
         stmt: &DefStructStmt,
     ) -> Result<(), RuntimeErrorStruct> {
         self.push_env();
-        let struct_check_well_defined_result =
-            self.def_struct_stmt_check_well_defined_body(stmt);
+        let struct_check_well_defined_result = self.def_struct_stmt_check_well_defined_body(stmt);
         self.pop_env();
         struct_check_well_defined_result
     }
@@ -46,9 +40,7 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
 
         self.define_params_with_type(
-            &ParamGroupWithStructFieldType::to_param_groups_with_param_type(
-                &stmt.param_defs,
-            ),
+            &ParamGroupWithStructFieldType::to_param_groups_with_param_type(&stmt.param_defs),
             false,
         )
         .map_err(|define_params_error| {
@@ -106,9 +98,7 @@ impl Runtime {
         self.register_param_as_struct_instance(
             SELF,
             StructParamType::new(
-                IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
-                    stmt.name.clone(),
-                )),
+                IdentifierOrIdentifierWithMod::Identifier(Identifier::new(stmt.name.clone())),
                 struct_params,
             ),
         );

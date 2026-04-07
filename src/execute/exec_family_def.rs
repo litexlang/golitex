@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn def_family_stmt(
+    pub fn exec_def_family_stmt(
         &mut self,
         def_family_stmt: &DefFamilyStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -71,18 +71,15 @@ impl Runtime {
             family_definition_infer_result.new_infer_result_inside(dom_fact_infer_result);
         }
 
-        self.verify_obj_well_defined_and_store_cache(
-            &def_family_stmt.equal_to,
-            &verify_state,
-        )
-        .map_err(|well_defined_error| {
-            RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                Stmt::DefFamilyStmt(def_family_stmt.clone()),
-                "".to_string(),
-                Some(well_defined_error.into()),
-                vec![],
-            )
-        })?;
+        self.verify_obj_well_defined_and_store_cache(&def_family_stmt.equal_to, &verify_state)
+            .map_err(|well_defined_error| {
+                RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                    Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                    "".to_string(),
+                    Some(well_defined_error.into()),
+                    vec![],
+                )
+            })?;
 
         Ok(family_definition_infer_result)
     }

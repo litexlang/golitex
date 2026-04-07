@@ -33,7 +33,7 @@ impl Runtime {
         Obj::FnObj(FnObj::new(fn_head_atom, fn_body_groups))
     }
 
-    pub fn def_prop_stmt(
+    pub fn exec_def_prop_stmt(
         &mut self,
         def_prop_stmt: &DefPropStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -99,7 +99,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn def_abstract_prop_stmt(
+    pub fn exec_def_abstract_prop_stmt(
         &mut self,
         def_abstract_prop_stmt: &DefAbstractPropStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -121,7 +121,7 @@ impl Runtime {
         ))
     }
 
-    pub fn def_let_stmt(
+    pub fn exec_let_stmt(
         &mut self,
         def_let_stmt: &DefLetStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -382,7 +382,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub fn have_obj_in_nonempty_set_or_param_type_stmt(
+    pub fn exec_have_obj_in_nonempty_set_or_param_type_stmt(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -453,7 +453,7 @@ impl Runtime {
     }
 
     // TODO: THIS IS A MESS
-    pub fn have_obj_equal_stmt(
+    pub fn exec_have_obj_equal_stmt(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -564,7 +564,7 @@ impl Runtime {
         ));
     }
 
-    pub fn have_exist_obj_stmt(
+    pub fn exec_have_exist_obj_stmt(
         &mut self,
         have_exist_obj_stmt: &HaveExistObjStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -666,7 +666,7 @@ impl Runtime {
         ))
     }
 
-    pub fn have_fn_equal_stmt(
+    pub fn exec_have_fn_equal_stmt(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -845,7 +845,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn have_fn_equal_case_by_case_stmt(
+    pub fn exec_have_fn_equal_case_by_case_stmt(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
@@ -963,43 +963,17 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub fn have_fn_by_induc_stmt(
+    // TODO
+    pub fn exec_have_fn_by_induc_stmt(
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.induc_from, &VerifyState::new(0, false))
-            .map_err(|well_defined_error| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnByInducStmt(stmt.clone()),
-                    "".to_string(),
-                    Some(well_defined_error.into()),
-                    vec![],
-                )
-            })?;
-
-        let equiv = stmt.to_have_fn_equal_case_by_case_stmt();
-        self.verify_have_fn_equal_case_by_case_stmt(&equiv)
-            .map_err(|e| {
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnByInducStmt(stmt.clone()),
-                    "have_fn_by_induc_stmt: verify well-defined failed".to_string(),
-                    Some(e.into()),
-                    vec![],
-                )
-            })?;
-
-        let infer_result = self.store_have_fn_equal_case_by_case(&equiv).map_err(|e| {
-            RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                Stmt::HaveFnByInducStmt(stmt.clone()),
-                "".to_string(),
-                Some(e.into()),
-                vec![],
-            )
-        })?;
-
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(Stmt::HaveFnByInducStmt(stmt.clone()), infer_result, vec![]),
-        ))
+        return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            Stmt::HaveFnByInducStmt(stmt.clone()),
+            "have_fn_by_induc_stmt: not implemented".to_string(),
+            None,
+            vec![],
+        ));
     }
 
     fn verify_have_fn_equal_case_by_case_stmt(

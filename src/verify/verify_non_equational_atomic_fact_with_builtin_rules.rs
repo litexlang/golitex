@@ -1,6 +1,11 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Builtin rules for non-equational atomic facts. Order relations delegate to
+    /// `verify_order_or_negation_fact_with_builtin_duality_and_number_compare`, which also applies
+    /// real-order congruence rules (same-side add/subtract, two-sided add/subtract from paired
+    /// inequalities, `d` nonpos/nonneg multiplication, etc.); recursive premise checks there use
+    /// [`VerifyState::make_final_round_state`].
     pub fn verify_non_equational_atomic_fact_with_builtin_rules(
         &mut self,
         atomic_fact: &AtomicFact,

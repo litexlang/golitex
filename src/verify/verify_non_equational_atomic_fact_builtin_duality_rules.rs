@@ -272,10 +272,371 @@ impl Runtime {
                 return Ok(verified_by_opposite_sign_factors);
             }
         }
+        if let Some(verified) =
+            self.try_verify_real_order_congruence_builtin_rules(current_fact, verify_state)?
+        {
+            return Ok(verified);
+        }
         self.verify_duality_atomic_fact_by_known_counterpart(
             current_fact,
             counterpart_fact,
             "real_order_negation_duality",
+        )
+    }
+
+    /// Builtin real-linearity / congruence rules (same shape as `know` order facts in examples).
+    /// Premises are checked via `non_equational_atomic_fact_holds_by_full_verify_pipeline` with
+    /// [`VerifyState::make_final_round_state`] to avoid re-entering round-0 forall / definition paths.
+    fn try_verify_real_order_congruence_builtin_rules(
+        &mut self,
+        current_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
+        let final_state = verify_state.make_final_round_state();
+        let zero = Obj::Number(Number::new("0".to_string()));
+
+        match current_fact {
+            AtomicFact::GreaterEqualFact(f) => {
+                if let (Obj::Sub(lsub), Obj::Sub(rsub)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&lsub.right, &rsub.right) {
+                        let premise = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            *lsub.left.clone(),
+                            *rsub.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_geq_subtract_same",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Sub(lsub), Obj::Sub(rsub)) = (&f.left, &f.right) {
+                    if !objs_equal_by_rational_expression_evaluation(&lsub.right, &rsub.right) {
+                        let premise_ge = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            *lsub.left.clone(),
+                            *rsub.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        let premise_le = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *lsub.right.clone(),
+                            *rsub.right.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_ge,
+                            &final_state,
+                        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_le,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_geq_sub_two_sided",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Add(ladd), Obj::Add(radd)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&ladd.right, &radd.right) {
+                        let premise = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            *ladd.left.clone(),
+                            *radd.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_geq_add_same",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Add(ladd), Obj::Add(radd)) = (&f.left, &f.right) {
+                    if !objs_equal_by_rational_expression_evaluation(&ladd.right, &radd.right) {
+                        let premise_l = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            *ladd.left.clone(),
+                            *radd.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        let premise_r = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            *ladd.right.clone(),
+                            *radd.right.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_l,
+                            &final_state,
+                        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_r,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_geq_add_two_sided",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Sub(lsub), Obj::Sub(rsub)) = (&f.left, &f.right) {
+                    if let (Obj::Mul(ldm), Obj::Mul(rdm)) = (&*lsub.right, &*rsub.right) {
+                        if objs_equal_by_rational_expression_evaluation(&lsub.left, &rsub.left)
+                            && objs_equal_by_rational_expression_evaluation(&ldm.left, &rdm.left)
+                        {
+                            let premise_xy = AtomicFact::LessEqualFact(LessEqualFact::new(
+                                *rdm.right.clone(),
+                                *lsub.left.clone(),
+                                f.line_file.clone(),
+                            ));
+                            let premise_d = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                                *ldm.left.clone(),
+                                zero.clone(),
+                                f.line_file.clone(),
+                            ));
+                            if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                                &premise_xy,
+                                &final_state,
+                            )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                                &premise_d,
+                                &final_state,
+                            )? {
+                                return Ok(Some(Self::real_order_congruence_builtin_success(
+                                    current_fact,
+                                    "real_order_congruence_geq_y_minus_d_linear",
+                                )));
+                            }
+                        }
+                    }
+                }
+                if let (Obj::Mul(ldm), Obj::Mul(rdm)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&ldm.left, &rdm.left) {
+                        let premise_ord = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *ldm.right.clone(),
+                            *rdm.right.clone(),
+                            f.line_file.clone(),
+                        ));
+                        let premise_d_nonpos = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *ldm.left.clone(),
+                            zero.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_ord,
+                            &final_state,
+                        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_d_nonpos,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_geq_mul_nonpos",
+                            )));
+                        }
+                    }
+                }
+            }
+            AtomicFact::LessEqualFact(f) => {
+                if let (Obj::Add(ladd), Obj::Add(radd)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&ladd.right, &radd.right) {
+                        let premise = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *ladd.left.clone(),
+                            *radd.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_leq_add_same",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Add(ladd), Obj::Add(radd)) = (&f.left, &f.right) {
+                    if !objs_equal_by_rational_expression_evaluation(&ladd.right, &radd.right) {
+                        let premise_l = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *ladd.left.clone(),
+                            *radd.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        let premise_r = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *ladd.right.clone(),
+                            *radd.right.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_l,
+                            &final_state,
+                        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_r,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_leq_add_two_sided",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Sub(lsub), Obj::Sub(rsub)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&lsub.right, &rsub.right) {
+                        let premise = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *lsub.left.clone(),
+                            *rsub.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_leq_subtract_same",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Sub(lsub), Obj::Sub(rsub)) = (&f.left, &f.right) {
+                    if !objs_equal_by_rational_expression_evaluation(&lsub.right, &rsub.right) {
+                        let premise_ge = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            *lsub.right.clone(),
+                            *rsub.right.clone(),
+                            f.line_file.clone(),
+                        ));
+                        let premise_le = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *lsub.left.clone(),
+                            *rsub.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_ge,
+                            &final_state,
+                        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_le,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_leq_sub_reversed_two_sided",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Mul(ldm), Obj::Mul(rdm)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&ldm.left, &rdm.left) {
+                        let d = &*ldm.left;
+                        if self
+                            .resolve_obj_to_number(d)
+                            .is_some_and(|n| n.normalized_value == "-1")
+                        {
+                            let premise = AtomicFact::LessEqualFact(LessEqualFact::new(
+                                *rdm.right.clone(),
+                                *ldm.right.clone(),
+                                f.line_file.clone(),
+                            ));
+                            if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                                &premise,
+                                &final_state,
+                            )? {
+                                return Ok(Some(Self::real_order_congruence_builtin_success(
+                                    current_fact,
+                                    "real_order_congruence_leq_negate_mul_minus_one",
+                                )));
+                            }
+                        }
+                    }
+                }
+                if let (Obj::Mul(ldm), Obj::Mul(rdm)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&ldm.left, &rdm.left) {
+                        let premise = AtomicFact::LessEqualFact(LessEqualFact::new(
+                            *ldm.right.clone(),
+                            *rdm.right.clone(),
+                            f.line_file.clone(),
+                        ));
+                        let premise_d_nonneg = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            *ldm.left.clone(),
+                            zero.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise,
+                            &final_state,
+                        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise_d_nonneg,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_leq_mul_nonneg",
+                            )));
+                        }
+                    }
+                }
+            }
+            AtomicFact::LessFact(f) => {
+                if let (Obj::Add(ladd), Obj::Add(radd)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&ladd.right, &radd.right) {
+                        let premise = AtomicFact::LessFact(LessFact::new(
+                            *ladd.left.clone(),
+                            *radd.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_lt_add_same",
+                            )));
+                        }
+                    }
+                }
+                if let (Obj::Sub(lsub), Obj::Sub(rsub)) = (&f.left, &f.right) {
+                    if objs_equal_by_rational_expression_evaluation(&lsub.right, &rsub.right) {
+                        let premise = AtomicFact::LessFact(LessFact::new(
+                            *lsub.left.clone(),
+                            *rsub.left.clone(),
+                            f.line_file.clone(),
+                        ));
+                        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &premise,
+                            &final_state,
+                        )? {
+                            return Ok(Some(Self::real_order_congruence_builtin_success(
+                                current_fact,
+                                "real_order_congruence_lt_subtract_same",
+                            )));
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        Ok(None)
+    }
+
+    fn real_order_congruence_builtin_success(
+        current_fact: &AtomicFact,
+        label: &str,
+    ) -> NonErrStmtExecResult {
+        NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                Fact::AtomicFact(current_fact.clone()),
+                InferResult::new(),
+                label.to_string(),
+                Vec::new(),
+            ),
         )
     }
 }
