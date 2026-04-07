@@ -216,8 +216,8 @@ impl Runtime {
     }
 
     /// `have fn by` 已消费；解析 `induc from <Obj>: <name> { ... } ret = : case ...`。
-    /// 前若干条须为 `param = from`, `param = from + 1`, …；最后一条须为 `param >= from + n`（n 为特殊 case 个数），
-    /// 且要么行末 `: obj`，要么 `: ` 后换行跟子块 `case when: obj`。
+    /// 前若干条须为 `param = from`, `param = from + 1`, …；最后一条须为 `param = param_2 + n`（n 为特殊 case 个数），
+    /// 其中 `param_2` 为固定辅助名；且要么行末 `: obj`，要么 `:` 后换行跟子块 `case when: obj`。
     fn parse_have_fn_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(INDUC)?;
         tb.skip_token(FROM)?;
@@ -300,33 +300,37 @@ impl Runtime {
             }
         }
 
+        self.insert_parsed_name_into_top_parsing_time_name_scope(
+            INDUC_PARAM_2_NAME,
+            tb.line_file.clone(),
+        )?;
+
         let last_block = &mut tb.body[num_blocks - 1];
         last_block.skip_token(CASE)?;
+        // `INDUC_PARAM_2_NAME` 已写入 `parsing_time_name_scope`（见上），此处解析的 `when` 里可出现 `param_2`。
         let last_when = self.parse_and_chain_atomic_fact(last_block)?;
         last_block.skip_token(COLON)?;
-        Self::verify_have_fn_by_induc_last_ge_when(
+        Self::verify_have_fn_by_induc_last_equal_when(
             &last_when,
             &param_name,
-            &induc_from,
             num_special,
             last_block.line_file.clone(),
         )?;
 
-        let (last_case_equal_to, last_case_cases) =
+        let (last_case_equal_to, last_case_cases) = if !last_block.exceed_end_of_head() {
+            let last_obj = self.parse_obj(last_block)?;
             if !last_block.exceed_end_of_head() {
-                let last_obj = self.parse_obj(last_block)?;
-                if !last_block.exceed_end_of_head() {
-                    return Err(
-                        RuntimeError::new_parse_error_with_msg_position_previous_error(
-                            "have fn by induc from: unexpected tokens after `obj` in last case"
-                                .to_string(),
-                            last_block.line_file.clone(),
-                            None,
-                        ),
-                    );
-                }
-                if !last_block.body.is_empty() {
-                    return Err(
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "have fn by induc from: unexpected tokens after `obj` in last case"
+                            .to_string(),
+                        last_block.line_file.clone(),
+                        None,
+                    ),
+                );
+            }
+            if !last_block.body.is_empty() {
+                return Err(
                         RuntimeError::new_parse_error_with_msg_position_previous_error(
                             "have fn by induc from: if last case has `:` and an object on the same line, it must not have a nested body"
                                 .to_string(),
@@ -334,41 +338,41 @@ impl Runtime {
                             None,
                         ),
                     );
+            }
+            (Some(last_obj), None)
+        } else if !last_block.body.is_empty() {
+            let mut nested: Vec<(AndChainAtomicFact, Obj)> =
+                Vec::with_capacity(last_block.body.len());
+            for sub in last_block.body.iter_mut() {
+                sub.skip_token(CASE)?;
+                let w = self.parse_and_chain_atomic_fact(sub)?;
+                sub.skip_token(COLON)?;
+                if sub.exceed_end_of_head() {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            "have fn by induc from: nested case must be `case <when>: <obj>`"
+                                .to_string(),
+                            sub.line_file.clone(),
+                            None,
+                        ),
+                    );
                 }
-                (Some(last_obj), None)
-            } else if !last_block.body.is_empty() {
-                let mut nested: Vec<(AndChainAtomicFact, Obj)> =
-                    Vec::with_capacity(last_block.body.len());
-                for sub in last_block.body.iter_mut() {
-                    sub.skip_token(CASE)?;
-                    let w = self.parse_and_chain_atomic_fact(sub)?;
-                    sub.skip_token(COLON)?;
-                    if sub.exceed_end_of_head() {
-                        return Err(
-                            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                                "have fn by induc from: nested case must be `case <when>: <obj>`"
-                                    .to_string(),
-                                sub.line_file.clone(),
-                                None,
-                            ),
-                        );
-                    }
-                    let o = self.parse_obj(sub)?;
-                    if !sub.body.is_empty() {
-                        return Err(
-                            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                                "have fn by induc from: nested case must not have further indentation"
-                                    .to_string(),
-                                sub.line_file.clone(),
-                                None,
-                            ),
-                        );
-                    }
-                    nested.push((w, o));
+                let o = self.parse_obj(sub)?;
+                if !sub.body.is_empty() {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            "have fn by induc from: nested case must not have further indentation"
+                                .to_string(),
+                            sub.line_file.clone(),
+                            None,
+                        ),
+                    );
                 }
-                (None, Some(nested))
-            } else {
-                return Err(
+                nested.push((w, o));
+            }
+            (None, Some(nested))
+        } else {
+            return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
                         "have fn by induc from: last case must end with `: <obj>` or `:` with nested `case` blocks"
                             .to_string(),
@@ -376,7 +380,7 @@ impl Runtime {
                         None,
                     ),
                 );
-            };
+        };
 
         Ok(Stmt::HaveFnByInducStmt(HaveFnByInducStmt::new(
             name,
@@ -441,9 +445,7 @@ impl Runtime {
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
                     format!(
                         "have fn by induc from: special case {} must be `param = {}` (got {})",
-                        index,
-                        expected,
-                        eq.right
+                        index, expected, eq.right
                     ),
                     line_file,
                     None,
@@ -453,21 +455,45 @@ impl Runtime {
         Ok(())
     }
 
-    fn verify_have_fn_by_induc_last_ge_when(
+    fn verify_have_fn_by_induc_last_equal_when(
         when: &AndChainAtomicFact,
         param_name: &str,
-        induc_from: &Obj,
         len_special: usize,
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        let ge = match when {
-            AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(ge)) => ge,
-            AndChainAtomicFact::AndFact(af) if af.facts.len() == 1 => match &af.facts[0] {
-                AtomicFact::GreaterEqualFact(ge) => ge,
+        let eq = match when {
+            AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(eq)) => eq,
+            _ => {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "have fn by induc from: last case `when` must be `param = param_2 + n`"
+                            .to_string(),
+                        line_file,
+                        None,
+                    ),
+                );
+            }
+        };
+        match &eq.left {
+            Obj::Identifier(id) if id.name == param_name => {}
+            _ => {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "have fn by induc from: last case equality left must be the parameter name"
+                            .to_string(),
+                        line_file,
+                        None,
+                    ),
+                );
+            }
+        }
+        let (base_id, offset_num) = match &eq.right {
+            Obj::Add(a) => match (&*a.left, &*a.right) {
+                (Obj::Identifier(id), Obj::Number(num)) => (id, num),
                 _ => {
                     return Err(
                         RuntimeError::new_parse_error_with_msg_position_previous_error(
-                            "have fn by induc from: last case `when` must be `param >= from + n`"
+                            "have fn by induc from: last case right must be `param_2 + <n>`"
                                 .to_string(),
                             line_file,
                             None,
@@ -478,7 +504,7 @@ impl Runtime {
             _ => {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: last case `when` must be `param >= from + n`"
+                        "have fn by induc from: last case right must be `param_2 + <n>`"
                             .to_string(),
                         line_file,
                         None,
@@ -486,27 +512,25 @@ impl Runtime {
                 );
             }
         };
-        match &ge.left {
-            Obj::Identifier(id) if id.name == param_name => {}
-            _ => {
-                return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: last case `>=` left must be the parameter name"
-                            .to_string(),
-                        line_file,
-                        None,
-                    ),
-                );
-            }
-        }
-        let expected = induc_obj_plus_offset(induc_from, len_special);
-        if ge.right.to_string() != expected.to_string() {
+        if base_id.name != INDUC_PARAM_2_NAME {
             return Err(
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
                     format!(
-                        "have fn by induc from: last case must be `param >= {}` (got {})",
-                        expected,
-                        ge.right
+                        "have fn by induc from: last case must use `{}` as the base (got {})",
+                        INDUC_PARAM_2_NAME, base_id.name
+                    ),
+                    line_file,
+                    None,
+                ),
+            );
+        }
+        if offset_num.normalized_value != len_special.to_string() {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    format!(
+                        "have fn by induc from: last case offset must be {} (special case count) (got {})",
+                        len_special,
+                        offset_num.normalized_value
                     ),
                     line_file,
                     None,
@@ -724,10 +748,7 @@ impl Runtime {
         )))
     }
 
-    pub fn parse_def_struct_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Stmt, RuntimeError> {
+    pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(STRUCT)?;
         let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 

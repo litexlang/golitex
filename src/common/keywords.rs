@@ -81,6 +81,8 @@ pub const CASES: &str = "cases";
 pub const CONTRA: &str = "contra";
 pub const ENUMERATE: &str = "enumerate";
 pub const INDUC: &str = "induc";
+/// `have fn by induc from` 最后一项 `case` 的 `when` 中，表示 `from` 一侧的辅助名（须与解析器登记名一致）。
+pub const INDUC_PARAM_2_NAME: &str = "param_2";
 pub const FOR: &str = "for";
 pub const EXTENSION: &str = "extension";
 pub const TUPLE: &str = "tuple";
