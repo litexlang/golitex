@@ -44,6 +44,8 @@ impl Runtime {
             Stmt::ByForStmt(s) => self.exec_by_for_stmt(s),
             Stmt::ByExtensionStmt(s) => self.exec_by_extension_stmt(s),
             Stmt::ByFnStmt(s) => self.exec_by_fn_stmt(s),
+            Stmt::ByFamilyStmt(s) => self.exec_by_family_stmt(s),
+            Stmt::ByStructStmt(s) => self.exec_by_struct_stmt(s),
             Stmt::ByTuple(s) => self.exec_by_tuple_stmt(s),
         }
     }

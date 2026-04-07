@@ -5,7 +5,9 @@ mod cases_by_stmt;
 mod contra_by_stmt;
 mod enumerate_by_stmt;
 mod extension_by_stmt;
+mod family_by_stmt;
 mod fn_tuple_by_stmt;
+mod struct_by_stmt;
 mod for_by_stmt;
 mod induc_by_stmt;
 
@@ -24,10 +26,12 @@ impl Runtime {
             FOR => self.parse_by_for_stmt(tb),
             EXTENSION => self.parse_by_extension_stmt(tb),
             FN => self.parse_by_fn_stmt(tb),
+            FAMILY => self.parse_by_family_stmt(tb),
+            STRUCT => self.parse_by_struct_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
             _ => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
                 format!(
-                    "by: expected cases, contra, enumerate, induc, for, extension, fn, or tuple after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate, induc, for, extension, fn, family, struct, or tuple after `by`, got `{}`",
                     second_keyword
                 ),
                 tb.line_file.clone(),
