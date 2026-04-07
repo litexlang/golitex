@@ -246,14 +246,13 @@ impl Runtime {
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
     ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
-        self.push_env();
-        let execute_result = self.exec_by_for_stmt_for_one_assignment_body(
-            stmt,
-            parameter_index_assignment,
-            param_value_strings_of_each_param,
-        );
-        self.pop_env();
-        execute_result
+        self.run_in_local_env(|rt| {
+            rt.exec_by_for_stmt_for_one_assignment_body(
+                stmt,
+                parameter_index_assignment,
+                param_value_strings_of_each_param,
+            )
+        })
     }
 
     fn exec_by_for_stmt_for_one_assignment_body(

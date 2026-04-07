@@ -23,9 +23,9 @@ impl Runtime {
 
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for case_index in 0..stmt.cases.len() {
-            self.push_env();
-            let one_case_result = self.exec_by_cases_stmt_for_one_case(stmt, case_index);
-            self.pop_env();
+            let one_case_result = self.run_in_local_env(|rt| {
+                rt.exec_by_cases_stmt_for_one_case(stmt, case_index)
+            });
 
             match one_case_result {
                 Ok(mut one_case_inside_results) => {

@@ -6,12 +6,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        self.push_env();
-        let result = self.exec_have_fn_by_induc_verify_process(stmt);
-        self.pop_env();
-        if let Err(e) = result {
-            return Err(e);
-        }
+        self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_process(stmt))?;
 
         let result = self.exec_have_fn_by_induc_store_process(stmt)?;
 
@@ -29,12 +24,7 @@ impl Runtime {
             )?;
         }
 
-        self.push_env();
-        let result = self.exec_have_fn_by_induc_verify_last_case(stmt);
-        self.pop_env();
-        if let Err(e) = result {
-            return Err(e);
-        }
+        self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_last_case(stmt))?;
 
         Ok(())
     }
@@ -185,23 +175,15 @@ impl Runtime {
                     })?;
 
                 for (when, eq_to) in last_pairs.iter() {
-                    self.push_env();
-                    let branch = (|| -> Result<(), RuntimeError> {
-                        let result = self
-                            .store_fact_without_well_defined_verified_and_infer(when.to_fact())
-                            .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()));
-                        if let Err(e) = result {
-                            Err(e)
-                        } else {
-                            self.have_fn_by_induc_verify_one_equal_to_well_defined(
-                                stmt,
-                                eq_to,
-                                &verify_state,
-                            )
-                        }
-                    })();
-                    self.pop_env();
-                    branch?;
+                    self.run_in_local_env(|rt| {
+                        rt.store_fact_without_well_defined_verified_and_infer(when.to_fact())
+                            .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+                        rt.have_fn_by_induc_verify_one_equal_to_well_defined(
+                            stmt,
+                            eq_to,
+                            &verify_state,
+                        )
+                    })?;
                 }
             }
             _ => {

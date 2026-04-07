@@ -148,11 +148,9 @@ impl Runtime {
         stmt: &ByEnumerateStmt,
         parameter_index_assignment: &Vec<usize>,
     ) -> Result<(), RuntimeError> {
-        self.push_env();
-        let execute_result = self
-            .exec_by_enumerate_stmt_for_one_assignment_body(stmt, parameter_index_assignment);
-        self.pop_env();
-        execute_result
+        self.run_in_local_env(|rt| {
+            rt.exec_by_enumerate_stmt_for_one_assignment_body(stmt, parameter_index_assignment)
+        })
     }
 
     fn exec_by_enumerate_stmt_for_one_assignment_body(

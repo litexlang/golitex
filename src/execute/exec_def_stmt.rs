@@ -60,12 +60,7 @@ impl Runtime {
         &mut self,
         def_prop_stmt: &DefPropStmt,
     ) -> Result<(), RuntimeErrorStruct> {
-        self.push_env();
-
-        let result = self.def_prop_stmt_check_well_defined_body(def_prop_stmt);
-
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| rt.def_prop_stmt_check_well_defined_body(def_prop_stmt))
     }
 
     fn def_prop_stmt_check_well_defined_body(
@@ -531,12 +526,9 @@ impl Runtime {
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
     ) -> Result<(), RuntimeErrorStruct> {
-        self.push_env();
-
-        let result = self.have_fn_equal_stmt_verify_well_defined_body(have_fn_equal_stmt);
-
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| {
+            rt.have_fn_equal_stmt_verify_well_defined_body(have_fn_equal_stmt)
+        })
     }
 
     fn have_fn_equal_stmt_verify_well_defined_body(
@@ -789,16 +781,13 @@ impl Runtime {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
 
-            self.push_env();
-            let case_result = self
-                .have_fn_equal_case_by_case_stmt_verify_well_defined_body_for_one_case(
+            self.run_in_local_env(|rt| {
+                rt.have_fn_equal_case_by_case_stmt_verify_well_defined_body_for_one_case(
                     have_fn_equal_case_by_case_stmt,
                     case_fact,
                     equal_to,
-                );
-
-            self.pop_env();
-            case_result?;
+                )
+            })?;
         }
 
         Ok(())

@@ -29,11 +29,9 @@ impl Runtime {
 
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
-        self.push_env();
-        let result = self.verify_forall_fact_body(forall_fact, &verify_state_for_children);
-        self.pop_env();
-
-        result
+        self.run_in_local_env(|rt| {
+            rt.verify_forall_fact_body(forall_fact, &verify_state_for_children)
+        })
     }
 
     fn verify_forall_fact_body(
