@@ -58,16 +58,6 @@ impl Runtime {
                     }
                 }
             }
-            ParamType::Family(family_obj) => {
-                let is_nonempty_set = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                    IsNonemptySetFact::new(Obj::FamilyObj(family_obj.clone()), default_line_file()),
-                ));
-                self.verify_fact_well_defined_and_store_and_infer(
-                    is_nonempty_set,
-                    &VerifyState::new(0, false),
-                )?;
-                Ok(())
-            }
             ParamType::Struct(struct_obj) => {
                 let is_nonempty_set = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                     IsNonemptySetFact::new(Obj::StructObj(struct_obj.clone()), default_line_file()),

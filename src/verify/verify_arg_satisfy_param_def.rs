@@ -16,14 +16,6 @@ impl Runtime {
                 ));
                 self.verify_atomic_fact(&fact, verify_state)
             }
-            ParamType::Family(family_ty) => {
-                let fact = AtomicFact::InFact(InFact::new(
-                    obj,
-                    Obj::FamilyObj(family_ty.clone()),
-                    default_line_file(),
-                ));
-                self.verify_atomic_fact(&fact, verify_state)
-            }
             ParamType::Obj(set_obj) => {
                 let fact =
                     AtomicFact::InFact(InFact::new(obj, set_obj.clone(), default_line_file()));

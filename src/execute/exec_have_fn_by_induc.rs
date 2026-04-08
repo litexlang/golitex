@@ -151,15 +151,24 @@ impl Runtime {
         )
         .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
 
+        // stmt.name(param_name_str - 1) ... stmt.name(param_name_str - n) all well-defined
+        for i in 1..=n {
+            let param_name = Obj::Sub(Sub::new(
+                Obj::Identifier(Identifier::new(param_name_str.to_string())),
+                Obj::Number(Number::new(i.to_string())),
+            ));
+            self.store_cache(&param_name)
+        }
+
         self.have_fn_by_induc_verify_last_case_register_fn(stmt, &param_name_str)?;
 
-        match (&stmt.last_case_equal_to, &stmt.last_case_cases) {
-            (Some(eq), None) => {
+        match &stmt.last_case {
+            HaveFnByInducLastCase::EqualTo(eq) => {
                 self.have_fn_by_induc_verify_one_equal_to_well_defined(stmt, eq, &verify_state)?;
             }
-            (None, Some(last_pairs)) if !last_pairs.is_empty() => {
+            HaveFnByInducLastCase::NestedCases(last_pairs) if !last_pairs.is_empty() => {
                 let coverage_cases: Vec<AndChainAtomicFact> =
-                    last_pairs.iter().map(|(w, _)| w.clone()).collect();
+                    last_pairs.iter().map(|c| c.case_fact.clone()).collect();
                 let coverage = Fact::OrFact(OrFact::new(coverage_cases, line_file.clone()));
                 self.verify_fact_return_err_if_not_true(&coverage, &verify_state)
                     .map_err(|e| {
@@ -174,23 +183,25 @@ impl Runtime {
                         )
                     })?;
 
-                for (when, eq_to) in last_pairs.iter() {
+                for nested in last_pairs.iter() {
                     self.run_in_local_env(|rt| {
-                        rt.store_fact_without_well_defined_verified_and_infer(when.to_fact())
-                            .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+                        rt.store_fact_without_well_defined_verified_and_infer(
+                            nested.case_fact.to_fact(),
+                        )
+                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
                         rt.have_fn_by_induc_verify_one_equal_to_well_defined(
                             stmt,
-                            eq_to,
+                            &nested.equal_to,
                             &verify_state,
                         )
                     })?;
                 }
             }
-            _ => {
+            HaveFnByInducLastCase::NestedCases(_) => {
                 return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::HaveFnByInducStmt(stmt.clone()),
-                        "have_fn_by_induc: last case must be either `: obj` or nested `case` blocks, not both or neither".to_string(),
+                        "have_fn_by_induc: nested last case list must not be empty".to_string(),
                         None,
                         vec![],
                     ),
@@ -205,6 +216,12 @@ impl Runtime {
         &mut self,
         _stmt: &HaveFnByInducStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
+        // 定义函数：stmt.name 是 符合 fn_set 的
+
+        // 遍历所有special case，让 stmt.name(induc_from + i) = equal_to[i]
+
+        // 按你的理解处理last，并解释清楚
+
         panic!("not implemented");
     }
 }

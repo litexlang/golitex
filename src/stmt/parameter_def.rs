@@ -2,14 +2,12 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt;
 
-// 虽然family 和 struct 本质上也是Obj，但他们的作为parameter type 出现用来定义新的identifier的时候，太特殊了，所以单独定义一个enum来表示。
 #[derive(Clone)]
 pub enum ParamType {
     Set(Set),
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
     Obj(Obj),
-    Family(FamilyObj),
     Struct(StructObj),
 }
 
@@ -19,7 +17,6 @@ pub enum StructFieldType {
     Set(Set),
     FiniteSet(FiniteSet),
     NonemptySet(NonemptySet),
-    Family(FamilyObj),
 }
 
 impl StructFieldType {
@@ -29,7 +26,6 @@ impl StructFieldType {
             StructFieldType::Set(s) => ParamType::Set(s.clone()),
             StructFieldType::FiniteSet(f) => ParamType::FiniteSet(f.clone()),
             StructFieldType::NonemptySet(n) => ParamType::NonemptySet(n.clone()),
-            StructFieldType::Family(f) => ParamType::Family(f.clone()),
         }
     }
 }
@@ -166,7 +162,6 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
-            ParamType::Family(family) => write!(f, "{}", family),
             ParamType::Struct(struct_ty) => write!(f, "{}", struct_ty),
         }
     }

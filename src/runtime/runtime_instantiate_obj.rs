@@ -597,16 +597,6 @@ impl Runtime {
             ParamType::FiniteSet(_) => Ok(param_type.clone()),
             ParamType::NonemptySet(_) => Ok(param_type.clone()),
             ParamType::Obj(obj) => Ok(ParamType::Obj(self.inst_obj(obj, param_to_arg_map)?)),
-            ParamType::Family(family) => {
-                let mut params = Vec::with_capacity(family.params.len());
-                for param in family.params.iter() {
-                    params.push(self.inst_obj(param, param_to_arg_map)?);
-                }
-                Ok(ParamType::Family(FamilyObj {
-                    name: family.name.clone(),
-                    params,
-                }))
-            }
             ParamType::Struct(struct_ty) => {
                 let mut params = Vec::with_capacity(struct_ty.args.len());
                 for param in struct_ty.args.iter() {

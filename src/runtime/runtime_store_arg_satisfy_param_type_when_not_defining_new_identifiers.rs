@@ -27,11 +27,6 @@ impl Runtime {
                     obj.clone(),
                     _line_file.clone(),
                 ))),
-                ParamType::Family(family) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                    arg.clone(),
-                    Obj::FamilyObj(family.clone()),
-                    _line_file.clone(),
-                ))),
                 ParamType::Struct(struct_ty) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                     arg.clone(),
                     Obj::StructObj(struct_ty.clone()),

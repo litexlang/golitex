@@ -123,6 +123,8 @@ pub use crate::stmt::definition_stmt::DefLetStmt;
 pub use crate::stmt::definition_stmt::DefPropStmt;
 pub use crate::stmt::definition_stmt::DefStructStmt;
 pub use crate::stmt::definition_stmt::HaveExistObjStmt;
+pub use crate::stmt::definition_stmt::HaveFnByInducLastCase;
+pub use crate::stmt::definition_stmt::HaveFnByInducNestedCase;
 pub use crate::stmt::definition_stmt::HaveFnByInducStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualStmt;
