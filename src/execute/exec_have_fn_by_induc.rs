@@ -51,7 +51,7 @@ impl Runtime {
         self.store_identifier_obj(&stmt.name)
             .map_err(RuntimeError::from)?;
 
-        let random_param = self.generate_random_unused_names(1)[0].clone();
+        let random_param = self.generate_random_unused_name();
 
         let param_minus_n = Obj::Sub(Sub::new(
             Obj::Identifier(Identifier::new(param_name.to_string())),
