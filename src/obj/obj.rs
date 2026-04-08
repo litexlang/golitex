@@ -836,12 +836,25 @@ impl fmt::Display for SetBuilder {
 }
 
 impl fmt::Display for FnSet {
+    /// 与 AST 一致：形参表、dom 均使用**存储名**（`fn` 形参为 `__` + 用户符面）。  
+    /// 区别于单独 [`ParamGroupWithSet`] 的 `Display`（会隐去 `__` 以便其它上下文）。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let params_with_sets_display: Vec<String> = self
+            .params_def_with_set
+            .iter()
+            .map(|g| {
+                format!(
+                    "{} {}",
+                    vec_to_string_join_by_comma(&g.params),
+                    g.set
+                )
+            })
+            .collect();
         write!(
             f,
             "{} {} {}",
             FN,
-            brace_vec_colon_vec_to_string(&self.params_def_with_set, &self.dom_facts),
+            brace_vec_colon_vec_to_string(&params_with_sets_display, &self.dom_facts),
             self.ret_set
         )
     }
