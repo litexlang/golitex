@@ -147,18 +147,18 @@ impl Runtime {
     }
 
     /// 与 [`parse_fn_set_with_dom_without_fn_prefix_body`] 同形，但形参/dom/ret 均为**用户符**，不做 `__` mangling（供 `have fn` 等语句 AST）。
-    pub fn parse_fn_set_with_dom_without_fn_prefix_user_ast(
+    pub fn parse_fn_set_without_mangled_prefix(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<HaveFnFnSetClause, RuntimeError> {
         self.push_parsing_time_name_scope();
-        let clause = self.parse_fn_set_with_dom_without_fn_prefix_user_ast_body(tb);
+        let clause = self.parse_fn_set_without_mangled_prefix_body(tb);
         self.pop_parsing_time_name_scope();
         clause
     }
 
     // 和 parse_fn_set的唯一区别：形式参数没有前面加前缀
-    fn parse_fn_set_with_dom_without_fn_prefix_user_ast_body(
+    fn parse_fn_set_without_mangled_prefix_body(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<HaveFnFnSetClause, RuntimeError> {
@@ -178,14 +178,10 @@ impl Runtime {
                 tb.line_file.clone(),
             )?;
 
-            // 这是必要的，以免作为 obj_set 出现的 set_builder里有未注册的形参。
-            self.register_collected_param_names_for_def_parse(
-                &current_params
-                    .iter()
-                    .map(|p| format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p))
-                    .collect(),
-                tb.line_file.clone(),
-            )?;
+            for p in current_params.iter() {
+                let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
+                self.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
+            }
 
             let set = self.parse_obj(tb)?;
             params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
@@ -245,13 +241,19 @@ impl Runtime {
 
             let mut params_with_prefix = vec![];
             for p in current_params.clone().iter() {
-                params_with_prefix.push(format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p));
+                let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
+                params_with_prefix.push(p_with_prefix.clone());
+                if !is_valid_litex_name(&p).is_ok() {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            format!("Invalid parameter name: {}", p),
+                            tb.line_file.clone(),
+                            None,
+                        ),
+                    );
+                }
+                self.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
             }
-
-            self.register_collected_param_names_for_def_parse(
-                &params_with_prefix,
-                tb.line_file.clone(),
-            )?;
 
             params_def_with_set.push(ParamGroupWithSet::new(params_with_prefix, set));
 
