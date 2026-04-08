@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
@@ -231,10 +230,7 @@ impl Runtime {
 
             let set = self.parse_obj(tb)?;
 
-            let mut params_with_prefix = vec![];
             for p in current_params.clone().iter() {
-                let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
-                params_with_prefix.push(p_with_prefix.clone());
                 if !is_valid_litex_name(&p).is_ok() {
                     return Err(
                         RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -244,10 +240,11 @@ impl Runtime {
                         ),
                     );
                 }
+                let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
                 self.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
             }
 
-            params_def_with_set.push(ParamGroupWithSet::new(params_with_prefix, set));
+            params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
 
             if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
@@ -267,38 +264,25 @@ impl Runtime {
             }
         }
 
-        let mut param_arg_map = HashMap::new();
-        let mut new_param_names = vec![];
-        for param in params_def_with_set.iter() {
-            for p in param.params.iter() {
-                param_arg_map.insert(
-                    p.clone(),
-                    Obj::Identifier(Identifier::new(format!(
-                        "{}{}",
-                        DEFAULT_MANGLED_FN_PARAM_PREFIX, p
-                    ))),
-                );
-                new_param_names.push(format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p));
-            }
-        }
-
         let mut dom_facts = vec![];
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let cur = self.parse_or_and_chain_atomic_fact(tb)?;
-            let inst = self.inst_or_and_chain_atomic_fact(&cur, &param_arg_map)?;
-            dom_facts.push(inst);
+            dom_facts.push(cur);
             while tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
                 let cur = self.parse_or_and_chain_atomic_fact(tb)?;
-                let inst = self.inst_or_and_chain_atomic_fact(&cur, &param_arg_map)?;
-                dom_facts.push(inst);
+                dom_facts.push(cur);
             }
         }
 
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set_parsed = self.parse_obj(tb)?;
-        Ok(FnSet::new(params_def_with_set, dom_facts, ret_set_parsed))
+        Ok(self.new_fn_set_and_add_mangled_prefix(
+            params_def_with_set,
+            dom_facts,
+            ret_set_parsed,
+        )?)
     }
 
     pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(

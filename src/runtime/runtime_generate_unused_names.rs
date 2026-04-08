@@ -36,7 +36,7 @@ impl Runtime {
             }
         }
 
-        let available_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz0123456789".chars().collect();
+        let available_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
         let first_char_candidates: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
         let mut try_index: usize = 0;
         loop {
