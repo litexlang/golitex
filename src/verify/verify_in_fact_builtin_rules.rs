@@ -632,11 +632,7 @@ impl Runtime {
         for _ in 0..n {
             let base = self.generate_one_unused_name_with_reserved(&reserved);
             reserved.insert(base.clone());
-            mangled_placeholders.push(format!(
-                "{}{}",
-                DEFAULT_MANGLED_FN_PARAM_PREFIX,
-                base
-            ));
+            mangled_placeholders.push(format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, base));
         }
 
         let mut pa_map = HashMap::new();
@@ -647,8 +643,16 @@ impl Runtime {
             pb_map.insert(pb[i].clone(), Obj::Identifier(Identifier::new(ph)));
         }
 
-        let a_params = param_def_with_set_rename_to_mangled(&a.params_def_with_set, &pa, &mangled_placeholders);
-        let b_params = param_def_with_set_rename_to_mangled(&b.params_def_with_set, &pb, &mangled_placeholders);
+        let a_params = param_def_with_set_rename_to_mangled(
+            &a.params_def_with_set,
+            &pa,
+            &mangled_placeholders,
+        );
+        let b_params = param_def_with_set_rename_to_mangled(
+            &b.params_def_with_set,
+            &pb,
+            &mangled_placeholders,
+        );
 
         let a_dom: Vec<OrAndChainAtomicFact> = a
             .dom_facts
@@ -664,8 +668,8 @@ impl Runtime {
         let a_ret = a.ret_set.as_ref().clone();
         let b_ret = b.ret_set.as_ref().clone();
 
-        let a_instantiated = FnSet::new(a_params, a_dom, a_ret);
-        let b_instantiated = FnSet::new(b_params, b_dom, b_ret);
+        let a_instantiated = self.new_fn_set_and_add_mangled_prefix(a_params, a_dom, a_ret)?;
+        let b_instantiated = self.new_fn_set_and_add_mangled_prefix(b_params, b_dom, b_ret)?;
 
         Ok(a_instantiated.to_string() == b_instantiated.to_string())
     }
@@ -681,7 +685,8 @@ impl Runtime {
         let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(&element_obj) else {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         };
-        if self.fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
+        if self
+            .fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
             .map_err(|e| {
                 RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
