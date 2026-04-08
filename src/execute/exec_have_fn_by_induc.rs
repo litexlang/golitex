@@ -8,9 +8,15 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_process(stmt))?;
 
-        let result = self.exec_have_fn_by_induc_store_process(stmt)?;
+        let infer_result = self.exec_have_fn_by_induc_store_process(stmt)?;
 
-        Ok(result)
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            NonFactualStmtSuccess::new(
+                Stmt::HaveFnByInducStmt(stmt.clone()),
+                infer_result,
+                vec![],
+            ),
+        ))
     }
 
     fn exec_have_fn_by_induc_verify_process(
@@ -215,7 +221,9 @@ impl Runtime {
     fn exec_have_fn_by_induc_store_process(
         &mut self,
         stmt: &HaveFnByInducStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+
         // 定义函数：stmt.name 是 符合 fn_set 的
         self.define_parameter_by_binding_param_type(
             &stmt.name,
@@ -246,8 +254,11 @@ impl Runtime {
                 stmt.line_file.clone(),
             )));
 
-            self.store_fact_without_well_defined_verified_and_infer(equal_fact)
+            let result = self
+                .store_fact_without_well_defined_verified_and_infer(equal_fact)
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+
+            infer_result.new_infer_result_inside(result);
         }
 
         match &stmt.last_case {
@@ -300,14 +311,72 @@ impl Runtime {
                     stmt.line_file.clone(),
                 ));
 
-                self.store_fact_without_well_defined_verified_and_infer(forall_fact)
+                let result = self
+                    .store_fact_without_well_defined_verified_and_infer(forall_fact)
                     .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+                infer_result.new_infer_result_inside(result);
             }
             HaveFnByInducLastCase::NestedCases(last_pairs) => {
-                panic!("not implemented");
+                for nested in last_pairs.iter() {
+                    let param_name = stmt.fn_set.get_params()[0].clone();
+                    let param_def = vec![ParamGroupWithParamType::new(
+                        vec![param_name.clone()],
+                        ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
+                    )];
+                    let eq = nested.equal_to.clone();
+
+                    let mut dom: Vec<ExistOrAndChainAtomicFact> = stmt
+                        .fn_set
+                        .dom_facts
+                        .clone()
+                        .into_iter()
+                        .map(|f| f.to_exist_or_and_chain_atomic_fact())
+                        .collect();
+
+                    dom.push(ExistOrAndChainAtomicFact::AtomicFact(
+                        AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            Obj::Identifier(Identifier::new(param_name.clone())),
+                            Obj::Number(Number::new(
+                                induc_obj_plus_offset(
+                                    &stmt.induc_from,
+                                    stmt.special_cases_equal_tos.len(),
+                                )
+                                .to_string(),
+                            )),
+                            stmt.line_file.clone(),
+                        )),
+                    ));
+
+                    dom.push(nested.case_fact.to_exist_or_and_chain_atomic_fact());
+
+                    let forall_fact = Fact::ForallFact(ForallFact::new(
+                        param_def,
+                        dom,
+                        vec![ExistOrAndChainAtomicFact::AtomicFact(
+                            AtomicFact::EqualFact(EqualFact::new(
+                                Obj::FnObj(FnObj {
+                                    head: Box::new(Atom::Identifier(Identifier::new(
+                                        stmt.name.clone(),
+                                    ))),
+                                    body: vec![vec![Box::new(Obj::Identifier(Identifier::new(
+                                        param_name.clone(),
+                                    )))]],
+                                }),
+                                eq.clone(),
+                                stmt.line_file.clone(),
+                            )),
+                        )],
+                        stmt.line_file.clone(),
+                    ));
+
+                    let result = self
+                        .store_fact_without_well_defined_verified_and_infer(forall_fact)
+                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+                    infer_result.new_infer_result_inside(result);
+                }
             }
         }
 
-        panic!("not implemented");
+        Ok(infer_result)
     }
 }
