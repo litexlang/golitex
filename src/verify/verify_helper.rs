@@ -10,9 +10,8 @@ impl Runtime {
         let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&key);
         if cache_ok {
             Some(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                     fact.clone(),
-                    InferResult::new(),
                     key,
                     None,
                     Some(cache_line_file),

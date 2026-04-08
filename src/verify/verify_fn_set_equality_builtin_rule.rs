@@ -29,10 +29,10 @@ fn fn_set_equality_verified_by_builtin_rules_result(
     right: &FnSet,
     line_file: LineFile,
 ) -> NonErrStmtExecResult {
+    let stmt = fn_set_equality_fact(left, right, line_file);
     NonErrStmtExecResult::FactualStmtSuccess(
-        FactualStmtSuccess::new_with_verified_by_builtin_rules(
-            fn_set_equality_fact(left, right, line_file),
-            InferResult::new(),
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            stmt,
             "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
             Vec::new(),
         ),

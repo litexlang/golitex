@@ -106,7 +106,7 @@ impl Runtime {
         ))
     }
 
-    /// Puts the generated forall fact string first in `infer_facts`, then appends infer from store.
+    /// Puts the generated forall fact first via [`InferResult::new_fact`], then appends infer from store.
     fn infer_result_with_generated_forall_and_store_infer(
         generated_forall_fact: &Fact,
         infer_after_store: InferResult,

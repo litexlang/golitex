@@ -35,9 +35,8 @@ impl Runtime {
             verify_what.push(fact.to_string());
         }
         Ok(NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_known_fact_source(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 Fact::AndFact(and_fact.clone()),
-                InferResult::new(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
                 Some(default_line_file()),
@@ -88,9 +87,8 @@ impl Runtime {
             verify_what.push(fact.to_string());
         }
         Ok(NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_known_fact_source(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 Fact::ChainFact(chain_fact.clone()),
-                InferResult::new(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
                 Some(default_line_file()),

@@ -8,7 +8,7 @@ impl Runtime {
         infer_result: &mut InferResult,
         infer_step_description: &str,
     ) -> Result<(), RuntimeError> {
-        let inferred_fact_display = inferred_fact.to_string();
+        infer_result.new_fact(&inferred_fact);
         self.store_fact_without_well_defined_verified_and_infer(inferred_fact)
             .map_err(|previous_error| {
                 RuntimeError::new_infer_error_with_msg_position_previous_error(
@@ -20,7 +20,6 @@ impl Runtime {
                     Some(previous_error.into()),
                 )
             })?;
-        infer_result.infer_facts.push(inferred_fact_display);
         Ok(())
     }
 

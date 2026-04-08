@@ -87,9 +87,8 @@ impl Runtime {
                     })?;
                 if target_string == known_string {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                             Fact::ExistFact(exist_fact.clone()),
-                            InferResult::new(),
                             known_fact.to_string(),
                             Some(Fact::ExistFact(known_fact.clone())),
                             None,

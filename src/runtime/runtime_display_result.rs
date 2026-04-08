@@ -115,7 +115,7 @@ impl Runtime {
 
         let infer_indent = json_one_level_indent(depth + 2);
         let mut infer_elements: Vec<String> = Vec::new();
-        for infer_fact in non_factual_stmt_success_result.infers.infer_facts.iter() {
+        for infer_fact in non_factual_stmt_success_result.infers.infer_lines().iter() {
             infer_elements.push(format!(
                 "{}{}",
                 infer_indent,
@@ -208,7 +208,7 @@ impl Runtime {
 
         let infer_indent = json_one_level_indent(depth + 2);
         let mut infer_elements: Vec<String> = Vec::new();
-        for infer_fact in factual_stmt_success_result.infers.infer_facts.iter() {
+        for infer_fact in factual_stmt_success_result.infers.infer_lines().iter() {
             infer_elements.push(format!(
                 "{}{}",
                 infer_indent,
@@ -297,7 +297,7 @@ impl Runtime {
 
         let infer_indent = json_one_level_indent(depth + 2);
         let mut infer_elements: Vec<String> = Vec::new();
-        for infer_fact in factual_stmt_success_result.infers.infer_facts.iter() {
+        for infer_fact in factual_stmt_success_result.infers.infer_lines().iter() {
             infer_elements.push(format!(
                 "{}{}",
                 infer_indent,
