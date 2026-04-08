@@ -379,4 +379,16 @@ impl Runtime {
         let ret_stored = self.inst_obj(&ret_set, &param_arg_map)?;
         Ok(FnSet::new(new_def_with_set, dom_stored, ret_stored))
     }
+
+    pub fn add_mangled_prefix_to_fn_set_clause(
+        &self,
+        clause: &FnSetClause,
+        _line_file: LineFile,
+    ) -> Result<FnSet, RuntimeError> {
+        self.new_fn_set_and_add_mangled_prefix(
+            clause.params_def_with_set.clone(),
+            clause.dom_facts.clone(),
+            clause.ret_set.clone(),
+        )
+    }
 }
