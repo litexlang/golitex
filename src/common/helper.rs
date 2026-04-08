@@ -1,3 +1,4 @@
+use super::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
 use super::keywords::{
     COLON, DOT_AKA_FIELD_ACCESS_SIGN, LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE,
 };
@@ -70,6 +71,19 @@ pub fn vec_to_string_join_by_comma<T: fmt::Display>(vec: &Vec<T>) -> String {
     vec.iter()
         .map(|x| x.to_string())
         .collect::<Vec<String>>()
+        .join(", ")
+}
+
+/// `fn` / 内涵集 AST 中形参存为 `__` + 用户符面；打印时去掉此前缀。
+pub fn comma_separated_stored_fn_params_as_user_source(params: &[String]) -> String {
+    params
+        .iter()
+        .map(|p| {
+            p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
+                .map(String::from)
+                .unwrap_or_else(|| p.clone())
+        })
+        .collect::<Vec<_>>()
         .join(", ")
 }
 

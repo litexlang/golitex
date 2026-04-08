@@ -1,0 +1,50 @@
+use crate::prelude::*;
+use std::fmt;
+
+// view fn set as a subset of a cartesian product set
+#[derive(Clone)]
+pub struct ByFnStmt {
+    pub function: Obj,
+    pub line_file: LineFile,
+}
+
+/// Introduce facts from the built-in ordered-pair / tuple encoding.
+#[derive(Clone)]
+pub struct ByTupleStmt {
+    pub obj: Obj,
+    pub line_file: LineFile,
+}
+
+impl fmt::Display for ByFnStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{} {}",
+            BY,
+            FN,
+            COLON,
+            self.function
+        )
+    }
+}
+
+impl ByFnStmt {
+    pub fn new(function: Obj, line_file: LineFile) -> Self {
+        ByFnStmt {
+            function,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for ByTupleStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{} {}", BY, TUPLE, COLON, self.obj)
+    }
+}
+
+impl ByTupleStmt {
+    pub fn new(obj: Obj, line_file: LineFile) -> Self {
+        ByTupleStmt { obj, line_file }
+    }
+}

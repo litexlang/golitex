@@ -5,21 +5,24 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn get_struct_that_object_satisfies(&self, obj: &IdentifierOrIdentifierWithMod) -> Option<&StructParamType> {
+    pub fn get_object_satisfy_struct(
+        &self,
+        obj: &IdentifierOrIdentifierWithMod,
+    ) -> Option<&StructObj> {
         let key = obj.to_string();
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.defined_field_access_name.get(&key) {
+            if let Some(definition) = env.known_identifier_satisfy_struct.get(&key) {
                 return Some(definition);
             }
         }
         None
     }
 
-    pub fn get_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<&FnSetWithParams> {
+    pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<&FnSet> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_obj_in_fn_set.get(&key) {
+            if let Some(definition) = env.known_objs_in_fn_sets.get(&key) {
                 return Some(definition);
             }
         }
@@ -27,11 +30,11 @@ impl Runtime {
         None
     }
 
-    pub fn get_cloned_fn_set_where_fn_belongs_to(&self, obj: &Obj) -> Option<FnSetWithParams> {
+    pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSet> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_obj_in_fn_set.get(&key) {
+            if let Some(definition) = env.known_objs_in_fn_sets.get(&key) {
                 return Some(definition.clone());
             }
         }
@@ -57,40 +60,40 @@ impl Runtime {
         (false, default_line_file())
     }
 
-    pub fn get_known_cart_obj_of_obj(&self, name: &str) -> Option<Cart> {
+    pub fn get_object_equal_to_cart(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
-            if let Some((known_cart_obj, _)) = env.known_cart_objs.get(name) {
+            if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(name) {
                 return Some(known_cart_obj.clone());
             }
-            if let Some((_, Some(known_cart_obj), _)) = env.known_tuple_objs.get(name) {
+            if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(name) {
                 return Some(known_cart_obj.clone());
             }
         }
         None
     }
 
-    pub fn get_known_tuple_obj_of_obj(&self, name: &str) -> Option<Tuple> {
+    pub fn get_obj_equal_to_tuple(&self, name: &str) -> Option<Tuple> {
         for env in self.iter_environments_from_top() {
-            if let Some((Some(known_tuple_obj), _, _)) = env.known_tuple_objs.get(name) {
+            if let Some((Some(known_tuple_obj), _, _)) = env.known_objs_equal_to_tuple.get(name) {
                 return Some(known_tuple_obj.clone());
             }
         }
         None
     }
 
-    pub fn get_tuple_obj_is_in_what_cart(&self, name: &str) -> Option<Cart> {
+    pub fn get_object_equal_to_tuple(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
-            if let Some(cart) = env.known_tuple_objs.get(name) {
+            if let Some(cart) = env.known_objs_equal_to_tuple.get(name) {
                 return cart.1.clone();
             }
         }
         None
     }
 
-    pub fn get_normalized_decimal_number_value_of_obj(&self, obj_str: &str) -> Option<Number> {
+    pub fn get_object_equal_to_normalized_decimal_number(&self, obj_str: &str) -> Option<Number> {
         for env in self.iter_environments_from_top() {
             if let Some(calculated_value) = env
-                .known_normalized_decimal_number_value_of_obj
+                .known_objs_equal_to_normalized_decimal_number
                 .get(obj_str)
             {
                 return Some(calculated_value.clone());
@@ -100,7 +103,7 @@ impl Runtime {
     }
 
     // TODO: PREDICATE WITH MOD NAME IS NOT IMPLEMENTED YET
-    pub fn get_all_objs_equal_to_arg(&self, given: &str) -> Vec<String> {
+    pub fn get_all_objs_equal_to_given(&self, given: &str) -> Vec<String> {
         let mut result = vec![];
         for env in self.iter_environments_from_top() {
             if let Some((_, equiv_class_members_rc)) = env.known_equality.get(given) {

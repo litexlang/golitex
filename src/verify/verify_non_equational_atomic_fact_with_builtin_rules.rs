@@ -1,6 +1,11 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Builtin rules for non-equational atomic facts. Order relations delegate to
+    /// `verify_order_or_negation_fact_with_builtin_duality_and_number_compare`, which also applies
+    /// real-order congruence rules (same-side add/subtract, two-sided add/subtract from paired
+    /// inequalities, `d` nonpos/nonneg multiplication, etc.); recursive premise checks there use
+    /// [`VerifyState::make_final_round_state`].
     pub fn verify_non_equational_atomic_fact_with_builtin_rules(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -500,6 +505,30 @@ impl Runtime {
                     ),
                 ))
             }
+            Obj::FnSet(fn_set) => {
+                let ret_nonempty_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                    fn_set.ret_set.as_ref().clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                ));
+                let ret_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                    &ret_nonempty_fact,
+                    _verify_state,
+                )?;
+                if ret_check.is_true() {
+                    Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+                                is_nonempty_set_fact.clone(),
+                            )),
+                            InferResult::new(),
+                            "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
+                            Vec::new(),
+                        ),
+                    ))
+                } else {
+                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+                }
+            }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
@@ -562,7 +591,7 @@ impl Runtime {
                 // 如果能从env里拿出 tuple 和 cart，则验证成功
                 if let Some((_, _, _)) = self
                     .top_level_env()
-                    .known_tuple_objs
+                    .known_objs_equal_to_tuple
                     .get(&is_tuple_fact.set.to_string())
                 {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(

@@ -75,51 +75,63 @@ impl WitnessNonemptySet {
     }
 }
 
-impl EnumerateAxiomStmt {
+impl ByEnumerateStmt {
     pub fn stmt_type_name(&self) -> String {
-        "EnumerateAxiomStmt".to_string()
+        "ByEnumerateStmt".to_string()
     }
 }
 
-impl ByCasesAxiomStmt {
+impl ByCasesStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByCasesAxiomStmt".to_string()
+        "ByCasesStmt".to_string()
     }
 }
 
-impl ByContraAxiomStmt {
+impl ByContraStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByContraAxiomStmt".to_string()
+        "ByContraStmt".to_string()
     }
 }
 
-impl ByInducAxiomStmt {
+impl ByInducStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByInducAxiomStmt".to_string()
+        "ByInducStmt".to_string()
     }
 }
 
-impl ForAxiomStmt {
+impl ByForStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ForAxiomStmt".to_string()
+        "ByForStmt".to_string()
     }
 }
 
-impl ByExtensionAxiomStmt {
+impl ByExtensionStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByExtensionAxiomStmt".to_string()
+        "ByExtensionStmt".to_string()
     }
 }
 
-impl ByFnDefAxiomStmt {
+impl ByFnStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByFnDefAxiomStmt".to_string()
+        "ByFnStmt".to_string()
     }
 }
 
-impl ByCartDefAxiomStmt {
+impl ByFamilyStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByCartDefAxiomStmt".to_string()
+        "ByFamilyStmt".to_string()
+    }
+}
+
+impl ByStructStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByStructStmt".to_string()
+    }
+}
+
+impl ByTupleStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByTupleStmt".to_string()
     }
 }
 
@@ -171,14 +183,20 @@ impl HaveFnEqualCaseByCaseStmt {
     }
 }
 
+impl HaveFnByInducStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "HaveFnByInducStmt".to_string()
+    }
+}
+
 impl DefFamilyStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefFamilyStmt".to_string()
     }
 }
 
-impl DefParamTypeStructStmt {
+impl DefStructStmt {
     pub fn stmt_type_name(&self) -> String {
-        "DefParamTypeStructStmt".to_string()
+        "DefStructStmt".to_string()
     }
 }

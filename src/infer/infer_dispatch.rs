@@ -60,14 +60,18 @@ impl Runtime {
         Ok(InferResult::new())
     }
 
-    fn infer_forall_fact(&mut self, _forall_fact: &ForallFact) -> Result<InferResult, RuntimeError> {
-        Ok(InferResult::new())
+    fn infer_forall_fact(&mut self, forall_fact: &ForallFact) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&Fact::ForallFact(forall_fact.clone()));
+        Ok(infer_result)
     }
 
     fn infer_forall_fact_with_iff(
         &mut self,
-        _forall_fact_with_iff: &ForallFactWithIff,
+        forall_fact_with_iff: &ForallFactWithIff,
     ) -> Result<InferResult, RuntimeError> {
-        Ok(InferResult::new())
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&Fact::ForallFactWithIff(forall_fact_with_iff.clone()));
+        Ok(infer_result)
     }
 }

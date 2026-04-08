@@ -272,7 +272,7 @@ impl Runtime {
             Obj::Cap(ref a) => Self::match_arg_when_left_is_cap(&a.left, given_arg),
             Obj::ListSet(ref left) => Self::match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(_) => Self::match_arg_when_left_is_set_builder(given_arg),
-            Obj::FnSetWithParams(ref left) => {
+            Obj::FnSet(ref left) => {
                 Self::match_arg_when_left_is_fn_set_with_params(left, given_arg)
             }
             Obj::StandardSet(StandardSet::NPos) => {
@@ -325,6 +325,8 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNz) => Self::match_arg_when_left_is_q_nz(given_arg),
             Obj::StandardSet(StandardSet::ZNz) => Self::match_arg_when_left_is_z_nz(given_arg),
             Obj::StandardSet(StandardSet::RNz) => Self::match_arg_when_left_is_r_nz(given_arg),
+            Obj::FamilyObj(_) => Self::match_arg_type_not_implemented("FamilyObj"),
+            Obj::StructObj(_) => Self::match_arg_type_not_implemented("StructObj"),
         }
     }
 
@@ -675,9 +677,7 @@ impl Runtime {
         }
     }
 
-    fn flatten_fn_set_with_params_param_sets_for_match(
-        fn_set: &FnSetWithParams,
-    ) -> Vec<Box<Obj>> {
+    fn flatten_fn_set_with_params_param_sets_for_match(fn_set: &FnSet) -> Vec<Box<Obj>> {
         let mut flat_param_sets: Vec<Box<Obj>> = Vec::new();
         for param_def_with_set in &fn_set.params_def_with_set {
             for _param_name in param_def_with_set.params.iter() {
@@ -688,11 +688,11 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_fn_set_with_params(
-        left: &FnSetWithParams,
+        left: &FnSet,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::FnSetWithParams(ref given) => {
+            Obj::FnSet(ref given) => {
                 if !left.dom_facts.is_empty() || !given.dom_facts.is_empty() {
                     return Self::match_arg_type_not_implemented("FnSetWithParams with dom_facts");
                 }

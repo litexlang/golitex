@@ -77,4 +77,25 @@ mod algebraic_identity_tests {
 
         assert!(objs_equal_by_rational_expression_evaluation(&left, &right));
     }
+
+    #[test]
+    fn two_an_plus_bm_squared_equals_expanded_rhs() {
+        use crate::parse::tokenize_line;
+        use crate::parse::TokenBlock;
+        use crate::runtime::Runtime;
+        use std::rc::Rc;
+
+        fn parse_obj_line(line: &str) -> Obj {
+            let tokens = tokenize_line(line);
+            let mut tb = TokenBlock::new(tokens, vec![], (1, Rc::from("test.lit")));
+            let mut rt = Runtime::new();
+            rt.parse_obj(&mut tb).expect("parse")
+        }
+
+        let left = parse_obj_line(r#"( 2 * a * n + b * m ) ^ 2"#);
+        let right = parse_obj_line(
+            r#"2 * ( a * m + b * n ) ^ 2 + ( m ^ 2 - 2 * n ^ 2 ) * ( b ^ 2 - 2 * a ^ 2 )"#,
+        );
+        assert!(objs_equal_by_rational_expression_evaluation(&left, &right));
+    }
 }

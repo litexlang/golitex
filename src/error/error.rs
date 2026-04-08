@@ -137,6 +137,23 @@ impl RuntimeErrorStruct {
 impl std::error::Error for RuntimeError {}
 
 impl RuntimeError {
+    pub fn into_struct(self) -> RuntimeErrorStruct {
+        match self {
+            RuntimeError::ArithmeticError(s) => s,
+            RuntimeError::NewAtomicFactError(s) => s,
+            RuntimeError::StoreFactError(s) => s,
+            RuntimeError::ParseError(s) => s,
+            RuntimeError::ExecStmtError(s) => s,
+            RuntimeError::WellDefinedError(s) => s,
+            RuntimeError::VerifyError(s) => s,
+            RuntimeError::UnknownError(s) => s,
+            RuntimeError::InferError(s) => s,
+            RuntimeError::NameAlreadyUsedError(s) => s,
+            RuntimeError::DefineParamsError(s) => s,
+            RuntimeError::InstantiateError(s) => s,
+        }
+    }
+
     pub fn line_file(&self) -> LineFile {
         match self {
             RuntimeError::ArithmeticError(e) => e.line_file.clone(),
@@ -202,22 +219,6 @@ impl RuntimeError {
             line_file,
             previous_error,
         ))
-    }
-
-    pub fn new_name_already_used_error_with_name_previous_position_current_position(
-        name: String,
-        name_already_used_on_line_file: LineFile,
-        line_file: LineFile,
-    ) -> Self {
-        let msg = format!(
-            "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
-            name,
-            name_already_used_on_line_file.0,
-            name_already_used_on_line_file.1.as_ref(),
-            line_file.0,
-            line_file.1.as_ref(),
-        );
-        RuntimeError::NameAlreadyUsedError(RuntimeErrorStruct::new(None, msg, line_file, None))
     }
 
     pub fn new_parse_error_with_msg_position_previous_error(
@@ -377,8 +378,8 @@ impl fmt::Display for RuntimeErrorStruct {
 impl std::error::Error for RuntimeErrorStruct {}
 
 impl From<RuntimeErrorStruct> for RuntimeError {
-    fn from(store_or_infer_runtime_error_struct: RuntimeErrorStruct) -> Self {
-        RuntimeError::StoreFactError(store_or_infer_runtime_error_struct)
+    fn from(runtime_error_struct: RuntimeErrorStruct) -> Self {
+        RuntimeError::ExecStmtError(runtime_error_struct)
     }
 }
 

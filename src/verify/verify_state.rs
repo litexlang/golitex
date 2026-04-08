@@ -26,4 +26,8 @@ impl VerifyState {
     pub fn is_round_0(&self) -> bool {
         self.round == 0
     }
+
+    pub fn make_final_round_state(&self) -> Self {
+        return Self::new(2, self.well_defined_already_verified);
+    }
 }

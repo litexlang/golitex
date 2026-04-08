@@ -7,7 +7,7 @@ impl Runtime {
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
             LET => self.parse_def_let_stmt(tb),
             HAVE => {
-                if tb.token_at_index(1)? == FN_FOR_FN_WITH_PARAMS {
+                if tb.token_at_index(1)? == FN {
                     self.parse_have_fn_stmt(tb)
                 } else if tb.token_at_index(1)? == BY && tb.token_at_index(2)? == EXIST {
                     self.parse_have_exist(tb)
@@ -24,9 +24,9 @@ impl Runtime {
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             FAMILY => self.parse_def_family_stmt(tb),
-            STRUCT => self.parse_def_param_type_struct_stmt(tb),
+            STRUCT => self.parse_def_struct_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
-            BY => self.parse_by_prefixed_axiom_stmt(tb),
+            BY => self.parse_by_prefixed_stmt(tb),
             _ => {
                 let fact = self.parse_fact(tb)?;
                 Ok(Stmt::Fact(fact))

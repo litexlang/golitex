@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct Runtime {
     pub module_manager: ModuleManager,
@@ -33,46 +32,134 @@ impl Runtime {
         current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                invalid_name_message,
-                default_line_file(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    invalid_name_message,
+                    default_line_file(),
+                    None,
+                ),
+            );
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
-            if let Some(name_already_defined_on_line_file) = names_in_scope.get(name) {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!(
-                        "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
-                        name,
-                        name_already_defined_on_line_file.0,
-                        name_already_defined_on_line_file.1.as_ref(),
-                        current_line_file.0,
-                        current_line_file.1.as_ref(),
+            if let Some(_) = names_in_scope.get(name) {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        format!("name `{}` is already used", name),
+                        current_line_file,
+                        None,
                     ),
-                    current_line_file,
-                    None,
-                ));
+                );
             }
         }
 
         if self.is_name_used(name) {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                format!(
-                    "name `{}` is already used: previous definition at line {} in {}; current at line {} in {}",
-                    name,
-                    default_line_file().0,
-                    default_line_file().1.as_ref(),
-                    current_line_file.0,
-                    current_line_file.1.as_ref(),
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    format!("name `{}` is already used", name),
+                    current_line_file,
+                    None,
                 ),
-                current_line_file,
-                None,
-            ));
+            );
         }
 
         Ok(())
+    }
+
+    pub(crate) fn validate_name_for_mangled_fn_param(
+        &mut self,
+        name: &str,
+        current_line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        if let Err(invalid_name_message) = is_valid_mangled_fn_param_name(name) {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    invalid_name_message,
+                    default_line_file(),
+                    None,
+                ),
+            );
+        }
+
+        for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
+            if let Some(_) = names_in_scope.get(name) {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        format!("name `{}` is already used", name,),
+                        current_line_file,
+                        None,
+                    ),
+                );
+            }
+        }
+
+        if self.is_name_used(name) {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    format!("name `{}` is already used", name),
+                    current_line_file,
+                    None,
+                ),
+            );
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn validate_name_and_insert_mangled_fn_param(
+        &mut self,
+        name: &str,
+        (line, path): LineFile,
+    ) -> Result<(), RuntimeError> {
+        self.validate_name_for_mangled_fn_param(name, (line, path.clone()))?;
+        if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
+            names_in_top_scope.insert(name.to_string(), (line, path.clone()));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn register_collected_mangled_fn_param_names_for_def_parse(
+        &mut self,
+        names: &Vec<String>,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        for name in names {
+            self.validate_name_and_insert_mangled_fn_param(name, line_file.clone())
+                .map_err(|e| {
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        String::new(),
+                        line_file.clone(),
+                        Some(e),
+                    )
+                })?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn register_mangled_fn_param_binding(
+        &mut self,
+        user_written_names: &[String],
+        line_file: LineFile,
+    ) -> Result<(Vec<String>, HashMap<String, Obj>), RuntimeError> {
+        // 虽然本质上存的是 __param，但param本身也要符合litex命名规则，比如你不能让 param 是 1
+        for name in user_written_names {
+            if let Err(e) = is_valid_litex_name(name) {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        e,
+                        line_file.clone(),
+                        None,
+                    ),
+                );
+            }
+        }
+
+        let (mangled, map) = crate::common::mangled_fn_param::mangled_fn_param_binding(
+            user_written_names,
+            crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX,
+        );
+        self.register_collected_mangled_fn_param_names_for_def_parse(&mangled, line_file)?;
+        Ok((mangled, map))
     }
 
     pub fn pop_parsing_time_name_scope(&mut self) {
@@ -85,7 +172,10 @@ impl Runtime {
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         for name in names {
-            self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file.clone())?;
+            self.validate_name_and_insert_into_top_parsing_time_name_scope(
+                name,
+                line_file.clone(),
+            )?;
         }
         Ok(())
     }
@@ -96,6 +186,15 @@ impl Runtime {
         (line, path): LineFile,
     ) -> Result<(), RuntimeError> {
         self.validate_name(name, (line, path.clone()))?;
+        self.register_name_into_name_scope(name, (line, path.clone()))?;
+        Ok(())
+    }
+
+    pub fn register_name_into_name_scope(
+        &mut self,
+        name: &str,
+        (line, path): LineFile,
+    ) -> Result<(), RuntimeError> {
         if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
             names_in_top_scope.insert(name.to_string(), (line, path.clone()));
         }
@@ -104,56 +203,6 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn generate_a_random_unused_name(&self) -> String {
-        let available_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz0123456789".chars().collect();
-        let first_char_candidates: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
-        let mut try_index: usize = 0;
-        loop {
-            let current_time_nanos: u128 = match SystemTime::now().duration_since(UNIX_EPOCH) {
-                Ok(current_duration) => current_duration.as_nanos(),
-                Err(_) => 0,
-            };
-            let mixed_seed_value: u128 =
-                current_time_nanos ^ ((try_index as u128 + 1) * 0x9e3779b97f4a7c15u128);
-            let generated_name_length: usize = 8 + (mixed_seed_value as usize % 17);
-
-            let mut generated_chars: Vec<char> = Vec::new();
-            let first_char_index = ((mixed_seed_value >> 1) as usize) % first_char_candidates.len();
-            generated_chars.push(first_char_candidates[first_char_index]);
-
-            let mut current_state_value: u128 = mixed_seed_value;
-            for character_index in 1..generated_name_length {
-                current_state_value = current_state_value
-                    .wrapping_mul(6364136223846793005u128)
-                    .wrapping_add(1442695040888963407u128 + character_index as u128);
-                let available_char_index = (current_state_value as usize) % available_chars.len();
-                generated_chars.push(available_chars[available_char_index]);
-            }
-
-            let candidate_name: String = generated_chars.into_iter().collect();
-            if is_valid_litex_name(&candidate_name).is_err() {
-                try_index += 1;
-                continue;
-            }
-            if self.is_name_used(&candidate_name) {
-                try_index += 1;
-                continue;
-            }
-            let mut used_in_parsing_time_name_scope = false;
-            for names_in_scope in self.parsing_time_name_scope_stack.iter() {
-                if names_in_scope.contains_key(&candidate_name) {
-                    used_in_parsing_time_name_scope = true;
-                    break;
-                }
-            }
-            if used_in_parsing_time_name_scope {
-                try_index += 1;
-                continue;
-            }
-            return candidate_name;
-        }
-    }
-
     pub fn new_file_path_new_env_new_name_scope(&mut self, path: &str) {
         self.module_manager.run_file_paths.push(Rc::from(path));
         self.module_manager.current_file_index += 1;
@@ -179,12 +228,12 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn push_env(&mut self) {
+    fn push_env(&mut self) {
         let new_env = Box::new(Environment::new_empty_env());
         self.environment_stack.push(new_env);
     }
 
-    pub fn pop_env(&mut self) {
+    fn pop_env(&mut self) {
         let last_env = self.environment_stack.last();
 
         match last_env {
@@ -195,6 +244,18 @@ impl Runtime {
                 self.environment_stack.pop();
             }
         }
+    }
+
+    /// 在临时子环境中执行闭包：`push_env` → `f` → `pop_env`；`Ok`/`Err` 都会弹出。
+    /// 与手写 `push`/`pop` 等价；若闭包 panic，栈不会恢复（与手写相同）。
+    pub fn run_in_local_env<T, E, F>(&mut self, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+    {
+        self.push_env();
+        let result = f(self);
+        self.pop_env();
+        result
     }
 }
 
@@ -213,8 +274,8 @@ impl Runtime {
         false
     }
 
-    pub fn is_name_used_for_def_prop(&self, name: &str) -> bool {
-        return self.get_def_prop_definition_by_name(name).is_some();
+    pub fn is_name_used_for_prop(&self, name: &str) -> bool {
+        return self.get_prop_definition_by_name(name).is_some();
     }
 
     pub fn is_name_used_for_abstract_prop(&self, name: &str) -> bool {
@@ -222,15 +283,11 @@ impl Runtime {
             return true;
         }
 
-        return self
-            .get_abstract_prop_definition_by_name(name)
-            .is_some();
+        return self.get_abstract_prop_definition_by_name(name).is_some();
     }
 
-    pub fn is_name_used_for_param_type_struct(&self, name: &str) -> bool {
-        return self
-            .get_cloned_definition_of_struct(name)
-            .is_some();
+    pub fn is_name_used_for_struct(&self, name: &str) -> bool {
+        return self.get_definition_of_struct_by_name(name).is_some();
     }
 
     pub fn is_name_used_for_family(&self, name: &str) -> bool {
@@ -261,7 +318,7 @@ impl Runtime {
         cart: Option<Cart>,
         line_file: LineFile,
     ) {
-        let known_tuple_objs = &mut self.top_level_env().known_tuple_objs;
+        let known_tuple_objs = &mut self.top_level_env().known_objs_equal_to_tuple;
         let old_tuple_and_cart = known_tuple_objs.get(name).cloned();
 
         let merged_tuple = match (tuple, old_tuple_and_cart.as_ref()) {
@@ -284,7 +341,163 @@ impl Runtime {
 
     pub fn store_known_cart_obj(&mut self, name: &str, cart: Cart, line_file: LineFile) {
         self.top_level_env()
-            .known_cart_objs
+            .known_objs_equal_to_cart
             .insert(name.to_string(), (cart, line_file));
+    }
+
+    pub fn store_well_defined_obj_cache(&mut self, obj: &Obj) {
+        self.top_level_env()
+            .cache_well_defined_obj
+            .insert(obj.to_string(), ());
+    }
+}
+
+impl Runtime {
+    pub fn new_fn_set_and_add_mangled_prefix(
+        &self,
+        params_and_their_sets: Vec<ParamGroupWithSet>,
+        dom_facts: Vec<OrAndChainAtomicFact>,
+        ret_set: Obj,
+    ) -> Result<FnSet, RuntimeError> {
+        let names = ParamGroupWithSet::collect_param_names(&params_and_their_sets);
+        let (new_param_names, param_arg_map) =
+            mangled_fn_param_binding(&names, DEFAULT_MANGLED_FN_PARAM_PREFIX);
+        let mut flat_stored_idx: usize = 0;
+        let mut new_def_with_set: Vec<ParamGroupWithSet> = Vec::new();
+        for param_group in &params_and_their_sets {
+            let mut new_params: Vec<String> = Vec::new();
+            for _ in 0..param_group.params.len() {
+                new_params.push(new_param_names[flat_stored_idx].clone());
+                flat_stored_idx += 1;
+            }
+            new_def_with_set.push(ParamGroupWithSet::new(new_params, param_group.set.clone()));
+        }
+        let mut dom_stored = Vec::with_capacity(dom_facts.len());
+        for d in &dom_facts {
+            dom_stored.push(self.inst_or_and_chain_atomic_fact(d, &param_arg_map)?);
+        }
+        let ret_stored = self.inst_obj(&ret_set, &param_arg_map)?;
+        Ok(FnSet::new(new_def_with_set, dom_stored, ret_stored))
+    }
+
+    pub fn add_mangled_prefix_to_fn_set_clause(
+        &self,
+        clause: &FnSetClause,
+        _line_file: LineFile,
+    ) -> Result<FnSet, RuntimeError> {
+        self.new_fn_set_and_add_mangled_prefix(
+            clause.params_def_with_set.clone(),
+            clause.dom_facts.clone(),
+            clause.ret_set.clone(),
+        )
+    }
+}
+
+impl Runtime {
+    /// Like [`ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map`], but when a
+    /// parameter has [`ParamType::Struct`] and the argument is a [`Obj::Tuple`], loads the struct
+    /// definition and inserts `param.field_name -> tuple[number_of_params + i]` for each field in
+    /// definition order (same layout as [`Runtime::inst_field_access_on_struct_tuple`]), and
+    /// registers the struct instance for field access on the tuple root.
+    pub fn params_to_arg_map(
+        &mut self,
+        param_defs: &Vec<ParamGroupWithParamType>,
+        args: &[Obj],
+    ) -> Result<HashMap<String, Obj>, RuntimeError> {
+        let param_names = ParamGroupWithParamType::collect_param_names(param_defs);
+        if param_names.len() != args.len() {
+            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "params_to_arg_map: expected {} argument(s), got {}",
+                    param_names.len(),
+                    args.len()
+                ),
+                default_line_file(),
+                None,
+            )));
+        }
+
+        let mut flat_types: Vec<ParamType> = Vec::with_capacity(param_names.len());
+        for param_def in param_defs.iter() {
+            for _ in param_def.params.iter() {
+                flat_types.push(param_def.param_type.clone());
+            }
+        }
+
+        let mut result: HashMap<String, Obj> = HashMap::new();
+        for ((param_name, param_type), arg) in
+            param_names.iter().zip(flat_types.iter()).zip(args.iter())
+        {
+            match param_type {
+                ParamType::Struct(struct_ty) => {
+                    let struct_name = struct_ty.name.to_string();
+                    let Some(def) = self.get_cloned_definition_of_struct(&struct_name) else {
+                        result.insert(param_name.clone(), arg.clone());
+                        continue;
+                    };
+                    if let Obj::Tuple(t) = arg {
+                        let expected_len = def.number_of_params() + def.fields.len();
+                        if t.args.len() != expected_len {
+                            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                                None,
+                                format!(
+                                    "params_to_arg_map: tuple for `{}` has {} component(s), struct `{}` expects {}",
+                                    param_name,
+                                    t.args.len(),
+                                    struct_name,
+                                    expected_len
+                                ),
+                                default_line_file(),
+                                None,
+                            )));
+                        }
+                        self.register_param_as_struct_instance(param_name, struct_ty.clone());
+                        result.insert(param_name.clone(), arg.clone());
+                        for (fi, (field_name, _)) in def.fields.iter().enumerate() {
+                            let ti = def.number_of_params() + fi;
+                            let component = (*t.args[ti]).clone();
+                            result.insert(
+                                crate::obj::field_access_to_string(param_name, field_name),
+                                component,
+                            );
+                        }
+                    } else {
+                        result.insert(param_name.clone(), arg.clone());
+                    }
+                }
+                _ => {
+                    result.insert(param_name.clone(), arg.clone());
+                }
+            }
+        }
+        Ok(result)
+    }
+
+    /// [`DefStructStmt::dom_facts`] under type arguments, then [`DefStructStmt::facts`] (`<=>:`) with
+    /// [`SELF`] replaced by `param_name`, in source order.
+    pub(crate) fn instantiated_struct_def_or_and_facts_for_def(
+        &self,
+        struct_ty: &StructObj,
+        def: &DefStructStmt,
+        param_name: &str,
+    ) -> Result<Vec<OrAndChainAtomicFact>, RuntimeError> {
+        let base_map = ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
+            &struct_ty.args,
+        );
+        let mut out = Vec::new();
+        for fact in def.dom_facts.iter() {
+            out.push(self.inst_or_and_chain_atomic_fact(fact, &base_map)?);
+        }
+        let mut map_with_self = base_map.clone();
+        map_with_self.insert(
+            SELF.to_string(),
+            Obj::Identifier(Identifier::new(param_name.to_string())),
+        );
+        for fact in def.facts.iter() {
+            out.push(self.inst_or_and_chain_atomic_fact(fact, &map_with_self)?);
+        }
+        Ok(out)
     }
 }

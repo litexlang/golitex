@@ -37,7 +37,7 @@ pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const CHOOSE: &str = "choose";
-pub const FN_FOR_FN_WITH_PARAMS: &str = "fn";
+pub const FN: &str = "fn";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
@@ -81,10 +81,11 @@ pub const CASES: &str = "cases";
 pub const CONTRA: &str = "contra";
 pub const ENUMERATE: &str = "enumerate";
 pub const INDUC: &str = "induc";
+/// 保留名（旧版最后一项 `case` 曾用 `param = param_2 + n`）；当前语法最后一项为 `case >= n:`（n 为特例个数），不再登记此名。
+pub const INDUC_PARAM_2_NAME: &str = "param_2";
 pub const FOR: &str = "for";
 pub const EXTENSION: &str = "extension";
-pub const FN_DEF: &str = "fn_def";
-pub const CART_DEF: &str = "cart_def";
+pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
 pub const IMPORT: &str = "import";
@@ -162,7 +163,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CAP,
         POWER_SET,
         CHOOSE,
-        FN_FOR_FN_WITH_PARAMS,
+        FN,
         SET,
         NONEMPTY_SET,
         FINITE_SET,
@@ -218,8 +219,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         WITNESS,
         EXTENSION,
         IMPOSSIBLE,
-        FN_DEF,
-        CART_DEF,
+        TUPLE,
         ALGO,
         Q_POS,
         R_POS,

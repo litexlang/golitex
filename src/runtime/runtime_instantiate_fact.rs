@@ -15,7 +15,9 @@ impl Runtime {
                 Fact::ExistFact(self.inst_exist_fact(exist_fact, param_to_arg_map)?)
             }
             Fact::OrFact(or_fact) => Fact::OrFact(self.inst_or_fact(or_fact, param_to_arg_map)?),
-            Fact::AndFact(and_fact) => Fact::AndFact(self.inst_and_fact(and_fact, param_to_arg_map)?),
+            Fact::AndFact(and_fact) => {
+                Fact::AndFact(self.inst_and_fact(and_fact, param_to_arg_map)?)
+            }
             Fact::ChainFact(chain_fact) => {
                 Fact::ChainFact(self.inst_chain_fact(chain_fact, param_to_arg_map)?)
             }
@@ -42,14 +44,18 @@ impl Runtime {
             ExistOrAndChainAtomicFact::AndFact(and_fact) => {
                 ExistOrAndChainAtomicFact::AndFact(self.inst_and_fact(and_fact, param_to_arg_map)?)
             }
-            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => ExistOrAndChainAtomicFact::ChainFact(
-                self.inst_chain_fact(chain_fact, param_to_arg_map)?,
-            ),
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                ExistOrAndChainAtomicFact::ChainFact(
+                    self.inst_chain_fact(chain_fact, param_to_arg_map)?,
+                )
+            }
             ExistOrAndChainAtomicFact::OrFact(or_fact) => {
                 ExistOrAndChainAtomicFact::OrFact(self.inst_or_fact(or_fact, param_to_arg_map)?)
             }
             ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
-                ExistOrAndChainAtomicFact::ExistFact(self.inst_exist_fact(exist_fact, param_to_arg_map)?)
+                ExistOrAndChainAtomicFact::ExistFact(
+                    self.inst_exist_fact(exist_fact, param_to_arg_map)?,
+                )
             }
         })
     }
@@ -60,9 +66,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<OrAndChainAtomicFact, RuntimeError> {
         Ok(match fact {
-            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
-                OrAndChainAtomicFact::AtomicFact(self.inst_atomic_fact(atomic_fact, param_to_arg_map)?)
-            }
+            OrAndChainAtomicFact::AtomicFact(atomic_fact) => OrAndChainAtomicFact::AtomicFact(
+                self.inst_atomic_fact(atomic_fact, param_to_arg_map)?,
+            ),
             OrAndChainAtomicFact::AndFact(and_fact) => {
                 OrAndChainAtomicFact::AndFact(self.inst_and_fact(and_fact, param_to_arg_map)?)
             }
@@ -81,9 +87,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<AndChainAtomicFact, RuntimeError> {
         Ok(match fact {
-            AndChainAtomicFact::AtomicFact(atomic_fact) => {
-                AndChainAtomicFact::AtomicFact(self.inst_atomic_fact(atomic_fact, param_to_arg_map)?)
-            }
+            AndChainAtomicFact::AtomicFact(atomic_fact) => AndChainAtomicFact::AtomicFact(
+                self.inst_atomic_fact(atomic_fact, param_to_arg_map)?,
+            ),
             AndChainAtomicFact::AndFact(and_fact) => {
                 AndChainAtomicFact::AndFact(self.inst_and_fact(and_fact, param_to_arg_map)?)
             }
@@ -105,7 +111,9 @@ impl Runtime {
             AtomicFact::EqualFact(fact) => {
                 AtomicFact::EqualFact(self.inst_equal_fact(fact, param_to_arg_map)?)
             }
-            AtomicFact::LessFact(fact) => AtomicFact::LessFact(self.inst_less_fact(fact, param_to_arg_map)?),
+            AtomicFact::LessFact(fact) => {
+                AtomicFact::LessFact(self.inst_less_fact(fact, param_to_arg_map)?)
+            }
             AtomicFact::GreaterFact(fact) => {
                 AtomicFact::GreaterFact(self.inst_greater_fact(fact, param_to_arg_map)?)
             }
@@ -118,13 +126,15 @@ impl Runtime {
             AtomicFact::IsSetFact(fact) => {
                 AtomicFact::IsSetFact(self.inst_is_set_fact(fact, param_to_arg_map)?)
             }
-            AtomicFact::IsNonemptySetFact(fact) => {
-                AtomicFact::IsNonemptySetFact(self.inst_is_nonempty_set_fact(fact, param_to_arg_map)?)
-            }
+            AtomicFact::IsNonemptySetFact(fact) => AtomicFact::IsNonemptySetFact(
+                self.inst_is_nonempty_set_fact(fact, param_to_arg_map)?,
+            ),
             AtomicFact::IsFiniteSetFact(fact) => {
                 AtomicFact::IsFiniteSetFact(self.inst_is_finite_set_fact(fact, param_to_arg_map)?)
             }
-            AtomicFact::InFact(fact) => AtomicFact::InFact(self.inst_in_fact(fact, param_to_arg_map)?),
+            AtomicFact::InFact(fact) => {
+                AtomicFact::InFact(self.inst_in_fact(fact, param_to_arg_map)?)
+            }
             AtomicFact::IsCartFact(fact) => {
                 AtomicFact::IsCartFact(self.inst_is_cart_fact(fact, param_to_arg_map)?)
             }
@@ -137,9 +147,9 @@ impl Runtime {
             AtomicFact::SupersetFact(fact) => {
                 AtomicFact::SupersetFact(self.inst_superset_fact(fact, param_to_arg_map)?)
             }
-            AtomicFact::NotNormalAtomicFact(fact) => {
-                AtomicFact::NotNormalAtomicFact(self.inst_not_normal_atomic_fact(fact, param_to_arg_map)?)
-            }
+            AtomicFact::NotNormalAtomicFact(fact) => AtomicFact::NotNormalAtomicFact(
+                self.inst_not_normal_atomic_fact(fact, param_to_arg_map)?,
+            ),
             AtomicFact::NotEqualFact(fact) => {
                 AtomicFact::NotEqualFact(self.inst_not_equal_fact(fact, param_to_arg_map)?)
             }
@@ -152,18 +162,18 @@ impl Runtime {
             AtomicFact::NotLessEqualFact(fact) => {
                 AtomicFact::NotLessEqualFact(self.inst_not_less_equal_fact(fact, param_to_arg_map)?)
             }
-            AtomicFact::NotGreaterEqualFact(fact) => {
-                AtomicFact::NotGreaterEqualFact(self.inst_not_greater_equal_fact(fact, param_to_arg_map)?)
-            }
+            AtomicFact::NotGreaterEqualFact(fact) => AtomicFact::NotGreaterEqualFact(
+                self.inst_not_greater_equal_fact(fact, param_to_arg_map)?,
+            ),
             AtomicFact::NotIsSetFact(fact) => {
                 AtomicFact::NotIsSetFact(self.inst_not_is_set_fact(fact, param_to_arg_map)?)
             }
-            AtomicFact::NotIsNonemptySetFact(fact) => {
-                AtomicFact::NotIsNonemptySetFact(self.inst_not_is_nonempty_set_fact(fact, param_to_arg_map)?)
-            }
-            AtomicFact::NotIsFiniteSetFact(fact) => {
-                AtomicFact::NotIsFiniteSetFact(self.inst_not_is_finite_set_fact(fact, param_to_arg_map)?)
-            }
+            AtomicFact::NotIsNonemptySetFact(fact) => AtomicFact::NotIsNonemptySetFact(
+                self.inst_not_is_nonempty_set_fact(fact, param_to_arg_map)?,
+            ),
+            AtomicFact::NotIsFiniteSetFact(fact) => AtomicFact::NotIsFiniteSetFact(
+                self.inst_not_is_finite_set_fact(fact, param_to_arg_map)?,
+            ),
             AtomicFact::NotInFact(fact) => {
                 AtomicFact::NotInFact(self.inst_not_in_fact(fact, param_to_arg_map)?)
             }
@@ -624,7 +634,8 @@ impl Runtime {
         forall_fact_with_iff: &ForallFactWithIff,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<ForallFactWithIff, RuntimeError> {
-        let forall_fact = self.inst_forall_fact(&forall_fact_with_iff.forall_fact, param_to_arg_map)?;
+        let forall_fact =
+            self.inst_forall_fact(&forall_fact_with_iff.forall_fact, param_to_arg_map)?;
         let mut iff_facts = Vec::with_capacity(forall_fact_with_iff.iff_facts.len());
         for iff_fact in forall_fact_with_iff.iff_facts.iter() {
             iff_facts.push(self.inst_exist_or_and_chain_atomic_fact(iff_fact, param_to_arg_map)?);
@@ -656,8 +667,10 @@ impl Runtime {
     ) -> Result<NotRestrictFact, RuntimeError> {
         Ok(NotRestrictFact {
             obj: self.inst_obj(&not_restrict_fact.obj, param_to_arg_map)?,
-            obj_cannot_restrict_to_fn_set: self
-                .inst_obj(&not_restrict_fact.obj_cannot_restrict_to_fn_set, param_to_arg_map)?,
+            obj_cannot_restrict_to_fn_set: self.inst_obj(
+                &not_restrict_fact.obj_cannot_restrict_to_fn_set,
+                param_to_arg_map,
+            )?,
             line_file: not_restrict_fact.line_file.clone(),
         })
     }

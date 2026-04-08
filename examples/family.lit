@@ -1,5 +1,0 @@
-family seq(s set) = fn(x N_pos) s
-
-forall a family seq(R):
-    a $in fn(y N_pos)R
-    a(1) = a(1)

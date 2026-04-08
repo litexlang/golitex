@@ -6,23 +6,68 @@ prove:
 
 
 prove:
-    abstract_prop p(x, y)
-    have fn f(x, y R) R = 1
+    have f fn(x, y R) R
 
     know:
         forall x, y R:
-            x < y
-            =>:
-                f(x, y) = 1
+            f(x, y) = f(x - 1, y) + 1
 
         forall x, y R:
-            $p(x, y)
+            x = 0
             =>:
-                f(x, y) = 2
-
-        forall x, y R:
-            x < y or $p(x, y)
+                f(x, y) = y
 
     algo f(x, y):
-        case x < y: 1
-        case $p(x, y): 2
+        case x = 0: y
+        f(x - 1, y) + 1
+
+    eval f(100, 200)
+
+    f(100, 200) = 300
+
+prove:
+    have fib fn(x R) R
+
+    know:
+        forall x R:
+            x = 0
+            =>:
+                fib(x) = 0
+
+        forall x R:
+            x = 1
+            =>:
+                fib(x) = 1
+
+        forall x R:
+            x > 1
+            =>:
+                fib(x) = fib(x - 1) + fib(x - 2)
+        
+    algo fib(x):
+        case x = 0: 0
+        case x = 1: 1
+        fib(x - 1) + fib(x - 2)
+        
+    eval fib(10)
+    fib(10) = 55
+
+prove:
+    have factorial fn(x R) R
+
+    know:
+        forall x R:
+            x = 0
+            =>:
+                factorial(x) = 1
+
+        forall x R:
+            x > 0
+            =>:
+                factorial(x) = factorial(x - 1) * x
+
+    algo factorial(x):
+        case x = 0: 1
+        factorial(x - 1) * x
+
+    eval factorial(15)

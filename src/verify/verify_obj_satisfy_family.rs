@@ -4,46 +4,51 @@ impl Runtime {
     pub fn verify_obj_satisfies_family(
         &mut self,
         obj: Obj,
-        family_ty: &FamilyParamType,
+        family_ty: &FamilyObj,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let family_name = family_ty.name.to_string();
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::new_verify_error_with_msg_position_previous_error(
-                    format!("family `{}` is not defined", family_name),
-                    default_line_file(),
-                    None,
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_msg_position_previous_error(
+                        format!("family `{}` is not defined", family_name),
+                        default_line_file(),
+                        None,
+                    ),
+                );
             }
         };
-        let expected_count =
-            ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
         if family_ty.params.len() != expected_count {
-            return Err(RuntimeError::new_verify_error_with_msg_position_previous_error(
-                format!(
-                    "family `{}` expects {} type argument(s), got {}",
-                    family_name,
-                    expected_count,
-                    family_ty.params.len()
+            return Err(
+                RuntimeError::new_verify_error_with_msg_position_previous_error(
+                    format!(
+                        "family `{}` expects {} type argument(s), got {}",
+                        family_name,
+                        expected_count,
+                        family_ty.params.len()
+                    ),
+                    default_line_file(),
+                    None,
                 ),
-                default_line_file(),
-                None,
-            ));
+            );
         }
         let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
             &def.params_def_with_type,
             &family_ty.params,
         );
-        let member_set = self.inst_obj(&def.equal_to, &param_to_arg_map).map_err(|e| {
-            RuntimeError::new_verify_error_with_msg_position_previous_error(String::new(), default_line_file(), Some(e))
-        })?;
-        let fact = AtomicFact::InFact(InFact::new(
-            obj,
-            member_set,
-            default_line_file(),
-        ));
+        let member_set = self
+            .inst_obj(&def.equal_to, &param_to_arg_map)
+            .map_err(|e| {
+                RuntimeError::new_verify_error_with_msg_position_previous_error(
+                    String::new(),
+                    default_line_file(),
+                    Some(e),
+                )
+            })?;
+        let fact = AtomicFact::InFact(InFact::new(obj, member_set, default_line_file()));
         self.verify_atomic_fact(&fact, verify_state)
     }
 }

@@ -1,107 +1,132 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+/// Right-hand side of a binary op waiting while we evaluate the left spine (iterative, no deep Rust recursion).
+enum PendingRight {
+    Add(Obj),
+    Sub(Obj),
+    Mul(Obj),
+    Div(Obj),
+}
+
+#[derive(Copy, Clone)]
+enum BinaryCombineOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
 impl Runtime {
-    fn evaluate_symbol_obj_recursively(
+    /// Evaluates numeric expressions for `eval` without deep recursion on the Rust stack.
+    /// Algorithm calls are expanded in a loop; `Add`/`Sub`/`Mul`/`Div` use an explicit stack for the left spine.
+    fn evaluate_symbol_obj_iterative(
         &mut self,
-        obj_to_evaluate: &Obj,
+        initial: Obj,
         eval_stmt: &EvalStmt,
     ) -> Result<Obj, RuntimeError> {
-        match obj_to_evaluate {
-            Obj::FnObj(fn_obj) => self.evaluate_fn_obj_to_obj(fn_obj, eval_stmt),
-            Obj::Add(add_obj) => {
-                let evaluated_left_obj =
-                    self.evaluate_symbol_obj_recursively(&add_obj.left, eval_stmt)?;
-                let evaluated_right_obj =
-                    self.evaluate_symbol_obj_recursively(&add_obj.right, eval_stmt)?;
-                let calculated_number = Obj::Add(crate::obj::Add::new(
-                    evaluated_left_obj,
-                    evaluated_right_obj,
-                ))
-                .evaluate_to_normalized_decimal_number();
-                match calculated_number {
-                    Some(number) => Ok(Obj::Number(number)),
-                    None => Err(RuntimeError::from(
+        let mut pending: Vec<PendingRight> = Vec::new();
+        let mut cur = initial;
+
+        loop {
+            cur = self.peel_fn_obj_dispatch_loop(cur, eval_stmt)?;
+
+            match cur {
+                Obj::Add(add) => {
+                    pending.push(PendingRight::Add(*add.right));
+                    cur = *add.left;
+                    continue;
+                }
+                Obj::Sub(sub) => {
+                    pending.push(PendingRight::Sub(*sub.right));
+                    cur = *sub.left;
+                    continue;
+                }
+                Obj::Mul(mul) => {
+                    pending.push(PendingRight::Mul(*mul.right));
+                    cur = *mul.left;
+                    continue;
+                }
+                Obj::Div(div) => {
+                    pending.push(PendingRight::Div(*div.right));
+                    cur = *div.left;
+                    continue;
+                }
+                Obj::Number(acc_num) => {
+                    let mut acc = Obj::Number(acc_num);
+                    while let Some(pend) = pending.pop() {
+                        let (combine_op, right_obj) = match pend {
+                            PendingRight::Add(o) => (BinaryCombineOp::Add, o),
+                            PendingRight::Sub(o) => (BinaryCombineOp::Sub, o),
+                            PendingRight::Mul(o) => (BinaryCombineOp::Mul, o),
+                            PendingRight::Div(o) => (BinaryCombineOp::Div, o),
+                        };
+                        let right_eval =
+                            self.evaluate_symbol_obj_iterative(right_obj, eval_stmt)?;
+                        acc =
+                            self.combine_two_numeric_objs(acc, right_eval, combine_op, eval_stmt)?;
+                    }
+                    return Ok(acc);
+                }
+                _ => {
+                    if pending.is_empty() {
+                        return Ok(cur);
+                    }
+                    return Err(RuntimeError::from(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             Stmt::EvalStmt(eval_stmt.clone()),
-                            "eval: failed to calculate add expression".to_string(),
+                            "eval: non-numeric intermediate with pending binary operation"
+                                .to_string(),
                             None,
                             vec![],
-                        )
-                    )),
+                        ),
+                    ));
                 }
             }
-            Obj::Sub(sub_obj) => {
-                let evaluated_left_obj =
-                    self.evaluate_symbol_obj_recursively(&sub_obj.left, eval_stmt)?;
-                let evaluated_right_obj =
-                    self.evaluate_symbol_obj_recursively(&sub_obj.right, eval_stmt)?;
-                let calculated_number = Obj::Sub(crate::obj::Sub::new(
-                    evaluated_left_obj,
-                    evaluated_right_obj,
-                ))
-                .evaluate_to_normalized_decimal_number();
-                match calculated_number {
-                    Some(number) => Ok(Obj::Number(number)),
-                    None => Err(RuntimeError::from(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EvalStmt(eval_stmt.clone()),
-                            "eval: failed to calculate sub expression".to_string(),
-                            None,
-                            vec![],
-                        )
-                    )),
-                }
-            }
-            Obj::Mul(mul_obj) => {
-                let evaluated_left_obj =
-                    self.evaluate_symbol_obj_recursively(&mul_obj.left, eval_stmt)?;
-                let evaluated_right_obj =
-                    self.evaluate_symbol_obj_recursively(&mul_obj.right, eval_stmt)?;
-                let calculated_number = Obj::Mul(crate::obj::Mul::new(
-                    evaluated_left_obj,
-                    evaluated_right_obj,
-                ))
-                .evaluate_to_normalized_decimal_number();
-                match calculated_number {
-                    Some(number) => Ok(Obj::Number(number)),
-                    None => Err(RuntimeError::from(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EvalStmt(eval_stmt.clone()),
-                            "eval: failed to calculate mul expression".to_string(),
-                            None,
-                            vec![],
-                        )
-                    )),
-                }
-            }
-            Obj::Div(div_obj) => {
-                let evaluated_left_obj =
-                    self.evaluate_symbol_obj_recursively(&div_obj.left, eval_stmt)?;
-                let evaluated_right_obj =
-                    self.evaluate_symbol_obj_recursively(&div_obj.right, eval_stmt)?;
-                let calculated_number = Obj::Div(crate::obj::Div::new(
-                    evaluated_left_obj,
-                    evaluated_right_obj,
-                ))
-                .evaluate_to_normalized_decimal_number();
-                match calculated_number {
-                    Some(number) => Ok(Obj::Number(number)),
-                    None => Err(RuntimeError::from(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EvalStmt(eval_stmt.clone()),
-                            "eval: failed to calculate div expression".to_string(),
-                            None,
-                            vec![],
-                        )
-                    )),
-                }
-            }
-            _ => Ok(obj_to_evaluate.clone()),
         }
     }
 
-    fn evaluate_fn_obj_to_obj(
+    fn combine_two_numeric_objs(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        combine_op: BinaryCombineOp,
+        eval_stmt: &EvalStmt,
+    ) -> Result<Obj, RuntimeError> {
+        let combined = match combine_op {
+            BinaryCombineOp::Add => Obj::Add(crate::obj::Add::new(left, right)),
+            BinaryCombineOp::Sub => Obj::Sub(crate::obj::Sub::new(left, right)),
+            BinaryCombineOp::Mul => Obj::Mul(crate::obj::Mul::new(left, right)),
+            BinaryCombineOp::Div => Obj::Div(crate::obj::Div::new(left, right)),
+        };
+        let calculated = combined.evaluate_to_normalized_decimal_number();
+        match calculated {
+            Some(number) => Ok(Obj::Number(number)),
+            None => Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    Stmt::EvalStmt(eval_stmt.clone()),
+                    "eval: failed to combine numeric sub-expression".to_string(),
+                    None,
+                    vec![],
+                ),
+            )),
+        }
+    }
+
+    /// Repeatedly expands `FnObj` using the algo definition until the head is not a call.
+    fn peel_fn_obj_dispatch_loop(
+        &mut self,
+        mut cur: Obj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<Obj, RuntimeError> {
+        while let Obj::FnObj(ref fn_obj) = cur {
+            cur = self.dispatch_algo_one_return_expr(fn_obj, eval_stmt)?;
+        }
+        Ok(cur)
+    }
+
+    /// One algo step: bind numeric args, match case / default, return **instantiated** return expression only (no recursive eval).
+    fn dispatch_algo_one_return_expr(
         &mut self,
         fn_obj_to_evaluate: &FnObj,
         eval_stmt: &EvalStmt,
@@ -110,7 +135,8 @@ impl Runtime {
         let mut flattened_number_args: Vec<Obj> = Vec::new();
         for arg_group in fn_obj_to_evaluate.body.iter() {
             for arg in arg_group.iter() {
-                let evaluated_arg_obj = self.evaluate_symbol_obj_recursively(arg, eval_stmt)?;
+                let evaluated_arg_obj =
+                    self.evaluate_symbol_obj_iterative((**arg).clone(), eval_stmt)?;
                 match evaluated_arg_obj {
                     Obj::Number(number) => {
                         flattened_number_args.push(Obj::Number(number));
@@ -173,31 +199,32 @@ impl Runtime {
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::EvalStmt(eval_stmt.clone()),
-                        "eval: failed to verify case condition".to_string(),
-                        Some(verify_error),
-                        vec![],
-                    ))
+                    RuntimeError::ExecStmtError(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            Stmt::EvalStmt(eval_stmt.clone()),
+                            "eval: failed to verify case condition".to_string(),
+                            Some(verify_error),
+                            vec![],
+                        ),
+                    )
                 })?;
 
             if verify_result.is_true() {
-                let instantiated_symbol_result =
-                    self.inst_obj(&algo_case.return_stmt.value, &param_to_arg_map)?;
-                return self
-                    .evaluate_symbol_obj_recursively(&instantiated_symbol_result, eval_stmt);
+                return self.inst_obj(&algo_case.return_stmt.value, &param_to_arg_map);
             }
             if verify_result.is_unknown() {
                 let reversed_case_condition = instantiated_case_condition.make_reversed();
                 let verify_reversed_result = self
                     .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
-                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EvalStmt(eval_stmt.clone()),
-                            "eval: failed to verify reversed case condition".to_string(),
-                            Some(verify_error),
-                            vec![],
-                        ))
+                        RuntimeError::ExecStmtError(
+                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                                Stmt::EvalStmt(eval_stmt.clone()),
+                                "eval: failed to verify reversed case condition".to_string(),
+                                Some(verify_error),
+                                vec![],
+                            ),
+                        )
                     })?;
                 if verify_reversed_result.is_unknown() {
                     return Err(RuntimeError::from(
@@ -216,9 +243,7 @@ impl Runtime {
         }
 
         if let Some(default_return_stmt) = &algo_definition.default_return {
-            let instantiated_default_symbol =
-                self.inst_obj(&default_return_stmt.value, &param_to_arg_map)?;
-            self.evaluate_symbol_obj_recursively(&instantiated_default_symbol, eval_stmt)
+            self.inst_obj(&default_return_stmt.value, &param_to_arg_map)
         } else {
             Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -251,9 +276,9 @@ impl Runtime {
             ));
         }
 
-        self.push_env();
-        let eval_result = self.evaluate_symbol_obj_recursively(&stmt.obj_to_eval, stmt);
-        self.pop_env();
+        let eval_result = self.run_in_local_env(|rt| {
+            rt.evaluate_symbol_obj_iterative(stmt.obj_to_eval.clone(), stmt)
+        });
 
         let evaluated_obj = eval_result?;
         let evaluated_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(

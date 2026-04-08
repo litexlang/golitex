@@ -9,10 +9,11 @@ impl Runtime {
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let function = &restrict_fact.obj;
 
-        let original_fn_set = match self.get_cloned_fn_set_where_fn_belongs_to(function) {
-            Some(fn_set) => fn_set,
-            None => {
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+        let original_fn_set =
+            match self.get_cloned_object_in_fn_set(function) {
+                Some(fn_set) => fn_set,
+                None => {
+                    return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                     String::new(),
                     restrict_fact.line_file.clone(),
@@ -25,8 +26,8 @@ impl Runtime {
                         default_line_file(),
                     )),
                 ));
-            }
-        };
+                }
+            };
 
         self.verify_restrict_to_fn_set_with_params_against_original_with_params(
             restrict_fact,
@@ -38,11 +39,11 @@ impl Runtime {
     fn verify_restrict_to_fn_set_with_params_against_original_with_params(
         &mut self,
         restrict_fact: &RestrictFact,
-        original_fn_set: &FnSetWithParams,
+        original_fn_set: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
         let restrict_to_ref = match &restrict_fact.obj_can_restrict_to_fn_set {
-            Obj::FnSetWithParams(r) => r,
+            Obj::FnSet(r) => r,
             _ => return Ok(None),
         };
 
@@ -129,7 +130,7 @@ impl Runtime {
 
     fn build_then_facts_for_original_with_params(
         runtime: &Runtime,
-        original_fn_set: &FnSetWithParams,
+        original_fn_set: &FnSet,
         original_to_restrict_param_map: &HashMap<String, Obj>,
         restrict_flat_param_names: &Vec<String>,
         line_file: LineFile,
@@ -154,8 +155,8 @@ impl Runtime {
         }
 
         for dom_fact in &original_fn_set.dom_facts {
-            let instantiated_dom_fact = runtime
-                .inst_or_and_chain_atomic_fact(dom_fact, original_to_restrict_param_map)?;
+            let instantiated_dom_fact =
+                runtime.inst_or_and_chain_atomic_fact(dom_fact, original_to_restrict_param_map)?;
             then_facts.push(instantiated_dom_fact.to_exist_or_and_chain_atomic_fact());
         }
 
@@ -172,8 +173,12 @@ impl Runtime {
         original_ret_set: &Obj,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
-        let params_in_original_sets_forall =
-            ForallFact::new(forall_params, forall_dom_facts, then_facts, restrict_fact.line_file.clone());
+        let params_in_original_sets_forall = ForallFact::new(
+            forall_params,
+            forall_dom_facts,
+            then_facts,
+            restrict_fact.line_file.clone(),
+        );
         let forall_result =
             self.verify_forall_fact(&params_in_original_sets_forall, verify_state)?;
         if !forall_result.is_true() {
