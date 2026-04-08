@@ -117,8 +117,8 @@ impl Runtime {
                 Obj::SetBuilder(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::FnSetWithParams(a) => match right {
-                Obj::FnSetWithParams(b) => a.to_string() == b.to_string(),
+            Obj::FnSet(a) => match right {
+                Obj::FnSet(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::StandardSet(StandardSet::NPos) => match right {
@@ -215,6 +215,14 @@ impl Runtime {
             },
             Obj::StandardSet(StandardSet::RNz) => match right {
                 Obj::StandardSet(StandardSet::RNz) => true,
+                _ => false,
+            },
+            Obj::FamilyObj(a) => match right {
+                Obj::FamilyObj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::StructObj(a) => match right {
+                Obj::StructObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
         }

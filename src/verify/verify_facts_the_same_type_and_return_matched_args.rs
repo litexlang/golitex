@@ -159,9 +159,24 @@ impl Runtime {
 
             match &fact_param_def.param_type {
                 ParamType::Obj(ref obj) => match &other_param_def.param_type {
-                    ParamType::Obj(other_obj) => {
-                        matched_args.push((obj.clone(), other_obj.clone()));
-                    }
+                    ParamType::Obj(other_obj) => match (obj, other_obj) {
+                        (Obj::FamilyObj(family), Obj::FamilyObj(other_family)) => {
+                            if family.name.to_string() != other_family.name.to_string() {
+                                return Ok(None);
+                            }
+                            if family.params.len() != other_family.params.len() {
+                                return Ok(None);
+                            }
+                            for (param, other_param) in
+                                family.params.iter().zip(other_family.params.iter())
+                            {
+                                matched_args.push((param.clone(), other_param.clone()));
+                            }
+                        }
+                        _ => {
+                            matched_args.push((obj.clone(), other_obj.clone()));
+                        }
+                    },
                     _ => return Ok(None),
                 },
                 ParamType::Set(_) => match &other_param_def.param_type {
@@ -176,22 +191,6 @@ impl Runtime {
                     ParamType::FiniteSet(_) => {}
                     _ => return Ok(None),
                 },
-                ParamType::Family(ref family) => match &other_param_def.param_type {
-                    ParamType::Family(other_family) => {
-                        if family.name.to_string() != other_family.name.to_string() {
-                            return Ok(None);
-                        }
-                        if family.params.len() != other_family.params.len() {
-                            return Ok(None);
-                        }
-                        for (param, other_param) in
-                            family.params.iter().zip(other_family.params.iter())
-                        {
-                            matched_args.push((param.clone(), other_param.clone()));
-                        }
-                    }
-                    _ => return Ok(None),
-                },
                 ParamType::Struct(ref struct_ty) => match &other_param_def.param_type {
                     ParamType::Struct(other_struct) => {
                         if struct_ty.name.to_string() != other_struct.name.to_string() {
@@ -200,10 +199,8 @@ impl Runtime {
                         if struct_ty.args.len() != other_struct.args.len() {
                             return Ok(None);
                         }
-                        for (param, other_param) in struct_ty
-                            .args
-                            .iter()
-                            .zip(other_struct.args.iter())
+                        for (param, other_param) in
+                            struct_ty.args.iter().zip(other_struct.args.iter())
                         {
                             matched_args.push((param.clone(), other_param.clone()));
                         }

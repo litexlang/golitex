@@ -26,41 +26,35 @@ impl Runtime {
     }
 
     /// `struct` 头部与字段类型：不允许嵌套 `struct`（无 `struct Foo(...)`）。
-    pub fn parse_struct_field_type(&mut self, tb: &mut TokenBlock) -> Result<StructFieldType, RuntimeError> {
+    pub fn parse_struct_field_type(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<StructFieldType, RuntimeError> {
         match tb.current()? {
-            NONEMPTY_SET => self
-                .parse_param_type_nonempty_set(tb)
-                .map(|pt| match pt {
-                    ParamType::NonemptySet(n) => StructFieldType::NonemptySet(n),
-                    _ => unreachable!(),
-                }),
-            FINITE_SET => self
-                .parse_param_type_finite_set(tb)
-                .map(|pt| match pt {
-                    ParamType::FiniteSet(f) => StructFieldType::FiniteSet(f),
-                    _ => unreachable!(),
-                }),
-            SET => self.parse_param_type_set(tb).map(|pt| match pt {
-                ParamType::Set(s) => StructFieldType::Set(s),
+            NONEMPTY_SET => {
+                tb.skip_token(NONEMPTY_SET)?;
+                Ok(StructFieldType::NonemptySet(NonemptySet::new()))
+            }
+            FINITE_SET => {
+                tb.skip_token(FINITE_SET)?;
+                Ok(StructFieldType::FiniteSet(FiniteSet::new()))
+            }
+            SET => {
+                tb.skip_token(SET)?;
+                Ok(StructFieldType::Set(Set::new()))
+            }
+            STRUCT => Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "nested `struct` types are not allowed in struct parameter and field types"
+                        .to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            ),
+            _ => self.parse_param_type_obj(tb).map(|pt| match pt {
+                ParamType::Obj(o) => StructFieldType::Obj(o),
                 _ => unreachable!(),
             }),
-            FAMILY => self
-                .parse_param_type_family(tb)
-                .map(|pt| match pt {
-                    ParamType::Family(f) => StructFieldType::Family(f),
-                    _ => unreachable!(),
-                }),
-            STRUCT => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                "nested `struct` types are not allowed in struct parameter and field types".to_string(),
-                tb.line_file.clone(),
-                None,
-            )),
-            _ => self
-                .parse_param_type_obj(tb)
-                .map(|pt| match pt {
-                    ParamType::Obj(o) => StructFieldType::Obj(o),
-                    _ => unreachable!(),
-                }),
         }
     }
 
@@ -93,18 +87,28 @@ impl Runtime {
             NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
             FINITE_SET => self.parse_param_type_finite_set(tb),
             SET => self.parse_param_type_set(tb),
-            FAMILY => self.parse_param_type_family(tb),
-            STRUCT => self.parse_param_type_struct(tb),
+            FAMILY => self
+                .parse_family_obj(tb)
+                .map(|f| ParamType::Obj(Obj::FamilyObj(f))),
+            STRUCT => self
+                .parse_struct_obj(tb)
+                .map(|s| ParamType::Struct(s.into())),
             _ => self.parse_param_type_obj(tb),
         }
     }
 
-    pub fn parse_param_type_nonempty_set(&self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
+    pub fn parse_param_type_nonempty_set(
+        &self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamType, RuntimeError> {
         tb.skip_token(NONEMPTY_SET)?;
         Ok(ParamType::NonemptySet(NonemptySet::new()))
     }
 
-    pub fn parse_param_type_finite_set(&self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
+    pub fn parse_param_type_finite_set(
+        &self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamType, RuntimeError> {
         tb.skip_token(FINITE_SET)?;
         Ok(ParamType::FiniteSet(FiniteSet::new()))
     }
@@ -117,25 +121,5 @@ impl Runtime {
     pub fn parse_param_type_obj(&mut self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         let obj = self.parse_obj(tb)?;
         Ok(ParamType::Obj(obj))
-    }
-
-    pub fn parse_param_type_family(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamType, RuntimeError> {
-        tb.skip_token(FAMILY)?;
-        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
-        let params = self.parse_braced_objs(tb)?;
-        Ok(ParamType::Family(FamilyParamType { name, params }))
-    }
-
-    pub fn parse_param_type_struct(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamType, RuntimeError> {
-        tb.skip_token(STRUCT)?;
-        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
-        let params = self.parse_braced_objs(tb)?;
-        Ok(ParamType::Struct(StructParamType { name, args: params }))
     }
 }

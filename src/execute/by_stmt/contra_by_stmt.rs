@@ -1,43 +1,39 @@
-use super::exec_axiom_helpers::impossible_proof_error_message;
+use super::helpers_by_stmt::impossible_proof_error_message;
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_contra_axiom_stmt(
+    pub fn exec_by_contra_stmt(
         &mut self,
-        stmt: &ByContraAxiomStmt,
+        stmt: &ByContraStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let to_prove_fact = Fact::AtomicFact(stmt.to_prove.clone());
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByContraAxiomStmt(stmt.clone()),
+                    Stmt::ByContraStmt(stmt.clone()),
                     format!("by contra: failed to prove `{}`", to_prove_fact),
                     Some(verify_error.into()),
                     vec![],
                 ))
             })?;
 
-        let mut last_error: Option<RuntimeError> = None;
-        let exec_proof_inside_results = {
+        let (exec_proof_inside_results, last_error) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
 
-            self.push_env();
-
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
-                reverse_to_prove_fact,
-            )
+            rt.store_atomic_fact_without_well_defined_verified_and_infer(reverse_to_prove_fact)
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByContraAxiomStmt(stmt.clone()),
+                        Stmt::ByContraStmt(stmt.clone()),
                         format!("by contra: failed to know reverse of `{}`", to_prove_fact),
                         Some(store_fact_error.into()),
                         vec![],
                     ))
                 })?;
 
+            let mut last_error: Option<RuntimeError> = None;
             for proof_stmt in stmt.proof.iter() {
-                let exec_stmt_result = self.exec_stmt(proof_stmt);
+                let exec_stmt_result = rt.exec_stmt(proof_stmt);
                 match exec_stmt_result {
                     Ok(result) => inside_results.push(result),
                     Err(statement_error) => {
@@ -48,11 +44,11 @@ impl Runtime {
             }
 
             let verify_impossible_fact_result =
-                self.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
+                rt.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
             if verify_impossible_fact_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByContraAxiomStmt(stmt.clone()),
+                        Stmt::ByContraStmt(stmt.clone()),
                         impossible_proof_error_message(&stmt.impossible_fact, None),
                         None,
                         inside_results,
@@ -60,14 +56,14 @@ impl Runtime {
                 ));
             }
 
-            let verify_reversed_impossible_fact_result = self.verify_atomic_fact(
+            let verify_reversed_impossible_fact_result = rt.verify_atomic_fact(
                 &stmt.impossible_fact.make_reversed(),
                 &VerifyState::new(0, false),
             )?;
             if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByContraAxiomStmt(stmt.clone()),
+                        Stmt::ByContraStmt(stmt.clone()),
                         impossible_proof_error_message(&stmt.impossible_fact, None),
                         None,
                         vec![],
@@ -75,14 +71,13 @@ impl Runtime {
                 ));
             }
 
-            self.pop_env();
-            inside_results
-        };
+            Ok((inside_results, last_error))
+        })?;
 
         if let Some(last_error) = last_error {
             return Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByContraAxiomStmt(stmt.clone()),
+                    Stmt::ByContraStmt(stmt.clone()),
                     "by contra: failed to execute proof".to_string(),
                     Some(last_error),
                     exec_proof_inside_results,
@@ -95,7 +90,7 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(to_prove_fact)
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByContraAxiomStmt(stmt.clone()),
+                    Stmt::ByContraStmt(stmt.clone()),
                     format!(
                         "by contra: failed to release `{}`",
                         to_prove_fact_display_string
@@ -107,7 +102,7 @@ impl Runtime {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::ByContraAxiomStmt(stmt.clone()),
+                Stmt::ByContraStmt(stmt.clone()),
                 infer_result,
                 exec_proof_inside_results,
             ),

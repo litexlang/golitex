@@ -125,30 +125,52 @@ impl Runtime {
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
-        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS) {
-            tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
-            Ok(Obj::FnSetWithParams(
-                self.parse_fn_set_with_dom_without_fn_prefix(tb)?,
-            ))
+        } else if tb.current_token_is_equal_to(FN) {
+            tb.skip_token(FN)?;
+            Ok(Obj::FnSet(self.parse_fn_set(tb)?))
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
     }
 
-    pub fn parse_fn_set_with_dom_without_fn_prefix(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<FnSetWithParams, RuntimeError> {
+    pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
         self.push_parsing_time_name_scope();
-        let fn_set = self.parse_fn_set_with_dom_without_fn_prefix_body(tb);
+        let fn_set = self.parse_fn_set_body(tb, true);
         self.pop_parsing_time_name_scope();
-        fn_set
+        match fn_set {
+            Ok(fn_set) => match fn_set {
+                FnSetOrFnSetClause::FnSet(fn_set) => Ok(fn_set),
+                FnSetOrFnSetClause::FnSetClause(_) => {
+                    panic!("FnSetOrFnSetClause::FnSetClause should not be returned");
+                }
+            },
+            Err(e) => Err(e),
+        }
     }
 
-    fn parse_fn_set_with_dom_without_fn_prefix_body(
+    pub fn parse_fn_set_clause(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<FnSetWithParams, RuntimeError> {
+    ) -> Result<FnSetClause, RuntimeError> {
+        self.push_parsing_time_name_scope();
+        let clause = self.parse_fn_set_body(tb, false);
+        self.pop_parsing_time_name_scope();
+        match clause {
+            Ok(clause) => match clause {
+                FnSetOrFnSetClause::FnSetClause(clause) => Ok(clause),
+                FnSetOrFnSetClause::FnSet(_) => {
+                    panic!("FnSetOrFnSetClause::FnSet should not be returned");
+                }
+            },
+            Err(e) => Err(e),
+        }
+    }
+
+    fn parse_fn_set_body(
+        &mut self,
+        tb: &mut TokenBlock,
+        true_when_return_fn_set_false_when_return_fn_set_clause: bool,
+    ) -> Result<FnSetOrFnSetClause, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
         loop {
@@ -161,7 +183,29 @@ impl Runtime {
             }
 
             let set = self.parse_obj(tb)?;
+
+            for p in current_params.clone().iter() {
+                if !true_when_return_fn_set_false_when_return_fn_set_clause {
+                    // 这里需要register一下，因为后文可能会用到这些参数
+                    self.register_name_into_name_scope(p, tb.line_file.clone())?;
+                } else {
+                    if !is_valid_litex_name(&p).is_ok() {
+                        return Err(
+                            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                                format!("Invalid parameter name: {}", p),
+                                tb.line_file.clone(),
+                                None,
+                            ),
+                        );
+                    }
+                }
+
+                let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
+                self.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
+            }
+
             params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
+
             if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
                 continue;
@@ -180,36 +224,35 @@ impl Runtime {
             }
         }
 
-        let fn_set_param_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(
-            &fn_set_param_names,
-            tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                String::new(),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
-
         let mut dom_facts = vec![];
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
-            dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+            let cur = self.parse_or_and_chain_atomic_fact(tb)?;
+            dom_facts.push(cur);
             while tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
-                dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+                let cur = self.parse_or_and_chain_atomic_fact(tb)?;
+                dom_facts.push(cur);
             }
         }
 
         tb.skip_token(RIGHT_BRACE)?;
-        let ret_set = self.parse_obj(tb)?;
-        Ok(FnSetWithParams::new(
-            params_def_with_set,
-            dom_facts,
-            ret_set,
-        ))
+        let ret_set_parsed = self.parse_obj(tb)?;
+        if true_when_return_fn_set_false_when_return_fn_set_clause {
+            Ok(FnSetOrFnSetClause::FnSet(
+                self.new_fn_set_and_add_mangled_prefix(
+                    params_def_with_set,
+                    dom_facts,
+                    ret_set_parsed,
+                )?,
+            ))
+        } else {
+            Ok(FnSetOrFnSetClause::FnSetClause(FnSetClause {
+                params_def_with_set,
+                dom_facts,
+                ret_set: ret_set_parsed,
+            }))
+        }
     }
 
     pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(
@@ -380,6 +423,15 @@ impl Runtime {
         if tok == R_NZ {
             tb.skip()?;
             return Ok(Obj::StandardSet(StandardSet::RNz));
+        }
+
+        if tok == FAMILY {
+            let family = self.parse_family_obj(tb)?;
+            return Ok(Obj::FamilyObj(family));
+        }
+        if tok == STRUCT {
+            let struct_obj = self.parse_struct_obj(tb)?;
+            return Ok(Obj::StructObj(struct_obj.into()));
         }
 
         // 多元关键字：吃关键字 + 括号里若干 obj
@@ -838,39 +890,37 @@ impl Runtime {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, RuntimeError> {
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(
-            &a.name,
-            tb.line_file.clone(),
-        )
-        .map_err(|e| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                RuntimeError::message_text_for_duplicate_used_name_without_line_file(&a.name),
-                tb.line_file.clone(),
-                Some(e),
-            )
-        })?;
-
         let second = self.parse_obj(tb)?;
         if tb.current()? == COLON {
             tb.skip_token(COLON)?;
-            let mut facts = vec![];
+
+            // 先登记形参 mangling，再解析域与条件（与 fn 集一致：先绑定再读体）
+            let user_names = vec![a.name.clone()];
+            let (mangled_names, param_arg_map) =
+                self.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
+            let stored = mangled_names[0].clone();
+            let second_inst = self.inst_obj(&second, &param_arg_map)?;
+
+            let mut facts_inst = Vec::new();
             while tb.current()? != RIGHT_CURLY_BRACE {
-                facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+                let f = self.parse_or_and_chain_atomic_fact(tb)?;
+                facts_inst.push(self.inst_or_and_chain_atomic_fact(&f, &param_arg_map)?);
             }
             tb.skip_token(RIGHT_CURLY_BRACE)?;
-            Ok(Obj::SetBuilder(SetBuilder::new(a.name, second, facts)))
+
+            Ok(Obj::SetBuilder(SetBuilder::new(
+                stored,
+                second_inst,
+                facts_inst,
+            )))
         } else {
-            let mut objs = Vec::with_capacity(2);
-            objs.push(Obj::Identifier(a));
-            objs.push(second);
-            while tb.current()? != RIGHT_CURLY_BRACE {
-                if tb.current_token_is_equal_to(COMMA) {
-                    tb.skip_token(COMMA)?;
-                }
-                objs.push(self.parse_obj(tb)?);
-            }
-            tb.skip_token(RIGHT_CURLY_BRACE)?;
-            Ok(Obj::ListSet(ListSet::new(objs)))
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "expected colon after first argument".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
         }
     }
 
@@ -968,6 +1018,20 @@ impl Runtime {
             )))
         }
     }
+
+    pub fn parse_family_obj(&mut self, tb: &mut TokenBlock) -> Result<FamilyObj, RuntimeError> {
+        tb.skip_token(FAMILY)?;
+        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let params = self.parse_braced_objs(tb)?;
+        Ok(FamilyObj { name, params })
+    }
+
+    pub fn parse_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<StructObj, RuntimeError> {
+        tb.skip_token(STRUCT)?;
+        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let params = self.parse_braced_objs(tb)?;
+        Ok(StructObj { name, args: params })
+    }
 }
 
 fn starts_with_digit(s: &str) -> bool {
@@ -996,4 +1060,9 @@ fn is_number(s: &str) -> bool {
     }
 
     s != "."
+}
+
+enum FnSetOrFnSetClause {
+    FnSet(FnSet),
+    FnSetClause(FnSetClause),
 }

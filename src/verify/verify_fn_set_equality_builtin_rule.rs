@@ -1,21 +1,17 @@
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
-fn fn_set_equality_fact(
-    left: &FnSetWithParams,
-    right: &FnSetWithParams,
-    line_file: LineFile,
-) -> Fact {
+fn fn_set_equality_fact(left: &FnSet, right: &FnSet, line_file: LineFile) -> Fact {
     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Obj::FnSetWithParams(left.clone()),
-        Obj::FnSetWithParams(right.clone()),
+        Obj::FnSet(left.clone()),
+        Obj::FnSet(right.clone()),
         line_file,
     )))
 }
 
 fn fn_set_equality_verify_error(
-    left: &FnSetWithParams,
-    right: &FnSetWithParams,
+    left: &FnSet,
+    right: &FnSet,
     line_file: LineFile,
     message: String,
     cause: Option<RuntimeError>,
@@ -29,23 +25,25 @@ fn fn_set_equality_verify_error(
 }
 
 fn fn_set_equality_verified_by_builtin_rules_result(
-    left: &FnSetWithParams,
-    right: &FnSetWithParams,
+    left: &FnSet,
+    right: &FnSet,
     line_file: LineFile,
 ) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-        fn_set_equality_fact(left, right, line_file),
-        InferResult::new(),
-        "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
-        Vec::new(),
-    ))
+    NonErrStmtExecResult::FactualStmtSuccess(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            fn_set_equality_fact(left, right, line_file),
+            InferResult::new(),
+            "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
+            Vec::new(),
+        ),
+    )
 }
 
 impl Runtime {
     pub(crate) fn verify_fn_set_with_params_equality_by_builtin_rules(
         &mut self,
-        left: &FnSetWithParams,
-        right: &FnSetWithParams,
+        left: &FnSet,
+        right: &FnSet,
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
@@ -55,24 +53,22 @@ impl Runtime {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
 
-        let left_implies_right = self
-            .verify_fn_set_with_params_directionally_in_local_env(
-                left,
-                right,
-                line_file.clone(),
-                verify_state,
-            )?;
+        let left_implies_right = self.verify_fn_set_with_params_directionally_in_local_env(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )?;
         if !left_implies_right {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
 
-        let right_implies_left = self
-            .verify_fn_set_with_params_directionally_in_local_env(
-                right,
-                left,
-                line_file.clone(),
-                verify_state,
-            )?;
+        let right_implies_left = self.verify_fn_set_with_params_directionally_in_local_env(
+            right,
+            left,
+            line_file.clone(),
+            verify_state,
+        )?;
         if !right_implies_left {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
@@ -84,32 +80,32 @@ impl Runtime {
 
     fn verify_fn_set_with_params_directionally_in_local_env(
         &mut self,
-        source: &FnSetWithParams,
-        target: &FnSetWithParams,
+        source: &FnSet,
+        target: &FnSet,
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        self.push_env();
-        let result = self.verify_fn_set_with_params_directionally_in_local_env_body(
-            source,
-            target,
-            line_file,
-            verify_state,
-        );
-        self.pop_env();
-        result
+        self.run_in_local_env(|rt| {
+            rt.verify_fn_set_with_params_directionally_in_local_env_body(
+                source,
+                target,
+                line_file,
+                verify_state,
+            )
+        })
     }
 
     fn verify_fn_set_with_params_directionally_in_local_env_body(
         &mut self,
-        source: &FnSetWithParams,
-        target: &FnSetWithParams,
+        source: &FnSet,
+        target: &FnSet,
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        let target_flat_param_names = ParamGroupWithSet::collect_param_names(&target.params_def_with_set);
+        let target_flat_param_names =
+            ParamGroupWithSet::collect_param_names(&target.params_def_with_set);
         let generated_param_names =
-            self.generate_non_duplicated_random_param_names(target_flat_param_names.len());
+            self.generate_random_unused_names(target_flat_param_names.len());
         let source_param_to_generated_arg_map = self
             .define_directional_source_fn_set_params_in_local_env(
                 source,
@@ -117,8 +113,10 @@ impl Runtime {
                 target,
                 line_file.clone(),
             )?;
-        let target_param_to_generated_arg_map =
-            Self::build_param_to_generated_arg_map(&target_flat_param_names, &generated_param_names);
+        let target_param_to_generated_arg_map = Self::build_param_to_generated_arg_map(
+            &target_flat_param_names,
+            &generated_param_names,
+        );
 
         self.assume_directional_source_fn_set_dom_facts_in_local_env(
             source,
@@ -147,8 +145,9 @@ impl Runtime {
             return Ok(false);
         }
 
-        let source_ret_set = self.inst_obj(&source.ret_set, &source_param_to_generated_arg_map).map_err(
-            |e| {
+        let source_ret_set = self
+            .inst_obj(&source.ret_set, &source_param_to_generated_arg_map)
+            .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
                     target,
@@ -156,10 +155,10 @@ impl Runtime {
                     "failed to instantiate source ret set for fnset equality check".to_string(),
                     Some(e),
                 )
-            },
-        )?;
-        let target_ret_set = self.inst_obj(&target.ret_set, &target_param_to_generated_arg_map).map_err(
-            |e| {
+            })?;
+        let target_ret_set = self
+            .inst_obj(&target.ret_set, &target_param_to_generated_arg_map)
+            .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
                     target,
@@ -167,23 +166,10 @@ impl Runtime {
                     "failed to instantiate target ret set for fnset equality check".to_string(),
                     Some(e),
                 )
-            },
-        )?;
+            })?;
         let ret_equal_fact = EqualFact::new(source_ret_set, target_ret_set, line_file);
         let ret_equal_result = self.verify_equal_fact(&ret_equal_fact, verify_state)?;
         Ok(ret_equal_result.is_true())
-    }
-
-    fn generate_non_duplicated_random_param_names(&self, number_of_params: usize) -> Vec<String> {
-        let mut generated_param_names: Vec<String> = Vec::with_capacity(number_of_params);
-        let mut generated_param_name_set: HashSet<String> = HashSet::with_capacity(number_of_params);
-        while generated_param_names.len() < number_of_params {
-            let generated_param_name = self.generate_a_random_unused_name();
-            if generated_param_name_set.insert(generated_param_name.clone()) {
-                generated_param_names.push(generated_param_name);
-            }
-        }
-        generated_param_names
     }
 
     fn build_param_to_generated_arg_map(
@@ -205,9 +191,9 @@ impl Runtime {
 
     fn define_directional_source_fn_set_params_in_local_env(
         &mut self,
-        source: &FnSetWithParams,
+        source: &FnSet,
         generated_param_names: &[String],
-        target: &FnSetWithParams,
+        target: &FnSet,
         line_file: LineFile,
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let mut source_param_to_generated_arg_map: HashMap<String, Obj> =
@@ -229,8 +215,10 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
-            let generated_param_def =
-                ParamGroupWithSet::new(generated_names_for_current_group.clone(), instantiated_param_set);
+            let generated_param_def = ParamGroupWithSet::new(
+                generated_names_for_current_group.clone(),
+                instantiated_param_set,
+            );
             self.define_params_with_set(&generated_param_def)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
@@ -261,9 +249,9 @@ impl Runtime {
 
     fn assume_directional_source_fn_set_dom_facts_in_local_env(
         &mut self,
-        source: &FnSetWithParams,
+        source: &FnSet,
         source_param_to_generated_arg_map: &HashMap<String, Obj>,
-        target: &FnSetWithParams,
+        target: &FnSet,
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         for dom_fact in source.dom_facts.iter() {
@@ -288,7 +276,7 @@ impl Runtime {
                     line_file.clone(),
                     "failed to assume source fnset dom fact in local equality environment"
                         .to_string(),
-                    Some(RuntimeError::StoreFactError(e)),
+                    Some(RuntimeError::ExecStmtError(e)),
                 )
             })?;
         }
@@ -297,8 +285,8 @@ impl Runtime {
 
     fn verify_directional_target_fn_set_param_membership_facts(
         &mut self,
-        source: &FnSetWithParams,
-        target: &FnSetWithParams,
+        source: &FnSet,
+        target: &FnSet,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         line_file: LineFile,
         verify_state: &VerifyState,
@@ -345,8 +333,8 @@ impl Runtime {
 
     fn verify_directional_target_fn_set_dom_facts(
         &mut self,
-        source: &FnSetWithParams,
-        target: &FnSetWithParams,
+        source: &FnSet,
+        target: &FnSet,
         line_file: LineFile,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         verify_state: &VerifyState,
@@ -363,10 +351,8 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
-            let verify_result = self.verify_or_and_chain_atomic_fact(
-                &instantiated_dom_fact,
-                verify_state,
-            )?;
+            let verify_result =
+                self.verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
             if !verify_result.is_true() {
                 return Ok(false);
             }

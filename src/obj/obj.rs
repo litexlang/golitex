@@ -25,7 +25,7 @@ pub enum Obj {
     PowerSet(PowerSet),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
-    FnSetWithParams(FnSetWithParams),
+    FnSet(FnSet),
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
@@ -37,6 +37,52 @@ pub enum Obj {
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
+    FamilyObj(FamilyObj),
+    StructObj(StructObj),
+}
+
+/// Instantiated family type: `family` name followed by argument objects (often sets).
+#[derive(Clone)]
+pub struct FamilyObj {
+    pub name: IdentifierOrIdentifierWithMod,
+    pub params: Vec<Obj>,
+}
+
+/// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
+#[derive(Clone)]
+pub struct StructObj {
+    pub name: IdentifierOrIdentifierWithMod,
+    pub args: Vec<Obj>,
+}
+
+impl StructObj {
+    pub fn new(name: IdentifierOrIdentifierWithMod, args: Vec<Obj>) -> Self {
+        StructObj { name, args }
+    }
+}
+
+impl fmt::Display for FamilyObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}({})",
+            FAMILY,
+            self.name,
+            vec_to_string_join_by_comma(&self.params)
+        )
+    }
+}
+
+impl fmt::Display for StructObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}({})",
+            STRUCT,
+            self.name,
+            vec_to_string_join_by_comma(&self.args)
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -187,12 +233,11 @@ pub struct SetBuilder {
 }
 
 #[derive(Clone)]
-pub struct FnSetWithParams {
+pub struct FnSet {
     pub params_def_with_set: Vec<ParamGroupWithSet>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Box<Obj>,
 }
-
 
 #[derive(Clone)]
 pub struct Cart {
@@ -349,20 +394,20 @@ impl SetBuilder {
     }
 }
 
-impl FnSetWithParams {
+impl FnSet {
     pub fn new(
         params_and_their_sets: Vec<ParamGroupWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Self {
-        FnSetWithParams {
+        FnSet {
             params_def_with_set: params_and_their_sets,
             dom_facts,
             ret_set: Box::new(ret_set),
         }
     }
 
-    pub fn params(&self) -> Vec<String> {
+    pub fn get_params(&self) -> Vec<String> {
         let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
             &self.params_def_with_set,
         ));
@@ -372,7 +417,6 @@ impl FnSetWithParams {
         ret
     }
 }
-
 
 impl PowerSet {
     pub fn new(set: Obj) -> Self {
@@ -520,7 +564,7 @@ impl Obj {
             Obj::Number(x) => write!(f, "{}", x)?,
             Obj::ListSet(x) => write!(f, "{}", x)?,
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
-            Obj::FnSetWithParams(x) => write!(f, "{}", x)?,
+            Obj::FnSet(x) => write!(f, "{}", x)?,
             Obj::StandardSet(standard_set) => write!(f, "{}", standard_set)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
@@ -533,6 +577,8 @@ impl Obj {
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
+            Obj::FamilyObj(x) => write!(f, "{}", x)?,
+            Obj::StructObj(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -789,19 +835,24 @@ impl fmt::Display for SetBuilder {
     }
 }
 
-impl fmt::Display for FnSetWithParams {
+impl fmt::Display for FnSet {
+    /// 与 AST 一致：形参表、dom 均使用**存储名**（`fn` 形参为 `__` + 用户符面）。  
+    /// 区别于单独 [`ParamGroupWithSet`] 的 `Display`（会隐去 `__` 以便其它上下文）。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let params_with_sets_display: Vec<String> = self
+            .params_def_with_set
+            .iter()
+            .map(|g| format!("{} {}", vec_to_string_join_by_comma(&g.params), g.set))
+            .collect();
         write!(
             f,
             "{} {} {}",
-            FN_FOR_FN_WITH_PARAMS,
-            brace_vec_colon_vec_to_string(&self.params_def_with_set, &self.dom_facts),
+            FN,
+            brace_vec_colon_vec_to_string(&params_with_sets_display, &self.dom_facts),
             self.ret_set
         )
     }
 }
-
-
 
 impl fmt::Display for Cart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -837,4 +888,3 @@ impl Identifier {
         Obj::Identifier(Identifier { name })
     }
 }
-

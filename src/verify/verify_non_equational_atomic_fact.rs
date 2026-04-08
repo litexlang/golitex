@@ -68,12 +68,12 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut all_objs_equal_to_arg =
-            self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
+            self.get_all_objs_equal_to_given(&atomic_fact.args()[0].to_string());
 
         // 得到它的 calculated obj
         if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[0]) {
             if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
-                let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
+                let equal_tos = self.get_all_objs_equal_to_given(&calculated_obj.to_string());
                 all_objs_equal_to_arg.extend(equal_tos);
             }
         }
@@ -97,10 +97,10 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut all_objs_equal_to_arg0 =
-            self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
+            self.get_all_objs_equal_to_given(&atomic_fact.args()[0].to_string());
         if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[0]) {
             if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
-                let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
+                let equal_tos = self.get_all_objs_equal_to_given(&calculated_obj.to_string());
                 all_objs_equal_to_arg0.extend(equal_tos);
             }
         }
@@ -108,10 +108,10 @@ impl Runtime {
             all_objs_equal_to_arg0.push(atomic_fact.args()[0].to_string());
         }
         let mut all_objs_equal_to_arg1 =
-            self.get_all_objs_equal_to_arg(&atomic_fact.args()[1].to_string());
+            self.get_all_objs_equal_to_given(&atomic_fact.args()[1].to_string());
         if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[1]) {
             if calculated_obj.to_string() != atomic_fact.args()[1].to_string() {
-                let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
+                let equal_tos = self.get_all_objs_equal_to_given(&calculated_obj.to_string());
                 all_objs_equal_to_arg1.extend(equal_tos);
             }
         }
@@ -136,7 +136,7 @@ impl Runtime {
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in atomic_fact.args().iter() {
             let mut all_objs_equal_to_current_arg =
-                self.get_all_objs_equal_to_arg(&arg.to_string());
+                self.get_all_objs_equal_to_given(&arg.to_string());
             if all_objs_equal_to_current_arg.is_empty() {
                 all_objs_equal_to_current_arg.push(arg.to_string());
             }
@@ -295,7 +295,11 @@ impl Runtime {
         subset_fact: &SubsetFact,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
-        let bound_param_name = self.generate_a_random_unused_name();
+        let bound_param_name = self
+            .generate_random_unused_names(1)
+            .into_iter()
+            .next()
+            .unwrap();
         let membership_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
@@ -330,7 +334,11 @@ impl Runtime {
         superset_fact: &SupersetFact,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
-        let bound_param_name = self.generate_a_random_unused_name();
+        let bound_param_name = self
+            .generate_random_unused_names(1)
+            .into_iter()
+            .next()
+            .unwrap();
         let membership_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
@@ -392,7 +400,7 @@ impl Runtime {
                 verify_state,
             );
         }
-        let definition = match self.get_def_prop_definition_by_name(&predicate_name) {
+        let definition = match self.get_prop_definition_by_name(&predicate_name) {
             Some(definition_reference) => definition_reference.clone(),
             None => return Ok(None),
         };

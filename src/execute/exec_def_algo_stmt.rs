@@ -21,13 +21,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
-        self.push_env();
-
-        let result = self.exec_def_algo_stmt_verify_process_body(def_algo_stmt);
-
-        self.pop_env();
-
-        result
+        self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process_body(def_algo_stmt))
     }
 
     fn exec_def_algo_stmt_verify_process_body(
@@ -35,18 +29,17 @@ impl Runtime {
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
         let function_name_obj = Obj::Identifier(Identifier::new(def_algo_stmt.name.clone()));
-        let fn_set_where_algo_belongs =
-            match self.get_fn_set_where_fn_belongs_to(&function_name_obj) {
-                Some(fn_set) => fn_set,
-                None => {
-                    return Err(Self::def_algo_verify_exec_error_without_message(
-                        def_algo_stmt,
-                    ));
-                }
-            };
+        let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
+            Some(fn_set) => fn_set,
+            None => {
+                return Err(Self::def_algo_verify_exec_error_without_message(
+                    def_algo_stmt,
+                ));
+            }
+        };
 
-        let (requirement_facts_for_param, algo_param_defs_with_type) =
-            self.collect_requirement_facts_and_algo_param_defs(
+        let (requirement_facts_for_param, algo_param_defs_with_type) = self
+            .collect_requirement_facts_and_algo_param_defs(
                 def_algo_stmt,
                 &fn_set_where_algo_belongs,
             )?;
@@ -79,7 +72,9 @@ impl Runtime {
         ))
     }
 
-    fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> RuntimeErrorStruct {
+    fn def_algo_verify_exec_error_without_message(
+        def_algo_stmt: &DefAlgoStmt,
+    ) -> RuntimeErrorStruct {
         RuntimeErrorStruct::exec_stmt_new_with_stmt(
             Stmt::DefAlgoStmt(def_algo_stmt.clone()),
             "".to_string(),
@@ -104,7 +99,7 @@ impl Runtime {
     fn collect_requirement_facts_and_algo_param_defs(
         &self,
         def_algo_stmt: &DefAlgoStmt,
-        fn_set_where_algo_belongs: &FnSetWithParams,
+        fn_set_where_algo_belongs: &FnSet,
     ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
@@ -115,7 +110,7 @@ impl Runtime {
     fn requirement_facts_and_param_defs_for_fn_set_with_dom(
         &self,
         def_algo_stmt: &DefAlgoStmt,
-        fn_set_with_dom: &FnSetWithParams,
+        fn_set_with_dom: &FnSet,
     ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
@@ -136,7 +131,7 @@ impl Runtime {
                 )
             })?;
 
-        let fn_set_param_names = fn_set_with_dom.params();
+        let fn_set_param_names = fn_set_with_dom.get_params();
         if fn_set_param_names.len() != def_algo_stmt.params.len() {
             return Err(
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
