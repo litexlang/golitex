@@ -169,9 +169,8 @@ impl Runtime {
             for obj in all_objs_equal_to_arg.iter() {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                             Fact::AtomicFact(atomic_fact.clone()),
-                            InferResult::new(),
                             known_atomic_fact.to_string(),
                             Some(Fact::AtomicFact(known_atomic_fact.clone())),
                             None,
@@ -201,9 +200,8 @@ impl Runtime {
                         known_facts_map.get(&(obj0.clone(), obj1.clone()))
                     {
                         return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                            FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                                 Fact::AtomicFact(atomic_fact.clone()),
-                                InferResult::new(),
                                 known_atomic_fact.to_string(),
                                 Some(Fact::AtomicFact(known_atomic_fact.clone())),
                                 None,
@@ -256,9 +254,8 @@ impl Runtime {
                 }
                 if all_args_match {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                             Fact::AtomicFact(atomic_fact.clone()),
-                            InferResult::new(),
                             known_fact.to_string(),
                             Some(Fact::AtomicFact(known_fact.clone())),
                             None,
@@ -320,9 +317,8 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
-                InferResult::new(),
                 "subset by definition (forall x in left: x in right)".to_string(),
                 Vec::new(),
             ),
@@ -359,9 +355,8 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
-                InferResult::new(),
                 "superset by definition (forall x in right: x in left)".to_string(),
                 Vec::new(),
             ),
@@ -463,6 +458,9 @@ impl Runtime {
             predicate_name,
             definition_clause_descriptions.join("; ")
         );
+        infer_result.new_fact(&Fact::AtomicFact(AtomicFact::NormalAtomicFact(
+            normal_atomic_fact.clone(),
+        )));
         Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
             FactualStmtSuccess::new_with_verified_by_known_fact_source(
                 Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal_atomic_fact.clone())),

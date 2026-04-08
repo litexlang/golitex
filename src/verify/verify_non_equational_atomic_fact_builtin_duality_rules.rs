@@ -18,9 +18,8 @@ impl Runtime {
             )?;
         if verify_result.is_true() {
             Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
-                    InferResult::new(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 ),
@@ -47,9 +46,8 @@ impl Runtime {
             )?;
         if verify_result.is_true() {
             Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
-                    InferResult::new(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 ),
@@ -76,9 +74,8 @@ impl Runtime {
             )?;
         if verify_result.is_true() {
             Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::NotSubsetFact(not_subset_fact.clone())),
-                    InferResult::new(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 ),
@@ -105,9 +102,8 @@ impl Runtime {
             )?;
         if verify_result.is_true() {
             Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::NotSupersetFact(not_superset_fact.clone())),
-                    InferResult::new(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 ),
@@ -199,9 +195,8 @@ impl Runtime {
             )?;
         if counterpart_verify_result.is_true() {
             Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(current_fact.clone()),
-                    InferResult::new(),
                     builtin_rule_name.to_string(),
                     Vec::new(),
                 ),
@@ -236,9 +231,8 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 Fact::AtomicFact(AtomicFact::LessFact(less_fact.clone())),
-                InferResult::new(),
                 "mul_opposite_signs_product_less_than_zero".to_string(),
                 Vec::new(),
             ),
@@ -255,9 +249,8 @@ impl Runtime {
         let number_compare_result = self.verify_number_comparison_builtin_rule(current_fact);
         if let Some(true) = number_compare_result {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(current_fact.clone()),
-                    InferResult::new(),
                     "number comparison".to_string(),
                     Vec::new(),
                 ),
@@ -631,9 +624,8 @@ impl Runtime {
         label: &str,
     ) -> NonErrStmtExecResult {
         NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 Fact::AtomicFact(current_fact.clone()),
-                InferResult::new(),
                 label.to_string(),
                 Vec::new(),
             ),

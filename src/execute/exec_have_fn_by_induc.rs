@@ -244,7 +244,7 @@ impl Runtime {
         store_infer: InferResult,
         fallback_fact: &Fact,
     ) {
-        let empty = store_infer.infer_facts.is_empty();
+        let empty = store_infer.is_empty();
         infer_result.new_infer_result_inside(store_infer);
         if empty {
             infer_result.new_fact(fallback_fact);
