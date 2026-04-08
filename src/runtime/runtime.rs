@@ -392,3 +392,85 @@ impl Runtime {
         )
     }
 }
+
+impl Runtime {
+    /// Like [`ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map`], but when a
+    /// parameter has [`ParamType::Struct`] and the argument is a [`Obj::Tuple`], loads the struct
+    /// definition and inserts `param.field_name -> tuple[number_of_params + i]` for each field in
+    /// definition order (same layout as [`Runtime::inst_field_access_on_struct_tuple`]), and
+    /// registers the struct instance for field access on the tuple root.
+    pub fn params_to_arg_map(
+        &mut self,
+        param_defs: &Vec<ParamGroupWithParamType>,
+        args: &[Obj],
+    ) -> Result<HashMap<String, Obj>, RuntimeError> {
+        let param_names = ParamGroupWithParamType::collect_param_names(param_defs);
+        if param_names.len() != args.len() {
+            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "params_to_arg_map: expected {} argument(s), got {}",
+                    param_names.len(),
+                    args.len()
+                ),
+                default_line_file(),
+                None,
+            )));
+        }
+
+        let mut flat_types: Vec<ParamType> = Vec::with_capacity(param_names.len());
+        for param_def in param_defs.iter() {
+            for _ in param_def.params.iter() {
+                flat_types.push(param_def.param_type.clone());
+            }
+        }
+
+        let mut result: HashMap<String, Obj> = HashMap::new();
+        for ((param_name, param_type), arg) in
+            param_names.iter().zip(flat_types.iter()).zip(args.iter())
+        {
+            match param_type {
+                ParamType::Struct(struct_ty) => {
+                    let struct_name = struct_ty.name.to_string();
+                    let Some(def) = self.get_cloned_definition_of_struct(&struct_name) else {
+                        result.insert(param_name.clone(), arg.clone());
+                        continue;
+                    };
+                    if let Obj::Tuple(t) = arg {
+                        let expected_len = def.number_of_params() + def.fields.len();
+                        if t.args.len() != expected_len {
+                            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
+                                None,
+                                format!(
+                                    "params_to_arg_map: tuple for `{}` has {} component(s), struct `{}` expects {}",
+                                    param_name,
+                                    t.args.len(),
+                                    struct_name,
+                                    expected_len
+                                ),
+                                default_line_file(),
+                                None,
+                            )));
+                        }
+                        self.register_param_as_struct_instance(param_name, struct_ty.clone());
+                        result.insert(param_name.clone(), arg.clone());
+                        for (fi, (field_name, _)) in def.fields.iter().enumerate() {
+                            let ti = def.number_of_params() + fi;
+                            let component = (*t.args[ti]).clone();
+                            result.insert(
+                                crate::obj::field_access_to_string(param_name, field_name),
+                                component,
+                            );
+                        }
+                    } else {
+                        result.insert(param_name.clone(), arg.clone());
+                    }
+                }
+                _ => {
+                    result.insert(param_name.clone(), arg.clone());
+                }
+            }
+        }
+        Ok(result)
+    }
+}

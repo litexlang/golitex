@@ -505,6 +505,30 @@ impl Runtime {
                     ),
                 ))
             }
+            Obj::FnSet(fn_set) => {
+                let ret_nonempty_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                    fn_set.ret_set.as_ref().clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                ));
+                let ret_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                    &ret_nonempty_fact,
+                    _verify_state,
+                )?;
+                if ret_check.is_true() {
+                    Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+                                is_nonempty_set_fact.clone(),
+                            )),
+                            InferResult::new(),
+                            "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
+                            Vec::new(),
+                        ),
+                    ))
+                } else {
+                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+                }
+            }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
