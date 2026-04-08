@@ -12,6 +12,7 @@ examples/hidden
 
 # Personal Cursor output preferences (local only)
 cursor-output.local.md
+LITEX_CURSOR_LOCAL.md
 
 # Local / secrets
 .dist
