@@ -3,3 +3,4 @@ let s set:
         $is_nonempty_set(x)
 
 choose(s) = choose(s)
+choose(s) $in s
