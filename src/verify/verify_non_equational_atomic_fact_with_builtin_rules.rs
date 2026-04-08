@@ -141,7 +141,7 @@ impl Runtime {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
-                    "calculation".to_string(),
+                            "calculation".to_string(),
                             Vec::new(),
                         ),
                     ));
@@ -190,8 +190,10 @@ impl Runtime {
         right_operand: &Obj,
         line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
-        let left_nonzero = self
-            .operand_is_not_equal_to_zero_by_known_non_equational_facts(left_operand, line_file.clone())?;
+        let left_nonzero = self.operand_is_not_equal_to_zero_by_known_non_equational_facts(
+            left_operand,
+            line_file.clone(),
+        )?;
         if !left_nonzero {
             return Ok(false);
         }
@@ -333,8 +335,11 @@ impl Runtime {
         )? {
             return Ok(true);
         }
-        let minuend_less_than_zero =
-            AtomicFact::LessFact(LessFact::new(minuend.clone(), zero_obj.clone(), line_file.clone()));
+        let minuend_less_than_zero = AtomicFact::LessFact(LessFact::new(
+            minuend.clone(),
+            zero_obj.clone(),
+            line_file.clone(),
+        ));
         let subtrahend_greater_than_zero =
             AtomicFact::GreaterFact(GreaterFact::new(subtrahend.clone(), zero_obj, line_file));
         Ok(
@@ -457,7 +462,7 @@ impl Runtime {
                             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                                 is_nonempty_set_fact.clone(),
                             )),
-                    "list_set_nonempty_has_member_in_syntax".to_string(),
+                            "list_set_nonempty_has_member_in_syntax".to_string(),
                             Vec::new(),
                         ),
                     ))
@@ -486,7 +491,7 @@ impl Runtime {
                         Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                             is_nonempty_set_fact.clone(),
                         )),
-                    format!(
+                        format!(
                             "sets `{}` in `{}` are nonempty sets",
                             cart.args
                                 .iter()
@@ -514,7 +519,7 @@ impl Runtime {
                             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                                 is_nonempty_set_fact.clone(),
                             )),
-                    "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
+                            "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
                             Vec::new(),
                         ),
                     ))
@@ -553,7 +558,7 @@ impl Runtime {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsCartFact(is_cart_fact.clone())),
-                    "any `cart` object is a cart".to_string(),
+                        "any `cart` object is a cart".to_string(),
                         Vec::new(),
                     ),
                 ));
@@ -572,7 +577,7 @@ impl Runtime {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
-                    "any `cart_dim` object is a cart_dim".to_string(),
+                        "any `cart_dim` object is a cart_dim".to_string(),
                         Vec::new(),
                     ),
                 ));
@@ -587,7 +592,7 @@ impl Runtime {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
-                    "it is a known tuple".to_string(),
+                            "it is a known tuple".to_string(),
                             Vec::new(),
                         ),
                     ));
