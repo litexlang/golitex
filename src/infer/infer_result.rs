@@ -12,6 +12,10 @@ impl InferResult {
         }
     }
 
+    pub fn new_with_msg(&mut self, msg: String) {
+        self.infer_facts.push(msg);
+    }
+
     pub fn new_fact(&mut self, fact: &Fact) {
         self.infer_facts.push(fact.to_string());
     }
