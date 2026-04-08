@@ -1,2 +1,5 @@
-forall a Z:
-    1 = 1
+let s set:
+    forall x s:
+        $is_nonempty_set(x)
+
+choose(s) = choose(s)
