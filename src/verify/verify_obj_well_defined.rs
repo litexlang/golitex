@@ -1038,7 +1038,30 @@ impl Runtime {
         _x: &Choose,
         _verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        unimplemented!()
+        let choose_from = *_x.set.clone();
+
+        let random_param = self.generate_random_unused_name();
+
+        let nonempty_set_fact = IsNonemptySetFact::new(
+            Obj::Identifier(Identifier::new(random_param.clone().to_string())),
+            default_line_file(),
+        );
+
+        let forall_x_in_choose_from_x_is_nonempty = Fact::ForallFact(ForallFact::new(
+            vec![ParamGroupWithParamType::new(
+                vec![random_param.clone().to_string()],
+                ParamType::Obj(choose_from),
+            )],
+            vec![],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(
+                AtomicFact::IsNonemptySetFact(nonempty_set_fact),
+            )],
+            default_line_file(),
+        ));
+
+        self.verify_fact(&forall_x_in_choose_from_x_is_nonempty, _verify_state)?;
+
+        Ok(())
     }
 
     fn verify_obj_at_index_well_defined(
