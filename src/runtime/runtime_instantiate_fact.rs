@@ -1,35 +1,7 @@
-use crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
-use crate::common::mangled_fn_param::mangled_fn_param_binding;
 use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    pub fn add_mangled_prefix_to_fn_set_clause(
-        &self,
-        clause: &FnSetClause,
-        _line_file: LineFile,
-    ) -> Result<FnSet, RuntimeError> {
-        let names = ParamGroupWithSet::collect_param_names(&clause.params_def_with_set);
-        let (new_param_names, param_arg_map) =
-            mangled_fn_param_binding(&names, DEFAULT_MANGLED_FN_PARAM_PREFIX);
-        let mut flat_stored_idx: usize = 0;
-        let mut new_def_with_set: Vec<ParamGroupWithSet> = Vec::new();
-        for param_group in &clause.params_def_with_set {
-            let mut new_params: Vec<String> = Vec::new();
-            for _ in 0..param_group.params.len() {
-                new_params.push(new_param_names[flat_stored_idx].clone());
-                flat_stored_idx += 1;
-            }
-            new_def_with_set.push(ParamGroupWithSet::new(new_params, param_group.set.clone()));
-        }
-        let mut dom_facts = Vec::with_capacity(clause.dom_facts.len());
-        for d in &clause.dom_facts {
-            dom_facts.push(self.inst_or_and_chain_atomic_fact(d, &param_arg_map)?);
-        }
-        let ret_set = clause.ret_set.clone();
-        Ok(FnSet::new(new_def_with_set, dom_facts, ret_set))
-    }
-
     pub fn inst_fact(
         &self,
         fact: &Fact,
