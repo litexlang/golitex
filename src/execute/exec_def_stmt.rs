@@ -733,17 +733,12 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    // TODO
     pub fn exec_have_fn_by_induc_stmt(
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
-        return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-            Stmt::HaveFnByInducStmt(stmt.clone()),
-            "have_fn_by_induc_stmt: not implemented".to_string(),
-            None,
-            vec![],
-        ));
+        self.exec_have_fn_by_induc(stmt)
+            .map_err(|e| e.into_struct())
     }
 
     fn verify_have_fn_equal_case_by_case_stmt(

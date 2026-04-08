@@ -1,4 +1,5 @@
 use crate::{
+    common::keywords::GREATER_EQUAL,
     prelude::*,
     stmt::parameter_def::{ParamGroupWithStructFieldType, StructFieldType},
 };
@@ -17,8 +18,8 @@ pub enum HaveFnByInducLastCase {
 }
 
 // have fn by induc from 0: f(x Z: x >= 0) R:
-//     case x = 0: 1
-//     case x = 1: 1
+//     case 0: 1
+//     case 1: 1
 //     case x >= 2:
 //         case x % 2 = 0: f(x / 2)
 //         case x % 2 = 1: f(x / 2) + f(x / 2 + 1)
@@ -26,7 +27,9 @@ pub enum HaveFnByInducLastCase {
 pub struct HaveFnByInducStmt {
     pub induc_from: Obj,
     pub name: String,
-    pub fn_set: FnSet,
+    /// 源码中的形参名（未加 `__` 前缀）。
+    pub param: String,
+    pub ret_set: Obj,
     pub special_cases_equal_tos: Vec<Obj>,
     pub last_case: HaveFnByInducLastCase,
     pub line_file: LineFile,
@@ -411,49 +414,6 @@ impl HaveFnEqualCaseByCaseStmt {
     }
 }
 
-impl fmt::Display for HaveFnByInducStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let flat = self.to_have_fn_equal_case_by_case_stmt();
-        let cases_and_proofs = flat
-            .cases
-            .iter()
-            .enumerate()
-            .map(|(i, case)| {
-                to_string_and_add_four_spaces_at_beginning_of_each_line(
-                    &format!(
-                        "{} {}{} {}{} {} {}",
-                        CASE,
-                        case,
-                        COMMA,
-                        self.name,
-                        braced_vec_to_string(&self.fn_set.get_params()),
-                        EQUAL,
-                        flat.equal_tos[i]
-                    ),
-                    1,
-                )
-            })
-            .collect::<Vec<String>>();
-
-        write!(
-            f,
-            "{} {} {} {} {} {}{} {}{} {} {}\n{}",
-            HAVE,
-            FN,
-            BY,
-            INDUC,
-            FROM,
-            self.induc_from,
-            COLON,
-            self.name,
-            brace_vec_colon_vec_to_string(&self.fn_set.params_def_with_set, &self.fn_set.dom_facts),
-            EQUAL,
-            COLON,
-            vec_to_string_with_sep(&cases_and_proofs, "\n".to_string())
-        )
-    }
-}
-
 pub(crate) fn induc_obj_plus_offset(induc_from: &Obj, offset: usize) -> Obj {
     if offset == 0 {
         induc_from.clone()
@@ -484,9 +444,34 @@ fn merge_two_and_chain_clauses(
 }
 
 impl HaveFnByInducStmt {
+    /// 与 `fn` 形参 mangling 一致：`__` + [`Self::param`]。
+    pub fn mangled_param_name(&self) -> String {
+        mangled_fn_param_names(&[self.param.clone()], DEFAULT_MANGLED_FN_PARAM_PREFIX)[0].clone()
+    }
+
+    /// 需要 [`FnSet`] 时构造：单参 `Z`、dom 为 `mangled_param >= induc_from`、返回集为 [`Self::ret_set`]。
+    pub fn fn_set_with_mangled_param(&self) -> FnSet {
+        let m = self.mangled_param_name();
+        FnSet::new(
+            vec![ParamGroupWithSet::new(
+                vec![m.clone()],
+                Obj::StandardSet(StandardSet::Z),
+            )],
+            vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(
+                GreaterEqualFact::new(
+                    Obj::Identifier(Identifier::new(m)),
+                    self.induc_from.clone(),
+                    self.line_file.clone(),
+                ),
+            ))],
+            self.ret_set.clone(),
+        )
+    }
+
     pub fn new(
         name: String,
-        fn_set_with_params: FnSet,
+        param: String,
+        ret_set: Obj,
         induc_from: Obj,
         special_cases_equal_tos: Vec<Obj>,
         last_case: HaveFnByInducLastCase,
@@ -494,7 +479,8 @@ impl HaveFnByInducStmt {
     ) -> Self {
         HaveFnByInducStmt {
             name,
-            fn_set: fn_set_with_params,
+            param,
+            ret_set,
             induc_from,
             special_cases_equal_tos,
             last_case,
@@ -502,10 +488,10 @@ impl HaveFnByInducStmt {
         }
     }
 
-    /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（源码最后一条为 `param >= from + n`，此处仍展开为 `param = from + n` 与可选子条件的合取）。
+    /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（源码最后一条为 `param >= n`（n 为特例个数），此处仍展开为 `param = from + n` 与可选子条件的合取）。
     pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
-        let param_name = self.fn_set.get_params()[0].clone();
+        let param_name = self.mangled_param_name();
         let left_id = Obj::Identifier(Identifier::new(param_name));
         let n = self.special_cases_equal_tos.len();
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
@@ -543,10 +529,69 @@ impl HaveFnByInducStmt {
         }
         HaveFnEqualCaseByCaseStmt::new(
             self.name.clone(),
-            self.fn_set.clone(),
+            self.fn_set_with_mangled_param(),
             cases,
             equal_tos,
             line_file,
+        )
+    }
+}
+
+impl fmt::Display for HaveFnByInducStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let flat = self.to_have_fn_equal_case_by_case_stmt();
+        let cases_and_proofs = flat
+            .cases
+            .iter()
+            .enumerate()
+            .map(|(i, case)| {
+                to_string_and_add_four_spaces_at_beginning_of_each_line(
+                    &format!(
+                        "{} {}{} {}{} {} {}",
+                        CASE,
+                        case,
+                        COMMA,
+                        self.name,
+                        braced_vec_to_string(&vec![self.param.clone()]),
+                        EQUAL,
+                        flat.equal_tos[i]
+                    ),
+                    1,
+                )
+            })
+            .collect::<Vec<String>>();
+
+        let fn_head = format!(
+            "{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+            self.name,
+            LEFT_BRACE,
+            self.param,
+            Z,
+            COLON,
+            " ",
+            self.param,
+            " ",
+            GREATER_EQUAL,
+            " ",
+            self.induc_from,
+            RIGHT_BRACE,
+            " ",
+            self.ret_set,
+        );
+        write!(
+            f,
+            "{} {} {} {} {} {}{} {} {} {}\n{}",
+            HAVE,
+            FN,
+            BY,
+            INDUC,
+            FROM,
+            self.induc_from,
+            COLON,
+            fn_head,
+            EQUAL,
+            COLON,
+            vec_to_string_with_sep(&cases_and_proofs, "\n".to_string())
         )
     }
 }
