@@ -250,7 +250,63 @@ impl Runtime {
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
         }
 
-        // 按你的理解处理last，并解释清楚
+        match &stmt.last_case {
+            HaveFnByInducLastCase::EqualTo(eq) => {
+                let param_name = stmt.fn_set.get_params()[0].clone();
+                let param_def = vec![ParamGroupWithParamType::new(
+                    vec![param_name.clone()],
+                    ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
+                )];
+
+                let mut dom: Vec<ExistOrAndChainAtomicFact> = stmt
+                    .fn_set
+                    .dom_facts
+                    .clone()
+                    .into_iter()
+                    .map(|f| f.to_exist_or_and_chain_atomic_fact())
+                    .collect();
+
+                dom.push(ExistOrAndChainAtomicFact::AtomicFact(
+                    AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                        Obj::Identifier(Identifier::new(param_name.clone())),
+                        Obj::Number(Number::new(
+                            induc_obj_plus_offset(
+                                &stmt.induc_from,
+                                stmt.special_cases_equal_tos.len(),
+                            )
+                            .to_string(),
+                        )),
+                        stmt.line_file.clone(),
+                    )),
+                ));
+
+                let forall_fact = Fact::ForallFact(ForallFact::new(
+                    param_def,
+                    dom,
+                    vec![ExistOrAndChainAtomicFact::AtomicFact(
+                        AtomicFact::EqualFact(EqualFact::new(
+                            Obj::FnObj(FnObj {
+                                head: Box::new(Atom::Identifier(Identifier::new(
+                                    stmt.name.clone(),
+                                ))),
+                                body: vec![vec![Box::new(Obj::Identifier(Identifier::new(
+                                    param_name.clone(),
+                                )))]],
+                            }),
+                            eq.clone(),
+                            stmt.line_file.clone(),
+                        )),
+                    )],
+                    stmt.line_file.clone(),
+                ));
+
+                self.store_fact_without_well_defined_verified_and_infer(forall_fact)
+                    .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+            }
+            HaveFnByInducLastCase::NestedCases(last_pairs) => {
+                panic!("not implemented");
+            }
+        }
 
         panic!("not implemented");
     }
