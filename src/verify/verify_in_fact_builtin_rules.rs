@@ -357,7 +357,7 @@ impl Runtime {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                            "By ZFC, we can choose an element from a set whose elements are all nonempty.".to_string(),
+                            "By ZFC, we can choose an element from a nonempty set whose elements are all nonempty.".to_string(),
                             Vec::new(),
                         ),
                     ));
