@@ -335,4 +335,10 @@ impl Runtime {
             .known_objs_equal_to_cart
             .insert(name.to_string(), (cart, line_file));
     }
+
+    pub fn store_cache(&mut self, obj: &Obj) {
+        self.top_level_env()
+            .cache_well_defined_obj
+            .insert(obj.to_string(), ());
+    }
 }

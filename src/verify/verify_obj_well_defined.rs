@@ -22,8 +22,6 @@ impl Runtime {
             return Ok(());
         }
 
-        let use_cache = !matches!(obj, Obj::FnSet(_) | Obj::SetBuilder(_));
-
         match obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
             Obj::IdentifierWithMod(x) => self.verify_identifier_with_mod_well_defined(x),
@@ -78,11 +76,8 @@ impl Runtime {
             }
         }?;
 
-        if use_cache {
-            self.top_level_env()
-                .cache_well_defined_obj
-                .insert(obj.to_string(), ());
-        }
+        self.store_cache(obj);
+
         Ok(())
     }
 
@@ -1162,10 +1157,12 @@ impl Runtime {
             ParamType::Set(_) => Ok(()),
             ParamType::NonemptySet(_) => Ok(()),
             ParamType::FiniteSet(_) => Ok(()),
-            ParamType::Obj(obj) => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
-            ParamType::Family(family) => {
-                return self.verify_param_type_family_well_defined(family, verify_state)
-            }
+            ParamType::Obj(obj) => match obj {
+                Obj::FamilyObj(family) => {
+                    self.verify_param_type_family_well_defined(family, verify_state)
+                }
+                _ => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
+            },
             ParamType::Struct(struct_ty) => {
                 return self.verify_param_type_struct_well_defined(struct_ty, verify_state)
             }

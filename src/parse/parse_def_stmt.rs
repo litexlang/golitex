@@ -312,7 +312,7 @@ impl Runtime {
             last_block.line_file.clone(),
         )?;
 
-        let (last_case_equal_to, last_case_cases) = if !last_block.exceed_end_of_head() {
+        let last_case = if !last_block.exceed_end_of_head() {
             let last_obj = self.parse_obj(last_block)?;
             if !last_block.exceed_end_of_head() {
                 return Err(
@@ -334,9 +334,9 @@ impl Runtime {
                         ),
                     );
             }
-            (Some(last_obj), None)
+            HaveFnByInducLastCase::EqualTo(last_obj)
         } else if !last_block.body.is_empty() {
-            let mut nested: Vec<(AndChainAtomicFact, Obj)> =
+            let mut nested: Vec<HaveFnByInducNestedCase> =
                 Vec::with_capacity(last_block.body.len());
             for sub in last_block.body.iter_mut() {
                 sub.skip_token(CASE)?;
@@ -363,9 +363,12 @@ impl Runtime {
                         ),
                     );
                 }
-                nested.push((w, o));
+                nested.push(HaveFnByInducNestedCase {
+                    case_fact: w,
+                    equal_to: o,
+                });
             }
-            (None, Some(nested))
+            HaveFnByInducLastCase::NestedCases(nested)
         } else {
             return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -382,8 +385,7 @@ impl Runtime {
             fs,
             induc_from,
             special_cases_equal_tos,
-            last_case_equal_to,
-            last_case_cases,
+            last_case,
             tb.line_file.clone(),
         )))
     }

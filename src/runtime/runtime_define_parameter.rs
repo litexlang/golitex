@@ -8,10 +8,12 @@ impl Runtime {
         param_type: &ParamType,
     ) -> Result<InferResult, RuntimeError> {
         match param_type {
-            ParamType::Family(family_ty) => {
-                self.define_parameter_by_binding_family(name, family_ty)
-            }
-            ParamType::Obj(obj) => self.define_parameter_by_binding_obj(name, obj),
+            ParamType::Obj(obj) => match obj {
+                Obj::FamilyObj(family_ty) => {
+                    self.define_parameter_by_binding_family(name, family_ty)
+                }
+                _ => self.define_parameter_by_binding_obj(name, obj),
+            },
             ParamType::Set(set) => self.define_parameter_by_binding_set(name, set),
             ParamType::NonemptySet(nonempty_set) => {
                 self.define_parameter_by_binding_nonempty_set(name, nonempty_set)
@@ -30,50 +32,7 @@ impl Runtime {
         name: &str,
         family_ty: &FamilyObj,
     ) -> Result<InferResult, RuntimeError> {
-        let family_name = family_ty.name.to_string();
-        let def = match self.get_cloned_family_definition_by_name(&family_name) {
-            Some(d) => d,
-            None => {
-                return Err(
-                    RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-                        format!("family `{}` is not defined", family_name),
-                        default_line_file(),
-                        None,
-                        None,
-                    )
-                    .into(),
-                );
-            }
-        };
-        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
-        if family_ty.params.len() != expected_count {
-            return Err(
-                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-                    format!(
-                        "family `{}` expects {} type argument(s), got {}",
-                        family_name,
-                        expected_count,
-                        family_ty.params.len()
-                    ),
-                    default_line_file(),
-                    None,
-                    None,
-                )
-                .into(),
-            );
-        }
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
-            &family_ty.params,
-        );
-        let member_set = self.inst_obj(&def.equal_to, &param_to_arg_map)?;
-        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
-            member_set,
-            default_line_file(),
-        )));
-        self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+        self.infer_membership_in_family_for_param_binding(name, family_ty)
     }
 
     fn define_parameter_by_binding_obj(
