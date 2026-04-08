@@ -218,7 +218,7 @@ impl Runtime {
 
     /// `have fn by` 已消费；解析 `induc from <Obj>: <name> ( <param> Z: <param> >= <induc_from> ) <ret_set> : case ...`。
     /// 前若干条特例为 `case <k>: obj`，其中 `<k>` 为 **0 起下标占位符**，须与该行顺序一致（第 1 条为 0，第 2 条为 1，…）；
-    /// 最后一条须为 `param >= n`，其中 **n 为特例个数**（数字字面量）；且要么行末 `: obj`，要么 `:` 后换行跟子块 `case when: obj`。
+    /// 最后一条须为 `case >= n:`，其中 **n 为特例个数**（数字字面量）；且要么行末 `: obj`，要么 `:` 后换行跟子块 `case when: obj`。
     fn parse_have_fn_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(INDUC)?;
         tb.skip_token(FROM)?;
@@ -254,12 +254,12 @@ impl Runtime {
         param: String,
         induc_from: Obj,
     ) -> Result<Stmt, RuntimeError> {
-        let (mangled_names, _) =
+        let (_, _) =
             self.register_mangled_fn_param_binding(&[param.clone()], tb.line_file.clone())?;
         let dom_and_chain = self.parse_and_chain_atomic_fact(tb)?;
         Self::verify_have_fn_by_induc_dom_matches_induc_from(
             &dom_and_chain,
-            &mangled_names[0],
+            &param,
             &induc_from,
             tb.line_file.clone(),
         )?;
@@ -337,14 +337,14 @@ impl Runtime {
 
         let last_block = &mut tb.body[num_blocks - 1];
         last_block.skip_token(CASE)?;
-        let last_when = self.parse_and_chain_atomic_fact(last_block)?;
-        last_block.skip_token(COLON)?;
-        Self::verify_have_fn_by_induc_last_greater_equal_when(
-            &last_when,
-            &mangled_names[0],
+        last_block.skip_token(GREATER_EQUAL)?;
+        let last_bound = self.parse_obj(last_block)?;
+        Self::verify_have_fn_by_induc_last_greater_equal_bound(
+            &last_bound,
             num_special,
             last_block.line_file.clone(),
         )?;
+        last_block.skip_token(COLON)?;
 
         let last_case = if !last_block.exceed_end_of_head() {
             let last_obj = self.parse_obj(last_block)?;
@@ -502,58 +502,19 @@ impl Runtime {
         }
     }
 
-    fn verify_have_fn_by_induc_last_greater_equal_when(
-        when: &AndChainAtomicFact,
-        param_name: &str,
+    /// 最后一项 `case >= n:` 中 `n` 须为自然数字面量，且等于特例条数。
+    fn verify_have_fn_by_induc_last_greater_equal_bound(
+        bound: &Obj,
         len_special: usize,
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        let ge = match when {
-            AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(ge)) => ge,
-            AndChainAtomicFact::AndFact(af) if af.facts.len() == 1 => match &af.facts[0] {
-                AtomicFact::GreaterEqualFact(ge) => ge,
-                _ => {
-                    return Err(
-                        RuntimeError::new_parse_error_with_msg_position_previous_error(
-                            "have fn by induc from: last case `when` must be `param >= <n>` where n is the number of special cases"
-                                .to_string(),
-                            line_file,
-                            None,
-                        ),
-                    );
-                }
-            },
-            _ => {
-                return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: last case `when` must be `param >= <n>` where n is the number of special cases"
-                            .to_string(),
-                        line_file,
-                        None,
-                    ),
-                );
-            }
-        };
-        match &ge.left {
-            Obj::Identifier(id) if id.name == param_name => {}
-            _ => {
-                return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: last case `>=` left must be the parameter name"
-                            .to_string(),
-                        line_file,
-                        None,
-                    ),
-                );
-            }
-        }
-        match &ge.right {
+        match bound {
             Obj::Number(n) if n.normalized_value == len_special.to_string() => Ok(()),
             Obj::Number(n) => Err(
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
                     format!(
-                        "have fn by induc from: last case must be `{} >= {}` (count of special cases), got {}",
-                        param_name, len_special, n.normalized_value
+                        "have fn by induc from: last case must be `case >= {}:` (count of special cases), got {}",
+                        len_special, n.normalized_value
                     ),
                     line_file,
                     None,
@@ -561,7 +522,7 @@ impl Runtime {
             ),
             _ => Err(
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "have fn by induc from: last case `>=` right must be a natural number literal equal to the number of special cases"
+                    "have fn by induc from: last case must be `case >= <n>:` where <n> is a natural number literal equal to the number of special cases"
                         .to_string(),
                     line_file,
                     None,
