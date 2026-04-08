@@ -73,7 +73,7 @@ pub struct DefFamilyStmt {
 /// `have fn` 里 `{ … }` 一段的源码形态：形参名为用户符，dom/ret 中标识符亦为源码名；**不含** `__` mangling。
 /// 需要存入 `Obj::FnSet` 时由 [`Runtime::fn_set_for_storage_from_have_fn_clause`] 生成存储用 [`FnSet`]。
 #[derive(Clone)]
-pub struct HaveFnFnSetClause {
+pub struct FnSetClause {
     pub params_def_with_set: Vec<ParamGroupWithSet>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Obj,
@@ -82,7 +82,7 @@ pub struct HaveFnFnSetClause {
 #[derive(Clone)]
 pub struct HaveFnEqualCaseByCaseStmt {
     pub name: String,
-    pub fn_set_clause: HaveFnFnSetClause,
+    pub fn_set_clause: FnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
     pub line_file: LineFile,
@@ -91,7 +91,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
 #[derive(Clone)]
 pub struct HaveFnEqualStmt {
     pub name: String,
-    pub fn_set_clause: HaveFnFnSetClause,
+    pub fn_set_clause: FnSetClause,
     pub equal_to: Obj,
     pub line_file: LineFile,
 }
@@ -333,7 +333,7 @@ impl fmt::Display for HaveExistObjStmt {
 impl HaveFnEqualStmt {
     pub fn new(
         name: String,
-        fn_set_clause: HaveFnFnSetClause,
+        fn_set_clause: FnSetClause,
         equal_to: Obj,
         line_file: LineFile,
     ) -> Self {
@@ -409,7 +409,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 impl HaveFnEqualCaseByCaseStmt {
     pub fn new(
         name: String,
-        fn_set_clause: HaveFnFnSetClause,
+        fn_set_clause: FnSetClause,
         cases: Vec<AndChainAtomicFact>,
         equal_tos: Vec<Obj>,
         line_file: LineFile,
@@ -455,8 +455,8 @@ fn merge_two_and_chain_clauses(
 
 impl HaveFnByInducStmt {
     /// 与源码一致的 `fn` 空间（用户形参名 + dom + ret），不含 `__`；存 `Obj::FnSet` 时用 [`Runtime::fn_set_for_storage_from_have_fn_clause`]。
-    pub fn fn_user_fn_set_clause(&self) -> HaveFnFnSetClause {
-        HaveFnFnSetClause {
+    pub fn fn_user_fn_set_clause(&self) -> FnSetClause {
+        FnSetClause {
             params_def_with_set: vec![ParamGroupWithSet::new(
                 vec![self.param.clone()],
                 Obj::StandardSet(StandardSet::Z),
@@ -558,14 +558,7 @@ impl fmt::Display for HaveFnByInducStmt {
         write!(
             f,
             "{} {} {} {} {} {} {}{}",
-            HAVE,
-            FN,
-            BY,
-            INDUC,
-            FROM,
-            " ",
-            self.induc_from,
-            COLON,
+            HAVE, FN, BY, INDUC, FROM, " ", self.induc_from, COLON,
         )?;
         write!(f, " {} {}{}", self.name, LEFT_BRACE, self.param)?;
         write!(

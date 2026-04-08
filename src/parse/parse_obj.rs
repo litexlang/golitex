@@ -128,20 +128,15 @@ impl Runtime {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(FN) {
             tb.skip_token(FN)?;
-            Ok(Obj::FnSet(
-                self.parse_fn_set_with_dom_without_fn_prefix(tb)?,
-            ))
+            Ok(Obj::FnSet(self.parse_fn_set(tb)?))
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
     }
 
-    pub fn parse_fn_set_with_dom_without_fn_prefix(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<FnSet, RuntimeError> {
+    pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
         self.push_parsing_time_name_scope();
-        let fn_set = self.parse_fn_set_with_dom_without_fn_prefix_body(tb);
+        let fn_set = self.parse_fn_set_body(tb);
         self.pop_parsing_time_name_scope();
         fn_set
     }
@@ -150,7 +145,7 @@ impl Runtime {
     pub fn parse_fn_set_without_mangled_prefix(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<HaveFnFnSetClause, RuntimeError> {
+    ) -> Result<FnSetClause, RuntimeError> {
         self.push_parsing_time_name_scope();
         let clause = self.parse_fn_set_without_mangled_prefix_body(tb);
         self.pop_parsing_time_name_scope();
@@ -161,7 +156,7 @@ impl Runtime {
     fn parse_fn_set_without_mangled_prefix_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<HaveFnFnSetClause, RuntimeError> {
+    ) -> Result<FnSetClause, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
         loop {
@@ -215,17 +210,14 @@ impl Runtime {
 
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set = self.parse_obj(tb)?;
-        Ok(HaveFnFnSetClause {
+        Ok(FnSetClause {
             params_def_with_set,
             dom_facts: dom_facts_user,
             ret_set,
         })
     }
 
-    fn parse_fn_set_with_dom_without_fn_prefix_body(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<FnSet, RuntimeError> {
+    fn parse_fn_set_body(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
         loop {

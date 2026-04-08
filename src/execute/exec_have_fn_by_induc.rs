@@ -260,7 +260,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
-        let fs = self.fn_set_for_storage_from_have_fn_clause(
+        let fs = self.add_mangled_prefix_to_fn_set_clause(
             &stmt.fn_user_fn_set_clause(),
             stmt.line_file.clone(),
         )?;
@@ -320,12 +320,10 @@ impl Runtime {
                 let mut dom: Vec<ExistOrAndChainAtomicFact> =
                     stmt.forall_fn_base_dom_exist_or_facts();
 
-                let induc_plus_n = induc_obj_plus_offset(
-                    &stmt.induc_from,
-                    stmt.special_cases_equal_tos.len(),
-                )
-                .replace_with_numeric_result_if_can_be_calculated()
-                .0;
+                let induc_plus_n =
+                    induc_obj_plus_offset(&stmt.induc_from, stmt.special_cases_equal_tos.len())
+                        .replace_with_numeric_result_if_can_be_calculated()
+                        .0;
                 dom.push(ExistOrAndChainAtomicFact::AtomicFact(
                     AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
                         Obj::Identifier(Identifier::new(param_name.clone())),
@@ -371,12 +369,10 @@ impl Runtime {
                     let mut dom: Vec<ExistOrAndChainAtomicFact> =
                         stmt.forall_fn_base_dom_exist_or_facts();
 
-                    let induc_plus_n = induc_obj_plus_offset(
-                        &stmt.induc_from,
-                        stmt.special_cases_equal_tos.len(),
-                    )
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0;
+                    let induc_plus_n =
+                        induc_obj_plus_offset(&stmt.induc_from, stmt.special_cases_equal_tos.len())
+                            .replace_with_numeric_result_if_can_be_calculated()
+                            .0;
                     dom.push(ExistOrAndChainAtomicFact::AtomicFact(
                         AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
                             Obj::Identifier(Identifier::new(param_name.clone())),
