@@ -100,9 +100,8 @@ impl Runtime {
                 )
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsSetFact(is_set_fact.clone())),
-                    InferResult::new(),
                     "Every object is a set.".to_string(),
                     Vec::new(),
                 ),
@@ -140,10 +139,9 @@ impl Runtime {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
-                            InferResult::new(),
-                            "calculation".to_string(),
+                    "calculation".to_string(),
                             Vec::new(),
                         ),
                     ));
@@ -427,9 +425,8 @@ impl Runtime {
 
         match builtin_rule_label {
             Some(rule_label) => Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
-                    InferResult::new(),
                     rule_label.to_string(),
                     Vec::new(),
                 ),
@@ -445,9 +442,8 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match &is_nonempty_set_fact.set {
             Obj::StandardSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
-                    InferResult::new(),
                     "standard_nonempty_set".to_string(),
                     Vec::new(),
                 ),
@@ -457,12 +453,11 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 } else {
                     Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                                 is_nonempty_set_fact.clone(),
                             )),
-                            InferResult::new(),
-                            "list_set_nonempty_has_member_in_syntax".to_string(),
+                    "list_set_nonempty_has_member_in_syntax".to_string(),
                             Vec::new(),
                         ),
                     ))
@@ -487,12 +482,11 @@ impl Runtime {
                 // verified by objects in cart are all nonempty sets
                 // e.g. cart(R, Q) is nonempty set because R and Q are nonempty sets
                 Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                             is_nonempty_set_fact.clone(),
                         )),
-                        InferResult::new(),
-                        format!(
+                    format!(
                             "sets `{}` in `{}` are nonempty sets",
                             cart.args
                                 .iter()
@@ -516,12 +510,11 @@ impl Runtime {
                 )?;
                 if ret_check.is_true() {
                     Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                                 is_nonempty_set_fact.clone(),
                             )),
-                            InferResult::new(),
-                            "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
+                    "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
                             Vec::new(),
                         ),
                     ))
@@ -540,9 +533,8 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match &is_finite_set_fact.set {
             Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsFiniteSetFact(is_finite_set_fact.clone())),
-                    InferResult::new(),
                     "list_set_finite".to_string(),
                     Vec::new(),
                 ),
@@ -559,10 +551,9 @@ impl Runtime {
         match &is_cart_fact.set {
             Obj::Cart(_) => {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsCartFact(is_cart_fact.clone())),
-                        InferResult::new(),
-                        "any `cart` object is a cart".to_string(),
+                    "any `cart` object is a cart".to_string(),
                         Vec::new(),
                     ),
                 ));
@@ -579,10 +570,9 @@ impl Runtime {
         match &is_tuple_fact.set {
             Obj::Tuple(_) => {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
-                        InferResult::new(),
-                        "any `cart_dim` object is a cart_dim".to_string(),
+                    "any `cart_dim` object is a cart_dim".to_string(),
                         Vec::new(),
                     ),
                 ));
@@ -595,10 +585,9 @@ impl Runtime {
                     .get(&is_tuple_fact.set.to_string())
                 {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
-                            InferResult::new(),
-                            "it is a known tuple".to_string(),
+                    "it is a known tuple".to_string(),
                             Vec::new(),
                         ),
                     ));

@@ -36,9 +36,8 @@ impl Runtime {
             {
                 if first_atomic.make_reversed().to_string() == second_atomic.to_string() {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::OrFact(or_fact.clone()),
-                            InferResult::new(),
                             "or: complementary atomic facts (make_reversed first equals second)"
                                 .to_string(),
                             Vec::new(),
@@ -52,9 +51,8 @@ impl Runtime {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                    FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                         Fact::OrFact(or_fact.clone()),
-                        InferResult::new(),
                         fact.to_string(),
                         None,
                         Some(fact.line_file()),
@@ -133,9 +131,8 @@ impl Runtime {
 
                 if all_args_match {
                     return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                             Fact::OrFact(or_fact.clone()),
-                            InferResult::new(),
                             known_or_fact.to_string(),
                             Some(Fact::OrFact(known_or_fact.clone())),
                             None,
