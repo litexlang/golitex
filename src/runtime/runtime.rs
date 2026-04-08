@@ -351,3 +351,32 @@ impl Runtime {
             .insert(obj.to_string(), ());
     }
 }
+
+impl Runtime {
+    pub fn new_fn_set_and_add_mangled_prefix(
+        &self,
+        params_and_their_sets: Vec<ParamGroupWithSet>,
+        dom_facts: Vec<OrAndChainAtomicFact>,
+        ret_set: Obj,
+    ) -> Result<FnSet, RuntimeError> {
+        let names = ParamGroupWithSet::collect_param_names(&params_and_their_sets);
+        let (new_param_names, param_arg_map) =
+            mangled_fn_param_binding(&names, DEFAULT_MANGLED_FN_PARAM_PREFIX);
+        let mut flat_stored_idx: usize = 0;
+        let mut new_def_with_set: Vec<ParamGroupWithSet> = Vec::new();
+        for param_group in &params_and_their_sets {
+            let mut new_params: Vec<String> = Vec::new();
+            for _ in 0..param_group.params.len() {
+                new_params.push(new_param_names[flat_stored_idx].clone());
+                flat_stored_idx += 1;
+            }
+            new_def_with_set.push(ParamGroupWithSet::new(new_params, param_group.set.clone()));
+        }
+        let mut dom_stored = Vec::with_capacity(dom_facts.len());
+        for d in &dom_facts {
+            dom_stored.push(self.inst_or_and_chain_atomic_fact(d, &param_arg_map)?);
+        }
+        let ret_stored = self.inst_obj(&ret_set, &param_arg_map)?;
+        Ok(FnSet::new(new_def_with_set, dom_stored, ret_stored))
+    }
+}

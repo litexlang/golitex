@@ -51,11 +51,7 @@ impl Runtime {
         self.store_identifier_obj(&stmt.name)
             .map_err(RuntimeError::from)?;
 
-        let random_param_with_mangled_prefix = format!(
-            "{}{}",
-            DEFAULT_MANGLED_FN_PARAM_PREFIX,
-            self.generate_random_unused_names(1)[0].clone()
-        );
+        let random_param = self.generate_random_unused_names(1)[0].clone();
 
         let param_minus_n = Obj::Sub(Sub::new(
             Obj::Identifier(Identifier::new(param_name.to_string())),
@@ -64,29 +60,29 @@ impl Runtime {
 
         let dom_facts: Vec<OrAndChainAtomicFact> = vec![
             OrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                Obj::Identifier(Identifier::new(random_param_with_mangled_prefix.clone())),
+                Obj::Identifier(Identifier::new(random_param.clone())),
                 param_minus_n,
                 stmt.line_file.clone(),
             ))),
             OrAndChainAtomicFact::AtomicFact(AtomicFact::LessFact(LessFact::new(
-                Obj::Identifier(Identifier::new(random_param_with_mangled_prefix.clone())),
+                Obj::Identifier(Identifier::new(random_param.clone())),
                 Obj::Identifier(Identifier::new(param_name.to_string())),
                 stmt.line_file.clone(),
             ))),
         ];
 
-        let restricted_fn_set = FnSet::new(
+        let fn_set = self.new_fn_set_and_add_mangled_prefix(
             vec![ParamGroupWithSet::new(
-                vec![random_param_with_mangled_prefix.clone()],
+                vec![random_param.clone()],
                 Obj::StandardSet(StandardSet::Z),
             )],
             dom_facts,
             stmt.ret_set.clone(),
-        );
+        )?;
 
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             Obj::Identifier(Identifier::new(stmt.name.clone())),
-            Obj::FnSet(restricted_fn_set),
+            Obj::FnSet(fn_set),
             stmt.line_file.clone(),
         )));
 
