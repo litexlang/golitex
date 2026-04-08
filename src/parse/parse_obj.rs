@@ -135,13 +135,16 @@ impl Runtime {
 
     pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
         self.push_parsing_time_name_scope();
-        let fn_set = self.parse_fn_set_body(tb, true)?;
+        let fn_set = self.parse_fn_set_body(tb, true);
         self.pop_parsing_time_name_scope();
         match fn_set {
-            FnSetOrFnSetClause::FnSet(fn_set) => Ok(fn_set),
-            FnSetOrFnSetClause::FnSetClause(_) => {
-                panic!("FnSetOrFnSetClause::FnSetClause should not be returned");
-            }
+            Ok(fn_set) => match fn_set {
+                FnSetOrFnSetClause::FnSet(fn_set) => Ok(fn_set),
+                FnSetOrFnSetClause::FnSetClause(_) => {
+                    panic!("FnSetOrFnSetClause::FnSetClause should not be returned");
+                }
+            },
+            Err(e) => Err(e),
         }
     }
 
@@ -150,13 +153,16 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<FnSetClause, RuntimeError> {
         self.push_parsing_time_name_scope();
-        let clause = self.parse_fn_set_body(tb, false)?;
+        let clause = self.parse_fn_set_body(tb, false);
         self.pop_parsing_time_name_scope();
         match clause {
-            FnSetOrFnSetClause::FnSetClause(clause) => Ok(clause),
-            FnSetOrFnSetClause::FnSet(_) => {
-                panic!("FnSetOrFnSetClause::FnSet should not be returned");
-            }
+            Ok(clause) => match clause {
+                FnSetOrFnSetClause::FnSetClause(clause) => Ok(clause),
+                FnSetOrFnSetClause::FnSet(_) => {
+                    panic!("FnSetOrFnSetClause::FnSet should not be returned");
+                }
+            },
+            Err(e) => Err(e),
         }
     }
 
