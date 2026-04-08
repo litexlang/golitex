@@ -255,6 +255,26 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<InferResult, RuntimeError> {
+        // stmt.induc_from 得是 Z
+        let in_fact = AtomicFact::InFact(InFact::new(
+            stmt.induc_from.clone(),
+            Obj::StandardSet(StandardSet::Z),
+            stmt.line_file.clone(),
+        ));
+        let verify_result = self
+            .verify_atomic_fact(&in_fact, &VerifyState::new(0, false))
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        if verify_result.is_unknown() {
+            return Err(RuntimeError::ExecStmtError(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    Stmt::HaveFnByInducStmt(stmt.clone()),
+                    "have_fn_by_induc: induc_from is not in Z".to_string(),
+                    None,
+                    vec![],
+                ),
+            ));
+        }
+
         let mut infer_result = InferResult::new();
         let fs = self.add_mangled_prefix_to_fn_set_clause(
             &stmt.fn_user_fn_set_clause(),
