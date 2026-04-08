@@ -1,10 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn get_def_prop_definition_by_name(
-        &self,
-        predicate_name: &str,
-    ) -> Option<&DefPropStmt> {
+    pub fn get_prop_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
         let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
@@ -30,10 +27,7 @@ impl Runtime {
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment
-                .defined_abstract_props
-                .get(predicate_name)
-            {
+            if let Some(definition) = environment.defined_abstract_props.get(predicate_name) {
                 return Some(definition);
             }
         }
@@ -41,24 +35,6 @@ impl Runtime {
         None
     }
 
-    pub fn get_obj_in_struct(
-        &self,
-        struct_name: &str,
-    ) -> Option<&StructParamType> {
-        let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
-        if parts.len() != 1 {
-            unimplemented!();
-        }
-
-        for environment in self.iter_environments_from_top() {
-            if let Some(t) = environment.defined_field_access_name.get(struct_name) {
-                return Some(&t);
-            }
-        }
-
-        None
-    }
-    
     pub fn get_algo_definition_by_name(&self, algo_name: &str) -> Option<&DefAlgoStmt> {
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment.defined_algorithms.get(algo_name) {
@@ -68,10 +44,7 @@ impl Runtime {
         None
     }
 
-    pub fn get_family_definition_by_name(
-        &self,
-        family_name: &str,
-    ) -> Option<&DefFamilyStmt> {
+    pub fn get_family_definition_by_name(&self, family_name: &str) -> Option<&DefFamilyStmt> {
         let parts = family_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
@@ -86,10 +59,7 @@ impl Runtime {
         None
     }
 
-    pub fn get_cloned_family_definition_by_name(
-        &self,
-        family_name: &str,
-    ) -> Option<DefFamilyStmt> {
+    pub fn get_cloned_family_definition_by_name(&self, family_name: &str) -> Option<DefFamilyStmt> {
         let parts = family_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
@@ -104,19 +74,27 @@ impl Runtime {
         None
     }
 
-    pub fn get_definition_of_struct_where_object_satisfies(&self, obj: &IdentifierOrIdentifierWithMod) -> Option<&DefParamTypeStructStmt> {
-        let Some(struct_object_satisfies) = self.get_struct_that_object_satisfies(obj) else {
+    pub fn get_definition_of_struct_where_object_satisfies(
+        &self,
+        obj: &IdentifierOrIdentifierWithMod,
+    ) -> Option<&DefStructStmt> {
+        let Some(struct_object_satisfies) = self.get_object_satisfy_struct(obj) else {
             return None;
         };
 
-        let Some(def) = self.get_definition_of_struct(&struct_object_satisfies.name.to_string()) else {
+        let Some(def) =
+            self.get_definition_of_struct_by_name(&struct_object_satisfies.name.to_string())
+        else {
             return None;
         };
 
         Some(def)
     }
 
-    fn get_definition_of_struct(&self, struct_name: &str) -> Option<&DefParamTypeStructStmt> {
+    pub fn get_definition_of_struct_by_name(
+        &self,
+        struct_name: &str,
+    ) -> Option<&DefStructStmt> {
         let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
@@ -132,23 +110,21 @@ impl Runtime {
 
     pub fn get_cloned_definition_of_struct(
         &self,
-        param_type_struct_name: &str,
-    ) -> Option<DefParamTypeStructStmt> {
-        let parts = param_type_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        struct_name: &str,
+    ) -> Option<DefStructStmt> {
+        let parts = struct_name
+            .split(MOD_SIGN)
+            .collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment
-                .defined_structs
-                .get(param_type_struct_name)
-            {
+            if let Some(definition) = environment.defined_structs.get(struct_name) {
                 return Some(definition.clone());
             }
         }
 
         None
     }
-
 }

@@ -69,9 +69,7 @@ impl Runtime {
             ));
         }
 
-        if let (Obj::FnSetWithParams(left_fn_set), Obj::FnSetWithParams(right_fn_set)) =
-            (left, right)
-        {
+        if let (Obj::FnSet(left_fn_set), Obj::FnSet(right_fn_set)) = (left, right) {
             return self.verify_fn_set_with_params_equality_by_builtin_rules(
                 left_fn_set,
                 right_fn_set,
@@ -98,8 +96,12 @@ impl Runtime {
             (None, None) => Ok(None),
             (Some(known_objs_equal_to_left), None) => {
                 for obj in known_objs_equal_to_left.iter() {
-                    let result =
-                        self.verify_equality_by_builtin_rules(obj, right, line_file.clone(), verify_state)?;
+                    let result = self.verify_equality_by_builtin_rules(
+                        obj,
+                        right,
+                        line_file.clone(),
+                        verify_state,
+                    )?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }
@@ -108,8 +110,12 @@ impl Runtime {
             }
             (None, Some(known_objs_equal_to_right)) => {
                 for obj in known_objs_equal_to_right.iter() {
-                    let result =
-                        self.verify_equality_by_builtin_rules(left, obj, line_file.clone(), verify_state)?;
+                    let result = self.verify_equality_by_builtin_rules(
+                        left,
+                        obj,
+                        line_file.clone(),
+                        verify_state,
+                    )?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }

@@ -92,20 +92,21 @@ impl fmt::Display for DefAlgoStmt {
                     1
                 ),
                 default_return
-            )?;
-        }
-        write!(
-            f,
-            "{} {}{}{}\n{}",
-            ALGO,
-            self.name,
-            braced_vec_to_string(&self.params),
-            COLON,
-            to_string_and_add_four_spaces_at_beginning_of_each_line(
-                &vec_to_string_with_sep(&self.cases, "\n".to_string()),
-                1
             )
-        )
+        } else {
+            write!(
+                f,
+                "{} {}{}{}\n{}",
+                ALGO,
+                self.name,
+                braced_vec_to_string(&self.params),
+                COLON,
+                to_string_and_add_four_spaces_at_beginning_of_each_line(
+                    &vec_to_string_with_sep(&self.cases, "\n".to_string()),
+                    1
+                )
+            )
+        }
     }
 }
 

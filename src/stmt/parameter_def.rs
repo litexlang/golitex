@@ -3,6 +3,40 @@ use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
+pub enum ParamType {
+    Set(Set),
+    NonemptySet(NonemptySet),
+    FiniteSet(FiniteSet),
+    Obj(Obj),
+    Struct(StructObj),
+}
+
+#[derive(Clone)]
+pub enum StructFieldType {
+    Obj(Obj),
+    Set(Set),
+    FiniteSet(FiniteSet),
+    NonemptySet(NonemptySet),
+}
+
+impl StructFieldType {
+    pub fn to_param_type(&self) -> ParamType {
+        match self {
+            StructFieldType::Obj(o) => ParamType::Obj(o.clone()),
+            StructFieldType::Set(s) => ParamType::Set(s.clone()),
+            StructFieldType::FiniteSet(f) => ParamType::FiniteSet(f.clone()),
+            StructFieldType::NonemptySet(n) => ParamType::NonemptySet(n.clone()),
+        }
+    }
+}
+
+impl fmt::Display for StructFieldType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_param_type())
+    }
+}
+
+#[derive(Clone)]
 pub struct ParamGroupWithSet {
     pub params: Vec<String>,
     pub set: Obj,
@@ -18,33 +52,6 @@ pub struct ParamGroupWithParamType {
 pub struct ParamGroupWithStructFieldType {
     pub params: Vec<String>,
     pub struct_field_type: StructFieldType,
-}
-
-#[derive(Clone)]
-pub enum StructFieldType {
-    Obj(Obj),
-    Set(Set),
-    FiniteSet(FiniteSet),
-    NonemptySet(NonemptySet),
-    Family(FamilyParamType),
-}
-
-impl StructFieldType {
-    pub fn to_param_type(&self) -> ParamType {
-        match self {
-            StructFieldType::Obj(o) => ParamType::Obj(o.clone()),
-            StructFieldType::Set(s) => ParamType::Set(s.clone()),
-            StructFieldType::FiniteSet(f) => ParamType::FiniteSet(f.clone()),
-            StructFieldType::NonemptySet(n) => ParamType::NonemptySet(n.clone()),
-            StructFieldType::Family(f) => ParamType::Family(f.clone()),
-        }
-    }
-}
-
-impl fmt::Display for StructFieldType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_param_type())
-    }
 }
 
 impl fmt::Display for ParamGroupWithStructFieldType {
@@ -122,38 +129,6 @@ impl ParamGroupWithStructFieldType {
 }
 
 #[derive(Clone)]
-pub enum ParamType {
-    Set(Set),
-    NonemptySet(NonemptySet),
-    FiniteSet(FiniteSet),
-    Obj(Obj),
-    /// Parameterized type family, e.g. `family seq(S)` — no record fields, indexed by type/set args.
-    Family(FamilyParamType),
-    /// Product/record-style type, e.g. `struct Point(R, R)` — named fields live in struct definitions.
-    Struct(StructParamType),
-}
-
-/// Instantiated family type: `family` name followed by argument objects (often sets).
-#[derive(Clone)]
-pub struct FamilyParamType {
-    pub name: IdentifierOrIdentifierWithMod,
-    pub params: Vec<Obj>,
-}
-
-/// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
-#[derive(Clone)]
-pub struct StructParamType {
-    pub name: IdentifierOrIdentifierWithMod,
-    pub args: Vec<Obj>,
-}
-
-impl StructParamType {
-    pub fn new(name: IdentifierOrIdentifierWithMod, args: Vec<Obj>) -> Self {
-        StructParamType { name, args }
-    }
-}
-
-#[derive(Clone)]
 pub struct Set {}
 
 #[derive(Clone)]
@@ -187,24 +162,7 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
-            ParamType::Family(family) => {
-                write!(
-                    f,
-                    "{} {}({})",
-                    FAMILY,
-                    family.name,
-                    vec_to_string_join_by_comma(&family.params)
-                )
-            }
-            ParamType::Struct(struct_ty) => {
-                write!(
-                    f,
-                    "{} {}({})",
-                    STRUCT,
-                    struct_ty.name,
-                    vec_to_string_join_by_comma(&struct_ty.args)
-                )
-            }
+            ParamType::Struct(struct_ty) => write!(f, "{}", struct_ty),
         }
     }
 }
@@ -232,7 +190,7 @@ impl fmt::Display for ParamGroupWithSet {
         write!(
             f,
             "{} {}",
-            vec_to_string_join_by_comma(&self.params),
+            comma_separated_stored_fn_params_as_user_source(&self.params),
             self.set
         )
     }

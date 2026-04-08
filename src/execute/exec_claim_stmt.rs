@@ -89,10 +89,9 @@ impl Runtime {
                         ))
                     })?;
 
-                self.push_env();
-                let body_exec_result =
-                    self.exec_claim_stmt_body_fact_for_forall_fact(stmt, forall_fact);
-                self.pop_env();
+                let body_exec_result = self.run_in_local_env(|rt| {
+                    rt.exec_claim_stmt_body_fact_for_forall_fact(stmt, forall_fact)
+                });
 
                 let non_err_after_body = match body_exec_result {
                     Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
@@ -123,9 +122,9 @@ impl Runtime {
                         ))
                     })?;
 
-                self.push_env();
-                let body_exec_result = self.exec_claim_stmt_body_fact_except_forall_fact(stmt);
-                self.pop_env();
+                let body_exec_result = self.run_in_local_env(|rt| {
+                    rt.exec_claim_stmt_body_fact_except_forall_fact(stmt)
+                });
 
                 let non_err_after_body = match body_exec_result {
                     Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,

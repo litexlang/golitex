@@ -40,13 +40,13 @@ impl Runtime {
 
     pub fn store_struct_def(
         &mut self,
-        def_param_type_struct_stmt: &DefParamTypeStructStmt,
+        def_struct_stmt: &DefStructStmt,
     ) -> Result<(), RuntimeErrorStruct> {
-        let name = def_param_type_struct_stmt.name.clone();
+        let name = def_struct_stmt.name.clone();
 
         self.top_level_env()
             .defined_structs
-            .insert(name, def_param_type_struct_stmt.clone());
+            .insert(name, def_struct_stmt.clone());
         Ok(())
     }
 

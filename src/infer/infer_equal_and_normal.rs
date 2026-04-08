@@ -191,13 +191,13 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         if let Some(right_calculated_value) = self.resolve_obj_to_number(&equal_fact.right) {
             self.top_level_env()
-                .known_normalized_decimal_number_value_of_obj
+                .known_objs_equal_to_normalized_decimal_number
                 .insert(equal_fact.left.to_string(), right_calculated_value);
         }
 
         if let Some(left_calculated_value) = self.resolve_obj_to_number(&equal_fact.left) {
             self.top_level_env()
-                .known_normalized_decimal_number_value_of_obj
+                .known_objs_equal_to_normalized_decimal_number
                 .insert(equal_fact.right.to_string(), left_calculated_value);
         }
 
@@ -211,14 +211,14 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
     ) -> Result<InferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
-        let predicate_definition = match self.get_def_prop_definition_by_name(&predicate_name) {
+        let predicate_definition = match self.get_prop_definition_by_name(&predicate_name) {
             Some(predicate_definition) => predicate_definition.clone(),
             None => return Ok(InferResult::new()),
         };
         let mut infer_result = InferResult::new();
 
         let param_type_infer = self
-            .store_args_satisfy_param_def(
+            .store_args_satisfy_param_type_when_not_defining_new_identifiers(
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 normal_atomic_fact.line_file.clone(),
@@ -235,10 +235,10 @@ impl Runtime {
             })?;
         infer_result.new_infer_result_inside(param_type_infer);
 
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = self.params_to_arg_map(
             &predicate_definition.params_def_with_type,
             &normal_atomic_fact.body,
-        );
+        )?;
 
         for iff_fact in predicate_definition.iff_facts.iter() {
             let instantiated_iff_fact =

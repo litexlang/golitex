@@ -1,3 +1,4 @@
+use super::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
 use super::keywords::is_keyword;
 
 const MAX_NAME_LEN: usize = 255;
@@ -5,6 +6,12 @@ const MAX_NAME_LEN: usize = 255;
 pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
     if s.is_empty() {
         return Err("name cannot be empty".to_string());
+    }
+    if s.starts_with(DEFAULT_MANGLED_FN_PARAM_PREFIX) {
+        return Err(format!(
+            "user defined name cannot start with two underscores because it is reserved for internal use: `{}`.",
+            s
+        ));
     }
     if s.len() > MAX_NAME_LEN {
         return Err(format!(
@@ -37,6 +44,20 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
         return Err(format!("cannot use keyword as name: {}", s));
     }
     Ok(())
+}
+
+/// `fn` / 内涵集形参在 AST 中存为 `__` + 用户符面；仅用于注册与校验这类实现侧名字。
+pub fn is_valid_mangled_fn_param_name(s: &str) -> Result<(), String> {
+    if !s.starts_with(DEFAULT_MANGLED_FN_PARAM_PREFIX) {
+        return Err("internal: mangled fn/set-builder param must start with __".to_string());
+    }
+    let rest = s
+        .strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
+        .unwrap_or("");
+    if rest.is_empty() {
+        return Err("internal: mangled param suffix is empty".to_string());
+    }
+    is_valid_litex_name(rest)
 }
 
 #[cfg(test)]
@@ -81,6 +102,22 @@ mod tests {
         assert!(is_valid_litex_name(&ok_255).is_ok());
         let bad_256: String = "a".chars().cycle().take(256).collect();
         assert!(is_valid_litex_name(&bad_256).is_err());
+    }
+
+    #[test]
+    fn double_underscore_prefix_rejected() {
+        assert!(is_valid_litex_name("__").is_err());
+        assert!(is_valid_litex_name("__x").is_err());
+        assert!(is_valid_litex_name("__foo").is_err());
+    }
+
+    #[test]
+    fn mangled_fn_param_name_validity() {
+        assert!(is_valid_mangled_fn_param_name("__x").is_ok());
+        assert!(is_valid_mangled_fn_param_name("__foo_bar").is_ok());
+        assert!(is_valid_mangled_fn_param_name("x").is_err());
+        assert!(is_valid_mangled_fn_param_name("__").is_err());
+        assert!(is_valid_mangled_fn_param_name("__let").is_err());
     }
 
     #[test]

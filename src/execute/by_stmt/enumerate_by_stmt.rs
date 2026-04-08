@@ -1,13 +1,13 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_enumerate_axiom_stmt(
+    pub fn exec_by_enumerate_stmt(
         &mut self,
-        stmt: &EnumerateAxiomStmt,
+        stmt: &ByEnumerateStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::EnumerateAxiomStmt(stmt.clone()),
+                Stmt::ByEnumerateStmt(stmt.clone()),
                 msg,
                 None,
                 vec![],
@@ -17,7 +17,7 @@ impl Runtime {
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::EnumerateAxiomStmt(stmt.clone()),
+                    Stmt::ByEnumerateStmt(stmt.clone()),
                     format!(
                         "by enumerate: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
@@ -38,7 +38,7 @@ impl Runtime {
                 )
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::EnumerateAxiomStmt(stmt.clone()),
+                        Stmt::ByEnumerateStmt(stmt.clone()),
                         format!(
                             "by enumerate: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
@@ -53,21 +53,21 @@ impl Runtime {
             );
             return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    Stmt::EnumerateAxiomStmt(stmt.clone()),
+                    Stmt::ByEnumerateStmt(stmt.clone()),
                     infer_result,
                     vec![],
                 ),
             ));
         }
 
-        let mut current_parameter_index_assignment = Self::enumerate_start_index_assignment(stmt);
+        let mut current_parameter_index_assignment = Self::by_enumerate_start_index_assignment(stmt);
         loop {
-            self.exec_enumerate_axiom_stmt_for_one_assignment(
+            self.exec_by_enumerate_stmt_for_one_assignment(
                 stmt,
                 &current_parameter_index_assignment,
             )?;
             let next_parameter_index_assignment =
-                Self::enumerate_next_index_assignment(stmt, &current_parameter_index_assignment);
+                Self::by_enumerate_next_index_assignment(stmt, &current_parameter_index_assignment);
             match next_parameter_index_assignment {
                 Some(next_parameter_index_assignment) => {
                     current_parameter_index_assignment = next_parameter_index_assignment;
@@ -82,7 +82,7 @@ impl Runtime {
             )
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::EnumerateAxiomStmt(stmt.clone()),
+                    Stmt::ByEnumerateStmt(stmt.clone()),
                     format!(
                         "by enumerate: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
@@ -99,7 +99,7 @@ impl Runtime {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::EnumerateAxiomStmt(stmt.clone()),
+                Stmt::ByEnumerateStmt(stmt.clone()),
                 infer_result,
                 vec![],
             ),
@@ -117,7 +117,7 @@ impl Runtime {
         infer_result
     }
 
-    fn enumerate_start_index_assignment(stmt: &EnumerateAxiomStmt) -> Vec<usize> {
+    fn by_enumerate_start_index_assignment(stmt: &ByEnumerateStmt) -> Vec<usize> {
         let mut start_index_assignment: Vec<usize> = Vec::new();
         for _ in stmt.param_sets.iter() {
             start_index_assignment.push(0);
@@ -125,8 +125,8 @@ impl Runtime {
         start_index_assignment
     }
 
-    fn enumerate_next_index_assignment(
-        stmt: &EnumerateAxiomStmt,
+    fn by_enumerate_next_index_assignment(
+        stmt: &ByEnumerateStmt,
         current_parameter_index_assignment: &Vec<usize>,
     ) -> Option<Vec<usize>> {
         let mut next_parameter_index_assignment = current_parameter_index_assignment.clone();
@@ -143,21 +143,19 @@ impl Runtime {
         None
     }
 
-    fn exec_enumerate_axiom_stmt_for_one_assignment(
+    fn exec_by_enumerate_stmt_for_one_assignment(
         &mut self,
-        stmt: &EnumerateAxiomStmt,
+        stmt: &ByEnumerateStmt,
         parameter_index_assignment: &Vec<usize>,
     ) -> Result<(), RuntimeError> {
-        self.push_env();
-        let execute_result = self
-            .exec_enumerate_axiom_stmt_for_one_assignment_body(stmt, parameter_index_assignment);
-        self.pop_env();
-        execute_result
+        self.run_in_local_env(|rt| {
+            rt.exec_by_enumerate_stmt_for_one_assignment_body(stmt, parameter_index_assignment)
+        })
     }
 
-    fn exec_enumerate_axiom_stmt_for_one_assignment_body(
+    fn exec_by_enumerate_stmt_for_one_assignment_body(
         &mut self,
-        stmt: &EnumerateAxiomStmt,
+        stmt: &ByEnumerateStmt,
         parameter_index_assignment: &Vec<usize>,
     ) -> Result<(), RuntimeError> {
         let mut inside_results_before_failure: Vec<NonErrStmtExecResult> = Vec::new();
@@ -169,7 +167,7 @@ impl Runtime {
                 .map_err(RuntimeError::from)?;
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    Obj::Identifier(Identifier::new(parameter_name.clone())),
+                    Obj::Identifier(Identifier::new(parameter_name.to_string())),
                     assigned_obj.clone(),
                     stmt.line_file.clone(),
                 ));
@@ -187,7 +185,7 @@ impl Runtime {
                 Err(statement_error) => {
                     return Err(RuntimeError::from(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EnumerateAxiomStmt(stmt.clone()),
+                            Stmt::ByEnumerateStmt(stmt.clone()),
                             proof_stmt.to_string(),
                             Some(statement_error),
                             inside_results_before_failure,
@@ -205,7 +203,7 @@ impl Runtime {
             if verified_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::EnumerateAxiomStmt(stmt.clone()),
+                        Stmt::ByEnumerateStmt(stmt.clone()),
                         format!("by enumerate: failed to prove `{}`", fact_to_prove),
                         None,
                         inside_results_before_failure,

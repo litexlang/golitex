@@ -1,61 +1,15 @@
 use crate::prelude::*;
 use crate::verify::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-/// `fn(x N_pos) R` 与 `fn(y N_pos) R`：将两侧形参名统一为 `##0`, `##1`, …，对 `params_def_with_set` / `dom_facts` / `ret_set` 做代入后比较 `Display`。
-fn fn_set_with_params_equal_modulo_param_rename(
-    runtime: &Runtime,
-    a: &FnSetWithParams,
-    b: &FnSetWithParams,
-) -> Result<bool, RuntimeError> {
-    let pa = a.params();
-    let pb = b.params();
-    if pa.len() != pb.len() {
-        return Ok(false);
-    }
-
-    let mut pa_map = HashMap::new();
-    let mut pb_map = HashMap::new();
-    for i in 0..pa.len() {
-        let ph = format!("##{}", i);
-        pa_map.insert(
-            pa[i].clone(),
-            Obj::Identifier(Identifier::new(ph.clone())),
-        );
-        pb_map.insert(pb[i].clone(), Obj::Identifier(Identifier::new(ph)));
-    }
-
-    let a_params =
-        param_def_with_set_rename_params_to_placeholders(&a.params_def_with_set, &pa);
-    let b_params =
-        param_def_with_set_rename_params_to_placeholders(&b.params_def_with_set, &pb);
-
-    let a_dom: Vec<OrAndChainAtomicFact> = a
-        .dom_facts
-        .iter()
-        .map(|dom_fact| runtime.inst_or_and_chain_atomic_fact(dom_fact, &pa_map))
-        .collect::<Result<Vec<_>, _>>()?;
-    let b_dom: Vec<OrAndChainAtomicFact> = b
-        .dom_facts
-        .iter()
-        .map(|dom_fact| runtime.inst_or_and_chain_atomic_fact(dom_fact, &pb_map))
-        .collect::<Result<Vec<_>, _>>()?;
-
-    let a_ret = a.ret_set.as_ref().clone();
-    let b_ret = b.ret_set.as_ref().clone();
-
-    let a_instantiated = FnSetWithParams::new(a_params, a_dom, a_ret);
-    let b_instantiated = FnSetWithParams::new(b_params, b_dom, b_ret);
-
-    Ok(a_instantiated.to_string() == b_instantiated.to_string())
-}
-
-fn param_def_with_set_rename_params_to_placeholders(
+/// 按 `flat_original` 与 `mangled_by_index` 把各组形参换成同一套存储名（与 [`FnSet::get_params`] 展平顺序一致）。
+fn param_def_with_set_rename_to_mangled(
     groups: &[ParamGroupWithSet],
-    flat_param_names: &[String],
+    flat_original: &[String],
+    mangled_by_index: &[String],
 ) -> Vec<ParamGroupWithSet> {
     let mut name_to_i: HashMap<String, usize> = HashMap::new();
-    for (i, n) in flat_param_names.iter().enumerate() {
+    for (i, n) in flat_original.iter().enumerate() {
         name_to_i.insert(n.clone(), i);
     }
     let mut out = Vec::with_capacity(groups.len());
@@ -65,11 +19,10 @@ fn param_def_with_set_rename_params_to_placeholders(
             .iter()
             .map(|n| {
                 let i = name_to_i[n];
-                format!("##{}", i)
+                mangled_by_index[i].clone()
             })
             .collect();
-        let set_obj = g.set.clone();
-        out.push(ParamGroupWithSet::new(new_names, set_obj));
+        out.push(ParamGroupWithSet::new(new_names, g.set.clone()));
     }
     out
 }
@@ -78,33 +31,39 @@ fn number_in_set_verified_by_builtin_rules_result(
     in_fact: &InFact,
     reason: &str,
 ) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-        Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-        InferResult::new(),
-        reason.to_string(),
-        Vec::new(),
-    ))
+    NonErrStmtExecResult::FactualStmtSuccess(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+            InferResult::new(),
+            reason.to_string(),
+            Vec::new(),
+        ),
+    )
 }
 
 fn not_in_fact_verified_by_builtin_rules_result(
     not_in_fact: &NotInFact,
     reason: &str,
 ) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-        Fact::AtomicFact(AtomicFact::NotInFact(not_in_fact.clone())),
-        InferResult::new(),
-        reason.to_string(),
-        Vec::new(),
-    ))
+    NonErrStmtExecResult::FactualStmtSuccess(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            Fact::AtomicFact(AtomicFact::NotInFact(not_in_fact.clone())),
+            InferResult::new(),
+            reason.to_string(),
+            Vec::new(),
+        ),
+    )
 }
 
 fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> NonErrStmtExecResult {
-    NonErrStmtExecResult::FactualStmtSuccess(FactualStmtSuccess::new_with_verified_by_builtin_rules(
-        Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-        InferResult::new(),
-        "arithmetic expression is in R".to_string(),
-        Vec::new(),
-    ))
+    NonErrStmtExecResult::FactualStmtSuccess(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+            InferResult::new(),
+            "arithmetic expression is in R".to_string(),
+            Vec::new(),
+        ),
+    )
 }
 
 fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -113,9 +72,7 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     standard_set: &StandardSet,
 ) -> NonErrStmtExecResult {
     match standard_set {
-        StandardSet::R => {
-            number_in_set_verified_by_builtin_rules_result(in_fact, "number in R")
-        }
+        StandardSet::R => number_in_set_verified_by_builtin_rules_result(in_fact, "number in R"),
         StandardSet::RPos => {
             if number_is_in_r_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_pos")
@@ -137,9 +94,7 @@ fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
             }
         }
-        StandardSet::Q => {
-            number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q")
-        }
+        StandardSet::Q => number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q"),
         StandardSet::QPos => {
             if number_is_in_q_pos(evaluated_number) {
                 number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_pos")
@@ -297,11 +252,13 @@ impl Runtime {
                 if let Some(evaluated_number) =
                     not_in_fact.element.evaluate_to_normalized_decimal_number()
                 {
-                    return Ok(builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
-                        not_in_fact,
-                        &evaluated_number,
-                        standard_set,
-                    ));
+                    return Ok(
+                        builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+                            not_in_fact,
+                            &evaluated_number,
+                            standard_set,
+                        ),
+                    );
                 }
             }
         }
@@ -346,13 +303,13 @@ impl Runtime {
                     verify_state,
                 );
             }
-            (Obj::Number(num), Obj::StandardSet(standard_set)) => Ok(
-                builtin_in_fact_result_for_evaluated_number_in_standard_set(
+            (Obj::Number(num), Obj::StandardSet(standard_set)) => {
+                Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                     in_fact,
                     num,
                     standard_set,
-                ),
-            ),
+                ))
+            }
             (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::RNeg),
@@ -395,12 +352,20 @@ impl Runtime {
                 list_set,
                 verify_state,
             ),
-            (Obj::Identifier(identifier), Obj::FnSetWithParams(expected_fn_set)) => self
+            (Obj::Identifier(identifier), Obj::FnSet(expected_fn_set)) => self
                 .verify_in_fact_identifier_in_fn_set_by_stored_definition(
                     identifier,
                     expected_fn_set,
                     in_fact,
                 ),
+            (_, Obj::FamilyObj(family_ty)) => {
+                self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
+            }
+            (_, Obj::StructObj(struct_ty)) => self.verify_obj_satisfies_struct_param_type(
+                in_fact.element.clone(),
+                struct_ty,
+                verify_state,
+            ),
             (_, target_set_obj) => {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
@@ -435,12 +400,14 @@ impl Runtime {
         )? {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
-        if !self.mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
-            &mul.left,
-            &mul.right,
-            in_fact.line_file.clone(),
-            verify_state,
-        )? {
+        if !self
+            .mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+                &mul.left,
+                &mul.right,
+                in_fact.line_file.clone(),
+                verify_state,
+            )?
+        {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
         match target_negative_standard_set {
@@ -511,8 +478,11 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for element_box in list_set.list.iter() {
             let element_obj = *element_box.clone();
-            let element_in_base_fact =
-                AtomicFact::InFact(InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()));
+            let element_in_base_fact = AtomicFact::InFact(InFact::new(
+                element_obj,
+                base_set.clone(),
+                in_fact.line_file.clone(),
+            ));
             let verify_one_element_result =
                 self.verify_atomic_fact(&element_in_base_fact, verify_state)?;
             if !verify_one_element_result.is_true() {
@@ -640,18 +610,83 @@ impl Runtime {
         }
     }
 
+    /// `fn(x N_pos) R` 与 `fn(y N_pos) R`：为每维生成随机基名并加 `__` 前缀，两侧代入同一套存储名后对 `params` / `dom` / `ret` 比较 `Display`。
+    fn fn_set_with_params_equal_modulo_param_rename(
+        &self,
+        a: &FnSet,
+        b: &FnSet,
+    ) -> Result<bool, RuntimeError> {
+        let pa = a.get_params();
+        let pb = b.get_params();
+        if pa.len() != pb.len() {
+            return Ok(false);
+        }
+        let n = pa.len();
+
+        let mut reserved: HashSet<String> = HashSet::new();
+        for s in pa.iter().chain(pb.iter()) {
+            reserved.insert(s.clone());
+        }
+
+        let mut mangled_placeholders: Vec<String> = Vec::with_capacity(n);
+        for _ in 0..n {
+            let base = self.generate_one_unused_name_with_reserved(&reserved);
+            reserved.insert(base.clone());
+            mangled_placeholders.push(format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, base));
+        }
+
+        let mut pa_map = HashMap::new();
+        let mut pb_map = HashMap::new();
+        for i in 0..n {
+            let ph = mangled_placeholders[i].clone();
+            pa_map.insert(pa[i].clone(), Obj::Identifier(Identifier::new(ph.clone())));
+            pb_map.insert(pb[i].clone(), Obj::Identifier(Identifier::new(ph)));
+        }
+
+        let a_params = param_def_with_set_rename_to_mangled(
+            &a.params_def_with_set,
+            &pa,
+            &mangled_placeholders,
+        );
+        let b_params = param_def_with_set_rename_to_mangled(
+            &b.params_def_with_set,
+            &pb,
+            &mangled_placeholders,
+        );
+
+        let a_dom: Vec<OrAndChainAtomicFact> = a
+            .dom_facts
+            .iter()
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map))
+            .collect::<Result<Vec<_>, _>>()?;
+        let b_dom: Vec<OrAndChainAtomicFact> = b
+            .dom_facts
+            .iter()
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let a_ret = a.ret_set.as_ref().clone();
+        let b_ret = b.ret_set.as_ref().clone();
+
+        let a_instantiated = self.new_fn_set_and_add_mangled_prefix(a_params, a_dom, a_ret)?;
+        let b_instantiated = self.new_fn_set_and_add_mangled_prefix(b_params, b_dom, b_ret)?;
+
+        Ok(a_instantiated.to_string() == b_instantiated.to_string())
+    }
+
     /// 若环境中已有 `identifier $in fn_定义`（由先前推断写入 `known_obj_in_fn_set`），则与当前 `fn ...` 右侧做 α-等价比较。
     fn verify_in_fact_identifier_in_fn_set_by_stored_definition(
         &mut self,
         identifier: &Identifier,
-        expected_fn_set: &FnSetWithParams,
+        expected_fn_set: &FnSet,
         in_fact: &InFact,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let element_obj = Obj::Identifier(Identifier::new(identifier.name.clone()));
-        let Some(stored_fn_set) = self.get_cloned_fn_set_where_fn_belongs_to(&element_obj) else {
+        let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(&element_obj) else {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         };
-        if fn_set_with_params_equal_modulo_param_rename(self, &stored_fn_set, expected_fn_set)
+        if self
+            .fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
             .map_err(|e| {
                 RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
@@ -665,7 +700,8 @@ impl Runtime {
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
                     InferResult::new(),
-                    "fn membership: stored fn signature matches RHS (α-renamed compare)".to_string(),
+                    "fn membership: stored fn signature matches RHS (α-renamed compare)"
+                        .to_string(),
                     Vec::new(),
                 ),
             ));

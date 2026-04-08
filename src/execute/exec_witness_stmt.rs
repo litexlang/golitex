@@ -7,12 +7,8 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
 
-        self.push_env();
-
-        let inside_results_when_verify = self.exec_witness_exist_fact_body(stmt);
-
-        // End verification: pop local environment.
-        self.pop_env();
+        let inside_results_when_verify =
+            self.run_in_local_env(|rt| rt.exec_witness_exist_fact_body(stmt));
 
         let inside_results = match inside_results_when_verify {
             Ok(proof_inside_results) => proof_inside_results,
@@ -99,7 +95,7 @@ impl Runtime {
             line_file: stmt.line_file.clone(),
         };
 
-        match self.have_obj_equal_stmt(&have_obj_equal_stmt) {
+        match self.exec_have_obj_equal_stmt(&have_obj_equal_stmt) {
             Ok(_binding_result) => {}
             Err(exec_stmt_error) => {
                 return Err(RuntimeError::from(exec_stmt_error));
@@ -153,12 +149,8 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
 
-        self.push_env();
-
-        let inside_results_when_verify = self.exec_witness_nonempty_set_body(stmt);
-
-        // End verification: pop local environment.
-        self.pop_env();
+        let inside_results_when_verify =
+            self.run_in_local_env(|rt| rt.exec_witness_nonempty_set_body(stmt));
 
         let inside_results = match inside_results_when_verify {
             Ok(proof_inside_results) => proof_inside_results,
@@ -243,12 +235,27 @@ impl Runtime {
         }
 
         // 3) Verify internal membership fact: `obj in set` must be true under the proof.
+        // 例外：若 `set` 为 `FnSet` 且其 `ret_set` 已被内置规则判为非空，则函数空间非空，无需再证 `obj in set`。
+        let verify_state_for_proof_check = VerifyState::new(0, false);
+        if let Obj::FnSet(fn_set) = &stmt.set {
+            let ret_nonempty_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                fn_set.ret_set.as_ref().clone(),
+                stmt.line_file.clone(),
+            ));
+            let ret_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                &ret_nonempty_fact,
+                &verify_state_for_proof_check,
+            )?;
+            if ret_check.is_true() {
+                return Ok(inside_results);
+            }
+        }
+
         let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             stmt.obj.clone(),
             stmt.set.clone(),
             stmt.line_file.clone(),
         )));
-        let verify_state_for_proof_check = VerifyState::new(0, false);
         self.verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)?;
 
         Ok(inside_results)
