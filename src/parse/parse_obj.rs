@@ -135,88 +135,36 @@ impl Runtime {
 
     pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
         self.push_parsing_time_name_scope();
-        let fn_set = self.parse_fn_set_body(tb);
+        let fn_set = self.parse_fn_set_body(tb, true)?;
         self.pop_parsing_time_name_scope();
-        fn_set
+        match fn_set {
+            FnSetOrFnSetClause::FnSet(fn_set) => Ok(fn_set),
+            FnSetOrFnSetClause::FnSetClause(_) => {
+                panic!("FnSetOrFnSetClause::FnSetClause should not be returned");
+            }
+        }
     }
 
-    /// 与 [`parse_fn_set_with_dom_without_fn_prefix_body`] 同形，但形参/dom/ret 均为**用户符**，不做 `__` mangling（供 `have fn` 等语句 AST）。
-    pub fn parse_fn_set_without_mangled_prefix(
+    pub fn parse_fn_set_clause(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<FnSetClause, RuntimeError> {
         self.push_parsing_time_name_scope();
-        let clause = self.parse_fn_set_without_mangled_prefix_body(tb);
+        let clause = self.parse_fn_set_body(tb, false)?;
         self.pop_parsing_time_name_scope();
-        clause
+        match clause {
+            FnSetOrFnSetClause::FnSetClause(clause) => Ok(clause),
+            FnSetOrFnSetClause::FnSet(_) => {
+                panic!("FnSetOrFnSetClause::FnSet should not be returned");
+            }
+        }
     }
 
-    // 和 parse_fn_set的唯一区别：形式参数没有前面加前缀
-    fn parse_fn_set_without_mangled_prefix_body(
+    fn parse_fn_set_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<FnSetClause, RuntimeError> {
-        tb.skip_token(LEFT_BRACE)?;
-        let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
-        loop {
-            let param = tb.advance()?;
-            let mut current_params = vec![param];
-
-            while tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-                current_params.push(tb.advance()?);
-            }
-
-            self.register_collected_param_names_for_def_parse(
-                &current_params,
-                tb.line_file.clone(),
-            )?;
-
-            for p in current_params.iter() {
-                let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
-                self.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
-            }
-
-            let set = self.parse_obj(tb)?;
-            params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
-            if tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-                continue;
-            } else if tb.current_token_is_equal_to(COLON) {
-                break;
-            } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
-                break;
-            } else {
-                return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "Expected comma or colon".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                    ),
-                );
-            }
-        }
-
-        let mut dom_facts_user = vec![];
-        if tb.current_token_is_equal_to(COLON) {
-            tb.skip_token(COLON)?;
-            dom_facts_user.push(self.parse_or_and_chain_atomic_fact(tb)?);
-            while tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-                dom_facts_user.push(self.parse_or_and_chain_atomic_fact(tb)?);
-            }
-        }
-
-        tb.skip_token(RIGHT_BRACE)?;
-        let ret_set = self.parse_obj(tb)?;
-        Ok(FnSetClause {
-            params_def_with_set,
-            dom_facts: dom_facts_user,
-            ret_set,
-        })
-    }
-
-    fn parse_fn_set_body(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
+        true_when_return_fn_set_false_when_return_fn_set_clause: bool,
+    ) -> Result<FnSetOrFnSetClause, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
         loop {
@@ -231,15 +179,21 @@ impl Runtime {
             let set = self.parse_obj(tb)?;
 
             for p in current_params.clone().iter() {
-                if !is_valid_litex_name(&p).is_ok() {
-                    return Err(
-                        RuntimeError::new_parse_error_with_msg_position_previous_error(
-                            format!("Invalid parameter name: {}", p),
-                            tb.line_file.clone(),
-                            None,
-                        ),
-                    );
+                if !true_when_return_fn_set_false_when_return_fn_set_clause {
+                    // 这里需要register一下，因为后文可能会用到这些参数
+                    self.register_name_into_name_scope(p, tb.line_file.clone())?;
+                } else {
+                    if !is_valid_litex_name(&p).is_ok() {
+                        return Err(
+                            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                                format!("Invalid parameter name: {}", p),
+                                tb.line_file.clone(),
+                                None,
+                            ),
+                        );
+                    }
                 }
+
                 let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
                 self.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
             }
@@ -278,11 +232,21 @@ impl Runtime {
 
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set_parsed = self.parse_obj(tb)?;
-        Ok(self.new_fn_set_and_add_mangled_prefix(
-            params_def_with_set,
-            dom_facts,
-            ret_set_parsed,
-        )?)
+        if true_when_return_fn_set_false_when_return_fn_set_clause {
+            Ok(FnSetOrFnSetClause::FnSet(
+                self.new_fn_set_and_add_mangled_prefix(
+                    params_def_with_set,
+                    dom_facts,
+                    ret_set_parsed,
+                )?,
+            ))
+        } else {
+            Ok(FnSetOrFnSetClause::FnSetClause(FnSetClause {
+                params_def_with_set,
+                dom_facts,
+                ret_set: ret_set_parsed,
+            }))
+        }
     }
 
     pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(
@@ -1090,4 +1054,9 @@ fn is_number(s: &str) -> bool {
     }
 
     s != "."
+}
+
+enum FnSetOrFnSetClause {
+    FnSet(FnSet),
+    FnSetClause(FnSetClause),
 }
