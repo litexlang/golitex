@@ -1,9 +1,7 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-fn param_defs_with_type_from_have_fn_clause(
-    clause: &HaveFnFnSetClause,
-) -> Vec<ParamGroupWithParamType> {
+fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> Vec<ParamGroupWithParamType> {
     let mut param_defs_with_type: Vec<ParamGroupWithParamType> =
         Vec::with_capacity(clause.params_def_with_set.len());
     for param_def_with_set in clause.params_def_with_set.iter() {
@@ -444,7 +442,7 @@ impl Runtime {
         have_fn_equal_stmt: &HaveFnEqualStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
         let fn_set_stored = self
-            .fn_set_for_storage_from_have_fn_clause(
+            .add_mangled_prefix_to_fn_set_clause(
                 &have_fn_equal_stmt.fn_set_clause,
                 have_fn_equal_stmt.line_file.clone(),
             )
@@ -629,7 +627,7 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
         let fn_set_stored = self
-            .fn_set_for_storage_from_have_fn_clause(
+            .add_mangled_prefix_to_fn_set_clause(
                 &have_fn_equal_case_by_case_stmt.fn_set_clause,
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
             )
