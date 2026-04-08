@@ -1,5 +1,31 @@
 use crate::prelude::*;
 
+fn fact_for_obj_satisfies_param_type_shallow(
+    arg: Obj,
+    param_type: &ParamType,
+    line_file: LineFile,
+) -> Fact {
+    match param_type {
+        ParamType::Set(_) => {
+            Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(arg, line_file)))
+        }
+        ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+            IsNonemptySetFact::new(arg, line_file),
+        )),
+        ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(
+            IsFiniteSetFact::new(arg, line_file),
+        )),
+        ParamType::Obj(obj) => {
+            Fact::AtomicFact(AtomicFact::InFact(InFact::new(arg, obj.clone(), line_file)))
+        }
+        ParamType::Struct(st) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            arg,
+            Obj::StructObj(st.clone()),
+            line_file,
+        ))),
+    }
+}
+
 impl Runtime {
     /// After `store_identifier_obj`, run param-type-specific work (type facts, storage, and later hooks).
     pub(crate) fn define_parameter_by_binding_param_type(
@@ -95,13 +121,45 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         self.register_param_as_struct_instance(name, struct_ty.clone());
 
+        let mut infer_result = InferResult::new();
+
         let new_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             Obj::Identifier(Identifier::new(name.to_string())),
             Obj::StructObj(struct_ty.clone()),
             default_line_file(),
         )));
+        infer_result.new_infer_result_inside(
+            self.store_fact_without_well_defined_verified_and_infer(new_fact)
+                .map_err(RuntimeError::from)?,
+        );
 
-        let infer_result = self.store_fact_without_well_defined_verified_and_infer(new_fact)?;
+        let struct_name = struct_ty.name.to_string();
+        let Some(def) = self.get_cloned_definition_of_struct(&struct_name) else {
+            return Ok(infer_result);
+        };
+
+        let base_map = ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
+            &struct_ty.args,
+        );
+        let lf = default_line_file();
+        for (field_name, field_st) in def.fields.iter() {
+            let arg = Obj::FieldAccess(FieldAccess::new(name.to_string(), field_name.clone()));
+            let param_type = self.inst_param_type(&field_st.to_param_type(), &base_map)?;
+            let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
+            infer_result.new_infer_result_inside(
+                self.store_fact_without_well_defined_verified_and_infer(f)
+                    .map_err(RuntimeError::from)?,
+            );
+        }
+
+        let iff_facts = self.instantiated_struct_def_or_and_facts_for_def(struct_ty, &def, name)?;
+        for ocf in iff_facts {
+            infer_result.new_infer_result_inside(
+                self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)
+                    .map_err(RuntimeError::from)?,
+            );
+        }
 
         Ok(infer_result)
     }

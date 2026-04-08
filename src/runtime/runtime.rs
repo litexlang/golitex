@@ -473,4 +473,31 @@ impl Runtime {
         }
         Ok(result)
     }
+
+    /// [`DefStructStmt::dom_facts`] under type arguments, then [`DefStructStmt::facts`] (`<=>:`) with
+    /// [`SELF`] replaced by `param_name`, in source order.
+    pub(crate) fn instantiated_struct_def_or_and_facts_for_def(
+        &self,
+        struct_ty: &StructObj,
+        def: &DefStructStmt,
+        param_name: &str,
+    ) -> Result<Vec<OrAndChainAtomicFact>, RuntimeError> {
+        let base_map = ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
+            &def.param_defs,
+            &struct_ty.args,
+        );
+        let mut out = Vec::new();
+        for fact in def.dom_facts.iter() {
+            out.push(self.inst_or_and_chain_atomic_fact(fact, &base_map)?);
+        }
+        let mut map_with_self = base_map.clone();
+        map_with_self.insert(
+            SELF.to_string(),
+            Obj::Identifier(Identifier::new(param_name.to_string())),
+        );
+        for fact in def.facts.iter() {
+            out.push(self.inst_or_and_chain_atomic_fact(fact, &map_with_self)?);
+        }
+        Ok(out)
+    }
 }
