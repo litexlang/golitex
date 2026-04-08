@@ -1040,6 +1040,21 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let choose_from = *_x.set.clone();
 
+        let choose_from_is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(
+            IsNonemptySetFact::new(choose_from.clone(), default_line_file()),
+        );
+        let choose_from_is_nonempty_set_result =
+            self.verify_atomic_fact(&choose_from_is_nonempty_set_fact, _verify_state)?;
+        if choose_from_is_nonempty_set_result.is_unknown() {
+            return Err(
+                RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                    format!("set {} is not a nonempty set", choose_from.to_string()),
+                    None,
+                    default_line_file(),
+                ),
+            );
+        }
+
         let random_param = self.generate_random_unused_name();
 
         let nonempty_set_fact = IsNonemptySetFact::new(
