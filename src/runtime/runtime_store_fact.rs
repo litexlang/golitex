@@ -1,25 +1,7 @@
 use crate::prelude::*;
+use std::collections::HashSet;
 
 impl Runtime {
-    fn return_err_if_forall_fact_with_iff_then_or_iff_clauses_miss_some_parameter_name(
-        forall_fact_with_iff: &ForallFactWithIff,
-    ) -> Result<(), RuntimeErrorStruct> {
-        let coverage_error_detail_lines =
-            forall_fact_with_iff.error_messages_if_forall_param_missing_in_then_or_iff_clause();
-        if coverage_error_detail_lines.is_empty() {
-            return Ok(());
-        }
-        Err(RuntimeErrorStruct::new(
-            None,
-            format!(
-                "failed to store forall fact with iff:\n{}",
-                coverage_error_detail_lines.join("\n")
-            ),
-            forall_fact_with_iff.line_file.clone(),
-            None,
-        ))
-    }
-
     pub fn store_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: Fact,
@@ -42,22 +24,58 @@ impl Runtime {
 
     fn store_forall_fact_without_well_defined_verified_and_infer(
         &mut self,
-        forall_fact: ForallFact,
+        mut forall_fact: ForallFact,
     ) -> Result<InferResult, RuntimeErrorStruct> {
-        return_err_if_forall_fact_then_or_iff_clauses_miss_some_parameter_name(&forall_fact)?;
-        self.store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFact(forall_fact))
+        let coverage_error_detail_lines =
+            forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
+
+        if coverage_error_detail_lines.is_empty() {
+            return self
+                .store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFact(forall_fact));
+        }
+
+        let warning_msg = forall_fact_coverage_warn_after_drop_then(&coverage_error_detail_lines);
+        let then_drop: HashSet<usize> = coverage_error_detail_lines
+            .iter()
+            .map(|(i, _)| *i)
+            .collect();
+
+        forall_fact.then_facts = forall_fact
+            .then_facts
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| !then_drop.contains(i))
+            .map(|(_, f)| f)
+            .collect();
+
+        if forall_fact.then_facts.is_empty() {
+            let mut infer_result = InferResult::new();
+            infer_result.new_with_msg(warning_msg);
+            return Ok(infer_result);
+        }
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_with_msg(warning_msg);
+        infer_result.new_infer_result_inside(
+            self.store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFact(forall_fact))?,
+        );
+        Ok(infer_result)
     }
 
     fn store_forall_fact_with_iff_without_well_defined_verified_and_infer(
         &mut self,
         forall_fact_with_iff: ForallFactWithIff,
     ) -> Result<InferResult, RuntimeErrorStruct> {
-        Self::return_err_if_forall_fact_with_iff_then_or_iff_clauses_miss_some_parameter_name(
-            &forall_fact_with_iff,
-        )?;
-        self.store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFactWithIff(
-            forall_fact_with_iff,
-        ))
+        let (forall_then_implies_iff, forall_iff_implies_then) =
+            forall_fact_with_iff.to_two_forall_facts();
+        let mut infer_result = self
+            .store_forall_fact_without_well_defined_verified_and_infer(forall_then_implies_iff)?;
+        infer_result.new_infer_result_inside(
+            self.store_forall_fact_without_well_defined_verified_and_infer(
+                forall_iff_implies_then,
+            )?,
+        );
+        Ok(infer_result)
     }
 
     fn store_whole_fact_update_cache_known_fact_and_infer(
@@ -162,21 +180,16 @@ impl Runtime {
     }
 }
 
-fn return_err_if_forall_fact_then_or_iff_clauses_miss_some_parameter_name(
-    forall_fact: &ForallFact,
-) -> Result<(), RuntimeErrorStruct> {
-    let coverage_error_detail_lines =
-        forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
-    if coverage_error_detail_lines.is_empty() {
-        return Ok(());
-    }
-    Err(RuntimeErrorStruct::new(
-        None,
-        format!(
-            "failed to store forall fact:\n{}",
-            coverage_error_detail_lines.join("\n")
-        ),
-        forall_fact.line_file.clone(),
-        None,
-    ))
+fn forall_fact_coverage_warn_after_drop_then(
+    coverage_error_detail_lines: &[(usize, String)],
+) -> String {
+    let body = coverage_error_detail_lines
+        .iter()
+        .map(|(idx, msg)| format!("at index {}: {}", idx, msg))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        "Warning: forall missing forall parameter(s) in some then clause(s); dropped problematic clause(s):\n{}",
+        body
+    )
 }
