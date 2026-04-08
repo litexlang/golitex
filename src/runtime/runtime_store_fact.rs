@@ -73,10 +73,7 @@ impl Runtime {
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
         let infer_result = self.infer(&fact_for_infer).map_err(|e| {
-            RuntimeErrorStruct::new_with_msg_previous_error(
-                format!("infer error: {}", e),
-                Some(e),
-            )
+            RuntimeErrorStruct::new_with_msg_previous_error(format!("infer error: {}", e), Some(e))
         })?;
         Ok(infer_result)
     }
@@ -94,10 +91,7 @@ impl Runtime {
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
         let infer_result = self.infer(&fact_for_infer).map_err(|e| {
-            RuntimeErrorStruct::new_with_msg_previous_error(
-                format!("infer error: {}", e),
-                Some(e),
-            )
+            RuntimeErrorStruct::new_with_msg_previous_error(format!("infer error: {}", e), Some(e))
         })?;
         Ok(infer_result)
     }
@@ -115,10 +109,7 @@ impl Runtime {
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
         let infer_result = self.infer(&infer_wrapped_fact).map_err(|e| {
-            RuntimeErrorStruct::new_with_msg_previous_error(
-                format!("infer error: {}", e),
-                Some(e),
-            )
+            RuntimeErrorStruct::new_with_msg_previous_error(format!("infer error: {}", e), Some(e))
         })?;
         Ok(infer_result)
     }

@@ -1,3 +1,4 @@
+use crate::obj::field_access_to_string;
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -145,6 +146,10 @@ impl Runtime {
         field_access: &FieldAccess,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
+        let dotted = field_access_to_string(&field_access.name, &field_access.field);
+        if let Some(obj) = param_to_arg_map.get(&dotted) {
+            return Ok(obj.clone());
+        }
         match param_to_arg_map.get(&field_access.name) {
             Some(Obj::Identifier(identifier)) => Ok(Obj::FieldAccess(FieldAccess {
                 name: identifier.name.clone(),
