@@ -70,10 +70,19 @@ pub struct DefFamilyStmt {
     pub line_file: LineFile,
 }
 
+/// `have fn` 里 `{ … }` 一段的源码形态：形参名为用户符，dom/ret 中标识符亦为源码名；**不含** `__` mangling。
+/// 需要存入 `Obj::FnSet` 时由 [`Runtime::fn_set_for_storage_from_have_fn_clause`] 生成存储用 [`FnSet`]。
+#[derive(Clone)]
+pub struct HaveFnFnSetClause {
+    pub params_def_with_set: Vec<ParamGroupWithSet>,
+    pub dom_facts: Vec<OrAndChainAtomicFact>,
+    pub ret_set: Obj,
+}
+
 #[derive(Clone)]
 pub struct HaveFnEqualCaseByCaseStmt {
     pub name: String,
-    pub fn_set_with_params: FnSet,
+    pub fn_set_clause: HaveFnFnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
     pub line_file: LineFile,
@@ -82,7 +91,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
 #[derive(Clone)]
 pub struct HaveFnEqualStmt {
     pub name: String,
-    pub fn_set_with_params: FnSet,
+    pub fn_set_clause: HaveFnFnSetClause,
     pub equal_to: Obj,
     pub line_file: LineFile,
 }
@@ -324,13 +333,13 @@ impl fmt::Display for HaveExistObjStmt {
 impl HaveFnEqualStmt {
     pub fn new(
         name: String,
-        fn_set_with_params: FnSet,
+        fn_set_clause: HaveFnFnSetClause,
         equal_to: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveFnEqualStmt {
             name,
-            fn_set_with_params,
+            fn_set_clause,
             equal_to,
             line_file,
         }
@@ -346,8 +355,8 @@ impl fmt::Display for HaveFnEqualStmt {
             FN,
             self.name,
             brace_vec_colon_vec_to_string(
-                &self.fn_set_with_params.params_def_with_set,
-                &self.fn_set_with_params.dom_facts
+                &self.fn_set_clause.params_def_with_set,
+                &self.fn_set_clause.dom_facts
             ),
             EQUAL,
             self.equal_to
@@ -369,7 +378,9 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
                         case,
                         COMMA,
                         self.name,
-                        braced_vec_to_string(&self.fn_set_with_params.get_params()),
+                        braced_vec_to_string(&ParamGroupWithSet::collect_param_names(
+                            &self.fn_set_clause.params_def_with_set,
+                        )),
                         EQUAL,
                         self.equal_tos[i]
                     ),
@@ -385,8 +396,8 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             FN,
             self.name,
             brace_vec_colon_vec_to_string(
-                &self.fn_set_with_params.params_def_with_set,
-                &self.fn_set_with_params.dom_facts
+                &self.fn_set_clause.params_def_with_set,
+                &self.fn_set_clause.dom_facts
             ),
             EQUAL,
             COLON,
@@ -398,14 +409,14 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 impl HaveFnEqualCaseByCaseStmt {
     pub fn new(
         name: String,
-        fn_set_with_params: FnSet,
+        fn_set_clause: HaveFnFnSetClause,
         cases: Vec<AndChainAtomicFact>,
         equal_tos: Vec<Obj>,
         line_file: LineFile,
     ) -> Self {
         HaveFnEqualCaseByCaseStmt {
             name,
-            fn_set_with_params,
+            fn_set_clause,
             cases,
             equal_tos,
             line_file,
@@ -443,31 +454,25 @@ fn merge_two_and_chain_clauses(
 }
 
 impl HaveFnByInducStmt {
-    /// 与 `fn` 形参 mangling 一致：`__` + [`Self::param`]。
-    pub fn mangled_param_name(&self) -> String {
-        mangled_fn_param_names(&[self.param.clone()], DEFAULT_MANGLED_FN_PARAM_PREFIX)[0].clone()
-    }
-
-    /// 需要 [`FnSet`] 时构造：单参 `Z`、dom 为 `mangled_param >= induc_from`、返回集为 [`Self::ret_set`]。
-    pub fn fn_set_with_mangled_param(&self) -> FnSet {
-        let m = self.mangled_param_name();
-        FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec![m.clone()],
+    /// 与源码一致的 `fn` 空间（用户形参名 + dom + ret），不含 `__`；存 `Obj::FnSet` 时用 [`Runtime::fn_set_for_storage_from_have_fn_clause`]。
+    pub fn fn_user_fn_set_clause(&self) -> HaveFnFnSetClause {
+        HaveFnFnSetClause {
+            params_def_with_set: vec![ParamGroupWithSet::new(
+                vec![self.param.clone()],
                 Obj::StandardSet(StandardSet::Z),
             )],
-            vec![OrAndChainAtomicFact::AtomicFact(
+            dom_facts: vec![OrAndChainAtomicFact::AtomicFact(
                 AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                    Obj::Identifier(Identifier::new(m)),
+                    Obj::Identifier(Identifier::new(self.param.clone())),
                     self.induc_from.clone(),
                     self.line_file.clone(),
                 )),
             )],
-            self.ret_set.clone(),
-        )
+            ret_set: self.ret_set.clone(),
+        }
     }
 
-    /// `forall x Z: ...` 里与 `fn` 定义域一致的那一段：与 [`Self::fn_set_with_mangled_param`] 的 dom 语义相同，但标识符用源码 [`Self::param`]，与量化变元一致（不出现 `__`）。
+    /// `forall x Z: ...` 里与 `fn` 定义域一致的那一段：标识符用源码 [`Self::param`]，与 [`Self::fn_user_fn_set_clause`] 的 dom 语义相同。
     pub fn forall_fn_base_dom_exist_or_facts(&self) -> Vec<ExistOrAndChainAtomicFact> {
         vec![ExistOrAndChainAtomicFact::AtomicFact(
             AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
@@ -501,8 +506,7 @@ impl HaveFnByInducStmt {
     /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（源码最后一条为 `case >= n:`（n 为特例个数），此处仍展开为 `param = from + n` 与可选子条件的合取）。
     pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
-        let param_name = self.mangled_param_name();
-        let left_id = Obj::Identifier(Identifier::new(param_name));
+        let left_id = Obj::Identifier(Identifier::new(self.param.clone()));
         let n = self.special_cases_equal_tos.len();
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
         let mut equal_tos: Vec<Obj> = Vec::new();
@@ -539,7 +543,7 @@ impl HaveFnByInducStmt {
         }
         HaveFnEqualCaseByCaseStmt::new(
             self.name.clone(),
-            self.fn_set_with_mangled_param(),
+            self.fn_user_fn_set_clause(),
             cases,
             equal_tos,
             line_file,
@@ -548,7 +552,7 @@ impl HaveFnByInducStmt {
 }
 
 impl fmt::Display for HaveFnByInducStmt {
-    /// 与源码一致：形参用用户名字，不出现 `__`；mangling 仅用于 [`Self::fn_set_with_mangled_param`] 等内部/FnSet。
+    /// 与源码一致：形参用用户名字，不出现 `__`；存 `FnSet` 时再 mangling。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let n = self.special_cases_equal_tos.len();
         write!(

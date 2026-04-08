@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
@@ -145,10 +146,22 @@ impl Runtime {
         fn_set
     }
 
-    fn parse_fn_set_with_dom_without_fn_prefix_body(
+    /// 与 [`parse_fn_set_with_dom_without_fn_prefix_body`] 同形，但形参/dom/ret 均为**用户符**，不做 `__` mangling（供 `have fn` 等语句 AST）。
+    pub fn parse_fn_set_with_dom_without_fn_prefix_user_ast(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<FnSet, RuntimeError> {
+    ) -> Result<HaveFnFnSetClause, RuntimeError> {
+        self.push_parsing_time_name_scope();
+        let clause = self.parse_fn_set_with_dom_without_fn_prefix_user_ast_body(tb);
+        self.pop_parsing_time_name_scope();
+        clause
+    }
+
+    // 和 parse_fn_set的唯一区别：形式参数没有前面加前缀
+    fn parse_fn_set_with_dom_without_fn_prefix_user_ast_body(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<HaveFnFnSetClause, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
         loop {
@@ -159,6 +172,20 @@ impl Runtime {
                 tb.skip_token(COMMA)?;
                 current_params.push(tb.advance()?);
             }
+
+            self.register_collected_param_names_for_def_parse(
+                &current_params,
+                tb.line_file.clone(),
+            )?;
+
+            // 这是必要的，以免作为 obj_set 出现的 set_builder里有未注册的形参。
+            self.register_collected_param_names_for_def_parse(
+                &current_params
+                    .iter()
+                    .map(|p| format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p))
+                    .collect(),
+                tb.line_file.clone(),
+            )?;
 
             let set = self.parse_obj(tb)?;
             params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
@@ -180,10 +207,86 @@ impl Runtime {
             }
         }
 
-        let fn_set_param_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
+        let mut dom_facts_user = vec![];
+        if tb.current_token_is_equal_to(COLON) {
+            tb.skip_token(COLON)?;
+            dom_facts_user.push(self.parse_or_and_chain_atomic_fact(tb)?);
+            while tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+                dom_facts_user.push(self.parse_or_and_chain_atomic_fact(tb)?);
+            }
+        }
 
-        let (new_param_names, param_arg_map) =
-            self.register_mangled_fn_param_binding(&fn_set_param_names, tb.line_file.clone())?;
+        tb.skip_token(RIGHT_BRACE)?;
+        let ret_set = self.parse_obj(tb)?;
+        Ok(HaveFnFnSetClause {
+            params_def_with_set,
+            dom_facts: dom_facts_user,
+            ret_set,
+        })
+    }
+
+    fn parse_fn_set_with_dom_without_fn_prefix_body(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<FnSet, RuntimeError> {
+        tb.skip_token(LEFT_BRACE)?;
+        let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
+        loop {
+            let param = tb.advance()?;
+            let mut current_params = vec![param];
+
+            while tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+                current_params.push(tb.advance()?);
+            }
+
+            let set = self.parse_obj(tb)?;
+
+            let mut params_with_prefix = vec![];
+            for p in current_params.clone().iter() {
+                params_with_prefix.push(format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p));
+            }
+
+            self.register_collected_param_names_for_def_parse(
+                &params_with_prefix,
+                tb.line_file.clone(),
+            )?;
+
+            params_def_with_set.push(ParamGroupWithSet::new(params_with_prefix, set));
+
+            if tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+                continue;
+            } else if tb.current_token_is_equal_to(COLON) {
+                break;
+            } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
+                break;
+            } else {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "Expected comma or colon".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
+            }
+        }
+
+        let mut param_arg_map = HashMap::new();
+        let mut new_param_names = vec![];
+        for param in params_def_with_set.iter() {
+            for p in param.params.iter() {
+                param_arg_map.insert(
+                    p.clone(),
+                    Obj::Identifier(Identifier::new(format!(
+                        "{}{}",
+                        DEFAULT_MANGLED_FN_PARAM_PREFIX, p
+                    ))),
+                );
+                new_param_names.push(format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p));
+            }
+        }
 
         let mut dom_facts = vec![];
         if tb.current_token_is_equal_to(COLON) {
@@ -199,27 +302,9 @@ impl Runtime {
             }
         }
 
-        let mut flat_stored_idx: usize = 0;
-        let new_def_with_set: Vec<ParamGroupWithSet> = params_def_with_set
-            .iter()
-            .map(|param_group| {
-                let new_params: Vec<String> = param_group
-                    .params
-                    .iter()
-                    .map(|_| {
-                        let s = new_param_names[flat_stored_idx].clone();
-                        flat_stored_idx += 1;
-                        s
-                    })
-                    .collect();
-                ParamGroupWithSet::new(new_params, param_group.set.clone())
-            })
-            .collect();
-
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set_parsed = self.parse_obj(tb)?;
-        let ret_set = self.inst_obj(&ret_set_parsed, &param_arg_map)?;
-        Ok(FnSet::new(new_def_with_set, dom_facts, ret_set))
+        Ok(FnSet::new(params_def_with_set, dom_facts, ret_set_parsed))
     }
 
     pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(

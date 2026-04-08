@@ -842,13 +842,7 @@ impl fmt::Display for FnSet {
         let params_with_sets_display: Vec<String> = self
             .params_def_with_set
             .iter()
-            .map(|g| {
-                format!(
-                    "{} {}",
-                    vec_to_string_join_by_comma(&g.params),
-                    g.set
-                )
-            })
+            .map(|g| format!("{} {}", vec_to_string_join_by_comma(&g.params), g.set))
             .collect();
         write!(
             f,
