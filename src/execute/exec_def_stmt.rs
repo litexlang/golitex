@@ -525,6 +525,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
+
         infer_result.new_infer_result_inside(forall_infer_result);
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
@@ -565,11 +566,7 @@ impl Runtime {
                 )
             })?;
 
-        for param_def_with_set in have_fn_equal_stmt
-            .fn_set_clause
-            .params_def_with_set
-            .iter()
-        {
+        for param_def_with_set in have_fn_equal_stmt.fn_set_clause.params_def_with_set.iter() {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
@@ -645,15 +642,18 @@ impl Runtime {
                 )
             })?;
 
-        self.verify_have_fn_equal_case_by_case_stmt(have_fn_equal_case_by_case_stmt, &fn_set_stored)
-            .map_err(|e| {
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
-                    "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
-                    Some(e.into()),
-                    vec![],
-                )
-            })?;
+        self.verify_have_fn_equal_case_by_case_stmt(
+            have_fn_equal_case_by_case_stmt,
+            &fn_set_stored,
+        )
+        .map_err(|e| {
+            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
+                Some(e.into()),
+                vec![],
+            )
+        })?;
 
         let infer_result =
             self.store_have_fn_equal_case_by_case(have_fn_equal_case_by_case_stmt, &fn_set_stored)?;
@@ -880,7 +880,10 @@ impl Runtime {
 
         let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
             equal_to.clone(),
-            have_fn_equal_case_by_case_stmt.fn_set_clause.ret_set.clone(),
+            have_fn_equal_case_by_case_stmt
+                .fn_set_clause
+                .ret_set
+                .clone(),
             have_fn_equal_case_by_case_stmt.line_file.clone(),
         ));
         let verify_result = self

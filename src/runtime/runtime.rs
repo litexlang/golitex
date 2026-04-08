@@ -186,6 +186,15 @@ impl Runtime {
         (line, path): LineFile,
     ) -> Result<(), RuntimeError> {
         self.validate_name(name, (line, path.clone()))?;
+        self.register_name_into_name_scope(name, (line, path.clone()))?;
+        Ok(())
+    }
+
+    pub fn register_name_into_name_scope(
+        &mut self,
+        name: &str,
+        (line, path): LineFile,
+    ) -> Result<(), RuntimeError> {
         if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
             names_in_top_scope.insert(name.to_string(), (line, path.clone()));
         }

@@ -99,7 +99,10 @@ impl Runtime {
         let env = self.top_level_env();
         env.known_objs_in_fn_sets
             .insert(key, fn_set_with_dom.clone());
-        Ok(InferResult::new())
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())));
+        Ok(infer_result)
     }
 
     /// [`InFact`] 右侧为内涵集时：推出 `element ∈ param_set` 及实例化后的约束事实。
