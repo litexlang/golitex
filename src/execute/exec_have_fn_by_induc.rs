@@ -260,7 +260,10 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
-        let fs = stmt.fn_set_with_mangled_param();
+        let fs = self.fn_set_for_storage_from_have_fn_clause(
+            &stmt.fn_user_fn_set_clause(),
+            stmt.line_file.clone(),
+        )?;
 
         let bind_infer = self.define_parameter_by_binding_param_type(
             &stmt.name,

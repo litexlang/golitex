@@ -1,7 +1,70 @@
+use crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
+use crate::common::is_valid_litex_name::is_valid_litex_name;
+use crate::common::mangled_fn_param::mangled_fn_param_binding;
 use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    /// 在 [`mangled_fn_param_binding`] 之后：把用户符形参表 + 用户符 dom/ret 换成存储形参并 [`FnSet::new`]。
+    pub(crate) fn fn_set_from_user_param_ast_after_binding(
+        &self,
+        params_def_with_user: Vec<ParamGroupWithSet>,
+        new_param_names: &[String],
+        param_arg_map: &HashMap<String, Obj>,
+        dom_facts_user: Vec<OrAndChainAtomicFact>,
+        ret_set_user: Obj,
+    ) -> Result<FnSet, RuntimeError> {
+        let mut flat_stored_idx: usize = 0;
+        let new_def_with_set: Vec<ParamGroupWithSet> = params_def_with_user
+            .iter()
+            .map(|param_group| {
+                let new_params: Vec<String> = param_group
+                    .params
+                    .iter()
+                    .map(|_| {
+                        let s = new_param_names[flat_stored_idx].clone();
+                        flat_stored_idx += 1;
+                        s
+                    })
+                    .collect();
+                ParamGroupWithSet::new(new_params, param_group.set.clone())
+            })
+            .collect();
+        let mut dom_facts = vec![];
+        for d in dom_facts_user {
+            dom_facts.push(self.inst_or_and_chain_atomic_fact(&d, param_arg_map)?);
+        }
+        let ret_set = self.inst_obj(&ret_set_user, param_arg_map)?;
+        Ok(FnSet::new(new_def_with_set, dom_facts, ret_set))
+    }
+
+    /// 用户符 `fn` 形参 + dom/ret → 存储用 [`FnSet`]（`__` 形参）；不登记 parse 期 mangled 名。
+    pub fn fn_set_for_storage_from_have_fn_clause(
+        &self,
+        clause: &HaveFnFnSetClause,
+        line_file: LineFile,
+    ) -> Result<FnSet, RuntimeError> {
+        let names = ParamGroupWithSet::collect_param_names(&clause.params_def_with_set);
+        for name in &names {
+            if let Err(e) = is_valid_litex_name(name) {
+                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    e,
+                    line_file.clone(),
+                    None,
+                ));
+            }
+        }
+        let (new_param_names, param_arg_map) =
+            mangled_fn_param_binding(&names, DEFAULT_MANGLED_FN_PARAM_PREFIX);
+        self.fn_set_from_user_param_ast_after_binding(
+            clause.params_def_with_set.clone(),
+            &new_param_names,
+            &param_arg_map,
+            clause.dom_facts.clone(),
+            clause.ret_set.clone(),
+        )
+    }
+
     pub fn inst_fact(
         &self,
         fact: &Fact,

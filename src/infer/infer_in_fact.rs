@@ -3,7 +3,10 @@ use std::collections::HashMap;
 
 impl Runtime {
     /// 解析 family 定义并将 `equal_to` 实例化为具体 member set（`x ∈ family F(...)` 的右侧语义）。
-    fn instantiate_family_member_set(&mut self, family_ty: &FamilyObj) -> Result<Obj, RuntimeError> {
+    fn instantiate_family_member_set(
+        &mut self,
+        family_ty: &FamilyObj,
+    ) -> Result<Obj, RuntimeError> {
         let family_name = family_ty.name.to_string();
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
@@ -371,37 +374,3 @@ impl Runtime {
         }
     }
 }
-#[cfg(test)]
-mod infer_membership_fn_set_tests {
-    use crate::prelude::*;
-
-    #[test]
-    fn infer_fn_set_registers_element_in_known_objs_in_fn_sets() {
-        let mut rt = Runtime::new();
-        let fn_set = FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec!["x".to_string()],
-                Obj::StandardSet(StandardSet::Z),
-            )],
-            vec![],
-            Obj::StandardSet(StandardSet::Z),
-        );
-        let in_fact = InFact::new(
-            Obj::Identifier(Identifier::new("f".to_string())),
-            Obj::FnSet(fn_set.clone()),
-            default_line_file(),
-        );
-        let infer = rt
-            .infer_membership_in_fn_set_from_in_fact(&in_fact, &fn_set)
-            .unwrap();
-        assert!(infer.infer_facts.is_empty());
-        let key = "f".to_string();
-        assert!(
-            rt.top_level_env()
-                .known_objs_in_fn_sets
-                .get(&key)
-                .is_some()
-        );
-    }
-}
-

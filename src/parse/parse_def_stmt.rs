@@ -180,7 +180,7 @@ impl Runtime {
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
-            let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
+            let fs = self.parse_fn_set_with_dom_without_fn_prefix_user_ast(tb)?;
 
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;

@@ -128,6 +128,7 @@ pub use crate::stmt::definition_stmt::HaveFnByInducNestedCase;
 pub use crate::stmt::definition_stmt::HaveFnByInducStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualStmt;
+pub use crate::stmt::definition_stmt::HaveFnFnSetClause;
 pub use crate::stmt::definition_stmt::HaveObjEqualStmt;
 pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
