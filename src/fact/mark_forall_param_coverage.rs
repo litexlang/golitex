@@ -436,7 +436,7 @@ fn mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
 }
 
 impl ForallFact {
-    pub fn error_messages_if_forall_param_missing_in_some_then_clause(&self) -> Vec<String> {
+    pub fn error_messages_if_forall_param_missing_in_some_then_clause(&self) -> Vec<(usize, String)> {
         let forall_param_names =
             ParamGroupWithParamType::collect_param_names(&self.params_def_with_type);
         if forall_param_names.is_empty() {
@@ -466,9 +466,12 @@ impl ForallFact {
             }
             if !missing_param_names.is_empty() {
                 let missing_list = missing_param_names.join(", ");
-                error_messages.push(format!(
-                    "then-clause `{}` does not mention forall parameter(s) {{{}}}",
-                    then_fact, missing_list,
+                error_messages.push((
+                    then_index,
+                    format!(
+                        "then-clause `{}` does not mention forall parameter(s) {{{}}}",
+                        then_fact, missing_list,
+                    ),
                 ));
             }
             then_index += 1;
@@ -478,45 +481,9 @@ impl ForallFact {
 }
 
 impl ForallFactWithIff {
-    pub fn error_messages_if_forall_param_missing_in_then_or_iff_clause(&self) -> Vec<String> {
-        let mut error_messages = self
-            .forall_fact
-            .error_messages_if_forall_param_missing_in_some_then_clause();
-        let forall_param_names =
-            ParamGroupWithParamType::collect_param_names(&self.forall_fact.params_def_with_type);
-        if forall_param_names.is_empty() {
-            return error_messages;
-        }
-        let mut iff_index: usize = 0;
-        while iff_index < self.iff_facts.len() {
-            let iff_fact = &self.iff_facts[iff_index];
-            let mut coverage_by_forall_param: HashMap<IdentifierName, bool> = HashMap::new();
-            for param_name in forall_param_names.iter() {
-                coverage_by_forall_param.insert(param_name.clone(), false);
-            }
-            mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
-                iff_fact,
-                &mut coverage_by_forall_param,
-            );
-            let mut missing_param_names = Vec::new();
-            for param_name in forall_param_names.iter() {
-                let is_mentioned_in_iff_clause = match coverage_by_forall_param.get(param_name) {
-                    Some(flag) => *flag,
-                    None => false,
-                };
-                if !is_mentioned_in_iff_clause {
-                    missing_param_names.push(param_name.clone());
-                }
-            }
-            if !missing_param_names.is_empty() {
-                let missing_list = missing_param_names.join(", ");
-                error_messages.push(format!(
-                    "iff-clause `{}` does not mention forall parameter(s) {{{}}}",
-                    iff_fact, missing_list,
-                ));
-            }
-            iff_index += 1;
-        }
-        error_messages
+    /// Only checks the embedded [`ForallFact`]'s `then_facts` (not `iff_facts`).
+    pub fn error_messages_if_forall_param_missing_in_forall_then_clause(&self) -> Vec<(usize, String)> {
+        self.forall_fact
+            .error_messages_if_forall_param_missing_in_some_then_clause()
     }
 }
