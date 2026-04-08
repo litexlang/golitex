@@ -344,6 +344,27 @@ impl Runtime {
                     power_set,
                     verify_state,
                 ),
+            (Obj::Choose(choose), where_is_obj) => {
+                let choose_from = choose.set.clone();
+                let equal_fact = AtomicFact::EqualFact(EqualFact::new(
+                    *choose_from,
+                    where_is_obj.clone(),
+                    in_fact.line_file.clone(),
+                ));
+                let equal_fact_verify_result =
+                    self.verify_atomic_fact(&equal_fact, verify_state)?;
+                if equal_fact_verify_result.is_true() {
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                            "By ZFC, we can choose an element from a set whose elements are all nonempty.".to_string(),
+                            Vec::new(),
+                        ),
+                    ));
+                } else {
+                    return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                }
+            }
             (_, Obj::ListSet(list_set)) => self.verify_in_fact_by_equal_to_one_element_in_list_set(
                 in_fact,
                 list_set,
