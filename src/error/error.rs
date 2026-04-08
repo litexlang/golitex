@@ -137,6 +137,23 @@ impl RuntimeErrorStruct {
 impl std::error::Error for RuntimeError {}
 
 impl RuntimeError {
+    pub fn into_struct(self) -> RuntimeErrorStruct {
+        match self {
+            RuntimeError::ArithmeticError(s) => s,
+            RuntimeError::NewAtomicFactError(s) => s,
+            RuntimeError::StoreFactError(s) => s,
+            RuntimeError::ParseError(s) => s,
+            RuntimeError::ExecStmtError(s) => s,
+            RuntimeError::WellDefinedError(s) => s,
+            RuntimeError::VerifyError(s) => s,
+            RuntimeError::UnknownError(s) => s,
+            RuntimeError::InferError(s) => s,
+            RuntimeError::NameAlreadyUsedError(s) => s,
+            RuntimeError::DefineParamsError(s) => s,
+            RuntimeError::InstantiateError(s) => s,
+        }
+    }
+
     pub fn line_file(&self) -> LineFile {
         match self {
             RuntimeError::ArithmeticError(e) => e.line_file.clone(),

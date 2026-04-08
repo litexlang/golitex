@@ -44,7 +44,7 @@ impl Runtime {
         ))
     }
 
-    // have fn by induc from 0: f(x Z: x >= 0) R
+    // have fn by induc from 0: f(x Z: x >= 0) R: case 0: … case 1: …
     /// 先按 `stmt.fn_set` 声明归纳参数 `param_name`，再登记 `stmt.name` 属于一个形式参数为**新生成名字**的 `FnSet`，
     /// 其定义域满足 `random_param < param_name` 且 `random_param >= param_name - len(special_cases)`（与特例下标区间一致）。
     fn have_fn_by_induc_verify_last_case_register_fn(
@@ -81,7 +81,7 @@ impl Runtime {
                 Obj::StandardSet(StandardSet::Z),
             )],
             dom_facts,
-            stmt.fn_set.ret_set.as_ref().clone(),
+            stmt.ret_set.clone(),
         );
 
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
@@ -107,7 +107,7 @@ impl Runtime {
 
         let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
             equal_to.clone(),
-            stmt.fn_set.ret_set.as_ref().clone(),
+            stmt.ret_set.clone(),
             stmt.line_file.clone(),
         ));
         let verify_result = self
@@ -119,7 +119,7 @@ impl Runtime {
                     Stmt::HaveFnByInducStmt(stmt.clone()),
                     format!(
                         "have_fn_by_induc: {} is not in return set {}",
-                        equal_to, stmt.fn_set.ret_set
+                        equal_to, stmt.ret_set
                     ),
                     None,
                     vec![],
@@ -129,9 +129,9 @@ impl Runtime {
         Ok(())
     }
 
-    // have fn by induc from 0: f(x Z: x > = 0) R:
-    // case x = 0: 1
-    // case x = 1: 2
+    // have fn by induc from 0: f(x Z: x >= 0) R:
+    // case 0: 1
+    // case 1: 2
     // case x >= 2:
     //      case x % 2 = 0: f(x - 1)
     //      case x % 2 = 2: f(x - 1) + f(x - 2)
@@ -143,7 +143,7 @@ impl Runtime {
         let n = stmt.special_cases_equal_tos.len();
         let line_file = stmt.line_file.clone();
 
-        let param_name_str = stmt.fn_set.get_params()[0].clone();
+        let param_name_str = stmt.mangled_param_name();
         let left_id = Obj::Identifier(Identifier::new(param_name_str.clone()));
         let param_larger_than_induc_plus_offset =
             AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
@@ -224,11 +224,12 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
 
-        // 定义函数：stmt.name 是 符合 fn_set 的
-        self.define_parameter_by_binding_param_type(
-            &stmt.name,
-            &ParamType::Obj(Obj::FnSet(stmt.fn_set.clone())),
-        )?;
+        infer_result.new_infer_result_inside(
+            self.define_parameter_by_binding_param_type(
+                &stmt.name,
+                &ParamType::Obj(Obj::FnSet(stmt.fn_set_with_mangled_param())),
+            )?,
+        );
 
         // 遍历所有special case，让 stmt.name(induc_from + i) = equal_to[i]
         for i in 0..stmt.special_cases_equal_tos.len() {
@@ -263,14 +264,14 @@ impl Runtime {
 
         match &stmt.last_case {
             HaveFnByInducLastCase::EqualTo(eq) => {
-                let param_name = stmt.fn_set.get_params()[0].clone();
+                let fs = stmt.fn_set_with_mangled_param();
+                let param_name = stmt.mangled_param_name();
                 let param_def = vec![ParamGroupWithParamType::new(
                     vec![param_name.clone()],
                     ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
                 )];
 
-                let mut dom: Vec<ExistOrAndChainAtomicFact> = stmt
-                    .fn_set
+                let mut dom: Vec<ExistOrAndChainAtomicFact> = fs
                     .dom_facts
                     .clone()
                     .into_iter()
@@ -317,16 +318,16 @@ impl Runtime {
                 infer_result.new_infer_result_inside(result);
             }
             HaveFnByInducLastCase::NestedCases(last_pairs) => {
+                let fs = stmt.fn_set_with_mangled_param();
                 for nested in last_pairs.iter() {
-                    let param_name = stmt.fn_set.get_params()[0].clone();
+                    let param_name = stmt.mangled_param_name();
                     let param_def = vec![ParamGroupWithParamType::new(
                         vec![param_name.clone()],
                         ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
                     )];
                     let eq = nested.equal_to.clone();
 
-                    let mut dom: Vec<ExistOrAndChainAtomicFact> = stmt
-                        .fn_set
+                    let mut dom: Vec<ExistOrAndChainAtomicFact> = fs
                         .dom_facts
                         .clone()
                         .into_iter()
