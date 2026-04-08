@@ -1,56 +1,15 @@
 use crate::prelude::*;
 use crate::verify::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-/// `fn(x N_pos) R` 与 `fn(y N_pos) R`：将两侧形参名统一为 `##0`, `##1`, …，对 `params_def_with_set` / `dom_facts` / `ret_set` 做代入后比较 `Display`。
-fn fn_set_with_params_equal_modulo_param_rename(
-    runtime: &Runtime,
-    a: &FnSet,
-    b: &FnSet,
-) -> Result<bool, RuntimeError> {
-    let pa = a.get_params();
-    let pb = b.get_params();
-    if pa.len() != pb.len() {
-        return Ok(false);
-    }
-
-    let mut pa_map = HashMap::new();
-    let mut pb_map = HashMap::new();
-    for i in 0..pa.len() {
-        let ph = format!("##{}", i);
-        pa_map.insert(pa[i].clone(), Obj::Identifier(Identifier::new(ph.clone())));
-        pb_map.insert(pb[i].clone(), Obj::Identifier(Identifier::new(ph)));
-    }
-
-    let a_params = param_def_with_set_rename_params_to_placeholders(&a.params_def_with_set, &pa);
-    let b_params = param_def_with_set_rename_params_to_placeholders(&b.params_def_with_set, &pb);
-
-    let a_dom: Vec<OrAndChainAtomicFact> = a
-        .dom_facts
-        .iter()
-        .map(|dom_fact| runtime.inst_or_and_chain_atomic_fact(dom_fact, &pa_map))
-        .collect::<Result<Vec<_>, _>>()?;
-    let b_dom: Vec<OrAndChainAtomicFact> = b
-        .dom_facts
-        .iter()
-        .map(|dom_fact| runtime.inst_or_and_chain_atomic_fact(dom_fact, &pb_map))
-        .collect::<Result<Vec<_>, _>>()?;
-
-    let a_ret = a.ret_set.as_ref().clone();
-    let b_ret = b.ret_set.as_ref().clone();
-
-    let a_instantiated = FnSet::new(a_params, a_dom, a_ret);
-    let b_instantiated = FnSet::new(b_params, b_dom, b_ret);
-
-    Ok(a_instantiated.to_string() == b_instantiated.to_string())
-}
-
-fn param_def_with_set_rename_params_to_placeholders(
+/// 按 `flat_original` 与 `mangled_by_index` 把各组形参换成同一套存储名（与 [`FnSet::get_params`] 展平顺序一致）。
+fn param_def_with_set_rename_to_mangled(
     groups: &[ParamGroupWithSet],
-    flat_param_names: &[String],
+    flat_original: &[String],
+    mangled_by_index: &[String],
 ) -> Vec<ParamGroupWithSet> {
     let mut name_to_i: HashMap<String, usize> = HashMap::new();
-    for (i, n) in flat_param_names.iter().enumerate() {
+    for (i, n) in flat_original.iter().enumerate() {
         name_to_i.insert(n.clone(), i);
     }
     let mut out = Vec::with_capacity(groups.len());
@@ -60,11 +19,10 @@ fn param_def_with_set_rename_params_to_placeholders(
             .iter()
             .map(|n| {
                 let i = name_to_i[n];
-                format!("##{}", i)
+                mangled_by_index[i].clone()
             })
             .collect();
-        let set_obj = g.set.clone();
-        out.push(ParamGroupWithSet::new(new_names, set_obj));
+        out.push(ParamGroupWithSet::new(new_names, g.set.clone()));
     }
     out
 }
@@ -652,6 +610,66 @@ impl Runtime {
         }
     }
 
+    /// `fn(x N_pos) R` 与 `fn(y N_pos) R`：为每维生成随机基名并加 `__` 前缀，两侧代入同一套存储名后对 `params` / `dom` / `ret` 比较 `Display`。
+    fn fn_set_with_params_equal_modulo_param_rename(
+        &self,
+        a: &FnSet,
+        b: &FnSet,
+    ) -> Result<bool, RuntimeError> {
+        let pa = a.get_params();
+        let pb = b.get_params();
+        if pa.len() != pb.len() {
+            return Ok(false);
+        }
+        let n = pa.len();
+
+        let mut reserved: HashSet<String> = HashSet::new();
+        for s in pa.iter().chain(pb.iter()) {
+            reserved.insert(s.clone());
+        }
+
+        let mut mangled_placeholders: Vec<String> = Vec::with_capacity(n);
+        for _ in 0..n {
+            let base = self.generate_one_unused_name_with_reserved(&reserved);
+            reserved.insert(base.clone());
+            mangled_placeholders.push(format!(
+                "{}{}",
+                DEFAULT_MANGLED_FN_PARAM_PREFIX,
+                base
+            ));
+        }
+
+        let mut pa_map = HashMap::new();
+        let mut pb_map = HashMap::new();
+        for i in 0..n {
+            let ph = mangled_placeholders[i].clone();
+            pa_map.insert(pa[i].clone(), Obj::Identifier(Identifier::new(ph.clone())));
+            pb_map.insert(pb[i].clone(), Obj::Identifier(Identifier::new(ph)));
+        }
+
+        let a_params = param_def_with_set_rename_to_mangled(&a.params_def_with_set, &pa, &mangled_placeholders);
+        let b_params = param_def_with_set_rename_to_mangled(&b.params_def_with_set, &pb, &mangled_placeholders);
+
+        let a_dom: Vec<OrAndChainAtomicFact> = a
+            .dom_facts
+            .iter()
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map))
+            .collect::<Result<Vec<_>, _>>()?;
+        let b_dom: Vec<OrAndChainAtomicFact> = b
+            .dom_facts
+            .iter()
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let a_ret = a.ret_set.as_ref().clone();
+        let b_ret = b.ret_set.as_ref().clone();
+
+        let a_instantiated = FnSet::new(a_params, a_dom, a_ret);
+        let b_instantiated = FnSet::new(b_params, b_dom, b_ret);
+
+        Ok(a_instantiated.to_string() == b_instantiated.to_string())
+    }
+
     /// 若环境中已有 `identifier $in fn_定义`（由先前推断写入 `known_obj_in_fn_set`），则与当前 `fn ...` 右侧做 α-等价比较。
     fn verify_in_fact_identifier_in_fn_set_by_stored_definition(
         &mut self,
@@ -663,7 +681,7 @@ impl Runtime {
         let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(&element_obj) else {
             return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
         };
-        if fn_set_with_params_equal_modulo_param_rename(self, &stored_fn_set, expected_fn_set)
+        if self.fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
             .map_err(|e| {
                 RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
