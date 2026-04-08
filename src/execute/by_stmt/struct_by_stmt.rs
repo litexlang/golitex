@@ -5,25 +5,27 @@ impl Runtime {
     /// 将实例化后的字段 [`ParamType`] 转为可出现在 `cart(...)` 中的 [`Obj`]（与 `$in` 右端一致）。
     fn param_type_to_cart_dimension_obj(&self, pt: &ParamType) -> Result<Obj, RuntimeError> {
         match pt {
-            ParamType::Obj(o) => Ok(o.clone()),
-            ParamType::Family(family_ty) => {
-                let family_name = family_ty.name.to_string();
-                let def = self
-                    .get_cloned_family_definition_by_name(&family_name)
-                    .ok_or_else(|| {
-                        RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-                            format!("family `{}` is not defined", family_name),
-                            default_line_file(),
-                            None,
-                            None,
-                        )
-                    })?;
-                let map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-                    &def.params_def_with_type,
-                    &family_ty.params,
-                );
-                self.inst_obj(&def.equal_to, &map)
-            }
+            ParamType::Obj(o) => match o {
+                Obj::FamilyObj(family_ty) => {
+                    let family_name = family_ty.name.to_string();
+                    let def = self
+                        .get_cloned_family_definition_by_name(&family_name)
+                        .ok_or_else(|| {
+                            RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                                format!("family `{}` is not defined", family_name),
+                                default_line_file(),
+                                None,
+                                None,
+                            )
+                        })?;
+                    let map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
+                        &def.params_def_with_type,
+                        &family_ty.params,
+                    );
+                    self.inst_obj(&def.equal_to, &map)
+                }
+                _ => Ok(o.clone()),
+            },
             ParamType::Struct(_)
             | ParamType::Set(_)
             | ParamType::NonemptySet(_)

@@ -5,13 +5,30 @@ use crate::{
 use std::fmt;
 
 #[derive(Clone)]
+pub struct HaveFnByInducNestedCase {
+    pub case_fact: AndChainAtomicFact,
+    pub equal_to: Obj,
+}
+
+#[derive(Clone)]
+pub enum HaveFnByInducLastCase {
+    EqualTo(Obj),
+    NestedCases(Vec<HaveFnByInducNestedCase>),
+}
+
+// have fn by induc from 0: f(x Z: x >= 0) R:
+//     case x = 0: 1
+//     case x = 1: 1
+//     case x >= 2:
+//         case x % 2 = 0: f(x / 2)
+//         case x % 2 = 1: f(x / 2) + f(x / 2 + 1)
+#[derive(Clone)]
 pub struct HaveFnByInducStmt {
     pub induc_from: Obj,
     pub name: String,
     pub fn_set: FnSet,
     pub special_cases_equal_tos: Vec<Obj>,
-    pub last_case_equal_to: Option<Obj>,
-    pub last_case_cases: Option<Vec<(AndChainAtomicFact, Obj)>>,
+    pub last_case: HaveFnByInducLastCase,
     pub line_file: LineFile,
 }
 
@@ -472,8 +489,7 @@ impl HaveFnByInducStmt {
         fn_set_with_params: FnSet,
         induc_from: Obj,
         special_cases_equal_tos: Vec<Obj>,
-        last_case_equal_to: Option<Obj>,
-        last_case_cases: Option<Vec<(AndChainAtomicFact, Obj)>>,
+        last_case: HaveFnByInducLastCase,
         line_file: LineFile,
     ) -> Self {
         HaveFnByInducStmt {
@@ -481,8 +497,7 @@ impl HaveFnByInducStmt {
             fn_set: fn_set_with_params,
             induc_from,
             special_cases_equal_tos,
-            last_case_equal_to,
-            last_case_cases,
+            last_case,
             line_file,
         }
     }
@@ -509,23 +524,21 @@ impl HaveFnByInducStmt {
             induc_obj_plus_offset(&self.induc_from, n),
             line_file.clone(),
         )));
-        match (&self.last_case_equal_to, &self.last_case_cases) {
-            (Some(eq), None) => {
+        match &self.last_case {
+            HaveFnByInducLastCase::EqualTo(eq) => {
                 cases.push(step);
                 equal_tos.push(eq.clone());
             }
-            (None, Some(last_pairs)) => {
-                for (when, eq_to) in last_pairs {
-                    let merged =
-                        merge_two_and_chain_clauses(step.clone(), when.clone(), line_file.clone());
+            HaveFnByInducLastCase::NestedCases(last_pairs) => {
+                for nested in last_pairs {
+                    let merged = merge_two_and_chain_clauses(
+                        step.clone(),
+                        nested.case_fact.clone(),
+                        line_file.clone(),
+                    );
                     cases.push(merged);
-                    equal_tos.push(eq_to.clone());
+                    equal_tos.push(nested.equal_to.clone());
                 }
-            }
-            (None, None) | (Some(_), Some(_)) => {
-                unreachable!(
-                    "HaveFnByInducStmt: last case must be either `: obj` or nested `case` blocks, not both or neither"
-                );
             }
         }
         HaveFnEqualCaseByCaseStmt::new(

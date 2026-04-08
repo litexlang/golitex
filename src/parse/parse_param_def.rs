@@ -43,10 +43,6 @@ impl Runtime {
                 tb.skip_token(SET)?;
                 Ok(StructFieldType::Set(Set::new()))
             }
-            FAMILY => {
-                let family = self.parse_family_obj(tb)?;
-                Ok(StructFieldType::Family(family.into()))
-            }
             STRUCT => Err(
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
                     "nested `struct` types are not allowed in struct parameter and field types"
@@ -93,7 +89,7 @@ impl Runtime {
             SET => self.parse_param_type_set(tb),
             FAMILY => self
                 .parse_family_obj(tb)
-                .map(|f| ParamType::Family(f.into())),
+                .map(|f| ParamType::Obj(Obj::FamilyObj(f))),
             STRUCT => self
                 .parse_struct_obj(tb)
                 .map(|s| ParamType::Struct(s.into())),
