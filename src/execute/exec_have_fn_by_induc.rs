@@ -157,7 +157,7 @@ impl Runtime {
                 Obj::Identifier(Identifier::new(param_name_str.to_string())),
                 Obj::Number(Number::new(i.to_string())),
             ));
-            self.store_cache(&param_name)
+            self.store_well_defined_obj_cache(&param_name)
         }
 
         self.have_fn_by_induc_verify_last_case_register_fn(stmt, &param_name_str)?;
@@ -214,11 +214,41 @@ impl Runtime {
 
     fn exec_have_fn_by_induc_store_process(
         &mut self,
-        _stmt: &HaveFnByInducStmt,
+        stmt: &HaveFnByInducStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         // 定义函数：stmt.name 是 符合 fn_set 的
+        self.define_parameter_by_binding_param_type(
+            &stmt.name,
+            &ParamType::Obj(Obj::FnSet(stmt.fn_set.clone())),
+        )?;
 
         // 遍历所有special case，让 stmt.name(induc_from + i) = equal_to[i]
+        for i in 0..stmt.special_cases_equal_tos.len() {
+            let arg = if i == 0 {
+                stmt.induc_from.clone()
+            } else {
+                Obj::Add(Add::new(
+                    stmt.induc_from.clone(),
+                    Obj::Number(Number::new(i.to_string())),
+                ))
+            };
+
+            let equal_to = &stmt.special_cases_equal_tos[i];
+
+            let fn_obj = Obj::FnObj(FnObj {
+                head: Box::new(Atom::Identifier(Identifier::new(stmt.name.clone()))),
+                body: vec![vec![Box::new(arg.clone())]],
+            });
+
+            let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                fn_obj.clone(),
+                equal_to.clone(),
+                stmt.line_file.clone(),
+            )));
+
+            self.store_fact_without_well_defined_verified_and_infer(equal_fact)
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
+        }
 
         // 按你的理解处理last，并解释清楚
 

@@ -76,7 +76,7 @@ impl Runtime {
             }
         }?;
 
-        self.store_cache(obj);
+        self.store_well_defined_obj_cache(obj);
 
         Ok(())
     }
