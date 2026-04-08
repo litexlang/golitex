@@ -81,7 +81,7 @@ pub const CASES: &str = "cases";
 pub const CONTRA: &str = "contra";
 pub const ENUMERATE: &str = "enumerate";
 pub const INDUC: &str = "induc";
-/// 保留名（旧版最后一项 `case` 曾用 `param = param_2 + n`）；当前语法最后一项为 `param >= n`（n 为特例个数），不再登记此名。
+/// 保留名（旧版最后一项 `case` 曾用 `param = param_2 + n`）；当前语法最后一项为 `case >= n:`（n 为特例个数），不再登记此名。
 pub const INDUC_PARAM_2_NAME: &str = "param_2";
 pub const FOR: &str = "for";
 pub const EXTENSION: &str = "extension";
