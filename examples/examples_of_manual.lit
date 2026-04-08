@@ -4,7 +4,7 @@ abstract_prop p_manual1(x)
 abstract_prop q_manual3(x, y, z)
 
 # manual.md — by cases (x -> x_demo: avoid clashing with formal parameter x in by contra abstract_prop p(x,y))
-have fn g(x_demo R) R =:
+have fn g(x_demo R) R :
     case x_demo = 2: 3
     case x_demo != 2: 4
 

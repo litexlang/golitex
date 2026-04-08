@@ -235,10 +235,10 @@ impl Runtime {
             })?;
         infer_result.new_infer_result_inside(param_type_infer);
 
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
+        let param_to_arg_map = self.params_to_arg_map(
             &predicate_definition.params_def_with_type,
             &normal_atomic_fact.body,
-        );
+        )?;
 
         for iff_fact in predicate_definition.iff_facts.iter() {
             let instantiated_iff_fact =

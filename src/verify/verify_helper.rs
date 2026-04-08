@@ -37,10 +37,23 @@ impl Runtime {
             ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(param_set) => {
                 match param_set {
-                    Obj::FnSet(_) | Obj::SetBuilder(_) => Err(
+                    Obj::FnSet(fn_set) => {
+                        let ret_nonempty = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+                            IsNonemptySetFact::new(
+                                fn_set.ret_set.as_ref().clone(),
+                                default_line_file(),
+                            ),
+                        ));
+                        self.verify_fact_well_defined_and_store_and_infer(
+                            ret_nonempty,
+                            &VerifyState::new(2, false),
+                        )?;
+                        Ok(())
+                    }
+                    Obj::SetBuilder(_) => Err(
                         RuntimeErrorStruct::exec_stmt_new(
                             None,
-                            "fn set / set builder param type is not supported yet in verify_param_type_nonempty_if_required"
+                            "set builder param type is not supported yet in verify_param_type_nonempty_if_required"
                                 .to_string(),
                             None,
                             vec![],
