@@ -86,16 +86,16 @@ impl Runtime {
         let forall_arg_cart_set = Obj::Cart(Cart::new(
             forall_param_defs_with_type
                 .iter()
-                .map(|param_def_with_type| match &param_def_with_type.param_type {
-                    ParamType::Obj(obj) => obj.clone(),
-                    _ => unreachable!(),
-                })
+                .map(
+                    |param_def_with_type| match &param_def_with_type.param_type {
+                        ParamType::Obj(obj) => obj.clone(),
+                        _ => unreachable!(),
+                    },
+                )
                 .collect(),
         ));
-        let forall_element_cart_set = Obj::Cart(Cart::new(vec![
-            forall_arg_cart_set,
-            forall_ret_set.clone(),
-        ]));
+        let forall_element_cart_set =
+            Obj::Cart(Cart::new(vec![forall_arg_cart_set, forall_ret_set.clone()]));
         let forall_shape = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![forall_element_name.clone()],
@@ -141,28 +141,27 @@ impl Runtime {
                         Vec::with_capacity(fn_set.dom_facts.len() + 1);
                     for dom_fact in fn_set.dom_facts.iter() {
                         facts.push(
-                            self.inst_or_and_chain_atomic_fact(dom_fact, &original_param_to_forall_obj)
-                                .map_err(|inst_error| {
-                                    RuntimeError::from(
-                                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                            stmt_exec.clone(),
-                                            format!(
-                                                "{}: failed to instantiate generated domain fact",
-                                                context
-                                            ),
-                                            Some(inst_error.into()),
-                                            vec![],
+                            self.inst_or_and_chain_atomic_fact(
+                                dom_fact,
+                                &original_param_to_forall_obj,
+                            )
+                            .map_err(|inst_error| {
+                                RuntimeError::from(
+                                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                                        stmt_exec.clone(),
+                                        format!(
+                                            "{}: failed to instantiate generated domain fact",
+                                            context
                                         ),
-                                    )
-                                })?,
+                                        Some(inst_error.into()),
+                                        vec![],
+                                    ),
+                                )
+                            })?,
                         );
                     }
                     facts.push(OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                        EqualFact::new(
-                            forall_element_obj,
-                            pair_in_fn,
-                            line_file.clone(),
-                        ),
+                        EqualFact::new(forall_element_obj, pair_in_fn, line_file.clone()),
                     )));
                     facts
                 },
@@ -241,11 +240,7 @@ impl Runtime {
                 ParamGroupWithParamType::new(vec![exist_z_name], ParamType::Obj(exist_ret_set)),
             ],
             vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                EqualFact::new(
-                    exist_element_obj,
-                    exist_pair,
-                    line_file.clone(),
-                ),
+                EqualFact::new(exist_element_obj, exist_pair, line_file.clone()),
             ))],
             line_file.clone(),
         );
@@ -295,13 +290,24 @@ impl Runtime {
             unique_arg_cart_set,
             fn_set.ret_set.as_ref().clone(),
         ]));
+        // 与手写标准一致：dom 为两元在图集内且首分量相同，then 仅为 x1 = x2
         let forall_unique = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![unique_x1_name, unique_x2_name],
                 ParamType::Obj(function.clone()),
             )],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                EqualFact::new(
+            vec![
+                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                    unique_x1_obj.clone(),
+                    unique_element_cart_set.clone(),
+                    line_file.clone(),
+                ))),
+                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                    unique_x2_obj.clone(),
+                    unique_element_cart_set.clone(),
+                    line_file.clone(),
+                ))),
+                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                     Obj::ObjAtIndex(ObjAtIndex::new(
                         unique_x1_obj.clone(),
                         Obj::Number(Number::new("1".to_string())),
@@ -311,33 +317,22 @@ impl Runtime {
                         Obj::Number(Number::new("1".to_string())),
                     )),
                     line_file.clone(),
-                ),
-            ))],
-            vec![
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
-                    unique_x1_obj.clone(),
-                    unique_element_cart_set.clone(),
-                    line_file.clone(),
                 ))),
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
-                    unique_x2_obj.clone(),
-                    unique_element_cart_set,
-                    line_file.clone(),
-                ))),
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                    EqualFact::new(unique_x1_obj, unique_x2_obj, line_file.clone()),
-                )),
             ],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(
+                AtomicFact::EqualFact(EqualFact::new(
+                    unique_x1_obj,
+                    unique_x2_obj,
+                    line_file.clone(),
+                )),
+            )],
             line_file.clone(),
         ));
 
         Ok((forall_shape, forall_in, forall_exist, forall_unique))
     }
 
-    pub fn exec_by_fn_stmt(
-        &mut self,
-        stmt: &ByFnStmt,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtExecResult, RuntimeError> {
         let stmt_exec = Stmt::ByFnStmt(stmt.clone());
 
         let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
@@ -357,13 +352,14 @@ impl Runtime {
             }
         };
 
-        let (forall_shape, forall_in, forall_exist, forall_unique) = self.build_fn_characterization_facts(
-            &stmt.function,
-            &fn_set,
-            &stmt.line_file,
-            &stmt_exec,
-            "by fn",
-        )?;
+        let (forall_shape, forall_in, forall_exist, forall_unique) = self
+            .build_fn_characterization_facts(
+                &stmt.function,
+                &fn_set,
+                &stmt.line_file,
+                &stmt_exec,
+                "by fn",
+            )?;
 
         // `store_fact...` on forall facts already feeds the stored fact back through `infer`,
         // so avoid pre-recording the same fact here or JSON `infer_facts` will show duplicates.
@@ -425,13 +421,14 @@ impl Runtime {
         stmt: &ByFnSetStmt,
     ) -> Result<StmtExecResult, RuntimeError> {
         let stmt_exec = Stmt::ByFnSetStmt(stmt.clone());
-        let (forall_shape, forall_in, forall_exist, forall_unique) = self.build_fn_characterization_facts(
-            &stmt.func,
-            &stmt.fn_set,
-            &stmt.line_file,
-            &stmt_exec,
-            "by fn set",
-        )?;
+        let (forall_shape, forall_in, forall_exist, forall_unique) = self
+            .build_fn_characterization_facts(
+                &stmt.func,
+                &stmt.fn_set,
+                &stmt.line_file,
+                &stmt_exec,
+                "by fn set",
+            )?;
 
         let verify_state = VerifyState::new(0, false);
         let verify_shape_fact = self
