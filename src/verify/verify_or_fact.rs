@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::OrFact(or_fact.clone()))
         {
@@ -35,7 +35,7 @@ impl Runtime {
             ) = (&or_fact.facts[0], &or_fact.facts[1])
             {
                 if first_atomic.make_reversed().to_string() == second_atomic.to_string() {
-                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    return Ok(StmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::OrFact(or_fact.clone()),
                             "or: complementary atomic facts (make_reversed first equals second)"
@@ -50,7 +50,7 @@ impl Runtime {
         for fact in or_fact.facts.iter() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
-                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                return Ok(StmtExecResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                         Fact::OrFact(or_fact.clone()),
                         fact.to_string(),
@@ -72,13 +72,13 @@ impl Runtime {
             return Ok(result);
         }
 
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     pub fn verify_or_fact_with_known_or_facts(
         &mut self,
         or_fact: &OrFact,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let args_in_or_fact = or_fact.get_args_from_fact();
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in args_in_or_fact.iter() {
@@ -101,14 +101,14 @@ impl Runtime {
             }
         }
 
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     pub fn verify_or_fact_with_known_or_facts_with_facts_in_environment(
         environment: &Environment,
         or_fact: &OrFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if let Some(known_or_facts) = environment.known_or_facts.get(&or_fact.key()) {
             for known_or_fact in known_or_facts.iter() {
                 let result = Self::_verify_or_fact_the_same_type_and_return_matched_args(
@@ -130,7 +130,7 @@ impl Runtime {
                 }
 
                 if all_args_match {
-                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    return Ok(StmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                             Fact::OrFact(or_fact.clone()),
                             known_or_fact.to_string(),
@@ -143,6 +143,6 @@ impl Runtime {
             }
         }
 
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+        return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
     }
 }

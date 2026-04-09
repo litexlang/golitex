@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::ForallFact(forall_fact.clone()))
         {
@@ -38,7 +38,7 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for param_def in forall_fact.params_def_with_type.iter() {
             let param_infer_result = self
@@ -110,7 +110,7 @@ impl Runtime {
             )?;
 
             match &result {
-                NonErrStmtExecResult::FactualStmtSuccess(factual_verification_result)
+                StmtExecResult::FactualStmtSuccess(factual_verification_result)
                     if factual_verification_result.is_verified_by_builtin_rules_only() =>
                 {
                     then_facts_builtin_verified_by_messages
@@ -118,16 +118,16 @@ impl Runtime {
                     infer_result
                         .new_infer_result_inside(factual_verification_result.infers.clone());
                 }
-                NonErrStmtExecResult::FactualStmtSuccess(factual_verification_result) => {
+                StmtExecResult::FactualStmtSuccess(factual_verification_result) => {
                     all_then_facts_are_verified_by_builtin_rules = false;
                     infer_result
                         .new_infer_result_inside(factual_verification_result.infers.clone());
                 }
-                NonErrStmtExecResult::NonFactualStmtSuccess(non_factual_success) => {
+                StmtExecResult::NonFactualStmtSuccess(non_factual_success) => {
                     all_then_facts_are_verified_by_builtin_rules = false;
                     infer_result.new_infer_result_inside(non_factual_success.infers.clone());
                 }
-                NonErrStmtExecResult::StmtUnknown(_) => {
+                StmtExecResult::StmtUnknown(_) => {
                     unreachable!("stmt unknown is handled above before this match")
                 }
             }
@@ -144,7 +144,7 @@ impl Runtime {
                 )
             };
             infer_result.new_fact(&Fact::ForallFact(forall_fact.clone()));
-            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            return Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::ForallFact(forall_fact.clone()),
                     infer_result,
@@ -155,7 +155,7 @@ impl Runtime {
         }
 
         infer_result.new_fact(&Fact::ForallFact(forall_fact.clone()));
-        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+        Ok(StmtExecResult::FactualStmtSuccess(
             FactualStmtSuccess::new_with_verified_by_known_fact_source(
                 Fact::ForallFact(forall_fact.clone()),
                 infer_result,
@@ -172,7 +172,7 @@ impl Runtime {
         &mut self,
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
             &Fact::ForallFactWithIff(forall_iff.clone()),
         ) {
@@ -225,7 +225,7 @@ impl Runtime {
             return Ok(result2);
         }
 
-        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+        Ok(StmtExecResult::FactualStmtSuccess(
             FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 Fact::ForallFactWithIff(forall_iff.clone()),
                 "forall iff: then=>iff and iff=>then verified".to_string(),

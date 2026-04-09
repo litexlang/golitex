@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_by_enumerate_stmt(
         &mut self,
         stmt: &ByEnumerateStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 Stmt::ByEnumerateStmt(stmt.clone()),
@@ -51,7 +51,7 @@ impl Runtime {
                 &corresponding_forall_fact,
                 infer_result_from_stored_forall_fact,
             );
-            return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            return Ok(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
                     Stmt::ByEnumerateStmt(stmt.clone()),
                     infer_result,
@@ -97,7 +97,7 @@ impl Runtime {
             infer_result_from_stored_forall_fact,
         );
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::ByEnumerateStmt(stmt.clone()),
                 infer_result,
@@ -158,7 +158,7 @@ impl Runtime {
         stmt: &ByEnumerateStmt,
         parameter_index_assignment: &Vec<usize>,
     ) -> Result<(), RuntimeError> {
-        let mut inside_results_before_failure: Vec<NonErrStmtExecResult> = Vec::new();
+        let mut inside_results_before_failure: Vec<StmtExecResult> = Vec::new();
         for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
             let assigned_obj = (*stmt.param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])

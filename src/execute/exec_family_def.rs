@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_def_family_stmt(
         &mut self,
         def_family_stmt: &DefFamilyStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
         let family_definition_infer_result =
             self.def_family_stmt_check_well_defined(def_family_stmt)?;
 
@@ -18,7 +18,7 @@ impl Runtime {
                 )
             })?;
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::DefFamilyStmt(def_family_stmt.clone()),
                 family_definition_infer_result,

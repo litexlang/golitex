@@ -24,7 +24,7 @@ pub struct RuntimeErrorStruct {
     pub conflict_with: Option<ConflictMsg>,
     pub line_file: LineFile,
     pub previous_error: Option<Box<RuntimeError>>,
-    pub inside_results: Vec<NonErrStmtExecResult>,
+    pub inside_results: Vec<StmtExecResult>,
 }
 
 #[derive(Debug, Clone)]
@@ -57,7 +57,7 @@ impl RuntimeErrorStruct {
         line_file: LineFile,
         conflict_with: Option<ConflictMsg>,
         previous_error: Option<RuntimeError>,
-        inside_results: Vec<NonErrStmtExecResult>,
+        inside_results: Vec<StmtExecResult>,
     ) -> Self {
         RuntimeErrorStruct {
             statement,
@@ -77,7 +77,7 @@ impl RuntimeErrorStruct {
         stmt: Option<Stmt>,
         info: String,
         previous_error: Option<RuntimeError>,
-        inside_results: Vec<NonErrStmtExecResult>,
+        inside_results: Vec<StmtExecResult>,
     ) -> Self {
         let line_file = if let Some(ref stmt) = stmt {
             stmt.line_file()
@@ -98,7 +98,7 @@ impl RuntimeErrorStruct {
         stmt: Stmt,
         info: String,
         previous_error: Option<RuntimeError>,
-        inside_results: Vec<NonErrStmtExecResult>,
+        inside_results: Vec<StmtExecResult>,
     ) -> Self {
         let line_file = stmt.line_file();
         RuntimeErrorStruct::new_with_conflict(
@@ -115,7 +115,7 @@ impl RuntimeErrorStruct {
         stmt: Stmt,
         message: String,
         cause: Option<RuntimeError>,
-        inside_results: Vec<NonErrStmtExecResult>,
+        inside_results: Vec<StmtExecResult>,
     ) -> Self {
         let line_file = stmt.line_file();
         let previous_error = if message.is_empty() {
