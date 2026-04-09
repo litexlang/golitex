@@ -1,3 +1,4 @@
+mod display_result_json;
 mod runtime_result;
 mod runtime_success;
 mod runtime_unknown;
