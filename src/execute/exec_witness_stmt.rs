@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_witness_exist_fact(
         &mut self,
         stmt: &WitnessExistFact,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
 
         let inside_results_when_verify =
@@ -20,7 +20,7 @@ impl Runtime {
             Fact::ExistFact(stmt.exist_fact_in_witness.clone()),
         );
         match store_result {
-            Ok(infer_result) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            Ok(infer_result) => Ok(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
             )),
             Err(store_error) => Err(RuntimeError::from(
@@ -38,7 +38,7 @@ impl Runtime {
     fn exec_witness_exist_fact_body(
         &mut self,
         stmt: &WitnessExistFact,
-    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
+    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
         let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
         let verify_state_for_well_defined = VerifyState::new(0, false);
 
@@ -103,7 +103,7 @@ impl Runtime {
         }
 
         // 4) Run witness proof in the local environment.
-        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        let mut inside_results: Vec<StmtExecResult> = Vec::new();
         for proof_stmt in stmt.proof.iter() {
             match self.exec_stmt(proof_stmt) {
                 Ok(proof_result) => {
@@ -146,7 +146,7 @@ impl Runtime {
     pub fn exec_witness_nonempty_set(
         &mut self,
         stmt: &WitnessNonemptySet,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
 
         let inside_results_when_verify =
@@ -165,7 +165,7 @@ impl Runtime {
             ))),
         );
         match store_result {
-            Ok(infer_result) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            Ok(infer_result) => Ok(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
             )),
             Err(store_error) => Err(RuntimeError::from(
@@ -183,7 +183,7 @@ impl Runtime {
     fn exec_witness_nonempty_set_body(
         &mut self,
         stmt: &WitnessNonemptySet,
-    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
+    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
         let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
 
         let verify_state_for_well_defined = VerifyState::new(0, false);
@@ -215,7 +215,7 @@ impl Runtime {
         }
 
         // 2) Run witness proof in the local environment.
-        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        let mut inside_results: Vec<StmtExecResult> = Vec::new();
         for proof_stmt in stmt.proof.iter() {
             match self.exec_stmt(proof_stmt) {
                 Ok(proof_result) => {

@@ -96,7 +96,7 @@ pub use crate::pipeline::{
 pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 pub use crate::result::FactualStmtSuccess;
-pub use crate::result::NonErrStmtExecResult;
+pub use crate::result::StmtExecResult;
 pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::StmtUnknown;
 pub use crate::runtime::builtin_env_code;
@@ -106,6 +106,7 @@ pub use crate::stmt::by_stmt::ByContraStmt;
 pub use crate::stmt::by_stmt::ByEnumerateStmt;
 pub use crate::stmt::by_stmt::ByExtensionStmt;
 pub use crate::stmt::by_stmt::ByFamilyStmt;
+pub use crate::stmt::by_stmt::ByFnSetStmt;
 pub use crate::stmt::by_stmt::ByFnStmt;
 pub use crate::stmt::by_stmt::ByForStmt;
 pub use crate::stmt::by_stmt::ByInducStmt;

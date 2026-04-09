@@ -5,9 +5,9 @@ impl Runtime {
     pub fn exec_by_induc_stmt(
         &mut self,
         stmt: &ByInducStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let mut infer_result = InferResult::new();
-        let all_inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        let all_inside_results: Vec<StmtExecResult> = Vec::new();
         for fact in stmt.to_prove.iter() {
             let one_fact_infer_result = self.run_in_local_env(|rt| {
                 rt.exec_by_induc_stmt_for_one_fact(stmt, fact)
@@ -40,7 +40,7 @@ impl Runtime {
         })?;
         self.store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact)?;
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::ByInducStmt(stmt.clone()),
                 infer_result,

@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_by_for_stmt(
         &mut self,
         stmt: &ByForStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if stmt.params.len() != stmt.param_sets.len() {
             return Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -66,7 +66,7 @@ impl Runtime {
                         vec![],
                     ))
                 })?;
-            return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            return Ok(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
                     Stmt::ByForStmt(stmt.clone()),
                     infer_result_from_stored_forall_fact,
@@ -75,7 +75,7 @@ impl Runtime {
             ));
         }
 
-        let mut all_inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        let mut all_inside_results: Vec<StmtExecResult> = Vec::new();
         let mut current_parameter_index_assignment = Self::by_for_start_index_assignment(stmt);
         loop {
             let mut one_assignment_inside_results = self.exec_by_for_stmt_for_one_assignment(
@@ -112,7 +112,7 @@ impl Runtime {
                 ))
             })?;
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::ByForStmt(stmt.clone()),
                 infer_result_from_stored_forall_fact,
@@ -245,7 +245,7 @@ impl Runtime {
         stmt: &ByForStmt,
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
-    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
+    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.exec_by_for_stmt_for_one_assignment_body(
                 stmt,
@@ -260,8 +260,8 @@ impl Runtime {
         stmt: &ByForStmt,
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
-    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
-        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
+        let mut inside_results: Vec<StmtExecResult> = Vec::new();
         for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
             let assigned_integer_string = param_value_strings_of_each_param[parameter_position]
                 [parameter_index_assignment[parameter_position]]

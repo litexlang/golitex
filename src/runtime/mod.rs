@@ -1,8 +1,6 @@
 pub mod builtin_env_code;
 pub mod runtime;
 mod runtime_define_parameter;
-pub mod runtime_display_error;
-pub mod runtime_display_result;
 mod runtime_generate_unused_names;
 mod runtime_get_definitions;
 mod runtime_instantiate_fact;

@@ -256,10 +256,7 @@ impl Runtime {
         }
     }
 
-    pub fn _exec_eval_stmt(
-        &mut self,
-        stmt: &EvalStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    pub fn _exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtExecResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &stmt.obj_to_eval,
             &VerifyState::new(0, false),
@@ -291,7 +288,7 @@ impl Runtime {
         infer_result.new_fact(&evaluated_equal_fact);
         self.store_fact_without_well_defined_verified_and_infer(evaluated_equal_fact)?;
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(Stmt::EvalStmt(stmt.clone()), infer_result, vec![]),
         ))
     }

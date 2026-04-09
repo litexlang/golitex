@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::AndFact(and_fact.clone()))
         {
@@ -34,7 +34,7 @@ impl Runtime {
             }
             verify_what.push(fact.to_string());
         }
-        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+        Ok(StmtExecResult::FactualStmtSuccess(
             FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 Fact::AndFact(and_fact.clone()),
                 format!("{} are verified", verify_what.join(", ")),
@@ -49,7 +49,7 @@ impl Runtime {
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::ChainFact(chain_fact.clone()))
         {
@@ -86,7 +86,7 @@ impl Runtime {
 
             verify_what.push(fact.to_string());
         }
-        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+        Ok(StmtExecResult::FactualStmtSuccess(
             FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 Fact::ChainFact(chain_fact.clone()),
                 format!("{} are verified", verify_what.join(", ")),

@@ -47,7 +47,7 @@ impl Runtime {
     pub fn exec_by_struct_stmt(
         &mut self,
         stmt: &ByStructStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let stmt_exec = Stmt::ByStructStmt(stmt.clone());
         let struct_ty = match &stmt.struct_obj {
             Obj::StructObj(s) => s.clone(),
@@ -226,7 +226,7 @@ impl Runtime {
                 .map_err(RuntimeError::from)?,
         );
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![]),
         ))
     }
