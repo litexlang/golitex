@@ -14,24 +14,7 @@ impl Runtime {
             return Ok(cached_result);
         }
 
-        if !verify_state.well_defined_already_verified {
-            if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
-                return Err(
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::ForallFact(forall_fact.clone()),
-                        String::new(),
-                        forall_fact.line_file.clone(),
-                        Some(e.into()),
-                    ),
-                );
-            }
-        }
-
-        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
-
-        self.run_in_local_env(|rt| {
-            rt.verify_forall_fact_body(forall_fact, &verify_state_for_children)
-        })
+        self.run_in_local_env(|rt| rt.verify_forall_fact_body(forall_fact, verify_state))
     }
 
     fn verify_forall_fact_body(
@@ -40,27 +23,19 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
         let mut infer_result = InferResult::new();
-        for param_def in forall_fact.params_def_with_type.iter() {
-            let param_infer_result = self
-                .define_params_with_type(std::slice::from_ref(param_def), false)
-                .map_err(|e| {
-                    let message = "failed to define params in forall".to_string();
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::ForallFact(forall_fact.clone()),
-                        message.clone(),
-                        forall_fact.line_file.clone(),
-                        Some(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-                            message,
-                            forall_fact.line_file.clone(),
-                            Some(Fact::ForallFact(forall_fact.clone())),
-                            Some(e),
-                        ).into()),
-                    )
-                })?;
-            infer_result.new_infer_result_inside(param_infer_result);
+        if let Err(e) = self.define_params_with_type(&forall_fact.params_def_with_type, false) {
+            return Err(
+                RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                    "failed to define parameters in forall fact".to_string(),
+                    Some(e.into()),
+                    forall_fact.line_file.clone(),
+                ),
+            );
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
+            self.verify_exist_or_and_chain_atomic_fact_well_defined(dom_fact, verify_state)?;
+
             let dom_infer_result = self
                 .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     dom_fact.clone(),
@@ -167,7 +142,6 @@ impl Runtime {
         ))
     }
 
-    /// Forall iff: two steps. Step 1: take then as part of dom, verify iff. Step 2: take iff as part of dom, verify then.
     pub fn verify_forall_fact_with_iff(
         &mut self,
         forall_iff: &ForallFactWithIff,
@@ -179,50 +153,13 @@ impl Runtime {
             return Ok(cached_result);
         }
 
-        if !verify_state.well_defined_already_verified {
-            if let Err(e) = self.verify_forall_fact_with_iff_well_defined(forall_iff, verify_state)
-            {
-                return Err(
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::ForallFactWithIff(forall_iff.clone()),
-                        String::new(),
-                        forall_iff.line_file.clone(),
-                        Some(e.into()),
-                    ),
-                );
+        let (forall_then_implies_iff, forall_iff_implies_then) = forall_iff.to_two_forall_facts();
+        let verification_steps = [&forall_then_implies_iff, &forall_iff_implies_then];
+        for forall_step in verification_steps {
+            let result = self.verify_forall_fact(forall_step, verify_state)?;
+            if result.is_unknown() {
+                return Ok(result);
             }
-        }
-
-        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
-
-        let f = &forall_iff.forall_fact;
-
-        let mut dom_then = f.dom_facts.clone();
-        dom_then.extend(f.then_facts.clone());
-        let forall_then_implies_iff = ForallFact::new(
-            f.params_def_with_type.clone(),
-            dom_then,
-            forall_iff.iff_facts.clone(),
-            forall_iff.line_file.clone(),
-        );
-        let result1 =
-            self.verify_forall_fact(&forall_then_implies_iff, &verify_state_for_children)?;
-        if result1.is_unknown() {
-            return Ok(result1);
-        }
-
-        let mut dom_iff = f.dom_facts.clone();
-        dom_iff.extend(forall_iff.iff_facts.clone());
-        let forall_iff_implies_then = ForallFact::new(
-            f.params_def_with_type.clone(),
-            dom_iff,
-            f.then_facts.clone(),
-            forall_iff.line_file.clone(),
-        );
-        let result2 =
-            self.verify_forall_fact(&forall_iff_implies_then, &verify_state_for_children)?;
-        if result2.is_unknown() {
-            return Ok(result2);
         }
 
         Ok(StmtExecResult::FactualStmtSuccess(
