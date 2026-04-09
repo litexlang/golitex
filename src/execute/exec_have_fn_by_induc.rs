@@ -5,12 +5,12 @@ impl Runtime {
     pub fn exec_have_fn_by_induc(
         &mut self,
         stmt: &HaveFnByInducStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_process(stmt))?;
 
         let infer_result = self.exec_have_fn_by_induc_store_process(stmt)?;
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(Stmt::HaveFnByInducStmt(stmt.clone()), infer_result, vec![]),
         ))
     }

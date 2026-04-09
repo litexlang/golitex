@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_by_extension_stmt(
         &mut self,
         stmt: &ByExtensionStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -44,7 +44,7 @@ impl Runtime {
             )?,
         );
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::ByExtensionStmt(stmt.clone()),
                 infer_result,
@@ -57,8 +57,8 @@ impl Runtime {
     fn exec_by_extension_stmt_in_local_env_body(
         &mut self,
         stmt: &ByExtensionStmt,
-    ) -> Result<(Vec<NonErrStmtExecResult>, Fact, Fact), RuntimeError> {
-        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+    ) -> Result<(Vec<StmtExecResult>, Fact, Fact), RuntimeError> {
+        let mut inside_results: Vec<StmtExecResult> = Vec::new();
         for proof_stmt in stmt.proof.iter() {
             let one_proof_stmt_exec_result = self.exec_stmt(proof_stmt).map_err(|stmt_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(

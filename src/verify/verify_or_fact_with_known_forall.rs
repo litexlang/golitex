@@ -8,13 +8,13 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_or_fact_with_known_forall_facts_in_envs(or_fact, verify_state)?
         {
-            return Ok(NonErrStmtExecResult::FactualStmtSuccess(fact_verified));
+            return Ok(StmtExecResult::FactualStmtSuccess(fact_verified));
         }
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     fn get_matched_or_fact_in_known_forall_fact_in_envs(

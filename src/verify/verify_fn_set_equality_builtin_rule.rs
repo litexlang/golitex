@@ -28,9 +28,9 @@ fn fn_set_equality_verified_by_builtin_rules_result(
     left: &FnSet,
     right: &FnSet,
     line_file: LineFile,
-) -> NonErrStmtExecResult {
+) -> StmtExecResult {
     let stmt = fn_set_equality_fact(left, right, line_file);
-    NonErrStmtExecResult::FactualStmtSuccess(
+    StmtExecResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             stmt,
             "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
@@ -46,11 +46,11 @@ impl Runtime {
         right: &FnSet,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if ParamGroupWithSet::number_of_params(&left.params_def_with_set)
             != ParamGroupWithSet::number_of_params(&right.params_def_with_set)
         {
-            return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
 
         let left_implies_right = self.verify_fn_set_with_params_directionally_in_local_env(
@@ -60,7 +60,7 @@ impl Runtime {
             verify_state,
         )?;
         if !left_implies_right {
-            return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
 
         let right_implies_left = self.verify_fn_set_with_params_directionally_in_local_env(
@@ -70,7 +70,7 @@ impl Runtime {
             verify_state,
         )?;
         if !right_implies_left {
-            return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
 
         Ok(fn_set_equality_verified_by_builtin_rules_result(

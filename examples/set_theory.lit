@@ -58,3 +58,6 @@ prove:
     product_of({2}) = 2
     product_of({1}) = 1
     product_of({1, 2}) = product_of(set_minus({1, 2}, {1})) * product_of({1}) = product_of({2}) * product_of({1}) = 2 * 1 = 2
+
+prove:
+    not $is_nonempty_set({})

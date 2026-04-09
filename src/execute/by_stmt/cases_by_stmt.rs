@@ -5,7 +5,7 @@ impl Runtime {
     pub fn exec_by_cases_stmt(
         &mut self,
         stmt: &ByCasesStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         for fact in stmt.then_facts.iter() {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
@@ -21,7 +21,7 @@ impl Runtime {
         self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)
             .map_err(RuntimeError::from)?;
 
-        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        let mut inside_results: Vec<StmtExecResult> = Vec::new();
         for case_index in 0..stmt.cases.len() {
             let one_case_result = self.run_in_local_env(|rt| {
                 rt.exec_by_cases_stmt_for_one_case(stmt, case_index)
@@ -52,7 +52,7 @@ impl Runtime {
             infer_result.new_infer_result_inside(one_then_fact_infer_result);
         }
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::ByCasesStmt(stmt.clone()),
                 infer_result,
@@ -83,7 +83,7 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesStmt,
         case_index: usize,
-        inside_results: &mut Vec<NonErrStmtExecResult>,
+        inside_results: &mut Vec<StmtExecResult>,
     ) -> Result<(), RuntimeErrorStruct> {
         for then_fact in stmt.then_facts.iter() {
             let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
@@ -106,9 +106,9 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesStmt,
         case_index: usize,
-    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeErrorStruct> {
+    ) -> Result<Vec<StmtExecResult>, RuntimeErrorStruct> {
         let case_fact = &stmt.cases[case_index];
-        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        let mut inside_results: Vec<StmtExecResult> = Vec::new();
 
         self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact.clone())
             .map_err(|store_fact_error| {
@@ -186,7 +186,7 @@ impl Runtime {
                 ));
             }
 
-            inside_results.push(NonErrStmtExecResult::NonFactualStmtSuccess(
+            inside_results.push(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
                     Stmt::ByCasesStmt(stmt.clone()),
                     InferResult::new(),

@@ -2,7 +2,7 @@ use crate::pipeline::run_stmt_at_global_env;
 use crate::prelude::*;
 use std::fs;
 
-pub type StmtResult = NonErrStmtExecResult;
+pub type StmtResult = StmtExecResult;
 
 pub fn run_source_code_in_file(entrance_file_path: &str) -> String {
     let source_code = match fs::read_to_string(entrance_file_path) {
@@ -82,20 +82,20 @@ pub fn run_source_code(
 }
 
 pub fn render_run_source_code_output(
-    runtime: &Runtime,
+    _runtime: &Runtime,
     stmt_results: &Vec<StmtResult>,
     runtime_error: &Option<RuntimeError>,
 ) -> (bool, String) {
     let mut output_text = String::new();
     for stmt_result in stmt_results.iter() {
         output_text.push('\n');
-        output_text.push_str(runtime.display_result_json_string(stmt_result).as_str());
+        output_text.push_str(stmt_result.to_display_json_string().as_str());
         output_text.push('\n');
     }
 
     if let Some(error) = runtime_error {
         output_text.push('\n');
-        output_text.push_str(runtime.display_error_json_string(error).as_str());
+        output_text.push_str(error.to_display_json_string().as_str());
         output_text.push('\n');
         return (false, output_text);
     }
