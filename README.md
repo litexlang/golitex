@@ -4,9 +4,7 @@
 
 <div align="center">
 
-# Litex: A computer language for the essence of mathematics
-
-## A Simple Formal Language Learnable in 2 Hours
+# Litex: A Simple Formal Language Learnable in 2 Hours
 
 **version v0.2-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*

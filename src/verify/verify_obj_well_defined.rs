@@ -1038,7 +1038,45 @@ impl Runtime {
         _x: &Choose,
         _verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        unimplemented!()
+        let choose_from = *_x.set.clone();
+
+        let choose_from_is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(
+            IsNonemptySetFact::new(choose_from.clone(), default_line_file()),
+        );
+        let choose_from_is_nonempty_set_result =
+            self.verify_atomic_fact(&choose_from_is_nonempty_set_fact, _verify_state)?;
+        if choose_from_is_nonempty_set_result.is_unknown() {
+            return Err(
+                RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                    format!("set {} is not a nonempty set", choose_from.to_string()),
+                    None,
+                    default_line_file(),
+                ),
+            );
+        }
+
+        let random_param = self.generate_random_unused_name();
+
+        let nonempty_set_fact = IsNonemptySetFact::new(
+            Obj::Identifier(Identifier::new(random_param.clone().to_string())),
+            default_line_file(),
+        );
+
+        let forall_x_in_choose_from_x_is_nonempty = Fact::ForallFact(ForallFact::new(
+            vec![ParamGroupWithParamType::new(
+                vec![random_param.clone().to_string()],
+                ParamType::Obj(choose_from),
+            )],
+            vec![],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(
+                AtomicFact::IsNonemptySetFact(nonempty_set_fact),
+            )],
+            default_line_file(),
+        ));
+
+        self.verify_fact(&forall_x_in_choose_from_x_is_nonempty, _verify_state)?;
+
+        Ok(())
     }
 
     fn verify_obj_at_index_well_defined(

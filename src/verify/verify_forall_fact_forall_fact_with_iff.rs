@@ -143,6 +143,7 @@ impl Runtime {
                     then_facts_builtin_verified_by_messages.join("; ")
                 )
             };
+            infer_result.new_fact(&Fact::ForallFact(forall_fact.clone()));
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     Fact::ForallFact(forall_fact.clone()),
@@ -153,6 +154,7 @@ impl Runtime {
             ));
         }
 
+        infer_result.new_fact(&Fact::ForallFact(forall_fact.clone()));
         Ok(NonErrStmtExecResult::FactualStmtSuccess(
             FactualStmtSuccess::new_with_verified_by_known_fact_source(
                 Fact::ForallFact(forall_fact.clone()),
@@ -224,9 +226,8 @@ impl Runtime {
         }
 
         Ok(NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_known_fact_source(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 Fact::ForallFactWithIff(forall_iff.clone()),
-                InferResult::new(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 None,
                 Some(default_line_file()),

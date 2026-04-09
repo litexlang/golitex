@@ -43,13 +43,12 @@ impl Runtime {
             )?;
         if verified_by_arg_to_arg {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
                         right.clone(),
                         line_file.clone(),
                     ))),
-                    InferResult::new(),
                     same_shape_and_equal_args_reason(left, right),
                     Vec::new(),
                 ),
@@ -505,13 +504,12 @@ impl Runtime {
         )?;
         if result.is_true() {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left_obj.clone(),
                         right_obj.clone(),
                         equality_line_file.clone(),
                     ))),
-                    InferResult::new(),
                     "builtin rules".to_string(),
                     Vec::new(),
                 ),
@@ -537,13 +535,12 @@ impl Runtime {
             )?;
         if verified_by_arg_to_arg {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left_obj.clone(),
                         right_obj.clone(),
                         equality_line_file,
                     ))),
-                    InferResult::new(),
                     same_shape_and_equal_args_reason(left_obj, right_obj),
                     Vec::new(),
                 ),

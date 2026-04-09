@@ -196,9 +196,8 @@ impl Runtime {
         }
 
         Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
-                InferResult::new(),
                 "restrict by definition (forall param sets narrower, same ret set)".to_string(),
                 Vec::new(),
             ),

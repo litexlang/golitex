@@ -32,9 +32,8 @@ fn number_in_set_verified_by_builtin_rules_result(
     reason: &str,
 ) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactualStmtSuccess(
-        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-            InferResult::new(),
             reason.to_string(),
             Vec::new(),
         ),
@@ -46,9 +45,8 @@ fn not_in_fact_verified_by_builtin_rules_result(
     reason: &str,
 ) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactualStmtSuccess(
-        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             Fact::AtomicFact(AtomicFact::NotInFact(not_in_fact.clone())),
-            InferResult::new(),
             reason.to_string(),
             Vec::new(),
         ),
@@ -57,9 +55,8 @@ fn not_in_fact_verified_by_builtin_rules_result(
 
 fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactualStmtSuccess(
-        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-            InferResult::new(),
             "arithmetic expression is in R".to_string(),
             Vec::new(),
         ),
@@ -347,6 +344,27 @@ impl Runtime {
                     power_set,
                     verify_state,
                 ),
+            (Obj::Choose(choose), where_is_obj) => {
+                let choose_from = choose.set.clone();
+                let equal_fact = AtomicFact::EqualFact(EqualFact::new(
+                    *choose_from,
+                    where_is_obj.clone(),
+                    in_fact.line_file.clone(),
+                ));
+                let equal_fact_verify_result =
+                    self.verify_atomic_fact(&equal_fact, verify_state)?;
+                if equal_fact_verify_result.is_true() {
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                            "By ZFC, we can choose an element from a nonempty set whose elements are all nonempty.".to_string(),
+                            Vec::new(),
+                        ),
+                    ));
+                } else {
+                    return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                }
+            }
             (_, Obj::ListSet(list_set)) => self.verify_in_fact_by_equal_to_one_element_in_list_set(
                 in_fact,
                 list_set,
@@ -412,9 +430,8 @@ impl Runtime {
         }
         match target_negative_standard_set {
             StandardSet::RNeg => Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                    InferResult::new(),
                     "mul_opposite_signs_product_in_R_neg".to_string(),
                     Vec::new(),
                 ),
@@ -430,9 +447,8 @@ impl Runtime {
                     verify_state,
                 )? {
                     Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                            InferResult::new(),
                             "mul_opposite_signs_product_in_Q_neg".to_string(),
                             Vec::new(),
                         ),
@@ -452,9 +468,8 @@ impl Runtime {
                     verify_state,
                 )? {
                     Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                            InferResult::new(),
                             "mul_opposite_signs_product_in_Z_neg".to_string(),
                             Vec::new(),
                         ),
@@ -500,9 +515,11 @@ impl Runtime {
                 }
             }
         }
+        let stmt = Fact::AtomicFact(AtomicFact::InFact(in_fact.clone()));
+        infer_result.new_fact(&stmt);
         Ok(NonErrStmtExecResult::FactualStmtSuccess(
             FactualStmtSuccess::new_with_verified_by_builtin_rules(
-                Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                stmt,
                 infer_result,
                 "list_set in power_set: each element is in the base set".to_string(),
                 Vec::new(),
@@ -525,9 +542,8 @@ impl Runtime {
             let equal_fact_verify_result = self.verify_atomic_fact(&equal_fact, verify_state)?;
             if equal_fact_verify_result.is_true() {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                        InferResult::new(),
                         format!(
                             "{} equals one element in list_set {}",
                             in_fact.element, in_fact.set
@@ -697,9 +713,8 @@ impl Runtime {
             })?
         {
             return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                    InferResult::new(),
                     "fn membership: stored fn signature matches RHS (α-renamed compare)"
                         .to_string(),
                     Vec::new(),
@@ -731,9 +746,8 @@ impl Runtime {
                 )?;
             if verify_result.is_true() {
                 return Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                        InferResult::new(),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
                             in_fact.element, standard_subset_set_obj, target_set_obj
@@ -773,9 +787,8 @@ impl Runtime {
         }
 
         Ok(NonErrStmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
-                InferResult::new(),
                 "tuple in cart: each component is in the corresponding cart factor".to_string(),
                 Vec::new(),
             ),

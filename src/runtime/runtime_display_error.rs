@@ -92,10 +92,7 @@ fn push_optional_conflict_with_json_field_lines(
         Some(conflict) => {
             let indent_nested = format!("{}  ", indent_inner);
             let conflict_line_file = conflict.line_file.clone();
-            let conflict_line = conflict_line_file.0;
-            let conflict_source = runtime.get_file_name_empty_if_default(conflict_line_file);
             let message_literal = json_string_literal(&conflict.msg);
-            let source_literal = json_string_literal(conflict_source.as_str());
             let mut inner_lines: Vec<String> = Vec::new();
             inner_lines.push(format!(
                 "{}\"{}\": {}",
@@ -107,13 +104,13 @@ fn push_optional_conflict_with_json_field_lines(
                 "{}\"{}\": {}",
                 indent_nested,
                 JSON_KEY_LINE,
-                conflict_line
+                runtime.json_display_line_json_fragment(&conflict_line_file)
             ));
             inner_lines.push(format!(
                 "{}\"{}\": {}",
                 indent_nested,
                 JSON_KEY_SOURCE,
-                source_literal
+                runtime.json_display_source_json_fragment(conflict_line_file)
             ));
             push_optional_statement_json_field_lines(
                 &mut inner_lines,
@@ -176,16 +173,18 @@ impl Runtime {
         ));
 
         let line_file = error.line_file();
-        let line = line_file.0;
-        field_lines.push(format!("{}\"{}\": {}", indent_inner, JSON_KEY_LINE, line));
-
-        let source_text = self.get_file_name_empty_if_default(line_file.clone());
+        field_lines.push(format!(
+            "{}\"{}\": {}",
+            indent_inner,
+            JSON_KEY_LINE,
+            self.json_display_line_json_fragment(&line_file)
+        ));
 
         field_lines.push(format!(
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(source_text.as_str())
+            self.json_display_source_json_fragment(line_file)
         ));
 
         match error {
@@ -461,5 +460,23 @@ impl Runtime {
             return String::new();
         }
         line_file.1.as_ref().to_string()
+    }
+
+    /// JSON fragment for `"line"`: `null` when [`is_default_line_file`], else the line number.
+    pub(in crate::runtime) fn json_display_line_json_fragment(&self, line_file: &LineFile) -> String {
+        if is_default_line_file(line_file) {
+            "null".to_string()
+        } else {
+            line_file.0.to_string()
+        }
+    }
+
+    /// JSON fragment for `"source"`: `null` when [`is_default_line_file`], else a quoted path string.
+    pub(in crate::runtime) fn json_display_source_json_fragment(&self, line_file: LineFile) -> String {
+        if is_default_line_file(&line_file) {
+            "null".to_string()
+        } else {
+            json_string_literal(self.get_file_name_empty_if_default(line_file).as_str())
+        }
     }
 }

@@ -78,13 +78,12 @@ impl Runtime {
                 }
 
                 Ok(NonErrStmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                    FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                         Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                             obj.clone(),
                             Obj::Identifier(Identifier::new(String::from("_"))),
                             default_line_file(),
                         ))),
-                        InferResult::new(),
                         "".to_string(),
                         None,
                         Some(default_line_file()),
