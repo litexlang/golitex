@@ -352,7 +352,7 @@ impl fmt::Display for HaveFnEqualStmt {
             f,
             "{} {} {}{} {} {}",
             HAVE,
-            FN,
+            FN_LOWER_CASE,
             self.name,
             brace_vec_colon_vec_to_string(
                 &self.fn_set_clause.params_def_with_set,
@@ -393,7 +393,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             f,
             "{} {} {}{} {} {}\n{}",
             HAVE,
-            FN,
+            FN_LOWER_CASE,
             self.name,
             brace_vec_colon_vec_to_string(
                 &self.fn_set_clause.params_def_with_set,
@@ -558,7 +558,7 @@ impl fmt::Display for HaveFnByInducStmt {
         write!(
             f,
             "{} {} {} {} {} {} {}{}",
-            HAVE, FN, BY, INDUC, FROM, " ", self.induc_from, COLON,
+            HAVE, FN_LOWER_CASE, BY, INDUC, FROM, " ", self.induc_from, COLON,
         )?;
         write!(f, " {} {}{}", self.name, LEFT_BRACE, self.param)?;
         write!(
