@@ -1,1 +1,12 @@
-not $is_nonempty_set({})
+let f fn(x R, y Q: x > y) Z
+
+by fn: f
+
+
+forall random_param f:
+    exist x R, y Q st {x > y, random_param = ((x, y), f(x, y))}
+
+forall x R, y Q:
+    x > y
+    =>:
+        exist random_param f st {random_param = ((x, y), f(x, y))}

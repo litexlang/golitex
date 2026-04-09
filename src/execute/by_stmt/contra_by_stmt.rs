@@ -5,7 +5,7 @@ impl Runtime {
     pub fn exec_by_contra_stmt(
         &mut self,
         stmt: &ByContraStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let to_prove_fact = Fact::AtomicFact(stmt.to_prove.clone());
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
@@ -18,7 +18,7 @@ impl Runtime {
             })?;
 
         let (exec_proof_inside_results, last_error) = self.run_in_local_env(|rt| {
-            let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+            let mut inside_results: Vec<StmtExecResult> = Vec::new();
 
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
             rt.store_atomic_fact_without_well_defined_verified_and_infer(reverse_to_prove_fact)
@@ -100,7 +100,7 @@ impl Runtime {
                 ))
             })?;
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::ByContraStmt(stmt.clone()),
                 infer_result,

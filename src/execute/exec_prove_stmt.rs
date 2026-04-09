@@ -4,11 +4,11 @@ impl Runtime {
     pub fn exec_prove_stmt(
         &mut self,
         stmt: &ProveStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let inside_results = self.run_in_local_env(|rt| rt.exec_prove_stmt_body(stmt));
 
         match inside_results {
-            Ok(_) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            Ok(_) => Ok(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
                     Stmt::ProveStmt(stmt.clone()),
                     InferResult::new(),
@@ -22,8 +22,8 @@ impl Runtime {
     fn exec_prove_stmt_body(
         &mut self,
         stmt: &ProveStmt,
-    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
-        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
+        let mut inside_results: Vec<StmtExecResult> = Vec::new();
         for proof_stmt in &stmt.proof {
             let exec_stmt_result = self.exec_stmt(proof_stmt);
             match exec_stmt_result {
