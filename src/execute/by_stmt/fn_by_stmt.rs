@@ -300,6 +300,19 @@ impl Runtime {
                 vec![unique_x1_name, unique_x2_name],
                 ParamType::Obj(function.clone()),
             )],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Obj::ObjAtIndex(ObjAtIndex::new(
+                        unique_x1_obj.clone(),
+                        Obj::Number(Number::new("1".to_string())),
+                    )),
+                    Obj::ObjAtIndex(ObjAtIndex::new(
+                        unique_x2_obj.clone(),
+                        Obj::Number(Number::new("1".to_string())),
+                    )),
+                    line_file.clone(),
+                ),
+            ))],
             vec![
                 ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
                     unique_x1_obj.clone(),
@@ -312,22 +325,9 @@ impl Runtime {
                     line_file.clone(),
                 ))),
                 ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                    EqualFact::new(
-                        Obj::ObjAtIndex(ObjAtIndex::new(
-                            unique_x1_obj.clone(),
-                            Obj::Number(Number::new("1".to_string())),
-                        )),
-                        Obj::ObjAtIndex(ObjAtIndex::new(
-                            unique_x2_obj.clone(),
-                            Obj::Number(Number::new("1".to_string())),
-                        )),
-                        line_file.clone(),
-                    ),
+                    EqualFact::new(unique_x1_obj, unique_x2_obj, line_file.clone()),
                 )),
             ],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                EqualFact::new(unique_x1_obj, unique_x2_obj, line_file.clone()),
-            ))],
             line_file.clone(),
         ));
 
