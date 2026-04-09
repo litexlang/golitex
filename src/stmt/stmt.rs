@@ -35,6 +35,7 @@ pub enum Stmt {
     ByFamilyStmt(ByFamilyStmt),
     ByStructStmt(ByStructStmt),
     ByTuple(ByTupleStmt),
+    ByFnSetStmt(ByFnSetStmt),
 }
 
 impl fmt::Debug for Stmt {
@@ -78,6 +79,7 @@ impl fmt::Display for Stmt {
             Stmt::ByFamilyStmt(x) => write!(f, "{}", x),
             Stmt::ByStructStmt(x) => write!(f, "{}", x),
             Stmt::ByTuple(x) => write!(f, "{}", x),
+            Stmt::ByFnSetStmt(x) => write!(f, "{}", x),
         }
     }
 }
@@ -117,6 +119,7 @@ impl Stmt {
             Stmt::ByFamilyStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByStructStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTuple(stmt) => stmt.line_file.clone(),
+            Stmt::ByFnSetStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -154,6 +157,7 @@ impl Stmt {
             Stmt::ByFamilyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByStructStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
+            Stmt::ByFnSetStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 }
