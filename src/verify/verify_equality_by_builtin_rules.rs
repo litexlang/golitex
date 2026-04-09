@@ -24,7 +24,7 @@ impl Runtime {
                         right.clone(),
                         line_file,
                     ))),
-                    "the same".to_string(),
+                    "they are the same".to_string(),
                     Vec::new(),
                 ),
             ));

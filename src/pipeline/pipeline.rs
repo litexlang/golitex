@@ -89,7 +89,7 @@ pub fn render_run_source_code_output(
     let mut output_text = String::new();
     for stmt_result in stmt_results.iter() {
         output_text.push('\n');
-        output_text.push_str(runtime.display_result_json_string(stmt_result).as_str());
+        output_text.push_str(stmt_result.to_display_json_string().as_str());
         output_text.push('\n');
     }
 
