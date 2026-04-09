@@ -178,9 +178,7 @@ impl Runtime {
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.run_in_local_env(|rt| {
-            rt.verify_exist_fact_well_defined_body(exist_fact, verify_state)
-        })
+        self.run_in_local_env(|rt| rt.verify_exist_fact_well_defined_body(exist_fact, verify_state))
     }
 
     fn verify_exist_fact_well_defined_body(
@@ -203,6 +201,9 @@ impl Runtime {
 
         for fact in exist_fact.facts() {
             self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
+            self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                fact.clone(),
+            )?;
         }
         Ok(())
     }

@@ -5,11 +5,11 @@ impl Runtime {
     pub fn verify_fact_from_cache_using_display_string(
         &self,
         fact: &Fact,
-    ) -> Option<NonErrStmtExecResult> {
+    ) -> Option<StmtExecResult> {
         let key = fact.to_string();
         let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&key);
         if cache_ok {
-            Some(NonErrStmtExecResult::FactualStmtSuccess(
+            Some(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                     fact.clone(),
                     key,

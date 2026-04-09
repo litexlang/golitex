@@ -6,7 +6,7 @@ impl Runtime {
         obj: Obj,
         param_type: &ParamType,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match param_type {
             ParamType::Struct(struct_ty) => {
                 let fact = AtomicFact::InFact(InFact::new(
@@ -70,13 +70,13 @@ impl Runtime {
                 );
             }
             match verify_result {
-                NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
+                StmtExecResult::NonFactualStmtSuccess(x) => {
                     infer_result.new_infer_result_inside(x.infers);
                 }
-                NonErrStmtExecResult::FactualStmtSuccess(x) => {
+                StmtExecResult::FactualStmtSuccess(x) => {
                     infer_result.new_infer_result_inside(x.infers);
                 }
-                NonErrStmtExecResult::StmtUnknown(_) => unreachable!(),
+                StmtExecResult::StmtUnknown(_) => unreachable!(),
             }
         }
         Ok(infer_result)

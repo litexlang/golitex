@@ -14,7 +14,7 @@ pub use contra::ByContraStmt;
 pub use enumerate::ByEnumerateStmt;
 pub use extension::ByExtensionStmt;
 pub use family::ByFamilyStmt;
-pub use fn_cart_tuple::{ByFnStmt, ByTupleStmt};
+pub use fn_cart_tuple::{ByFnSetStmt, ByFnStmt, ByTupleStmt};
 pub use struct_stmt::ByStructStmt;
 pub use for_stmt::{ByForStmt, ClosedRangeOrRange};
 pub use induc::ByInducStmt;

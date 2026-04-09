@@ -5,7 +5,7 @@ impl Runtime {
     pub fn exec_by_tuple_stmt(
         &mut self,
         stmt: &ByTupleStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let stmt_exec = Stmt::ByTuple(stmt.clone());
 
         let tuple_struct = match &stmt.obj {
@@ -60,7 +60,7 @@ impl Runtime {
                     None,
                     stmt.line_file.clone(),
                 );
-                Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+                Ok(StmtExecResult::NonFactualStmtSuccess(
                     NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![]),
                 ))
             }
