@@ -36,28 +36,28 @@ impl fmt::Display for ForallFactWithIff {
 }
 
 impl ForallFactWithIff {
-    pub fn to_two_forall_facts(self) -> (ForallFact, ForallFact) {
-        let ForallFact {
-            params_def_with_type,
-            dom_facts,
-            then_facts,
-            line_file,
-        } = self.forall_fact;
-        let iff_facts = self.iff_facts;
-
-        let mut dom_then = dom_facts.clone();
-        dom_then.extend(then_facts.clone());
+    // 将 `forall ... iff` 拆成两个等价验证用的 `forall`：
+    // 1. `dom ∪ then ⊢ iff`（then 并入 dom）
+    // 2. `dom ∪ iff ⊢ then`（iff 并入 dom）
+    pub fn to_two_forall_facts(&self) -> (ForallFact, ForallFact) {
+        let f = &self.forall_fact;
+        let mut dom_then = f.dom_facts.clone();
+        dom_then.extend(f.then_facts.clone());
         let forall_then_implies_iff = ForallFact::new(
-            params_def_with_type.clone(),
+            f.params_def_with_type.clone(),
             dom_then,
-            iff_facts.clone(),
-            line_file.clone(),
+            self.iff_facts.clone(),
+            self.line_file.clone(),
         );
 
-        let mut dom_iff = dom_facts;
-        dom_iff.extend(iff_facts);
-        let forall_iff_implies_then =
-            ForallFact::new(params_def_with_type, dom_iff, then_facts, line_file);
+        let mut dom_iff = f.dom_facts.clone();
+        dom_iff.extend(self.iff_facts.clone());
+        let forall_iff_implies_then = ForallFact::new(
+            f.params_def_with_type.clone(),
+            dom_iff,
+            f.then_facts.clone(),
+            self.line_file.clone(),
+        );
 
         (forall_then_implies_iff, forall_iff_implies_then)
     }
