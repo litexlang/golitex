@@ -80,4 +80,8 @@ impl Runtime {
         }
         generated_names
     }
+
+    pub fn generate_random_unused_name(&self) -> String {
+        self.generate_one_unused_name_with_reserved(&HashSet::new())
+    }
 }

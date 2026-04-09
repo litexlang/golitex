@@ -27,13 +27,13 @@ impl NonErrStmtExecResult {
 
 impl NonErrStmtExecResult {
     fn infer_block_string(infer_result: &InferResult) -> String {
-        if infer_result.infer_facts.is_empty() {
+        if infer_result.is_empty() {
             return String::new();
         }
         format!(
             "\n\n{}\n{}",
             INFER_COLON,
-            infer_result.infer_facts.join("\n")
+            infer_result.join_infer_lines("\n")
         )
     }
 

@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::verify::number_is_in_z;
 use std::collections::HashSet;
 
 impl Runtime {
@@ -291,15 +292,79 @@ impl Runtime {
         let num_special = num_blocks - 1;
         let mut special_cases_equal_tos: Vec<Obj> = Vec::with_capacity(num_special);
 
+        let induc_from_is_number_obj = matches!(induc_from, Obj::Number(_));
+        if induc_from_is_number_obj {
+            if let Obj::Number(n) = &induc_from {
+                if !number_is_in_z(n) {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            format!(
+                                "have fn by induc from: when `from` is a number literal, it must be an integer, got {}",
+                                induc_from.to_string()
+                            ),
+                            tb.line_file.clone(),
+                            None,
+                        ),
+                    );
+                }
+            }
+        }
+
         for i in 0..num_special {
             let block = &mut tb.body[i];
             block.skip_token(CASE)?;
+
+            block.skip_token(&param)?;
+
+            block.skip_token(EQUAL)?;
+
             let slot_label = self.parse_obj(block)?;
             Self::verify_have_fn_by_induc_special_case_slot_label(
                 &slot_label,
                 i,
                 block.line_file.clone(),
             )?;
+
+            if induc_from_is_number_obj {
+                let induc_from_add_i = Obj::Add(Add::new(
+                    induc_from.clone(),
+                    Obj::Number(Number::new(i.to_string())),
+                ));
+
+                if !induc_from_add_i
+                    .two_objs_can_be_calculated_and_equal_by_calculation(&slot_label)
+                {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            format!(
+                                "have fn by induc from: when `from` is a number literal, special case must be `case {} = {}:` (`from` + {}), got {}",
+                                param, induc_from_add_i.to_string(), i, slot_label.to_string()
+                            ),
+                            block.line_file.clone(),
+                            None,
+                        ),
+                    );
+                }
+            } else {
+                let induc_from_add_i = Obj::Add(Add::new(
+                    induc_from.clone(),
+                    Obj::Number(Number::new(i.to_string())),
+                ));
+
+                if induc_from_add_i.to_string() != slot_label.to_string() {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            format!(
+                                "have fn by induc from: when `from` is not a number literal, special case must be `case {} = {}:`, got {}",
+                                param, induc_from_add_i.to_string(), slot_label.to_string()
+                            ),
+                            block.line_file.clone(),
+                            None,
+                        ),
+                    );
+                }
+            }
+
             block.skip_token(COLON)?;
             if !block.exceed_end_of_head() {
                 special_cases_equal_tos.push(self.parse_obj(block)?);
@@ -313,37 +378,50 @@ impl Runtime {
                     ),
                 );
             }
-            if !block.exceed_end_of_head() {
+        }
+
+        let last_block = &mut tb.body[num_blocks - 1];
+        last_block.skip_token(CASE)?;
+        last_block.skip_token(&param)?;
+        last_block.skip_token(GREATER_EQUAL)?;
+        let last_bound = self.parse_obj(last_block)?;
+
+        if induc_from_is_number_obj {
+            let induc_from_add_n = Obj::Add(Add::new(
+                induc_from.clone(),
+                Obj::Number(Number::new(num_special.to_string())),
+            ));
+            if !induc_from_add_n.two_objs_can_be_calculated_and_equal_by_calculation(&last_bound) {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: unexpected tokens after `obj` in special case"
-                            .to_string(),
-                        block.line_file.clone(),
+                        format!(
+                            "have fn by induc from: when `from` is a number literal, last case must be `case >= {}:` (`from` + {}), got {}",
+                            induc_from_add_n.to_string(), num_special, last_bound.to_string()
+                        ),
+                        last_block.line_file.clone(),
                         None,
                     ),
                 );
             }
-            if !block.body.is_empty() {
+        } else {
+            let induc_from_add_n = Obj::Add(Add::new(
+                induc_from.clone(),
+                Obj::Number(Number::new(num_special.to_string())),
+            ));
+            if induc_from_add_n.to_string() != last_bound.to_string() {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "have fn by induc from: special case must not have a nested body under `case`"
-                            .to_string(),
-                        block.line_file.clone(),
+                        format!(
+                            "have fn by induc from: when `from` is not a number literal, last case must be `case >= {}:`, got {}",
+                            induc_from_add_n.to_string(), last_bound.to_string()
+                        ),
+                        last_block.line_file.clone(),
                         None,
                     ),
                 );
             }
         }
 
-        let last_block = &mut tb.body[num_blocks - 1];
-        last_block.skip_token(CASE)?;
-        last_block.skip_token(GREATER_EQUAL)?;
-        let last_bound = self.parse_obj(last_block)?;
-        Self::verify_have_fn_by_induc_last_greater_equal_bound(
-            &last_bound,
-            num_special,
-            last_block.line_file.clone(),
-        )?;
         last_block.skip_token(COLON)?;
 
         let last_case = if !last_block.exceed_end_of_head() {
@@ -494,35 +572,6 @@ impl Runtime {
             _ => Err(
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
                     "have fn by induc from: special case must be `case <natural>: <obj>` where <natural> is the 0-based index (0, 1, …)"
-                        .to_string(),
-                    line_file,
-                    None,
-                ),
-            ),
-        }
-    }
-
-    /// 最后一项 `case >= n:` 中 `n` 须为自然数字面量，且等于特例条数。
-    fn verify_have_fn_by_induc_last_greater_equal_bound(
-        bound: &Obj,
-        len_special: usize,
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        match bound {
-            Obj::Number(n) if n.normalized_value == len_special.to_string() => Ok(()),
-            Obj::Number(n) => Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!(
-                        "have fn by induc from: last case must be `case >= {}:` (count of special cases), got {}",
-                        len_special, n.normalized_value
-                    ),
-                    line_file,
-                    None,
-                ),
-            ),
-            _ => Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "have fn by induc from: last case must be `case >= <n>:` where <n> is a natural number literal equal to the number of special cases"
                         .to_string(),
                     line_file,
                     None,
