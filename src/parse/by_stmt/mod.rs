@@ -25,7 +25,7 @@ impl Runtime {
             INDUC => self.parse_by_induc_stmt(tb),
             FOR => self.parse_by_for_stmt(tb),
             EXTENSION => self.parse_by_extension_stmt(tb),
-            FN => self.parse_by_fn_stmt(tb),
+            FN_LOWER_CASE => self.parse_by_fn_stmt(tb),
             FAMILY => self.parse_by_family_stmt(tb),
             STRUCT => self.parse_by_struct_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),

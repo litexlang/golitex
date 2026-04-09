@@ -847,7 +847,7 @@ impl fmt::Display for FnSet {
         write!(
             f,
             "{} {} {}",
-            FN,
+            FN_LOWER_CASE,
             brace_vec_colon_vec_to_string(&params_with_sets_display, &self.dom_facts),
             self.ret_set
         )
