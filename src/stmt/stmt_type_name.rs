@@ -117,6 +117,12 @@ impl ByFnStmt {
     }
 }
 
+impl ByFnSetStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByFnSetStmt".to_string()
+    }
+}
+
 impl ByFamilyStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByFamilyStmt".to_string()
