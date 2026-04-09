@@ -37,7 +37,8 @@ pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const CHOOSE: &str = "choose";
-pub const FN: &str = "fn";
+pub const FN_LOWER_CASE: &str = "fn";
+pub const FN_UPPER_CASE: &str = "Fn";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
@@ -163,7 +164,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CAP,
         POWER_SET,
         CHOOSE,
-        FN,
+        FN_LOWER_CASE,
+        FN_UPPER_CASE,
         SET,
         NONEMPTY_SET,
         FINITE_SET,
