@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         self.verify_objs_are_equal(
             &equal_fact.left,
             &equal_fact.right,
@@ -21,7 +21,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let mut result =
             self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
         if result.is_true() {
@@ -42,7 +42,7 @@ impl Runtime {
                 line_file.clone(),
             )?;
         if verified_by_arg_to_arg {
-            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            return Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
@@ -66,7 +66,7 @@ impl Runtime {
             }
         }
 
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     fn verify_equality_with_known_equalities(
@@ -75,7 +75,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let left_string = left.to_string();
         let right_string = right.to_string();
 
@@ -95,7 +95,7 @@ impl Runtime {
             }
         }
 
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     /// Collect (known_left, known_right) from each env in top-to-bottom order (last env first).
@@ -495,7 +495,7 @@ impl Runtime {
         right_obj: &Obj,
         verify_state: &VerifyState,
         equality_line_file: LineFile,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let mut result = self.verify_equality_by_builtin_rules(
             left_obj,
             right_obj,
@@ -503,7 +503,7 @@ impl Runtime {
             verify_state,
         )?;
         if result.is_true() {
-            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            return Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left_obj.clone(),
@@ -534,7 +534,7 @@ impl Runtime {
                 equality_line_file.clone(),
             )?;
         if verified_by_arg_to_arg {
-            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            return Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left_obj.clone(),
@@ -547,7 +547,7 @@ impl Runtime {
             ));
         }
 
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 }
 

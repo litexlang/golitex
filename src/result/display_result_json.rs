@@ -8,16 +8,16 @@ const JSON_KEY_SUCCESS: &str = "success";
 const JSON_KEY_INFER_FACTS: &str = "infer_facts";
 const JSON_KEY_SOURCE: &str = "source";
 
-impl NonErrStmtExecResult {
+impl StmtExecResult {
     pub fn to_display_json_string(&self) -> String {
         render_json_value(&self.to_json_value(), 0)
     }
 
     fn to_json_value(&self) -> JsonValue {
         match self {
-            NonErrStmtExecResult::NonFactualStmtSuccess(x) => non_factual_stmt_success_to_json(x),
-            NonErrStmtExecResult::FactualStmtSuccess(x) => factual_stmt_success_to_json(x),
-            NonErrStmtExecResult::StmtUnknown(_) => unreachable!(),
+            StmtExecResult::NonFactualStmtSuccess(x) => non_factual_stmt_success_to_json(x),
+            StmtExecResult::FactualStmtSuccess(x) => factual_stmt_success_to_json(x),
+            StmtExecResult::StmtUnknown(_) => unreachable!(),
         }
     }
 }

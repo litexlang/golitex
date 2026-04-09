@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
             AtomicFact::NotEqualFact(not_equal_fact) => {
@@ -94,7 +94,7 @@ impl Runtime {
                     verify_state,
                 )
             }
-            AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            AtomicFact::IsSetFact(is_set_fact) => Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsSetFact(is_set_fact.clone())),
                     "Every object is a set.".to_string(),
@@ -120,7 +120,7 @@ impl Runtime {
                     not_is_nonempty_set_fact,
                     verify_state,
                 ),
-            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
 
@@ -128,7 +128,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
 
@@ -138,7 +138,7 @@ impl Runtime {
         ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
-                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    return Ok(StmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
                             "calculation".to_string(),
@@ -159,7 +159,7 @@ impl Runtime {
             None => {}
         }
 
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {
@@ -357,7 +357,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtExecResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let expression_obj =
             if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
@@ -429,7 +429,7 @@ impl Runtime {
         };
 
         match builtin_rule_label {
-            Some(rule_label) => Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
+            Some(rule_label) => Ok(Some(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
                     rule_label.to_string(),
@@ -444,9 +444,9 @@ impl Runtime {
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match &is_nonempty_set_fact.set {
-            Obj::StandardSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            Obj::StandardSet(_) => Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
                     "standard_nonempty_set".to_string(),
@@ -455,9 +455,9 @@ impl Runtime {
             )),
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
                 } else {
-                    Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    Ok(StmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                                 is_nonempty_set_fact.clone(),
@@ -480,13 +480,13 @@ impl Runtime {
                         )?;
 
                     if is_nonempty_set_result.is_unknown() {
-                        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                        return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
                     }
                 }
 
                 // verified by objects in cart are all nonempty sets
                 // e.g. cart(R, Q) is nonempty set because R and Q are nonempty sets
-                Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                Ok(StmtExecResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                             is_nonempty_set_fact.clone(),
@@ -514,7 +514,7 @@ impl Runtime {
                     _verify_state,
                 )?;
                 if ret_check.is_true() {
-                    Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    Ok(StmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                                 is_nonempty_set_fact.clone(),
@@ -524,10 +524,10 @@ impl Runtime {
                         ),
                     ))
                 } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
 
@@ -535,16 +535,16 @@ impl Runtime {
         &mut self,
         is_finite_set_fact: &IsFiniteSetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match &is_finite_set_fact.set {
-            Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            Obj::ListSet(_) => Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsFiniteSetFact(is_finite_set_fact.clone())),
                     "list_set_finite".to_string(),
                     Vec::new(),
                 ),
             )),
-            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
 
@@ -552,10 +552,10 @@ impl Runtime {
         &mut self,
         is_cart_fact: &IsCartFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match &is_cart_fact.set {
             Obj::Cart(_) => {
-                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                return Ok(StmtExecResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsCartFact(is_cart_fact.clone())),
                         "any `cart` object is a cart".to_string(),
@@ -563,7 +563,7 @@ impl Runtime {
                     ),
                 ));
             }
-            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
 
@@ -571,10 +571,10 @@ impl Runtime {
         &mut self,
         is_tuple_fact: &IsTupleFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match &is_tuple_fact.set {
             Obj::Tuple(_) => {
-                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                return Ok(StmtExecResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
                         "any `cart_dim` object is a cart_dim".to_string(),
@@ -589,7 +589,7 @@ impl Runtime {
                     .known_objs_equal_to_tuple
                     .get(&is_tuple_fact.set.to_string())
                 {
-                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    return Ok(StmtExecResult::FactualStmtSuccess(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
                             "it is a known tuple".to_string(),
@@ -598,7 +598,7 @@ impl Runtime {
                     ));
                 }
 
-                Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+                Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
             }
         }
     }
@@ -607,10 +607,10 @@ impl Runtime {
         &mut self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
         _verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if let Obj::ListSet(list_set) = &not_is_nonempty_set_fact.set {
             if list_set.list.is_empty() {
-                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                return Ok(StmtExecResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::NotIsNonemptySetFact(
                             not_is_nonempty_set_fact.clone(),
@@ -621,6 +621,6 @@ impl Runtime {
                 ));
             }
         }
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 }

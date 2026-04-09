@@ -5,7 +5,7 @@ impl Runtime {
     pub fn exec_by_family_stmt(
         &mut self,
         stmt: &ByFamilyStmt,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let stmt_exec = Stmt::ByFamilyStmt(stmt.clone());
         let family_ty = match &stmt.family_obj {
             Obj::FamilyObj(f) => f,
@@ -105,7 +105,7 @@ impl Runtime {
             self.store_atomic_fact_without_well_defined_verified_and_infer(equal_fact)?,
         );
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![]),
         ))
     }

@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         let result = match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
             Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
@@ -41,7 +41,7 @@ impl Runtime {
         &mut self,
         exist_or_and_chain_atomic_fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match exist_or_and_chain_atomic_fact {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact(atomic_fact, verify_state)
@@ -65,7 +65,7 @@ impl Runtime {
         &mut self,
         or_and_chain_atomic_fact: &OrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match or_and_chain_atomic_fact {
             OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact(atomic_fact, verify_state)
@@ -82,7 +82,7 @@ impl Runtime {
         &mut self,
         and_chain_atomic_fact: &AndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         match and_chain_atomic_fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact(atomic_fact, verify_state)

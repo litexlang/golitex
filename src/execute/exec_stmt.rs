@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
+    pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtExecResult, RuntimeError> {
         match stmt {
             Stmt::DefLetStmt(d) => self.exec_let_stmt(d).map_err(RuntimeError::from),
             Stmt::DefPropStmt(d) => self.exec_def_prop_stmt(d).map_err(RuntimeError::from),
@@ -50,7 +50,7 @@ impl Runtime {
         }
     }
 
-    pub fn stmt_unsupported(stmt: Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
+    pub fn stmt_unsupported(stmt: Stmt) -> Result<StmtExecResult, RuntimeError> {
         Err(RuntimeError::from(
             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt,

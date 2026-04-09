@@ -15,9 +15,9 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+    ) -> Result<StmtExecResult, RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
-            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            return Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
@@ -36,7 +36,7 @@ impl Runtime {
         if left_for_numeric_verification
             .two_objs_can_be_calculated_and_equal_by_calculation(&right_for_numeric_verification)
         {
-            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            return Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
@@ -53,7 +53,7 @@ impl Runtime {
             &left_for_numeric_verification,
             &right_for_numeric_verification,
         ) {
-            return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            return Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
@@ -75,7 +75,7 @@ impl Runtime {
             );
         }
 
-        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 }
 
@@ -88,7 +88,7 @@ impl Runtime {
         verify_state: &VerifyState,
         known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
         known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
-    ) -> Result<Option<NonErrStmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtExecResult>, RuntimeError> {
         match (known_objs_equal_to_left, known_objs_equal_to_right) {
             (None, None) => Ok(None),
             (Some(known_objs_equal_to_left), None) => {
