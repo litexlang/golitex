@@ -332,35 +332,19 @@ impl Runtime {
         Ok((forall_shape, forall_in, forall_exist, forall_unique))
     }
 
-    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtExecResult, RuntimeError> {
-        let stmt_exec = Stmt::ByFnStmt(stmt.clone());
+    /// `by fn`：在本地环境中占位（不另从知识库证明），刻画事实在主环境登记。
+    fn exec_by_fn_stmt_verify_process(&mut self) -> Result<(), RuntimeError> {
+        Ok(())
+    }
 
-        let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
-            Some(fs) => fs,
-            None => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt_exec,
-                        format!(
-                            "by fn: `{}` is not known to belong to a fn set",
-                            stmt.function
-                        ),
-                        None,
-                        vec![],
-                    ),
-                ));
-            }
-        };
-
-        let (forall_shape, forall_in, forall_exist, forall_unique) = self
-            .build_fn_characterization_facts(
-                &stmt.function,
-                &fn_set,
-                &stmt.line_file,
-                &stmt_exec,
-                "by fn",
-            )?;
-
+    fn exec_by_fn_stmt_store_process(
+        &mut self,
+        stmt_exec: &Stmt,
+        forall_shape: Fact,
+        forall_in: Fact,
+        forall_exist: Fact,
+        forall_unique: Fact,
+    ) -> Result<InferResult, RuntimeError> {
         // `store_fact...` on forall facts already feeds the stored fact back through `infer`,
         // so avoid pre-recording the same fact here or JSON `infer_facts` will show duplicates.
         let mut infer_result = InferResult::new();
@@ -411,9 +395,142 @@ impl Runtime {
             })?;
         infer_result.new_infer_result_inside(infer_unique);
 
+        Ok(infer_result)
+    }
+
+    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtExecResult, RuntimeError> {
+        let stmt_exec = Stmt::ByFnStmt(stmt.clone());
+
+        let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
+            Some(fs) => fs,
+            None => {
+                return Err(RuntimeError::ExecStmtError(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                        stmt_exec,
+                        format!(
+                            "by fn: `{}` is not known to belong to a fn set",
+                            stmt.function
+                        ),
+                        None,
+                        vec![],
+                    ),
+                ));
+            }
+        };
+
+        let (forall_shape, forall_in, forall_exist, forall_unique) = self
+            .build_fn_characterization_facts(
+                &stmt.function,
+                &fn_set,
+                &stmt.line_file,
+                &stmt_exec,
+                "by fn",
+            )?;
+
+        self.run_in_local_env(|rt| rt.exec_by_fn_stmt_verify_process())?;
+
+        let infer_result = self.exec_by_fn_stmt_store_process(
+            &stmt_exec,
+            forall_shape,
+            forall_in,
+            forall_exist,
+            forall_unique,
+        )?;
+
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![]),
         ))
+    }
+
+    fn exec_by_fn_set_stmt_verify_process(
+        &mut self,
+        stmt_exec: &Stmt,
+        forall_shape: &Fact,
+        forall_in: &Fact,
+        forall_exist: &Fact,
+        forall_unique: &Fact,
+    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
+        let verify_state = VerifyState::new(0, false);
+        let verify_shape_fact = self
+            .verify_fact_return_err_if_not_true(forall_shape, &verify_state)
+            .map_err(|verify_error| {
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt_exec.clone(),
+                    format!(
+                        "by fn set: failed to prove cart/tuple shape characterization `{}`",
+                        forall_shape
+                    ),
+                    Some(verify_error.into()),
+                    vec![],
+                ))
+            })?;
+        let verify_random_param_fact = self
+            .verify_fact_return_err_if_not_true(forall_in, &verify_state)
+            .map_err(|verify_error| {
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt_exec.clone(),
+                    format!(
+                        "by fn set: failed to prove graph-element characterization `{}`",
+                        forall_in
+                    ),
+                    Some(verify_error.into()),
+                    vec![],
+                ))
+            })?;
+        let verify_param_to_element_fact = self
+            .verify_fact_return_err_if_not_true(forall_exist, &verify_state)
+            .map_err(|verify_error| {
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt_exec.clone(),
+                    format!(
+                        "by fn set: failed to prove graph-coverage characterization `{}`",
+                        forall_exist
+                    ),
+                    Some(verify_error.into()),
+                    vec![],
+                ))
+            })?;
+        let verify_uniqueness_fact = self
+            .verify_fact_return_err_if_not_true(forall_unique, &verify_state)
+            .map_err(|verify_error| {
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt_exec.clone(),
+                    format!(
+                        "by fn set: failed to prove graph-uniqueness characterization `{}`",
+                        forall_unique
+                    ),
+                    Some(verify_error.into()),
+                    vec![],
+                ))
+            })?;
+
+        Ok(vec![
+            verify_shape_fact,
+            verify_random_param_fact,
+            verify_param_to_element_fact,
+            verify_uniqueness_fact,
+        ])
+    }
+
+    fn exec_by_fn_set_stmt_store_process(
+        &mut self,
+        stmt: &ByFnSetStmt,
+        stmt_exec: &Stmt,
+    ) -> Result<InferResult, RuntimeError> {
+        let membership_fact = AtomicFact::InFact(InFact::new(
+            stmt.func.clone(),
+            Obj::FnSet(stmt.fn_set.clone()),
+            stmt.line_file.clone(),
+        ));
+        self.store_atomic_fact_without_well_defined_verified_and_infer(membership_fact)
+            .map_err(|store_fact_error| {
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt_exec.clone(),
+                    "by fn set: failed to store membership fact".to_string(),
+                    Some(store_fact_error.into()),
+                    vec![],
+                ))
+            })
     }
 
     pub fn exec_by_fn_set_stmt(
@@ -430,91 +547,20 @@ impl Runtime {
                 "by fn set",
             )?;
 
-        let verify_state = VerifyState::new(0, false);
-        let verify_shape_fact = self
-            .verify_fact_return_err_if_not_true(&forall_shape, &verify_state)
-            .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!(
-                        "by fn set: failed to prove cart/tuple shape characterization `{}`",
-                        forall_shape
-                    ),
-                    Some(verify_error.into()),
-                    vec![],
-                ))
-            })?;
-        let verify_random_param_fact = self
-            .verify_fact_return_err_if_not_true(&forall_in, &verify_state)
-            .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!(
-                        "by fn set: failed to prove graph-element characterization `{}`",
-                        forall_in
-                    ),
-                    Some(verify_error.into()),
-                    vec![],
-                ))
-            })?;
-        let verify_param_to_element_fact = self
-            .verify_fact_return_err_if_not_true(&forall_exist, &verify_state)
-            .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!(
-                        "by fn set: failed to prove graph-coverage characterization `{}`",
-                        forall_exist
-                    ),
-                    Some(verify_error.into()),
-                    vec![],
-                ))
-            })?;
-        let verify_uniqueness_fact = self
-            .verify_fact_return_err_if_not_true(&forall_unique, &verify_state)
-            .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!(
-                        "by fn set: failed to prove graph-uniqueness characterization `{}`",
-                        forall_unique
-                    ),
-                    Some(verify_error.into()),
-                    vec![],
-                ))
-            })?;
+        let verify_inside_results = self.run_in_local_env(|rt| {
+            rt.exec_by_fn_set_stmt_verify_process(
+                &stmt_exec,
+                &forall_shape,
+                &forall_in,
+                &forall_exist,
+                &forall_unique,
+            )
+        })?;
 
-        let membership_fact = AtomicFact::InFact(InFact::new(
-            stmt.func.clone(),
-            Obj::FnSet(stmt.fn_set.clone()),
-            stmt.line_file.clone(),
-        ));
-        let mut infer_result = InferResult::new();
-        infer_result.new_infer_result_inside(
-            self.store_atomic_fact_without_well_defined_verified_and_infer(membership_fact)
-                .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            stmt_exec.clone(),
-                            "by fn set: failed to store membership fact".to_string(),
-                            Some(store_fact_error.into()),
-                            vec![],
-                        ),
-                    )
-                })?,
-        );
+        let infer_result = self.exec_by_fn_set_stmt_store_process(stmt, &stmt_exec)?;
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
-                stmt_exec,
-                infer_result,
-                vec![
-                    verify_shape_fact,
-                    verify_random_param_fact,
-                    verify_param_to_element_fact,
-                    verify_uniqueness_fact,
-                ],
-            ),
+            NonFactualStmtSuccess::new(stmt_exec, infer_result, verify_inside_results),
         ))
     }
 }
