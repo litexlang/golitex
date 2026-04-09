@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-pub type LineFile = (usize, Rc<str>);
+pub type LineFile = (usize, Rc<str>); // (line number, file path)
 
 pub const FILE_INDEX_FOR_BUILTIN: usize = 0;
 
