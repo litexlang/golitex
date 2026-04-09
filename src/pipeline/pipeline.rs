@@ -82,7 +82,7 @@ pub fn run_source_code(
 }
 
 pub fn render_run_source_code_output(
-    runtime: &Runtime,
+    _runtime: &Runtime,
     stmt_results: &Vec<StmtResult>,
     runtime_error: &Option<RuntimeError>,
 ) -> (bool, String) {
@@ -95,7 +95,7 @@ pub fn render_run_source_code_output(
 
     if let Some(error) = runtime_error {
         output_text.push('\n');
-        output_text.push_str(runtime.display_error_json_string(error).as_str());
+        output_text.push_str(error.to_display_json_string().as_str());
         output_text.push('\n');
         return (false, output_text);
     }

@@ -362,7 +362,7 @@ impl RuntimeError {
     }
 }
 
-// Display outputs a short placeholder; full machine-readable form is Runtime::display_error_json_string.
+// Display outputs a short placeholder; full machine-readable form is [`RuntimeError::to_display_json_string`].
 impl fmt::Display for RuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", "error")
