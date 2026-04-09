@@ -111,7 +111,7 @@ where
             };
 
             output_chunk.push('\n');
-            output_chunk.push_str(runtime.display_result_json_string(&exec_result).as_str());
+            output_chunk.push_str(exec_result.to_display_json_string().as_str());
             output_chunk.push('\n');
         }
 

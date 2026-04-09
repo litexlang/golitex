@@ -1,4 +1,5 @@
 pub mod defaults;
+pub mod json_value;
 pub mod mangled_fn_param;
 pub mod name_types;
 pub mod helper;

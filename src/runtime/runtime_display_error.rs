@@ -96,9 +96,7 @@ fn push_optional_conflict_with_json_field_lines(
             let mut inner_lines: Vec<String> = Vec::new();
             inner_lines.push(format!(
                 "{}\"{}\": {}",
-                indent_nested,
-                JSON_KEY_MESSAGE,
-                message_literal
+                indent_nested, JSON_KEY_MESSAGE, message_literal
             ));
             inner_lines.push(format!(
                 "{}\"{}\": {}",
@@ -285,8 +283,7 @@ impl Runtime {
 
                 let mut inside_result_elements: Vec<String> = Vec::new();
                 for inside_result in e.inside_results.iter() {
-                    inside_result_elements
-                        .push(self.runtime_context_display_result_json_string(inside_result));
+                    inside_result_elements.push(inside_result.to_display_json_string());
                 }
                 field_lines.push(json_array_field_line(
                     indent_inner.as_str(),
@@ -447,14 +444,6 @@ impl Runtime {
         }
     }
 
-    fn runtime_context_display_result_json_string(
-        &self,
-        inside_result: &NonErrStmtExecResult,
-    ) -> String {
-        // We reuse the existing json result formatter for nested results.
-        self.display_result_json_string(inside_result)
-    }
-
     pub(in crate::runtime) fn get_file_name_empty_if_default(&self, line_file: LineFile) -> String {
         if is_default_line_file(&line_file) {
             return String::new();
@@ -463,7 +452,10 @@ impl Runtime {
     }
 
     /// JSON fragment for `"line"`: `null` when [`is_default_line_file`], else the line number.
-    pub(in crate::runtime) fn json_display_line_json_fragment(&self, line_file: &LineFile) -> String {
+    pub(in crate::runtime) fn json_display_line_json_fragment(
+        &self,
+        line_file: &LineFile,
+    ) -> String {
         if is_default_line_file(line_file) {
             "null".to_string()
         } else {
@@ -472,7 +464,10 @@ impl Runtime {
     }
 
     /// JSON fragment for `"source"`: `null` when [`is_default_line_file`], else a quoted path string.
-    pub(in crate::runtime) fn json_display_source_json_fragment(&self, line_file: LineFile) -> String {
+    pub(in crate::runtime) fn json_display_source_json_fragment(
+        &self,
+        line_file: LineFile,
+    ) -> String {
         if is_default_line_file(&line_file) {
             "null".to_string()
         } else {
