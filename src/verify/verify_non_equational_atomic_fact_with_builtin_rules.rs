@@ -1,11 +1,6 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// Builtin rules for non-equational atomic facts. Order relations delegate to
-    /// `verify_order_or_negation_fact_with_builtin_duality_and_number_compare`, which also applies
-    /// real-order congruence rules (same-side add/subtract, two-sided add/subtract from paired
-    /// inequalities, `d` nonpos/nonneg multiplication, etc.); recursive premise checks there use
-    /// [`VerifyState::make_final_round_state`].
     pub fn verify_non_equational_atomic_fact_with_builtin_rules(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -120,6 +115,11 @@ impl Runtime {
             AtomicFact::IsTupleFact(is_tuple_fact) => {
                 self._verify_is_tuple_fact_with_builtin_rules(is_tuple_fact, verify_state)
             }
+            AtomicFact::NotIsNonemptySetFact(not_is_nonempty_set_fact) => self
+                ._verify_not_is_nonempty_set_fact_with_builtin_rules(
+                    not_is_nonempty_set_fact,
+                    verify_state,
+                ),
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
@@ -601,5 +601,26 @@ impl Runtime {
                 Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
             }
         }
+    }
+
+    fn _verify_not_is_nonempty_set_fact_with_builtin_rules(
+        &mut self,
+        not_is_nonempty_set_fact: &NotIsNonemptySetFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+        if let Obj::ListSet(list_set) = &not_is_nonempty_set_fact.set {
+            if list_set.list.is_empty() {
+                return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        Fact::AtomicFact(AtomicFact::NotIsNonemptySetFact(
+                            not_is_nonempty_set_fact.clone(),
+                        )),
+                        "list_set_empty".to_string(),
+                        Vec::new(),
+                    ),
+                ));
+            }
+        }
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 }
