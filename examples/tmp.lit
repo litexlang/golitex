@@ -1,1 +1,294 @@
-Fn (R, R) R = Fn (R, R) R
+# examples/tmp.lit — 与 `Stmt` 枚举（见 src/stmt/stmt.rs）一一对应的**可运行**小例子。
+# 约定：每条用独立 `prove:` 块，便于复制；`import` / `run_file` 执行器尚未接好，仅列语法。
+
+# --- Stmt::Fact：prove 体内直接写事实（原子或复合） ---
+prove:
+    1 = 1
+
+# --- Stmt::DefLetStmt：`let` 引入名字并附带一组事实 ---
+prove:
+    let tmp_let_x R:
+        tmp_let_x = 1
+    tmp_let_x = 1
+
+# --- Stmt::DefPropStmt：`prop` 定义谓词（可带 iff 体） ---
+prove:
+    prop tmp_prop_p(x R):
+        x = x
+
+# --- Stmt::DefAbstractPropStmt：`abstract_prop` 仅声明符号与元数 ---
+prove:
+    abstract_prop tmp_abs_q()
+
+# --- Stmt::HaveObjInNonemptySetStmt：`have` 参数 + 集合/类型，无 `=` ---
+prove:
+    have tmp_have_a R, tmp_have_b Z
+
+# --- Stmt::HaveObjEqualStmt：`have` 后 `=` 把参数约束到具体对象 ---
+prove:
+    have tmp_have_eq_r R = 1
+    tmp_have_eq_r = 1
+
+# --- Stmt::HaveExistObjStmt：`have by exist` 从已知存在式里取名 ---
+prove:
+    know exist tmp_exist_w R st {tmp_exist_w > 0, tmp_exist_w < 1}
+    have by exist tmp_exist_c R st {tmp_exist_c > 0, tmp_exist_c < 1}: tmp_exist_name
+    tmp_exist_name > 0
+
+# --- Stmt::HaveFnEqualStmt：`have fn` … `=` 单值定义（须写返回集 `(x R) R`） ---
+prove:
+    have fn tmp_fn_eq(x R) R = x + 1
+    do_nothing
+
+# --- Stmt::HaveFnEqualCaseByCaseStmt：`have fn` … `:` 后跟 `case` 分情况（每行一条：case … : 值） ---
+prove:
+    have fn tmp_fn_cases(x_demo R) R :
+        case x_demo = 2: 3
+        case x_demo != 2: 4
+    do_nothing
+
+# --- Stmt::HaveFnByInducStmt：`have fn by induc from` 归纳定义函数（与 examples/have_fn_by_induc.lit 同形） ---
+prove:
+    know forall x Z:
+        x % 2 = 0 or x % 2 = 1
+
+    have fn by induc from 0: tmp_fn_ind(x Z: x >= 0) R:
+        case x = 0: 1
+        case x = 1: 1
+        case x >= 2:
+            case x % 2 = 0: tmp_fn_ind(x - 2) + tmp_fn_ind(x - 1)
+            case x % 2 = 1: tmp_fn_ind(x - 2) + tmp_fn_ind(x - 1)
+
+# --- Stmt::DefStructStmt：`struct` 定义带字段与可选 iff ---
+prove:
+    abstract_prop tmp_abs_for_struct(a)
+
+    struct tmp_struct_t(a set):
+        fld a
+        <=>:
+            $tmp_abs_for_struct(self.fld)
+
+# --- Stmt::DefFamilyStmt：`family` 把参数族绑定到右侧对象（常为 `fn` 集） ---
+prove:
+    family tmp_fam_seq(s set) = fn(x N_pos) s
+
+    forall a family tmp_fam_seq(R):
+        a $in fn(y N_pos) R
+        a(1) = a(1)
+
+# --- Stmt::DefAlgoStmt：`algo` 定义可 `eval` 的算法 ---
+prove:
+    have fn tmp_algo_f(x R) R = 1
+
+    algo tmp_algo_f(x):
+        1
+
+    eval tmp_algo_f(0)
+    tmp_algo_f(0) = 1
+
+# --- Stmt::ClaimStmt：`claim` 目标 + `prove:` 子证明 + 若干事实行 ---
+prove:
+    claim:
+        prove:
+            1 + 1 = 2
+        1 + 1 = 2
+
+# --- Stmt::KnowStmt：`know` 把事实记入环境（可多行或 `forall` 单条） ---
+prove:
+    know:
+        1 = 1
+
+# --- Stmt::ProveStmt：嵌套 `prove:` 再开一层证明子块 ---
+prove:
+    prove:
+        2 = 2
+    2 = 2
+
+# --- Stmt::ImportStmt / Stmt::RunFileStmt：语法备忘（当前 exec 会报错，勿在此文件直接执行） ---
+# import "examples/runfile2.lit"
+# run_file "./examples/runfile2.lit"
+
+# --- Stmt::DoNothingStmt：`do_nothing`（常用于占位证明步） ---
+prove:
+    do_nothing
+
+# --- Stmt::EvalStmt：`eval` 对表达式求值（需先有 `algo` 等） ---
+prove:
+    have fn tmp_eval_g(x R) R = x
+
+    algo tmp_eval_g(x):
+        x
+
+    eval tmp_eval_g(3)
+    tmp_eval_g(3) = 3
+
+# --- Stmt::WitnessExistFact：`witness exist … from …` 构造存在见证 ---
+prove:
+    witness exist tmp_wx, tmp_wy R st {tmp_wx > tmp_wy} from 1, 0:
+        1 > 0
+
+    exist tmp_wx2, tmp_wy2 R st {tmp_wx2 > tmp_wy2}
+
+# --- Stmt::WitnessNonemptySet：`witness nonempty` 从元素见证集合非空 ---
+prove:
+    have tmp_wit_s set
+
+    witness $is_nonempty_set(tmp_wit_s) from 1:
+        know 1 $in tmp_wit_s
+
+    $is_nonempty_set(tmp_wit_s)
+
+# --- Stmt::ByCasesStmt：`by cases` 分情形证明 ---
+prove:
+    have fn tmp_fn_bc(x_bc R) R :
+        case x_bc = 2: 3
+        case x_bc != 2: 4
+
+    have tmp_x_demo R
+
+    tmp_x_demo = 2 or tmp_x_demo != 2
+
+    by cases:
+        prove:
+            tmp_fn_bc(tmp_x_demo) > 2
+        case tmp_x_demo = 2:
+            tmp_fn_bc(tmp_x_demo) = 3
+            tmp_fn_bc(tmp_x_demo) > 2
+        case tmp_x_demo != 2:
+            tmp_fn_bc(tmp_x_demo) = 4
+            tmp_fn_bc(tmp_x_demo) > 2
+
+# --- Stmt::ByContraStmt：`by contra` 反证 ---
+prove:
+    abstract_prop tmp_abs_pc(x, y)
+    abstract_prop tmp_abs_qc(x, y)
+
+    know forall tmp_a, tmp_b R:
+        $tmp_abs_pc(tmp_a, tmp_b)
+        =>:
+            $tmp_abs_qc(tmp_a, tmp_b)
+
+    know not $tmp_abs_qc(1, 2)
+
+    by contra:
+        prove:
+            not $tmp_abs_pc(1, 2)
+        $tmp_abs_pc(1, 2)
+        impossible $tmp_abs_qc(1, 2)
+
+# --- Stmt::ByEnumerateStmt：`by enumerate` 在有限集合上枚举 ---
+prove:
+    let tmp_enum_a R:
+        tmp_enum_a $in {1, 2}
+
+    tmp_enum_a = 1 or tmp_enum_a = 2
+
+    by enumerate tmp_enum_a {1, 2, 3}:
+        prove:
+            tmp_enum_a < 4
+
+# --- Stmt::ByInducStmt：`by induc` 归纳 ---
+prove:
+    abstract_prop tmp_abs_pind(a)
+
+    know:
+        $tmp_abs_pind(0)
+        forall tmp_n Z:
+            tmp_n >= 0
+            $tmp_abs_pind(tmp_n)
+            =>:
+                $tmp_abs_pind(tmp_n + 1)
+
+    by induc tmp_n from 0:
+        $tmp_abs_pind(tmp_n)
+
+    forall tmp_n2 Z:
+        tmp_n2 >= 0
+        =>:
+            $tmp_abs_pind(tmp_n2)
+
+# --- Stmt::ByForStmt：`by for` 在 range / closed_range 上循环证明 ---
+prove:
+    by for tmp_i range(0, 10):
+        prove:
+            tmp_i < 10
+        do_nothing
+
+# --- Stmt::ByExtensionStmt：`by extension` 集合外延相等 ---
+prove:
+    by extension:
+        prove:
+            {1, 2} = {2, 1}
+        by enumerate tmp_x {1, 2}:
+            prove:
+                tmp_x $in {2, 1}
+        by enumerate tmp_y {2, 1}:
+            prove:
+                tmp_y $in {1, 2}
+
+    {1, 2} = {2, 1}
+
+# --- Stmt::ByFnStmt：`by fn` 登记函数图刻画（需已知 `f` 属于某 fn 集） ---
+prove:
+    have fn tmp_byfn_f(x R) R = 1
+
+    by fn: tmp_byfn_f
+
+# --- Stmt::ByFamilyStmt：`by family` 展开 family 实例 ---
+prove:
+    family tmp_fam_p(a set) = fn(x a) a
+
+    forall a family tmp_fam_p(R):
+        a $in fn(y R) R
+        a(1) = a(1)
+
+    by family: family tmp_fam_p(R)
+
+# --- Stmt::ByStructStmt：`by struct` 展开 struct 实例 ---
+prove:
+    abstract_prop tmp_abs_bs(b, c, d)
+
+    struct tmp_struct_q(a set):
+        b1 a
+        c1 fn(x a) a
+        d1 fn(x, y a) a
+        <=>:
+            $tmp_abs_bs(self.b1, self.c1, self.d1)
+
+    by struct: struct tmp_struct_q(R)
+
+# --- Stmt::ByTupleStmt：`by tuple` 元组/笛卡尔相关展开 ---
+prove:
+    let tmp_tup_a set:
+        tmp_tup_a = (2, 3)
+
+    by tuple: tmp_tup_a
+
+# --- Stmt::ByFnSetStmt：`by fn set` 验证成员属于 fn 集并存储（需先 know 若干刻画） ---
+prove:
+    let tmp_fs set
+
+    know:
+        forall tmp_x1 tmp_fs:
+            tmp_x1 $in cart(cart(R, Q), Z)
+            tuple_dim(tmp_x1) = 2
+
+        forall tmp_x1 tmp_fs:
+            exist tmp_x2 R, tmp_x3 Q, tmp_z Z st {tmp_x2 > tmp_x3, tmp_x2 > 2, tmp_x1 = ((tmp_x2, tmp_x3), tmp_z)}
+
+        forall tmp_x2 R, tmp_x3 Q:
+            tmp_x2 > tmp_x3
+            tmp_x2 > 2
+            =>:
+                exist tmp_x1 tmp_fs, tmp_z2 Z st {tmp_x1 = ((tmp_x2, tmp_x3), tmp_z2)}
+
+        forall tmp_x1, tmp_x2 tmp_fs:
+            tmp_x1 $in cart(cart(R, Q), Z)
+            tmp_x2 $in cart(cart(R, Q), Z)
+            tmp_x1[1] = tmp_x2[1]
+            =>:
+                tmp_x1 = tmp_x2
+
+    by fn set: tmp_fs $in fn(tmp_x1 R, tmp_y1 Q: tmp_x1 > tmp_y1, tmp_x1 > 2) Z
+
+    tmp_fs(100, 99) = tmp_fs(100, 99)
