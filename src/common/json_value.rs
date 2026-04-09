@@ -31,7 +31,7 @@ pub fn json_string_literal(source_text: &str) -> String {
     output
 }
 
-fn json_one_level_indent(unit_count: usize) -> String {
+pub fn json_one_level_indent(unit_count: usize) -> String {
     "  ".repeat(unit_count)
 }
 
@@ -61,6 +61,16 @@ fn render_json_primitive(v: &JsonValue) -> String {
             unreachable!("render_json_primitive: non-primitive")
         }
     }
+}
+
+/// JSON fragment for `"line"`: `null` when [`is_default_line_file`], else the line number (unquoted).
+pub fn line_file_line_json_fragment(line_file: &LineFile) -> String {
+    render_json_primitive(&line_file_line_json_value(line_file))
+}
+
+/// JSON fragment for `"source"`: `null` when [`is_default_line_file`], else a quoted path string.
+pub fn line_file_source_json_fragment(line_file: &LineFile) -> String {
+    render_json_primitive(&line_file_source_json_value(line_file))
 }
 
 /// `depth` is the indent depth (number of two-space units) of the opening `{` of this object.
