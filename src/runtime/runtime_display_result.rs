@@ -90,12 +90,16 @@ impl Runtime {
             )
         ));
         let stmt_line_file = non_factual_stmt_success_result.stmt.line_file();
-        field_lines.push(format!("{}\"line\": {}", indent_inner, stmt_line_file.0));
+        field_lines.push(format!(
+            "{}\"line\": {}",
+            indent_inner,
+            self.json_display_line_json_fragment(&stmt_line_file)
+        ));
         field_lines.push(format!(
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_empty_if_default(stmt_line_file))
+            self.json_display_source_json_fragment(stmt_line_file)
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -111,7 +115,7 @@ impl Runtime {
 
         let infer_indent = json_one_level_indent(depth + 2);
         let mut infer_elements: Vec<String> = Vec::new();
-        for infer_fact in non_factual_stmt_success_result.infers.infer_facts.iter() {
+        for infer_fact in non_factual_stmt_success_result.infers.infer_lines().iter() {
             infer_elements.push(format!(
                 "{}{}",
                 infer_indent,
@@ -180,12 +184,16 @@ impl Runtime {
             json_string_literal("Fact")
         ));
         let fact_line_file = factual_stmt_success_result.stmt.line_file();
-        field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
+        field_lines.push(format!(
+            "{}\"line\": {}",
+            indent_inner,
+            self.json_display_line_json_fragment(&fact_line_file)
+        ));
         field_lines.push(format!(
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_empty_if_default(fact_line_file))
+            self.json_display_source_json_fragment(fact_line_file)
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -200,7 +208,7 @@ impl Runtime {
 
         let infer_indent = json_one_level_indent(depth + 2);
         let mut infer_elements: Vec<String> = Vec::new();
-        for infer_fact in factual_stmt_success_result.infers.infer_facts.iter() {
+        for infer_fact in factual_stmt_success_result.infers.infer_lines().iter() {
             infer_elements.push(format!(
                 "{}{}",
                 infer_indent,
@@ -255,12 +263,16 @@ impl Runtime {
             json_string_literal("Fact")
         ));
         let stmt_line_file = factual_stmt_success_result.stmt.line_file();
-        field_lines.push(format!("{}\"line\": {}", indent_inner, stmt_line_file.0));
+        field_lines.push(format!(
+            "{}\"line\": {}",
+            indent_inner,
+            self.json_display_line_json_fragment(&stmt_line_file)
+        ));
         field_lines.push(format!(
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_empty_if_default(stmt_line_file))
+            self.json_display_source_json_fragment(stmt_line_file)
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -269,12 +281,13 @@ impl Runtime {
         ));
         field_lines.push(format!(
             "{}\"verified_by_fact_known_on_line\": {}",
-            indent_inner, known_fact_line_file.0
+            indent_inner,
+            self.json_display_line_json_fragment(&known_fact_line_file)
         ));
         field_lines.push(format!(
             "{}\"verified_by_fact_known_from_source\": {}",
             indent_inner,
-            json_string_literal(&self.get_file_name_empty_if_default(known_fact_line_file))
+            self.json_display_source_json_fragment(known_fact_line_file)
         ));
         field_lines.push(format!(
             "{}\"verified_by\": {}",
@@ -284,7 +297,7 @@ impl Runtime {
 
         let infer_indent = json_one_level_indent(depth + 2);
         let mut infer_elements: Vec<String> = Vec::new();
-        for infer_fact in factual_stmt_success_result.infers.infer_facts.iter() {
+        for infer_fact in factual_stmt_success_result.infers.infer_lines().iter() {
             infer_elements.push(format!(
                 "{}{}",
                 infer_indent,

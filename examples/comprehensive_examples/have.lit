@@ -110,3 +110,10 @@ prove:
     f(1) $in fn(Z)Z
 
     f(1)(2) = f(1)(2)
+
+prove:
+    have fn f(x R) R = x + 1
+
+    have fn g(x R) R:
+        case x = 1: 2
+        case x != 1: 3
