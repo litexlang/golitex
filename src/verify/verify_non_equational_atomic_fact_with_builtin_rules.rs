@@ -445,7 +445,53 @@ impl Runtime {
                     None
                 }
             }
-            _ => None,
+            other => {
+                let zero_obj = Obj::Number(Number::new("0".to_string()));
+                let a_gt_0 = AtomicFact::GreaterFact(GreaterFact::new(
+                    other.clone(),
+                    zero_obj.clone(),
+                    line_file.clone(),
+                ));
+                let zero_lt_a = AtomicFact::LessFact(LessFact::new(
+                    zero_obj.clone(),
+                    other.clone(),
+                    line_file.clone(),
+                ));
+
+                let final_round_verify_state = verify_state.make_final_round_state();
+
+                if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                    &a_gt_0,
+                    &final_round_verify_state,
+                )? || self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                    &zero_lt_a,
+                    &final_round_verify_state,
+                )? {
+                    Some("not_equal_zero_operand_strictly_positive")
+                } else {
+                    let a_lt_0 = AtomicFact::LessFact(LessFact::new(
+                        other.clone(),
+                        zero_obj.clone(),
+                        line_file.clone(),
+                    ));
+                    let zero_gt_a = AtomicFact::GreaterFact(GreaterFact::new(
+                        zero_obj,
+                        other.clone(),
+                        line_file.clone(),
+                    ));
+                    if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                        &a_lt_0,
+                        &final_round_verify_state,
+                    )? || self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                        &zero_gt_a,
+                        &final_round_verify_state,
+                    )? {
+                        Some("not_equal_zero_operand_strictly_negative")
+                    } else {
+                        None
+                    }
+                }
+            }
         };
 
         match builtin_rule_label {

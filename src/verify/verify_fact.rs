@@ -22,14 +22,25 @@ impl Runtime {
         if result.is_unknown() {
             let fact_owned = fact.clone();
             let line_file = fact_owned.line_file();
-            return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                fact_owned.clone(),
-                String::new(),
-                line_file,
-                Some(RuntimeError::new_verify_result_unknown_with_fact_previous_error(
-                    fact_owned, None,
-                )),
-            ));
+            let unknown_detail = if let StmtExecResult::StmtUnknown(u) = &result {
+                u.detail.clone().unwrap_or_default()
+            } else {
+                String::new()
+            };
+            return Err(
+                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                    fact_owned.clone(),
+                    unknown_detail.clone(),
+                    line_file,
+                    Some(
+                        RuntimeError::new_verify_result_unknown_with_fact_previous_error(
+                            fact_owned,
+                            unknown_detail,
+                            None,
+                        ),
+                    ),
+                ),
+            );
         } else {
             Ok(result)
         }

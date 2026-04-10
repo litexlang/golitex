@@ -317,11 +317,12 @@ impl RuntimeError {
 
     pub fn new_verify_result_unknown_with_fact_previous_error(
         fact: Fact,
+        msg: String,
         previous_error: Option<RuntimeError>,
     ) -> Self {
         let line_file = fact.line_file();
         RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-            String::new(),
+            msg,
             line_file,
             Some(fact),
             previous_error,
