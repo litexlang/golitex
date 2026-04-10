@@ -35,7 +35,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
-        let (result, left_for_numeric_verification, right_for_numeric_verification) = self
+        let (result, calculated_left, calculated_right) = self
             .verify_equality_by_they_are_the_same_and_calculation(
                 left,
                 right,
@@ -46,10 +46,7 @@ impl Runtime {
             return Ok(result);
         }
 
-        if objs_equal_by_rational_expression_evaluation(
-            &left_for_numeric_verification,
-            &right_for_numeric_verification,
-        ) {
+        if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
             return Ok(StmtExecResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
