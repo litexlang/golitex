@@ -844,6 +844,58 @@ impl AtomicFact {
     pub fn key(&self) -> String {
         return self.predicate_string();
     }
+
+    pub fn transposed_binary_order_equivalent(&self) -> Option<Self> {
+        match self {
+            AtomicFact::LessFact(f) => Some(AtomicFact::GreaterFact(GreaterFact::new(
+                f.right.clone(),
+                f.left.clone(),
+                f.line_file.clone(),
+            ))),
+            AtomicFact::GreaterFact(f) => Some(AtomicFact::LessFact(LessFact::new(
+                f.right.clone(),
+                f.left.clone(),
+                f.line_file.clone(),
+            ))),
+            AtomicFact::LessEqualFact(f) => Some(AtomicFact::GreaterEqualFact(
+                GreaterEqualFact::new(
+                    f.right.clone(),
+                    f.left.clone(),
+                    f.line_file.clone(),
+                ),
+            )),
+            AtomicFact::GreaterEqualFact(f) => Some(AtomicFact::LessEqualFact(LessEqualFact::new(
+                f.right.clone(),
+                f.left.clone(),
+                f.line_file.clone(),
+            ))),
+            AtomicFact::NotLessFact(f) => Some(AtomicFact::NotGreaterFact(NotGreaterFact::new(
+                f.right.clone(),
+                f.left.clone(),
+                f.line_file.clone(),
+            ))),
+            AtomicFact::NotGreaterFact(f) => Some(AtomicFact::NotLessFact(NotLessFact::new(
+                f.right.clone(),
+                f.left.clone(),
+                f.line_file.clone(),
+            ))),
+            AtomicFact::NotLessEqualFact(f) => Some(AtomicFact::NotGreaterEqualFact(
+                NotGreaterEqualFact::new(
+                    f.right.clone(),
+                    f.left.clone(),
+                    f.line_file.clone(),
+                ),
+            )),
+            AtomicFact::NotGreaterEqualFact(f) => Some(AtomicFact::NotLessEqualFact(
+                NotLessEqualFact::new(
+                    f.right.clone(),
+                    f.left.clone(),
+                    f.line_file.clone(),
+                ),
+            )),
+            _ => None,
+        }
+    }
 }
 
 impl AtomicFact {

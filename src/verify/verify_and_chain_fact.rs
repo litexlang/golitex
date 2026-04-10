@@ -81,7 +81,10 @@ impl Runtime {
         for fact in &facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
-                return Ok(result);
+                return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new_with_detail(format!(
+                    "unverified chain step: {}",
+                    fact
+                ))));
             }
 
             verify_what.push(fact.to_string());

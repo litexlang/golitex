@@ -11,6 +11,30 @@ know:
         =>:
             a * c <= b * c
 
+    forall a, b, c R:
+        c > 0
+        a <= b
+        =>:
+            a / c <= b / c
+
+prop a_lt_c(a, b, c R)
+
+know:
+    forall a, b, c R:
+        0 < a
+        a <= c
+        =>:
+            $a_lt_c(a, b, c)
+
+know:
+    forall a, b R:
+        0 <= a
+        0 <= b
+        =>:
+            0 <= a * b
+
+0 <= 2/3
+
 claim:
     prove:
         forall a, b, c, d R:
@@ -20,10 +44,6 @@ claim:
             =>:
                 d + a <= 5 * b
     d = 2 * 1 <= 2 * a
-    d + a <= 2*a + a = 3*a
-    a <= 1.5 * a
     a = (2*a)/2 <= (3*b)/2 = 1.5 * b
-    a <= 1.5 * b
-    know 4.5 * b <= 5 * b
+    0 <= (2/3)* a = (2 * a)/3 <= (3 * b)/3 = b
     d + a <= 2 * a + a <= 3 * b + a <= 3 * b +1.5*b = 4.5*b <= 5 * b
-    d + a <= 5 * b
