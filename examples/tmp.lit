@@ -4,22 +4,22 @@
 
 # --- Stmt::Fact — assert a closed formula ---
 prove:
-    1 = 1
+    1 + 1 = 2
 
-# --- Stmt::DefLetStmt — local names with defining equations ---
+# --- Stmt::DefLetStmt — local names with defining properties ---
 prove:
     let tmp_let_x R:
         tmp_let_x = 1
     tmp_let_x = 1
 
-# --- Stmt::DefPropStmt — define a named predicate ---
+# --- Stmt::DefPropStmt — define a named predicate with its if and only if properties ---
 prove:
     prop tmp_prop_p(x R):
         x = x
 
 # --- Stmt::DefAbstractPropStmt — declare a predicate symbol and arity only ---
 prove:
-    abstract_prop tmp_abs_q()
+    abstract_prop tmp_abs_q(a)
 
 # --- Stmt::HaveObjInNonemptySetStmt — introduce typed parameters (membership in given sets / types) ---
 prove:
@@ -30,7 +30,7 @@ prove:
     have tmp_have_eq_r R = 1
     tmp_have_eq_r = 1
 
-# --- Stmt::HaveExistObjStmt — name witnesses for an already known existential ---
+# --- Stmt::HaveByExistStmt — name witnesses for an already known existential ---
 prove:
     know exist tmp_exist_w R st {tmp_exist_w > 0, tmp_exist_w < 1}
     have by exist tmp_exist_c R st {tmp_exist_c > 0, tmp_exist_c < 1}: tmp_exist_name
@@ -79,13 +79,16 @@ prove:
 
 # --- Stmt::DefAlgoStmt — computational presentation of a function (evaluation) ---
 prove:
-    have fn tmp_algo_f(x R) R = 1
+    have fn tmp_algo_f(x N_pos) R:
+        case x = 1: 1
+        case x != 1: 0
 
     algo tmp_algo_f(x):
-        1
+        case x = 1: 1
+        case x != 1: 0
 
-    eval tmp_algo_f(0)
-    tmp_algo_f(0) = 1
+    eval tmp_algo_f(1)
+    tmp_algo_f(1) = 1
 
 # --- Stmt::ClaimStmt — stated goal with a sub-proof and lemmas ---
 prove:
@@ -115,10 +118,28 @@ prove:
 
 # --- Stmt::EvalStmt — compute a closed expression ---
 prove:
-    have fn tmp_eval_g(x R) R = x
+    have tmp_eval_g fn(x Z) Z
+
+    know:
+        forall x Z:
+            x > 0
+            =>:
+                x -1 $in Z
+                tmp_eval_g(x) = tmp_eval_g(x-1) + 1
+        forall x Z:
+            x = 0
+            =>:
+                tmp_eval_g(x) = 0
+        forall x Z:
+            x < 0
+            =>:
+                x + 1 $in Z
+                tmp_eval_g(x) = tmp_eval_g(x+1) - 1
 
     algo tmp_eval_g(x):
-        x
+        case x > 0: tmp_eval_g(x-1) + 1
+        case x = 0: 0
+        case x < 0: tmp_eval_g(x+1) - 1
 
     eval tmp_eval_g(3)
     tmp_eval_g(3) = 3

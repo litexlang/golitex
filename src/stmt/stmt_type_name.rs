@@ -171,7 +171,7 @@ impl HaveObjEqualStmt {
     }
 }
 
-impl HaveExistObjStmt {
+impl HaveByExistStmt {
     pub fn stmt_type_name(&self) -> String {
         "HaveExistObjStmt".to_string()
     }
