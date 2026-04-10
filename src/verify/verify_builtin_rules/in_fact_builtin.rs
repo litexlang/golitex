@@ -1,8 +1,13 @@
 use crate::prelude::*;
-use crate::verify::*;
+use crate::verify::{
+    number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
+    number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
+    number_is_in_z_nz, VerifyState,
+};
 use std::collections::{HashMap, HashSet};
 
-/// 按 `flat_original` 与 `mangled_by_index` 把各组形参换成同一套存储名（与 [`FnSet::get_params`] 展平顺序一致）。
+// Rename param groups to mangled storage names using `flat_original` and `mangled_by_index`
+// (same flatten order as `FnSet::get_params`).
 fn param_def_with_set_rename_to_mangled(
     groups: &[ParamGroupWithSet],
     flat_original: &[String],
@@ -398,9 +403,8 @@ impl Runtime {
         }
     }
 
-    /// Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and `^` when direct operands are in `Z`
-    /// (`Pow` checks `base` and `exponent`; if the power can be normalized to a decimal, the numeric
-    /// branch above still decides membership).
+    // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and `^` when direct operands are in `Z`
+    // (`Pow` checks `base` and `exponent`; if the power normalizes to a decimal, the numeric branch above applies).
     fn verify_in_fact_arithmetic_expression_in_z(
         &mut self,
         in_fact: &InFact,
@@ -443,8 +447,8 @@ impl Runtime {
         ))
     }
 
-    /// Builtin closure of `Q` under `+`, `-`, `*`, `/` when both operands are in `Q`. For `^`, require
-    /// `base` in `Q` and `exponent` in `Z` (rational base with integer exponent stays in `Q`).
+    // Builtin closure of `Q` under `+`, `-`, `*`, `/` when both operands are in `Q`. For `^`, require
+    // `base` in `Q` and `exponent` in `Z` (rational base with integer exponent stays in `Q`).
     fn verify_in_fact_arithmetic_expression_in_q(
         &mut self,
         in_fact: &InFact,
@@ -730,7 +734,8 @@ impl Runtime {
         }
     }
 
-    /// `fn(x N_pos) R` 与 `fn(y N_pos) R`：为每维生成随机基名并加 `__` 前缀，两侧代入同一套存储名后对 `params` / `dom` / `ret` 比较 `Display`。
+    // `fn(x N_pos) R` vs `fn(y N_pos) R`: pick fresh base names per dimension with `__` prefix, substitute
+    // the same storage names on both sides, then compare `Display` of params / dom / ret.
     fn fn_set_with_params_equal_modulo_param_rename(
         &self,
         a: &FnSet,
@@ -794,7 +799,7 @@ impl Runtime {
         Ok(a_instantiated.to_string() == b_instantiated.to_string())
     }
 
-    /// 若环境中已有 `identifier $in fn_定义`（由先前推断写入 `known_obj_in_fn_set`），则与当前 `fn ...` 右侧做 α-等价比较。
+    // If the env already has `identifier $in fn_def` (from `known_obj_in_fn_set`), α-compare to the RHS `fn ...`.
     fn verify_in_fact_identifier_in_fn_set_by_stored_definition(
         &mut self,
         identifier: &Identifier,

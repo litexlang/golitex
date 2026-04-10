@@ -858,11 +858,7 @@ impl AtomicFact {
                 f.line_file.clone(),
             ))),
             AtomicFact::LessEqualFact(f) => Some(AtomicFact::GreaterEqualFact(
-                GreaterEqualFact::new(
-                    f.right.clone(),
-                    f.left.clone(),
-                    f.line_file.clone(),
-                ),
+                GreaterEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
             )),
             AtomicFact::GreaterEqualFact(f) => Some(AtomicFact::LessEqualFact(LessEqualFact::new(
                 f.right.clone(),
@@ -880,18 +876,10 @@ impl AtomicFact {
                 f.line_file.clone(),
             ))),
             AtomicFact::NotLessEqualFact(f) => Some(AtomicFact::NotGreaterEqualFact(
-                NotGreaterEqualFact::new(
-                    f.right.clone(),
-                    f.left.clone(),
-                    f.line_file.clone(),
-                ),
+                NotGreaterEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
             )),
             AtomicFact::NotGreaterEqualFact(f) => Some(AtomicFact::NotLessEqualFact(
-                NotLessEqualFact::new(
-                    f.right.clone(),
-                    f.left.clone(),
-                    f.line_file.clone(),
-                ),
+                NotLessEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
             )),
             _ => None,
         }
@@ -1546,12 +1534,12 @@ impl AtomicFact {
             AtomicFact::IsSetFact(a) => {
                 AtomicFact::NotIsSetFact(NotIsSetFact::new(a.set.clone(), a.line_file.clone()))
             }
-            AtomicFact::IsNonemptySetFact(a) => {
-                AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(a.set.clone(), a.line_file.clone()))
-            }
-            AtomicFact::IsFiniteSetFact(a) => {
-                AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(a.set.clone(), a.line_file.clone()))
-            }
+            AtomicFact::IsNonemptySetFact(a) => AtomicFact::IsNonemptySetFact(
+                IsNonemptySetFact::new(a.set.clone(), a.line_file.clone()),
+            ),
+            AtomicFact::IsFiniteSetFact(a) => AtomicFact::NotIsFiniteSetFact(
+                NotIsFiniteSetFact::new(a.set.clone(), a.line_file.clone()),
+            ),
             AtomicFact::InFact(a) => AtomicFact::NotInFact(NotInFact::new(
                 a.element.clone(),
                 a.set.clone(),
@@ -1578,12 +1566,16 @@ impl AtomicFact {
                 a.obj_can_restrict_to_fn_set.clone(),
                 a.line_file.clone(),
             )),
-            AtomicFact::NotEqualFact(a) => {
-                AtomicFact::EqualFact(EqualFact::new(a.left.clone(), a.right.clone(), a.line_file.clone()))
-            }
-            AtomicFact::NotLessFact(a) => {
-                AtomicFact::LessFact(LessFact::new(a.left.clone(), a.right.clone(), a.line_file.clone()))
-            }
+            AtomicFact::NotEqualFact(a) => AtomicFact::EqualFact(EqualFact::new(
+                a.left.clone(),
+                a.right.clone(),
+                a.line_file.clone(),
+            )),
+            AtomicFact::NotLessFact(a) => AtomicFact::LessFact(LessFact::new(
+                a.left.clone(),
+                a.right.clone(),
+                a.line_file.clone(),
+            )),
             AtomicFact::NotGreaterFact(a) => AtomicFact::GreaterFact(GreaterFact::new(
                 a.left.clone(),
                 a.right.clone(),
@@ -1600,15 +1592,18 @@ impl AtomicFact {
             AtomicFact::NotIsSetFact(a) => {
                 AtomicFact::IsSetFact(IsSetFact::new(a.set.clone(), a.line_file.clone()))
             }
-            AtomicFact::NotIsNonemptySetFact(a) => {
-                AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(a.set.clone(), a.line_file.clone()))
-            }
-            AtomicFact::NotIsFiniteSetFact(a) => {
-                AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(a.set.clone(), a.line_file.clone()))
-            }
-            AtomicFact::NotInFact(a) => {
-                AtomicFact::InFact(InFact::new(a.element.clone(), a.set.clone(), a.line_file.clone()))
-            }
+            AtomicFact::NotIsNonemptySetFact(a) => AtomicFact::IsNonemptySetFact(
+                IsNonemptySetFact::new(a.set.clone(), a.line_file.clone()),
+            ),
+            AtomicFact::NotIsFiniteSetFact(a) => AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+                a.set.clone(),
+                a.line_file.clone(),
+            )),
+            AtomicFact::NotInFact(a) => AtomicFact::InFact(InFact::new(
+                a.element.clone(),
+                a.set.clone(),
+                a.line_file.clone(),
+            )),
             AtomicFact::NotIsCartFact(a) => {
                 AtomicFact::IsCartFact(IsCartFact::new(a.set.clone(), a.line_file.clone()))
             }
