@@ -1,0 +1,314 @@
+# examples/tmp.lit — one runnable `prove:` block per `Stmt` kind (see `src/stmt/stmt.rs`).
+# Each block illustrates the usual mathematical reading of that statement form. Independent blocks for easy copy-paste.
+# `import` / `run_file`: syntax shown in comments only (not run here).
+
+# --- Stmt::Fact — assert a closed formula ---
+prove:
+    1 + 1 = 2
+
+# --- Stmt::DefLetStmt — local names with defining properties ---
+prove:
+    let tmp_let_x R:
+        tmp_let_x = 1
+    tmp_let_x = 1
+
+# --- Stmt::DefPropStmt — define a named predicate with its if and only if properties ---
+prove:
+    prop tmp_prop_p(x R):
+        x = x
+
+# --- Stmt::DefAbstractPropStmt — declare a predicate symbol and arity only ---
+prove:
+    abstract_prop tmp_abs_q(a)
+
+# --- Stmt::HaveObjInNonemptySetStmt — introduce typed parameters (membership in given sets / types) ---
+prove:
+    have tmp_have_a R, tmp_have_b Z
+
+# --- Stmt::HaveObjEqualStmt — introduce parameters and fix them to given values ---
+prove:
+    have tmp_have_eq_r R = 1
+    tmp_have_eq_r = 1
+
+# --- Stmt::HaveByExistStmt — name witnesses for an already known existential ---
+prove:
+    know exist tmp_exist_w R st {tmp_exist_w > 0, tmp_exist_w < 1}
+    have by exist tmp_exist_c R st {tmp_exist_c > 0, tmp_exist_c < 1}: tmp_exist_name
+    tmp_exist_name > 0
+
+# --- Stmt::HaveFnEqualStmt — define a function by a single defining equation on its domain ---
+prove:
+    have fn tmp_fn_eq(x R) R = x + 1
+    do_nothing
+
+# --- Stmt::HaveFnEqualCaseByCaseStmt — piecewise definition by cases on the domain ---
+prove:
+    have fn tmp_fn_cases(x_demo R) R :
+        case x_demo = 2: 3
+        case x_demo != 2: 4
+    do_nothing
+
+# --- Stmt::HaveFnByInducStmt — function given by induction on a discrete parameter ---
+prove:
+    know forall x Z:
+        x % 2 = 0 or x % 2 = 1
+
+    have fn by induc from 0: tmp_fn_ind(x Z: x >= 0) R:
+        case x = 0: 1
+        case x = 1: 1
+        case x >= 2:
+            case x % 2 = 0: tmp_fn_ind(x - 2) + tmp_fn_ind(x - 1)
+            case x % 2 = 1: tmp_fn_ind(x - 2) + tmp_fn_ind(x - 1)
+
+# --- Stmt::DefStructStmt — record-like type with fields and optional defining equivalence ---
+prove:
+    abstract_prop tmp_abs_for_struct(a)
+
+    struct tmp_struct_t(a set):
+        fld a
+        <=>:
+            $tmp_abs_for_struct(self.fld)
+
+# --- Stmt::DefFamilyStmt — parametric type family, right-hand side fixed once parameters are fixed ---
+prove:
+    family tmp_fam_seq(s set) = fn(x N_pos) s
+
+    forall a family tmp_fam_seq(R):
+        a $in fn(y N_pos) R
+        a(1) = a(1)
+
+# --- Stmt::DefAlgoStmt — computational presentation of a function (evaluation) ---
+prove:
+    have fn tmp_algo_f(x N_pos) R:
+        case x = 1: 1
+        case x != 1: 0
+
+    algo tmp_algo_f(x):
+        case x = 1: 1
+        case x != 1: 0
+
+    eval tmp_algo_f(1)
+    tmp_algo_f(1) = 1
+
+# --- Stmt::ClaimStmt — stated goal with a sub-proof and lemmas ---
+prove:
+    claim:
+        prove:
+            1 + 1 = 2
+        1 + 1 = 2
+
+# --- Stmt::KnowStmt — assume lemmas / axioms in scope ---
+prove:
+    know:
+        1 = 1
+
+# --- Stmt::ProveStmt — nested sub-proof (lemma) ---
+prove:
+    prove:
+        2 = 2
+    2 = 2
+
+# --- Stmt::ImportStmt / Stmt::RunFileStmt — module or file inclusion (syntax only here) ---
+# import "examples/runfile2.lit"
+# run_file "./examples/runfile2.lit"
+
+# --- Stmt::DoNothingStmt — trivial proof step ---
+prove:
+    do_nothing
+
+# --- Stmt::EvalStmt — compute a closed expression ---
+prove:
+    have tmp_eval_g fn(x Z) Z
+
+    know:
+        forall x Z:
+            x > 0
+            =>:
+                tmp_eval_g(x) = tmp_eval_g(x-1) + 1
+        forall x Z:
+            x = 0
+            =>:
+                tmp_eval_g(x) = 0
+        forall x Z:
+            x < 0
+            =>:
+                tmp_eval_g(x) = tmp_eval_g(x+1) - 1
+
+    algo tmp_eval_g(x):
+        case x > 0: tmp_eval_g(x-1) + 1
+        case x = 0: 0
+        case x < 0: tmp_eval_g(x+1) - 1
+
+    eval tmp_eval_g(3)
+    tmp_eval_g(3) = 3
+
+# --- Stmt::WitnessExistFact — exhibit witnesses for an existential claim ---
+prove:
+    witness exist tmp_wx, tmp_wy R st {tmp_wx > tmp_wy} from 1, 0:
+        1 > 0
+
+    exist tmp_wx2, tmp_wy2 R st {tmp_wx2 > tmp_wy2}
+
+# --- Stmt::WitnessNonemptySet — exhibit an element to show a set is nonempty ---
+prove:
+    have tmp_wit_s set
+
+    witness $is_nonempty_set(tmp_wit_s) from 1:
+        know 1 $in tmp_wit_s
+
+    $is_nonempty_set(tmp_wit_s)
+
+# --- Stmt::ByCasesStmt — proof by cases on a finite disjunction ---
+prove:
+    have fn tmp_fn_bc(x_bc R) R :
+        case x_bc = 2: 3
+        case x_bc != 2: 4
+
+    have tmp_x_demo R
+
+    tmp_x_demo = 2 or tmp_x_demo != 2
+
+    by cases:
+        prove:
+            tmp_fn_bc(tmp_x_demo) > 2
+        case tmp_x_demo = 2:
+            tmp_fn_bc(tmp_x_demo) = 3
+            tmp_fn_bc(tmp_x_demo) > 2
+        case tmp_x_demo != 2:
+            tmp_fn_bc(tmp_x_demo) = 4
+            tmp_fn_bc(tmp_x_demo) > 2
+
+# --- Stmt::ByContraStmt — proof of negation from a contradiction ---
+prove:
+    abstract_prop tmp_abs_pc(x, y)
+    abstract_prop tmp_abs_qc(x, y)
+
+    know forall tmp_a, tmp_b R:
+        $tmp_abs_pc(tmp_a, tmp_b)
+        =>:
+            $tmp_abs_qc(tmp_a, tmp_b)
+
+    know not $tmp_abs_qc(1, 2)
+
+    by contra:
+        prove:
+            not $tmp_abs_pc(1, 2)
+        $tmp_abs_pc(1, 2)
+        impossible $tmp_abs_qc(1, 2)
+
+# --- Stmt::ByEnumerateStmt — universal claim proved by enumerating a finite index set ---
+prove:
+    let tmp_enum_a R:
+        tmp_enum_a $in {1, 2}
+
+    tmp_enum_a = 1 or tmp_enum_a = 2
+
+    by enumerate tmp_enum_a {1, 2, 3}:
+        prove:
+            tmp_enum_a < 4
+
+# --- Stmt::ByInducStmt — induction on a discrete parameter ---
+prove:
+    abstract_prop tmp(a)
+
+    know:
+        $tmp(0)
+        forall tmp_n Z:
+            tmp_n >= 0
+            $tmp(tmp_n)
+            =>:
+                $tmp(tmp_n + 1)
+
+    by induc tmp_n from 0:
+        $tmp(tmp_n)
+
+    forall tmp_n2 Z:
+        tmp_n2 >= 0
+        =>:
+            $tmp(tmp_n2)
+
+# --- Stmt::ByForStmt — finite or bounded iteration as proof skeleton ---
+prove:
+    by for tmp_i range(0, 10):
+        prove:
+            tmp_i < 10
+        do_nothing
+
+# --- Stmt::ByExtensionStmt — set equality by mutual inclusion ---
+prove:
+    by extension:
+        prove:
+            {1, 2} = {2, 1}
+        by enumerate tmp_x {1, 2}:
+            prove:
+                tmp_x $in {2, 1}
+        by enumerate tmp_y {2, 1}:
+            prove:
+                tmp_y $in {1, 2}
+
+    {1, 2} = {2, 1}
+
+# --- Stmt::ByFnStmt — use the graph characterization of a function in a function space ---
+prove:
+    have fn f(x R) R = 1
+
+    by fn: f
+
+# --- Stmt::ByFamilyStmt — instantiate a parametric family at given arguments ---
+prove:
+    family tmp_fam_p(a set) = fn(x a) a
+
+    forall a family tmp_fam_p(R):
+        a $in fn(y R) R
+        a(1) = a(1)
+
+    by family: family tmp_fam_p(R)
+
+# --- Stmt::ByStructStmt — use the defining data of a structure instance ---
+prove:
+    abstract_prop tmp_abs_bs(b, c, d)
+
+    struct tmp_struct_q(a set):
+        b1 a
+        c1 fn(x a) a
+        d1 fn(x, y a) a
+        <=>:
+            $tmp_abs_bs(self.b1, self.c1, self.d1)
+
+    by struct: struct tmp_struct_q(R)
+
+# --- Stmt::ByTupleStmt — tuple / product-space reasoning on an object ---
+prove:
+    let tmp_tup_a set:
+        tmp_tup_a = (2, 3)
+
+    by tuple: tmp_tup_a
+
+# --- Stmt::ByFnSetStmt — membership of a function in a function set (graph axioms) ---
+prove:
+    let tmp_fs set
+
+    know:
+        forall tmp_x1 tmp_fs:
+            tmp_x1 $in cart(cart(R, Q), Z)
+            tuple_dim(tmp_x1) = 2
+
+        forall tmp_x1 tmp_fs:
+            exist tmp_x2 R, tmp_x3 Q, tmp_z Z st {tmp_x2 > tmp_x3, tmp_x2 > 2, tmp_x1 = ((tmp_x2, tmp_x3), tmp_z)}
+
+        forall tmp_x2 R, tmp_x3 Q:
+            tmp_x2 > tmp_x3
+            tmp_x2 > 2
+            =>:
+                exist tmp_x1 tmp_fs, tmp_z2 Z st {tmp_x1 = ((tmp_x2, tmp_x3), tmp_z2)}
+
+        forall tmp_x1, tmp_x2 tmp_fs:
+            tmp_x1 $in cart(cart(R, Q), Z)
+            tmp_x2 $in cart(cart(R, Q), Z)
+            tmp_x1[1] = tmp_x2[1]
+            =>:
+                tmp_x1 = tmp_x2
+
+    by fn set: tmp_fs $in fn(tmp_x1 R, tmp_y1 Q: tmp_x1 > tmp_y1, tmp_x1 > 2) Z
+
+    tmp_fs(100, 99) = tmp_fs(100, 99)
