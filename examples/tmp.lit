@@ -1,53 +1,54 @@
-# examples/tmp.lit — 与 `Stmt` 枚举（见 src/stmt/stmt.rs）一一对应的**可运行**小例子。
-# 约定：每条用独立 `prove:` 块，便于复制；`import` / `run_file` 执行器尚未接好，仅列语法。
+# examples/tmp.lit — one runnable `prove:` block per `Stmt` kind (see `src/stmt/stmt.rs`).
+# Each block illustrates the usual mathematical reading of that statement form. Independent blocks for easy copy-paste.
+# `import` / `run_file`: syntax shown in comments only (not run here).
 
-# --- Stmt::Fact：prove 体内直接写事实（原子或复合） ---
+# --- Stmt::Fact — assert a closed formula ---
 prove:
     1 = 1
 
-# --- Stmt::DefLetStmt：`let` 引入名字并附带一组事实 ---
+# --- Stmt::DefLetStmt — local names with defining equations ---
 prove:
     let tmp_let_x R:
         tmp_let_x = 1
     tmp_let_x = 1
 
-# --- Stmt::DefPropStmt：`prop` 定义谓词（可带 iff 体） ---
+# --- Stmt::DefPropStmt — define a named predicate ---
 prove:
     prop tmp_prop_p(x R):
         x = x
 
-# --- Stmt::DefAbstractPropStmt：`abstract_prop` 仅声明符号与元数 ---
+# --- Stmt::DefAbstractPropStmt — declare a predicate symbol and arity only ---
 prove:
     abstract_prop tmp_abs_q()
 
-# --- Stmt::HaveObjInNonemptySetStmt：`have` 参数 + 集合/类型，无 `=` ---
+# --- Stmt::HaveObjInNonemptySetStmt — introduce typed parameters (membership in given sets / types) ---
 prove:
     have tmp_have_a R, tmp_have_b Z
 
-# --- Stmt::HaveObjEqualStmt：`have` 后 `=` 把参数约束到具体对象 ---
+# --- Stmt::HaveObjEqualStmt — introduce parameters and fix them to given values ---
 prove:
     have tmp_have_eq_r R = 1
     tmp_have_eq_r = 1
 
-# --- Stmt::HaveExistObjStmt：`have by exist` 从已知存在式里取名 ---
+# --- Stmt::HaveExistObjStmt — name witnesses for an already known existential ---
 prove:
     know exist tmp_exist_w R st {tmp_exist_w > 0, tmp_exist_w < 1}
     have by exist tmp_exist_c R st {tmp_exist_c > 0, tmp_exist_c < 1}: tmp_exist_name
     tmp_exist_name > 0
 
-# --- Stmt::HaveFnEqualStmt：`have fn` … `=` 单值定义（须写返回集 `(x R) R`） ---
+# --- Stmt::HaveFnEqualStmt — define a function by a single defining equation on its domain ---
 prove:
     have fn tmp_fn_eq(x R) R = x + 1
     do_nothing
 
-# --- Stmt::HaveFnEqualCaseByCaseStmt：`have fn` … `:` 后跟 `case` 分情况（每行一条：case … : 值） ---
+# --- Stmt::HaveFnEqualCaseByCaseStmt — piecewise definition by cases on the domain ---
 prove:
     have fn tmp_fn_cases(x_demo R) R :
         case x_demo = 2: 3
         case x_demo != 2: 4
     do_nothing
 
-# --- Stmt::HaveFnByInducStmt：`have fn by induc from` 归纳定义函数（与 examples/have_fn_by_induc.lit 同形） ---
+# --- Stmt::HaveFnByInducStmt — function given by induction on a discrete parameter ---
 prove:
     know forall x Z:
         x % 2 = 0 or x % 2 = 1
@@ -59,7 +60,7 @@ prove:
             case x % 2 = 0: tmp_fn_ind(x - 2) + tmp_fn_ind(x - 1)
             case x % 2 = 1: tmp_fn_ind(x - 2) + tmp_fn_ind(x - 1)
 
-# --- Stmt::DefStructStmt：`struct` 定义带字段与可选 iff ---
+# --- Stmt::DefStructStmt — record-like type with fields and optional defining equivalence ---
 prove:
     abstract_prop tmp_abs_for_struct(a)
 
@@ -68,7 +69,7 @@ prove:
         <=>:
             $tmp_abs_for_struct(self.fld)
 
-# --- Stmt::DefFamilyStmt：`family` 把参数族绑定到右侧对象（常为 `fn` 集） ---
+# --- Stmt::DefFamilyStmt — parametric type family, right-hand side fixed once parameters are fixed ---
 prove:
     family tmp_fam_seq(s set) = fn(x N_pos) s
 
@@ -76,7 +77,7 @@ prove:
         a $in fn(y N_pos) R
         a(1) = a(1)
 
-# --- Stmt::DefAlgoStmt：`algo` 定义可 `eval` 的算法 ---
+# --- Stmt::DefAlgoStmt — computational presentation of a function (evaluation) ---
 prove:
     have fn tmp_algo_f(x R) R = 1
 
@@ -86,33 +87,33 @@ prove:
     eval tmp_algo_f(0)
     tmp_algo_f(0) = 1
 
-# --- Stmt::ClaimStmt：`claim` 目标 + `prove:` 子证明 + 若干事实行 ---
+# --- Stmt::ClaimStmt — stated goal with a sub-proof and lemmas ---
 prove:
     claim:
         prove:
             1 + 1 = 2
         1 + 1 = 2
 
-# --- Stmt::KnowStmt：`know` 把事实记入环境（可多行或 `forall` 单条） ---
+# --- Stmt::KnowStmt — assume lemmas / axioms in scope ---
 prove:
     know:
         1 = 1
 
-# --- Stmt::ProveStmt：嵌套 `prove:` 再开一层证明子块 ---
+# --- Stmt::ProveStmt — nested sub-proof (lemma) ---
 prove:
     prove:
         2 = 2
     2 = 2
 
-# --- Stmt::ImportStmt / Stmt::RunFileStmt：语法备忘（当前 exec 会报错，勿在此文件直接执行） ---
+# --- Stmt::ImportStmt / Stmt::RunFileStmt — module or file inclusion (syntax only here) ---
 # import "examples/runfile2.lit"
 # run_file "./examples/runfile2.lit"
 
-# --- Stmt::DoNothingStmt：`do_nothing`（常用于占位证明步） ---
+# --- Stmt::DoNothingStmt — trivial proof step ---
 prove:
     do_nothing
 
-# --- Stmt::EvalStmt：`eval` 对表达式求值（需先有 `algo` 等） ---
+# --- Stmt::EvalStmt — compute a closed expression ---
 prove:
     have fn tmp_eval_g(x R) R = x
 
@@ -122,14 +123,14 @@ prove:
     eval tmp_eval_g(3)
     tmp_eval_g(3) = 3
 
-# --- Stmt::WitnessExistFact：`witness exist … from …` 构造存在见证 ---
+# --- Stmt::WitnessExistFact — exhibit witnesses for an existential claim ---
 prove:
     witness exist tmp_wx, tmp_wy R st {tmp_wx > tmp_wy} from 1, 0:
         1 > 0
 
     exist tmp_wx2, tmp_wy2 R st {tmp_wx2 > tmp_wy2}
 
-# --- Stmt::WitnessNonemptySet：`witness nonempty` 从元素见证集合非空 ---
+# --- Stmt::WitnessNonemptySet — exhibit an element to show a set is nonempty ---
 prove:
     have tmp_wit_s set
 
@@ -138,7 +139,7 @@ prove:
 
     $is_nonempty_set(tmp_wit_s)
 
-# --- Stmt::ByCasesStmt：`by cases` 分情形证明 ---
+# --- Stmt::ByCasesStmt — proof by cases on a finite disjunction ---
 prove:
     have fn tmp_fn_bc(x_bc R) R :
         case x_bc = 2: 3
@@ -158,7 +159,7 @@ prove:
             tmp_fn_bc(tmp_x_demo) = 4
             tmp_fn_bc(tmp_x_demo) > 2
 
-# --- Stmt::ByContraStmt：`by contra` 反证 ---
+# --- Stmt::ByContraStmt — proof of negation from a contradiction ---
 prove:
     abstract_prop tmp_abs_pc(x, y)
     abstract_prop tmp_abs_qc(x, y)
@@ -176,7 +177,7 @@ prove:
         $tmp_abs_pc(1, 2)
         impossible $tmp_abs_qc(1, 2)
 
-# --- Stmt::ByEnumerateStmt：`by enumerate` 在有限集合上枚举 ---
+# --- Stmt::ByEnumerateStmt — universal claim proved by enumerating a finite index set ---
 prove:
     let tmp_enum_a R:
         tmp_enum_a $in {1, 2}
@@ -187,7 +188,7 @@ prove:
         prove:
             tmp_enum_a < 4
 
-# --- Stmt::ByInducStmt：`by induc` 归纳 ---
+# --- Stmt::ByInducStmt — induction on a discrete parameter ---
 prove:
     abstract_prop tmp_abs_pind(a)
 
@@ -207,14 +208,14 @@ prove:
         =>:
             $tmp_abs_pind(tmp_n2)
 
-# --- Stmt::ByForStmt：`by for` 在 range / closed_range 上循环证明 ---
+# --- Stmt::ByForStmt — finite or bounded iteration as proof skeleton ---
 prove:
     by for tmp_i range(0, 10):
         prove:
             tmp_i < 10
         do_nothing
 
-# --- Stmt::ByExtensionStmt：`by extension` 集合外延相等 ---
+# --- Stmt::ByExtensionStmt — set equality by mutual inclusion ---
 prove:
     by extension:
         prove:
@@ -228,13 +229,13 @@ prove:
 
     {1, 2} = {2, 1}
 
-# --- Stmt::ByFnStmt：`by fn` 登记函数图刻画（需已知 `f` 属于某 fn 集） ---
+# --- Stmt::ByFnStmt — use the graph characterization of a function in a function space ---
 prove:
     have fn tmp_byfn_f(x R) R = 1
 
     by fn: tmp_byfn_f
 
-# --- Stmt::ByFamilyStmt：`by family` 展开 family 实例 ---
+# --- Stmt::ByFamilyStmt — instantiate a parametric family at given arguments ---
 prove:
     family tmp_fam_p(a set) = fn(x a) a
 
@@ -244,7 +245,7 @@ prove:
 
     by family: family tmp_fam_p(R)
 
-# --- Stmt::ByStructStmt：`by struct` 展开 struct 实例 ---
+# --- Stmt::ByStructStmt — use the defining data of a structure instance ---
 prove:
     abstract_prop tmp_abs_bs(b, c, d)
 
@@ -257,14 +258,14 @@ prove:
 
     by struct: struct tmp_struct_q(R)
 
-# --- Stmt::ByTupleStmt：`by tuple` 元组/笛卡尔相关展开 ---
+# --- Stmt::ByTupleStmt — tuple / product-space reasoning on an object ---
 prove:
     let tmp_tup_a set:
         tmp_tup_a = (2, 3)
 
     by tuple: tmp_tup_a
 
-# --- Stmt::ByFnSetStmt：`by fn set` 验证成员属于 fn 集并存储（需先 know 若干刻画） ---
+# --- Stmt::ByFnSetStmt — membership of a function in a function set (graph axioms) ---
 prove:
     let tmp_fs set
 
