@@ -1,3 +1,9 @@
+let a, b, c R, d R:
+    a < b = c <= d
+
+a < d
+
+"""
 claim:
     prove:
         forall a, b, c, d R:
@@ -16,3 +22,4 @@ claim:
     know 4.5 * b <= 5 * b
     d + a <= 2 * a + a <= 3 * b + a <= 3 * b +1.5*b = 4.5*b <= 5 * b
     know d + a <= 5 * b
+"""
