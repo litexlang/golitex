@@ -1,9 +1,14 @@
 use crate::prelude::*;
 
-enum NumberCompareResult {
+pub(crate) enum NumberCompareResult {
     Less,
     Equal,
     Greater,
+}
+
+/// Compare a normalized decimal string (same shape as [`Number::normalized_value`]) to `"0"`.
+pub(crate) fn compare_normalized_number_str_to_zero(number_value: &str) -> NumberCompareResult {
+    compare_number_strings(number_value.trim(), "0")
 }
 
 fn parse_number_parts_for_comparison(number_value: &str) -> (bool, Vec<u8>, Vec<u8>) {

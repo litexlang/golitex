@@ -32,7 +32,7 @@ fn non_factual_stmt_success_to_json(x: &NonFactualStmtSuccess) -> JsonValue {
 
     let infer_items: Vec<JsonValue> = x
         .infers
-        .infer_lines()
+        .infer_lines_unique_in_order()
         .iter()
         .map(|s| JsonValue::JsonString(s.clone()))
         .collect();
@@ -76,7 +76,7 @@ fn factual_builtin_rules_to_json(x: &FactualStmtSuccess) -> JsonValue {
 
     let infer_items: Vec<JsonValue> = x
         .infers
-        .infer_lines()
+        .infer_lines_unique_in_order()
         .iter()
         .map(|s| JsonValue::JsonString(s.clone()))
         .collect();
@@ -117,7 +117,7 @@ fn factual_known_fact_to_json(x: &FactualStmtSuccess) -> JsonValue {
 
     let infer_items: Vec<JsonValue> = x
         .infers
-        .infer_lines()
+        .infer_lines_unique_in_order()
         .iter()
         .map(|s| JsonValue::JsonString(s.clone()))
         .collect();

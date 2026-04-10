@@ -1,0 +1,38 @@
+know:
+    forall a R, b R:
+        a >= 0
+        b >= 1
+        =>:
+            a <= b * a
+
+    forall a, b, c R:
+        c >= 0
+        a <= b
+        =>:
+            a * c <= b * c
+
+    forall a, b, c R:
+        c > 0
+        a <= b
+        =>:
+            a / c <= b / c
+
+know:
+    forall a, b R:
+        0 <= a
+        0 <= b
+        =>:
+            0 <= a * b
+
+claim:
+    prove:
+        forall a, b, c, d R:
+            2 * a <= 3 * b
+            1 <= a
+            d = 2
+            =>:
+                d + a <= 5 * b
+    d = 2 * 1 <= 2 * a
+    a = (2*a)/2 <= (3*b)/2 = 1.5 * b
+    0 <= (2/3)* a = (2 * a)/3 <= (3 * b)/3 = b
+    d + a <= 2 * a + a <= 3 * b + a <= 3 * b +1.5*b = 4.5*b <= 5 * b
