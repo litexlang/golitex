@@ -53,14 +53,59 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtExecResult, RuntimeError> {
-        if atomic_fact.number_of_args() == 1 {
-            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact)
+        self.verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts_impl(
+            atomic_fact,
+            true,
+        )
+    }
+
+    fn verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts_impl(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        try_order_transpose: bool,
+    ) -> Result<StmtExecResult, RuntimeError> {
+        let result = if atomic_fact.number_of_args() == 1 {
+            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact)?
         } else if atomic_fact.number_of_args() == 2 {
-            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(atomic_fact)
+            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(atomic_fact)?
         } else {
-            self
-                .verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(atomic_fact)
+            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(
+                atomic_fact,
+            )?
+        };
+
+        if result.is_true() {
+            return Ok(result);
         }
+
+        if !try_order_transpose {
+            return Ok(result);
+        }
+
+        if let Some(transposed_fact) = atomic_fact.transposed_binary_order_equivalent() {
+            let transposed_result = self
+                .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts_impl(
+                    &transposed_fact,
+                    false,
+                )?;
+            match transposed_result {
+                StmtExecResult::FactualStmtSuccess(inner_success) => {
+                    return Ok(StmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                            Fact::AtomicFact(atomic_fact.clone()),
+                            inner_success.msg,
+                            inner_success.verified_by_fact,
+                            inner_success.verified_by_fact_known_line_file,
+                            inner_success.inside_results,
+                        ),
+                    ));
+                }
+                other if other.is_true() => return Ok(other),
+                _ => {}
+            }
+        }
+
+        Ok(result)
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(

@@ -1,21 +1,22 @@
-prove:
-    have tmp_eval_g fn(x Z) Z
+prop is_group(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
+    forall x, y, z s:
+        add(x, add(y, z)) = add(add(x, y), z)
+    forall x s:
+        add(x, zero) = x
+        add(zero, x) = x
+        add(x, inv(x)) = zero
+        add(inv(x), x) = zero
 
-    know:
-        forall x Z:
-            x > 0
-            =>:
-                tmp_eval_g(x) = tmp_eval_g(x-1) + 1
-        tmp_eval_g(0) = 0
-        forall x Z:
-            x < 0
-            =>:
-                tmp_eval_g(x) = tmp_eval_g(x+1) - 1
+struct group(s nonempty_set):
+    zero s
+    add fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        $is_group(s, self.zero, self.add, self.inv)
 
-    algo tmp_eval_g(x):
-        case x > 0: tmp_eval_g(x-1) + 1
-        case x = 0: 0
-        case x < 0: tmp_eval_g(x+1) - 1
+let s nonempty_set, g struct group(s)
 
-    eval tmp_eval_g(3)
-    tmp_eval_g(3) = 3
+$is_group(s, g.zero, g.add, g.inv)
+
+forall x s:
+    g.add(x, g.inv(x)) = g.zero
