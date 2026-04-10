@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use super::order_normalize::normalize_positive_order_atomic_fact;
 
 pub(crate) enum NumberCompareResult {
     Less,
@@ -169,7 +170,8 @@ fn compare_number_strings(
 
 impl Runtime {
     pub fn verify_number_comparison_builtin_rule(&self, atomic_fact: &AtomicFact) -> Option<bool> {
-        match atomic_fact {
+        let normalized = normalize_positive_order_atomic_fact(atomic_fact)?;
+        match normalized {
             AtomicFact::LessFact(less_fact) => {
                 let calculated_number_string_pair =
                     self.calculate_obj_pair_to_number_strings(&less_fact.left, &less_fact.right)?;
@@ -179,19 +181,6 @@ impl Runtime {
                         &calculated_number_string_pair.1
                     ),
                     NumberCompareResult::Less
-                ))
-            }
-            AtomicFact::GreaterFact(greater_fact) => {
-                let calculated_number_string_pair = self.calculate_obj_pair_to_number_strings(
-                    &greater_fact.left,
-                    &greater_fact.right,
-                )?;
-                Some(matches!(
-                    compare_number_strings(
-                        &calculated_number_string_pair.0,
-                        &calculated_number_string_pair.1
-                    ),
-                    NumberCompareResult::Greater
                 ))
             }
             AtomicFact::LessEqualFact(less_equal_fact) => {
@@ -206,74 +195,6 @@ impl Runtime {
                 Some(matches!(
                     compare_result,
                     NumberCompareResult::Less | NumberCompareResult::Equal
-                ))
-            }
-            AtomicFact::GreaterEqualFact(greater_equal_fact) => {
-                let calculated_number_string_pair = self.calculate_obj_pair_to_number_strings(
-                    &greater_equal_fact.left,
-                    &greater_equal_fact.right,
-                )?;
-                let compare_result = compare_number_strings(
-                    &calculated_number_string_pair.0,
-                    &calculated_number_string_pair.1,
-                );
-                Some(matches!(
-                    compare_result,
-                    NumberCompareResult::Greater | NumberCompareResult::Equal
-                ))
-            }
-            AtomicFact::NotLessFact(not_less_fact) => {
-                let calculated_number_string_pair = self.calculate_obj_pair_to_number_strings(
-                    &not_less_fact.left,
-                    &not_less_fact.right,
-                )?;
-                let compare_result = compare_number_strings(
-                    &calculated_number_string_pair.0,
-                    &calculated_number_string_pair.1,
-                );
-                Some(matches!(
-                    compare_result,
-                    NumberCompareResult::Greater | NumberCompareResult::Equal
-                ))
-            }
-            AtomicFact::NotGreaterFact(not_greater_fact) => {
-                let calculated_number_string_pair = self.calculate_obj_pair_to_number_strings(
-                    &not_greater_fact.left,
-                    &not_greater_fact.right,
-                )?;
-                let compare_result = compare_number_strings(
-                    &calculated_number_string_pair.0,
-                    &calculated_number_string_pair.1,
-                );
-                Some(matches!(
-                    compare_result,
-                    NumberCompareResult::Less | NumberCompareResult::Equal
-                ))
-            }
-            AtomicFact::NotLessEqualFact(not_less_equal_fact) => {
-                let calculated_number_string_pair = self.calculate_obj_pair_to_number_strings(
-                    &not_less_equal_fact.left,
-                    &not_less_equal_fact.right,
-                )?;
-                Some(matches!(
-                    compare_number_strings(
-                        &calculated_number_string_pair.0,
-                        &calculated_number_string_pair.1
-                    ),
-                    NumberCompareResult::Greater
-                ))
-            }
-            AtomicFact::NotGreaterEqualFact(not_greater_equal_fact) => {
-                let calculated_number_string_pair = self.calculate_obj_pair_to_number_strings(
-                    &not_greater_equal_fact.left,
-                    &not_greater_equal_fact.right,
-                )?;
-                Some(matches!(
-                    compare_number_strings(
-                        &calculated_number_string_pair.0,
-                        &calculated_number_string_pair.1
-                    ),
-                    NumberCompareResult::Less
                 ))
             }
             _ => None,
