@@ -3,3 +3,34 @@ forall a, b, m, n Z:
     a * m + b * n = 1
     =>:
         (2 * a * n + b * m)^2 = 2 * (a * m + b * n)^2 + (m^2 - 2 * n^2) * (b^2 - 2 * a^2) = 2 * 1^2 + (m^2 - 2 * n^2) * (2 * a^2 - 2 * a^2) = 2
+
+prop a_lt_c(a, b, c R):
+    a < c
+
+know forall a, b, c R:
+    a < b
+    b <= c
+    =>:
+        $a_lt_c(a, b, c)
+
+prop a_le_c(a, b, c R):
+    a <= c
+
+know forall a, b, c R:
+    a <= b
+    b <= c
+    =>:
+        $a_le_c(a, b, c)
+
+prop a_gt_c(a, b, c R):
+    a > c
+
+know forall a, b, c R:
+    a > b
+    b > c
+    =>:
+        $a_gt_c(a, b, c)
+
+prop a_ge_c(a, b, c R):
+    a >= c
+    
