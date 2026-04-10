@@ -1,21 +1,18 @@
-prove:
-    have tmp_eval_g fn(x Z) Z
-
-    know:
-        forall x Z:
-            x > 0
+claim:
+    prove:
+        forall a, b, c, d R:
+            2 * a <= 3 * b
+            1 <= a
+            d = 2
             =>:
-                tmp_eval_g(x) = tmp_eval_g(x-1) + 1
-        tmp_eval_g(0) = 0
-        forall x Z:
-            x < 0
-            =>:
-                tmp_eval_g(x) = tmp_eval_g(x+1) - 1
-
-    algo tmp_eval_g(x):
-        case x > 0: tmp_eval_g(x-1) + 1
-        case x = 0: 0
-        case x < 0: tmp_eval_g(x+1) - 1
-
-    eval tmp_eval_g(3)
-    tmp_eval_g(3) = 3
+                d + a <= 5 * b
+    2 * 1 <= 2 * a
+    2 * 1 = d
+    d <= 2 * a
+    d + a <= 2*a + a = 3*a
+    d + a <= 3 * a
+    know a <= 1.5 * a
+    know a <= 1.5 * b
+    know 4.5 * b <= 5 * b
+    d + a <= 2 * a + a <= 3 * b + a <= 3 * b +1.5*b = 4.5*b <= 5 * b
+    know d + a <= 5 * b
