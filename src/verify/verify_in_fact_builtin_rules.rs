@@ -308,6 +308,14 @@ impl Runtime {
                 ))
             }
             (
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::StandardSet(StandardSet::Z),
+            ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, verify_state),
+            (
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Pow(_),
+                Obj::StandardSet(StandardSet::Q),
+            ) => self.verify_in_fact_arithmetic_expression_in_q(in_fact, verify_state),
+            (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::RNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
@@ -388,6 +396,102 @@ impl Runtime {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
         }
+    }
+
+    /// Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and `^` when direct operands are in `Z`
+    /// (`Pow` checks `base` and `exponent`; if the power can be normalized to a decimal, the numeric
+    /// branch above still decides membership).
+    fn verify_in_fact_arithmetic_expression_in_z(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtExecResult, RuntimeError> {
+        if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
+            return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                in_fact,
+                &evaluated_number,
+                &StandardSet::Z,
+            ));
+        }
+        let z_obj = Obj::StandardSet(StandardSet::Z);
+        let lf = in_fact.line_file.clone();
+
+        let mut require_in_z = |o: &Obj| -> Result<bool, RuntimeError> {
+            let f = AtomicFact::InFact(InFact::new(o.clone(), z_obj.clone(), lf.clone()));
+            self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)
+        };
+
+        let ok = match &in_fact.element {
+            Obj::Add(a) => require_in_z(&a.left)? && require_in_z(&a.right)?,
+            Obj::Sub(s) => require_in_z(&s.left)? && require_in_z(&s.right)?,
+            Obj::Mul(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
+            Obj::Mod(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
+            Obj::Pow(p) => require_in_z(&p.base)? && require_in_z(&p.exponent)?,
+            _ => false,
+        };
+
+        if !ok {
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+
+        Ok(StmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                "Z closure: operands in Z".to_string(),
+                Vec::new(),
+            ),
+        ))
+    }
+
+    /// Builtin closure of `Q` under `+`, `-`, `*`, `/` when both operands are in `Q`. For `^`, require
+    /// `base` in `Q` and `exponent` in `Z` (rational base with integer exponent stays in `Q`).
+    fn verify_in_fact_arithmetic_expression_in_q(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtExecResult, RuntimeError> {
+        if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
+            return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                in_fact,
+                &evaluated_number,
+                &StandardSet::Q,
+            ));
+        }
+        let q_obj = Obj::StandardSet(StandardSet::Q);
+        let z_obj = Obj::StandardSet(StandardSet::Z);
+        let lf = in_fact.line_file.clone();
+
+        let in_q =
+            |slf: &mut Self, o: &Obj| -> Result<bool, RuntimeError> {
+                let f = AtomicFact::InFact(InFact::new(o.clone(), q_obj.clone(), lf.clone()));
+                slf.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)
+            };
+        let in_z =
+            |slf: &mut Self, o: &Obj| -> Result<bool, RuntimeError> {
+                let f = AtomicFact::InFact(InFact::new(o.clone(), z_obj.clone(), lf.clone()));
+                slf.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)
+            };
+
+        let ok = match &in_fact.element {
+            Obj::Add(a) => in_q(self, &a.left)? && in_q(self, &a.right)?,
+            Obj::Sub(s) => in_q(self, &s.left)? && in_q(self, &s.right)?,
+            Obj::Mul(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
+            Obj::Div(d) => in_q(self, &d.left)? && in_q(self, &d.right)?,
+            Obj::Pow(p) => in_q(self, &p.base)? && in_z(self, &p.exponent)?,
+            _ => false,
+        };
+
+        if !ok {
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+
+        Ok(StmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                "Q closure: +-*/ operands in Q; pow base in Q and exponent in Z".to_string(),
+                Vec::new(),
+            ),
+        ))
     }
 
     fn verify_in_fact_arithmetic_expression_in_standard_negative_set(
