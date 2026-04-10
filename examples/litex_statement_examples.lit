@@ -118,6 +118,7 @@ prove:
 
 # --- Stmt::EvalStmt — compute a closed expression ---
 prove:
+prove:
     have tmp_eval_g fn(x Z) Z
 
     know:
@@ -125,10 +126,7 @@ prove:
             x > 0
             =>:
                 tmp_eval_g(x) = tmp_eval_g(x-1) + 1
-        forall x Z:
-            x = 0
-            =>:
-                tmp_eval_g(x) = 0
+        tmp_eval_g(0) = 0
         forall x Z:
             x < 0
             =>:
