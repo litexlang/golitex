@@ -7,6 +7,16 @@ impl Runtime {
         subset_fact: &SubsetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
+        if subset_fact.left.to_string() == subset_fact.right.to_string() {
+            return Ok(StmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
+                    "subset_superset_duality".to_string(),
+                    Vec::new(),
+                ),
+            ));
+        }
+
         let converted_superset_fact = AtomicFact::SupersetFact(SupersetFact::new(
             subset_fact.right.clone(),
             subset_fact.left.clone(),
@@ -35,6 +45,15 @@ impl Runtime {
         superset_fact: &SupersetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
+        if superset_fact.left.to_string() == superset_fact.right.to_string() {
+            return Ok(StmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
+                    "subset_superset_duality".to_string(),
+                    Vec::new(),
+                ),
+            ));
+        }
         let converted_subset_fact = AtomicFact::SubsetFact(SubsetFact::new(
             superset_fact.right.clone(),
             superset_fact.left.clone(),
