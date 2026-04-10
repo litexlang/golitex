@@ -337,7 +337,7 @@ impl Runtime {
 
     pub fn exec_have_exist_obj_stmt(
         &mut self,
-        have_exist_obj_stmt: &HaveExistObjStmt,
+        have_exist_obj_stmt: &HaveByExistStmt,
     ) -> Result<StmtExecResult, RuntimeErrorStruct> {
         let exist_fact_in_have_obj_stmt = &have_exist_obj_stmt.exist_fact_in_have_obj_st;
         let verify_state = VerifyState::new(0, false);
@@ -346,7 +346,7 @@ impl Runtime {
             .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
             .map_err(|verify_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                    Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
                     "".to_string(),
                     Some(verify_error.into()),
                     vec![],
@@ -354,7 +354,7 @@ impl Runtime {
             })?;
         if result.is_unknown() {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
                 "have_exist_obj_stmt: exist fact is not verified".to_string(),
                 None,
                 vec![],
@@ -366,7 +366,7 @@ impl Runtime {
         ) != have_exist_obj_stmt.equal_tos.len()
         {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
                 "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string(),
                 None,
                 vec![],
@@ -391,7 +391,7 @@ impl Runtime {
             )
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                    Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
                     "".to_string(),
                     Some(e),
                     vec![],
@@ -408,7 +408,7 @@ impl Runtime {
                 .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map)
                 .map_err(|runtime_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                        Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
                         "".to_string(),
                         Some(runtime_error),
                         vec![],
@@ -419,7 +419,7 @@ impl Runtime {
                 .store_fact_without_well_defined_verified_and_infer(instantiated_fact)
                 .map_err(|store_fact_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                        Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
                         "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
@@ -430,7 +430,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
                 infer_result,
                 vec![],
             ),

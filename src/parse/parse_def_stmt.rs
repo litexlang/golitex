@@ -174,7 +174,7 @@ impl Runtime {
 
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
-        tb.skip_token(FN)?;
+        tb.skip_token(FN_LOWER_CASE)?;
         if tb.current_token_is_equal_to(BY) {
             tb.skip_token(BY)?;
             self.parse_have_fn_by_induc_stmt(tb)
@@ -598,7 +598,7 @@ impl Runtime {
 
         self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
 
-        Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
+        Ok(Stmt::HaveByExistStmt(HaveByExistStmt::new(
             equal_tos,
             true_fact,
             tb.line_file.clone(),

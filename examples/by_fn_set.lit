@@ -15,12 +15,12 @@ know:
             exist x1 f, z Z st {x1 = ((x2, x3), z)}
 
     forall x1, x2 f:
+        x1 $in cart(cart(R, Q), Z)
+        x2 $in cart(cart(R, Q), Z)
         x1[1] = x2[1]
         =>:
-            x1 $in cart(cart(R, Q), Z)
-            x2 $in cart(cart(R, Q), Z)
             x1 = x2
 
 by fn set: f $in fn(x1 R, y1 Q: x1 > y1, x1 > 2) Z
 
-f $in fn(x1 R, y1 Q: x1 > 2, x1 > y1) Z
+f(100,99) = f(100,99)
