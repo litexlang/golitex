@@ -69,6 +69,15 @@ impl Runtime {
                 )
             }
             AtomicFact::LessEqualFact(less_equal_fact) => {
+                if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
+                    return Ok(StmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
+                            "less_equal_fact_equal".to_string(),
+                            Vec::new(),
+                        ),
+                    ));
+                }
                 let current_fact = AtomicFact::LessEqualFact(less_equal_fact.clone());
                 let counterpart_fact = AtomicFact::NotGreaterFact(NotGreaterFact::new(
                     less_equal_fact.left.clone(),
@@ -82,6 +91,17 @@ impl Runtime {
                 )
             }
             AtomicFact::GreaterEqualFact(greater_equal_fact) => {
+                if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
+                    return Ok(StmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            Fact::AtomicFact(AtomicFact::GreaterEqualFact(
+                                greater_equal_fact.clone(),
+                            )),
+                            "greater_equal_fact_equal".to_string(),
+                            Vec::new(),
+                        ),
+                    ));
+                }
                 let current_fact = AtomicFact::GreaterEqualFact(greater_equal_fact.clone());
                 let counterpart_fact = AtomicFact::NotLessFact(NotLessFact::new(
                     greater_equal_fact.left.clone(),
