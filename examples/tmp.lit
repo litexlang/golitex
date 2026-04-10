@@ -1,7 +1,21 @@
-have x R = 0
+prove:
+    have tmp_eval_g fn(x Z) Z
 
-have f fn(x R) R
+    know:
+        forall x Z:
+            x > 0
+            =>:
+                tmp_eval_g(x) = tmp_eval_g(x-1) + 1
+        tmp_eval_g(0) = 0
+        forall x Z:
+            x < 0
+            =>:
+                tmp_eval_g(x) = tmp_eval_g(x+1) - 1
 
-know f(0) = 0
+    algo tmp_eval_g(x):
+        case x > 0: tmp_eval_g(x-1) + 1
+        case x = 0: 0
+        case x < 0: tmp_eval_g(x+1) - 1
 
-f(x) = 0
+    eval tmp_eval_g(3)
+    tmp_eval_g(3) = 3
