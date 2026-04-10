@@ -1,36 +1,11 @@
-forall a, b, m, n Z:
-    b^2 = 2 * a^2
-    a * m + b * n = 1
-    =>:
-        (2 * a * n + b * m)^2 = 2 * (a * m + b * n)^2 + (m^2 - 2 * n^2) * (b^2 - 2 * a^2) = 2 * 1^2 + (m^2 - 2 * n^2) * (2 * a^2 - 2 * a^2) = 2
+have fn max(x, y R) R:
+    case x > y: x
+    case x <= y: y
 
-prop a_lt_c(a, b, c R):
-    a < c
+have f fn(x R)R
 
-know forall a, b, c R:
-    a < b
-    b <= c
-    =>:
-        $a_lt_c(a, b, c)
+by fn : f
 
-prop a_le_c(a, b, c R):
-    a <= c
+(1, 2) $in cart(R, R)
 
-know forall a, b, c R:
-    a <= b
-    b <= c
-    =>:
-        $a_le_c(a, b, c)
-
-prop a_gt_c(a, b, c R):
-    a > c
-
-know forall a, b, c R:
-    a > b
-    b > c
-    =>:
-        $a_gt_c(a, b, c)
-
-prop a_ge_c(a, b, c R):
-    a >= c
-    
+by tuple: (1, 2)

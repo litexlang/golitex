@@ -214,6 +214,9 @@ impl Runtime {
                 self.infer_membership_in_set_builder_from_in_fact(in_fact, set_builder)
             }
             Obj::Cart(cart) => {
+                if cart.args.len() < 2 {
+                    return Ok(InferResult::new());
+                }
                 let mut infer_result = InferResult::new();
 
                 let is_cart_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact::new(

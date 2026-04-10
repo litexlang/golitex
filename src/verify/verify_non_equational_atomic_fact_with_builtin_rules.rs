@@ -639,7 +639,10 @@ impl Runtime {
         _verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
         match &is_tuple_fact.set {
-            Obj::Tuple(_) => {
+            Obj::Tuple(t) => {
+                if t.args.len() < 2 {
+                    return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                }
                 return Ok(StmtExecResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
