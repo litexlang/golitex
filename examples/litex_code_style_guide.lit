@@ -1,0 +1,24 @@
+# write <= and < instead of >= and >
+
+# give a name to a fact when you 在证明的 forall 的then里的事实的参数数量少于forall 参数量 
+
+"""
+比如下面这个不好，因为 未来想用这个事实证明后续事实的时候，我
+
+know forall a, b, c R:
+    a < b
+    b < c
+    =>:
+        a < c
+
+要写成 
+
+prop a_less_than_c(a, b, c R):
+    a < c
+
+know forall a, b, c R:
+    a < b
+    b < c
+    =>:
+        $a_less_than_c(a, b, c)
+"""
