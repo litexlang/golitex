@@ -15,6 +15,12 @@ impl Runtime {
             }
             AtomicFact::SubsetFact(subset_fact) => self.infer_subset_fact(subset_fact),
             AtomicFact::SupersetFact(superset_fact) => self.infer_superset_fact(superset_fact),
+            AtomicFact::LessFact(_)
+            | AtomicFact::GreaterFact(_)
+            | AtomicFact::LessEqualFact(_)
+            | AtomicFact::GreaterEqualFact(_) => {
+                self.infer_numeric_order_sign_from_order_atomic(atomic_fact)
+            }
             _ => Ok(InferResult::new()),
         }
     }
