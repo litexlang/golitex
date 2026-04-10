@@ -871,6 +871,9 @@ impl Runtime {
         cart: &Cart,
         verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
+        if tuple.args.len() < 2 {
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
         if tuple.args.len() != cart.args.len() {
             return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
