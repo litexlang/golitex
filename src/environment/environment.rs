@@ -117,11 +117,7 @@ impl fmt::Display for Environment {
         write!(f, "Environment {{\n")?;
         write!(f, "    objs: {:?}\n", self.defined_identifiers.len())?;
         write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;
-        write!(
-            f,
-            "    defined_structs: {:?}\n",
-            self.defined_structs.len()
-        )?;
+        write!(f, "    defined_structs: {:?}\n", self.defined_structs.len())?;
         write!(f, "    families: {:?}\n", self.defined_families.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
@@ -469,16 +465,18 @@ impl Environment {
     }
 
     fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeErrorStruct> {
-        let atomic_facts = chain_fact.facts().map_err(|e| {
-            RuntimeErrorStruct::new_with_conflict(
-                e.statement.clone(),
-                e.msg.clone(),
-                e.line_file.clone(),
-                e.conflict_with.clone(),
-                Some(RuntimeError::NewAtomicFactError(e)),
-                vec![],
-            )
-        })?;
+        let atomic_facts = chain_fact
+            .facts_with_order_transitive_closure()
+            .map_err(|e| {
+                RuntimeErrorStruct::new_with_conflict(
+                    e.statement.clone(),
+                    e.msg.clone(),
+                    e.line_file.clone(),
+                    e.conflict_with.clone(),
+                    Some(RuntimeError::NewAtomicFactError(e)),
+                    vec![],
+                )
+            })?;
         for atomic_fact in atomic_facts {
             self.store_atomic_fact(atomic_fact)?;
         }

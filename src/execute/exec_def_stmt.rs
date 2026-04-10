@@ -143,6 +143,11 @@ impl Runtime {
                     )
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
+            // Body facts are not added by infer() for chain/and/or/exist; record them for JSON / CLI.
+            infer_result.new_fact(fact);
+        }
+        for line in infer_result.infer_lines_unique_in_order() {
+            println!("{}", line);
         }
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(

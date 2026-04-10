@@ -17,6 +17,9 @@ mod verify_non_equational_atomic_fact;
 mod verify_non_equational_atomic_fact_builtin_duality_rules;
 mod verify_non_equational_atomic_fact_with_builtin_rules;
 mod verify_number_comparison_builtin_rule;
+pub(crate) use verify_number_comparison_builtin_rule::{
+    compare_normalized_number_str_to_zero, NumberCompareResult,
+};
 mod verify_number_in_standard_set;
 mod verify_obj_well_defined;
 mod verify_or_fact;

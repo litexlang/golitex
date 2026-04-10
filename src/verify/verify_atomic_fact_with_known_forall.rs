@@ -184,13 +184,14 @@ impl Runtime {
             )],
             known_forall.line_file.clone(),
         );
-        let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-            Fact::AtomicFact(given_atomic_fact.clone()),
-            verified_by_known_forall_fact.to_string(),
-            Some(Fact::ForallFact(verified_by_known_forall_fact.clone())),
-            None,
-            Vec::new(),
-        );
+        let fact_verified =
+            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                Fact::AtomicFact(given_atomic_fact.clone()),
+                verified_by_known_forall_fact.to_string(),
+                Some(Fact::ForallFact(verified_by_known_forall_fact.clone())),
+                None,
+                Vec::new(),
+            );
         Ok(Some(fact_verified))
     }
 
