@@ -1,22 +1,5 @@
-prop is_group(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
-    forall x, y, z s:
-        add(x, add(y, z)) = add(add(x, y), z)
-    forall x s:
-        add(x, zero) = x
-        add(zero, x) = x
-        add(x, inv(x)) = zero
-        add(inv(x), x) = zero
-
-struct group(s nonempty_set):
-    zero s
-    add fn(x, y s) s
-    inv fn(x s) s
-    <=>:
-        $is_group(s, self.zero, self.add, self.inv)
-
-let s nonempty_set, g struct group(s)
-
-$is_group(s, g.zero, g.add, g.inv)
-
-forall x s:
-    g.add(x, g.inv(x)) = g.zero
+forall a, b, m, n Z:
+    b^2 = 2 * a^2
+    a * m + b * n = 1
+    =>:
+        (2 * a * n + b * m)^2 = 2 * (a * m + b * n)^2 + (m^2 - 2 * n^2) * (b^2 - 2 * a^2) = 2 * 1^2 + (m^2 - 2 * n^2) * (2 * a^2 - 2 * a^2) = 2
