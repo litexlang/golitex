@@ -14,7 +14,7 @@ impl fmt::Display for ByFnSetStmt {
             f,
             "{} {} {}{} {} {}{} {}",
             BY,
-            FN,
+            FN_LOWER_CASE,
             SET,
             COLON,
             self.func,
@@ -51,7 +51,7 @@ pub struct ByTupleStmt {
 
 impl fmt::Display for ByFnStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{} {}", BY, FN, COLON, self.function)
+        write!(f, "{} {}{} {}", BY, FN_LOWER_CASE, COLON, self.function)
     }
 }
 

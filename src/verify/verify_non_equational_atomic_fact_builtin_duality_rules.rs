@@ -137,6 +137,21 @@ impl Runtime {
         not_greater_fact: &NotGreaterFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
+        if not_greater_fact.left.to_string() == not_greater_fact.right.to_string() {
+            return Ok(StmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Fact::AtomicFact(AtomicFact::NotGreaterFact(not_greater_fact.clone())),
+                    format!(
+                        "{} = {}",
+                        not_greater_fact.left.to_string(),
+                        not_greater_fact.right.to_string()
+                    )
+                    .to_string(),
+                    Vec::new(),
+                ),
+            ));
+        }
+
         let counterpart_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
             not_greater_fact.left.clone(),
             not_greater_fact.right.clone(),
@@ -154,6 +169,21 @@ impl Runtime {
         not_less_equal_fact: &NotLessEqualFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
+        if not_less_equal_fact.left.to_string() == not_less_equal_fact.right.to_string() {
+            return Ok(StmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Fact::AtomicFact(AtomicFact::NotLessEqualFact(not_less_equal_fact.clone())),
+                    format!(
+                        "{} = {}",
+                        not_less_equal_fact.left.to_string(),
+                        not_less_equal_fact.right.to_string()
+                    )
+                    .to_string(),
+                    Vec::new(),
+                ),
+            ));
+        }
+
         let counterpart_fact = AtomicFact::GreaterFact(GreaterFact::new(
             not_less_equal_fact.left.clone(),
             not_less_equal_fact.right.clone(),
@@ -222,12 +252,14 @@ impl Runtime {
             Obj::Mul(mul) => mul,
             _ => return Ok(None),
         };
-        if !self.mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
-            &mul.left,
-            &mul.right,
-            less_fact.line_file.clone(),
-            verify_state,
-        )? {
+        if !self
+            .mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+                &mul.left,
+                &mul.right,
+                less_fact.line_file.clone(),
+                verify_state,
+            )?
+        {
             return Ok(None);
         }
         Ok(Some(StmtExecResult::FactualStmtSuccess(
@@ -261,7 +293,8 @@ impl Runtime {
                 .verify_less_fact_when_left_is_mul_right_is_zero_by_opposite_sign_factors(
                     less_fact,
                     verify_state,
-                )? {
+                )?
+            {
                 return Ok(verified_by_opposite_sign_factors);
             }
         }
