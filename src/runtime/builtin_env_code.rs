@@ -55,6 +55,43 @@ know:
         a * b = 0
         =>:
             a = 0 or b = 0
+
+prop a_lt_c(a, b, c R):
+    a < c
+
+prop a_le_c(a, b, c R):
+    a <= c
+
+prop a_gt_c(a, b, c R):
+    a > c
+
+prop a_ge_c(a, b, c R):
+    a >= c
+
+know:
+    forall a, b, c R:
+        a < b
+        b < c
+        =>:
+            $a_lt_c(a, b, c)
+
+    forall a, b, c R:
+        a <= b
+        b <= c
+        =>:
+            $a_le_c(a, b, c)
+
+    forall a, b, c R:
+        a > b
+        b > c
+        =>:
+            $a_gt_c(a, b, c)
+
+    forall a, b, c R:
+        a >= b
+        b >= c
+        =>:
+            $a_ge_c(a, b, c)
 "#;
 
 const BUILTIN_ENV_CODE_FOR_SET_OPERATORS: &str = r#"
