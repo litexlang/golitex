@@ -14,7 +14,7 @@ impl Runtime {
             Stmt::HaveObjEqualStmt(d) => {
                 self.exec_have_obj_equal_stmt(d).map_err(RuntimeError::from)
             }
-            Stmt::HaveExistObjStmt(d) => {
+            Stmt::HaveByExistStmt(d) => {
                 self.exec_have_exist_obj_stmt(d).map_err(RuntimeError::from)
             }
             Stmt::HaveFnEqualStmt(d) => self.exec_have_fn_equal_stmt(d).map_err(RuntimeError::from),
