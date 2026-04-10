@@ -125,12 +125,51 @@ impl Runtime {
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
-        } else if tb.current_token_is_equal_to(FN) {
-            tb.skip_token(FN)?;
+        } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
+            tb.skip_token(FN_LOWER_CASE)?;
             Ok(Obj::FnSet(self.parse_fn_set(tb)?))
+        } else if tb.current_token_is_equal_to(FN_UPPER_CASE) {
+            Ok(Obj::FnSet(self.parse_fn_upper_case_fn_set(tb)?))
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
+    }
+
+    /// `Fn (A, B, ...) R` 语法糖：等价于 `fn { __x1 A, __x2 B, ... } R`（`_i` 为未占用新名），无 dom 条件。
+    fn parse_fn_upper_case_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
+        tb.skip_token(FN_UPPER_CASE)?;
+        tb.skip_token(LEFT_BRACE)?;
+        let mut domain_sets: Vec<Obj> = Vec::new();
+        if !tb.current_token_is_equal_to(RIGHT_BRACE) {
+            loop {
+                domain_sets.push(self.parse_obj(tb)?);
+                if tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    if tb.current_token_is_equal_to(RIGHT_BRACE) {
+                        break;
+                    }
+                    continue;
+                }
+                break;
+            }
+        }
+        tb.skip_token(RIGHT_BRACE)?;
+        if domain_sets.is_empty() {
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "Fn(...) requires at least one domain type in parentheses".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
+        }
+        let ret_set = self.parse_obj(tb)?;
+        let names = self.generate_random_unused_names(domain_sets.len());
+        let mut params_def_with_set: Vec<ParamGroupWithSet> = Vec::with_capacity(domain_sets.len());
+        for (name, set) in names.into_iter().zip(domain_sets.into_iter()) {
+            params_def_with_set.push(ParamGroupWithSet::new(vec![name], set));
+        }
+        self.new_fn_set_and_add_mangled_prefix(params_def_with_set, vec![], ret_set)
     }
 
     pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {

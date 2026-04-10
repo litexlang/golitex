@@ -97,7 +97,7 @@ pub struct HaveFnEqualStmt {
 }
 
 #[derive(Clone)]
-pub struct HaveExistObjStmt {
+pub struct HaveByExistStmt {
     pub equal_tos: Vec<String>,
     pub exist_fact_in_have_obj_st: ExistFact,
     pub line_file: LineFile,
@@ -302,13 +302,13 @@ impl fmt::Display for HaveObjEqualStmt {
     }
 }
 
-impl HaveExistObjStmt {
+impl HaveByExistStmt {
     pub fn new(
         equal_tos: Vec<String>,
         exist_fact_in_have_obj_st: ExistFact,
         line_file: LineFile,
     ) -> Self {
-        HaveExistObjStmt {
+        HaveByExistStmt {
             equal_tos,
             exist_fact_in_have_obj_st,
             line_file,
@@ -316,7 +316,7 @@ impl HaveExistObjStmt {
     }
 }
 
-impl fmt::Display for HaveExistObjStmt {
+impl fmt::Display for HaveByExistStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -352,7 +352,7 @@ impl fmt::Display for HaveFnEqualStmt {
             f,
             "{} {} {}{} {} {}",
             HAVE,
-            FN,
+            FN_LOWER_CASE,
             self.name,
             brace_vec_colon_vec_to_string(
                 &self.fn_set_clause.params_def_with_set,
@@ -393,7 +393,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             f,
             "{} {} {}{} {} {}\n{}",
             HAVE,
-            FN,
+            FN_LOWER_CASE,
             self.name,
             brace_vec_colon_vec_to_string(
                 &self.fn_set_clause.params_def_with_set,
@@ -558,7 +558,7 @@ impl fmt::Display for HaveFnByInducStmt {
         write!(
             f,
             "{} {} {} {} {} {} {}{}",
-            HAVE, FN, BY, INDUC, FROM, " ", self.induc_from, COLON,
+            HAVE, FN_LOWER_CASE, BY, INDUC, FROM, " ", self.induc_from, COLON,
         )?;
         write!(f, " {} {}{}", self.name, LEFT_BRACE, self.param)?;
         write!(
