@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone, Debug)]
 pub struct InferResult {
@@ -30,6 +31,16 @@ impl InferResult {
     /// 用于 CLI / JSON `infer_facts`：按顺序的文本行（含 `new_fact` 写入的事实字符串与 `new_with_msg` 的文本）。
     pub fn infer_lines(&self) -> &[String] {
         &self.infer_facts
+    }
+
+    /// Same as [`Self::infer_lines`] but drops repeated strings while keeping first occurrence order (for JSON / CLI).
+    pub fn infer_lines_unique_in_order(&self) -> Vec<String> {
+        let mut seen = HashSet::new();
+        self.infer_facts
+            .iter()
+            .filter(|s| seen.insert((*s).clone()))
+            .cloned()
+            .collect()
     }
 
     /// 结构化推断事实（与 [`Self::infer_lines`] 中由事实产生的行对应）。
