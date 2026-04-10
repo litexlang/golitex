@@ -598,7 +598,7 @@ impl Runtime {
 
         self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
 
-        Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
+        Ok(Stmt::HaveByExistStmt(HaveByExistStmt::new(
             equal_tos,
             true_fact,
             tb.line_file.clone(),
