@@ -3,6 +3,8 @@ use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
 impl Runtime {
+    // Builtin: if right is 0 and left is u*v with u,v strictly opposite sign, then u*v < 0.
+    // Recording label: mul_opposite_signs_product_less_than_zero.
     fn verify_less_fact_when_left_is_mul_right_is_zero_by_opposite_sign_factors(
         &mut self,
         less_fact: &LessFact,
@@ -271,20 +273,31 @@ impl Runtime {
         current_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtExecResult>, RuntimeError> {
-        let Some(premise) =
-            try_build_order_fact_after_clearing_numeric_div_denominators(current_fact)
-        else {
-            return Ok(None);
-        };
         let final_state = verify_state.make_final_round_state();
-        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&premise, &final_state)? {
-            Ok(Some(Self::real_order_congruence_builtin_success(
-                current_fact,
-                "real_order_multiply_through_numeric_div_denominator",
-            )))
-        } else {
-            Ok(None)
+        if let Some(premise) =
+            try_build_order_fact_after_clearing_numeric_div_denominators(current_fact)
+        {
+            if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&premise, &final_state)?
+            {
+                return Ok(Some(Self::real_order_congruence_builtin_success(
+                    current_fact,
+                    "real_order_multiply_through_numeric_div_denominator",
+                )));
+            }
         }
+        if let Some(premise) = self.try_build_order_fact_after_clearing_div_denominators_with_verified_signs(
+            current_fact,
+            &final_state,
+        )? {
+            if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&premise, &final_state)?
+            {
+                return Ok(Some(Self::real_order_congruence_builtin_success(
+                    current_fact,
+                    "real_order_multiply_through_div_denominator_via_sign_facts",
+                )));
+            }
+        }
+        Ok(None)
     }
 
     /// Verify order facts by either direct number calculation or negation duality.
