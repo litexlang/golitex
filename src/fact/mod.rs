@@ -5,6 +5,7 @@ mod forall_fact;
 mod forall_fact_with_iff;
 mod mark_forall_param_coverage;
 mod matchable_fact_with_atomic_fact_inside;
+mod chain_fact_order_closure;
 mod or_fact;
 mod reversible_fact;
 pub use atomic_fact::*;
