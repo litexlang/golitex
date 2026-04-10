@@ -465,16 +465,18 @@ impl Environment {
     }
 
     fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeErrorStruct> {
-        let atomic_facts = chain_fact.facts_with_order_transitive_closure().map_err(|e| {
-            RuntimeErrorStruct::new_with_conflict(
-                e.statement.clone(),
-                e.msg.clone(),
-                e.line_file.clone(),
-                e.conflict_with.clone(),
-                Some(RuntimeError::NewAtomicFactError(e)),
-                vec![],
-            )
-        })?;
+        let atomic_facts = chain_fact
+            .facts_with_order_transitive_closure()
+            .map_err(|e| {
+                RuntimeErrorStruct::new_with_conflict(
+                    e.statement.clone(),
+                    e.msg.clone(),
+                    e.line_file.clone(),
+                    e.conflict_with.clone(),
+                    Some(RuntimeError::NewAtomicFactError(e)),
+                    vec![],
+                )
+            })?;
         for atomic_fact in atomic_facts {
             self.store_atomic_fact(atomic_fact)?;
         }
