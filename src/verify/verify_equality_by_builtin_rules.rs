@@ -35,37 +35,15 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
-        if verify_equality_by_they_are_the_same(left, right) {
-            return Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                        left.clone(),
-                        right.clone(),
-                        line_file,
-                    ))),
-                    "they are the same".to_string(),
-                    Vec::new(),
-                ),
-            ));
-        }
-
-        let left_for_numeric_verification = self.resolve_obj(left);
-        let right_for_numeric_verification = self.resolve_obj(right);
-
-        if left_for_numeric_verification
-            .two_objs_can_be_calculated_and_equal_by_calculation(&right_for_numeric_verification)
-        {
-            return Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                        left.clone(),
-                        right.clone(),
-                        line_file,
-                    ))),
-                    "calculation".to_string(),
-                    Vec::new(),
-                ),
-            ));
+        let (result, left_for_numeric_verification, right_for_numeric_verification) = self
+            .verify_equality_by_they_are_the_same_and_calculation(
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )?;
+        if result.is_true() {
+            return Ok(result);
         }
 
         if objs_equal_by_rational_expression_evaluation(
@@ -106,7 +84,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtExecResult>, RuntimeError> {
-        let result = self.verify_equality_by_they_are_the_same_and_calculation(
+        let (result, _, _) = self.verify_equality_by_they_are_the_same_and_calculation(
             left,
             right,
             line_file.clone(),
@@ -513,40 +491,35 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<(StmtExecResult, Obj, Obj), RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
-            return Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                        left.clone(),
-                        right.clone(),
-                        line_file,
-                    ))),
-                    "they are the same".to_string(),
-                    Vec::new(),
+            return Ok((
+                factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "they are the same",
                 ),
+                left.clone(),
+                right.clone(),
             ));
         }
 
-        let left_for_numeric_verification = self.resolve_obj(left);
-        let right_for_numeric_verification = self.resolve_obj(right);
+        let left_resolved = self.resolve_obj(left);
+        let right_resolved = self.resolve_obj(right);
 
-        if left_for_numeric_verification
-            .two_objs_can_be_calculated_and_equal_by_calculation(&right_for_numeric_verification)
-        {
-            return Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                        left.clone(),
-                        right.clone(),
-                        line_file,
-                    ))),
-                    "calculation".to_string(),
-                    Vec::new(),
-                ),
+        if left_resolved.two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved) {
+            return Ok((
+                factual_equal_success_by_builtin_reason(left, right, line_file, "calculation"),
+                left_resolved,
+                right_resolved,
             ));
-        } else {
-            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
         }
+
+        Ok((
+            StmtExecResult::StmtUnknown(StmtUnknown::new()),
+            left_resolved,
+            right_resolved,
+        ))
     }
 }
