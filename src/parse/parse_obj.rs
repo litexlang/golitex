@@ -326,6 +326,7 @@ impl Runtime {
                 let mut args = vec![obj];
                 while tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
+
                     args.push(self.parse_obj(tb)?);
                 }
                 tb.skip_token(RIGHT_BRACE)?;
@@ -835,6 +836,15 @@ impl Runtime {
         if tok == CART {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
+            if args.len() < 2 {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "cart expects at least 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
+            }
             return Ok(Obj::Cart(Cart::new(args)));
         }
 

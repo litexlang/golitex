@@ -83,19 +83,20 @@ impl Runtime {
             })
             .collect();
         let forall_element_obj = Obj::Identifier(Identifier::new(forall_element_name.clone()));
-        let forall_arg_cart_set = Obj::Cart(Cart::new(
-            forall_param_defs_with_type
-                .iter()
-                .map(
-                    |param_def_with_type| match &param_def_with_type.param_type {
-                        ParamType::Obj(obj) => obj.clone(),
-                        _ => unreachable!(),
-                    },
-                )
-                .collect(),
-        ));
+        let arg_domain_factors: Vec<Obj> = forall_param_defs_with_type
+            .iter()
+            .map(|param_def_with_type| match &param_def_with_type.param_type {
+                ParamType::Obj(obj) => obj.clone(),
+                _ => unreachable!(),
+            })
+            .collect();
+        let forall_arg_dom = if param_names.len() == 1 {
+            arg_domain_factors[0].clone()
+        } else {
+            Obj::Cart(Cart::new(arg_domain_factors))
+        };
         let forall_element_cart_set =
-            Obj::Cart(Cart::new(vec![forall_arg_cart_set, forall_ret_set.clone()]));
+            Obj::Cart(Cart::new(vec![forall_arg_dom, forall_ret_set.clone()]));
         let forall_shape = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![forall_element_name.clone()],
@@ -117,10 +118,14 @@ impl Runtime {
             line_file.clone(),
         ));
         let forall_z_obj = Obj::Identifier(Identifier::new(forall_z_name.clone()));
-        let pair_in_fn = Obj::Tuple(Tuple::new(vec![
-            Obj::Tuple(Tuple::new(forall_args)),
-            forall_z_obj,
-        ]));
+        let pair_in_fn = if param_names.len() == 1 {
+            Obj::Tuple(Tuple::new(vec![forall_args[0].clone(), forall_z_obj]))
+        } else {
+            Obj::Tuple(Tuple::new(vec![
+                Obj::Tuple(Tuple::new(forall_args)),
+                forall_z_obj,
+            ]))
+        };
         let forall_in = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![forall_element_name],
@@ -227,10 +232,14 @@ impl Runtime {
             .collect();
         let exist_element_obj = Obj::Identifier(Identifier::new(exist_element_name.clone()));
         let exist_z_obj = Obj::Identifier(Identifier::new(exist_z_name.clone()));
-        let exist_pair = Obj::Tuple(Tuple::new(vec![
-            Obj::Tuple(Tuple::new(exist_args)),
-            exist_z_obj,
-        ]));
+        let exist_pair = if param_names.len() == 1 {
+            Obj::Tuple(Tuple::new(vec![exist_args[0].clone(), exist_z_obj]))
+        } else {
+            Obj::Tuple(Tuple::new(vec![
+                Obj::Tuple(Tuple::new(exist_args)),
+                exist_z_obj,
+            ]))
+        };
         let exist_fact = ExistFact::new(
             vec![
                 ParamGroupWithParamType::new(
@@ -279,15 +288,18 @@ impl Runtime {
         let unique_x2_name = unique_names[1].clone();
         let unique_x1_obj = Obj::Identifier(Identifier::new(unique_x1_name.clone()));
         let unique_x2_obj = Obj::Identifier(Identifier::new(unique_x2_name.clone()));
-        let unique_arg_cart_set = Obj::Cart(Cart::new(
-            fn_set
-                .params_def_with_set
-                .iter()
-                .map(|param_def_with_set| param_def_with_set.set.clone())
-                .collect(),
-        ));
+        let unique_param_group_sets: Vec<Obj> = fn_set
+            .params_def_with_set
+            .iter()
+            .map(|param_def_with_set| param_def_with_set.set.clone())
+            .collect();
+        let unique_arg_dom = if param_names.len() == 1 {
+            unique_param_group_sets[0].clone()
+        } else {
+            Obj::Cart(Cart::new(unique_param_group_sets))
+        };
         let unique_element_cart_set = Obj::Cart(Cart::new(vec![
-            unique_arg_cart_set,
+            unique_arg_dom,
             fn_set.ret_set.as_ref().clone(),
         ]));
         // 与手写标准一致：dom 为两元在图集内且首分量相同，then 仅为 x1 = x2

@@ -37,10 +37,10 @@ impl Runtime {
                 ))
             })?;
 
-        let encoded = kuratowski_encode_tuple_boxes(&tuple_struct.args).map_err(|_| {
+        let encoded = kuratowski_encode_tuple_boxes(&tuple_struct.args).map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt_exec.clone(),
-                "by tuple: empty tuple has no Kuratowski encoding".to_string(),
+                format!("by tuple: {}", msg),
                 None,
                 vec![],
             ))
