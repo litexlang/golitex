@@ -65,14 +65,15 @@ prove:
 
     struct row(a set):
         fld a
+        fld2 a
         <=>:
             $r(self.fld)
 
 # --- Stmt::DefFamilyStmt — parametric type family, right-hand side fixed once parameters are fixed ---
 prove:
-    family seq(s set) = fn(x N_pos) s
+    family self_seq(s set) = fn(x N_pos) s
 
-    forall a family seq(R):
+    forall a family self_seq(R):
         a $in fn(y N_pos) R
         a(1) = a(1)
 
@@ -114,7 +115,7 @@ prove:
 
 # --- Stmt::ImportStmt / Stmt::RunFileStmt — module or file inclusion (syntax only here) ---
 # import "examples/runfile2.lit"
-# run_file "./examples/runfile2.lit"
+# run_file "./runfile2.lit"
 
 # --- Stmt::DoNothingStmt — trivial proof step ---
 prove:

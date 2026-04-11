@@ -28,6 +28,61 @@ fn factual_equal_success_by_builtin_reason(
 }
 
 impl Runtime {
+    // Instantiate family `equal_to` on one or both sides, then full `verify_objs_are_equal` on the expanded pair.
+    fn try_verify_objs_equal_by_expanding_family(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtExecResult>, RuntimeError> {
+        if let (Obj::FamilyObj(fl), Obj::FamilyObj(fr)) = (left, right) {
+            if let (Ok(el), Ok(er)) = (
+                self.instantiate_family_member_set(fl),
+                self.instantiate_family_member_set(fr),
+            ) {
+                let r = self.verify_objs_are_equal(&el, &er, line_file.clone(), verify_state)?;
+                if r.is_true() {
+                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                        left,
+                        right,
+                        line_file,
+                        "equality: expand family definition (substitute parameters into equal_to)",
+                    )));
+                }
+            }
+        }
+        if let Obj::FamilyObj(f) = left {
+            if let Ok(expanded) = self.instantiate_family_member_set(f) {
+                let r =
+                    self.verify_objs_are_equal(&expanded, right, line_file.clone(), verify_state)?;
+                if r.is_true() {
+                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                        left,
+                        right,
+                        line_file,
+                        "equality: expand family definition (substitute parameters into equal_to)",
+                    )));
+                }
+            }
+        }
+        if let Obj::FamilyObj(f) = right {
+            if let Ok(expanded) = self.instantiate_family_member_set(f) {
+                let r =
+                    self.verify_objs_are_equal(left, &expanded, line_file.clone(), verify_state)?;
+                if r.is_true() {
+                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                        left,
+                        right,
+                        line_file,
+                        "equality: expand family definition (substitute parameters into equal_to)",
+                    )));
+                }
+            }
+        }
+        Ok(None)
+    }
+
     pub(crate) fn verify_equality_by_builtin_rules(
         &mut self,
         left: &Obj,
@@ -35,6 +90,15 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtExecResult, RuntimeError> {
+        if let Some(done) = self.try_verify_objs_equal_by_expanding_family(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         let (result, calculated_left, calculated_right) = self
             .verify_equality_by_they_are_the_same_and_calculation(
                 left,

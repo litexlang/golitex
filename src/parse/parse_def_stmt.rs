@@ -52,24 +52,24 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
-        let stmt: Result<DefAbstractPropStmt, RuntimeError> =
-            self.run_in_local_parsing_time_name_scope(|this| {
-            tb.skip_token(ABSTRACT_PROP)?;
-            let name = this.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-            tb.skip_token(LEFT_BRACE)?;
-            let mut params = vec![];
-            while tb.current()? != RIGHT_BRACE {
-                params.push(tb.advance()?);
-                if !tb.current_token_is_equal_to(RIGHT_BRACE) {
-                    tb.skip_token(COMMA)?;
+        let stmt: Result<DefAbstractPropStmt, RuntimeError> = self
+            .run_in_local_parsing_time_name_scope(|this| {
+                tb.skip_token(ABSTRACT_PROP)?;
+                let name = this.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+                tb.skip_token(LEFT_BRACE)?;
+                let mut params = vec![];
+                while tb.current()? != RIGHT_BRACE {
+                    params.push(tb.advance()?);
+                    if !tb.current_token_is_equal_to(RIGHT_BRACE) {
+                        tb.skip_token(COMMA)?;
+                    }
                 }
-            }
-            tb.skip_token(RIGHT_BRACE)?;
+                tb.skip_token(RIGHT_BRACE)?;
 
-            this.register_collected_param_names_for_def_parse(&params, tb.line_file.clone())?;
+                this.register_collected_param_names_for_def_parse(&params, tb.line_file.clone())?;
 
-            Ok(DefAbstractPropStmt::new(name, params, tb.line_file.clone()))
-        });
+                Ok(DefAbstractPropStmt::new(name, params, tb.line_file.clone()))
+            });
 
         let stmt_ok = stmt?;
         self.insert_parsed_name_into_top_parsing_time_name_scope(
@@ -756,6 +756,17 @@ impl Runtime {
                 }
             }
 
+
+            if fields.len() <= 1 {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "struct with fields expects at least two fields".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
+            }
+            
             Ok(Stmt::DefStructStmt(DefStructStmt::new(
                 name,
                 param_defs,
