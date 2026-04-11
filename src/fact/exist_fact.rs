@@ -18,6 +18,42 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
         }
     }
+
+    pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
+        if from == to {
+            return self;
+        }
+        match self {
+            OrAndChainAtomicFact::AtomicFact(a) => {
+                OrAndChainAtomicFact::AtomicFact(a.replace_bound_identifier(from, to))
+            }
+            OrAndChainAtomicFact::AndFact(af) => OrAndChainAtomicFact::AndFact(AndFact {
+                facts: af
+                    .facts
+                    .into_iter()
+                    .map(|x| x.replace_bound_identifier(from, to))
+                    .collect(),
+                line_file: af.line_file,
+            }),
+            OrAndChainAtomicFact::ChainFact(cf) => OrAndChainAtomicFact::ChainFact(ChainFact {
+                objs: cf
+                    .objs
+                    .into_iter()
+                    .map(|o| Obj::replace_bound_identifier(o, from, to))
+                    .collect(),
+                prop_names: cf.prop_names,
+                line_file: cf.line_file,
+            }),
+            OrAndChainAtomicFact::OrFact(of) => OrAndChainAtomicFact::OrFact(OrFact {
+                facts: of
+                    .facts
+                    .into_iter()
+                    .map(|x| x.replace_bound_identifier(from, to))
+                    .collect(),
+                line_file: of.line_file,
+            }),
+        }
+    }
 }
 
 #[derive(Clone)]

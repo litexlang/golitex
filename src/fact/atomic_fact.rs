@@ -771,6 +771,151 @@ impl fmt::Display for NotIsFiniteSetFact {
 }
 
 impl AtomicFact {
+    pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
+        if from == to {
+            return self;
+        }
+        fn r(o: Obj, from: &str, to: &str) -> Obj {
+            Obj::replace_bound_identifier(o, from, to)
+        }
+        match self {
+            AtomicFact::NormalAtomicFact(x) => AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
+                x.predicate,
+                x.body.into_iter().map(|o| r(o, from, to)).collect(),
+                x.line_file,
+            )),
+            AtomicFact::EqualFact(x) => {
+                AtomicFact::EqualFact(EqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file))
+            }
+            AtomicFact::LessFact(x) => {
+                AtomicFact::LessFact(LessFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file))
+            }
+            AtomicFact::GreaterFact(x) => AtomicFact::GreaterFact(GreaterFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::LessEqualFact(x) => AtomicFact::LessEqualFact(LessEqualFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::GreaterEqualFact(x) => AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::IsSetFact(x) => {
+                AtomicFact::IsSetFact(IsSetFact::new(r(x.set, from, to), x.line_file))
+            }
+            AtomicFact::IsNonemptySetFact(x) => AtomicFact::IsNonemptySetFact(
+                IsNonemptySetFact::new(r(x.set, from, to), x.line_file),
+            ),
+            AtomicFact::IsFiniteSetFact(x) => AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+                r(x.set, from, to),
+                x.line_file,
+            )),
+            AtomicFact::InFact(x) => AtomicFact::InFact(InFact::new(
+                r(x.element, from, to),
+                r(x.set, from, to),
+                x.line_file,
+            )),
+            AtomicFact::IsCartFact(x) => {
+                AtomicFact::IsCartFact(IsCartFact::new(r(x.set, from, to), x.line_file))
+            }
+            AtomicFact::IsTupleFact(x) => {
+                AtomicFact::IsTupleFact(IsTupleFact::new(r(x.set, from, to), x.line_file))
+            }
+            AtomicFact::SubsetFact(x) => AtomicFact::SubsetFact(SubsetFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::SupersetFact(x) => AtomicFact::SupersetFact(SupersetFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::RestrictFact(x) => AtomicFact::RestrictFact(RestrictFact::new(
+                r(x.obj, from, to),
+                r(x.obj_can_restrict_to_fn_set, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotRestrictFact(x) => AtomicFact::NotRestrictFact(NotRestrictFact::new(
+                r(x.obj, from, to),
+                r(x.obj_cannot_restrict_to_fn_set, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotNormalAtomicFact(x) => {
+                AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
+                    x.predicate,
+                    x.body.into_iter().map(|o| r(o, from, to)).collect(),
+                    x.line_file,
+                ))
+            }
+            AtomicFact::NotEqualFact(x) => AtomicFact::NotEqualFact(NotEqualFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotLessFact(x) => AtomicFact::NotLessFact(NotLessFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotGreaterFact(x) => AtomicFact::NotGreaterFact(NotGreaterFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotLessEqualFact(x) => AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotGreaterEqualFact(x) => {
+                AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
+                    r(x.left, from, to),
+                    r(x.right, from, to),
+                    x.line_file,
+                ))
+            }
+            AtomicFact::NotIsSetFact(x) => {
+                AtomicFact::NotIsSetFact(NotIsSetFact::new(r(x.set, from, to), x.line_file))
+            }
+            AtomicFact::NotIsNonemptySetFact(x) => AtomicFact::NotIsNonemptySetFact(
+                NotIsNonemptySetFact::new(r(x.set, from, to), x.line_file),
+            ),
+            AtomicFact::NotIsFiniteSetFact(x) => AtomicFact::NotIsFiniteSetFact(
+                NotIsFiniteSetFact::new(r(x.set, from, to), x.line_file),
+            ),
+            AtomicFact::NotInFact(x) => AtomicFact::NotInFact(NotInFact::new(
+                r(x.element, from, to),
+                r(x.set, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotIsCartFact(x) => {
+                AtomicFact::NotIsCartFact(NotIsCartFact::new(r(x.set, from, to), x.line_file))
+            }
+            AtomicFact::NotIsTupleFact(x) => AtomicFact::NotIsTupleFact(NotIsTupleFact::new(
+                r(x.set, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotSubsetFact(x) => AtomicFact::NotSubsetFact(NotSubsetFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+            AtomicFact::NotSupersetFact(x) => AtomicFact::NotSupersetFact(NotSupersetFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )),
+        }
+    }
+}
+
+impl AtomicFact {
     fn predicate_string(&self) -> String {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.predicate.to_string(),

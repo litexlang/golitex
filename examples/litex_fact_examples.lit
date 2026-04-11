@@ -1,0 +1,110 @@
+# Fact layer: each surface form maps to a `Fact` variant; atomic pieces map to `AtomicFact`
+# (see `src/fact/fact.rs` and `src/fact/atomic_fact.rs`). Independent blocks for copy-paste.
+
+# --- Fact::AtomicFact — EqualFact, NotEqualFact ---
+prove:
+    1 = 1
+    2 != 3
+
+# --- AtomicFact — order (Less / Greater / LessEqual / GreaterEqual) and negated forms ---
+prove:
+    0 < 1
+    2 > 1
+    1 <= 1
+    2 >= 1
+    not 1 < 0
+
+# --- Fact::ChainFact — chained binary relations (one `ChainFact`, not nested `AndFact`) ---
+prove:
+    0 < 1 < 2
+
+# --- Fact::AndFact — conjunction of atomics ---
+prove:
+    1 = 1 and 2 < 3
+
+# --- Fact::OrFact — disjunction ---
+prove:
+    1 = 2 or 1 = 1
+
+# --- Fact::ExistFact ---
+# exist fact is usually proved by witness exist ... from ...
+prove:
+    witness exist x R st { x = 1 } from 1:
+        1 = 1
+
+    exist y R st { y = 1 }
+
+# --- Fact::ForallFact — no domain guard (empty `dom_facts`) ---
+prove:
+    forall s set:
+        s = s
+
+    forall x Z:
+        x $in R
+
+# --- Fact::ForallFact — with `=>:` (non-empty `dom_facts` + `then_facts`) ---
+prove:
+    forall t R:
+        100 < t
+        =>:
+            $a_lt_c(0, 100, t)
+            0 < t
+
+# --- Fact::ForallFactWithIff — last block `=>:`, then `<=>:` ---
+prove:
+    forall x, y R:
+        =>:
+            x > y
+        <=>:
+            y < x
+
+# --- AtomicFact — $is_set / $is_nonempty_set / $is_finite_set / $in ---
+prove:
+    $is_set({1, 2})
+    $is_nonempty_set({1})
+    $is_finite_set({1, 2})
+    1 $in {1, 2}
+    0.5 $in Q
+
+prove:
+    not $is_nonempty_set({})
+
+# --- AtomicFact — $is_cart ---
+prove:
+    have c set = cart(R, Q)
+    $is_cart(c)
+
+# --- AtomicFact — $is_tuple ---
+prove:
+    have u set = (1, 2)
+    $is_tuple(u)
+
+# --- AtomicFact — $subset / $superset ---
+prove:
+    let a, b set:
+        a $subset b
+    forall x a:
+        x $in b
+    b $superset a
+
+# --- AtomicFact — NotSubsetFact / NotSupersetFact ---
+prove:
+    let a, b set:
+        not a $subset b
+    not b $superset a
+
+# --- Stmt::Fact — RestrictFact (top-level fact line, not inside `prove:`) ---
+have f fn(x R, y Q) R
+
+$restrict(f, fn(a Q, b Q) R)
+
+# --- AtomicFact — NormalAtomicFact / NotNormalAtomicFact (`$name(args)`) ---
+prove:
+    abstract_prop ok(x)
+    know $ok(0)
+    $ok(0)
+
+prove:
+    abstract_prop bad(x)
+    know not $bad(1)
+    not $bad(1)

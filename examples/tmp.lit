@@ -1,27 +1,17 @@
-prop group_property(s set, zero s, add fn(x, y s) s, inv fn(x s) s):
-    forall x, y, z s:
-        add(x, add(y, z)) = add(add(x, y), z)
-    forall x s:
-        add(x, zero) = x
-        add(zero, x) = x
-        add(x, inv(x)) = zero
-        add(inv(x), x) = zero
+abstract_prop p(a, b, c)
 
-struct group(s set):
-    zero s
-    add fn(x, y s) s
-    inv fn(x s) s
+struct some_struct(a set):
+    field1 a
+    field2 a
     <=>:
-        $group_property(s, self.zero, self.add, self.inv)
+        $p(a, self.field1, self.field2)
 
-forall s set, g struct group(s):
-    $group_property(s, g.zero, g.add, g.inv)
-    g.add(g.zero, g.zero) = g.zero
+# use by struct to generate set-theoretic definition of struct
+by struct: struct some_struct(R)
 
-claim:
-    prove:
-        forall s set, g struct group(s):
-            g.inv(g.zero) = g.zero
-    g.add(g.inv(g.zero), g.zero) = g.inv(g.zero)
+(struct some_struct(R)) = {x2 cart(R, R): $p(R, x2[1], x2[2])}
 
-    g.add(g.inv(g.zero), g.zero) = g.zero
+forall x1 struct some_struct(R):
+    x1 $in cart(R, R)
+    x1[1] = x1.field1
+    x1[2] = x1.field2

@@ -1,10 +1,17 @@
-abstract_prop p(b, c, d)
+abstract_prop p(a, b, c)
 
-struct q(a set):
-    b a
-    c fn(x a) a
-    d fn(x, y a) a
+struct some_struct(a set):
+    field1 a
+    field2 a
     <=>:
-        $p(self.b, self.c, self.d)
+        $p(a, self.field1, self.field2)
 
-by struct: struct q(R)
+# use by struct to generate set-theoretic definition of struct
+by struct: struct some_struct(R)
+
+(struct some_struct(R)) = {x2 cart(R, R): $p(R, x2[1], x2[2])}
+
+forall x1 struct some_struct(R):
+    x1 $in cart(R, R)
+    x1[1] = x1.field1
+    x1[2] = x1.field2
