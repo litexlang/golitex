@@ -7,7 +7,10 @@ pub type StmtResult = StmtExecResult;
 pub fn run_source_code_in_file(entrance_file_path: &str) -> String {
     let source_code = match fs::read_to_string(entrance_file_path) {
         Ok(content) => content,
-        Err(read_error) => panic!("Could not read file {:?}: {}", entrance_file_path, read_error),
+        Err(read_error) => panic!(
+            "Could not read file {:?}: {}",
+            entrance_file_path, read_error
+        ),
     };
     run_source_code_with_output(&source_code, entrance_file_path).1
 }
@@ -35,10 +38,7 @@ fn run_source_code_with_output(source_code: &str, entrance_label: &str) -> (bool
         run_source_code(builtin_code().as_str(), &mut runtime);
     let (ok, msg) = render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
     if !ok {
-        return (
-            false,
-            format!("builtin code execution failed: {}", msg),
-        );
+        return (false, format!("builtin code execution failed: {}", msg));
     }
     runtime.new_file_path_new_env_new_name_scope(entrance_label);
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
@@ -53,11 +53,11 @@ pub fn run_source_code(
         source_code,
         runtime.module_manager.current_file_path_rc(),
     ) {
-            Ok(b) => b,
-            Err(e) => {
-                return (vec![], Some(e));
-            }
-        };
+        Ok(b) => b,
+        Err(e) => {
+            return (vec![], Some(e));
+        }
+    };
 
     let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {

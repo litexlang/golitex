@@ -123,6 +123,7 @@ prove:
     abstract_prop p(a)
     struct rec(a set):
         fld a
+        fld2 a
         <=>:
             $p(self.fld)
     know forall s set, h struct rec(s):
@@ -146,6 +147,7 @@ prove:
     abstract_prop q(a)
     struct ty(a set):
         f a
+        f2 a
         <=>:
             $q(self.f)
     $is_set(struct ty(R))

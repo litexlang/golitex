@@ -643,6 +643,10 @@ impl DefStructStmt {
         facts: Vec<OrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {
+        if fields.len() <= 1 {
+            unreachable!();
+        }
+
         DefStructStmt {
             name,
             param_defs,

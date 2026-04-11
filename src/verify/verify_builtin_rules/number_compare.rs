@@ -183,6 +183,24 @@ impl Runtime {
                     ),
                 );
             }
+            let strict_fact = Fact::AtomicFact(AtomicFact::LessFact(LessFact::new(
+                less_equal_fact.left.clone(),
+                less_equal_fact.right.clone(),
+                less_equal_fact.line_file.clone(),
+            )));
+            let strict_key = strict_fact.to_string();
+            let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&strict_key);
+            if cache_ok {
+                return StmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                        Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
+                        strict_key,
+                        Some(strict_fact),
+                        Some(cache_line_file),
+                        Vec::new(),
+                    ),
+                );
+            }
         }
         if let AtomicFact::GreaterEqualFact(greater_equal_fact) = atomic_fact {
             if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
