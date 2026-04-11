@@ -77,6 +77,9 @@ impl Runtime {
         equal_fact: &EqualFact,
         infer_result: &mut InferResult,
     ) -> Result<(), RuntimeError> {
+        if known_tuple_obj.args.len() < 2 {
+            return Ok(());
+        }
         let target_is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact::new(
             target_obj.clone(),
             equal_fact.line_file.clone(),

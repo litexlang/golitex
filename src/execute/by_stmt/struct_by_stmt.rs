@@ -152,9 +152,9 @@ impl Runtime {
                 Obj::Number(Number::new(idx.to_string())),
             ));
             let rhs = Obj::FieldAccess(FieldAccess::new(forall_param.clone(), field_name.clone()));
-            then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                EqualFact::new(lhs, rhs, stmt.line_file.clone()),
-            )));
+            then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
+                AtomicFact::EqualFact(EqualFact::new(lhs, rhs, stmt.line_file.clone())),
+            ));
         }
 
         let forall_fact = Fact::ForallFact(ForallFact::new(
@@ -171,7 +171,8 @@ impl Runtime {
         // 故令 `self` 为 `(R, x[1], x[2], …)`：与 `def.fields` + `number_of_params` 的 tuple 下标一致，
         // `inst_field_access` 会把 `self.b` 等变成 `x[1]` 而非非法的 `x.b`。
         let x_obj = Obj::Identifier(Identifier::new(set_builder_param.clone()));
-        let mut tuple_components: Vec<Obj> = Vec::with_capacity(def.number_of_params() + def.fields.len());
+        let mut tuple_components: Vec<Obj> =
+            Vec::with_capacity(def.number_of_params() + def.fields.len());
         for a in struct_ty.args.iter() {
             tuple_components.push(a.clone());
         }

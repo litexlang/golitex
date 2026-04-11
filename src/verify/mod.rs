@@ -12,14 +12,9 @@ mod verify_facts_the_same_type_and_return_matched_args;
 mod verify_fn_set_equality_builtin_rule;
 mod verify_forall_fact_forall_fact_with_iff;
 mod verify_helper;
-mod verify_in_fact_builtin_rules;
+mod verify_builtin_rules;
 mod verify_non_equational_atomic_fact;
-mod verify_non_equational_atomic_fact_builtin_duality_rules;
-mod verify_non_equational_atomic_fact_with_builtin_rules;
-mod verify_number_comparison_builtin_rule;
-pub(crate) use verify_number_comparison_builtin_rule::{
-    compare_normalized_number_str_to_zero, NumberCompareResult,
-};
+pub(crate) use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
 mod verify_number_in_standard_set;
 mod verify_obj_well_defined;
 mod verify_or_fact;

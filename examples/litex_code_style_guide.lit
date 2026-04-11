@@ -21,4 +21,4 @@ know forall a, b, c R:
     b < c
     =>:
         $a_less_than_c(a, b, c)
-"""
+"""·
