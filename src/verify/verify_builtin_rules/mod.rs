@@ -4,6 +4,7 @@ mod in_fact_builtin;
 mod non_equational_dispatch;
 mod not_equal_builtin;
 mod number_compare;
+mod number_compare_div_elimination;
 mod order_normalize;
 mod set_relation_duality;
 mod type_predicates_builtin;
