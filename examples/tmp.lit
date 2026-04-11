@@ -1,3 +1,5 @@
+1 + 2 = 3
+
 """
 # family equality builtin: expand `equal_to` after substituting parameters, then compare
 seq(R) = Fn(N_pos) R
