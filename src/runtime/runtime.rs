@@ -22,7 +22,7 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn push_parsing_time_name_scope(&mut self) {
+    fn push_parsing_time_name_scope(&mut self) {
         self.parsing_time_name_scope_stack.push(HashMap::new());
     }
 
@@ -162,7 +162,7 @@ impl Runtime {
         Ok((mangled, map))
     }
 
-    pub fn pop_parsing_time_name_scope(&mut self) {
+    fn pop_parsing_time_name_scope(&mut self) {
         self.parsing_time_name_scope_stack.pop();
     }
 
@@ -255,6 +255,17 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         self.pop_env();
+        result
+    }
+
+    /// Same contract as `run_in_local_env`, but for `parsing_time_name_scope_stack`.
+    pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+    {
+        self.push_parsing_time_name_scope();
+        let result = f(self);
+        self.pop_parsing_time_name_scope();
         result
     }
 }

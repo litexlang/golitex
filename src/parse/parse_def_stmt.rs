@@ -4,9 +4,7 @@ use std::collections::HashSet;
 
 impl Runtime {
     pub fn parse_def_prop_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_prop_stmt_body(tb);
-        self.pop_parsing_time_name_scope();
+        let stmt = self.run_in_local_parsing_time_name_scope(|this| this.parse_def_prop_stmt_body(tb));
 
         let stmt_ok = stmt?;
         self.insert_parsed_name_into_top_parsing_time_name_scope(
@@ -59,9 +57,8 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
-        self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_abstract_prop_stmt_body(tb);
-        self.pop_parsing_time_name_scope();
+        let stmt =
+            self.run_in_local_parsing_time_name_scope(|this| this.parse_def_abstract_prop_stmt_body(tb));
 
         let stmt_ok = stmt?;
         self.insert_parsed_name_into_top_parsing_time_name_scope(
@@ -241,11 +238,9 @@ impl Runtime {
         tb.skip_token(Z)?;
         tb.skip_token(COLON)?;
 
-        self.push_parsing_time_name_scope();
-        let outcome =
-            self.parse_have_fn_by_induc_stmt_after_param_scope(tb, name, param, induc_from);
-        self.pop_parsing_time_name_scope();
-        outcome
+        self.run_in_local_parsing_time_name_scope(|this| {
+            this.parse_have_fn_by_induc_stmt_after_param_scope(tb, name, param, induc_from)
+        })
     }
 
     fn parse_have_fn_by_induc_stmt_after_param_scope(
@@ -662,10 +657,7 @@ impl Runtime {
         tb.skip_token(FAMILY)?;
         let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
-        self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_family_stmt_body(name, tb);
-        self.pop_parsing_time_name_scope();
-        stmt
+        self.run_in_local_parsing_time_name_scope(|this| this.parse_def_family_stmt_body(name, tb))
     }
 
     fn parse_def_family_stmt_body(
@@ -699,10 +691,7 @@ impl Runtime {
         tb.skip_token(STRUCT)?;
         let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
-        self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_struct_stmt_body(name, tb);
-        self.pop_parsing_time_name_scope();
-        stmt
+        self.run_in_local_parsing_time_name_scope(|this| this.parse_def_struct_stmt_body(name, tb))
     }
 
     fn parse_def_struct_stmt_body(
@@ -803,10 +792,7 @@ impl Runtime {
     pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
-        self.push_parsing_time_name_scope();
-        let stmt = self.parse_def_algorithm_stmt_body(name, tb);
-        self.pop_parsing_time_name_scope();
-        stmt
+        self.run_in_local_parsing_time_name_scope(|this| this.parse_def_algorithm_stmt_body(name, tb))
     }
 
     fn parse_def_algorithm_stmt_body(

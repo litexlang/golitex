@@ -173,9 +173,7 @@ impl Runtime {
     }
 
     pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
-        self.push_parsing_time_name_scope();
-        let fn_set = self.parse_fn_set_body(tb, true);
-        self.pop_parsing_time_name_scope();
+        let fn_set = self.run_in_local_parsing_time_name_scope(|this| this.parse_fn_set_body(tb, true));
         match fn_set {
             Ok(fn_set) => match fn_set {
                 FnSetOrFnSetClause::FnSet(fn_set) => Ok(fn_set),
@@ -191,9 +189,8 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<FnSetClause, RuntimeError> {
-        self.push_parsing_time_name_scope();
-        let clause = self.parse_fn_set_body(tb, false);
-        self.pop_parsing_time_name_scope();
+        let clause =
+            self.run_in_local_parsing_time_name_scope(|this| this.parse_fn_set_body(tb, false));
         match clause {
             Ok(clause) => match clause {
                 FnSetOrFnSetClause::FnSetClause(clause) => Ok(clause),
@@ -927,10 +924,7 @@ impl Runtime {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, RuntimeError> {
-        self.push_parsing_time_name_scope();
-        let result = self.parse_set_builder_body(tb, a);
-        self.pop_parsing_time_name_scope();
-        result
+        self.run_in_local_parsing_time_name_scope(|this| this.parse_set_builder_body(tb, a))
     }
 
     /// Parse after first identifier: either "S : fact1, fact2" (SetBuilder) or "b c" (ListSet).
