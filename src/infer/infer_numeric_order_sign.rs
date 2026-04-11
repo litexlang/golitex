@@ -2,7 +2,7 @@ use crate::prelude::*;
 use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 
 impl Runtime {
-    /// From numeric bounds on one side, infer a weaker comparison to `0` on the other side.
+    /// From numeric bounds on one side, infer a comparison to `0` on the other side when the constant side is numeric.
     pub(crate) fn infer_numeric_order_sign_from_order_atomic(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -25,12 +25,12 @@ impl Runtime {
         match (left_num, right_num) {
             (Some(_), Some(_)) | (None, None) => Ok(InferResult::new()),
             (None, Some(k)) => {
-                // L >= k and k > 0 => L >= 0
+                // L >= k and k > 0 => store `0 < L`
                 if matches!(
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Greater
                 ) {
-                    self.infer_store_ge_zero(f.left.clone(), f.line_file.clone())
+                    self.infer_store_gt_zero(f.left.clone(), f.line_file.clone())
                 } else {
                     Ok(InferResult::new())
                 }
@@ -58,12 +58,12 @@ impl Runtime {
         match (left_num, right_num) {
             (Some(_), Some(_)) | (None, None) => Ok(InferResult::new()),
             (None, Some(k)) => {
-                // L > k and k >= 0 => L >= 0
+                // L > k and k > 0 => store `0 < L`. If k == 0 the premise is already `0 < L`; do not re-store (avoids infinite infer).
                 if matches!(
                     compare_normalized_number_str_to_zero(&k.normalized_value),
-                    NumberCompareResult::Greater | NumberCompareResult::Equal
+                    NumberCompareResult::Greater
                 ) {
-                    self.infer_store_ge_zero(f.left.clone(), f.line_file.clone())
+                    self.infer_store_gt_zero(f.left.clone(), f.line_file.clone())
                 } else {
                     Ok(InferResult::new())
                 }
@@ -102,12 +102,12 @@ impl Runtime {
                 }
             }
             (Some(k), None) => {
-                // k <= R => R >= k; k > 0 => R >= 0
+                // k <= R => R >= k; k > 0 => store `0 < R`
                 if matches!(
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Greater
                 ) {
-                    self.infer_store_ge_zero(f.right.clone(), f.line_file.clone())
+                    self.infer_store_gt_zero(f.right.clone(), f.line_file.clone())
                 } else {
                     Ok(InferResult::new())
                 }
@@ -135,12 +135,12 @@ impl Runtime {
                 }
             }
             (Some(k), None) => {
-                // k < R => R > k; k >= 0 => R >= 0
+                // k < R and k > 0 => store `0 < R`. If k == 0, premise is already `0 < R`; do not re-store (avoids infinite infer).
                 if matches!(
                     compare_normalized_number_str_to_zero(&k.normalized_value),
-                    NumberCompareResult::Greater | NumberCompareResult::Equal
+                    NumberCompareResult::Greater
                 ) {
-                    self.infer_store_ge_zero(f.right.clone(), f.line_file.clone())
+                    self.infer_store_gt_zero(f.right.clone(), f.line_file.clone())
                 } else {
                     Ok(InferResult::new())
                 }
@@ -148,20 +148,18 @@ impl Runtime {
         }
     }
 
-    fn infer_store_ge_zero(&mut self, x: Obj, line_file: LineFile) -> Result<InferResult, RuntimeError> {
-        let fact_to_store = Fact::AtomicFact(AtomicFact::GreaterEqualFact(
-            GreaterEqualFact::new(
-                x,
-                Obj::Number(Number::new("0".to_string())),
-                line_file.clone(),
-            ),
-        ));
+    fn infer_store_gt_zero(&mut self, x: Obj, line_file: LineFile) -> Result<InferResult, RuntimeError> {
+        let fact_to_store = Fact::AtomicFact(AtomicFact::LessFact(LessFact::new(
+            Obj::Number(Number::new("0".to_string())),
+            x,
+            line_file.clone(),
+        )));
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
         self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
             .map_err(|previous_error| {
                 RuntimeError::new_infer_error_with_msg_position_previous_error(
-                    "infer numeric order sign: failed to store inferred >= 0 bound".to_string(),
+                    "infer numeric order sign: failed to store inferred (0 < x) bound".to_string(),
                     line_file,
                     Some(previous_error.into()),
                 )
