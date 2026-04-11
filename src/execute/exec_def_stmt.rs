@@ -139,9 +139,6 @@ impl Runtime {
             // Body facts are not added by infer() for chain/and/or/exist; record them for JSON / CLI.
             infer_result.new_fact(fact);
         }
-        for line in infer_result.infer_lines_unique_in_order() {
-            println!("{}", line);
-        }
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::DefLetStmt(def_let_stmt.clone()),
