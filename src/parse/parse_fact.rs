@@ -16,10 +16,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Fact, RuntimeError> {
-        self.push_parsing_time_name_scope();
-        let fact = self.parse_forall_or_forall_with_iff_body(tb);
-        self.pop_parsing_time_name_scope();
-        fact
+        self.run_in_local_parsing_time_name_scope(|this| this.parse_forall_or_forall_with_iff_body(tb))
     }
 
     fn parse_forall_or_forall_with_iff_body(
@@ -189,10 +186,7 @@ impl Runtime {
     }
 
     pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, RuntimeError> {
-        self.push_parsing_time_name_scope();
-        let fact = self.parse_exist_fact_body(tb);
-        self.pop_parsing_time_name_scope();
-        fact
+        self.run_in_local_parsing_time_name_scope(|this| this.parse_exist_fact_body(tb))
     }
 
     fn parse_exist_fact_body(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, RuntimeError> {
@@ -202,29 +196,29 @@ impl Runtime {
             param_def.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
         let exist_param_names = ParamGroupWithParamType::collect_param_names(&param_def);
-        self.push_parsing_time_name_scope();
-        self.register_collected_param_names_for_def_parse(
-            &exist_param_names,
-            tb.line_file.clone(),
-        )?;
-        tb.skip_token(ST)?;
+        self.run_in_local_parsing_time_name_scope(move |this| {
+            this.register_collected_param_names_for_def_parse(
+                &exist_param_names,
+                tb.line_file.clone(),
+            )?;
+            tb.skip_token(ST)?;
 
-        tb.skip_token(LEFT_CURLY_BRACE)?;
+            tb.skip_token(LEFT_CURLY_BRACE)?;
 
-        let mut facts: Vec<OrAndChainAtomicFact> = vec![];
-        loop {
-            facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
-            if tb.current()? != RIGHT_CURLY_BRACE {
-                tb.skip_token(COMMA)?;
-            } else {
-                break;
+            let mut facts: Vec<OrAndChainAtomicFact> = vec![];
+            loop {
+                facts.push(this.parse_or_and_chain_atomic_fact(tb)?);
+                if tb.current()? != RIGHT_CURLY_BRACE {
+                    tb.skip_token(COMMA)?;
+                } else {
+                    break;
+                }
             }
-        }
-        tb.skip_token(RIGHT_CURLY_BRACE)?;
+            tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-        self.pop_parsing_time_name_scope();
-        let line_file = tb.line_file.clone();
-        Ok(ExistFact::new(param_def, facts, line_file))
+            let line_file = tb.line_file.clone();
+            Ok(ExistFact::new(param_def, facts, line_file))
+        })
     }
 
     pub fn parse_facts_in_body(&mut self, tb: &mut TokenBlock) -> Result<Vec<Fact>, RuntimeError> {
