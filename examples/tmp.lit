@@ -1,5 +1,10 @@
 1 + 2 = 3
 
+let a R:
+    a = 1
+
+a = 1
+
 """
 # family equality builtin: expand `equal_to` after substituting parameters, then compare
 seq(R) = Fn(N_pos) R
