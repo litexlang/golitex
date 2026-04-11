@@ -2,8 +2,8 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    /// 解析 family 定义并将 `equal_to` 实例化为具体 member set（`x ∈ family F(...)` 的右侧语义）。
-    fn instantiate_family_member_set(
+    /// Resolve a family application to the `equal_to` object after substituting type arguments.
+    pub(crate) fn instantiate_family_member_set(
         &mut self,
         family_ty: &FamilyObj,
     ) -> Result<Obj, RuntimeError> {
