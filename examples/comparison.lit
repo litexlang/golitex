@@ -24,6 +24,14 @@ know:
         =>:
             0 <= a * b
 
+know:
+    forall a, b, c R:
+        0 < c
+        =>:
+            a * c <= b
+        <=>:
+            a <= b / c
+
 claim:
     prove:
         forall a, b, c, d R:
