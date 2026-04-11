@@ -1,13 +1,9 @@
-use crate::common::json_value::{
-    line_file_line_json_value, line_file_source_json_value, render_json_value, JsonValue,
-};
+use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
 use crate::prelude::*;
 
 const JSON_KEY_RESULT: &str = "result";
 const JSON_KEY_SUCCESS: &str = "success";
 const JSON_KEY_INFER_FACTS: &str = "infer_facts";
-const JSON_KEY_SOURCE: &str = "source";
-
 impl StmtExecResult {
     pub fn to_display_json_string(&self) -> String {
         render_json_value(&self.to_json_value(), 0)
@@ -53,10 +49,6 @@ fn non_factual_stmt_success_to_json(x: &NonFactualStmtSuccess) -> JsonValue {
             JsonValue::JsonString(x.stmt.stmt_type_name().to_string()),
         ),
         ("line".to_string(), line_file_line_json_value(&stmt_line_file)),
-        (
-            JSON_KEY_SOURCE.to_string(),
-            line_file_source_json_value(&stmt_line_file),
-        ),
         ("stmt".to_string(), JsonValue::JsonString(stmt_text)),
         (JSON_KEY_INFER_FACTS.to_string(), JsonValue::Array(infer_items)),
         ("inside_results".to_string(), JsonValue::Array(inside_items)),
@@ -95,10 +87,6 @@ fn factual_builtin_rules_to_json(x: &FactualStmtSuccess) -> JsonValue {
         ("stmt_type".to_string(), JsonValue::JsonString("Fact".to_string())),
         ("line".to_string(), line_file_line_json_value(&fact_line_file)),
         (
-            JSON_KEY_SOURCE.to_string(),
-            line_file_source_json_value(&fact_line_file),
-        ),
-        (
             "stmt".to_string(),
             JsonValue::JsonString(x.stmt.to_string()),
         ),
@@ -136,20 +124,12 @@ fn factual_known_fact_to_json(x: &FactualStmtSuccess) -> JsonValue {
         ("stmt_type".to_string(), JsonValue::JsonString("Fact".to_string())),
         ("line".to_string(), line_file_line_json_value(&stmt_line_file)),
         (
-            JSON_KEY_SOURCE.to_string(),
-            line_file_source_json_value(&stmt_line_file),
-        ),
-        (
             "stmt".to_string(),
             JsonValue::JsonString(x.stmt.to_string()),
         ),
         (
             "verified_by_fact_known_on_line".to_string(),
             line_file_line_json_value(&known_fact_line_file),
-        ),
-        (
-            "verified_by_fact_known_from_source".to_string(),
-            line_file_source_json_value(&known_fact_line_file),
         ),
         (
             "verified_by".to_string(),

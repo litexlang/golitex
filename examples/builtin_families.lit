@@ -1,0 +1,7 @@
+have s1 family seq(R)
+
+s1(1) = s1(1)
+
+have s2 family finite_seq(R, 1)
+
+s2(1) = s2(1)

@@ -35,7 +35,7 @@ impl Runtime {
         &mut self,
         def_prop_stmt: &DefPropStmt,
     ) -> Result<StmtExecResult, RuntimeErrorStruct> {
-        self.def_prop_stmt_check_well_defined(def_prop_stmt)
+        self.run_in_local_env(|rt| rt.def_prop_stmt_check_well_defined(def_prop_stmt))
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     Stmt::DefPropStmt(def_prop_stmt.clone()),
@@ -55,13 +55,6 @@ impl Runtime {
     }
 
     fn def_prop_stmt_check_well_defined(
-        &mut self,
-        def_prop_stmt: &DefPropStmt,
-    ) -> Result<(), RuntimeErrorStruct> {
-        self.run_in_local_env(|rt| rt.def_prop_stmt_check_well_defined_body(def_prop_stmt))
-    }
-
-    fn def_prop_stmt_check_well_defined_body(
         &mut self,
         def_prop_stmt: &DefPropStmt,
     ) -> Result<(), RuntimeErrorStruct> {
@@ -145,9 +138,6 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
             // Body facts are not added by infer() for chain/and/or/exist; record them for JSON / CLI.
             infer_result.new_fact(fact);
-        }
-        for line in infer_result.infer_lines_unique_in_order() {
-            println!("{}", line);
         }
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(

@@ -152,7 +152,6 @@ fn build_display_error_json_object(
         JSON_KEY_LINE,
         line_file_line_json_fragment(&line_file)
     ));
-
     field_lines.push(format!(
         "{}\"{}\": {}",
         indent_inner,
