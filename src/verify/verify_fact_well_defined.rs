@@ -178,34 +178,28 @@ impl Runtime {
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.run_in_local_env(|rt| rt.verify_exist_fact_well_defined_body(exist_fact, verify_state))
-    }
-
-    fn verify_exist_fact_well_defined_body(
-        &mut self,
-        exist_fact: &ExistFact,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        for param_def in exist_fact.params_def_with_type().iter() {
-            let result = self.define_params_with_type(std::slice::from_ref(param_def), false);
-            if let Err(e) = result {
-                return Err(
-                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                        "failed to define parameters in exist fact".to_string(),
-                        Some(e.into()),
-                        exist_fact.line_file(),
-                    ),
-                );
+        self.run_in_local_env(|rt| {
+            for param_def in exist_fact.params_def_with_type().iter() {
+                let result = rt.define_params_with_type(std::slice::from_ref(param_def), false);
+                if let Err(e) = result {
+                    return Err(
+                        RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                            "failed to define parameters in exist fact".to_string(),
+                            Some(e.into()),
+                            exist_fact.line_file(),
+                        ),
+                    );
+                }
             }
-        }
 
-        for fact in exist_fact.facts() {
-            self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-            self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                fact.clone(),
-            )?;
-        }
-        Ok(())
+            for fact in exist_fact.facts() {
+                rt.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
+                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    fact.clone(),
+                )?;
+            }
+            Ok(())
+        })
     }
 
     pub(crate) fn verify_forall_fact_well_defined(
@@ -214,11 +208,11 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.verify_forall_fact_well_defined_body(forall_fact, verify_state)
+            rt.verify_forall_fact_well_defined_inner(forall_fact, verify_state)
         })
     }
 
-    fn verify_forall_fact_well_defined_body(
+    fn verify_forall_fact_well_defined_inner(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
@@ -319,19 +313,14 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.verify_forall_fact_with_iff_well_defined_body(forall_fact_with_iff, verify_state)
+            rt.verify_forall_fact_well_defined_inner(
+                &forall_fact_with_iff.forall_fact,
+                verify_state,
+            )?;
+            for fact in forall_fact_with_iff.iff_facts.iter() {
+                rt.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
+            }
+            Ok(())
         })
-    }
-
-    fn verify_forall_fact_with_iff_well_defined_body(
-        &mut self,
-        forall_fact_with_iff: &ForallFactWithIff,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_forall_fact_well_defined_body(&forall_fact_with_iff.forall_fact, verify_state)?;
-        for fact in forall_fact_with_iff.iff_facts.iter() {
-            self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-        }
-        Ok(())
     }
 }

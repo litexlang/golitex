@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         stmt: &DefStructStmt,
     ) -> Result<StmtExecResult, RuntimeErrorStruct> {
-        self.def_struct_stmt_check_well_defined(stmt)?;
+        self.run_in_local_env(|rt| rt.def_struct_stmt_check_well_defined(stmt))?;
 
         self.store_struct_def(stmt).map_err(|store_error| {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
@@ -25,13 +25,6 @@ impl Runtime {
     }
 
     fn def_struct_stmt_check_well_defined(
-        &mut self,
-        stmt: &DefStructStmt,
-    ) -> Result<(), RuntimeErrorStruct> {
-        self.run_in_local_env(|rt| rt.def_struct_stmt_check_well_defined_body(stmt))
-    }
-
-    fn def_struct_stmt_check_well_defined_body(
         &mut self,
         stmt: &DefStructStmt,
     ) -> Result<(), RuntimeErrorStruct> {

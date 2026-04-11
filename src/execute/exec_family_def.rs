@@ -5,8 +5,9 @@ impl Runtime {
         &mut self,
         def_family_stmt: &DefFamilyStmt,
     ) -> Result<StmtExecResult, RuntimeErrorStruct> {
-        let family_definition_infer_result =
-            self.def_family_stmt_check_well_defined(def_family_stmt)?;
+        let family_definition_infer_result = self.run_in_local_env(|rt| {
+            rt.def_family_stmt_check_well_defined(def_family_stmt)
+        })?;
 
         self.store_def_family(def_family_stmt)
             .map_err(|store_error| {
@@ -28,13 +29,6 @@ impl Runtime {
     }
 
     fn def_family_stmt_check_well_defined(
-        &mut self,
-        def_family_stmt: &DefFamilyStmt,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
-        self.run_in_local_env(|rt| rt.def_family_stmt_check_well_defined_body(def_family_stmt))
-    }
-
-    fn def_family_stmt_check_well_defined_body(
         &mut self,
         def_family_stmt: &DefFamilyStmt,
     ) -> Result<InferResult, RuntimeErrorStruct> {

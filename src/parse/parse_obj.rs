@@ -173,7 +173,77 @@ impl Runtime {
     }
 
     pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
-        let fn_set = self.run_in_local_parsing_time_name_scope(|this| this.parse_fn_set_body(tb, true));
+        let fn_set = self.run_in_local_parsing_time_name_scope(|this| {
+            tb.skip_token(LEFT_BRACE)?;
+            let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
+            loop {
+                let param = tb.advance()?;
+                let mut current_params = vec![param];
+
+                while tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    current_params.push(tb.advance()?);
+                }
+
+                let set = this.parse_obj(tb)?;
+
+                for p in current_params.clone().iter() {
+                    if !is_valid_litex_name(&p).is_ok() {
+                        return Err(
+                            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                                format!("Invalid parameter name: {}", p),
+                                tb.line_file.clone(),
+                                None,
+                            ),
+                        );
+                    }
+
+                    let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
+                    this.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
+                }
+
+                params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
+
+                if tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    continue;
+                } else if tb.current_token_is_equal_to(COLON) {
+                    break;
+                } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
+                    break;
+                } else {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            "Expected comma or colon".to_string(),
+                            tb.line_file.clone(),
+                            None,
+                        ),
+                    );
+                }
+            }
+
+            let mut dom_facts = vec![];
+            if tb.current_token_is_equal_to(COLON) {
+                tb.skip_token(COLON)?;
+                let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                dom_facts.push(cur);
+                while tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                    dom_facts.push(cur);
+                }
+            }
+
+            tb.skip_token(RIGHT_BRACE)?;
+            let ret_set_parsed = this.parse_obj(tb)?;
+            Ok(FnSetOrFnSetClause::FnSet(
+                this.new_fn_set_and_add_mangled_prefix(
+                    params_def_with_set,
+                    dom_facts,
+                    ret_set_parsed,
+                )?,
+            ))
+        });
         match fn_set {
             Ok(fn_set) => match fn_set {
                 FnSetOrFnSetClause::FnSet(fn_set) => Ok(fn_set),
@@ -189,8 +259,68 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<FnSetClause, RuntimeError> {
-        let clause =
-            self.run_in_local_parsing_time_name_scope(|this| this.parse_fn_set_body(tb, false));
+        let clause = self.run_in_local_parsing_time_name_scope(|this| {
+            tb.skip_token(LEFT_BRACE)?;
+            let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
+            loop {
+                let param = tb.advance()?;
+                let mut current_params = vec![param];
+
+                while tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    current_params.push(tb.advance()?);
+                }
+
+                let set = this.parse_obj(tb)?;
+
+                for p in current_params.clone().iter() {
+                    // Register plain names so later parsing can resolve them.
+                    this.register_name_into_name_scope(p, tb.line_file.clone())?;
+
+                    let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
+                    this.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
+                }
+
+                params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
+
+                if tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    continue;
+                } else if tb.current_token_is_equal_to(COLON) {
+                    break;
+                } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
+                    break;
+                } else {
+                    return Err(
+                        RuntimeError::new_parse_error_with_msg_position_previous_error(
+                            "Expected comma or colon".to_string(),
+                            tb.line_file.clone(),
+                            None,
+                        ),
+                    );
+                }
+            }
+
+            let mut dom_facts = vec![];
+            if tb.current_token_is_equal_to(COLON) {
+                tb.skip_token(COLON)?;
+                let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                dom_facts.push(cur);
+                while tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                    dom_facts.push(cur);
+                }
+            }
+
+            tb.skip_token(RIGHT_BRACE)?;
+            let ret_set_parsed = this.parse_obj(tb)?;
+            Ok(FnSetOrFnSetClause::FnSetClause(FnSetClause {
+                params_def_with_set,
+                dom_facts,
+                ret_set: ret_set_parsed,
+            }))
+        });
         match clause {
             Ok(clause) => match clause {
                 FnSetOrFnSetClause::FnSetClause(clause) => Ok(clause),
@@ -199,95 +329,6 @@ impl Runtime {
                 }
             },
             Err(e) => Err(e),
-        }
-    }
-
-    fn parse_fn_set_body(
-        &mut self,
-        tb: &mut TokenBlock,
-        true_when_return_fn_set_false_when_return_fn_set_clause: bool,
-    ) -> Result<FnSetOrFnSetClause, RuntimeError> {
-        tb.skip_token(LEFT_BRACE)?;
-        let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
-        loop {
-            let param = tb.advance()?;
-            let mut current_params = vec![param];
-
-            while tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-                current_params.push(tb.advance()?);
-            }
-
-            let set = self.parse_obj(tb)?;
-
-            for p in current_params.clone().iter() {
-                if !true_when_return_fn_set_false_when_return_fn_set_clause {
-                    // 这里需要register一下，因为后文可能会用到这些参数
-                    self.register_name_into_name_scope(p, tb.line_file.clone())?;
-                } else {
-                    if !is_valid_litex_name(&p).is_ok() {
-                        return Err(
-                            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                                format!("Invalid parameter name: {}", p),
-                                tb.line_file.clone(),
-                                None,
-                            ),
-                        );
-                    }
-                }
-
-                let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
-                self.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
-            }
-
-            params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
-
-            if tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-                continue;
-            } else if tb.current_token_is_equal_to(COLON) {
-                break;
-            } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
-                break;
-            } else {
-                return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "Expected comma or colon".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                    ),
-                );
-            }
-        }
-
-        let mut dom_facts = vec![];
-        if tb.current_token_is_equal_to(COLON) {
-            tb.skip_token(COLON)?;
-            let cur = self.parse_or_and_chain_atomic_fact(tb)?;
-            dom_facts.push(cur);
-            while tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-                let cur = self.parse_or_and_chain_atomic_fact(tb)?;
-                dom_facts.push(cur);
-            }
-        }
-
-        tb.skip_token(RIGHT_BRACE)?;
-        let ret_set_parsed = self.parse_obj(tb)?;
-        if true_when_return_fn_set_false_when_return_fn_set_clause {
-            Ok(FnSetOrFnSetClause::FnSet(
-                self.new_fn_set_and_add_mangled_prefix(
-                    params_def_with_set,
-                    dom_facts,
-                    ret_set_parsed,
-                )?,
-            ))
-        } else {
-            Ok(FnSetOrFnSetClause::FnSetClause(FnSetClause {
-                params_def_with_set,
-                dom_facts,
-                ret_set: ret_set_parsed,
-            }))
         }
     }
 
@@ -924,47 +965,40 @@ impl Runtime {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, RuntimeError> {
-        self.run_in_local_parsing_time_name_scope(|this| this.parse_set_builder_body(tb, a))
-    }
+        self.run_in_local_parsing_time_name_scope(|this| {
+            let second = this.parse_obj(tb)?;
+            if tb.current()? == COLON {
+                tb.skip_token(COLON)?;
 
-    /// Parse after first identifier: either "S : fact1, fact2" (SetBuilder) or "b c" (ListSet).
-    fn parse_set_builder_body(
-        &mut self,
-        tb: &mut TokenBlock,
-        a: Identifier,
-    ) -> Result<Obj, RuntimeError> {
-        let second = self.parse_obj(tb)?;
-        if tb.current()? == COLON {
-            tb.skip_token(COLON)?;
+                // 先登记形参 mangling，再解析域与条件（与 fn 集一致：先绑定再读体）
+                let user_names = vec![a.name.clone()];
+                let (mangled_names, param_arg_map) =
+                    this.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
+                let stored = mangled_names[0].clone();
+                let second_inst = this.inst_obj(&second, &param_arg_map)?;
 
-            // 先登记形参 mangling，再解析域与条件（与 fn 集一致：先绑定再读体）
-            let user_names = vec![a.name.clone()];
-            let (mangled_names, param_arg_map) =
-                self.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
-            let stored = mangled_names[0].clone();
-            let second_inst = self.inst_obj(&second, &param_arg_map)?;
+                let mut facts_inst = Vec::new();
+                while tb.current()? != RIGHT_CURLY_BRACE {
+                    let f = this.parse_or_and_chain_atomic_fact(tb)?;
+                    facts_inst.push(this.inst_or_and_chain_atomic_fact(&f, &param_arg_map)?);
+                }
+                tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-            let mut facts_inst = Vec::new();
-            while tb.current()? != RIGHT_CURLY_BRACE {
-                let f = self.parse_or_and_chain_atomic_fact(tb)?;
-                facts_inst.push(self.inst_or_and_chain_atomic_fact(&f, &param_arg_map)?);
+                Ok(Obj::SetBuilder(SetBuilder::new(
+                    stored,
+                    second_inst,
+                    facts_inst,
+                )))
+            } else {
+                Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "expected colon after first argument".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                )
             }
-            tb.skip_token(RIGHT_CURLY_BRACE)?;
-
-            Ok(Obj::SetBuilder(SetBuilder::new(
-                stored,
-                second_inst,
-                facts_inst,
-            )))
-        } else {
-            return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "expected colon after first argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                ),
-            );
-        }
+        })
     }
 
     /// ListSet: { a b c } 或 { 1, 0, 2 }；遇逗号先 skip 再解析下一项
