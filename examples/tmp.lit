@@ -1,10 +1,28 @@
-have s1 family seq(R)
+abstract_prop p(a, b, c)
 
-s1(1) = s1(1)
+struct some_struct(a set):
+    field1 a
+    field2 a
+    <=>:
+        $p(a, self.field1, self.field2)
 
-have s family finite_seq(R, 1)
-   
-s(1) = s(1)
+# use by struct to generate set-theoretic definition of struct
+by struct: struct some_struct(R)
 
-1/4 < 2/3
+(struct some_struct(R)) = {x2 cart(R, R): $p(R, x2[1], x2[2])}
 
+forall x1 struct some_struct(R):
+    x1 $in cart(R, R)
+    x1[1] = x1.field1
+    x1[2] = x1.field2
+
+# cart 不应有一维，但可以让 struct 有一维
+
+struct xxx(a set):
+    f1 a
+    <=>:
+        $p(a, self.f1)
+
+family xxx(a set) = {z a: $p(a, z)}
+
+let xxx.f1 family xxx(a)
