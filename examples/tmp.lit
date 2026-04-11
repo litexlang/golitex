@@ -1,0 +1,10 @@
+have s1 family seq(R)
+
+s1(1) = s1(1)
+
+have s family finite_seq(R, 1)
+   
+s(1) = s(1)
+
+1/4 < 2/3
+
