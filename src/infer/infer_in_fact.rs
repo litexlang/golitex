@@ -295,9 +295,9 @@ impl Runtime {
             | Obj::StandardSet(StandardSet::RPos)
             | Obj::StandardSet(StandardSet::NPos) => {
                 let zero_obj = Obj::Number(Number::new("0".to_string()));
-                let inferred_atomic_fact = AtomicFact::GreaterFact(GreaterFact::new(
-                    in_fact.element.clone(),
+                let inferred_atomic_fact = AtomicFact::LessFact(LessFact::new(
                     zero_obj,
+                    in_fact.element.clone(),
                     in_fact.line_file.clone(),
                 ));
                 let mut infer_result = InferResult::new();
@@ -308,7 +308,7 @@ impl Runtime {
                 .map_err(|previous_error| {
                     RuntimeError::new_infer_error_with_msg_position_previous_error(
                         format!(
-                            "failed to store inferred greater-than-zero while inferring `{}`",
+                            "failed to store inferred 0 < x while inferring `{}`",
                             in_fact
                         ),
                         in_fact.line_file.clone(),
