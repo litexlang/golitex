@@ -9,18 +9,14 @@ const JSON_KEY_RESULT: &str = "result";
 const JSON_KEY_MESSAGE: &str = "message";
 const JSON_KEY_LINE: &str = "line";
 const JSON_KEY_SOURCE: &str = "source";
-const JSON_KEY_STMT_TYPE: &str = "stmt_type";
+const JSON_KEY_STMT_TYPE: &str = "type";
 const JSON_KEY_STMT: &str = "stmt";
 const JSON_KEY_INSIDE_RESULTS: &str = "inside_results";
 const JSON_KEY_PREVIOUS_ERROR: &str = "previous_error";
 const JSON_KEY_CONFLICT_WITH: &str = "conflict_with";
 const JSON_VALUE_ERROR: &str = "error";
 
-fn json_array_field_line(
-    indent_inner: &str,
-    json_key: &str,
-    json_elements: &[String],
-) -> String {
+fn json_array_field_line(indent_inner: &str, json_key: &str, json_elements: &[String]) -> String {
     if json_elements.is_empty() {
         format!("{}\"{}\": []", indent_inner, json_key)
     } else {
