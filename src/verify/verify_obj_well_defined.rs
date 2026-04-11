@@ -42,8 +42,12 @@ impl Runtime {
             Obj::Cup(x) => self.verify_cup_well_defined(x, verify_state),
             Obj::Cap(x) => self.verify_cap_well_defined(x, verify_state),
             Obj::ListSet(x) => self.verify_list_set_well_defined(x, verify_state),
-            Obj::SetBuilder(x) => self.verify_set_builder_well_defined(x, verify_state),
-            Obj::FnSet(x) => self.verify_fn_set_with_dom_well_defined(x, verify_state),
+            Obj::SetBuilder(x) => {
+                self.run_in_local_env(|rt| rt.verify_set_builder_well_defined(x, verify_state))
+            }
+            Obj::FnSet(x) => {
+                self.run_in_local_env(|rt| rt.verify_fn_set_with_dom_well_defined(x, verify_state))
+            }
             Obj::StandardSet(StandardSet::NPos) => self.verify_n_pos_obj_well_defined(),
             Obj::StandardSet(StandardSet::N) => self.verify_n_obj_well_defined(),
             Obj::StandardSet(StandardSet::Q) => self.verify_q_obj_well_defined(),
@@ -702,14 +706,6 @@ impl Runtime {
         x: &SetBuilder,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.run_in_local_env(|rt| rt.verify_set_builder_well_defined_body(x, verify_state))
-    }
-
-    fn verify_set_builder_well_defined_body(
-        &mut self,
-        x: &SetBuilder,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
         if let Err(e) = self.define_params_with_set(&ParamGroupWithSet::new(
             vec![x.param.clone()],
             *x.param_set.clone(),
@@ -748,14 +744,6 @@ impl Runtime {
     }
 
     fn verify_fn_set_with_dom_well_defined(
-        &mut self,
-        x: &FnSet,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.run_in_local_env(|rt| rt.verify_fn_set_with_dom_well_defined_body(x, verify_state))
-    }
-
-    fn verify_fn_set_with_dom_well_defined_body(
         &mut self,
         x: &FnSet,
         verify_state: &VerifyState,
