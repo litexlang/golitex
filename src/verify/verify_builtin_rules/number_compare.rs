@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use super::order_normalize::normalize_positive_order_atomic_fact;
+use crate::prelude::*;
 
 pub(crate) enum NumberCompareResult {
     Less,
@@ -169,6 +169,45 @@ fn compare_number_strings(
 }
 
 impl Runtime {
+    pub(crate) fn verify_order_atomic_fact_numeric_builtin_only(
+        &self,
+        atomic_fact: &AtomicFact,
+    ) -> StmtExecResult {
+        if let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact {
+            if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
+                return StmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
+                        "less_equal_fact_equal".to_string(),
+                        Vec::new(),
+                    ),
+                );
+            }
+        }
+        if let AtomicFact::GreaterEqualFact(greater_equal_fact) = atomic_fact {
+            if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
+                return StmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        Fact::AtomicFact(AtomicFact::GreaterEqualFact(greater_equal_fact.clone())),
+                        "greater_equal_fact_equal".to_string(),
+                        Vec::new(),
+                    ),
+                );
+            }
+        }
+        if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
+            StmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Fact::AtomicFact(atomic_fact.clone()),
+                    "number comparison".to_string(),
+                    Vec::new(),
+                ),
+            )
+        } else {
+            StmtExecResult::StmtUnknown(StmtUnknown::new())
+        }
+    }
+
     pub fn verify_number_comparison_builtin_rule(&self, atomic_fact: &AtomicFact) -> Option<bool> {
         let normalized = normalize_positive_order_atomic_fact(atomic_fact)?;
         match normalized {
