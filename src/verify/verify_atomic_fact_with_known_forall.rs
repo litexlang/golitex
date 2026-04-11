@@ -236,17 +236,19 @@ impl Runtime {
     }
 
     fn match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-        arg_in_atomic_fact_in_known_forall: &Obj,
+        known_arg: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match arg_in_atomic_fact_in_known_forall {
+        match known_arg {
             Obj::Identifier(ref id_known) => {
                 Self::match_arg_when_left_is_identifier(id_known, given_arg)
             }
             Obj::IdentifierWithMod(_) => {
                 Self::match_arg_when_left_is_identifier_with_mod(given_arg)
             }
-            Obj::FieldAccess(_) => Self::match_arg_when_left_is_field_access(given_arg),
+            Obj::FieldAccess(ref known_arg) => {
+                Self::match_arg_when_left_is_field_access(known_arg, given_arg)
+            }
             Obj::FieldAccessWithMod(_) => {
                 Self::match_arg_when_left_is_field_access_with_mod(given_arg)
             }
@@ -349,12 +351,25 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_field_access(
+        known_arg: &FieldAccess,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::FieldAccess(_) => Self::match_arg_type_not_implemented("FieldAccess"),
-            _ => Ok(None),
+        let given = match given_arg {
+            Obj::FieldAccess(ref f) => f,
+            _ => return Ok(None),
+        };
+
+        if known_arg.field != given.field {
+            return Ok(None);
         }
+
+        let mut map = HashMap::new();
+        map.insert(
+            known_arg.name.clone(),
+            Obj::Identifier(Identifier::new(given.name.clone())),
+        );
+
+        Ok(Some(map))
     }
 
     fn match_arg_when_left_is_field_access_with_mod(
