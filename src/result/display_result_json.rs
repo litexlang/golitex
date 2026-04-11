@@ -7,22 +7,27 @@ const JSON_KEY_RESULT: &str = "result";
 const JSON_KEY_SUCCESS: &str = "success";
 const JSON_KEY_INFER_FACTS: &str = "infer_facts";
 const JSON_KEY_VERIFIED_BY: &str = "verified_by";
-const JSON_KEY_VERIFIED_BY_SOURCE: &str = "verified_by_source";
 
-fn verified_by_source_builtin_rule() -> JsonValue {
-    JsonValue::Object(vec![(
-        "type".to_string(),
-        JsonValue::JsonString("builtin_rules".to_string()),
-    )])
+fn verified_by_builtin_rule_value(rule: &str) -> JsonValue {
+    JsonValue::Object(vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("builtin_rule".to_string()),
+        ),
+        ("rule".to_string(), JsonValue::JsonString(rule.to_string())),
+    ])
 }
 
-fn verified_by_source_with_citation(
-    kind: &str,
+fn verified_by_with_citation(
+    type_name: &str,
     citation_line_file: &LineFile,
     cited_fact: JsonValue,
 ) -> JsonValue {
     JsonValue::Object(vec![
-        ("type".to_string(), JsonValue::JsonString(kind.to_string())),
+        (
+            "type".to_string(),
+            JsonValue::JsonString(type_name.to_string()),
+        ),
         (
             "line".to_string(),
             line_file_line_json_value(citation_line_file),
@@ -33,6 +38,33 @@ fn verified_by_source_with_citation(
         ),
         ("cited_fact".to_string(), cited_fact),
     ])
+}
+
+fn verified_by_known_fact_object(
+    citation_line_file: &LineFile,
+    cited_fact: JsonValue,
+    cited_fact_plain: &str,
+    msg: &str,
+) -> JsonValue {
+    let mut fields = vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("known_fact".to_string()),
+        ),
+        (
+            "line".to_string(),
+            line_file_line_json_value(citation_line_file),
+        ),
+        (
+            "file".to_string(),
+            line_file_source_json_value(citation_line_file),
+        ),
+        ("cited_fact".to_string(), cited_fact),
+    ];
+    if msg != cited_fact_plain {
+        fields.push(("detail".to_string(), JsonValue::JsonString(msg.to_string())));
+    }
+    JsonValue::Object(fields)
 }
 
 impl StmtExecResult {
@@ -66,8 +98,8 @@ fn non_factual_stmt_success_to_json(x: &NonFactualStmtSuccess) -> JsonValue {
 
     let inside_items: Vec<JsonValue> = x.inside_results.iter().map(|r| r.to_json_value()).collect();
 
-    let verified_by_source =
-        verified_by_source_with_citation("non_factual", &stmt_line_file, JsonValue::Null);
+    let verified_by =
+        verified_by_with_citation("non_factual", &stmt_line_file, JsonValue::Null);
 
     JsonValue::Object(vec![
         (
@@ -75,7 +107,7 @@ fn non_factual_stmt_success_to_json(x: &NonFactualStmtSuccess) -> JsonValue {
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
         ),
         (
-            "stmt_type".to_string(),
+            "type".to_string(),
             JsonValue::JsonString(x.stmt.stmt_type_name().to_string()),
         ),
         (
@@ -83,8 +115,7 @@ fn non_factual_stmt_success_to_json(x: &NonFactualStmtSuccess) -> JsonValue {
             line_file_line_json_value(&stmt_line_file),
         ),
         ("stmt".to_string(), JsonValue::JsonString(stmt_text)),
-        (JSON_KEY_VERIFIED_BY_SOURCE.to_string(), verified_by_source),
-        (JSON_KEY_VERIFIED_BY.to_string(), JsonValue::Null),
+        (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (
             JSON_KEY_INFER_FACTS.to_string(),
             JsonValue::Array(infer_items),
@@ -103,7 +134,7 @@ fn factual_stmt_success_to_json(x: &FactualStmtSuccess) -> JsonValue {
 
 fn factual_builtin_rules_to_json(x: &FactualStmtSuccess) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
-    let verified_by_source = verified_by_source_builtin_rule();
+    let verified_by = verified_by_builtin_rule_value(x.msg.as_str());
 
     let infer_items: Vec<JsonValue> = x
         .infers
@@ -120,7 +151,7 @@ fn factual_builtin_rules_to_json(x: &FactualStmtSuccess) -> JsonValue {
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
         ),
         (
-            "stmt_type".to_string(),
+            "type".to_string(),
             JsonValue::JsonString("Fact".to_string()),
         ),
         (
@@ -131,11 +162,7 @@ fn factual_builtin_rules_to_json(x: &FactualStmtSuccess) -> JsonValue {
             "stmt".to_string(),
             JsonValue::JsonString(x.stmt.to_string()),
         ),
-        (JSON_KEY_VERIFIED_BY_SOURCE.to_string(), verified_by_source),
-        (
-            JSON_KEY_VERIFIED_BY.to_string(),
-            JsonValue::JsonString(x.msg.clone()),
-        ),
+        (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (
             JSON_KEY_INFER_FACTS.to_string(),
             JsonValue::Array(infer_items),
@@ -152,10 +179,12 @@ fn factual_known_fact_to_json(x: &FactualStmtSuccess) -> JsonValue {
         .as_ref()
         .map(|f| f.to_string())
         .unwrap_or_else(|| x.msg.clone());
-    let verified_by_source = verified_by_source_with_citation(
-        "known_fact",
+    let cited_fact_json = JsonValue::JsonString(cited_fact_text.clone());
+    let verified_by = verified_by_known_fact_object(
         &known_fact_line_file,
-        JsonValue::JsonString(cited_fact_text),
+        cited_fact_json,
+        cited_fact_text.as_str(),
+        x.msg.as_str(),
     );
 
     let infer_items: Vec<JsonValue> = x
@@ -173,7 +202,7 @@ fn factual_known_fact_to_json(x: &FactualStmtSuccess) -> JsonValue {
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
         ),
         (
-            "stmt_type".to_string(),
+            "type".to_string(),
             JsonValue::JsonString("Fact".to_string()),
         ),
         (
@@ -188,11 +217,7 @@ fn factual_known_fact_to_json(x: &FactualStmtSuccess) -> JsonValue {
             "verified_by_fact_known_on_line".to_string(),
             line_file_line_json_value(&known_fact_line_file),
         ),
-        (JSON_KEY_VERIFIED_BY_SOURCE.to_string(), verified_by_source),
-        (
-            JSON_KEY_VERIFIED_BY.to_string(),
-            JsonValue::JsonString(x.msg.clone()),
-        ),
+        (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (
             JSON_KEY_INFER_FACTS.to_string(),
             JsonValue::Array(infer_items),
