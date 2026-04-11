@@ -1,4 +1,3 @@
-# examples/tmp.lit — one runnable `prove:` block per `Stmt` kind (see `src/stmt/stmt.rs`).
 # Each block illustrates the usual mathematical reading of that statement form. Independent blocks for easy copy-paste.
 # `import` / `run_file`: syntax shown in comments only (not run here).
 
@@ -97,6 +96,14 @@ prove:
             1 + 1 = 2
         1 + 1 = 2
 
+    claim:
+        prove:
+            forall a R:
+                a > 0
+                =>:
+                    a $in R_pos
+        do_nothing
+
 # --- Stmt::KnowStmt — assume lemmas / axioms in scope ---
 prove:
     know:
@@ -106,7 +113,6 @@ prove:
 prove:
     prove:
         2 = 2
-    2 = 2
 
 # --- Stmt::ImportStmt / Stmt::RunFileStmt — module or file inclusion (syntax only here) ---
 # import "examples/runfile2.lit"
