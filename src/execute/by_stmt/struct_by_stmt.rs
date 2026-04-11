@@ -196,7 +196,11 @@ impl Runtime {
             inst_body_facts.push(self.inst_or_and_chain_atomic_fact(fact, &extended_for_sb)?);
         }
 
-        let set_builder = SetBuilder::new(set_builder_param, cart_obj.clone(), inst_body_facts);
+        let set_builder = SetBuilder::new_with_mangled_name(
+            set_builder_param,
+            cart_obj.clone(),
+            inst_body_facts,
+        );
         let rhs_sb_obj = Obj::SetBuilder(set_builder.clone());
         self.verify_obj_well_defined_and_store_cache(&rhs_sb_obj, &verify_state)
             .map_err(|e| {
