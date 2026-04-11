@@ -4,9 +4,7 @@ impl Runtime {
     pub fn parse_prove_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(PROVE)?;
         tb.skip_token(COLON)?;
-        self.push_parsing_time_name_scope();
-        let result = self.parse_prove_stmt_body(tb);
-        self.pop_parsing_time_name_scope();
+        let result = self.run_in_local_parsing_time_name_scope(|this| this.parse_prove_stmt_body(tb));
         match result {
             Ok(proof) => Ok(Stmt::ProveStmt(ProveStmt::new(proof, tb.line_file.clone()))),
             Err(e) => Err(e),
