@@ -98,6 +98,34 @@ impl AndChainAtomicFact {
             AndChainAtomicFact::ChainFact(c) => c.line_file(),
         }
     }
+
+    pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
+        if from == to {
+            return self;
+        }
+        match self {
+            AndChainAtomicFact::AtomicFact(a) => {
+                AndChainAtomicFact::AtomicFact(a.replace_bound_identifier(from, to))
+            }
+            AndChainAtomicFact::AndFact(af) => AndChainAtomicFact::AndFact(AndFact {
+                facts: af
+                    .facts
+                    .into_iter()
+                    .map(|x| x.replace_bound_identifier(from, to))
+                    .collect(),
+                line_file: af.line_file,
+            }),
+            AndChainAtomicFact::ChainFact(cf) => AndChainAtomicFact::ChainFact(ChainFact {
+                objs: cf
+                    .objs
+                    .into_iter()
+                    .map(|o| Obj::replace_bound_identifier(o, from, to))
+                    .collect(),
+                prop_names: cf.prop_names,
+                line_file: cf.line_file,
+            }),
+        }
+    }
 }
 
 impl fmt::Display for AndFact {

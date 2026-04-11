@@ -1,151 +1,17 @@
-# Object expressions: surface syntax maps to `Obj` in `src/obj/obj.rs`. Independent blocks for copy-paste.
-# IdentifierWithMod / FieldAccessWithMod use `::` between name parts (`MOD_SIGN`); FieldAccess uses a single `.`.
-# Included below: Number, Tuple, Add/Sub/Mul/Div/Mod/Pow, StandardSet (sample), ListSet, SetBuilder,
-# Union/Intersect/SetMinus/SetDiff, infix `\` forms, Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn` / `Fn`),
-# TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, Choose, FieldAccess, FamilyObj, StructObj, FnObj (via `have fn`).
-# Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
+abstract_prop p(a, b, c)
 
-# --- Obj::Number ---
-prove:
-    1 = 1
-    1.5 = 1.5
+struct some_struct(a set):
+    field1 a
+    field2 a
+    <=>:
+        $p(a, self.field1, self.field2)
 
-# --- Obj::Add, Sub, Mul, Div, Mod, Pow (and unary `-` as Mul by -1) ---
-prove:
-    1 + 2 = 3
-    3 - 1 = 2
-    2 * 3 = 6
-    6 / 2 = 3
-    5 % 2 = 1
-    2 ^ 3 = 8
-    -1 + 2 = 1
+# use by struct to generate set-theoretic definition of struct
+by struct: struct some_struct(R)
 
-# --- Obj::Tuple, parenthesized Obj ---
-prove:
-    (1, 2) = (1, 2)
+(struct some_struct(R)) = {x2 cart(R, R): $p(R, x2[1], x2[2])}
 
-# --- Obj::StandardSet ---
-prove:
-    0 $in N
-    0 $in Z
-    0 $in Q
-    0 $in R
-    1 $in N_pos
-    1 $in R_pos
-    -1 $in Z_neg
-    1 $in Z_nz
-
-# --- Obj::ListSet ---
-prove:
-    1 $in {1, 2, 3}
-    $is_finite_set({1, 2})
-
-# --- Obj::SetBuilder (here as the rhs of `have`; membership proof needs extra `know` / forall) ---
-prove:
-    have s set = { z N : z > 5 }
-
-# --- Obj::Union, Intersect, SetMinus (keyword forms); Obj::SetDiff (rhs of `have`) ---
-prove:
-    2 $in union({1, 2}, {2, 3})
-    2 $in intersect({1, 2}, {2, 3})
-
-prove:
-    have t set = set_minus({1, 2}, {1})
-
-prove:
-    have u set = set_diff({1, 2}, {3})
-
-# --- infix `\` on Obj::Union, Intersect, Range, ClosedRange (SetMinus infix: same token as `set_minus`) ---
-prove:
-    1 $in {1} \union {2}
-    2 $in {1, 2} \intersect {2}
-    have p set = 0 \range 10
-    have q set = 0 \closed_range 1
-
-prove:
-    have v set = {1} \set_minus {2}
-
-prove:
-    cart(R, Q) \proj 1 = R
-
-# --- Obj::Range, ClosedRange (keyword forms; membership often via `know` / set equality) ---
-prove:
-    have r set = range(0, 10)
-    have w set = closed_range(0, 1)
-
-# --- Obj::Proj (keyword) ---
-prove:
-    let c set:
-        c = cart(R, Q)
-    proj(c, 1) = R
-
-# --- Obj::Cart, CartDim, Obj::FnSet (`fn`), uppercase `Fn` sugar ---
-prove:
-    let d set:
-        d = cart(R, Q)
-    $is_cart(d)
-    cart_dim(d) = 2
-
-prove:
-    have f fn(x R) R
-    have g set = Fn(R) R
-
-# --- Obj::TupleDim, Obj::ObjAtIndex ---
-prove:
-    let e set:
-        e = (2, 3)
-    $is_tuple(e)
-    tuple_dim(e) = 2
-    e[1] = 2
-    e[2] = 3
-
-# --- Obj::PowerSet, Obj::Count ---
-prove:
-    {1, 2} $in power_set({1, 2, 3})
-    count({1, 2, 3}) = 3
-
-# --- Obj::Cup, Obj::Cap ---
-# Surface: `cup({{a}, {b}})`, `cap({{a, b}, {b, c}})` (requires provably distinct inner sets for `have`).
-
-# --- Obj::Choose ---
-prove:
-    let s nonempty_set:
-        forall x s:
-            $is_nonempty_set(x)
-    choose(s) $in s
-
-# --- Obj::Identifier, Obj::FnObj (e.g. `f(0)` after `have fn f(x R) R = ...`) ---
-prove:
-    have fn f(x R) R = x + 1
-
-# --- Obj::FieldAccess (single `.`; no `a.b.c`) ---
-prove:
-    abstract_prop p(a)
-    struct rec(a set):
-        fld a
-        <=>:
-            $p(self.fld)
-    know forall s set, h struct rec(s):
-        h.fld $in s
-    let t set, y t:
-        y = 1
-    let h struct rec(t):
-        h = (t, y)
-    h.fld $in t
-
-# --- Obj::FamilyObj ---
-prove:
-    family fam(s set) = fn(x N_pos) s
-
-    forall a family fam(R):
-        a $in fn(y N_pos) R
-        a(1) = a(1)
-
-# --- Obj::StructObj (type object `struct Name(args)`) ---
-prove:
-    abstract_prop q(a)
-    struct ty(a set):
-        f a
-        <=>:
-            $q(self.f)
-    $is_set(struct ty(R))
+forall x1 struct some_struct(R):
+    x1 $in cart(R, R)
+    x1[1] = x1.field1
+    x1[2] = x1.field2

@@ -1,4 +1,5 @@
 use super::standard_set::StandardSet;
+use crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
 use crate::prelude::*;
 use std::fmt;
 
@@ -392,6 +393,21 @@ impl SetBuilder {
             facts,
         }
     }
+
+    // Same storage shape as parsing `{user cart(...): ...}`: bound name is `__` + user (facts rewritten).
+    pub fn new_with_mangled_name(
+        user_param: String,
+        param_set: Obj,
+        facts: Vec<OrAndChainAtomicFact>,
+    ) -> Self {
+        let mangled = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, user_param);
+        let param_set = Obj::replace_bound_identifier(param_set, &user_param, &mangled);
+        let facts = facts
+            .into_iter()
+            .map(|f| f.replace_bound_identifier(&user_param, &mangled))
+            .collect();
+        Self::new(mangled, param_set, facts)
+    }
 }
 
 impl FnSet {
@@ -592,6 +608,248 @@ impl Obj {
             write!(f, "{}", RIGHT_BRACE)?;
         }
         Ok(())
+    }
+
+    pub fn replace_bound_identifier(self, from: &str, to: &str) -> Obj {
+        if from == to {
+            return self;
+        }
+        match self {
+            Obj::Identifier(i) => {
+                if i.name == from {
+                    Obj::Identifier(Identifier::new(to.to_string()))
+                } else {
+                    Obj::Identifier(i)
+                }
+            }
+            Obj::IdentifierWithMod(m) => {
+                let name = if m.name == from {
+                    to.to_string()
+                } else {
+                    m.name
+                };
+                Obj::IdentifierWithMod(IdentifierWithMod::new(m.mod_name, name))
+            }
+            Obj::FieldAccess(f) => {
+                let name = if f.name == from {
+                    to.to_string()
+                } else {
+                    f.name
+                };
+                Obj::FieldAccess(FieldAccess::new(name, f.field))
+            }
+            Obj::FieldAccessWithMod(f) => {
+                let name = if f.name == from {
+                    to.to_string()
+                } else {
+                    f.name
+                };
+                Obj::FieldAccessWithMod(FieldAccessWithMod::new(f.mod_name, name, f.field))
+            }
+            Obj::FnObj(inner) => {
+                let head = Box::new(replace_bound_identifier_in_atom(*inner.head, from, to));
+                let body = inner
+                    .body
+                    .into_iter()
+                    .map(|group| {
+                        group
+                            .into_iter()
+                            .map(|b| Box::new(Obj::replace_bound_identifier(*b, from, to)))
+                            .collect()
+                    })
+                    .collect();
+                Obj::FnObj(FnObj { head, body })
+            }
+            Obj::Number(n) => Obj::Number(n),
+            Obj::Add(x) => Obj::Add(Add::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::Sub(x) => Obj::Sub(Sub::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::Mul(x) => Obj::Mul(Mul::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::Div(x) => Obj::Div(Div::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::Mod(x) => Obj::Mod(Mod::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::Pow(x) => Obj::Pow(Pow::new(
+                Obj::replace_bound_identifier(*x.base, from, to),
+                Obj::replace_bound_identifier(*x.exponent, from, to),
+            )),
+            Obj::Union(x) => Obj::Union(Union::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::Intersect(x) => Obj::Intersect(Intersect::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::SetMinus(x) => Obj::SetMinus(SetMinus::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::SetDiff(x) => Obj::SetDiff(SetDiff::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )),
+            Obj::Cup(x) => Obj::Cup(Cup::new(Obj::replace_bound_identifier(*x.left, from, to))),
+            Obj::Cap(x) => Obj::Cap(Cap::new(Obj::replace_bound_identifier(*x.left, from, to))),
+            Obj::PowerSet(x) => Obj::PowerSet(PowerSet::new(Obj::replace_bound_identifier(
+                *x.set, from, to,
+            ))),
+            Obj::ListSet(x) => Obj::ListSet(ListSet::new(
+                x.list
+                    .into_iter()
+                    .map(|b| Obj::replace_bound_identifier(*b, from, to))
+                    .collect(),
+            )),
+            Obj::SetBuilder(sb) => {
+                let param = if sb.param == from {
+                    to.to_string()
+                } else {
+                    sb.param
+                };
+                let param_set = Box::new(Obj::replace_bound_identifier(*sb.param_set, from, to));
+                let facts = sb
+                    .facts
+                    .into_iter()
+                    .map(|f| f.replace_bound_identifier(from, to))
+                    .collect();
+                Obj::SetBuilder(SetBuilder {
+                    param,
+                    param_set,
+                    facts,
+                })
+            }
+            Obj::FnSet(fs) => {
+                let params_def_with_set = fs
+                    .params_def_with_set
+                    .into_iter()
+                    .map(|pg| ParamGroupWithSet {
+                        params: pg
+                            .params
+                            .into_iter()
+                            .map(|p| {
+                                if p == from {
+                                    to.to_string()
+                                } else {
+                                    p
+                                }
+                            })
+                            .collect(),
+                        set: Obj::replace_bound_identifier(pg.set, from, to),
+                    })
+                    .collect();
+                let dom_facts = fs
+                    .dom_facts
+                    .into_iter()
+                    .map(|f| f.replace_bound_identifier(from, to))
+                    .collect();
+                let ret_set = Obj::replace_bound_identifier(*fs.ret_set, from, to);
+                Obj::FnSet(FnSet::new(params_def_with_set, dom_facts, ret_set))
+            }
+            Obj::Cart(c) => Obj::Cart(Cart::new(
+                c.args
+                    .into_iter()
+                    .map(|b| Obj::replace_bound_identifier(*b, from, to))
+                    .collect(),
+            )),
+            Obj::CartDim(x) => Obj::CartDim(CartDim::new(Obj::replace_bound_identifier(
+                *x.set, from, to,
+            ))),
+            Obj::Proj(x) => Obj::Proj(Proj::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
+                Obj::replace_bound_identifier(*x.dim, from, to),
+            )),
+            Obj::TupleDim(x) => Obj::TupleDim(TupleDim::new(Obj::replace_bound_identifier(
+                *x.arg, from, to,
+            ))),
+            Obj::Tuple(t) => Obj::Tuple(Tuple::new(
+                t.args
+                    .into_iter()
+                    .map(|b| Obj::replace_bound_identifier(*b, from, to))
+                    .collect(),
+            )),
+            Obj::Count(x) => Obj::Count(Count::new(Obj::replace_bound_identifier(*x.set, from, to))),
+            Obj::Range(x) => Obj::Range(Range::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+            )),
+            Obj::ClosedRange(x) => Obj::ClosedRange(ClosedRange::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+            )),
+            Obj::Choose(x) => Obj::Choose(Choose::new(Obj::replace_bound_identifier(*x.set, from, to))),
+            Obj::ObjAtIndex(x) => Obj::ObjAtIndex(ObjAtIndex::new(
+                Obj::replace_bound_identifier(*x.obj, from, to),
+                Obj::replace_bound_identifier(*x.index, from, to),
+            )),
+            Obj::StandardSet(s) => Obj::StandardSet(s),
+            Obj::FamilyObj(f) => Obj::FamilyObj(FamilyObj {
+                name: f.name,
+                params: f
+                    .params
+                    .into_iter()
+                    .map(|o| Obj::replace_bound_identifier(o, from, to))
+                    .collect(),
+            }),
+            Obj::StructObj(s) => Obj::StructObj(StructObj {
+                name: s.name,
+                args: s
+                    .args
+                    .into_iter()
+                    .map(|o| Obj::replace_bound_identifier(o, from, to))
+                    .collect(),
+            }),
+        }
+    }
+}
+
+fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
+    if from == to {
+        return atom;
+    }
+    match atom {
+        Atom::Identifier(i) => {
+            if i.name == from {
+                Atom::Identifier(Identifier::new(to.to_string()))
+            } else {
+                Atom::Identifier(i)
+            }
+        }
+        Atom::IdentifierWithMod(m) => {
+            let name = if m.name == from {
+                to.to_string()
+            } else {
+                m.name
+            };
+            Atom::IdentifierWithMod(IdentifierWithMod::new(m.mod_name, name))
+        }
+        Atom::FieldAccess(f) => {
+            let name = if f.name == from {
+                to.to_string()
+            } else {
+                f.name
+            };
+            Atom::FieldAccess(FieldAccess::new(name, f.field))
+        }
+        Atom::FieldAccessWithMod(f) => {
+            let name = if f.name == from {
+                to.to_string()
+            } else {
+                f.name
+            };
+            Atom::FieldAccessWithMod(FieldAccessWithMod::new(f.mod_name, name, f.field))
+        }
     }
 }
 
