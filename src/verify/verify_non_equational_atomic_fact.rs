@@ -5,6 +5,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
+        post_process: bool,
     ) -> Result<StmtExecResult, RuntimeError> {
         let mut result =
             self.verify_non_equational_atomic_fact_with_builtin_rules(atomic_fact, verify_state)?;
@@ -41,6 +42,14 @@ impl Runtime {
 
             result = self
                 .verify_atomic_fact_with_known_forall(atomic_fact, &verify_state_add_one_round)?;
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
+
+        if post_process {
+            result =
+                self.post_process_non_equational_atomic_fact(atomic_fact, verify_state, result)?;
             if result.is_true() {
                 return Ok(result);
             }
@@ -546,5 +555,34 @@ impl Runtime {
             _ => {}
         }
         Ok(None)
+    }
+
+    // If direct verification failed, try the order-dual with swapped operands (e.g. a >= b via b <= a).
+    fn post_process_non_equational_atomic_fact(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+        result: StmtExecResult,
+    ) -> Result<StmtExecResult, RuntimeError> {
+        let Some(transposed_fact) = atomic_fact.transposed_binary_order_equivalent() else {
+            return Ok(result);
+        };
+        let transposed_result =
+            self.verify_non_equational_atomic_fact(&transposed_fact, verify_state, false)?;
+        match transposed_result {
+            StmtExecResult::FactualStmtSuccess(inner_success) => {
+                Ok(StmtExecResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                        Fact::AtomicFact(atomic_fact.clone()),
+                        inner_success.msg,
+                        inner_success.verified_by_fact,
+                        inner_success.verified_by_fact_known_line_file,
+                        inner_success.inside_results,
+                    ),
+                ))
+            }
+            other if other.is_true() => Ok(other),
+            _ => Ok(result),
+        }
     }
 }

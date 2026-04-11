@@ -14,12 +14,14 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::AtomicFact(fact.clone()),
-                    String::new(),
-                    fact.line_file(),
-                    Some(e.into()),
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        Fact::AtomicFact(fact.clone()),
+                        String::new(),
+                        fact.line_file(),
+                        Some(e.into()),
+                    ),
+                );
             }
         }
 
@@ -29,7 +31,7 @@ impl Runtime {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact(equal_fact, &next_verify_state)
             }
-            _ => self.verify_non_equational_atomic_fact(fact, &next_verify_state),
+            _ => self.verify_non_equational_atomic_fact(fact, &next_verify_state, true),
         }
     }
 }

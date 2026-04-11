@@ -32,7 +32,7 @@ fn run_source_code_with_output(source_code: &str, entrance_label: &str) -> (bool
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new();
     let (builtin_stmt_results, builtin_error) =
-        run_source_code(builtin_env_code().as_str(), &mut runtime);
+        run_source_code(builtin_code().as_str(), &mut runtime);
     let (ok, msg) = render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
     if !ok {
         return (
