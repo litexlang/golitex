@@ -1,3 +1,9 @@
+"""
+# family equality builtin: expand `equal_to` after substituting parameters, then compare
+seq(R) = Fn(N_pos) R
+finite_seq(R, 2) = fn(x N_pos: x <= 2) R
+Fn(N_pos) R = seq(R)
+
 family matrix(s set, m, n N_pos) = fn(i N_pos, j N_pos: i <= m, j <= n) s
 
 let m family matrix(R, 3, 3)：
@@ -27,3 +33,4 @@ by for:
                 m(i, j) = 0
     do_nothing
 
+"""
