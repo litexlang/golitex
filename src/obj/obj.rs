@@ -453,6 +453,10 @@ impl TupleDim {
 
 impl Cart {
     pub fn new(args: Vec<Obj>) -> Self {
+        let n = args.len();
+        if n < 2 {
+            panic!("Cart::new: expected at least 2 factors, got {n}");
+        }
         Cart {
             args: args.into_iter().map(Box::new).collect(),
         }
@@ -461,6 +465,10 @@ impl Cart {
 
 impl Tuple {
     pub fn new(elements: Vec<Obj>) -> Self {
+        let n = elements.len();
+        if n < 2 {
+            panic!("Tuple::new: expected at least 2 elements, got {n}");
+        }
         Tuple {
             args: elements.into_iter().map(Box::new).collect(),
         }

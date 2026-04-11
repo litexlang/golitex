@@ -1,0 +1,3 @@
+have fn max(x, y R) R:
+    case x > y: x
+    case x <= y: y

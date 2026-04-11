@@ -8,11 +8,8 @@ pub(super) fn kuratowski_pair_tagged_set(left: Obj, right: Obj) -> Obj {
 
 /// Left-associative Kuratowski encoding of a tuple's component list (same as `by tuple`).
 pub(super) fn kuratowski_encode_tuple_boxes(args: &[Box<Obj>]) -> Result<Obj, &'static str> {
-    if args.is_empty() {
-        return Err("empty tuple");
-    }
-    if args.len() == 1 {
-        return Ok((*args[0]).clone());
+    if args.len() < 2 {
+        return Err("Kuratowski tuple encoding requires at least 2 components");
     }
     let mut acc = (*args[args.len() - 1]).clone();
     for i in (0..args.len() - 1).rev() {
