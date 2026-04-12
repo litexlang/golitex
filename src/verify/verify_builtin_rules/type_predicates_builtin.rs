@@ -5,28 +5,24 @@ impl Runtime {
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         match &is_nonempty_set_fact.set {
-            Obj::StandardSet(_) => Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Obj::StandardSet(_) => Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
                     "standard_nonempty_set".to_string(),
                     Vec::new(),
-                ),
-            )),
+                )).into()),
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
-                    Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Ok((StmtUnknown::new()).into())
                 } else {
-                    Ok(StmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                                 is_nonempty_set_fact.clone(),
                             )),
                             "list_set_nonempty_has_member_in_syntax".to_string(),
                             Vec::new(),
-                        ),
-                    ))
+                        )).into())
                 }
             }
             Obj::Cart(cart) => {
@@ -41,12 +37,11 @@ impl Runtime {
                         )?;
 
                     if is_nonempty_set_result.is_unknown() {
-                        return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                        return Ok((StmtUnknown::new()).into());
                     }
                 }
 
-                Ok(StmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                             is_nonempty_set_fact.clone(),
                         )),
@@ -60,8 +55,7 @@ impl Runtime {
                             cart.to_string()
                         ),
                         Vec::new(),
-                    ),
-                ))
+                    )).into())
             }
             Obj::FnSet(fn_set) => {
                 let ret_nonempty_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
@@ -73,20 +67,18 @@ impl Runtime {
                     _verify_state,
                 )?;
                 if ret_check.is_true() {
-                    Ok(StmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                                 is_nonempty_set_fact.clone(),
                             )),
                             "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
                             Vec::new(),
-                        ),
-                    ))
+                        )).into())
                 } else {
-                    Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Ok((StmtUnknown::new()).into())
                 }
             }
-            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => Ok((StmtUnknown::new()).into()),
         }
     }
 
@@ -94,16 +86,14 @@ impl Runtime {
         &mut self,
         is_finite_set_fact: &IsFiniteSetFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         match &is_finite_set_fact.set {
-            Obj::ListSet(_) => Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Obj::ListSet(_) => Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsFiniteSetFact(is_finite_set_fact.clone())),
                     "list_set_finite".to_string(),
                     Vec::new(),
-                ),
-            )),
-            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
+                )).into()),
+            _ => Ok((StmtUnknown::new()).into()),
         }
     }
 
@@ -111,18 +101,16 @@ impl Runtime {
         &mut self,
         is_cart_fact: &IsCartFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         match &is_cart_fact.set {
             Obj::Cart(_) => {
-                return Ok(StmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsCartFact(is_cart_fact.clone())),
                         "any `cart` object is a cart".to_string(),
                         Vec::new(),
-                    ),
-                ));
+                    )).into());
             }
-            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => Ok((StmtUnknown::new()).into()),
         }
     }
 
@@ -130,19 +118,17 @@ impl Runtime {
         &mut self,
         is_tuple_fact: &IsTupleFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         match &is_tuple_fact.set {
             Obj::Tuple(t) => {
                 if t.args.len() < 2 {
-                    return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    return Ok((StmtUnknown::new()).into());
                 }
-                return Ok(StmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
                         "any `cart_dim` object is a cart_dim".to_string(),
                         Vec::new(),
-                    ),
-                ));
+                    )).into());
             }
             _ => {
                 if let Some((_, _, _)) = self
@@ -150,16 +136,14 @@ impl Runtime {
                     .known_objs_equal_to_tuple
                     .get(&is_tuple_fact.set.to_string())
                 {
-                    return Ok(StmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
                             "it is a known tuple".to_string(),
                             Vec::new(),
-                        ),
-                    ));
+                        )).into());
                 }
 
-                Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                Ok((StmtUnknown::new()).into())
             }
         }
     }
@@ -168,20 +152,18 @@ impl Runtime {
         &mut self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if let Obj::ListSet(list_set) = &not_is_nonempty_set_fact.set {
             if list_set.list.is_empty() {
-                return Ok(StmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::NotIsNonemptySetFact(
                             not_is_nonempty_set_fact.clone(),
                         )),
                         "list_set_empty".to_string(),
                         Vec::new(),
-                    ),
-                ));
+                    )).into());
             }
         }
-        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok((StmtUnknown::new()).into())
     }
 }

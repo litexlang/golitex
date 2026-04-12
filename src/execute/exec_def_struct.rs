@@ -5,7 +5,7 @@ impl Runtime {
     pub fn exec_def_struct_stmt(
         &mut self,
         stmt: &DefStructStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         self.run_in_local_env(|rt| rt.def_struct_stmt_check_well_defined(stmt))?;
 
         self.store_struct_def(stmt).map_err(|store_error| {
@@ -19,9 +19,7 @@ impl Runtime {
 
         let infer_result = InferResult::new();
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]),
-        ))
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
 
     fn def_struct_stmt_check_well_defined(

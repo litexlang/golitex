@@ -1,12 +1,9 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_for_stmt(
-        &mut self,
-        stmt: &ByForStmt,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    pub fn exec_by_for_stmt(&mut self, stmt: &ByForStmt) -> Result<StmtResult, RuntimeError> {
         let (params, param_sets) = stmt.expanded_range_params().map_err(|msg| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt.clone().into(),
                 msg,
                 None,
@@ -15,7 +12,7 @@ impl Runtime {
         })?;
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt.clone().into(),
                 msg,
                 None,
@@ -27,7 +24,7 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt.clone().into(),
                 format!(
                     "by for: forall parameters or domain is not well-defined (`{}`)",
@@ -41,7 +38,7 @@ impl Runtime {
         let param_value_strings_of_each_param = self
             .by_for_param_value_strings_of_each_param(stmt, &param_sets)
             .map_err(|msg| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     msg,
                     None,
@@ -57,23 +54,21 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        format!(
-                            "by for: failed to store corresponding forall `{}`",
-                            corresponding_forall_fact
-                        ),
-                        Some(store_fact_error.into()),
-                        vec![],
-                    ))
+                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            stmt.clone().into(),
+                            format!(
+                                "by for: failed to store corresponding forall `{}`",
+                                corresponding_forall_fact
+                            ),
+                            Some(store_fact_error.into()),
+                            vec![],
+                        ))
                 })?;
-            return Ok(StmtExecResult::NonFactualStmtSuccess(
-                NonFactualStmtSuccess::new(
+            return Ok((NonFactualStmtSuccess::new(
                     stmt.clone().into(),
                     infer_result_from_stored_forall_fact,
                     vec![],
-                ),
-            ));
+                )).into());
         }
 
         let mut current_parameter_index_assignment =
@@ -99,11 +94,9 @@ impl Runtime {
         }
 
         let infer_result_from_stored_forall_fact = self
-            .store_fact_without_well_defined_verified_and_infer(
-                corresponding_forall_fact.clone(),
-            )
+            .store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact.clone())
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by for: failed to store corresponding forall `{}`",
@@ -114,13 +107,11 @@ impl Runtime {
                 ))
             })?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 stmt.clone().into(),
                 infer_result_from_stored_forall_fact,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 }
 
@@ -174,15 +165,18 @@ impl Runtime {
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
-                format!(
-                    "by for: range boundary `{}` is not an integer number",
-                    number_like_obj
-                ),
-                line_file,
-                None,
-                None,
-            ).into());
+            return Err(
+                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    format!(
+                        "by for: range boundary `{}` is not an integer number",
+                        number_like_obj
+                    ),
+                    line_file,
+                    None,
+                    None,
+                )
+                .into(),
+            );
         }
         Ok(calculated_string)
     }
@@ -336,8 +330,7 @@ impl Runtime {
                         return Ok(());
                     }
                 }
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!(
                             "by for: domain fact `{}` is not decided (could not verify it or its negation)",
@@ -345,8 +338,7 @@ impl Runtime {
                         ),
                         None,
                         vec![],
-                    ),
-                ));
+                    )));
             }
         }
 
@@ -354,10 +346,8 @@ impl Runtime {
             self.exec_stmt(proof_stmt)?;
         }
         for fact_to_prove in stmt.forall_fact.then_facts.iter() {
-            let verified_result = self.verify_exist_or_and_chain_atomic_fact(
-                fact_to_prove,
-                &verify_state,
-            )?;
+            let verified_result =
+                self.verify_exist_or_and_chain_atomic_fact(fact_to_prove, &verify_state)?;
             if verified_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(

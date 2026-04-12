@@ -22,7 +22,7 @@ const JSON_KEY_PREVIOUS_ERROR: &str = "previous_error";
 const JSON_KEY_CONFLICT_WITH: &str = "conflict_with";
 const JSON_VALUE_ERROR: &str = "error";
 
-pub fn display_stmt_exec_result_json(runtime: &Runtime, r: &StmtExecResult) -> String {
+pub fn display_stmt_exec_result_json(runtime: &Runtime, r: &StmtResult) -> String {
     render_json_value(&stmt_exec_result_json_value(runtime, r), 0)
 }
 
@@ -85,11 +85,11 @@ fn verified_by_known_fact_object(
     JsonValue::Object(fields)
 }
 
-fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtExecResult) -> JsonValue {
+fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
     match r {
-        StmtExecResult::NonFactualStmtSuccess(x) => non_factual_stmt_success_to_json(runtime, x),
-        StmtExecResult::FactualStmtSuccess(x) => factual_stmt_success_to_json(runtime, x),
-        StmtExecResult::StmtUnknown(_) => unreachable!(),
+        StmtResult::NonFactualStmtSuccess(x) => non_factual_stmt_success_to_json(runtime, x),
+        StmtResult::FactualStmtSuccess(x) => factual_stmt_success_to_json(runtime, x),
+        StmtResult::StmtUnknown(_) => unreachable!(),
     }
 }
 

@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::AndFact(and_fact.clone()))
         {
@@ -34,22 +34,20 @@ impl Runtime {
             }
             verify_what.push(fact.to_string());
         }
-        Ok(StmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+        Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 Fact::AndFact(and_fact.clone()),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
                 Some(default_line_file()),
                 Vec::new(),
-            ),
-        ))
+            )).into())
     }
 
     pub fn verify_chain_fact(
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::ChainFact(chain_fact.clone()))
         {
@@ -74,29 +72,27 @@ impl Runtime {
                 Fact::ChainFact(chain_fact.clone()),
                 String::new(),
                 Fact::ChainFact(chain_fact.clone()).line_file(),
-                Some(RuntimeError::NewAtomicFactError(e)),
+                Some(NewAtomicFactRuntimeError(e).into()),
             )
         })?;
         let mut verify_what = Vec::with_capacity(facts.len());
         for fact in &facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
-                return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new_with_detail(format!(
+                return Ok((StmtUnknown::new_with_detail(format!(
                     "unverified chain step: {}",
                     fact
-                ))));
+                ))).into());
             }
 
             verify_what.push(fact.to_string());
         }
-        Ok(StmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+        Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 Fact::ChainFact(chain_fact.clone()),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
                 Some(default_line_file()),
                 Vec::new(),
-            ),
-        ))
+            )).into())
     }
 }
