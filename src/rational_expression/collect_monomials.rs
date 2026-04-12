@@ -367,7 +367,7 @@ fn from_number_obj_to_monomial(
 #[cfg(test)]
 mod collect_monomials_add_merge_tests {
     use super::*;
-    use crate::obj::Obj;
+    use crate::prelude::*;
     use crate::parse::tokenize_line;
     use crate::parse::TokenBlock;
     use crate::runtime::Runtime;

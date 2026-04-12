@@ -72,10 +72,7 @@ impl Runtime {
                 for a in s.args.iter() {
                     args.push(self.inst_obj(a, param_to_arg_map)?);
                 }
-                Ok(Obj::StructObj(StructObj {
-                    name: s.name.clone(),
-                    args,
-                }))
+                Ok(Obj::StructObj(StructObj::new(s.name.clone(), args)))
             }
         }
     }
@@ -151,16 +148,16 @@ impl Runtime {
             return Ok(obj.clone());
         }
         match param_to_arg_map.get(&field_access.name) {
-            Some(Obj::Identifier(identifier)) => Ok(Obj::FieldAccess(FieldAccess {
-                name: identifier.name.clone(),
-                field: field_access.field.clone(),
-            })),
+            Some(Obj::Identifier(identifier)) => Ok(Obj::FieldAccess(FieldAccess::new(
+                identifier.name.clone(),
+                field_access.field.clone(),
+            ))),
             Some(Obj::IdentifierWithMod(identifier_with_mod)) => {
-                Ok(Obj::FieldAccessWithMod(FieldAccessWithMod {
-                    mod_name: identifier_with_mod.mod_name.clone(),
-                    name: identifier_with_mod.name.clone(),
-                    field: field_access.field.clone(),
-                }))
+                Ok(Obj::FieldAccessWithMod(FieldAccessWithMod::new(
+                    identifier_with_mod.mod_name.clone(),
+                    identifier_with_mod.name.clone(),
+                    field_access.field.clone(),
+                )))
             }
             Some(obj) => {
                 let tuple_opt = match obj {
@@ -265,10 +262,10 @@ impl Runtime {
             }
             body.push(new_obj_vec);
         }
-        Ok(Obj::FnObj(FnObj {
-            head: Box::new(self.inst_atom(&fn_obj.head, param_to_arg_map)?),
+        Ok(Obj::FnObj(FnObj::new(
+            self.inst_atom(&fn_obj.head, param_to_arg_map)?,
             body,
-        }))
+        )))
     }
 
     pub fn inst_number(
@@ -318,10 +315,11 @@ impl Runtime {
         div: &Div,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Div(Div {
-            left: Box::new(self.inst_obj(&div.left, param_to_arg_map)?),
-            right: Box::new(self.inst_obj(&div.right, param_to_arg_map)?),
-        }))
+        Ok(Div::new(
+            self.inst_obj(&div.left, param_to_arg_map)?,
+            self.inst_obj(&div.right, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_mod(
@@ -351,10 +349,11 @@ impl Runtime {
         union: &Union,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Union(Union {
-            left: Box::new(self.inst_obj(&union.left, param_to_arg_map)?),
-            right: Box::new(self.inst_obj(&union.right, param_to_arg_map)?),
-        }))
+        Ok(Union::new(
+            self.inst_obj(&union.left, param_to_arg_map)?,
+            self.inst_obj(&union.right, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_intersect(
@@ -362,10 +361,11 @@ impl Runtime {
         intersect: &Intersect,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Intersect(Intersect {
-            left: Box::new(self.inst_obj(&intersect.left, param_to_arg_map)?),
-            right: Box::new(self.inst_obj(&intersect.right, param_to_arg_map)?),
-        }))
+        Ok(Intersect::new(
+            self.inst_obj(&intersect.left, param_to_arg_map)?,
+            self.inst_obj(&intersect.right, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_set_minus(
@@ -373,10 +373,11 @@ impl Runtime {
         set_minus: &SetMinus,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::SetMinus(SetMinus {
-            left: Box::new(self.inst_obj(&set_minus.left, param_to_arg_map)?),
-            right: Box::new(self.inst_obj(&set_minus.right, param_to_arg_map)?),
-        }))
+        Ok(SetMinus::new(
+            self.inst_obj(&set_minus.left, param_to_arg_map)?,
+            self.inst_obj(&set_minus.right, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_set_diff(
@@ -384,10 +385,11 @@ impl Runtime {
         set_diff: &SetDiff,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::SetDiff(SetDiff {
-            left: Box::new(self.inst_obj(&set_diff.left, param_to_arg_map)?),
-            right: Box::new(self.inst_obj(&set_diff.right, param_to_arg_map)?),
-        }))
+        Ok(SetDiff::new(
+            self.inst_obj(&set_diff.left, param_to_arg_map)?,
+            self.inst_obj(&set_diff.right, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_cup(
@@ -395,9 +397,7 @@ impl Runtime {
         cup: &Cup,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Cup(Cup {
-            left: Box::new(self.inst_obj(&cup.left, param_to_arg_map)?),
-        }))
+        Ok(Cup::new(self.inst_obj(&cup.left, param_to_arg_map)?).into())
     }
 
     pub fn inst_cap(
@@ -405,9 +405,7 @@ impl Runtime {
         cap: &Cap,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Cap(Cap {
-            left: Box::new(self.inst_obj(&cap.left, param_to_arg_map)?),
-        }))
+        Ok(Cap::new(self.inst_obj(&cap.left, param_to_arg_map)?).into())
     }
 
     pub fn inst_power_set(
@@ -415,9 +413,7 @@ impl Runtime {
         power_set: &PowerSet,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::PowerSet(PowerSet {
-            set: Box::new(self.inst_obj(&power_set.set, param_to_arg_map)?),
-        }))
+        Ok(PowerSet::new(self.inst_obj(&power_set.set, param_to_arg_map)?).into())
     }
 
     pub fn inst_list_set(
@@ -427,9 +423,9 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let mut list = Vec::with_capacity(list_set.list.len());
         for obj in list_set.list.iter() {
-            list.push(Box::new(self.inst_obj(obj, param_to_arg_map)?));
+            list.push(self.inst_obj(obj, param_to_arg_map)?);
         }
-        Ok(Obj::ListSet(ListSet { list }))
+        Ok(ListSet::new(list).into())
     }
 
     pub fn inst_set_builder(
@@ -444,11 +440,12 @@ impl Runtime {
         for fact in set_builder.facts.iter() {
             facts.push(self.inst_or_and_chain_atomic_fact(fact, &filtered_param_to_arg_map)?);
         }
-        Ok(Obj::SetBuilder(SetBuilder {
-            param: set_builder.param.clone(),
-            param_set: Box::new(self.inst_obj(&set_builder.param_set, &filtered_param_to_arg_map)?),
+        Ok(SetBuilder::new(
+            set_builder.param.clone(),
+            self.inst_obj(&set_builder.param_set, &filtered_param_to_arg_map)?,
             facts,
-        }))
+        )
+        .into())
     }
 
     pub fn inst_fn_set_with_params(
@@ -473,13 +470,12 @@ impl Runtime {
             dom_facts
                 .push(self.inst_or_and_chain_atomic_fact(dom_fact, &filtered_param_to_arg_map)?);
         }
-        Ok(Obj::FnSet(FnSet {
+        Ok(FnSet::new(
             params_def_with_set,
             dom_facts,
-            ret_set: Box::new(
-                self.inst_obj(&fn_set_with_params.ret_set, &filtered_param_to_arg_map)?,
-            ),
-        }))
+            self.inst_obj(&fn_set_with_params.ret_set, &filtered_param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_cart(
@@ -489,9 +485,9 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let mut args = Vec::with_capacity(cart.args.len());
         for arg in cart.args.iter() {
-            args.push(Box::new(self.inst_obj(arg, param_to_arg_map)?));
+            args.push(self.inst_obj(arg, param_to_arg_map)?);
         }
-        Ok(Obj::Cart(Cart { args }))
+        Ok(Cart::new(args).into())
     }
 
     pub fn inst_cart_dim(
@@ -499,9 +495,7 @@ impl Runtime {
         cart_dim: &CartDim,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::CartDim(CartDim {
-            set: Box::new(self.inst_obj(&cart_dim.set, param_to_arg_map)?),
-        }))
+        Ok(CartDim::new(self.inst_obj(&cart_dim.set, param_to_arg_map)?).into())
     }
 
     pub fn inst_proj(
@@ -509,10 +503,11 @@ impl Runtime {
         proj: &Proj,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Proj(Proj {
-            set: Box::new(self.inst_obj(&proj.set, param_to_arg_map)?),
-            dim: Box::new(self.inst_obj(&proj.dim, param_to_arg_map)?),
-        }))
+        Ok(Proj::new(
+            self.inst_obj(&proj.set, param_to_arg_map)?,
+            self.inst_obj(&proj.dim, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_tuple_dim(
@@ -520,9 +515,7 @@ impl Runtime {
         tuple_dim: &TupleDim,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::TupleDim(TupleDim {
-            arg: Box::new(self.inst_obj(&tuple_dim.arg, param_to_arg_map)?),
-        }))
+        Ok(TupleDim::new(self.inst_obj(&tuple_dim.arg, param_to_arg_map)?).into())
     }
 
     pub fn inst_tuple(
@@ -532,9 +525,9 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let mut elements = Vec::with_capacity(tuple.args.len());
         for element in tuple.args.iter() {
-            elements.push(Box::new(self.inst_obj(element, param_to_arg_map)?));
+            elements.push(self.inst_obj(element, param_to_arg_map)?);
         }
-        Ok(Obj::Tuple(Tuple { args: elements }))
+        Ok(Tuple::new(elements).into())
     }
 
     pub fn inst_count(
@@ -542,9 +535,7 @@ impl Runtime {
         count: &Count,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Count(Count {
-            set: Box::new(self.inst_obj(&count.set, param_to_arg_map)?),
-        }))
+        Ok(Count::new(self.inst_obj(&count.set, param_to_arg_map)?).into())
     }
 
     pub fn inst_range(
@@ -552,10 +543,11 @@ impl Runtime {
         range: &Range,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Range(Range {
-            start: Box::new(self.inst_obj(&range.start, param_to_arg_map)?),
-            end: Box::new(self.inst_obj(&range.end, param_to_arg_map)?),
-        }))
+        Ok(Range::new(
+            self.inst_obj(&range.start, param_to_arg_map)?,
+            self.inst_obj(&range.end, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_closed_range(
@@ -563,10 +555,11 @@ impl Runtime {
         closed_range: &ClosedRange,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::ClosedRange(ClosedRange {
-            start: Box::new(self.inst_obj(&closed_range.start, param_to_arg_map)?),
-            end: Box::new(self.inst_obj(&closed_range.end, param_to_arg_map)?),
-        }))
+        Ok(ClosedRange::new(
+            self.inst_obj(&closed_range.start, param_to_arg_map)?,
+            self.inst_obj(&closed_range.end, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_choose(
@@ -574,9 +567,7 @@ impl Runtime {
         choose: &Choose,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::Choose(Choose {
-            set: Box::new(self.inst_obj(&choose.set, param_to_arg_map)?),
-        }))
+        Ok(Choose::new(self.inst_obj(&choose.set, param_to_arg_map)?).into())
     }
 
     pub fn inst_obj_at_index(
@@ -584,10 +575,11 @@ impl Runtime {
         obj_at_index: &ObjAtIndex,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Obj::ObjAtIndex(ObjAtIndex {
-            obj: Box::new(self.inst_obj(&obj_at_index.obj, param_to_arg_map)?),
-            index: Box::new(self.inst_obj(&obj_at_index.index, param_to_arg_map)?),
-        }))
+        Ok(ObjAtIndex::new(
+            self.inst_obj(&obj_at_index.obj, param_to_arg_map)?,
+            self.inst_obj(&obj_at_index.index, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_standard_set(&self, standard_set: &StandardSet) -> Result<Obj, RuntimeError> {
@@ -609,10 +601,7 @@ impl Runtime {
                 for param in struct_ty.args.iter() {
                     params.push(self.inst_obj(param, param_to_arg_map)?);
                 }
-                Ok(ParamType::Struct(StructObj {
-                    name: struct_ty.name.clone(),
-                    args: params,
-                }))
+                Ok(ParamType::Struct(StructObj::new(struct_ty.name.clone(), params)))
             }
         }
     }

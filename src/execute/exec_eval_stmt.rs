@@ -94,10 +94,10 @@ impl Runtime {
         eval_stmt: &EvalStmt,
     ) -> Result<Obj, RuntimeError> {
         let combined = match combine_op {
-            BinaryCombineOp::Add => Obj::Add(crate::obj::Add::new(left, right)),
-            BinaryCombineOp::Sub => Obj::Sub(crate::obj::Sub::new(left, right)),
-            BinaryCombineOp::Mul => Obj::Mul(crate::obj::Mul::new(left, right)),
-            BinaryCombineOp::Div => Obj::Div(crate::obj::Div::new(left, right)),
+            BinaryCombineOp::Add => Obj::Add(Add::new(left, right)),
+            BinaryCombineOp::Sub => Obj::Sub(Sub::new(left, right)),
+            BinaryCombineOp::Mul => Obj::Mul(Mul::new(left, right)),
+            BinaryCombineOp::Div => Obj::Div(Div::new(left, right)),
         };
         let calculated = combined.evaluate_to_normalized_decimal_number();
         match calculated {

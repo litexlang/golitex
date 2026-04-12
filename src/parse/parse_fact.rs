@@ -357,7 +357,7 @@ impl Runtime {
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
         let first_obj = self.parse_obj(tb)?;
-        let mut objs: Vec<crate::obj::Obj> = vec![first_obj];
+        let mut objs: Vec<Obj> = vec![first_obj];
         let mut prop_names: Vec<IdentifierOrIdentifierWithMod> = vec![];
         while !tb.exceed_end_of_head() {
             let tok = tb.current()?.to_string();
