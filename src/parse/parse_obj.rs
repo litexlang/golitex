@@ -127,9 +127,9 @@ impl Runtime {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
-            Ok(Obj::FnSet(self.parse_fn_set(tb)?))
+            Ok(self.parse_fn_set(tb)?.into())
         } else if tb.current_token_is_equal_to(FN_UPPER_CASE) {
-            Ok(Obj::FnSet(self.parse_fn_upper_case_fn_set(tb)?))
+            Ok(self.parse_fn_upper_case_fn_set(tb)?.into())
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
@@ -339,8 +339,7 @@ impl Runtime {
         if tb.current_token_is_equal_to(SUB) {
             tb.skip()?;
             let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
-            Ok(Mul::new(Number::new("-1".to_string()).into(),
-                obj).into())
+            Ok(Mul::new(Number::new("-1".to_string()).into(), obj).into())
         } else {
             self.parse_number_or_primary_obj_or_fn_obj(tb)
         }
@@ -982,9 +981,7 @@ impl Runtime {
                 }
                 tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-                Ok(SetBuilder::new(stored,
-                    second_inst,
-                    facts_inst).into())
+                Ok(SetBuilder::new(stored, second_inst, facts_inst).into())
             } else {
                 Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(

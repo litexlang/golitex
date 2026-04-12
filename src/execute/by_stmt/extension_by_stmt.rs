@@ -118,7 +118,7 @@ impl Runtime {
         let local_proof_result = local_proof_result?;
         let (inside_results, _, _) = local_proof_result;
 
-        let left_equal_to_right_atomic_fact = AtomicFact::EqualFact(crate::fact::EqualFact::new(
+        let left_equal_to_right_atomic_fact = AtomicFact::EqualFact(EqualFact::new(
             stmt.left.clone(),
             stmt.right.clone(),
             stmt.line_file.clone(),

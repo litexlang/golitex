@@ -60,7 +60,7 @@ impl Runtime {
 
                     Ok(NonFactualStmtSuccess::new(
                             stmt.clone().into(),
-                            crate::infer::InferResult::new(),
+                            InferResult::new(),
                             inside_results,
                         )
                         .into())
@@ -106,7 +106,7 @@ impl Runtime {
 
                     Ok(NonFactualStmtSuccess::new(
                             stmt.clone().into(),
-                            crate::infer::InferResult::new(),
+                            InferResult::new(),
                             inside_results,
                         )
                         .into())
