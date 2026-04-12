@@ -193,7 +193,8 @@ jobs:
         shell: bash
         run: |
           WIX_VERSION=$(echo "${VERSION}" | sed 's/-.*//').0
-          cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi" --package-version "${WIX_VERSION}"
+          sed -i "s/{{VERSION}}/${WIX_VERSION}/g" wix/main.wxs
+          cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi"
 
       - name: Upload .msi
         uses: actions/upload-artifact@v4
@@ -321,7 +322,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add litex.rb
-          git commit -m "Update litex to ${VERSION}"
+          git diff --quiet && echo "No changes" || git commit -m "Update litex to ${VERSION}"
           git push
 
   # ─────────────────────────────────────────────
