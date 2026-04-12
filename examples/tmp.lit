@@ -1,4 +1,4 @@
-family matrix(s set, m, n N_pos) = fn(i N_pos, j N_pos: i <= m, j <= n) s
+family matrix(s set, m, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
 
 let M family matrix(R, 3, 3):
     M(1, 1) = 1
@@ -12,10 +12,8 @@ let M family matrix(R, 3, 3):
     M(3, 3) = 1
 
 prop is_diagonal_matrix(n N_pos,m family matrix(R, n, n)):
-    forall i, j N_pos:
+    forall i closed_range(1, n), j closed_range(1, n):
         i != j
-        i <= n
-        j <= n
         =>:
             m(i, j) = 0
 
@@ -25,3 +23,5 @@ by for:
             i != j
             =>:
                 M(i, j) = 0
+
+$is_diagonal_matrix(3, M)
