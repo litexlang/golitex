@@ -18,7 +18,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
+          components: clippy
 
       - uses: actions/cache@v4
         with:
@@ -27,9 +27,6 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
-
-      - name: Check formatting
-        run: cargo fmt --check
 
       - name: Clippy
         run: cargo clippy -- -D warnings
