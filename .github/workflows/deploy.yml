@@ -69,12 +69,12 @@ jobs:
             arch: arm64
             cross: true
           - target: x86_64-apple-darwin
-            runner: macos-13
+            runner: macos-latest
             os_name: darwin
             arch: amd64
             cross: false
           - target: aarch64-apple-darwin
-            runner: macos-14
+            runner: macos-latest
             os_name: darwin
             arch: arm64
             cross: false
