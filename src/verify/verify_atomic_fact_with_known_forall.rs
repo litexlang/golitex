@@ -439,7 +439,7 @@ impl Runtime {
         if !given_arg.evaluate_to_normalized_decimal_number().is_some() {
             return Ok(None);
         }
-        let left_obj = Obj::Number(left.clone());
+        let left_obj: Obj = left.clone().into();
         if left_obj.two_objs_can_be_calculated_and_equal_by_calculation(given_arg) {
             Ok(Some(HashMap::new()))
         } else {

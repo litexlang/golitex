@@ -62,17 +62,18 @@ impl Runtime {
                 for p in family.params.iter() {
                     params.push(self.inst_obj(p, param_to_arg_map)?);
                 }
-                Ok(Obj::FamilyObj(FamilyObj {
+                Ok(FamilyObj {
                     name: family.name.clone(),
                     params,
-                }))
+                }
+                .into())
             }
             Obj::StructObj(s) => {
                 let mut args = Vec::with_capacity(s.args.len());
                 for a in s.args.iter() {
                     args.push(self.inst_obj(a, param_to_arg_map)?);
                 }
-                Ok(Obj::StructObj(StructObj::new(s.name.clone(), args)))
+                Ok(StructObj::new(s.name.clone(), args).into())
             }
         }
     }
@@ -148,17 +149,19 @@ impl Runtime {
             return Ok(obj.clone());
         }
         match param_to_arg_map.get(&field_access.name) {
-            Some(Obj::Identifier(identifier)) => Ok(Obj::FieldAccess(FieldAccess::new(
+            Some(Obj::Identifier(identifier)) => Ok(FieldAccess::new(
                 identifier.name.clone(),
                 field_access.field.clone(),
-            ))),
-            Some(Obj::IdentifierWithMod(identifier_with_mod)) => {
-                Ok(Obj::FieldAccessWithMod(FieldAccessWithMod::new(
+            )
+            .into()),
+            Some(Obj::IdentifierWithMod(identifier_with_mod)) => Ok(
+                FieldAccessWithMod::new(
                     identifier_with_mod.mod_name.clone(),
                     identifier_with_mod.name.clone(),
                     field_access.field.clone(),
-                )))
-            }
+                )
+                .into(),
+            ),
             Some(obj) => {
                 let tuple_opt = match obj {
                     Obj::Tuple(t) => Some(t.clone()),
@@ -262,10 +265,11 @@ impl Runtime {
             }
             body.push(new_obj_vec);
         }
-        Ok(Obj::FnObj(FnObj::new(
+        Ok(FnObj::new(
             self.inst_atom(&fn_obj.head, param_to_arg_map)?,
             body,
-        )))
+        )
+        .into())
     }
 
     pub fn inst_number(
@@ -274,7 +278,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
         _ = param_to_arg_map;
-        Ok(Obj::Number(number.clone()))
+        Ok(number.clone().into())
     }
 
     pub fn inst_add(

@@ -14,13 +14,13 @@ impl Runtime {
 
     pub fn resolve_obj(&self, obj: &Obj) -> Obj {
         match obj {
-            Obj::Number(number) => Obj::Number(number.clone()),
+            Obj::Number(number) => number.clone().into(),
             Obj::Add(add) => {
                 let result: Obj = Add::new(self.resolve_obj(&add.left),
                     self.resolve_obj(&add.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
@@ -30,7 +30,7 @@ impl Runtime {
                     self.resolve_obj(&sub.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
@@ -40,7 +40,7 @@ impl Runtime {
                     self.resolve_obj(&mul.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
@@ -50,7 +50,7 @@ impl Runtime {
                     self.resolve_obj(&mod_obj.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
@@ -60,7 +60,7 @@ impl Runtime {
                     self.resolve_obj(&pow.exponent)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
@@ -70,7 +70,7 @@ impl Runtime {
                     self.resolve_obj(&div.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
@@ -81,7 +81,7 @@ impl Runtime {
             | Obj::FieldAccessWithMod(_)
             | Obj::FnObj(_) => {
                 if let Some(number) = self.resolve_obj_to_number(obj) {
-                    Obj::Number(number)
+                    number.into()
                 } else {
                     obj.clone()
                 }

@@ -191,7 +191,7 @@ impl Runtime {
             cart_obj.clone(),
             inst_body_facts,
         );
-        let rhs_sb_obj = Obj::SetBuilder(set_builder.clone());
+        let rhs_sb_obj: Obj = set_builder.clone().into();
         self.verify_obj_well_defined_and_store_cache(&rhs_sb_obj, &verify_state)
             .map_err(|e| {
                 RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(

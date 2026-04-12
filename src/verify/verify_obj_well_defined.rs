@@ -200,11 +200,8 @@ impl Runtime {
             // at i=0 we store: f(a) in ret_set_of_f
             let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
                 fn_obj.body[..=i].iter().cloned().collect();
-            let fn_obj_prefix = FnObj {
-                head: fn_obj.head.clone(),
-                body: fn_obj_prefix_body,
-            };
-            let fn_obj_prefix_as_obj = Obj::FnObj(fn_obj_prefix);
+            let fn_obj_prefix_as_obj: Obj =
+                FnObj::new(*fn_obj.head.clone(), fn_obj_prefix_body).into();
             let set_where_the_next_fn_obj_is_in_obj =
                 (*set_where_the_next_fn_obj_is_in.clone()).clone();
             let intermediate_in_fact = InFact::new(

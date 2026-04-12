@@ -43,9 +43,7 @@ impl Runtime {
         )?;
 
         let target_cart_dim_obj = CartDim::new(target_obj.clone()).into();
-        let known_cart_dim_obj = Obj::Number(Number::new(
-            known_cart_obj.args.len().to_string(),
-        ));
+        let known_cart_dim_obj = Number::new(known_cart_obj.args.len().to_string()).into();
         let cart_dim_equal_fact = EqualFact::new(
             target_cart_dim_obj,
             known_cart_dim_obj,
@@ -92,9 +90,7 @@ impl Runtime {
         )?;
 
         let target_tuple_dim_obj = TupleDim::new(target_obj.clone()).into();
-        let known_tuple_dim_obj = Obj::Number(Number::new(
-            known_tuple_obj.args.len().to_string(),
-        ));
+        let known_tuple_dim_obj = Number::new(known_tuple_obj.args.len().to_string()).into();
         let tuple_dim_equal_fact = EqualFact::new(
             target_tuple_dim_obj,
             known_tuple_dim_obj,

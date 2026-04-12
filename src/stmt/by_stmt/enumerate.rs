@@ -39,7 +39,7 @@ impl ByEnumerateStmt {
         for (param_name, list_set_obj) in self.params.iter().zip(self.param_sets.iter()) {
             params_def_with_type.push(ParamGroupWithParamType::new(
                 vec![param_name.clone()],
-                ParamType::Obj(Obj::ListSet(list_set_obj.clone())),
+                ParamType::Obj(list_set_obj.clone().into()),
             ));
         }
         let forall_fact = ForallFact::new(
