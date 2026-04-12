@@ -59,7 +59,7 @@ impl Fact {
     }
 
     pub fn into_stmt(self) -> Stmt {
-        return Stmt::Fact(self);
+        self.into()
     }
 }
 

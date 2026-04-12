@@ -12,7 +12,7 @@ impl Runtime {
         self.store_def_family(def_family_stmt)
             .map_err(|store_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                    def_family_stmt.clone().into(),
                     "failed to store family definition".to_string(),
                     Some(store_error.into()),
                     vec![],
@@ -21,7 +21,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                def_family_stmt.clone().into(),
                 family_definition_infer_result,
                 vec![],
             ),
@@ -37,7 +37,7 @@ impl Runtime {
             .define_params_with_type(&def_family_stmt.params_def_with_type, false)
             .map_err(|define_params_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                    def_family_stmt.clone().into(),
                     "".to_string(),
                     Some(define_params_error),
                     vec![],
@@ -52,7 +52,7 @@ impl Runtime {
                 )
                 .map_err(|inner_exec_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                        def_family_stmt.clone().into(),
                         "".to_string(),
                         Some(RuntimeError::from(inner_exec_error)),
                         vec![],
@@ -64,7 +64,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&def_family_stmt.equal_to, &verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                    def_family_stmt.clone().into(),
                     "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],

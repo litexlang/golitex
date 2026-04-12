@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         stmt: &ByTupleStmt,
     ) -> Result<StmtExecResult, RuntimeError> {
-        let stmt_exec = Stmt::ByTuple(stmt.clone());
+        let stmt_exec = stmt.clone().into();
 
         let tuple_struct = match &stmt.obj {
             Obj::Tuple(tuple) => tuple.clone(),

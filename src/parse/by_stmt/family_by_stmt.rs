@@ -8,9 +8,6 @@ impl Runtime {
         tb.skip_token(FAMILY)?;
         tb.skip_token(COLON)?;
         let family_obj = self.parse_obj(tb)?;
-        Ok(Stmt::ByFamilyStmt(ByFamilyStmt::new(
-            family_obj,
-            tb.line_file.clone(),
-        )))
+        Ok(ByFamilyStmt::new(family_obj, tb.line_file.clone()).into())
     }
 }

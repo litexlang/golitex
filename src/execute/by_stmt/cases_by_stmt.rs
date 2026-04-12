@@ -10,7 +10,7 @@ impl Runtime {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByCasesStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!("by cases: failed to prove `{}`", fact),
                         Some(verify_error.into()),
                         vec![],
@@ -43,7 +43,7 @@ impl Runtime {
                 .store_fact_without_well_defined_verified_and_infer(then_fact.clone())
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByCasesStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!("by cases: failed to release `{}`", then_fact),
                         Some(store_fact_error.into()),
                         vec![],
@@ -54,7 +54,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::ByCasesStmt(stmt.clone()),
+                stmt.clone().into(),
                 infer_result,
                 inside_results,
             ),
@@ -70,7 +70,7 @@ impl Runtime {
         self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByCasesStmt(stmt.clone()),
+                    stmt.clone().into(),
                     "by cases: cannot verify that all cases cover all situations".to_string(),
                     Some(verify_error.into()),
                     vec![],
@@ -88,7 +88,7 @@ impl Runtime {
         for then_fact in stmt.then_facts.iter() {
             let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByCasesStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!(
                         "by cases: failed to prove `{}` under case `{}`",
                         then_fact, stmt.cases[case_index]
@@ -113,7 +113,7 @@ impl Runtime {
         self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact.clone())
             .map_err(|store_fact_error| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByCasesStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!("by cases: failed to assume case `{}`", case_fact),
                     Some(store_fact_error.into()),
                     vec![],
@@ -126,7 +126,7 @@ impl Runtime {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
                     return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByCasesStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!(
                             "by cases: failed while executing proof under case `{}`",
                             case_fact
@@ -144,7 +144,7 @@ impl Runtime {
                 .verify_atomic_fact(impossible_fact, &verify_state)
                 .map_err(|verify_error| {
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByCasesStmt(stmt.clone()),
+                        stmt.clone().into(),
                         impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
@@ -156,7 +156,7 @@ impl Runtime {
 
             if verify_impossible_fact_result.is_unknown() {
                 return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByCasesStmt(stmt.clone()),
+                    stmt.clone().into(),
                     impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
                     None,
                     vec![],
@@ -167,7 +167,7 @@ impl Runtime {
                 .verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)
                 .map_err(|verify_error| {
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByCasesStmt(stmt.clone()),
+                        stmt.clone().into(),
                         impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
@@ -179,7 +179,7 @@ impl Runtime {
 
             if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByCasesStmt(stmt.clone()),
+                    stmt.clone().into(),
                     impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
                     None,
                     vec![],
@@ -188,7 +188,7 @@ impl Runtime {
 
             inside_results.push(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    Stmt::ByCasesStmt(stmt.clone()),
+                    stmt.clone().into(),
                     InferResult::new(),
                     vec![
                         verify_impossible_fact_result,

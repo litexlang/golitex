@@ -6,7 +6,7 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeErrorStruct> {
-        let stmt_for_fact_errors = Stmt::Fact(fact.clone().to_fact());
+        let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
@@ -34,7 +34,7 @@ impl Runtime {
         fact: &OrAndChainAtomicFact,
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeErrorStruct> {
-        let stmt_for_fact_errors = Stmt::Fact(fact.clone().to_fact());
+        let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
@@ -60,7 +60,7 @@ impl Runtime {
         fact: Fact,
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeErrorStruct> {
-        let stmt_for_fact_errors = Stmt::Fact(fact.clone());
+        let stmt_for_fact_errors: Stmt = fact.clone().into();
         self.verify_fact_well_defined(&fact, verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(

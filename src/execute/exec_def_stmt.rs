@@ -38,7 +38,7 @@ impl Runtime {
         self.run_in_local_env(|rt| rt.def_prop_stmt_check_well_defined(def_prop_stmt))
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefPropStmt(def_prop_stmt.clone()),
+                    def_prop_stmt.clone().into(),
                     "".to_string(),
                     Some(e.into()),
                     vec![],
@@ -47,7 +47,7 @@ impl Runtime {
         self.store_def_prop(def_prop_stmt)?;
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefPropStmt(def_prop_stmt.clone()),
+                def_prop_stmt.clone().into(),
                 InferResult::new(),
                 vec![],
             ),
@@ -61,7 +61,7 @@ impl Runtime {
         self.define_params_with_type(&def_prop_stmt.params_def_with_type, false)
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefPropStmt(def_prop_stmt.clone()),
+                    def_prop_stmt.clone().into(),
                     "".to_string(),
                     Some(e.into()),
                     vec![],
@@ -75,7 +75,7 @@ impl Runtime {
             )
             .map_err(|inner_exec_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefPropStmt(def_prop_stmt.clone()),
+                    def_prop_stmt.clone().into(),
                     "".to_string(),
                     Some(RuntimeError::from(inner_exec_error)),
                     vec![],
@@ -92,7 +92,7 @@ impl Runtime {
         self.store_def_abstract_prop(def_abstract_prop_stmt)
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefAbstractPropStmt(def_abstract_prop_stmt.clone()),
+                    def_abstract_prop_stmt.clone().into(),
                     "".to_string(),
                     Some(e.into()),
                     vec![],
@@ -100,7 +100,7 @@ impl Runtime {
             })?;
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefAbstractPropStmt(def_abstract_prop_stmt.clone()),
+                def_abstract_prop_stmt.clone().into(),
                 InferResult::new(),
                 vec![],
             ),
@@ -115,7 +115,7 @@ impl Runtime {
             .define_params_with_type(&def_let_stmt.param_def, false)
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefLetStmt(def_let_stmt.clone()),
+                    def_let_stmt.clone().into(),
                     "".to_string(),
                     Some(e.into()),
                     vec![],
@@ -129,7 +129,7 @@ impl Runtime {
                 )
                 .map_err(|inner_exec_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::DefLetStmt(def_let_stmt.clone()),
+                        def_let_stmt.clone().into(),
                         "".to_string(),
                         Some(RuntimeError::from(inner_exec_error)),
                         vec![],
@@ -141,7 +141,7 @@ impl Runtime {
         }
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefLetStmt(def_let_stmt.clone()),
+                def_let_stmt.clone().into(),
                 infer_result,
                 vec![],
             ),
@@ -156,7 +156,7 @@ impl Runtime {
             .define_params_with_type(&stmt.param_def, true)
             .map_err(|define_params_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveObjInNonemptySetStmt(stmt.clone()),
+                    stmt.clone().into(),
                     "".to_string(),
                     Some(define_params_error),
                     vec![],
@@ -164,7 +164,7 @@ impl Runtime {
             })?;
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::HaveObjInNonemptySetStmt(stmt.clone()),
+                stmt.clone().into(),
                 infer_result,
                 vec![],
             ),
@@ -227,7 +227,7 @@ impl Runtime {
             != have_obj_equal_stmt.objs_equal_to.len()
         {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                have_obj_equal_stmt.clone().into(),
                 "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(),
                 None,
                 vec![],
@@ -241,7 +241,7 @@ impl Runtime {
                 .inst_param_type(&param_def.param_type, &param_to_obj_map)
                 .map_err(|runtime_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                        have_obj_equal_stmt.clone().into(),
                         "".to_string(),
                         Some(runtime_error),
                         vec![],
@@ -259,7 +259,7 @@ impl Runtime {
                     )
                     .map_err(|verify_error| {
                         RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                            Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                            have_obj_equal_stmt.clone().into(),
                             "".to_string(),
                             Some(verify_error.into()),
                             vec![],
@@ -271,7 +271,7 @@ impl Runtime {
                         current_param_equal_to, current_type
                     );
                     return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                        have_obj_equal_stmt.clone().into(),
                         msg,
                         None,
                         vec![],
@@ -290,7 +290,7 @@ impl Runtime {
             .define_params_with_type(&have_obj_equal_stmt.param_def, true)
             .map_err(|define_params_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                    have_obj_equal_stmt.clone().into(),
                     "".to_string(),
                     Some(define_params_error),
                     vec![],
@@ -312,7 +312,7 @@ impl Runtime {
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
                 .map_err(|store_fact_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                        have_obj_equal_stmt.clone().into(),
                         "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
@@ -323,7 +323,7 @@ impl Runtime {
 
         return Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                have_obj_equal_stmt.clone().into(),
                 infer_result,
                 vec![],
             ),
@@ -341,7 +341,7 @@ impl Runtime {
             .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
             .map_err(|verify_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
+                    have_exist_obj_stmt.clone().into(),
                     "".to_string(),
                     Some(verify_error.into()),
                     vec![],
@@ -349,7 +349,7 @@ impl Runtime {
             })?;
         if result.is_unknown() {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
+                have_exist_obj_stmt.clone().into(),
                 "have_exist_obj_stmt: exist fact is not verified".to_string(),
                 None,
                 vec![],
@@ -361,7 +361,7 @@ impl Runtime {
         ) != have_exist_obj_stmt.equal_tos.len()
         {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
+                have_exist_obj_stmt.clone().into(),
                 "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string(),
                 None,
                 vec![],
@@ -386,7 +386,7 @@ impl Runtime {
             )
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
+                    have_exist_obj_stmt.clone().into(),
                     "".to_string(),
                     Some(e),
                     vec![],
@@ -403,7 +403,7 @@ impl Runtime {
                 .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map)
                 .map_err(|runtime_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
+                        have_exist_obj_stmt.clone().into(),
                         "".to_string(),
                         Some(runtime_error),
                         vec![],
@@ -414,7 +414,7 @@ impl Runtime {
                 .store_fact_without_well_defined_verified_and_infer(instantiated_fact)
                 .map_err(|store_fact_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
+                        have_exist_obj_stmt.clone().into(),
                         "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
@@ -425,7 +425,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::HaveByExistStmt(have_exist_obj_stmt.clone()),
+                have_exist_obj_stmt.clone().into(),
                 infer_result,
                 vec![],
             ),
@@ -443,7 +443,7 @@ impl Runtime {
             )
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    have_fn_equal_stmt.clone().into(),
                     "have_fn_equal_stmt: build fn set for storage failed".to_string(),
                     Some(e.into()),
                     vec![],
@@ -453,7 +453,7 @@ impl Runtime {
         self.have_fn_equal_stmt_verify_well_defined(have_fn_equal_stmt, &fn_set_stored)
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    have_fn_equal_stmt.clone().into(),
                     "have_fn_equal_stmt: verify well-defined failed".to_string(),
                     Some(e.into()),
                     vec![],
@@ -474,7 +474,7 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    have_fn_equal_stmt.clone().into(),
                     "".to_string(),
                     Some(store_fact_error.into()),
                     vec![],
@@ -512,7 +512,7 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
             .map_err(|store_fact_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    have_fn_equal_stmt.clone().into(),
                     "".to_string(),
                     Some(store_fact_error.into()),
                     vec![],
@@ -523,7 +523,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                have_fn_equal_stmt.clone().into(),
                 infer_result,
                 vec![],
             ),
@@ -552,7 +552,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    have_fn_equal_stmt.clone().into(),
                     "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],
@@ -563,7 +563,7 @@ impl Runtime {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                        have_fn_equal_stmt.clone().into(),
                         "".to_string(),
                         Some(define_params_error),
                         vec![],
@@ -578,7 +578,7 @@ impl Runtime {
                 )
                 .map_err(|store_fact_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                        have_fn_equal_stmt.clone().into(),
                         "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
@@ -595,7 +595,7 @@ impl Runtime {
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    have_fn_equal_stmt.clone().into(),
                     "".to_string(),
                     Some(verify_error.into()),
                     vec![],
@@ -607,7 +607,7 @@ impl Runtime {
                 have_fn_equal_stmt.equal_to, have_fn_equal_stmt.fn_set_clause.ret_set
             );
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                have_fn_equal_stmt.clone().into(),
                 msg,
                 None,
                 vec![],
@@ -628,7 +628,7 @@ impl Runtime {
             )
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    have_fn_equal_case_by_case_stmt.clone().into(),
                     "have_fn_equal_case_by_case_stmt: build fn set for storage failed".to_string(),
                     Some(e.into()),
                     vec![],
@@ -641,7 +641,7 @@ impl Runtime {
         )
         .map_err(|e| {
             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                have_fn_equal_case_by_case_stmt.clone().into(),
                 "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
                 Some(e.into()),
                 vec![],
@@ -652,7 +652,7 @@ impl Runtime {
             self.store_have_fn_equal_case_by_case(have_fn_equal_case_by_case_stmt, &fn_set_stored)?;
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                have_fn_equal_case_by_case_stmt.clone().into(),
                 infer_result,
                 vec![],
             ),
@@ -680,7 +680,7 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    have_fn_equal_case_by_case_stmt.clone().into(),
                     "".to_string(),
                     Some(store_fact_error.into()),
                     vec![],
@@ -740,7 +740,7 @@ impl Runtime {
                 .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
                 .map_err(|store_fact_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                        have_fn_equal_case_by_case_stmt.clone().into(),
                         "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
@@ -769,7 +769,7 @@ impl Runtime {
             != have_fn_equal_case_by_case_stmt.equal_tos.len()
         {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                have_fn_equal_case_by_case_stmt.clone().into(),
                 "have_fn_equal_case_by_case_stmt: number of cases does not match number of equal_tos".to_string(),
                 None,
                 vec![],
@@ -784,7 +784,7 @@ impl Runtime {
         )
         .map_err(|well_defined_error| {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                have_fn_equal_case_by_case_stmt.clone().into(),
                 "".to_string(),
                 Some(well_defined_error.into()),
                 vec![],
@@ -824,7 +824,7 @@ impl Runtime {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                        have_fn_equal_case_by_case_stmt.clone().into(),
                         "".to_string(),
                         Some(define_params_error),
                         vec![],
@@ -843,7 +843,7 @@ impl Runtime {
                 )
                 .map_err(|store_fact_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                        have_fn_equal_case_by_case_stmt.clone().into(),
                         "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
@@ -855,7 +855,7 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(case_fact_as_fact)
             .map_err(|store_fact_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    have_fn_equal_case_by_case_stmt.clone().into(),
                     "".to_string(),
                     Some(store_fact_error.into()),
                     vec![],
@@ -864,7 +864,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    have_fn_equal_case_by_case_stmt.clone().into(),
                     "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],
@@ -883,7 +883,7 @@ impl Runtime {
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    have_fn_equal_case_by_case_stmt.clone().into(),
                     "".to_string(),
                     Some(verify_error.into()),
                     vec![],
@@ -895,7 +895,7 @@ impl Runtime {
                 equal_to, have_fn_equal_case_by_case_stmt.fn_set_clause.ret_set, case_fact,
             );
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                have_fn_equal_case_by_case_stmt.clone().into(),
                 msg,
                 None,
                 vec![],

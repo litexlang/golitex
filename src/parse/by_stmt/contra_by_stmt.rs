@@ -51,11 +51,12 @@ impl Runtime {
             .ok_or_else(|| RuntimeError::new_parse_error_with_msg_position_previous_error("Expected body".to_string(), tb.line_file.clone(), None))?;
         last_block.skip_token(IMPOSSIBLE)?;
         let impossible_fact = self.parse_atomic_fact(&mut last_block, true)?;
-        Ok(Stmt::ByContraStmt(ByContraStmt::new(
+        Ok(ByContraStmt::new(
             to_prove,
             proof,
             impossible_fact,
             tb.line_file.clone(),
-        )))
+        )
+        .into())
     }
 }

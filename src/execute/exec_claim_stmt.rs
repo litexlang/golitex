@@ -9,7 +9,7 @@ impl Runtime {
                     .map_err(|e| {
                         RuntimeError::ExecStmtError(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::ClaimStmt(stmt.clone()),
+                                stmt.clone().into(),
                                 "claim: fact is not well defined".to_string(),
                                 Some(e.into()),
                                 vec![],
@@ -21,7 +21,7 @@ impl Runtime {
                     rt.define_params_with_type(&forall_fact.params_def_with_type, false)
                         .map_err(|define_params_error| {
                             RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                                Stmt::ClaimStmt(stmt.clone()),
+                                stmt.clone().into(),
                                 "".to_string(),
                                 Some(define_params_error),
                                 vec![],
@@ -62,7 +62,7 @@ impl Runtime {
 
                     Ok(StmtExecResult::NonFactualStmtSuccess(
                         NonFactualStmtSuccess::new(
-                            Stmt::ClaimStmt(stmt.clone()),
+                            stmt.clone().into(),
                             crate::infer::InferResult::new(),
                             inside_results,
                         ),
@@ -92,7 +92,7 @@ impl Runtime {
                     .map_err(|e| {
                         RuntimeError::ExecStmtError(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::ClaimStmt(stmt.clone()),
+                                stmt.clone().into(),
                                 "claim: fact is not well defined".to_string(),
                                 Some(e.into()),
                                 vec![],
@@ -111,7 +111,7 @@ impl Runtime {
 
                     Ok(StmtExecResult::NonFactualStmtSuccess(
                         NonFactualStmtSuccess::new(
-                            Stmt::ClaimStmt(stmt.clone()),
+                            stmt.clone().into(),
                             crate::infer::InferResult::new(),
                             inside_results,
                         ),

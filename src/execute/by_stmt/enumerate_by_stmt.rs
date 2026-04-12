@@ -7,7 +7,7 @@ impl Runtime {
     ) -> Result<StmtExecResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::ByEnumerateStmt(stmt.clone()),
+                stmt.clone().into(),
                 msg,
                 None,
                 vec![],
@@ -17,7 +17,7 @@ impl Runtime {
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByEnumerateStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!(
                         "by enumerate: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
@@ -38,7 +38,7 @@ impl Runtime {
                 )
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByEnumerateStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!(
                             "by enumerate: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
@@ -53,7 +53,7 @@ impl Runtime {
             );
             return Ok(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    Stmt::ByEnumerateStmt(stmt.clone()),
+                    stmt.clone().into(),
                     infer_result,
                     vec![],
                 ),
@@ -82,7 +82,7 @@ impl Runtime {
             )
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByEnumerateStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!(
                         "by enumerate: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
@@ -99,7 +99,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::ByEnumerateStmt(stmt.clone()),
+                stmt.clone().into(),
                 infer_result,
                 vec![],
             ),
@@ -180,7 +180,7 @@ impl Runtime {
             if let Err(statement_error) = self.exec_stmt(proof_stmt) {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByEnumerateStmt(stmt.clone()),
+                        stmt.clone().into(),
                         proof_stmt.to_string(),
                         Some(statement_error),
                         vec![],
@@ -197,7 +197,7 @@ impl Runtime {
             if verified_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByEnumerateStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!("by enumerate: failed to prove `{}`", fact_to_prove),
                         None,
                         vec![],

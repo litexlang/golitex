@@ -11,7 +11,7 @@ impl Runtime {
         let infer_result = self.exec_have_fn_by_induc_store_process(stmt)?;
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(Stmt::HaveFnByInducStmt(stmt.clone()), infer_result, vec![]),
+            NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]),
         ))
     }
 
@@ -33,7 +33,7 @@ impl Runtime {
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
         RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            Stmt::HaveFnByInducStmt(stmt.clone()),
+            stmt.clone().into(),
             String::new(),
             Some(cause),
             vec![],
@@ -112,7 +112,7 @@ impl Runtime {
         if verify_result.is_unknown() {
             return Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnByInducStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!(
                         "have_fn_by_induc: {} is not in return set {}",
                         equal_to, stmt.ret_set
@@ -199,7 +199,7 @@ impl Runtime {
                     .map_err(|e| {
                         RuntimeError::ExecStmtError(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::HaveFnByInducStmt(stmt.clone()),
+                                stmt.clone().into(),
                                 "have_fn_by_induc: nested last cases do not cover all situations"
                                     .to_string(),
                                 Some(e),
@@ -225,7 +225,7 @@ impl Runtime {
             HaveFnByInducLastCase::NestedCases(_) => {
                 return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::HaveFnByInducStmt(stmt.clone()),
+                        stmt.clone().into(),
                         "have_fn_by_induc: nested last case list must not be empty".to_string(),
                         None,
                         vec![],
@@ -267,7 +267,7 @@ impl Runtime {
         if verify_result.is_unknown() {
             return Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnByInducStmt(stmt.clone()),
+                    stmt.clone().into(),
                     "have_fn_by_induc: induc_from is not in Z".to_string(),
                     None,
                     vec![],

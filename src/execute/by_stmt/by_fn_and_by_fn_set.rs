@@ -411,7 +411,7 @@ impl Runtime {
     }
 
     pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtExecResult, RuntimeError> {
-        let stmt_exec = Stmt::ByFnStmt(stmt.clone());
+        let stmt_exec = stmt.clone().into();
 
         let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
             Some(fs) => fs,
@@ -549,7 +549,7 @@ impl Runtime {
         &mut self,
         stmt: &ByFnSetStmt,
     ) -> Result<StmtExecResult, RuntimeError> {
-        let stmt_exec = Stmt::ByFnSetStmt(stmt.clone());
+        let stmt_exec = stmt.clone().into();
         let (forall_shape, forall_in, forall_exist, forall_unique) = self
             .build_fn_characterization_facts(
                 &stmt.func,

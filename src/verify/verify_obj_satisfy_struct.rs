@@ -215,7 +215,7 @@ impl Runtime {
 
         Ok(last_result.unwrap_or_else(|| {
             StmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
-                Stmt::DoNothingStmt(DoNothingStmt::new(default_line_file())),
+                DoNothingStmt::new(default_line_file()).into(),
                 InferResult::new(),
                 vec![],
             ))

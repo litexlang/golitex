@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         stmt: &ByFamilyStmt,
     ) -> Result<StmtExecResult, RuntimeError> {
-        let stmt_exec = Stmt::ByFamilyStmt(stmt.clone());
+        let stmt_exec = stmt.clone().into();
         let family_ty = match &stmt.family_obj {
             Obj::FamilyObj(f) => f,
             _ => {
