@@ -192,7 +192,7 @@ jobs:
       - name: Build .msi
         shell: bash
         run: |
-          WIX_VERSION=$(echo "${VERSION}" | sed 's/-.*//.0')
+          WIX_VERSION=$(echo "${VERSION}" | sed 's/-.*//').0
           cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi" --package-version "${WIX_VERSION}"
 
       - name: Upload .msi
