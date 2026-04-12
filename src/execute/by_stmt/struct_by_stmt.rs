@@ -145,7 +145,7 @@ impl Runtime {
                 Number::new(idx.to_string()).into()).into();
             let rhs = FieldAccess::new(forall_param.clone(), field_name.clone()).into();
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
-                AtomicFact::EqualFact(EqualFact::new(lhs, rhs, stmt.line_file.clone())),
+                EqualFact::new(lhs, rhs, stmt.line_file.clone()).into(),
             ));
         }
 
@@ -202,11 +202,11 @@ impl Runtime {
                 ))
             })?;
 
-        let definitional_eq = AtomicFact::EqualFact(EqualFact::new(
+        let definitional_eq = EqualFact::new(
             Obj::StructObj(struct_ty.clone()),
             rhs_sb_obj,
             stmt.line_file.clone(),
-        ));
+        ).into();
 
         let mut infer_result = InferResult::new();
         infer_result.push_atomic_fact(&definitional_eq);

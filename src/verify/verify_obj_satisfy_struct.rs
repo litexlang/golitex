@@ -78,11 +78,11 @@ impl Runtime {
                 }
 
                 Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                        InFact::new(
                             obj.clone(),
                             String::from("_").into(),
                             default_line_file(),
-                        ))),
+                        ).into(),
                         "".to_string(),
                         None,
                         Some(default_line_file()),

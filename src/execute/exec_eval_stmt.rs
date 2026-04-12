@@ -274,11 +274,11 @@ impl Runtime {
         });
 
         let evaluated_obj = eval_result?;
-        let evaluated_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        let evaluated_equal_fact = EqualFact::new(
             stmt.obj_to_eval.clone(),
             evaluated_obj,
             stmt.line_file.clone(),
-        )));
+        ).into();
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&evaluated_equal_fact);

@@ -16,11 +16,11 @@ fn factual_equal_success_by_builtin_reason(
 ) -> StmtResult {
     StmtResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            EqualFact::new(
                 left.clone(),
                 right.clone(),
                 line_file,
-            ))),
+            ).into(),
             reason.to_string(),
             Vec::new(),
         ),
@@ -112,11 +112,11 @@ impl Runtime {
 
         if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
             return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    EqualFact::new(
                         left.clone(),
                         right.clone(),
                         line_file,
-                    ))),
+                    ).into(),
                     "calculation and rational expression simplification".to_string(),
                     Vec::new(),
                 )).into());

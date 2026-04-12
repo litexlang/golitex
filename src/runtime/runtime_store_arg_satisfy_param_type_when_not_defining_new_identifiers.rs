@@ -12,26 +12,26 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for (arg, param_type) in args.iter().zip(instantiated_types.iter()) {
             let new_fact: Fact = match param_type {
-                ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
+                ParamType::Set(_) => IsSetFact::new(
                     arg.clone(),
                     _line_file.clone(),
-                ))),
+                ).into(),
                 ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                     IsNonemptySetFact::new(arg.clone(), _line_file.clone()),
                 )),
                 ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(
                     IsFiniteSetFact::new(arg.clone(), _line_file.clone()),
                 )),
-                ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                ParamType::Obj(obj) => InFact::new(
                     arg.clone(),
                     obj.clone(),
                     _line_file.clone(),
-                ))),
-                ParamType::Struct(struct_ty) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                ).into(),
+                ParamType::Struct(struct_ty) => InFact::new(
                     arg.clone(),
                     Obj::StructObj(struct_ty.clone()),
                     _line_file.clone(),
-                ))),
+                ).into(),
             };
             infer_result.new_infer_result_inside(
                 self.store_fact_without_well_defined_verified_and_infer(new_fact)?,

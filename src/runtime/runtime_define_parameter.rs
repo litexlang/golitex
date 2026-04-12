@@ -7,7 +7,7 @@ fn fact_for_obj_satisfies_param_type_shallow(
 ) -> Fact {
     match param_type {
         ParamType::Set(_) => {
-            Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(arg, line_file)))
+            IsSetFact::new(arg, line_file).into()
         }
         ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
             IsNonemptySetFact::new(arg, line_file),
@@ -16,13 +16,13 @@ fn fact_for_obj_satisfies_param_type_shallow(
             IsFiniteSetFact::new(arg, line_file),
         )),
         ParamType::Obj(obj) => {
-            Fact::AtomicFact(AtomicFact::InFact(InFact::new(arg, obj.clone(), line_file)))
+            InFact::new(arg, obj.clone(), line_file).into()
         }
-        ParamType::Struct(st) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+        ParamType::Struct(st) => InFact::new(
             arg,
             Obj::StructObj(st.clone()),
             line_file,
-        ))),
+        ).into(),
     }
 }
 
@@ -66,11 +66,11 @@ impl Runtime {
         name: &str,
         obj: &Obj,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+        let type_fact = InFact::new(
             name.to_string().into(),
             obj.clone(),
             default_line_file(),
-        )));
+        ).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
     }
@@ -80,10 +80,10 @@ impl Runtime {
         name: &str,
         _set: &Set,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
+        let type_fact = IsSetFact::new(
             name.to_string().into(),
             default_line_file(),
-        )));
+        ).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
     }
@@ -93,10 +93,10 @@ impl Runtime {
         name: &str,
         _nonempty_set: &NonemptySet,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+        let type_fact = IsNonemptySetFact::new(
             name.to_string().into(),
             default_line_file(),
-        )));
+        ).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
     }
@@ -106,10 +106,10 @@ impl Runtime {
         name: &str,
         _finite_set: &FiniteSet,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+        let type_fact = IsFiniteSetFact::new(
             name.to_string().into(),
             default_line_file(),
-        )));
+        ).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
             .map_err(RuntimeError::from)
     }
@@ -123,11 +123,11 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
 
-        let new_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+        let new_fact = InFact::new(
             name.to_string().into(),
             Obj::StructObj(struct_ty.clone()),
             default_line_file(),
-        )));
+        ).into();
         infer_result.new_infer_result_inside(
             self.store_fact_without_well_defined_verified_and_infer(new_fact)
                 .map_err(RuntimeError::from)?,

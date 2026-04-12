@@ -9,30 +9,30 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match param_type {
             ParamType::Struct(struct_ty) => {
-                let fact = AtomicFact::InFact(InFact::new(
+                let fact = InFact::new(
                     obj,
                     Obj::StructObj(struct_ty.clone()),
                     default_line_file(),
-                ));
+                ).into();
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::Obj(set_obj) => {
                 let fact =
-                    AtomicFact::InFact(InFact::new(obj, set_obj.clone(), default_line_file()));
+                    InFact::new(obj, set_obj.clone(), default_line_file()).into();
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::Set(_) => {
-                let fact = AtomicFact::IsSetFact(IsSetFact::new(obj, default_line_file()));
+                let fact = IsSetFact::new(obj, default_line_file()).into();
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::NonemptySet(_) => {
                 let fact =
-                    AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(obj, default_line_file()));
+                    IsNonemptySetFact::new(obj, default_line_file()).into();
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::FiniteSet(_) => {
                 let fact =
-                    AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(obj, default_line_file()));
+                    IsFiniteSetFact::new(obj, default_line_file()).into();
                 self.verify_atomic_fact(&fact, verify_state)
             }
         }

@@ -161,11 +161,11 @@ impl Runtime {
             self.store_identifier_obj(parameter_name)
                 .map_err(RuntimeError::from)?;
             let parameter_equal_to_assigned_obj_atomic_fact =
-                AtomicFact::EqualFact(EqualFact::new(
+                EqualFact::new(
                     parameter_name.to_string().into(),
                     assigned_obj.clone(),
                     stmt.line_file.clone(),
-                ));
+                ).into();
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,
             )

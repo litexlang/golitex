@@ -86,11 +86,11 @@ impl Runtime {
                 ))
             })?;
 
-        let equal_fact = AtomicFact::EqualFact(EqualFact::new(
+        let equal_fact = EqualFact::new(
             stmt.family_obj.clone(),
             right,
             stmt.line_file.clone(),
-        ));
+        ).into();
 
         // 与 `by_enumerate` 一致：先把本语句直接生成的事实写进 `infer_facts`，再追加 store+infer 链上的结果。
         let mut infer_result = InferResult::new();

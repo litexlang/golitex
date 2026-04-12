@@ -43,11 +43,11 @@ impl Runtime {
             )?;
         if verified_by_arg_to_arg {
             return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    EqualFact::new(
                         left.clone(),
                         right.clone(),
                         line_file.clone(),
-                    ))),
+                    ).into(),
                     same_shape_and_equal_args_reason(left, right),
                     Vec::new(),
                 )).into());
@@ -56,7 +56,7 @@ impl Runtime {
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
             result = self.verify_atomic_fact_with_known_forall(
-                &AtomicFact::EqualFact(EqualFact::new(left.clone(), right.clone(), line_file.clone())),
+                &EqualFact::new(left.clone(), right.clone(), line_file.clone()).into(),
                 &verify_state_add_one_round,
             )?;
             if result.is_true() {
@@ -502,11 +502,11 @@ impl Runtime {
         )?;
         if result.is_true() {
             return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    EqualFact::new(
                         left_obj.clone(),
                         right_obj.clone(),
                         equality_line_file.clone(),
-                    ))),
+                    ).into(),
                     "builtin rules".to_string(),
                     Vec::new(),
                 )).into());
@@ -531,11 +531,11 @@ impl Runtime {
             )?;
         if verified_by_arg_to_arg {
             return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    EqualFact::new(
                         left_obj.clone(),
                         right_obj.clone(),
                         equality_line_file,
-                    ))),
+                    ).into(),
                     same_shape_and_equal_args_reason(left_obj, right_obj),
                     Vec::new(),
                 )).into());

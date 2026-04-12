@@ -2,11 +2,11 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 fn fn_set_equality_fact(left: &FnSet, right: &FnSet, line_file: LineFile) -> Fact {
-    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    EqualFact::new(
         Obj::FnSet(left.clone()),
         Obj::FnSet(right.clone()),
         line_file,
-    )))
+    ).into()
 }
 
 fn fn_set_equality_verify_error(
@@ -316,11 +316,11 @@ impl Runtime {
                         None,
                     ));
                 };
-                let param_in_target_set_fact = AtomicFact::InFact(InFact::new(
+                let param_in_target_set_fact = InFact::new(
                     generated_param_obj,
                     instantiated_param_set.clone(),
                     line_file.clone(),
-                ));
+                ).into();
                 let verify_result =
                     self.verify_atomic_fact(&param_in_target_set_fact, verify_state)?;
                 if !verify_result.is_true() {

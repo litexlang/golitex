@@ -48,7 +48,7 @@ impl Runtime {
                     Some(e),
                 )
             })?;
-        let fact = AtomicFact::InFact(InFact::new(obj, member_set, default_line_file()));
+        let fact = InFact::new(obj, member_set, default_line_file()).into();
         self.verify_atomic_fact(&fact, verify_state)
     }
 }

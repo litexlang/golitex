@@ -12,11 +12,11 @@ impl Runtime {
             ParamType::Obj(subset_fact.left.clone()),
         );
         let in_fact_for_forall_then =
-            ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+            ExistOrAndChainAtomicFact::AtomicFact(InFact::new(
                 generated_param_name.clone().into(),
                 subset_fact.right.clone(),
                 subset_fact.line_file.clone(),
-            )));
+            ).into());
         let inferred_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![parameter_definition],
             vec![],
@@ -51,11 +51,11 @@ impl Runtime {
             ParamType::Obj(superset_fact.right.clone()),
         );
         let in_fact_for_forall_then =
-            ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+            ExistOrAndChainAtomicFact::AtomicFact(InFact::new(
                 generated_param_name.clone().into(),
                 superset_fact.left.clone(),
                 superset_fact.line_file.clone(),
-            )));
+            ).into());
         let inferred_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![parameter_definition],
             vec![],

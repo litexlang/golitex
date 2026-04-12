@@ -305,11 +305,11 @@ impl ParamGroupWithSet {
     pub fn facts(&self) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
         for name in self.params.iter() {
-            let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            let fact = InFact::new(
                 name.clone().into(),
                 self.set.clone(),
                 default_line_file(),
-            )));
+            ).into();
             facts.push(fact);
         }
         facts
@@ -328,11 +328,11 @@ impl ParamGroupWithSet {
             Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
         let mut facts = Vec::with_capacity(args.len());
         for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
-            facts.push(AtomicFact::InFact(InFact::new(
+            facts.push(InFact::new(
                 arg.clone(),
                 param_set.clone(),
                 default_line_file(),
-            )));
+            ).into());
         }
         Ok(facts)
     }

@@ -104,16 +104,16 @@ impl Runtime {
             )],
             vec![],
             vec![
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                ExistOrAndChainAtomicFact::AtomicFact(InFact::new(
                     forall_element_obj.clone(),
                     forall_element_cart_set,
                     line_file.clone(),
-                ))),
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                ).into()),
+                ExistOrAndChainAtomicFact::AtomicFact(EqualFact::new(
                     TupleDim::new(forall_element_obj.clone()).into(),
                     Number::new("2".to_string()).into(),
                     line_file.clone(),
-                ))),
+                ).into()),
             ],
             line_file.clone(),
         ));
@@ -310,30 +310,30 @@ impl Runtime {
                 ParamType::Obj(function.clone()),
             )],
             vec![
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                ExistOrAndChainAtomicFact::AtomicFact(InFact::new(
                     unique_x1_obj.clone(),
                     unique_element_cart_set.clone(),
                     line_file.clone(),
-                ))),
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                ).into()),
+                ExistOrAndChainAtomicFact::AtomicFact(InFact::new(
                     unique_x2_obj.clone(),
                     unique_element_cart_set.clone(),
                     line_file.clone(),
-                ))),
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                ).into()),
+                ExistOrAndChainAtomicFact::AtomicFact(EqualFact::new(
                     ObjAtIndex::new(unique_x1_obj.clone(),
                         Number::new("1".to_string()).into()).into(),
                     ObjAtIndex::new(unique_x2_obj.clone(),
                         Number::new("1".to_string()).into()).into(),
                     line_file.clone(),
-                ))),
+                ).into()),
             ],
             vec![ExistOrAndChainAtomicFact::AtomicFact(
-                AtomicFact::EqualFact(EqualFact::new(
+                EqualFact::new(
                     unique_x1_obj,
                     unique_x2_obj,
                     line_file.clone(),
-                )),
+                ).into(),
             )],
             line_file.clone(),
         ));
@@ -522,11 +522,11 @@ impl Runtime {
         stmt: &ByFnSetStmt,
         stmt_exec: &Stmt,
     ) -> Result<InferResult, RuntimeError> {
-        let membership_fact = AtomicFact::InFact(InFact::new(
+        let membership_fact = InFact::new(
             stmt.func.clone(),
             Obj::FnSet(stmt.fn_set.clone()),
             stmt.line_file.clone(),
-        ));
+        ).into();
         self.store_atomic_fact_without_well_defined_verified_and_infer(membership_fact)
             .map_err(|store_fact_error| {
                 RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
