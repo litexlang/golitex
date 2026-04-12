@@ -161,3 +161,201 @@ impl Stmt {
         }
     }
 }
+
+impl From<Fact> for Stmt {
+    fn from(v: Fact) -> Self {
+        Stmt::Fact(v)
+    }
+}
+
+impl From<DefLetStmt> for Stmt {
+    fn from(v: DefLetStmt) -> Self {
+        Stmt::DefLetStmt(v)
+    }
+}
+
+impl From<DefPropStmt> for Stmt {
+    fn from(v: DefPropStmt) -> Self {
+        Stmt::DefPropStmt(v)
+    }
+}
+
+impl From<DefAbstractPropStmt> for Stmt {
+    fn from(v: DefAbstractPropStmt) -> Self {
+        Stmt::DefAbstractPropStmt(v)
+    }
+}
+
+impl From<HaveObjInNonemptySetOrParamTypeStmt> for Stmt {
+    fn from(v: HaveObjInNonemptySetOrParamTypeStmt) -> Self {
+        Stmt::HaveObjInNonemptySetStmt(v)
+    }
+}
+
+impl From<HaveObjEqualStmt> for Stmt {
+    fn from(v: HaveObjEqualStmt) -> Self {
+        Stmt::HaveObjEqualStmt(v)
+    }
+}
+
+impl From<HaveByExistStmt> for Stmt {
+    fn from(v: HaveByExistStmt) -> Self {
+        Stmt::HaveByExistStmt(v)
+    }
+}
+
+impl From<HaveFnEqualStmt> for Stmt {
+    fn from(v: HaveFnEqualStmt) -> Self {
+        Stmt::HaveFnEqualStmt(v)
+    }
+}
+
+impl From<HaveFnEqualCaseByCaseStmt> for Stmt {
+    fn from(v: HaveFnEqualCaseByCaseStmt) -> Self {
+        Stmt::HaveFnEqualCaseByCaseStmt(v)
+    }
+}
+
+impl From<HaveFnByInducStmt> for Stmt {
+    fn from(v: HaveFnByInducStmt) -> Self {
+        Stmt::HaveFnByInducStmt(v)
+    }
+}
+
+impl From<DefStructStmt> for Stmt {
+    fn from(v: DefStructStmt) -> Self {
+        Stmt::DefStructStmt(v)
+    }
+}
+
+impl From<DefFamilyStmt> for Stmt {
+    fn from(v: DefFamilyStmt) -> Self {
+        Stmt::DefFamilyStmt(v)
+    }
+}
+
+impl From<DefAlgoStmt> for Stmt {
+    fn from(v: DefAlgoStmt) -> Self {
+        Stmt::DefAlgoStmt(v)
+    }
+}
+
+impl From<ClaimStmt> for Stmt {
+    fn from(v: ClaimStmt) -> Self {
+        Stmt::ClaimStmt(v)
+    }
+}
+
+impl From<KnowStmt> for Stmt {
+    fn from(v: KnowStmt) -> Self {
+        Stmt::KnowStmt(v)
+    }
+}
+
+impl From<ProveStmt> for Stmt {
+    fn from(v: ProveStmt) -> Self {
+        Stmt::ProveStmt(v)
+    }
+}
+
+impl From<ImportStmt> for Stmt {
+    fn from(v: ImportStmt) -> Self {
+        Stmt::ImportStmt(v)
+    }
+}
+
+impl From<DoNothingStmt> for Stmt {
+    fn from(v: DoNothingStmt) -> Self {
+        Stmt::DoNothingStmt(v)
+    }
+}
+
+impl From<RunFileStmt> for Stmt {
+    fn from(v: RunFileStmt) -> Self {
+        Stmt::RunFileStmt(v)
+    }
+}
+
+impl From<EvalStmt> for Stmt {
+    fn from(v: EvalStmt) -> Self {
+        Stmt::EvalStmt(v)
+    }
+}
+
+impl From<WitnessExistFact> for Stmt {
+    fn from(v: WitnessExistFact) -> Self {
+        Stmt::WitnessExistFact(v)
+    }
+}
+
+impl From<WitnessNonemptySet> for Stmt {
+    fn from(v: WitnessNonemptySet) -> Self {
+        Stmt::WitnessNonemptySet(v)
+    }
+}
+
+impl From<ByCasesStmt> for Stmt {
+    fn from(v: ByCasesStmt) -> Self {
+        Stmt::ByCasesStmt(v)
+    }
+}
+
+impl From<ByContraStmt> for Stmt {
+    fn from(v: ByContraStmt) -> Self {
+        Stmt::ByContraStmt(v)
+    }
+}
+
+impl From<ByEnumerateStmt> for Stmt {
+    fn from(v: ByEnumerateStmt) -> Self {
+        Stmt::ByEnumerateStmt(v)
+    }
+}
+
+impl From<ByInducStmt> for Stmt {
+    fn from(v: ByInducStmt) -> Self {
+        Stmt::ByInducStmt(v)
+    }
+}
+
+impl From<ByForStmt> for Stmt {
+    fn from(v: ByForStmt) -> Self {
+        Stmt::ByForStmt(v)
+    }
+}
+
+impl From<ByExtensionStmt> for Stmt {
+    fn from(v: ByExtensionStmt) -> Self {
+        Stmt::ByExtensionStmt(v)
+    }
+}
+
+impl From<ByFnStmt> for Stmt {
+    fn from(v: ByFnStmt) -> Self {
+        Stmt::ByFnStmt(v)
+    }
+}
+
+impl From<ByFamilyStmt> for Stmt {
+    fn from(v: ByFamilyStmt) -> Self {
+        Stmt::ByFamilyStmt(v)
+    }
+}
+
+impl From<ByStructStmt> for Stmt {
+    fn from(v: ByStructStmt) -> Self {
+        Stmt::ByStructStmt(v)
+    }
+}
+
+impl From<ByTupleStmt> for Stmt {
+    fn from(v: ByTupleStmt) -> Self {
+        Stmt::ByTuple(v)
+    }
+}
+
+impl From<ByFnSetStmt> for Stmt {
+    fn from(v: ByFnSetStmt) -> Self {
+        Stmt::ByFnSetStmt(v)
+    }
+}

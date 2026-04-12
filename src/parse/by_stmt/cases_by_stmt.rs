@@ -67,12 +67,13 @@ impl Runtime {
             proofs.push(proof_stmts);
             impossible_facts.push(impossible);
         }
-        Ok(Stmt::ByCasesStmt(ByCasesStmt::new(
+        Ok(ByCasesStmt::new(
             cases,
             then_facts,
             proofs,
             impossible_facts,
             tb.line_file.clone(),
-        )))
+        )
+        .into())
     }
 }

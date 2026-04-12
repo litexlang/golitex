@@ -26,12 +26,13 @@ impl Runtime {
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
-        Ok(Stmt::WitnessExistFact(WitnessExistFact::new(
+        Ok(WitnessExistFact::new(
             equal_tos,
             exist_fact_in_witness,
             proof,
             tb.line_file.clone(),
-        )))
+        )
+        .into())
     }
 
     // witness $is_nonempty_set(R) from 1:
@@ -51,11 +52,6 @@ impl Runtime {
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
-        Ok(Stmt::WitnessNonemptySet(WitnessNonemptySet::new(
-            obj,
-            set,
-            proof,
-            tb.line_file.clone(),
-        )))
+        Ok(WitnessNonemptySet::new(obj, set, proof, tb.line_file.clone()).into())
     }
 }

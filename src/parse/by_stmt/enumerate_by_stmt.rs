@@ -58,12 +58,13 @@ impl Runtime {
             proof.push(self.parse_stmt(block)?);
         }
 
-        Ok(Stmt::ByEnumerateStmt(ByEnumerateStmt::new(
+        Ok(ByEnumerateStmt::new(
             params,
             param_sets,
             to_prove,
             proof,
             tb.line_file.clone(),
-        )))
+        )
+        .into())
     }
 }

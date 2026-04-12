@@ -6,10 +6,10 @@ impl Runtime {
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let facts = self.parse_facts_in_body(tb)?;
-            Ok(Stmt::KnowStmt(KnowStmt::new(facts, tb.line_file.clone())))
+            Ok(KnowStmt::new(facts, tb.line_file.clone()).into())
         } else if tb.current_token_is_equal_to(FORALL) {
             let fact = self.parse_fact(tb)?;
-            Ok(Stmt::KnowStmt(KnowStmt::new(vec![fact], tb.line_file.clone())))
+            Ok(KnowStmt::new(vec![fact], tb.line_file.clone()).into())
         } else {
             let mut facts: Vec<Fact> = vec![];
             loop {
@@ -21,7 +21,7 @@ impl Runtime {
                 }
                 tb.skip_token(COMMA)?;
             }
-            Ok(Stmt::KnowStmt(KnowStmt::new(facts, tb.line_file.clone())))
+            Ok(KnowStmt::new(facts, tb.line_file.clone()).into())
         }
     }
 }

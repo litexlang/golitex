@@ -14,7 +14,7 @@ impl Runtime {
                     Err(statement_error) => {
                         return Err(RuntimeError::from(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::ProveStmt(stmt.clone()),
+                                stmt.clone().into(),
                                 proof_stmt.to_string(),
                                 Some(statement_error),
                                 inside_results,
@@ -29,7 +29,7 @@ impl Runtime {
         match inside_results {
             Ok(_) => Ok(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    Stmt::ProveStmt(stmt.clone()),
+                    stmt.clone().into(),
                     InferResult::new(),
                     vec![],
                 ),

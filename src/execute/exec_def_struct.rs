@@ -10,7 +10,7 @@ impl Runtime {
 
         self.store_struct_def(stmt).map_err(|store_error| {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                Stmt::DefStructStmt(stmt.clone()),
+                stmt.clone().into(),
                 "".to_string(),
                 Some(store_error.into()),
                 vec![],
@@ -20,7 +20,7 @@ impl Runtime {
         let infer_result = InferResult::new();
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(Stmt::DefStructStmt(stmt.clone()), infer_result, vec![]),
+            NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]),
         ))
     }
 
@@ -36,7 +36,7 @@ impl Runtime {
         )
         .map_err(|define_params_error| {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                Stmt::DefStructStmt(stmt.clone()),
+                stmt.clone().into(),
                 "".to_string(),
                 Some(define_params_error),
                 vec![],
@@ -48,7 +48,7 @@ impl Runtime {
         for (field_name, _) in stmt.fields.iter() {
             if param_names.contains(field_name) {
                 return Err(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefStructStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!(
                         "struct `{}`: field `{}` must not reuse a type parameter name",
                         stmt.name, field_name
@@ -66,7 +66,7 @@ impl Runtime {
             )
             .map_err(|inner_exec_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefStructStmt(stmt.clone()),
+                    stmt.clone().into(),
                     "".to_string(),
                     Some(RuntimeError::from(inner_exec_error)),
                     vec![],
@@ -78,7 +78,7 @@ impl Runtime {
             self.verify_param_type_well_defined(&field_param_type.to_param_type(), &verify_state)
                 .map_err(|well_defined_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::DefStructStmt(stmt.clone()),
+                        stmt.clone().into(),
                         "".to_string(),
                         Some(well_defined_error.into()),
                         vec![],
@@ -88,7 +88,7 @@ impl Runtime {
 
         self.store_identifier_obj(SELF).map_err(|store_error| {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                Stmt::DefStructStmt(stmt.clone()),
+                stmt.clone().into(),
                 "".to_string(),
                 Some(store_error.into()),
                 vec![],
@@ -128,7 +128,7 @@ impl Runtime {
             )
             .map_err(|inner_exec_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefStructStmt(stmt.clone()),
+                    stmt.clone().into(),
                     "".to_string(),
                     Some(RuntimeError::from(inner_exec_error)),
                     vec![],

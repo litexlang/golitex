@@ -48,7 +48,7 @@ impl Runtime {
         &mut self,
         stmt: &ByStructStmt,
     ) -> Result<StmtExecResult, RuntimeError> {
-        let stmt_exec = Stmt::ByStructStmt(stmt.clone());
+        let stmt_exec = stmt.clone().into();
         let struct_ty = match &stmt.struct_obj {
             Obj::StructObj(s) => s.clone(),
             _ => {

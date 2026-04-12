@@ -8,9 +8,6 @@ impl Runtime {
         tb.skip_token(STRUCT)?;
         tb.skip_token(COLON)?;
         let struct_obj = self.parse_obj(tb)?;
-        Ok(Stmt::ByStructStmt(ByStructStmt::new(
-            struct_obj,
-            tb.line_file.clone(),
-        )))
+        Ok(ByStructStmt::new(struct_obj, tb.line_file.clone()).into())
     }
 }

@@ -41,7 +41,7 @@ fn run_file(
     );
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
         RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            Stmt::RunFileStmt(_run_file_stmt.clone()),
+            _run_file_stmt.clone().into(),
             format!("Failed to read file: {}", path.as_str()),
             None,
             vec![],
@@ -62,7 +62,7 @@ fn run_file(
 
     return Ok(StmtExecResult::NonFactualStmtSuccess(
         NonFactualStmtSuccess::new(
-            Stmt::RunFileStmt(_run_file_stmt.clone()),
+            _run_file_stmt.clone().into(),
             InferResult::new(),
             result.0,
         ),
