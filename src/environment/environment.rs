@@ -260,21 +260,19 @@ impl Environment {
 
     fn store_atomic_fact_in_forall_fact(
         &mut self,
-        atomic_fact_ref: &AtomicFact,
+        atomic_fact: AtomicFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeErrorStruct> {
-        let key: AtomicFactKey = atomic_fact_ref.key();
-        let is_true = atomic_fact_ref.is_true();
+        let key: AtomicFactKey = atomic_fact.key();
+        let is_true = atomic_fact.is_true();
         if let Some(vec_ref) = self
             .known_atomic_facts_in_forall_facts
             .get_mut(&(key.clone(), is_true))
         {
-            vec_ref.push((atomic_fact_ref.clone(), forall_params_and_dom));
+            vec_ref.push((atomic_fact, forall_params_and_dom));
         } else {
-            self.known_atomic_facts_in_forall_facts.insert(
-                (key, is_true),
-                vec![(atomic_fact_ref.clone(), forall_params_and_dom)],
-            );
+            self.known_atomic_facts_in_forall_facts
+                .insert((key, is_true), vec![(atomic_fact, forall_params_and_dom)]);
         }
         Ok(())
     }
@@ -301,7 +299,7 @@ impl Environment {
     ) -> Result<(), RuntimeErrorStruct> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(spec_fact) => {
-                self.store_atomic_fact_in_forall_fact(&spec_fact, forall_params_and_dom)
+                self.store_atomic_fact_in_forall_fact(spec_fact.clone(), forall_params_and_dom)
             }
             ExistOrAndChainAtomicFact::OrFact(or_fact) => {
                 self.store_or_fact_in_forall_fact(&or_fact, forall_params_and_dom)
@@ -335,12 +333,9 @@ impl Environment {
                     vec![],
                 )
             })?
-            .iter()
+            .into_iter()
         {
-            self.store_a_fact_in_forall_fact(
-                &ExistOrAndChainAtomicFact::AtomicFact(fact.clone()),
-                forall_params_and_dom.clone(),
-            )?;
+            self.store_atomic_fact_in_forall_fact(fact, forall_params_and_dom.clone())?;
         }
         Ok(())
     }
@@ -366,10 +361,7 @@ impl Environment {
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeErrorStruct> {
         for fact in and_fact.facts.iter() {
-            self.store_a_fact_in_forall_fact(
-                &ExistOrAndChainAtomicFact::AtomicFact(fact.clone()),
-                forall_params_and_dom.clone(),
-            )?;
+            self.store_atomic_fact_in_forall_fact(fact.clone(), forall_params_and_dom.clone())?;
         }
         Ok(())
     }

@@ -382,7 +382,7 @@ impl Runtime {
                         .into(),
                     );
 
-                    dom.push(nested.case_fact.to_exist_or_and_chain_atomic_fact());
+                    dom.push(nested.case_fact.clone().into());
 
                     let forall_fact: Fact = ForallFact::new(
                         param_def,

@@ -275,7 +275,7 @@ impl Runtime {
                                     ),
                                 )
                             })?
-                            .to_exist_or_and_chain_atomic_fact(),
+                            .into(),
                     );
                 }
                 dom_facts

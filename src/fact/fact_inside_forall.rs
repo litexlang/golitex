@@ -79,3 +79,21 @@ impl From<ExistFact> for ExistOrAndChainAtomicFact {
         ExistOrAndChainAtomicFact::ExistFact(exist_fact)
     }
 }
+
+impl From<AndFact> for ExistOrAndChainAtomicFact {
+    fn from(a: AndFact) -> Self {
+        ExistOrAndChainAtomicFact::AndFact(a)
+    }
+}
+
+impl From<ChainFact> for ExistOrAndChainAtomicFact {
+    fn from(c: ChainFact) -> Self {
+        ExistOrAndChainAtomicFact::ChainFact(c)
+    }
+}
+
+impl From<OrFact> for ExistOrAndChainAtomicFact {
+    fn from(o: OrFact) -> Self {
+        ExistOrAndChainAtomicFact::OrFact(o)
+    }
+}
