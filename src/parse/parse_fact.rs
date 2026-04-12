@@ -238,7 +238,7 @@ impl Runtime {
                 tb.skip_token(NOT)?;
                 Ok(self
                     .parse_atomic_fact(tb, false)
-                    .map(|a| ExistOrAndChainAtomicFact::AtomicFact(a))?)
+                    .map(|a| a.into())?)
             }
             _ => Ok(self.parse_or_and_chain_atomic_fact(tb)?.into()),
         }

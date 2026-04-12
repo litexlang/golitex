@@ -114,7 +114,7 @@ impl Runtime {
 
         // 6) Store exist fact into the top-level (big) environment.
         let store_result = self.store_fact_without_well_defined_verified_and_infer(
-            Fact::ExistFact(stmt.exist_fact_in_witness.clone()),
+            stmt.exist_fact_in_witness.clone().into(),
         );
         match store_result {
             Ok(infer_result) => Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into()),

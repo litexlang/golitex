@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         stmt: &ByContraStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let to_prove_fact = Fact::AtomicFact(stmt.to_prove.clone());
+        let to_prove_fact: Fact = stmt.to_prove.clone().into();
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(

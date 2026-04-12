@@ -74,7 +74,7 @@ impl ByForStmt {
 
     pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
         self.expanded_range_params()?;
-        Ok(Fact::ForallFact(self.forall_fact.clone()))
+        Ok(self.forall_fact.clone().into())
     }
 }
 

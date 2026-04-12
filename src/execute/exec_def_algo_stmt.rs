@@ -184,7 +184,7 @@ impl Runtime {
         }
 
         for in_fact_atomic in param_satisfy_fn_param_set_facts_atomic.iter() {
-            requirement_facts.push(Fact::AtomicFact(in_fact_atomic.clone()));
+            requirement_facts.push(in_fact_atomic.clone().into());
         }
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
@@ -196,7 +196,7 @@ impl Runtime {
                         Some(runtime_error),
                     )
                 })?;
-            requirement_facts.push(instantiated_dom_fact.to_fact());
+            requirement_facts.push(instantiated_dom_fact.into());
         }
 
         Ok((requirement_facts, algo_param_defs_with_type))
@@ -321,7 +321,7 @@ impl Runtime {
         let mut case_conditions: Vec<AndChainAtomicFact> =
             Vec::with_capacity(def_algo_stmt.cases.len());
         for algo_case in def_algo_stmt.cases.iter() {
-            case_conditions.push(AndChainAtomicFact::AtomicFact(algo_case.condition.clone()));
+            case_conditions.push(algo_case.condition.clone().into());
         }
         let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file.clone());
         let coverage_forall_fact = ForallFact::new(

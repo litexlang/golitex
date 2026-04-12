@@ -475,11 +475,12 @@ impl Runtime {
         let function_obj =
             self.build_function_obj_with_param_names(&have_fn_equal_stmt.name, &param_names);
 
-        let function_equals_equal_to_fact = EqualFact::new(
+        let function_equals_equal_to_fact: AtomicFact = EqualFact::new(
             function_obj,
             have_fn_equal_stmt.equal_to.clone(),
             have_fn_equal_stmt.line_file.clone(),
-        ).into();
+        )
+        .into();
         let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> =
             Vec::with_capacity(have_fn_equal_stmt.fn_set_clause.dom_facts.len());
         for dom_fact in have_fn_equal_stmt.fn_set_clause.dom_facts.iter() {
@@ -488,12 +489,10 @@ impl Runtime {
         let forall_fact = ForallFact::new(
             param_defs_with_type,
             forall_dom_facts,
-            vec![crate::fact::ExistOrAndChainAtomicFact::AtomicFact(
-                function_equals_equal_to_fact,
-            )],
+            vec![function_equals_equal_to_fact.into()],
             have_fn_equal_stmt.line_file.clone(),
         );
-        let forall_as_fact = Fact::ForallFact(forall_fact);
+        let forall_as_fact: Fact = forall_fact.into();
         let forall_infer_result = self
             .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
             .map_err(|store_fact_error| {
@@ -700,20 +699,19 @@ impl Runtime {
             }
             forall_dom_facts.push(case_fact.clone().into());
 
-            let function_equals_equal_to_fact = EqualFact::new(
+            let function_equals_equal_to_fact: AtomicFact = EqualFact::new(
                 function_obj.clone(),
                 equal_to.clone(),
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
-            ).into();
+            )
+            .into();
             let forall_fact = ForallFact::new(
                 param_defs_with_type.clone(),
                 forall_dom_facts,
-                vec![ExistOrAndChainAtomicFact::AtomicFact(
-                    function_equals_equal_to_fact,
-                )],
+                vec![function_equals_equal_to_fact.into()],
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
             );
-            let forall_as_fact = Fact::ForallFact(forall_fact);
+            let forall_as_fact: Fact = forall_fact.into();
 
             infer_result.new_fact(&forall_as_fact);
             let forall_infer_result = self

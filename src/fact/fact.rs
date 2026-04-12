@@ -143,6 +143,17 @@ impl From<AndChainAtomicFact> for Fact {
     }
 }
 
+impl From<OrAndChainAtomicFact> for Fact {
+    fn from(f: OrAndChainAtomicFact) -> Self {
+        match f {
+            OrAndChainAtomicFact::AtomicFact(a) => a.into(),
+            OrAndChainAtomicFact::AndFact(a) => a.into(),
+            OrAndChainAtomicFact::ChainFact(c) => c.into(),
+            OrAndChainAtomicFact::OrFact(o) => o.into(),
+        }
+    }
+}
+
 impl From<ForallFactWithIff> for Fact {
     fn from(forall_fact_with_iff: ForallFactWithIff) -> Self {
         Fact::ForallFactWithIff(forall_fact_with_iff)

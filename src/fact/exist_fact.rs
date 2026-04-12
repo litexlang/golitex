@@ -198,10 +198,10 @@ impl OrAndChainAtomicFact {
 impl OrAndChainAtomicFact {
     pub fn from_ref_to_cloned_fact(&self) -> Fact {
         match self {
-            OrAndChainAtomicFact::AtomicFact(a) => Fact::AtomicFact(a.clone()),
-            OrAndChainAtomicFact::AndFact(a) => Fact::AndFact(a.clone()),
-            OrAndChainAtomicFact::ChainFact(c) => Fact::ChainFact(c.clone()),
-            OrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o.clone()),
+            OrAndChainAtomicFact::AtomicFact(a) => a.clone().into(),
+            OrAndChainAtomicFact::AndFact(a) => a.clone().into(),
+            OrAndChainAtomicFact::ChainFact(c) => c.clone().into(),
+            OrAndChainAtomicFact::OrFact(o) => o.clone().into(),
         }
     }
 

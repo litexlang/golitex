@@ -127,7 +127,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeErrorStruct> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
-        let infer_wrapped_fact = Fact::AtomicFact(fact.clone());
+        let infer_wrapped_fact: Fact = fact.clone().into();
         self.top_level_env().store_atomic_fact(fact)?;
 
         self.top_level_env()
