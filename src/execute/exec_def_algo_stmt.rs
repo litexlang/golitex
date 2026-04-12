@@ -5,22 +5,20 @@ impl Runtime {
     pub fn exec_def_algo_stmt(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process(def_algo_stmt))?;
         self.store_def_algo(def_algo_stmt)?;
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 def_algo_stmt.clone().into(),
                 InferResult::new(),
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     fn exec_def_algo_stmt_verify_process(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         let function_name_obj = Obj::Identifier(Identifier::new(def_algo_stmt.name.clone()));
         let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
             Some(fn_set) => fn_set,
@@ -56,13 +54,11 @@ impl Runtime {
             &requirement_dom_facts,
         )?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 def_algo_stmt.clone().into(),
                 InferResult::new(),
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     fn def_algo_verify_exec_error_without_message(

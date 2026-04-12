@@ -16,7 +16,7 @@ fn resolve_run_file_path(user_path: &str, current_lit_file_path: &str) -> String
 pub fn run_stmt_at_global_env(
     stmt: &Stmt,
     runtime: &mut Runtime,
-) -> Result<StmtExecResult, RuntimeError> {
+) -> Result<StmtResult, RuntimeError> {
     match stmt {
         Stmt::RunFileStmt(run_file_stmt) => {
             return run_file(run_file_stmt, runtime);
@@ -33,14 +33,14 @@ pub fn run_stmt_at_global_env(
 fn run_file(
     _run_file_stmt: &RunFileStmt,
     _runtime: &mut Runtime,
-) -> Result<StmtExecResult, RuntimeError> {
+) -> Result<StmtResult, RuntimeError> {
     let current_lit_path = _runtime.module_manager.current_file_path_rc();
     let path = resolve_run_file_path(
         _run_file_stmt.file_path.as_str(),
         current_lit_path.as_ref(),
     );
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
-        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
+        RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
             _run_file_stmt.clone().into(),
             format!("Failed to read file: {}", path.as_str()),
             None,
@@ -60,18 +60,16 @@ fn run_file(
         return Err(error);
     };
 
-    return Ok(StmtExecResult::NonFactualStmtSuccess(
-        NonFactualStmtSuccess::new(
+    return Ok((NonFactualStmtSuccess::new(
             _run_file_stmt.clone().into(),
             InferResult::new(),
             result.0,
-        ),
-    ));
+        )).into());
 }
 
 fn run_import_stmt(
     _import_stmt: &ImportStmt,
     _runtime: &mut Runtime,
-) -> Result<StmtExecResult, RuntimeError> {
+) -> Result<StmtResult, RuntimeError> {
     unimplemented!();
 }

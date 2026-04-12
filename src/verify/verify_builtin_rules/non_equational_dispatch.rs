@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
             AtomicFact::NotEqualFact(not_equal_fact) => {
@@ -39,13 +39,11 @@ impl Runtime {
             | AtomicFact::GreaterEqualFact(_) => Ok(
                 self.verify_order_atomic_fact_numeric_builtin_only(atomic_fact),
             ),
-            AtomicFact::IsSetFact(is_set_fact) => Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            AtomicFact::IsSetFact(is_set_fact) => Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::IsSetFact(is_set_fact.clone())),
                     "Every object is a set.".to_string(),
                     Vec::new(),
-                ),
-            )),
+                )).into()),
             AtomicFact::IsNonemptySetFact(is_nonempty_set_fact) => self
                 ._verify_is_nonempty_set_fact_with_builtin_rules(
                     is_nonempty_set_fact,
@@ -65,7 +63,7 @@ impl Runtime {
                     not_is_nonempty_set_fact,
                     verify_state,
                 ),
-            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => Ok((StmtUnknown::new()).into()),
         }
     }
 

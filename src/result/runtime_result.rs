@@ -1,31 +1,45 @@
 use crate::prelude::*;
 
 #[derive(Debug)]
-pub enum StmtExecResult {
+pub enum StmtResult {
     NonFactualStmtSuccess(NonFactualStmtSuccess),
     FactualStmtSuccess(FactualStmtSuccess),
     StmtUnknown(StmtUnknown),
 }
 
+impl From<NonFactualStmtSuccess> for StmtResult {
+    fn from(v: NonFactualStmtSuccess) -> Self {
+        StmtResult::NonFactualStmtSuccess(v)
+    }
+}
+
+impl From<FactualStmtSuccess> for StmtResult {
+    fn from(v: FactualStmtSuccess) -> Self {
+        StmtResult::FactualStmtSuccess(v)
+    }
+}
+
+impl From<StmtUnknown> for StmtResult {
+    fn from(v: StmtUnknown) -> Self {
+        StmtResult::StmtUnknown(v)
+    }
+}
+
 const VERIFIED_BY: &str = "verified by";
 const INFER_COLON: &str = "infer:";
 
-impl StmtExecResult {
+impl StmtResult {
     pub fn with_infers(mut self, infer_result: InferResult) -> Self {
         match &mut self {
-            StmtExecResult::NonFactualStmtSuccess(x) => {
-                x.infers.new_infer_result_inside(infer_result)
-            }
-            StmtExecResult::FactualStmtSuccess(x) => {
-                x.infers.new_infer_result_inside(infer_result)
-            }
-            StmtExecResult::StmtUnknown(_) => {}
+            StmtResult::NonFactualStmtSuccess(x) => x.infers.new_infer_result_inside(infer_result),
+            StmtResult::FactualStmtSuccess(x) => x.infers.new_infer_result_inside(infer_result),
+            StmtResult::StmtUnknown(_) => {}
         }
         self
     }
 }
 
-impl StmtExecResult {
+impl StmtResult {
     fn infer_block_string(infer_result: &InferResult) -> String {
         if infer_result.is_empty() {
             return String::new();
@@ -40,7 +54,7 @@ impl StmtExecResult {
     /// Returns the result body string without any line/file prefix (for tests or when location is not needed).
     pub fn body_string(&self) -> String {
         match self {
-            StmtExecResult::NonFactualStmtSuccess(x) => {
+            StmtResult::NonFactualStmtSuccess(x) => {
                 format!(
                     "{}\n{}{}",
                     SUCCESS_COLON,
@@ -48,7 +62,7 @@ impl StmtExecResult {
                     Self::infer_block_string(&x.infers)
                 )
             }
-            StmtExecResult::FactualStmtSuccess(x) => {
+            StmtResult::FactualStmtSuccess(x) => {
                 format!(
                     "{}\n{}\n{}\n{}{}",
                     SUCCESS_COLON,
@@ -58,36 +72,36 @@ impl StmtExecResult {
                     Self::infer_block_string(&x.infers)
                 )
             }
-            StmtExecResult::StmtUnknown(x) => x.to_string(),
+            StmtResult::StmtUnknown(x) => x.to_string(),
         }
     }
 }
 
-impl StmtExecResult {
+impl StmtResult {
     #[allow(dead_code)]
     pub fn line_file(&self) -> LineFile {
         match self {
-            StmtExecResult::NonFactualStmtSuccess(x) => x.stmt.line_file(),
-            StmtExecResult::FactualStmtSuccess(x) => x.stmt.line_file(),
-            StmtExecResult::StmtUnknown(_) => default_line_file(),
+            StmtResult::NonFactualStmtSuccess(x) => x.stmt.line_file(),
+            StmtResult::FactualStmtSuccess(x) => x.stmt.line_file(),
+            StmtResult::StmtUnknown(_) => default_line_file(),
         }
     }
 }
 
-impl StmtExecResult {
+impl StmtResult {
     pub fn is_true(&self) -> bool {
         match self {
-            StmtExecResult::NonFactualStmtSuccess(_) => true,
-            StmtExecResult::FactualStmtSuccess(_) => true,
-            StmtExecResult::StmtUnknown(_) => false,
+            StmtResult::NonFactualStmtSuccess(_) => true,
+            StmtResult::FactualStmtSuccess(_) => true,
+            StmtResult::StmtUnknown(_) => false,
         }
     }
 
     pub fn is_unknown(&self) -> bool {
         match self {
-            StmtExecResult::StmtUnknown(_) => true,
-            StmtExecResult::NonFactualStmtSuccess(_) => false,
-            StmtExecResult::FactualStmtSuccess(_) => false,
+            StmtResult::StmtUnknown(_) => true,
+            StmtResult::NonFactualStmtSuccess(_) => false,
+            StmtResult::FactualStmtSuccess(_) => false,
         }
     }
 }

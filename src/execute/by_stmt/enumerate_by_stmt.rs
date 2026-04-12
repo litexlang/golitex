@@ -4,9 +4,9 @@ impl Runtime {
     pub fn exec_by_enumerate_stmt(
         &mut self,
         stmt: &ByEnumerateStmt,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt.clone().into(),
                 msg,
                 None,
@@ -16,7 +16,7 @@ impl Runtime {
 
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by enumerate: corresponding forall `{}` is not well-defined",
@@ -37,7 +37,7 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!(
                             "by enumerate: failed to store corresponding forall `{}`",
@@ -51,13 +51,11 @@ impl Runtime {
                 &corresponding_forall_fact,
                 infer_result_from_stored_forall_fact,
             );
-            return Ok(StmtExecResult::NonFactualStmtSuccess(
-                NonFactualStmtSuccess::new(
+            return Ok((NonFactualStmtSuccess::new(
                     stmt.clone().into(),
                     infer_result,
                     vec![],
-                ),
-            ));
+                )).into());
         }
 
         let mut current_parameter_index_assignment = Self::by_enumerate_start_index_assignment(stmt);
@@ -81,7 +79,7 @@ impl Runtime {
                 corresponding_forall_fact.clone(),
             )
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by enumerate: failed to store corresponding forall `{}`",
@@ -97,13 +95,11 @@ impl Runtime {
             infer_result_from_stored_forall_fact,
         );
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 stmt.clone().into(),
                 infer_result,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     /// Puts the generated forall fact first via [`InferResult::new_fact`], then appends infer from store.

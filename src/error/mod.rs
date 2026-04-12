@@ -1,3 +1,8 @@
 mod error;
 
-pub use error::{ConflictMsg, RuntimeError, RuntimeErrorStruct};
+pub use error::{
+    ArithmeticRuntimeError, ConflictMsg, DefineParamsRuntimeError, InstantiateRuntimeError,
+    InferRuntimeError, NameAlreadyUsedRuntimeError, NewAtomicFactRuntimeError, ParseRuntimeError,
+    RuntimeError, RuntimeErrorStruct, StoreFactRuntimeError, UnknownRuntimeError,
+    VerifyRuntimeError, WellDefinedRuntimeError,
+};
