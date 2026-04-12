@@ -100,7 +100,7 @@ impl Runtime {
             let pt = self.inst_param_type(&field_st.to_param_type(), &param_to_arg_map)?;
             cart_dims.push(self.param_type_to_cart_dimension_obj(&pt)?);
         }
-        let cart_obj = Obj::Cart(Cart::new(cart_dims));
+        let cart_obj = Cart::new(cart_dims).into();
 
         let verify_state = VerifyState::new(0, false);
         self.verify_obj_well_defined_and_store_cache(&stmt.struct_obj, &verify_state)
@@ -129,7 +129,7 @@ impl Runtime {
         let forall_param = random_names[0].clone();
         let set_builder_param = random_names[1].clone();
 
-        let forall_param_obj = Obj::Identifier(Identifier::new(forall_param.clone()));
+        let forall_param_obj: Obj = forall_param.clone().into();
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
@@ -141,11 +141,9 @@ impl Runtime {
         )));
         for (i, (field_name, _)) in def.fields.iter().enumerate() {
             let idx = i + 1;
-            let lhs = Obj::ObjAtIndex(ObjAtIndex::new(
-                forall_param_obj.clone(),
-                Obj::Number(Number::new(idx.to_string())),
-            ));
-            let rhs = Obj::FieldAccess(FieldAccess::new(forall_param.clone(), field_name.clone()));
+            let lhs = ObjAtIndex::new(forall_param_obj.clone(),
+                Number::new(idx.to_string()).into()).into();
+            let rhs = FieldAccess::new(forall_param.clone(), field_name.clone()).into();
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
                 AtomicFact::EqualFact(EqualFact::new(lhs, rhs, stmt.line_file.clone())),
             ));
@@ -164,19 +162,17 @@ impl Runtime {
         // `<=>:` 里 `self.field` 在定义验证时按「tuple 模型」展开。set-builder 的域变量 `x` 在 cart 上，
         // 故令 `self` 为 `(R, x[1], x[2], …)`：与 `def.fields` + `number_of_params` 的 tuple 下标一致，
         // `inst_field_access` 会把 `self.b` 等变成 `x[1]` 而非非法的 `x.b`。
-        let x_obj = Obj::Identifier(Identifier::new(set_builder_param.clone()));
+        let x_obj: Obj = set_builder_param.clone().into();
         let mut tuple_components: Vec<Obj> =
             Vec::with_capacity(def.number_of_params() + def.fields.len());
         for a in struct_ty.args.iter() {
             tuple_components.push(a.clone());
         }
         for i in 0..def.fields.len() {
-            tuple_components.push(Obj::ObjAtIndex(ObjAtIndex::new(
-                x_obj.clone(),
-                Obj::Number(Number::new((i + 1).to_string())),
-            )));
+            tuple_components.push(ObjAtIndex::new(x_obj.clone(),
+                Number::new((i + 1).to_string()).into()).into());
         }
-        let self_as_tuple = Obj::Tuple(Tuple::new(tuple_components));
+        let self_as_tuple = Tuple::new(tuple_components).into();
 
         let mut extended_for_sb: HashMap<String, Obj> = param_to_arg_map.clone();
         extended_for_sb.insert(SELF.to_string(), self_as_tuple);

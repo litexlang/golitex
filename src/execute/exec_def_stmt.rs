@@ -21,14 +21,12 @@ impl Runtime {
     ) -> Obj {
         let mut function_args: Vec<Box<Obj>> = Vec::with_capacity(param_names.len());
         for param_name in param_names.iter() {
-            function_args.push(Box::new(Obj::Identifier(Identifier::new(
-                param_name.clone(),
-            ))));
+            function_args.push(Box::new(param_name.clone().into()));
         }
 
-        let fn_head_atom = Atom::Identifier(Identifier::new(function_name.to_string()));
+        let fn_head_atom = Atom::from(Identifier::new(function_name.to_string()));
         let fn_body_groups = vec![function_args];
-        Obj::FnObj(FnObj::new(fn_head_atom, fn_body_groups))
+        FnObj::new(fn_head_atom, fn_body_groups).into()
     }
 
     pub fn exec_def_prop_stmt(
@@ -296,7 +294,7 @@ impl Runtime {
             .zip(have_obj_equal_stmt.objs_equal_to.iter())
         {
             let equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
-                Obj::Identifier(Identifier::new(name.clone())),
+                name.clone().into(),
                 obj.clone(),
                 have_obj_equal_stmt.line_file.clone(),
             ));
@@ -365,7 +363,7 @@ impl Runtime {
         let new_obj_names_as_identifier_objs = have_exist_obj_stmt
             .equal_tos
             .iter()
-            .map(|s| Obj::Identifier(Identifier::new(s.clone())))
+            .map(|s| s.clone().into())
             .collect();
 
         let mut infer_result = self
@@ -451,7 +449,7 @@ impl Runtime {
         self.store_identifier_obj(&have_fn_equal_stmt.name)?;
 
         let function_identifier_obj =
-            Obj::Identifier(Identifier::new(have_fn_equal_stmt.name.clone()));
+            have_fn_equal_stmt.name.clone().into();
         let function_set_obj = Obj::FnSet(fn_set_stored.clone());
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,
@@ -650,9 +648,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeErrorStruct> {
         self.store_identifier_obj(&have_fn_equal_case_by_case_stmt.name)?;
 
-        let function_identifier_obj = Obj::Identifier(Identifier::new(
-            have_fn_equal_case_by_case_stmt.name.clone(),
-        ));
+        let function_identifier_obj = have_fn_equal_case_by_case_stmt.name.clone().into();
         let function_set_obj = Obj::FnSet(fn_set_stored.clone());
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,

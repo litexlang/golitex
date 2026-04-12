@@ -96,3 +96,21 @@ impl Fact {
         }
     }
 }
+
+impl From<AtomicFact> for Fact {
+    fn from(atomic_fact: AtomicFact) -> Self {
+        Fact::AtomicFact(atomic_fact)
+    }
+}
+
+impl From<OrFact> for Fact {
+    fn from(or_fact: OrFact) -> Self {
+        Fact::OrFact(or_fact)
+    }
+}
+
+impl From<ForallFact> for Fact {
+    fn from(forall_fact: ForallFact) -> Self {
+        Fact::ForallFact(forall_fact)
+    }
+}

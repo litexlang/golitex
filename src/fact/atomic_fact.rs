@@ -2090,3 +2090,39 @@ impl AtomicFact {
         (calculated_atomic_fact, any_argument_replaced)
     }
 }
+
+impl From<InFact> for AtomicFact {
+    fn from(f: InFact) -> Self {
+        AtomicFact::InFact(f)
+    }
+}
+
+impl From<EqualFact> for AtomicFact {
+    fn from(f: EqualFact) -> Self {
+        AtomicFact::EqualFact(f)
+    }
+}
+
+impl From<LessFact> for AtomicFact {
+    fn from(f: LessFact) -> Self {
+        AtomicFact::LessFact(f)
+    }
+}
+
+impl From<GreaterEqualFact> for AtomicFact {
+    fn from(f: GreaterEqualFact) -> Self {
+        AtomicFact::GreaterEqualFact(f)
+    }
+}
+
+impl From<InFact> for Fact {
+    fn from(f: InFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<EqualFact> for Fact {
+    fn from(f: EqualFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}

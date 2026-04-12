@@ -19,7 +19,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<StmtResult, RuntimeErrorStruct> {
-        let function_name_obj = Obj::Identifier(Identifier::new(def_algo_stmt.name.clone()));
+        let function_name_obj: Obj = def_algo_stmt.name.clone().into();
         let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
             Some(fn_set) => fn_set,
             None => {
@@ -103,7 +103,7 @@ impl Runtime {
     ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
-            args_for_algo_params.push(Obj::Identifier(Identifier::new(param_name.clone())));
+            args_for_algo_params.push(param_name.clone().into());
         }
 
         let param_satisfy_fn_param_set_facts_atomic =
@@ -141,7 +141,7 @@ impl Runtime {
         {
             fn_set_param_name_to_algo_arg_obj.insert(
                 fn_set_param_name.clone(),
-                Obj::Identifier(Identifier::new(algo_param_name.clone())),
+                algo_param_name.clone().into(),
             );
         }
 
@@ -205,14 +205,10 @@ impl Runtime {
     fn build_algo_verification_fn_call_obj(def_algo_stmt: &DefAlgoStmt) -> Obj {
         let mut fn_call_arg_boxes: Vec<Box<Obj>> = Vec::with_capacity(def_algo_stmt.params.len());
         for algo_param_name in def_algo_stmt.params.iter() {
-            fn_call_arg_boxes.push(Box::new(Obj::Identifier(Identifier::new(
-                algo_param_name.clone(),
-            ))));
+            fn_call_arg_boxes.push(Box::new(algo_param_name.clone().into()));
         }
-        Obj::FnObj(FnObj::new(
-            Atom::Identifier(Identifier::new(def_algo_stmt.name.clone())),
-            vec![fn_call_arg_boxes],
-        ))
+        FnObj::new(Atom::from(Identifier::new(def_algo_stmt.name.clone())),
+            vec![fn_call_arg_boxes]).into()
     }
 
     fn requirement_facts_to_exist_or_and_chain_dom_facts(

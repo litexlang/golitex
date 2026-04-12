@@ -295,10 +295,8 @@ impl Runtime {
             )?;
 
             if induc_from_is_number_obj {
-                let induc_from_add_i = Obj::Add(Add::new(
-                    induc_from.clone(),
-                    Obj::Number(Number::new(i.to_string())),
-                ));
+                let induc_from_add_i: Obj = Add::new(induc_from.clone(),
+                    Into::<Obj>::into(Number::new(i.to_string()))).into();
 
                 if !induc_from_add_i
                     .two_objs_can_be_calculated_and_equal_by_calculation(&slot_label)
@@ -315,10 +313,8 @@ impl Runtime {
                     );
                 }
             } else {
-                let induc_from_add_i = Obj::Add(Add::new(
-                    induc_from.clone(),
-                    Obj::Number(Number::new(i.to_string())),
-                ));
+                let induc_from_add_i: Obj = Add::new(induc_from.clone(),
+                    Into::<Obj>::into(Number::new(i.to_string()))).into();
 
                 if induc_from_add_i.to_string() != slot_label.to_string() {
                     return Err(
@@ -356,10 +352,8 @@ impl Runtime {
         let last_bound = self.parse_obj(last_block)?;
 
         if induc_from_is_number_obj {
-            let induc_from_add_n = Obj::Add(Add::new(
-                induc_from.clone(),
-                Obj::Number(Number::new(num_special.to_string())),
-            ));
+            let induc_from_add_n: Obj = Add::new(induc_from.clone(),
+                Into::<Obj>::into(Number::new(num_special.to_string()))).into();
             if !induc_from_add_n.two_objs_can_be_calculated_and_equal_by_calculation(&last_bound) {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -373,10 +367,8 @@ impl Runtime {
                 );
             }
         } else {
-            let induc_from_add_n = Obj::Add(Add::new(
-                induc_from.clone(),
-                Obj::Number(Number::new(num_special.to_string())),
-            ));
+            let induc_from_add_n: Obj = Add::new(induc_from.clone(),
+                Into::<Obj>::into(Number::new(num_special.to_string()))).into();
             if induc_from_add_n.to_string() != last_bound.to_string() {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(

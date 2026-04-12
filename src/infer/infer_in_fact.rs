@@ -54,7 +54,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let member_set = self.instantiate_family_member_set(family_ty)?;
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
+            name.to_string().into(),
             member_set,
             default_line_file(),
         )));
@@ -238,8 +238,8 @@ impl Runtime {
                     })?;
 
                 let cart_args_count = cart.args.len();
-                let tuple_dim_obj = Obj::TupleDim(TupleDim::new(in_fact.element.clone()));
-                let cart_args_count_obj = Obj::Number(Number::new(cart_args_count.to_string()));
+                let tuple_dim_obj = TupleDim::new(in_fact.element.clone()).into();
+                let cart_args_count_obj = Number::new(cart_args_count.to_string()).into();
                 let tuple_dim_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                     tuple_dim_obj,
                     cart_args_count_obj,
@@ -281,7 +281,7 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::RPos)
             | Obj::StandardSet(StandardSet::NPos) => {
-                let zero_obj = Obj::Number(Number::new("0".to_string()));
+                let zero_obj: Obj = Number::new("0".to_string()).into();
                 let inferred_atomic_fact = AtomicFact::LessFact(LessFact::new(
                     zero_obj,
                     in_fact.element.clone(),
@@ -307,7 +307,7 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNeg)
             | Obj::StandardSet(StandardSet::ZNeg)
             | Obj::StandardSet(StandardSet::RNeg) => {
-                let zero_obj = Obj::Number(Number::new("0".to_string()));
+                let zero_obj: Obj = Number::new("0".to_string()).into();
                 let inferred_atomic_fact = AtomicFact::LessFact(LessFact::new(
                     in_fact.element.clone(),
                     zero_obj,
@@ -333,7 +333,7 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNz)
             | Obj::StandardSet(StandardSet::ZNz)
             | Obj::StandardSet(StandardSet::RNz) => {
-                let zero_obj = Obj::Number(Number::new("0".to_string()));
+                let zero_obj: Obj = Number::new("0".to_string()).into();
                 let inferred_atomic_fact = AtomicFact::NotEqualFact(NotEqualFact::new(
                     in_fact.element.clone(),
                     zero_obj,
@@ -380,7 +380,7 @@ impl Runtime {
 
         let inferred_in_z_fact = AtomicFact::InFact(InFact::new(
             element.clone(),
-            Obj::StandardSet(StandardSet::Z),
+            StandardSet::Z.into(),
             lf.clone(),
         ));
         let mut infer_result = InferResult::new();

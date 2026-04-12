@@ -43,3 +43,21 @@ impl ExistOrAndChainAtomicFact {
         }
     }
 }
+
+impl From<AtomicFact> for ExistOrAndChainAtomicFact {
+    fn from(atomic_fact: AtomicFact) -> Self {
+        ExistOrAndChainAtomicFact::AtomicFact(atomic_fact)
+    }
+}
+
+impl From<GreaterEqualFact> for ExistOrAndChainAtomicFact {
+    fn from(f: GreaterEqualFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
+impl From<EqualFact> for ExistOrAndChainAtomicFact {
+    fn from(f: EqualFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
