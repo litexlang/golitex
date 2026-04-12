@@ -207,7 +207,7 @@ impl Runtime {
         for algo_param_name in def_algo_stmt.params.iter() {
             fn_call_arg_boxes.push(Box::new(algo_param_name.clone().into()));
         }
-        FnObj::new(Atom::from(Identifier::new(def_algo_stmt.name.clone())),
+        FnObj::new(Identifier::new(def_algo_stmt.name.clone()).into(),
             vec![fn_call_arg_boxes]).into()
     }
 
