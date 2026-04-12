@@ -109,7 +109,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeErrorStruct> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
-        let fact_for_infer = fact.to_fact();
+        let fact_for_infer: Fact = fact.clone().into();
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
 
         self.top_level_env()

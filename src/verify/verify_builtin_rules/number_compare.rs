@@ -177,7 +177,7 @@ impl Runtime {
             if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
                 return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
+                        less_equal_fact.clone().into(),
                         "less_equal_fact_equal".to_string(),
                         Vec::new(),
                     ),
@@ -194,7 +194,7 @@ impl Runtime {
             if cache_ok {
                 return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
+                        less_equal_fact.clone().into(),
                         strict_key,
                         Some(strict_fact),
                         Some(cache_line_file),
@@ -207,7 +207,7 @@ impl Runtime {
             if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
                 return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        Fact::AtomicFact(AtomicFact::GreaterEqualFact(greater_equal_fact.clone())),
+                        greater_equal_fact.clone().into(),
                         "greater_equal_fact_equal".to_string(),
                         Vec::new(),
                     ),
@@ -217,7 +217,7 @@ impl Runtime {
         if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
             StmtResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(atomic_fact.clone()),
+                    atomic_fact.clone().into(),
                     "number comparison".to_string(),
                     Vec::new(),
                 ),

@@ -74,6 +74,12 @@ impl From<LessFact> for OrAndChainAtomicFact {
     }
 }
 
+impl From<EqualFact> for OrAndChainAtomicFact {
+    fn from(f: EqualFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
 #[derive(Clone)]
 pub struct ExistFact {
     pub params_def_with_type: Vec<ParamGroupWithParamType>,

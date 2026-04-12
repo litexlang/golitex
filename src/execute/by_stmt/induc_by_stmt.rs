@@ -105,24 +105,24 @@ impl Runtime {
         let next_fact_of_induction_step = self
             .inst_exist_or_and_chain_atomic_fact(fact, &induction_step_param_to_obj_map)?;
 
-        let corresponding_forall_fact = Fact::ForallFact(ForallFact::new(
+        let corresponding_forall_fact = ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![stmt.param.clone()],
                 ParamType::Obj(StandardSet::Z.into()),
             )],
             vec![
-                ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(
-                    GreaterEqualFact::new(
-                        param_as_identifier,
-                        stmt.induc_from.clone(),
-                        stmt.line_file.clone(),
-                    ),
-                )),
+                GreaterEqualFact::new(
+                    param_as_identifier,
+                    stmt.induc_from.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into(),
                 fact.clone(),
             ],
             vec![next_fact_of_induction_step],
             stmt.line_file.clone(),
-        ));
+        )
+        .into();
 
         self.verify_fact_return_err_if_not_true(
             &corresponding_forall_fact,

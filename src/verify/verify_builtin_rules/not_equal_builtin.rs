@@ -16,7 +16,7 @@ impl Runtime {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
                     return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
+                            not_equal_fact.clone().into(),
                             "calculation".to_string(),
                             Vec::new(),
                         )).into());
@@ -327,7 +327,7 @@ impl Runtime {
         match builtin_rule_label {
             Some(rule_label) => Ok(Some(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
+                    not_equal_fact.clone().into(),
                     rule_label.to_string(),
                     Vec::new(),
                 ))

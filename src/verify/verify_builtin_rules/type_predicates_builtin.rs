@@ -8,7 +8,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match &is_nonempty_set_fact.set {
             Obj::StandardSet(_) => Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
+                    is_nonempty_set_fact.clone().into(),
                     "standard_nonempty_set".to_string(),
                     Vec::new(),
                 )).into()),
@@ -17,9 +17,7 @@ impl Runtime {
                     Ok((StmtUnknown::new()).into())
                 } else {
                     Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                                is_nonempty_set_fact.clone(),
-                            )),
+                            is_nonempty_set_fact.clone().into(),
                             "list_set_nonempty_has_member_in_syntax".to_string(),
                             Vec::new(),
                         )).into())
@@ -42,9 +40,7 @@ impl Runtime {
                 }
 
                 Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                            is_nonempty_set_fact.clone(),
-                        )),
+                        is_nonempty_set_fact.clone().into(),
                         format!(
                             "sets `{}` in `{}` are nonempty sets",
                             cart.args
@@ -68,9 +64,7 @@ impl Runtime {
                 )?;
                 if ret_check.is_true() {
                     Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                                is_nonempty_set_fact.clone(),
-                            )),
+                            is_nonempty_set_fact.clone().into(),
                             "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
                             Vec::new(),
                         )).into())
@@ -89,7 +83,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match &is_finite_set_fact.set {
             Obj::ListSet(_) => Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::IsFiniteSetFact(is_finite_set_fact.clone())),
+                    is_finite_set_fact.clone().into(),
                     "list_set_finite".to_string(),
                     Vec::new(),
                 )).into()),
@@ -105,7 +99,7 @@ impl Runtime {
         match &is_cart_fact.set {
             Obj::Cart(_) => {
                 return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        Fact::AtomicFact(AtomicFact::IsCartFact(is_cart_fact.clone())),
+                        is_cart_fact.clone().into(),
                         "any `cart` object is a cart".to_string(),
                         Vec::new(),
                     )).into());
@@ -125,7 +119,7 @@ impl Runtime {
                     return Ok((StmtUnknown::new()).into());
                 }
                 return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
+                        is_tuple_fact.clone().into(),
                         "any `cart_dim` object is a cart_dim".to_string(),
                         Vec::new(),
                     )).into());
@@ -137,7 +131,7 @@ impl Runtime {
                     .get(&is_tuple_fact.set.to_string())
                 {
                     return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
+                            is_tuple_fact.clone().into(),
                             "it is a known tuple".to_string(),
                             Vec::new(),
                         )).into());
@@ -156,9 +150,7 @@ impl Runtime {
         if let Obj::ListSet(list_set) = &not_is_nonempty_set_fact.set {
             if list_set.list.is_empty() {
                 return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        Fact::AtomicFact(AtomicFact::NotIsNonemptySetFact(
-                            not_is_nonempty_set_fact.clone(),
-                        )),
+                        not_is_nonempty_set_fact.clone().into(),
                         "list_set_empty".to_string(),
                         Vec::new(),
                     )).into());

@@ -794,7 +794,7 @@ impl Runtime {
         equal_to: &Obj,
     ) -> Result<(), RuntimeErrorStruct> {
         let verify_state = VerifyState::new(0, false);
-        let case_fact_as_fact = case_fact.to_fact();
+        let case_fact_as_fact: Fact = case_fact.clone().into();
 
         for param_def_with_set in have_fn_equal_case_by_case_stmt
             .fn_set_clause

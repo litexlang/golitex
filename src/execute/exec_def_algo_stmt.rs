@@ -256,24 +256,22 @@ impl Runtime {
         for requirement_dom_fact in requirement_dom_facts.iter() {
             case_dom_facts.push(requirement_dom_fact.clone());
         }
-        case_dom_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
-            algo_case.condition.clone(),
-        ));
+        case_dom_facts.push(algo_case.condition.clone().into());
 
-        let case_then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
-            EqualFact::new(
-                fn_call_obj.clone(),
-                algo_case.return_stmt.value.clone(),
-                algo_case.line_file.clone(),
-            ).into(),
-        )];
+        let case_then_facts = vec![EqualFact::new(
+            fn_call_obj.clone(),
+            algo_case.return_stmt.value.clone(),
+            algo_case.line_file.clone(),
+        )
+        .into()];
 
-        Fact::ForallFact(ForallFact::new(
+        ForallFact::new(
             algo_param_defs_with_type.to_vec(),
             case_dom_facts,
             case_then_facts,
             algo_case.line_file.clone(),
-        ))
+        )
+        .into()
     }
 
     fn verify_each_def_algo_case_implies_return(
@@ -332,12 +330,13 @@ impl Runtime {
             case_conditions.push(AndChainAtomicFact::AtomicFact(algo_case.condition.clone()));
         }
         let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file.clone());
-        let coverage_forall_fact = Fact::ForallFact(ForallFact::new(
+        let coverage_forall_fact = ForallFact::new(
             algo_param_defs_with_type.to_vec(),
             requirement_dom_facts.to_vec(),
             vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
             def_algo_stmt.line_file.clone(),
-        ));
+        )
+        .into();
 
         let verify_state = VerifyState::new(0, false);
         self.verify_fact_return_err_if_not_true(&coverage_forall_fact, &verify_state)
