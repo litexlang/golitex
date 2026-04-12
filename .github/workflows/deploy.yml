@@ -192,9 +192,8 @@ jobs:
       - name: Build .msi
         shell: bash
         run: |
-          WIX_VERSION=$(echo "${VERSION}" | sed 's/-.*//').0
-          sed -i "s/version = \"${VERSION}\"/version = \"${WIX_VERSION}\"/" Cargo.toml
-          cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi"
+          WIX_VERSION=$(echo "${VERSION}" | sed 's/-.*//')
+          cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi" --install-version "${WIX_VERSION}"
 
       - name: Upload .msi
         uses: actions/upload-artifact@v4
