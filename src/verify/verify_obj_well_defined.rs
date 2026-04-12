@@ -1050,17 +1050,16 @@ impl Runtime {
             default_line_file(),
         );
 
-        let forall_x_in_choose_from_x_is_nonempty = Fact::ForallFact(ForallFact::new(
+        let forall_x_in_choose_from_x_is_nonempty = ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![random_param.clone().to_string()],
                 ParamType::Obj(choose_from),
             )],
             vec![],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(
-                AtomicFact::IsNonemptySetFact(nonempty_set_fact),
-            )],
+            vec![nonempty_set_fact.into()],
             default_line_file(),
-        ));
+        )
+        .into();
 
         self.verify_fact(&forall_x_in_choose_from_x_is_nonempty, _verify_state)?;
 

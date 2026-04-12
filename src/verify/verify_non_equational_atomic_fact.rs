@@ -339,28 +339,28 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
-        let membership_forall_fact = Fact::ForallFact(ForallFact::new(
+        let membership_forall_fact = ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
                 ParamType::Obj(subset_fact.left.clone()),
             )],
             vec![],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
-                InFact::new(
-                    bound_param_name.into(),
-                    subset_fact.right.clone(),
-                    subset_fact.line_file.clone(),
-                ),
-            ))],
+            vec![InFact::new(
+                bound_param_name.into(),
+                subset_fact.right.clone(),
+                subset_fact.line_file.clone(),
+            )
+            .into()],
             subset_fact.line_file.clone(),
-        ));
+        )
+        .into();
         let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
+                subset_fact.clone().into(),
                 "subset by definition (forall x in left: x in right)".to_string(),
                 Vec::new(),
             ))
@@ -374,28 +374,28 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
-        let membership_forall_fact = Fact::ForallFact(ForallFact::new(
+        let membership_forall_fact = ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
                 ParamType::Obj(superset_fact.right.clone()),
             )],
             vec![],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
-                InFact::new(
-                    bound_param_name.into(),
-                    superset_fact.left.clone(),
-                    superset_fact.line_file.clone(),
-                ),
-            ))],
+            vec![InFact::new(
+                bound_param_name.into(),
+                superset_fact.left.clone(),
+                superset_fact.line_file.clone(),
+            )
+            .into()],
             superset_fact.line_file.clone(),
-        ));
+        )
+        .into();
         let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
+                superset_fact.clone().into(),
                 "superset by definition (forall x in right: x in left)".to_string(),
                 Vec::new(),
             ))
@@ -469,7 +469,7 @@ impl Runtime {
                 .inst_fact(iff_fact, &param_to_arg_map)
                 .map_err(|e| {
                     RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal_atomic_fact.clone())),
+                        normal_atomic_fact.clone().into(),
                         String::new(),
                         normal_atomic_fact.line_file.clone(),
                         Some(e),
@@ -498,12 +498,10 @@ impl Runtime {
             predicate_name,
             definition_clause_descriptions.join("; ")
         );
-        infer_result.new_fact(&Fact::AtomicFact(AtomicFact::NormalAtomicFact(
-            normal_atomic_fact.clone(),
-        )));
+        infer_result.new_fact(&normal_atomic_fact.clone().into());
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_known_fact_source(
-                Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal_atomic_fact.clone())),
+                normal_atomic_fact.clone().into(),
                 infer_result,
                 verified_by_text,
                 None,

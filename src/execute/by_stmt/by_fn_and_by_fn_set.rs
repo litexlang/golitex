@@ -97,26 +97,29 @@ impl Runtime {
         };
         let forall_element_cart_set =
             Cart::new(vec![forall_arg_dom, forall_ret_set.clone()]).into();
-        let forall_shape = Fact::ForallFact(ForallFact::new(
+        let forall_shape = ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![forall_element_name.clone()],
                 ParamType::Obj(function.clone()),
             )],
             vec![],
             vec![
-                ExistOrAndChainAtomicFact::AtomicFact(InFact::new(
+                InFact::new(
                     forall_element_obj.clone(),
                     forall_element_cart_set,
                     line_file.clone(),
-                ).into()),
-                ExistOrAndChainAtomicFact::AtomicFact(EqualFact::new(
+                )
+                .into(),
+                EqualFact::new(
                     TupleDim::new(forall_element_obj.clone()).into(),
                     Number::new("2".to_string()).into(),
                     line_file.clone(),
-                ).into()),
+                )
+                .into(),
             ],
             line_file.clone(),
-        ));
+        )
+        .into();
         let forall_z_obj = forall_z_name.clone().into();
         let pair_in_fn = if param_names.len() == 1 {
             Tuple::new(vec![forall_args[0].clone(), forall_z_obj]).into()
@@ -126,13 +129,13 @@ impl Runtime {
                 forall_z_obj,
             ]).into()
         };
-        let forall_in = Fact::ForallFact(ForallFact::new(
+        let forall_in = ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![forall_element_name],
                 ParamType::Obj(function.clone()),
             )],
             vec![],
-            vec![ExistOrAndChainAtomicFact::ExistFact(ExistFact::new(
+            vec![ExistFact::new(
                 {
                     let mut exist_param_defs = forall_param_defs_with_type;
                     exist_param_defs.push(ParamGroupWithParamType::new(
@@ -165,15 +168,15 @@ impl Runtime {
                             })?,
                         );
                     }
-                    facts.push(OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                        EqualFact::new(forall_element_obj, pair_in_fn, line_file.clone()),
-                    )));
+                    facts.push(EqualFact::new(forall_element_obj, pair_in_fn, line_file.clone()).into());
                     facts
                 },
                 line_file.clone(),
-            ))],
+            )
+            .into()],
             line_file.clone(),
-        ));
+        )
+        .into();
 
         let mut generated_exist_names = self
             .generate_random_unused_names(param_names.len() + 2)
@@ -248,12 +251,10 @@ impl Runtime {
                 ),
                 ParamGroupWithParamType::new(vec![exist_z_name], ParamType::Obj(exist_ret_set)),
             ],
-            vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                EqualFact::new(exist_element_obj, exist_pair, line_file.clone()),
-            ))],
+            vec![EqualFact::new(exist_element_obj, exist_pair, line_file.clone()).into()],
             line_file.clone(),
         );
-        let forall_exist = Fact::ForallFact(ForallFact::new(
+        let forall_exist = ForallFact::new(
             exist_param_defs_with_type,
             {
                 let mut dom_facts: Vec<ExistOrAndChainAtomicFact> =
@@ -279,9 +280,10 @@ impl Runtime {
                 }
                 dom_facts
             },
-            vec![ExistOrAndChainAtomicFact::ExistFact(exist_fact)],
+            vec![exist_fact.into()],
             line_file.clone(),
-        ));
+        )
+        .into();
 
         let unique_names = self.generate_random_unused_names(2);
         let unique_x1_name = unique_names[0].clone();
@@ -304,39 +306,42 @@ impl Runtime {
         ])
         .into();
         // 与手写标准一致：dom 为两元在图集内且首分量相同，then 仅为 x1 = x2
-        let forall_unique = Fact::ForallFact(ForallFact::new(
+        let forall_unique = ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![unique_x1_name, unique_x2_name],
                 ParamType::Obj(function.clone()),
             )],
             vec![
-                ExistOrAndChainAtomicFact::AtomicFact(InFact::new(
+                InFact::new(
                     unique_x1_obj.clone(),
                     unique_element_cart_set.clone(),
                     line_file.clone(),
-                ).into()),
-                ExistOrAndChainAtomicFact::AtomicFact(InFact::new(
+                )
+                .into(),
+                InFact::new(
                     unique_x2_obj.clone(),
                     unique_element_cart_set.clone(),
                     line_file.clone(),
-                ).into()),
-                ExistOrAndChainAtomicFact::AtomicFact(EqualFact::new(
+                )
+                .into(),
+                EqualFact::new(
                     ObjAtIndex::new(unique_x1_obj.clone(),
                         Number::new("1".to_string()).into()).into(),
                     ObjAtIndex::new(unique_x2_obj.clone(),
                         Number::new("1".to_string()).into()).into(),
                     line_file.clone(),
-                ).into()),
+                )
+                .into(),
             ],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(
-                EqualFact::new(
-                    unique_x1_obj,
-                    unique_x2_obj,
-                    line_file.clone(),
-                ).into(),
-            )],
+            vec![EqualFact::new(
+                unique_x1_obj,
+                unique_x2_obj,
+                line_file.clone(),
+            )
+            .into()],
             line_file.clone(),
-        ));
+        )
+        .into();
 
         Ok((forall_shape, forall_in, forall_exist, forall_unique))
     }

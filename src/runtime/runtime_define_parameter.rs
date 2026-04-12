@@ -9,12 +9,8 @@ fn fact_for_obj_satisfies_param_type_shallow(
         ParamType::Set(_) => {
             IsSetFact::new(arg, line_file).into()
         }
-        ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-            IsNonemptySetFact::new(arg, line_file),
-        )),
-        ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(
-            IsFiniteSetFact::new(arg, line_file),
-        )),
+        ParamType::NonemptySet(_) => IsNonemptySetFact::new(arg, line_file).into(),
+        ParamType::FiniteSet(_) => IsFiniteSetFact::new(arg, line_file).into(),
         ParamType::Obj(obj) => {
             InFact::new(arg, obj.clone(), line_file).into()
         }

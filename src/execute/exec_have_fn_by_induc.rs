@@ -158,7 +158,7 @@ impl Runtime {
         .into();
 
         self.store_fact_without_well_defined_verified_and_infer(
-            param_larger_than_induc_plus_offset.to_fact(),
+            param_larger_than_induc_plus_offset.into(),
         )
         .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
 
@@ -201,7 +201,7 @@ impl Runtime {
                 for nested in last_pairs.iter() {
                     self.run_in_local_env(|rt| {
                         rt.store_fact_without_well_defined_verified_and_infer(
-                            nested.case_fact.to_fact(),
+                            nested.case_fact.clone().into(),
                         )
                         .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
                         rt.have_fn_by_induc_verify_one_equal_to_well_defined(

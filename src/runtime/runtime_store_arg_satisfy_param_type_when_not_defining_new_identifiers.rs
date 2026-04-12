@@ -16,12 +16,12 @@ impl Runtime {
                     arg.clone(),
                     _line_file.clone(),
                 ).into(),
-                ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                    IsNonemptySetFact::new(arg.clone(), _line_file.clone()),
-                )),
-                ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(
-                    IsFiniteSetFact::new(arg.clone(), _line_file.clone()),
-                )),
+                ParamType::NonemptySet(_) => {
+                    IsNonemptySetFact::new(arg.clone(), _line_file.clone()).into()
+                }
+                ParamType::FiniteSet(_) => {
+                    IsFiniteSetFact::new(arg.clone(), _line_file.clone()).into()
+                }
                 ParamType::Obj(obj) => InFact::new(
                     arg.clone(),
                     obj.clone(),
