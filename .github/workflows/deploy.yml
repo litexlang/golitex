@@ -68,11 +68,6 @@ jobs:
             os_name: linux
             arch: arm64
             cross: true
-          - target: x86_64-apple-darwin
-            runner: macos-latest
-            os_name: darwin
-            arch: amd64
-            cross: false
           - target: aarch64-apple-darwin
             runner: macos-latest
             os_name: darwin
@@ -93,7 +88,6 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      # Cross-compilation for linux arm64
       - name: Install cross
         if: matrix.cross
         run: cargo install cross --git https://github.com/cross-rs/cross
@@ -106,7 +100,6 @@ jobs:
         if: matrix.cross
         run: cross build --release --target ${{ matrix.target }}
 
-      # Rename binary to match existing naming convention
       - name: Rename binary (unix)
         if: matrix.os_name != 'windows'
         run: |
@@ -150,21 +143,18 @@ jobs:
 
       - name: Build .deb
         run: |
-          PKG_DIR="litex_${VERSION}_${{ matrix.deb_arch }}"
+          PKG_DIR="pkg_litex_${VERSION}_${{ matrix.deb_arch }}"
           mkdir -p "${PKG_DIR}/DEBIAN"
           mkdir -p "${PKG_DIR}/usr/local/bin"
 
-          # Create control file from template
           sed -e "s/{{VERSION}}/${VERSION}/" \
               -e "s/{{ARCH}}/${{ matrix.deb_arch }}/" \
               dist/deb/control.template > "${PKG_DIR}/DEBIAN/control"
 
-          # Copy binary
           cp "litex_${VERSION}_linux_${{ matrix.arch }}" "${PKG_DIR}/usr/local/bin/litex"
           chmod 755 "${PKG_DIR}/usr/local/bin/litex"
 
-          dpkg-deb --build "${PKG_DIR}"
-          mv "${PKG_DIR}.deb" "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
+          dpkg-deb --build "${PKG_DIR}" "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
 
       - name: Upload .deb
         uses: actions/upload-artifact@v4
@@ -173,12 +163,13 @@ jobs:
           path: litex_${{ env.VERSION }}_${{ matrix.deb_arch }}.deb
 
   # ─────────────────────────────────────────────
-  # Job 4: Package .msi (Windows)
+  # Job 4: Package .msi (Windows) - optional
   # ─────────────────────────────────────────────
   package-msi:
     name: Package .msi
     needs: [validate, build]
     runs-on: windows-latest
+    continue-on-error: true
     env:
       VERSION: ${{ needs.validate.outputs.version }}
     steps:
@@ -194,7 +185,7 @@ jobs:
       - name: Install cargo-wix
         run: cargo install cargo-wix
 
-      - name: Init WiX (generate template if not present)
+      - name: Init WiX
         run: cargo wix init --force
         continue-on-error: true
 
@@ -214,7 +205,7 @@ jobs:
   # ─────────────────────────────────────────────
   release:
     name: GitHub Release
-    needs: [validate, build, package-deb, package-msi]
+    needs: [validate, build, package-deb]
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.validate.outputs.version }}
@@ -266,14 +257,13 @@ jobs:
       - name: Download binaries for SHA256
         run: |
           BASE_URL="https://github.com/litexlang/golitex/releases/download/${VERSION}"
-          for pair in "darwin_amd64" "darwin_arm64" "linux_amd64" "linux_arm64"; do
+          for pair in "darwin_arm64" "linux_amd64" "linux_arm64"; do
             curl -fSL -o "litex_${VERSION}_${pair}" "${BASE_URL}/litex_${VERSION}_${pair}"
           done
 
       - name: Compute SHA256
         id: sha
         run: |
-          echo "darwin_amd64=$(sha256sum litex_${VERSION}_darwin_amd64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
           echo "darwin_arm64=$(sha256sum litex_${VERSION}_darwin_arm64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
           echo "linux_amd64=$(sha256sum litex_${VERSION}_linux_amd64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
           echo "linux_arm64=$(sha256sum litex_${VERSION}_linux_arm64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
@@ -295,13 +285,8 @@ jobs:
             license "Apache-2.0"
 
             on_macos do
-              if Hardware::CPU.arm?
-                url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_darwin_arm64"
-                sha256 "SHA_DARWIN_ARM64"
-              else
-                url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_darwin_amd64"
-                sha256 "SHA_DARWIN_AMD64"
-              end
+              url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_darwin_arm64"
+              sha256 "SHA_DARWIN_ARM64"
             end
 
             on_linux do
@@ -324,9 +309,7 @@ jobs:
           end
           FORMULA
 
-          # Replace placeholders
           sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" homebrew-tap/litex.rb
-          sed -i "s/SHA_DARWIN_AMD64/${{ steps.sha.outputs.darwin_amd64 }}/g" homebrew-tap/litex.rb
           sed -i "s/SHA_DARWIN_ARM64/${{ steps.sha.outputs.darwin_arm64 }}/g" homebrew-tap/litex.rb
           sed -i "s/SHA_LINUX_AMD64/${{ steps.sha.outputs.linux_amd64 }}/g" homebrew-tap/litex.rb
           sed -i "s/SHA_LINUX_ARM64/${{ steps.sha.outputs.linux_arm64 }}/g" homebrew-tap/litex.rb
