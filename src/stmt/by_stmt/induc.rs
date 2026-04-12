@@ -29,13 +29,13 @@ impl ByInducStmt {
         let mut params_def_with_type: Vec<ParamGroupWithParamType> = Vec::new();
         params_def_with_type.push(ParamGroupWithParamType::new(
             vec![self.param.clone()],
-            ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
+            ParamType::Obj(StandardSet::Z.into()),
         ));
         let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
         dom_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
             AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                Obj::Identifier(Identifier::new(self.param.clone())),
+                self.param.clone().into(),
                 self.induc_from.clone(),
                 self.line_file.clone(),
             )),

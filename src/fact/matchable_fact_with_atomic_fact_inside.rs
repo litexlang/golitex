@@ -128,6 +128,18 @@ impl AndChainAtomicFact {
     }
 }
 
+impl From<AtomicFact> for AndChainAtomicFact {
+    fn from(atomic_fact: AtomicFact) -> Self {
+        AndChainAtomicFact::AtomicFact(atomic_fact)
+    }
+}
+
+impl From<GreaterEqualFact> for AndChainAtomicFact {
+    fn from(f: GreaterEqualFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
 impl fmt::Display for AndFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(

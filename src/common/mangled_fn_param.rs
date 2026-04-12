@@ -1,4 +1,4 @@
-use crate::obj::{Identifier, Obj};
+use crate::obj::Obj;
 use std::collections::HashMap;
 
 /// 将用户写的形参名转为带前缀的存储名（如 `x` → `__x`）。
@@ -17,7 +17,7 @@ pub fn fn_param_substitution_map(
     debug_assert_eq!(user_written_names.len(), mangled_names.len());
     let mut map = HashMap::with_capacity(user_written_names.len());
     for (u, m) in user_written_names.iter().zip(mangled_names.iter()) {
-        map.insert(u.clone(), Obj::Identifier(Identifier::new(m.clone())));
+        map.insert(u.clone(), m.clone().into());
     }
     map
 }

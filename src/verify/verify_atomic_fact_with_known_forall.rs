@@ -366,7 +366,7 @@ impl Runtime {
         let mut map = HashMap::new();
         map.insert(
             known_arg.name.clone(),
-            Obj::Identifier(Identifier::new(given.name.clone())),
+            given.name.clone().into(),
         );
 
         Ok(Some(map))
@@ -396,8 +396,8 @@ impl Runtime {
 
                 // heads must match
                 let head_match = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    &Obj::from(left.head.as_ref().clone()),
-                    &Obj::from(right_fn.head.as_ref().clone()),
+                    &left.head.as_ref().clone().into(),
+                    &right_fn.head.as_ref().clone().into(),
                 )?;
                 let mut head_map = match head_match {
                     Some(m) => m,

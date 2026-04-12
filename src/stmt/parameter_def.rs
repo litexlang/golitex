@@ -306,7 +306,7 @@ impl ParamGroupWithSet {
         let mut facts = Vec::with_capacity(self.params.len());
         for name in self.params.iter() {
             let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(name.clone())),
+                name.clone().into(),
                 self.set.clone(),
                 default_line_file(),
             )));

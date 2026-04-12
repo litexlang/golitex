@@ -157,7 +157,7 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let function_name_obj = Obj::Identifier(Identifier::new(fn_obj.head.to_string()));
+        let function_name_obj = fn_obj.head.to_string().into();
         let mut the_set_where_current_fn_obj_is_in = self
             .get_object_in_fn_set(&function_name_obj)
             .ok_or_else(|| {
@@ -368,7 +368,7 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let r_obj = Obj::StandardSet(StandardSet::R);
+        let r_obj = StandardSet::R.into();
         let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -389,7 +389,7 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let z_obj = Obj::StandardSet(StandardSet::Z);
+        let z_obj = StandardSet::Z.into();
         let in_fact = InFact::new(obj.clone(), z_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -449,7 +449,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&div.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&div.right, verify_state)?;
 
-        let zero = Obj::Number(Number::new("0".to_string()));
+        let zero: Obj = Number::new("0".to_string()).into();
         let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, default_line_file());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -477,7 +477,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&m.right, verify_state)?;
         self.require_obj_in_z(&m.left, verify_state)?;
         self.require_obj_in_z(&m.right, verify_state)?;
-        let zero = Obj::Number(Number::new("0".to_string()));
+        let zero: Obj = Number::new("0".to_string()).into();
         let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, default_line_file());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -501,9 +501,9 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&pow.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
 
-        let zero_obj = Obj::Number(Number::new("0".to_string()));
-        let two_obj = Obj::Number(Number::new("2".to_string()));
-        let exponent_mod_two_obj = Obj::Mod(Mod::new((*pow.exponent).clone(), two_obj));
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let two_obj: Obj = Number::new("2".to_string()).into();
+        let exponent_mod_two_obj = Mod::new((*pow.exponent).clone(), two_obj).into();
 
         let positive_base_and_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
@@ -514,7 +514,7 @@ impl Runtime {
                 )),
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet(StandardSet::R),
+                    StandardSet::R.into(),
                     default_line_file(),
                 )),
             ],
@@ -530,7 +530,7 @@ impl Runtime {
                 )),
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet(StandardSet::R),
+                    StandardSet::R.into(),
                     default_line_file(),
                 )),
                 AtomicFact::GreaterFact(GreaterFact::new(
@@ -546,7 +546,7 @@ impl Runtime {
             vec![
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet(StandardSet::Z),
+                    StandardSet::Z.into(),
                     default_line_file(),
                 )),
                 AtomicFact::EqualFact(EqualFact::new(
@@ -561,7 +561,7 @@ impl Runtime {
         let exponent_is_positive_integer =
             AndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
                 (*pow.exponent).clone(),
-                Obj::StandardSet(StandardSet::NPos),
+                StandardSet::NPos.into(),
                 default_line_file(),
             )));
 
@@ -866,12 +866,12 @@ impl Runtime {
                 default_line_file(),
             )
         })?;
-        let projection_dimension_obj =
-            Obj::Number(Number::new(projection_dimension_number.normalized_value));
+        let projection_dimension_obj: Obj =
+            Number::new(projection_dimension_number.normalized_value).into();
 
         let projection_dimension_is_positive_integer_fact = AtomicFact::InFact(InFact::new(
             projection_dimension_obj.clone(),
-            Obj::StandardSet(StandardSet::NPos),
+            StandardSet::NPos.into(),
             default_line_file(),
         ));
         let projection_dimension_is_positive_integer_result =
@@ -903,7 +903,7 @@ impl Runtime {
             );
         }
 
-        let left_set_cart_dim_obj = Obj::CartDim(CartDim::new((*x.set).clone()));
+        let left_set_cart_dim_obj: Obj = CartDim::new((*x.set).clone()).into();
 
         let proj_index_not_larger_than_cart_dim = AtomicFact::LessEqualFact(LessEqualFact::new(
             projection_dimension_obj.clone(),
@@ -1046,7 +1046,7 @@ impl Runtime {
         let random_param = self.generate_random_unused_name();
 
         let nonempty_set_fact = IsNonemptySetFact::new(
-            Obj::Identifier(Identifier::new(random_param.clone().to_string())),
+            random_param.clone().to_string().into(),
             default_line_file(),
         );
 
@@ -1082,12 +1082,12 @@ impl Runtime {
                 default_line_file(),
             )
         })?;
-        let index_calculated_obj =
-            Obj::Number(Number::new(index_calculated_number.normalized_value));
+        let index_calculated_obj: Obj =
+            Number::new(index_calculated_number.normalized_value).into();
 
         let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
             index_calculated_obj.clone(),
-            Obj::StandardSet(StandardSet::NPos),
+            StandardSet::NPos.into(),
             default_line_file(),
         ));
         let index_is_positive_integer_result =
@@ -1116,7 +1116,7 @@ impl Runtime {
             );
         }
 
-        let target_tuple_dim_obj = Obj::TupleDim(TupleDim::new((*x.obj).clone()));
+        let target_tuple_dim_obj: Obj = TupleDim::new((*x.obj).clone()).into();
         let index_not_larger_than_tuple_dim_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
             index_calculated_obj.clone(),
             target_tuple_dim_obj.clone(),
