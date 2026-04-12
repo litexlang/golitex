@@ -7,7 +7,7 @@ impl Runtime {
     ) -> Result<StmtExecResult, RuntimeError> {
         let (params, param_sets) = stmt.expanded_range_params().map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::ByForStmt(stmt.clone()),
+                stmt.clone().into(),
                 msg,
                 None,
                 vec![],
@@ -16,7 +16,7 @@ impl Runtime {
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::ByForStmt(stmt.clone()),
+                stmt.clone().into(),
                 msg,
                 None,
                 vec![],
@@ -28,7 +28,7 @@ impl Runtime {
         )
         .map_err(|well_defined_error| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::ByForStmt(stmt.clone()),
+                stmt.clone().into(),
                 format!(
                     "by for: forall parameters or domain is not well-defined (`{}`)",
                     stmt.forall_fact
@@ -42,7 +42,7 @@ impl Runtime {
             .by_for_param_value_strings_of_each_param(stmt, &param_sets)
             .map_err(|msg| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByForStmt(stmt.clone()),
+                    stmt.clone().into(),
                     msg,
                     None,
                     vec![],
@@ -58,7 +58,7 @@ impl Runtime {
                 )
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByForStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!(
                             "by for: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
@@ -69,7 +69,7 @@ impl Runtime {
                 })?;
             return Ok(StmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    Stmt::ByForStmt(stmt.clone()),
+                    stmt.clone().into(),
                     infer_result_from_stored_forall_fact,
                     vec![],
                 ),
@@ -104,7 +104,7 @@ impl Runtime {
             )
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByForStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!(
                         "by for: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
@@ -116,7 +116,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::ByForStmt(stmt.clone()),
+                stmt.clone().into(),
                 infer_result_from_stored_forall_fact,
                 vec![],
             ),
@@ -338,7 +338,7 @@ impl Runtime {
                 }
                 return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByForStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!(
                             "by for: domain fact `{}` is not decided (could not verify it or its negation)",
                             dom_fact
@@ -361,7 +361,7 @@ impl Runtime {
             if verified_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByForStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!("by for: failed to prove `{}`", fact_to_prove),
                         None,
                         vec![],

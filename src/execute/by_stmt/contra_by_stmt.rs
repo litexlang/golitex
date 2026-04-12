@@ -10,7 +10,7 @@ impl Runtime {
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByContraStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!("by contra: failed to prove `{}`", to_prove_fact),
                     Some(verify_error.into()),
                     vec![],
@@ -24,7 +24,7 @@ impl Runtime {
             rt.store_atomic_fact_without_well_defined_verified_and_infer(reverse_to_prove_fact)
                 .map_err(|store_fact_error| {
                     RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByContraStmt(stmt.clone()),
+                        stmt.clone().into(),
                         format!("by contra: failed to know reverse of `{}`", to_prove_fact),
                         Some(store_fact_error.into()),
                         vec![],
@@ -48,7 +48,7 @@ impl Runtime {
             if verify_impossible_fact_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByContraStmt(stmt.clone()),
+                        stmt.clone().into(),
                         impossible_proof_error_message(&stmt.impossible_fact, None),
                         None,
                         inside_results,
@@ -63,7 +63,7 @@ impl Runtime {
             if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::ByContraStmt(stmt.clone()),
+                        stmt.clone().into(),
                         impossible_proof_error_message(&stmt.impossible_fact, None),
                         None,
                         vec![],
@@ -77,7 +77,7 @@ impl Runtime {
         if let Some(last_error) = last_error {
             return Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByContraStmt(stmt.clone()),
+                    stmt.clone().into(),
                     "by contra: failed to execute proof".to_string(),
                     Some(last_error),
                     exec_proof_inside_results,
@@ -90,7 +90,7 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(to_prove_fact)
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByContraStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!(
                         "by contra: failed to release `{}`",
                         to_prove_fact_display_string
@@ -102,7 +102,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::ByContraStmt(stmt.clone()),
+                stmt.clone().into(),
                 infer_result,
                 exec_proof_inside_results,
             ),

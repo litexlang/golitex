@@ -20,7 +20,7 @@ impl Runtime {
                 Err(exec_stmt_error) => {
                     return Err(RuntimeError::from(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::ByInducStmt(stmt.clone()),
+                            stmt.clone().into(),
                             format!("by induc: failed to prove `{}`", fact),
                             Some(RuntimeError::from(exec_stmt_error)),
                             vec![],
@@ -32,7 +32,7 @@ impl Runtime {
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::ByInducStmt(stmt.clone()),
+                stmt.clone().into(),
                 msg,
                 None,
                 vec![],
@@ -42,7 +42,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::ByInducStmt(stmt.clone()),
+                stmt.clone().into(),
                 infer_result,
                 all_inside_results,
             ),
@@ -66,7 +66,7 @@ impl Runtime {
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByInducStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!("by induc: base case is not proved `{}`", base_case_fact),
                     Some(verify_error.into()),
                     vec![],
@@ -82,7 +82,7 @@ impl Runtime {
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByInducStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
                     Some(verify_error.into()),
                     vec![],
@@ -91,7 +91,7 @@ impl Runtime {
         if verify_induc_from_in_z_result.is_unknown() {
             return Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByInducStmt(stmt.clone()),
+                    stmt.clone().into(),
                     format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
                     None,
                     vec![],
@@ -134,7 +134,7 @@ impl Runtime {
         )
         .map_err(|well_defined_error| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                Stmt::ByInducStmt(stmt.clone()),
+                stmt.clone().into(),
                 format!(
                     "by induc: generated step forall is not well-defined `{}`",
                     corresponding_forall_fact

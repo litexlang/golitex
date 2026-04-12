@@ -10,7 +10,7 @@ impl Runtime {
         self.store_def_algo(def_algo_stmt)?;
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefAlgoStmt(def_algo_stmt.clone()),
+                def_algo_stmt.clone().into(),
                 InferResult::new(),
                 vec![],
             ),
@@ -58,7 +58,7 @@ impl Runtime {
 
         Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DefAlgoStmt(def_algo_stmt.clone()),
+                def_algo_stmt.clone().into(),
                 InferResult::new(),
                 vec![],
             ),
@@ -69,7 +69,7 @@ impl Runtime {
         def_algo_stmt: &DefAlgoStmt,
     ) -> RuntimeErrorStruct {
         RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            Stmt::DefAlgoStmt(def_algo_stmt.clone()),
+            def_algo_stmt.clone().into(),
             "".to_string(),
             None,
             vec![],
@@ -82,7 +82,7 @@ impl Runtime {
         cause: Option<RuntimeError>,
     ) -> RuntimeErrorStruct {
         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-            Stmt::DefAlgoStmt(def_algo_stmt.clone()),
+            def_algo_stmt.clone().into(),
             message,
             cause,
             vec![],

@@ -6,7 +6,7 @@ impl Runtime {
         stmt: &ImportStmt,
     ) -> Result<StmtExecResult, RuntimeError> {
         return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            Stmt::ImportStmt(stmt.clone()),
+            stmt.clone().into(),
             "".to_string(),
             None,
             vec![],
@@ -19,7 +19,7 @@ impl Runtime {
     ) -> Result<StmtExecResult, RuntimeError> {
         return Ok(StmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                Stmt::DoNothingStmt(stmt.clone()),
+                stmt.clone().into(),
                 InferResult::new(),
                 vec![],
             ),
@@ -31,7 +31,7 @@ impl Runtime {
         stmt: &RunFileStmt,
     ) -> Result<StmtExecResult, RuntimeError> {
         return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            Stmt::RunFileStmt(stmt.clone()),
+            stmt.clone().into(),
             "".to_string(),
             None,
             vec![],

@@ -14,7 +14,7 @@ impl Runtime {
                 )
                 .map_err(|e| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::KnowStmt(know_stmt.clone()),
+                        know_stmt.clone().into(),
                         "".to_string(),
                         Some(e.into()),
                         vec![],
@@ -23,7 +23,7 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(Stmt::KnowStmt(know_stmt.clone()), infer_result, vec![]),
+            NonFactualStmtSuccess::new(know_stmt.clone().into(), infer_result, vec![]),
         ))
     }
 }

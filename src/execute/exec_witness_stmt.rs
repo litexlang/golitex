@@ -5,10 +5,10 @@ impl Runtime {
         &mut self,
         stmt: &WitnessExistFact,
     ) -> Result<StmtExecResult, RuntimeError> {
-        let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
+        let witness_stmt = stmt.clone().into();
 
         let inside_results_when_verify = self.run_in_local_env(|rt| {
-            let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
+            let witness_stmt = stmt.clone().into();
             let verify_state_for_well_defined = VerifyState::new(0, false);
 
             let expected_param_count = ParamGroupWithParamType::number_of_params(
@@ -136,10 +136,10 @@ impl Runtime {
         &mut self,
         stmt: &WitnessNonemptySet,
     ) -> Result<StmtExecResult, RuntimeError> {
-        let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
+        let witness_stmt = stmt.clone().into();
 
         let inside_results_when_verify = self.run_in_local_env(|rt| {
-            let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
+            let witness_stmt = stmt.clone().into();
 
             let verify_state_for_well_defined = VerifyState::new(0, false);
 
