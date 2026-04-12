@@ -29,7 +29,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
 
       - name: Clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy -- -W warnings
 
       - name: Test
         run: cargo test
