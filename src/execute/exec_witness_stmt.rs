@@ -4,11 +4,11 @@ impl Runtime {
     pub fn exec_witness_exist_fact(
         &mut self,
         stmt: &WitnessExistFact,
-    ) -> Result<StmtExecResult, RuntimeError> {
-        let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
+    ) -> Result<StmtResult, RuntimeError> {
+        let witness_stmt = stmt.clone().into();
 
         let inside_results_when_verify = self.run_in_local_env(|rt| {
-            let witness_stmt = Stmt::WitnessExistFact(stmt.clone());
+            let witness_stmt = stmt.clone().into();
             let verify_state_for_well_defined = VerifyState::new(0, false);
 
             let expected_param_count = ParamGroupWithParamType::number_of_params(
@@ -68,7 +68,7 @@ impl Runtime {
                 }
             }
 
-            let mut inside_results: Vec<StmtExecResult> = Vec::new();
+            let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 match rt.exec_stmt(proof_stmt) {
                     Ok(proof_result) => {
@@ -117,9 +117,7 @@ impl Runtime {
             Fact::ExistFact(stmt.exist_fact_in_witness.clone()),
         );
         match store_result {
-            Ok(infer_result) => Ok(StmtExecResult::NonFactualStmtSuccess(
-                NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
-            )),
+            Ok(infer_result) => Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into()),
             Err(store_error) => Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
@@ -135,11 +133,11 @@ impl Runtime {
     pub fn exec_witness_nonempty_set(
         &mut self,
         stmt: &WitnessNonemptySet,
-    ) -> Result<StmtExecResult, RuntimeError> {
-        let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
+    ) -> Result<StmtResult, RuntimeError> {
+        let witness_stmt = stmt.clone().into();
 
         let inside_results_when_verify = self.run_in_local_env(|rt| {
-            let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
+            let witness_stmt = stmt.clone().into();
 
             let verify_state_for_well_defined = VerifyState::new(0, false);
 
@@ -169,7 +167,7 @@ impl Runtime {
                 ));
             }
 
-            let mut inside_results: Vec<StmtExecResult> = Vec::new();
+            let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 match rt.exec_stmt(proof_stmt) {
                     Ok(proof_result) => {
@@ -226,9 +224,7 @@ impl Runtime {
             ))),
         );
         match store_result {
-            Ok(infer_result) => Ok(StmtExecResult::NonFactualStmtSuccess(
-                NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
-            )),
+            Ok(infer_result) => Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into()),
             Err(store_error) => Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,

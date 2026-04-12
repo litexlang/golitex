@@ -10,10 +10,7 @@ impl Runtime {
         }
         tb.skip_token(COLON)?;
         let function = self.parse_obj(tb)?;
-        Ok(Stmt::ByFnStmt(ByFnStmt::new(
-            function,
-            tb.line_file.clone(),
-        )))
+        Ok(ByFnStmt::new(function, tb.line_file.clone()).into())
     }
 
     /// `by fn set: <func> $in fn{ ... } <ret>` — membership in a function-set via built-in rules (exec TBD).
@@ -23,11 +20,7 @@ impl Runtime {
         tb.skip_token(IN)?;
         tb.skip_token(FN_LOWER_CASE)?;
         let fn_set = self.parse_fn_set(tb)?;
-        Ok(Stmt::ByFnSetStmt(ByFnSetStmt::new(
-            func,
-            fn_set,
-            tb.line_file.clone(),
-        )))
+        Ok(ByFnSetStmt::new(func, fn_set, tb.line_file.clone()).into())
     }
 
     /// `by tuple: <obj>` — tuple / ordered-pair definitional expansion.
@@ -35,6 +28,6 @@ impl Runtime {
         tb.skip_token(TUPLE)?;
         tb.skip_token(COLON)?;
         let obj = self.parse_obj(tb)?;
-        Ok(Stmt::ByTuple(ByTupleStmt::new(obj, tb.line_file.clone())))
+        Ok(ByTupleStmt::new(obj, tb.line_file.clone()).into())
     }
 }

@@ -24,8 +24,32 @@ pub struct RuntimeErrorStruct {
     pub conflict_with: Option<ConflictMsg>,
     pub line_file: LineFile,
     pub previous_error: Option<Box<RuntimeError>>,
-    pub inside_results: Vec<StmtExecResult>,
+    pub inside_results: Vec<StmtResult>,
 }
+
+macro_rules! runtime_error_from_wrapper {
+    ($wrapper:ident, $variant:ident) => {
+        #[derive(Debug)]
+        pub struct $wrapper(pub RuntimeErrorStruct);
+        impl From<$wrapper> for RuntimeError {
+            fn from(w: $wrapper) -> Self {
+                RuntimeError::$variant(w.0)
+            }
+        }
+    };
+}
+
+runtime_error_from_wrapper!(ArithmeticRuntimeError, ArithmeticError);
+runtime_error_from_wrapper!(NewAtomicFactRuntimeError, NewAtomicFactError);
+runtime_error_from_wrapper!(StoreFactRuntimeError, StoreFactError);
+runtime_error_from_wrapper!(ParseRuntimeError, ParseError);
+runtime_error_from_wrapper!(WellDefinedRuntimeError, WellDefinedError);
+runtime_error_from_wrapper!(VerifyRuntimeError, VerifyError);
+runtime_error_from_wrapper!(UnknownRuntimeError, UnknownError);
+runtime_error_from_wrapper!(InferRuntimeError, InferError);
+runtime_error_from_wrapper!(NameAlreadyUsedRuntimeError, NameAlreadyUsedError);
+runtime_error_from_wrapper!(DefineParamsRuntimeError, DefineParamsError);
+runtime_error_from_wrapper!(InstantiateRuntimeError, InstantiateError);
 
 #[derive(Debug, Clone)]
 pub struct ConflictMsg {
@@ -57,7 +81,7 @@ impl RuntimeErrorStruct {
         line_file: LineFile,
         conflict_with: Option<ConflictMsg>,
         previous_error: Option<RuntimeError>,
-        inside_results: Vec<StmtExecResult>,
+        inside_results: Vec<StmtResult>,
     ) -> Self {
         RuntimeErrorStruct {
             statement,
@@ -77,7 +101,7 @@ impl RuntimeErrorStruct {
         stmt: Option<Stmt>,
         info: String,
         previous_error: Option<RuntimeError>,
-        inside_results: Vec<StmtExecResult>,
+        inside_results: Vec<StmtResult>,
     ) -> Self {
         let line_file = if let Some(ref stmt) = stmt {
             stmt.line_file()
@@ -98,7 +122,7 @@ impl RuntimeErrorStruct {
         stmt: Stmt,
         info: String,
         previous_error: Option<RuntimeError>,
-        inside_results: Vec<StmtExecResult>,
+        inside_results: Vec<StmtResult>,
     ) -> Self {
         let line_file = stmt.line_file();
         RuntimeErrorStruct::new_with_conflict(
@@ -115,7 +139,7 @@ impl RuntimeErrorStruct {
         stmt: Stmt,
         message: String,
         cause: Option<RuntimeError>,
-        inside_results: Vec<StmtExecResult>,
+        inside_results: Vec<StmtResult>,
     ) -> Self {
         let line_file = stmt.line_file();
         let previous_error = if message.is_empty() {
@@ -200,12 +224,13 @@ impl RuntimeError {
         line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
-        RuntimeError::InferError(RuntimeErrorStruct::new(
+        InferRuntimeError(RuntimeErrorStruct::new(
             None,
             msg,
             line_file,
             previous_error,
         ))
+        .into()
     }
 
     pub fn new_define_params_error_with_msg_previous_error_position(
@@ -213,12 +238,13 @@ impl RuntimeError {
         previous_error: Option<RuntimeError>,
         line_file: LineFile,
     ) -> Self {
-        RuntimeError::DefineParamsError(RuntimeErrorStruct::new(
+        DefineParamsRuntimeError(RuntimeErrorStruct::new(
             None,
             msg,
             line_file,
             previous_error,
         ))
+        .into()
     }
 
     pub fn new_parse_error_with_msg_position_previous_error(
@@ -226,12 +252,13 @@ impl RuntimeError {
         line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
-        RuntimeError::ParseError(RuntimeErrorStruct::new(
+        ParseRuntimeError(RuntimeErrorStruct::new(
             None,
             msg,
             line_file,
             previous_error,
         ))
+        .into()
     }
 
     pub fn new_parse_error_for_block_unexpected_indent_at_line_file(line_file: LineFile) -> Self {
@@ -276,12 +303,13 @@ impl RuntimeError {
         line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
-        RuntimeError::VerifyError(RuntimeErrorStruct::new(
+        VerifyRuntimeError(RuntimeErrorStruct::new(
             Some(fact.into_stmt()),
             msg,
             line_file,
             previous_error,
         ))
+        .into()
     }
 
     pub fn new_verify_error_with_msg_position_previous_error(
@@ -289,12 +317,13 @@ impl RuntimeError {
         line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
-        RuntimeError::VerifyError(RuntimeErrorStruct::new(
+        VerifyRuntimeError(RuntimeErrorStruct::new(
             None,
             msg,
             line_file,
             previous_error,
         ))
+        .into()
     }
 
     pub fn new_unknown_error_with_msg_position_optional_fact_previous_error(
@@ -303,7 +332,7 @@ impl RuntimeError {
         fact: Option<Fact>,
         previous_error: Option<RuntimeError>,
     ) -> Self {
-        RuntimeError::UnknownError(RuntimeErrorStruct::new(
+        UnknownRuntimeError(RuntimeErrorStruct::new(
             if let Some(fact) = fact {
                 Some(fact.into_stmt())
             } else {
@@ -313,6 +342,7 @@ impl RuntimeError {
             line_file,
             previous_error,
         ))
+        .into()
     }
 
     pub fn new_verify_result_unknown_with_fact_previous_error(
@@ -334,12 +364,13 @@ impl RuntimeError {
         previous_error: Option<RuntimeError>,
         line_file: LineFile,
     ) -> Self {
-        RuntimeError::WellDefinedError(RuntimeErrorStruct::new(
+        WellDefinedRuntimeError(RuntimeErrorStruct::new(
             None,
             msg,
             line_file,
             previous_error,
         ))
+        .into()
     }
 
     pub fn new_well_defined_error_wrapping_verify_runtime_error(e: RuntimeError) -> RuntimeError {
@@ -351,12 +382,13 @@ impl RuntimeError {
                 } else {
                     inner.msg.clone()
                 };
-                RuntimeError::WellDefinedError(RuntimeErrorStruct::new(
+                WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,
                     msg_for_well_defined,
                     line_file,
-                    Some(RuntimeError::VerifyError(inner)),
+                    Some(VerifyRuntimeError(inner).into()),
                 ))
+                .into()
             }
             _ => e,
         }
@@ -380,7 +412,7 @@ impl std::error::Error for RuntimeErrorStruct {}
 
 impl From<RuntimeErrorStruct> for RuntimeError {
     fn from(runtime_error_struct: RuntimeErrorStruct) -> Self {
-        RuntimeError::ExecStmtError(runtime_error_struct)
+        runtime_error_struct.into()
     }
 }
 

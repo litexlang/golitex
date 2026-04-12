@@ -29,7 +29,7 @@ impl Runtime {
             BY => self.parse_by_prefixed_stmt(tb),
             _ => {
                 let fact = self.parse_fact(tb)?;
-                Ok(Stmt::Fact(fact))
+                Ok(fact.into())
             }
         }
     }

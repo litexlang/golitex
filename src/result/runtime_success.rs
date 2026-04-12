@@ -4,7 +4,7 @@ use crate::prelude::*;
 pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
     pub infers: InferResult,
-    pub inside_results: Vec<StmtExecResult>,
+    pub inside_results: Vec<StmtResult>,
 }
 
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub struct FactualStmtSuccess {
     pub msg: String,
     pub verified_by_fact: Option<Fact>,
     pub verified_by_fact_known_line_file: Option<LineFile>,
-    pub inside_results: Vec<StmtExecResult>,
+    pub inside_results: Vec<StmtResult>,
 }
 
 impl FactualStmtSuccess {
@@ -22,7 +22,7 @@ impl FactualStmtSuccess {
         stmt: Fact,
         infers: InferResult,
         builtin_rule_label: String,
-        inside_results: Vec<StmtExecResult>,
+        inside_results: Vec<StmtResult>,
     ) -> Self {
         FactualStmtSuccess {
             stmt,
@@ -38,7 +38,7 @@ impl FactualStmtSuccess {
     pub fn new_with_verified_by_builtin_rules_recording_stmt(
         stmt: Fact,
         builtin_rule_label: String,
-        inside_results: Vec<StmtExecResult>,
+        inside_results: Vec<StmtResult>,
     ) -> Self {
         let infers = InferResult::from_fact(&stmt);
         Self::new_with_verified_by_builtin_rules(stmt, infers, builtin_rule_label, inside_results)
@@ -50,7 +50,7 @@ impl FactualStmtSuccess {
         msg: String,
         verified_by_fact: Option<Fact>,
         verified_by_fact_known_line_file: Option<LineFile>,
-        inside_results: Vec<StmtExecResult>,
+        inside_results: Vec<StmtResult>,
     ) -> Self {
         FactualStmtSuccess {
             stmt,
@@ -68,7 +68,7 @@ impl FactualStmtSuccess {
         msg: String,
         verified_by_fact: Option<Fact>,
         verified_by_fact_known_line_file: Option<LineFile>,
-        inside_results: Vec<StmtExecResult>,
+        inside_results: Vec<StmtResult>,
     ) -> Self {
         let mut infers = InferResult::new();
         infers.new_fact(&stmt);
@@ -101,7 +101,7 @@ impl FactualStmtSuccess {
 }
 
 impl NonFactualStmtSuccess {
-    pub fn new(stmt: Stmt, infers: InferResult, inside_results: Vec<StmtExecResult>) -> Self {
+    pub fn new(stmt: Stmt, infers: InferResult, inside_results: Vec<StmtResult>) -> Self {
         NonFactualStmtSuccess {
             stmt,
             infers,

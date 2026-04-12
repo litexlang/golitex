@@ -12,7 +12,7 @@ impl Runtime {
             Ok(proof)
         });
         match result {
-            Ok(proof) => Ok(Stmt::ProveStmt(ProveStmt::new(proof, tb.line_file.clone()))),
+            Ok(proof) => Ok(ProveStmt::new(proof, tb.line_file.clone()).into()),
             Err(e) => Err(e),
         }
     }

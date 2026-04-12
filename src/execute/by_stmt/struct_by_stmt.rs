@@ -47,19 +47,17 @@ impl Runtime {
     pub fn exec_by_struct_stmt(
         &mut self,
         stmt: &ByStructStmt,
-    ) -> Result<StmtExecResult, RuntimeError> {
-        let stmt_exec = Stmt::ByStructStmt(stmt.clone());
+    ) -> Result<StmtResult, RuntimeError> {
+        let stmt_exec = stmt.clone().into();
         let struct_ty = match &stmt.struct_obj {
             Obj::StructObj(s) => s.clone(),
             _ => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt_exec,
                         "by struct: expected `struct name(...)` object".to_string(),
                         None,
                         vec![],
-                    ),
-                ));
+                    )));
             }
         };
 
@@ -67,21 +65,18 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt_exec.clone(),
                         format!("by struct: struct `{}` is not defined", struct_name),
                         None,
                         vec![],
-                    ),
-                ));
+                    )));
             }
         };
 
         let expected_count = ParamGroupWithStructFieldType::number_of_params(&def.param_defs);
         if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec,
                     format!(
                         "by struct: struct `{}` expects {} type argument(s), got {}",
@@ -91,8 +86,7 @@ impl Runtime {
                     ),
                     None,
                     vec![],
-                ),
-            ));
+                )));
         }
 
         let param_to_arg_map =
@@ -111,7 +105,7 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
         self.verify_obj_well_defined_and_store_cache(&stmt.struct_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by struct: struct type object `{}` is not well-defined",
@@ -123,7 +117,7 @@ impl Runtime {
             })?;
         self.verify_obj_well_defined_and_store_cache(&cart_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!("by struct: cart `{}` is not well-defined", cart_obj),
                     Some(e.into()),
@@ -204,7 +198,7 @@ impl Runtime {
         let rhs_sb_obj = Obj::SetBuilder(set_builder.clone());
         self.verify_obj_well_defined_and_store_cache(&rhs_sb_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     "by struct: set-builder (right-hand side) is not well-defined".to_string(),
                     Some(e.into()),
@@ -231,8 +225,6 @@ impl Runtime {
                 .map_err(RuntimeError::from)?,
         );
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![]),
-        ))
+        Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())
     }
 }

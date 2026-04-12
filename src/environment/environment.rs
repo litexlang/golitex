@@ -331,7 +331,7 @@ impl Environment {
                     e.msg.clone(),
                     e.line_file.clone(),
                     e.conflict_with.clone(),
-                    Some(RuntimeError::NewAtomicFactError(e)),
+                    Some(NewAtomicFactRuntimeError(e).into()),
                     vec![],
                 )
             })?
@@ -473,7 +473,7 @@ impl Environment {
                     e.msg.clone(),
                     e.line_file.clone(),
                     e.conflict_with.clone(),
-                    Some(RuntimeError::NewAtomicFactError(e)),
+                    Some(NewAtomicFactRuntimeError(e).into()),
                     vec![],
                 )
             })?;

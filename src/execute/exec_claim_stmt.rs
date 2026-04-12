@@ -1,31 +1,29 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_claim_stmt(&mut self, stmt: &ClaimStmt) -> Result<StmtExecResult, RuntimeError> {
+    pub fn exec_claim_stmt(&mut self, stmt: &ClaimStmt) -> Result<StmtResult, RuntimeError> {
         match &stmt.fact {
             Fact::ForallFactWithIff(_) => unreachable!("claim forall with iff is not supported"),
             Fact::ForallFact(forall_fact) => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::ClaimStmt(stmt.clone()),
+                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                                stmt.clone().into(),
                                 "claim: fact is not well defined".to_string(),
                                 Some(e.into()),
                                 vec![],
-                            ),
-                        )
+                            ))
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {
                     rt.define_params_with_type(&forall_fact.params_def_with_type, false)
                         .map_err(|define_params_error| {
-                            RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                                Stmt::ClaimStmt(stmt.clone()),
+                            RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                                stmt.clone().into(),
                                 "".to_string(),
                                 Some(define_params_error),
                                 vec![],
-                            )
+                            ))
                         })?;
 
                     for dom_fact in forall_fact.dom_facts.iter() {
@@ -60,16 +58,15 @@ impl Runtime {
                         inside_results.push(result);
                     }
 
-                    Ok(StmtExecResult::NonFactualStmtSuccess(
-                        NonFactualStmtSuccess::new(
-                            Stmt::ClaimStmt(stmt.clone()),
+                    Ok(NonFactualStmtSuccess::new(
+                            stmt.clone().into(),
                             crate::infer::InferResult::new(),
                             inside_results,
-                        ),
-                    ))
+                        )
+                        .into())
                 });
 
-                let non_err_after_body = match body_exec_result {
+                let non_err_after_body: StmtResult = match body_exec_result {
                     Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
                     Err(runtime_error) => return Err(runtime_error),
                 };
@@ -90,18 +87,16 @@ impl Runtime {
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::ClaimStmt(stmt.clone()),
+                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                                stmt.clone().into(),
                                 "claim: fact is not well defined".to_string(),
                                 Some(e.into()),
                                 vec![],
-                            ),
-                        )
+                            ))
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {
-                    let mut inside_results: Vec<StmtExecResult> = Vec::new();
+                    let mut inside_results: Vec<StmtResult> = Vec::new();
                     for proof_stmt in stmt.proof.iter() {
                         let proof_exec_result = rt.exec_stmt(proof_stmt)?;
                         inside_results.push(proof_exec_result);
@@ -109,16 +104,15 @@ impl Runtime {
 
                     rt.verify_fact_return_err_if_not_true(&stmt.fact, &VerifyState::new(0, false))?;
 
-                    Ok(StmtExecResult::NonFactualStmtSuccess(
-                        NonFactualStmtSuccess::new(
-                            Stmt::ClaimStmt(stmt.clone()),
+                    Ok(NonFactualStmtSuccess::new(
+                            stmt.clone().into(),
                             crate::infer::InferResult::new(),
                             inside_results,
-                        ),
-                    ))
+                        )
+                        .into())
                 });
 
-                let non_err_after_body = match body_exec_result {
+                let non_err_after_body: StmtResult = match body_exec_result {
                     Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
                     Err(runtime_error) => return Err(runtime_error),
                 };
