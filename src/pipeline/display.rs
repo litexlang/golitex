@@ -132,7 +132,10 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
             JSON_KEY_INFER_FACTS.to_string(),
             JsonValue::Array(infer_items),
         ),
-        ("inside_results".to_string(), JsonValue::Array(inside_items)),
+        (
+            JSON_KEY_INSIDE_RESULTS.to_string(),
+            JsonValue::Array(inside_items),
+        ),
     ])
 }
 

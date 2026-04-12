@@ -5,16 +5,14 @@ impl Runtime {
         &mut self,
         stmt: &ByForStmt,
     ) -> Result<StmtExecResult, RuntimeError> {
-        if stmt.params.len() != stmt.param_sets.len() {
-            return Err(RuntimeError::from(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByForStmt(stmt.clone()),
-                    "by for: number of params does not match number of ranges".to_string(),
-                    None,
-                    vec![],
-                ),
-            ));
-        }
+        let (params, param_sets) = stmt.expanded_range_params().map_err(|msg| {
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                Stmt::ByForStmt(stmt.clone()),
+                msg,
+                None,
+                vec![],
+            ))
+        })?;
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
             RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -24,21 +22,24 @@ impl Runtime {
                 vec![],
             ))
         })?;
-        self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
-            .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::ByForStmt(stmt.clone()),
-                    format!(
-                        "by for: corresponding forall `{}` is not well-defined",
-                        corresponding_forall_fact
-                    ),
-                    Some(well_defined_error.into()),
-                    vec![],
-                ))
-            })?;
+        self.verify_forall_fact_params_and_dom_well_defined(
+            &stmt.forall_fact,
+            &VerifyState::new(0, false),
+        )
+        .map_err(|well_defined_error| {
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                Stmt::ByForStmt(stmt.clone()),
+                format!(
+                    "by for: forall parameters or domain is not well-defined (`{}`)",
+                    stmt.forall_fact
+                ),
+                Some(well_defined_error.into()),
+                vec![],
+            ))
+        })?;
 
         let param_value_strings_of_each_param = self
-            .by_for_param_value_strings_of_each_param(stmt)
+            .by_for_param_value_strings_of_each_param(stmt, &param_sets)
             .map_err(|msg| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     Stmt::ByForStmt(stmt.clone()),
@@ -75,15 +76,16 @@ impl Runtime {
             ));
         }
 
-        let mut all_inside_results: Vec<StmtExecResult> = Vec::new();
-        let mut current_parameter_index_assignment = Self::by_for_start_index_assignment(stmt);
+        let mut current_parameter_index_assignment =
+            Self::by_for_start_index_assignment(param_sets.len());
         loop {
-            let mut one_assignment_inside_results = self.exec_by_for_stmt_for_one_assignment(
+            self.exec_by_for_stmt_for_one_assignment(
                 stmt,
+                &params,
+                &param_sets,
                 &current_parameter_index_assignment,
                 &param_value_strings_of_each_param,
             )?;
-            all_inside_results.append(&mut one_assignment_inside_results);
             let next_parameter_index_assignment = Self::by_for_next_index_assignment(
                 &current_parameter_index_assignment,
                 &param_value_strings_of_each_param,
@@ -116,13 +118,37 @@ impl Runtime {
             NonFactualStmtSuccess::new(
                 Stmt::ByForStmt(stmt.clone()),
                 infer_result_from_stored_forall_fact,
-                all_inside_results,
+                vec![],
             ),
         ))
     }
 }
 
 impl Runtime {
+    // Negated domain: one atomic uses `make_reversed`; conjunction uses De Morgan (or of negated atomics).
+    fn negated_domain_fact_for_by_for_skip(dom: &ExistOrAndChainAtomicFact) -> Option<Fact> {
+        match dom {
+            ExistOrAndChainAtomicFact::AtomicFact(a) => Some(Fact::AtomicFact(a.make_reversed())),
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => {
+                if and_fact.facts.is_empty() {
+                    return None;
+                }
+                let branches: Vec<AndChainAtomicFact> = and_fact
+                    .facts
+                    .iter()
+                    .map(|f| AndChainAtomicFact::AtomicFact(f.make_reversed()))
+                    .collect();
+                Some(Fact::OrFact(OrFact::new(
+                    branches,
+                    and_fact.line_file.clone(),
+                )))
+            }
+            ExistOrAndChainAtomicFact::ChainFact(_)
+            | ExistOrAndChainAtomicFact::OrFact(_)
+            | ExistOrAndChainAtomicFact::ExistFact(_) => None,
+        }
+    }
+
     fn integer_string_from_number_like_obj_for_for(
         self: &Self,
         number_like_obj: &Obj,
@@ -164,14 +190,15 @@ impl Runtime {
     fn by_for_param_value_strings_of_each_param(
         self: &Self,
         stmt: &ByForStmt,
+        param_sets: &[ClosedRangeOrRange],
     ) -> Result<Vec<Vec<String>>, String> {
         let mut param_value_strings_of_each_param: Vec<Vec<String>> = Vec::new();
-        for param_set in stmt.param_sets.iter() {
+        for param_set in param_sets.iter() {
             let (start_obj, end_obj, is_closed_range) = match param_set {
-                crate::stmt::by_stmt::ClosedRangeOrRange::ClosedRange(closed_range) => {
+                ClosedRangeOrRange::ClosedRange(closed_range) => {
                     (closed_range.start.as_ref(), closed_range.end.as_ref(), true)
                 }
-                crate::stmt::by_stmt::ClosedRangeOrRange::Range(range) => {
+                ClosedRangeOrRange::Range(range) => {
                     (range.start.as_ref(), range.end.as_ref(), false)
                 }
             };
@@ -214,12 +241,8 @@ impl Runtime {
         Ok(param_value_strings_of_each_param)
     }
 
-    fn by_for_start_index_assignment(stmt: &ByForStmt) -> Vec<usize> {
-        let mut start_index_assignment: Vec<usize> = Vec::new();
-        for _ in stmt.param_sets.iter() {
-            start_index_assignment.push(0);
-        }
-        start_index_assignment
+    fn by_for_start_index_assignment(param_count: usize) -> Vec<usize> {
+        vec![0; param_count]
     }
 
     fn by_for_next_index_assignment(
@@ -243,12 +266,16 @@ impl Runtime {
     fn exec_by_for_stmt_for_one_assignment(
         &mut self,
         stmt: &ByForStmt,
+        params: &[String],
+        param_sets: &[ClosedRangeOrRange],
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
-    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.exec_by_for_stmt_for_one_assignment_body(
                 stmt,
+                params,
+                param_sets,
                 parameter_index_assignment,
                 param_value_strings_of_each_param,
             )
@@ -258,11 +285,12 @@ impl Runtime {
     fn exec_by_for_stmt_for_one_assignment_body(
         &mut self,
         stmt: &ByForStmt,
+        params: &[String],
+        _param_sets: &[ClosedRangeOrRange],
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
-    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
-        let mut inside_results: Vec<StmtExecResult> = Vec::new();
-        for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
+    ) -> Result<(), RuntimeError> {
+        for (parameter_position, parameter_name) in params.iter().enumerate() {
             let assigned_integer_string = param_value_strings_of_each_param[parameter_position]
                 [parameter_index_assignment[parameter_position]]
                 .clone();
@@ -291,47 +319,44 @@ impl Runtime {
             .map_err(RuntimeError::from)?;
         }
 
-        let mut no_dom_fact_is_false = true;
-        for dom_fact in stmt.dom_facts.iter() {
+        let verify_state = VerifyState::new(0, false);
+        for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result =
-                self.verify_atomic_fact(dom_fact, &VerifyState::new(0, false))?;
+                self.verify_exist_or_and_chain_atomic_fact(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
-                self.store_atomic_fact_without_well_defined_verified_and_infer(dom_fact.clone())
-                    .map_err(RuntimeError::from)?;
-                inside_results.push(verify_dom_result);
-            } else {
-                let reversed = dom_fact.make_reversed();
-                let verify_reversed_dom_result =
-                    self.verify_atomic_fact(&reversed, &VerifyState::new(0, false))?;
-                if verify_reversed_dom_result.is_unknown() {
-                    return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    dom_fact.clone(),
+                )
+                .map_err(RuntimeError::from)?;
+            } else if verify_dom_result.is_unknown() {
+                if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
+                    let verify_negation_result =
+                        self.verify_fact(&negated_domain, &verify_state)?;
+                    if verify_negation_result.is_true() {
+                        return Ok(());
+                    }
+                }
+                return Err(RuntimeError::ExecStmtError(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         Stmt::ByForStmt(stmt.clone()),
                         format!(
-                            "by for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown",
-                            dom_fact, reversed
+                            "by for: domain fact `{}` is not decided (could not verify it or its negation)",
+                            dom_fact
                         ),
                         None,
-                        inside_results,
-                    )));
-                }
-                if verify_reversed_dom_result.is_true() {
-                    no_dom_fact_is_false = false;
-                }
+                        vec![],
+                    ),
+                ));
             }
         }
 
-        if !no_dom_fact_is_false {
-            return Ok(inside_results);
-        }
-
         for proof_stmt in stmt.proof.iter() {
-            let proof_result = self.exec_stmt(proof_stmt)?;
-            inside_results.push(proof_result);
+            self.exec_stmt(proof_stmt)?;
         }
-        for fact_to_prove in stmt.then_facts.iter() {
+        for fact_to_prove in stmt.forall_fact.then_facts.iter() {
             let verified_result = self.verify_exist_or_and_chain_atomic_fact(
                 fact_to_prove,
-                &VerifyState::new(0, false),
+                &verify_state,
             )?;
             if verified_result.is_unknown() {
                 return Err(RuntimeError::from(
@@ -339,12 +364,11 @@ impl Runtime {
                         Stmt::ByForStmt(stmt.clone()),
                         format!("by for: failed to prove `{}`", fact_to_prove),
                         None,
-                        inside_results,
+                        vec![],
                     ),
                 ));
             }
-            inside_results.push(verified_result);
         }
-        Ok(inside_results)
+        Ok(())
     }
 }

@@ -1,28 +1,15 @@
-1 + 1 =2
-
-
-let  a R:
-    a = 1
-a = 1
-
-"""
-# family equality builtin: expand `equal_to` after substituting parameters, then compare
-seq(R) = Fn(N_pos) R
-finite_seq(R, 2) = fn(x N_pos: x <= 2) R
-Fn(N_pos) R = seq(R)
-
 family matrix(s set, m, n N_pos) = fn(i N_pos, j N_pos: i <= m, j <= n) s
 
-let m family matrix(R, 3, 3)：
-    m(1, 1) = 1
-    m(1, 2) = 0
-    m(1, 3) = 0
-    m(2, 1) = 0
-    m(2, 2) = 1
-    m(2, 3) = 0
-    m(3, 1) = 0
-    m(3, 2) = 0
-    m(3, 3) = 1
+let M family matrix(R, 3, 3):
+    M(1, 1) = 1
+    M(1, 2) = 0
+    M(1, 3) = 0
+    M(2, 1) = 0
+    M(2, 2) = 1
+    M(2, 3) = 0
+    M(3, 1) = 0
+    M(3, 2) = 0
+    M(3, 3) = 1
 
 prop is_diagonal_matrix(n N_pos,m family matrix(R, n, n)):
     forall i, j N_pos:
@@ -37,7 +24,4 @@ by for:
         forall i closed_range(1, 3), j closed_range(1, 3):
             i != j
             =>:
-                m(i, j) = 0
-    do_nothing
-
-"""
+                M(i, j) = 0

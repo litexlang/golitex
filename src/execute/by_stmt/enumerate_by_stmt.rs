@@ -158,7 +158,6 @@ impl Runtime {
         stmt: &ByEnumerateStmt,
         parameter_index_assignment: &Vec<usize>,
     ) -> Result<(), RuntimeError> {
-        let mut inside_results_before_failure: Vec<StmtExecResult> = Vec::new();
         for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
             let assigned_obj = (*stmt.param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
@@ -178,20 +177,15 @@ impl Runtime {
         }
 
         for proof_stmt in stmt.proof.iter() {
-            match self.exec_stmt(proof_stmt) {
-                Ok(proof_result) => {
-                    inside_results_before_failure.push(proof_result);
-                }
-                Err(statement_error) => {
-                    return Err(RuntimeError::from(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::ByEnumerateStmt(stmt.clone()),
-                            proof_stmt.to_string(),
-                            Some(statement_error),
-                            inside_results_before_failure,
-                        ),
-                    ));
-                }
+            if let Err(statement_error) = self.exec_stmt(proof_stmt) {
+                return Err(RuntimeError::from(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                        Stmt::ByEnumerateStmt(stmt.clone()),
+                        proof_stmt.to_string(),
+                        Some(statement_error),
+                        vec![],
+                    ),
+                ));
             }
         }
 
@@ -206,11 +200,10 @@ impl Runtime {
                         Stmt::ByEnumerateStmt(stmt.clone()),
                         format!("by enumerate: failed to prove `{}`", fact_to_prove),
                         None,
-                        inside_results_before_failure,
+                        vec![],
                     ),
                 ));
             }
-            inside_results_before_failure.push(verified_result);
         }
         Ok(())
     }
