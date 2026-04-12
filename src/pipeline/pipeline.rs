@@ -1,37 +1,38 @@
+use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::pipeline::run_stmt_at_global_env;
 use crate::prelude::*;
 use std::fs;
 
 pub type StmtResult = StmtExecResult;
 
-pub fn run_source_code_in_file(entrance_file_path: &str) -> String {
-    let source_code = match fs::read_to_string(entrance_file_path) {
+pub fn run_source_code_in_file(entry_file_path: &str) -> String {
+    let source_code = match fs::read_to_string(entry_file_path) {
         Ok(content) => content,
         Err(read_error) => panic!(
             "Could not read file {:?}: {}",
-            entrance_file_path, read_error
+            entry_file_path, read_error
         ),
     };
-    run_source_code_with_output(&source_code, entrance_file_path).1
+    run_source_code_with_output(&source_code, entry_file_path).1
 }
 
-pub fn run_source_code_in_file_with_ok(entrance_file_path: &str) -> (bool, String) {
-    let source_code = match fs::read_to_string(entrance_file_path) {
+pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) {
+    let source_code = match fs::read_to_string(entry_file_path) {
         Ok(content) => content,
         Err(read_error) => {
             return (
                 false,
                 format!(
                     "Could not read file {:?}: {}",
-                    entrance_file_path, read_error
+                    entry_file_path, read_error
                 ),
             );
         }
     };
-    run_source_code_with_output(&source_code, entrance_file_path)
+    run_source_code_with_output(&source_code, entry_file_path)
 }
 
-fn run_source_code_with_output(source_code: &str, entrance_label: &str) -> (bool, String) {
+fn run_source_code_with_output(source_code: &str, entry_label: &str) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new();
     let (builtin_stmt_results, builtin_error) =
@@ -40,7 +41,7 @@ fn run_source_code_with_output(source_code: &str, entrance_label: &str) -> (bool
     if !ok {
         return (false, format!("builtin code execution failed: {}", msg));
     }
-    runtime.new_file_path_new_env_new_name_scope(entrance_label);
+    runtime.new_file_path_new_env_new_name_scope(entry_label);
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     render_run_source_code_output(&runtime, &stmt_results, &runtime_error)
 }
@@ -82,20 +83,20 @@ pub fn run_source_code(
 }
 
 pub fn render_run_source_code_output(
-    _runtime: &Runtime,
+    runtime: &Runtime,
     stmt_results: &Vec<StmtResult>,
     runtime_error: &Option<RuntimeError>,
 ) -> (bool, String) {
     let mut output_text = String::new();
     for stmt_result in stmt_results.iter() {
         output_text.push('\n');
-        output_text.push_str(stmt_result.to_display_json_string().as_str());
+        output_text.push_str(display_stmt_exec_result_json(runtime, stmt_result).as_str());
         output_text.push('\n');
     }
 
     if let Some(error) = runtime_error {
         output_text.push('\n');
-        output_text.push_str(error.to_display_json_string().as_str());
+        output_text.push_str(display_runtime_error_json(runtime, error).as_str());
         output_text.push('\n');
         return (false, output_text);
     }

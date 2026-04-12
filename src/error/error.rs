@@ -363,7 +363,7 @@ impl RuntimeError {
     }
 }
 
-// Display outputs a short placeholder; full machine-readable form is [`RuntimeError::to_display_json_string`].
+// Display outputs a short placeholder; JSON: `display_runtime_error_json` in `crate::pipeline`.
 impl fmt::Display for RuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", "error")
