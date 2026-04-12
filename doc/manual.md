@@ -247,32 +247,38 @@ forall n Z:
 
 Purpose:
 
-Prove facts uniformly for parameters ranging over **`range(…)`** or **`closed_range(…)`**.
+Prove facts uniformly for parameters ranging over **`range(…)`** or **`closed_range(…)`**, using a single **`forall`** fact that carries the bounds and (optionally) domain / `=>:` conclusions.
 
-Syntax (common pattern):
+Syntax:
 
 ```text
-by for <param> <range_or_closed_range> [, <param> <range_or_closed_range> ]…:
+by for:
     prove:
-        <facts to prove>
+        forall <param_groups with range or closed_range>:
+            [ domain facts … ]
+            =>:
+                <then facts …>
     <proof statements>
 ```
 
-1. Each `<param>` is paired with a half-open `range(a, b)` or a closed `closed_range(a, b)` object.
-2. Optional **domain** atomic facts plus a `prove:` block of conclusions can appear in more elaborate forms (same structure as a `forall` with `=>:` in the surface grammar); the minimal pattern above matches `examples/for.lit`.
-3. Proof statements after `prove:` discharge the obligation.
+1. After `for` comes only `:` (no parameter list in the header).
+2. The first body block must be `prove:` containing **exactly one** `forall` fact. Every parameter type in that `forall` must be `range(…)` or `closed_range(…)` (possibly comma-grouped, e.g. `i, j closed_range(0, 3)`).
+3. The executor enumerates integer values in those ranges, assumes domain facts when they verify, runs `<proof statements>`, then checks each `then` fact. `forall` with `<=>:` is not allowed here.
+4. See `examples/for.lit` and `examples/tmp.lit`.
 
 e.g.
 
 ```litex
-by for n range(0, 10):
+by for:
     prove:
-        n < 10
+        forall n range(0, 10):
+            n < 10
     do_nothing
 
-by for n closed_range(0, 10):
+by for:
     prove:
-        n <= 10
+        forall n closed_range(0, 10):
+            n <= 10
     do_nothing
 ```
 
