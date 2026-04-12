@@ -53,7 +53,7 @@ impl Runtime {
                     continue;
                 }
                 Obj::Number(acc_num) => {
-                    let mut acc = Obj::Number(acc_num);
+                    let mut acc: Obj = acc_num.into();
                     while let Some(pend) = pending.pop() {
                         let (combine_op, right_obj) = match pend {
                             PendingRight::Add(o) => (BinaryCombineOp::Add, o),
@@ -93,15 +93,15 @@ impl Runtime {
         combine_op: BinaryCombineOp,
         eval_stmt: &EvalStmt,
     ) -> Result<Obj, RuntimeError> {
-        let combined = match combine_op {
-            BinaryCombineOp::Add => Obj::Add(Add::new(left, right)),
-            BinaryCombineOp::Sub => Obj::Sub(Sub::new(left, right)),
-            BinaryCombineOp::Mul => Obj::Mul(Mul::new(left, right)),
-            BinaryCombineOp::Div => Obj::Div(Div::new(left, right)),
+        let combined: Obj = match combine_op {
+            BinaryCombineOp::Add => Add::new(left, right).into(),
+            BinaryCombineOp::Sub => Sub::new(left, right).into(),
+            BinaryCombineOp::Mul => Mul::new(left, right).into(),
+            BinaryCombineOp::Div => Div::new(left, right).into(),
         };
         let calculated = combined.evaluate_to_normalized_decimal_number();
         match calculated {
-            Some(number) => Ok(Obj::Number(number)),
+            Some(number) => Ok(number.into()),
             None => Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     eval_stmt.clone().into(),
@@ -139,7 +139,7 @@ impl Runtime {
                     self.evaluate_symbol_obj_iterative((**arg).clone(), eval_stmt)?;
                 match evaluated_arg_obj {
                     Obj::Number(number) => {
-                        flattened_number_args.push(Obj::Number(number));
+                        flattened_number_args.push(number.into());
                     }
                     _ => {
                         return Err(RuntimeError::from(

@@ -28,7 +28,7 @@ pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOr
 
 pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
-        Obj::Sub(sub.clone()).evaluate_to_normalized_decimal_number()
+        Obj::from(sub.clone()).evaluate_to_normalized_decimal_number()
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
@@ -93,7 +93,7 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
 
 pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
-        Obj::Add(add.clone()).evaluate_to_normalized_decimal_number()
+        Obj::from(add.clone()).evaluate_to_normalized_decimal_number()
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
@@ -149,7 +149,7 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
 
 fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
-        Obj::Mul(mul.clone()).evaluate_to_normalized_decimal_number()
+        Obj::from(mul.clone()).evaluate_to_normalized_decimal_number()
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
@@ -238,7 +238,7 @@ fn collect_monomials_of_mul_of_monomial_vec(
 
 fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
-        Obj::Pow(pow.clone()).evaluate_to_normalized_decimal_number()
+        Obj::from(pow.clone()).evaluate_to_normalized_decimal_number()
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
@@ -295,7 +295,7 @@ fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrdere
 fn default_pow_fallback(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(m) = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
         "1".to_string(),
-        Some(vec![(Obj::Pow(pow.clone()), pow.to_string())]),
+        Some(vec![(Obj::from(pow.clone()), pow.to_string())]),
     ) {
         vec![m]
     } else {

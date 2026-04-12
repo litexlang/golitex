@@ -450,7 +450,7 @@ impl Runtime {
 
         let function_identifier_obj =
             have_fn_equal_stmt.name.clone().into();
-        let function_set_obj = Obj::FnSet(fn_set_stored.clone());
+        let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj,
             function_set_obj,
@@ -531,7 +531,7 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
 
         // 证明 fn_set 是 well-defined 的
-        let function_set_obj = Obj::FnSet(fn_set_stored.clone());
+        let function_set_obj = fn_set_stored.clone().into();
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
@@ -648,7 +648,7 @@ impl Runtime {
         self.store_identifier_obj(&have_fn_equal_case_by_case_stmt.name)?;
 
         let function_identifier_obj = have_fn_equal_case_by_case_stmt.name.clone().into();
-        let function_set_obj = Obj::FnSet(fn_set_stored.clone());
+        let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj,
             function_set_obj,
@@ -755,7 +755,7 @@ impl Runtime {
         }
 
         // 证明 fn_set 是 well-defined 的
-        let function_set_obj = Obj::FnSet(fn_set_stored.clone());
+        let function_set_obj = fn_set_stored.clone().into();
         self.verify_obj_well_defined_and_store_cache(
             &function_set_obj,
             &VerifyState::new(0, false),

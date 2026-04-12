@@ -185,7 +185,7 @@ impl Runtime {
             last_result = Some(result);
         }
 
-        param_arg_map.insert(SELF.to_string(), Obj::Tuple(tuple.clone()));
+        param_arg_map.insert(SELF.to_string(), tuple.clone().into());
 
         // TODO TODO: 让 self 对应这个 def ，否则 无法 instantiate
         self.register_param_as_struct_instance(SELF, struct_param_type.clone());

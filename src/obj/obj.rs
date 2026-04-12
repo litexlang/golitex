@@ -627,7 +627,7 @@ impl Obj {
                 } else {
                     m.name
                 };
-                Obj::IdentifierWithMod(IdentifierWithMod::new(m.mod_name, name))
+                IdentifierWithMod::new(m.mod_name, name).into()
             }
             Obj::FieldAccess(f) => {
                 let name = if f.name == from {
@@ -643,10 +643,10 @@ impl Obj {
                 } else {
                     f.name
                 };
-                Obj::FieldAccessWithMod(FieldAccessWithMod::new(f.mod_name, name, f.field))
+                FieldAccessWithMod::new(f.mod_name, name, f.field).into()
             }
             Obj::FnObj(inner) => {
-                let head = Box::new(replace_bound_identifier_in_atom(*inner.head, from, to));
+                let head = replace_bound_identifier_in_atom(*inner.head, from, to);
                 let body = inner
                     .body
                     .into_iter()
@@ -657,9 +657,9 @@ impl Obj {
                             .collect()
                     })
                     .collect();
-                Obj::FnObj(FnObj { head, body })
+                FnObj::new(head, body).into()
             }
-            Obj::Number(n) => Obj::Number(n),
+            Obj::Number(n) => n.into(),
             Obj::Add(x) => Add::new(Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to)).into(),
             Obj::Sub(x) => Sub::new(Obj::replace_bound_identifier(*x.left, from, to),
@@ -759,22 +759,23 @@ impl Obj {
             Obj::ObjAtIndex(x) => ObjAtIndex::new(Obj::replace_bound_identifier(*x.obj, from, to),
                 Obj::replace_bound_identifier(*x.index, from, to)).into(),
             Obj::StandardSet(s) => Obj::StandardSet(s),
-            Obj::FamilyObj(f) => Obj::FamilyObj(FamilyObj {
+            Obj::FamilyObj(f) => FamilyObj {
                 name: f.name,
                 params: f
                     .params
                     .into_iter()
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
-            }),
-            Obj::StructObj(s) => Obj::StructObj(StructObj {
-                name: s.name,
-                args: s
-                    .args
+            }
+            .into(),
+            Obj::StructObj(s) => StructObj::new(
+                s.name,
+                s.args
                     .into_iter()
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
-            }),
+            )
+            .into(),
         }
     }
 }
@@ -1308,6 +1309,30 @@ impl From<ObjAtIndex> for Obj {
 impl From<FieldAccess> for Obj {
     fn from(f: FieldAccess) -> Self {
         Obj::FieldAccess(f)
+    }
+}
+
+impl From<FieldAccessWithMod> for Obj {
+    fn from(f: FieldAccessWithMod) -> Self {
+        Obj::FieldAccessWithMod(f)
+    }
+}
+
+impl From<IdentifierWithMod> for Obj {
+    fn from(m: IdentifierWithMod) -> Self {
+        Obj::IdentifierWithMod(m)
+    }
+}
+
+impl From<StructObj> for Obj {
+    fn from(s: StructObj) -> Self {
+        Obj::StructObj(s)
+    }
+}
+
+impl From<FamilyObj> for Obj {
+    fn from(f: FamilyObj) -> Self {
+        Obj::FamilyObj(f)
     }
 }
 

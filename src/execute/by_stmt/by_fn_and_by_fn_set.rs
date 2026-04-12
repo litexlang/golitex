@@ -529,7 +529,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let membership_fact = InFact::new(
             stmt.func.clone(),
-            Obj::FnSet(stmt.fn_set.clone()),
+            stmt.fn_set.clone().into(),
             stmt.line_file.clone(),
         ).into();
         self.store_atomic_fact_without_well_defined_verified_and_infer(membership_fact)
