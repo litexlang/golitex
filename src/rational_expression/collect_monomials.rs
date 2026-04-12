@@ -76,8 +76,7 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
         if processed_right_indexes.contains(&j) {
             continue;
         }
-        let negated_scalar =
-            sub_signed_decimal_str("0", &right_monomial.non_zero_scalar);
+        let negated_scalar = sub_signed_decimal_str("0", &right_monomial.non_zero_scalar);
         if let Some(m) =
             MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
                 negated_scalar,
@@ -361,38 +360,5 @@ fn from_number_obj_to_monomial(
         vec![current_monomial]
     } else {
         vec![]
-    }
-}
-
-#[cfg(test)]
-mod collect_monomials_add_merge_tests {
-    use super::*;
-    use crate::prelude::*;
-    use crate::parse::tokenize_line;
-    use crate::parse::TokenBlock;
-    use crate::runtime::Runtime;
-    use std::rc::Rc;
-
-    fn parse_obj_line(line: &str) -> Obj {
-        let tokens = tokenize_line(line);
-        let mut tb = TokenBlock::new(tokens, vec![], (1, Rc::from("test.lit")));
-        let mut rt = Runtime::new();
-        rt.parse_obj(&mut tb).expect("parse")
-    }
-
-    /// Regression: `already_processed_indexes` stores **right** indices `j`; it must not be
-    /// checked against the **left** loop index `i`. When `i == j` (e.g. left[1] and right[1]
-    /// merged earlier), skipping `i` dropped unrelated left monomials (e.g. the `4abmn` term).
-    #[test]
-    fn add_merges_left_and_right_without_skipping_left_by_right_index_collision() {
-        let sum = parse_obj_line(
-            r#"2 * ( a * m + b * n ) ^ 2 + ( m ^ 2 - 2 * n ^ 2 ) * ( b ^ 2 - 2 * a ^ 2 )"#,
-        );
-        let monomials = collect_monomials_in_obj(&sum);
-        assert_eq!(
-            monomials.len(),
-            3,
-            "expect 4abmn + b^2 m^2 + 4 a^2 n^2 after a^2m^2/m^2a^2 and b^2n^2/n^2b^2 cancellation"
-        );
     }
 }

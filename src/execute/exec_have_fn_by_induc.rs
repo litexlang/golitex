@@ -166,7 +166,7 @@ impl Runtime {
         for i in 1..=n {
             let arg: Obj = Sub::new(param_name_str.as_str().into(), i.into()).into();
             let fn_obj: Obj = FnObj::new(
-                Atom::from(Identifier::new(stmt.name.clone())),
+                Identifier::new(stmt.name.clone()).into(),
                 vec![vec![Box::new(arg.clone())]],
             )
             .into();
@@ -296,7 +296,7 @@ impl Runtime {
             let equal_to = &stmt.special_cases_equal_tos[i];
 
             let fn_obj: Obj = FnObj::new(
-                Atom::from(Identifier::new(stmt.name.clone())),
+                Identifier::new(stmt.name.clone()).into(),
                 vec![vec![Box::new(arg.clone())]],
             )
             .into();
@@ -340,7 +340,7 @@ impl Runtime {
                     dom,
                     vec![EqualFact::new(
                         FnObj::new(
-                            Atom::from(Identifier::new(stmt.name.clone())),
+                            Identifier::new(stmt.name.clone()).into(),
                             vec![vec![Box::new(param_name.clone().into())]],
                         )
                         .into(),
@@ -389,7 +389,7 @@ impl Runtime {
                         dom,
                         vec![EqualFact::new(
                             FnObj::new(
-                                Atom::from(Identifier::new(stmt.name.clone())),
+                                Identifier::new(stmt.name.clone()).into(),
                                 vec![vec![Box::new(param_name.clone().into())]],
                             )
                             .into(),

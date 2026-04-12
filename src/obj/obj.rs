@@ -618,7 +618,7 @@ impl Obj {
                 if i.name == from {
                     to.to_string().into()
                 } else {
-                    Obj::Identifier(i)
+                    i.into()
                 }
             }
             Obj::IdentifierWithMod(m) => {
@@ -758,7 +758,7 @@ impl Obj {
             Obj::Choose(x) => Choose::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::ObjAtIndex(x) => ObjAtIndex::new(Obj::replace_bound_identifier(*x.obj, from, to),
                 Obj::replace_bound_identifier(*x.index, from, to)).into(),
-            Obj::StandardSet(s) => Obj::StandardSet(s),
+            Obj::StandardSet(s) => s.into(),
             Obj::FamilyObj(f) => FamilyObj {
                 name: f.name,
                 params: f
@@ -787,9 +787,9 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
     match atom {
         Atom::Identifier(i) => {
             if i.name == from {
-                Atom::from(Identifier::new(to.to_string()))
+                Identifier::new(to.to_string()).into()
             } else {
-                Atom::Identifier(i)
+                i.into()
             }
         }
         Atom::IdentifierWithMod(m) => {
@@ -798,7 +798,7 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
             } else {
                 m.name
             };
-            Atom::IdentifierWithMod(IdentifierWithMod::new(m.mod_name, name))
+            IdentifierWithMod::new(m.mod_name, name).into()
         }
         Atom::FieldAccess(f) => {
             let name = if f.name == from {
@@ -806,7 +806,7 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
             } else {
                 f.name
             };
-            Atom::FieldAccess(FieldAccess::new(name, f.field))
+            FieldAccess::new(name, f.field).into()
         }
         Atom::FieldAccessWithMod(f) => {
             let name = if f.name == from {
@@ -814,7 +814,7 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
             } else {
                 f.name
             };
-            Atom::FieldAccessWithMod(FieldAccessWithMod::new(f.mod_name, name, f.field))
+            FieldAccessWithMod::new(f.mod_name, name, f.field).into()
         }
     }
 }
@@ -1106,10 +1106,10 @@ impl fmt::Display for PowerSet {
 impl From<Atom> for Obj {
     fn from(atom: Atom) -> Self {
         match atom {
-            Atom::Identifier(a) => Obj::Identifier(a),
-            Atom::IdentifierWithMod(a) => Obj::IdentifierWithMod(a),
-            Atom::FieldAccess(a) => Obj::FieldAccess(a),
-            Atom::FieldAccessWithMod(a) => Obj::FieldAccessWithMod(a),
+            Atom::Identifier(a) => a.into(),
+            Atom::IdentifierWithMod(a) => a.into(),
+            Atom::FieldAccess(a) => a.into(),
+            Atom::FieldAccessWithMod(a) => a.into(),
         }
     }
 }
@@ -1122,13 +1122,13 @@ impl From<Identifier> for Obj {
 
 impl From<String> for Obj {
     fn from(name: String) -> Self {
-        Obj::Identifier(Identifier::new(name))
+        Identifier::new(name).into()
     }
 }
 
 impl From<&str> for Obj {
     fn from(name: &str) -> Self {
-        Obj::Identifier(Identifier::new(name.to_string()))
+        Identifier::new(name.to_string()).into()
     }
 }
 
@@ -1345,6 +1345,6 @@ impl From<StandardSet> for Obj {
 impl Identifier {
     /// Build an Obj::Identifier from a name. Parameter is String (not &str).
     pub fn mk(name: String) -> Obj {
-        Obj::Identifier(Identifier { name })
+        Identifier::new(name).into()
     }
 }

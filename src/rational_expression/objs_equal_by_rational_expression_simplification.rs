@@ -57,7 +57,6 @@ fn monomial_vectors_are_equal(
 #[cfg(test)]
 mod algebraic_identity_tests {
     use super::*;
-    use crate::prelude::*;
 
     #[test]
     fn a_plus_b_squared_equals_a_minus_b_squared_plus_4ab() {
@@ -66,10 +65,12 @@ mod algebraic_identity_tests {
         let two: Obj = Number::new("2".to_string()).into();
         let four: Obj = Number::new("4".to_string()).into();
 
-        let left = Pow::new(Add::new(a.clone(), b.clone()).into(),
-            two.clone()).into();
-        let right = Add::new(Pow::new(Sub::new(a.clone(), b.clone()).into(), two.clone()).into(),
-            Mul::new(Mul::new(four, a.clone()).into(), b.clone()).into()).into();
+        let left = Pow::new(Add::new(a.clone(), b.clone()).into(), two.clone()).into();
+        let right = Add::new(
+            Pow::new(Sub::new(a.clone(), b.clone()).into(), two.clone()).into(),
+            Mul::new(Mul::new(four, a.clone()).into(), b.clone()).into(),
+        )
+        .into();
 
         assert!(objs_equal_by_rational_expression_evaluation(&left, &right));
     }

@@ -86,35 +86,35 @@ impl Runtime {
         match atom {
             Atom::Identifier(identifier) => {
                 match self.inst_identifier(identifier, param_to_arg_map)? {
-                    Obj::Identifier(new_identifier) => Ok(Atom::Identifier(new_identifier)),
+                    Obj::Identifier(new_identifier) => Ok(new_identifier.into()),
                     Obj::IdentifierWithMod(new_identifier_with_mod) => {
-                        Ok(Atom::IdentifierWithMod(new_identifier_with_mod))
+                        Ok(new_identifier_with_mod.into())
                     }
-                    Obj::FieldAccess(new_field_access) => Ok(Atom::FieldAccess(new_field_access)),
+                    Obj::FieldAccess(new_field_access) => Ok(new_field_access.into()),
                     Obj::FieldAccessWithMod(new_field_access_with_mod) => {
-                        Ok(Atom::FieldAccessWithMod(new_field_access_with_mod))
+                        Ok(new_field_access_with_mod.into())
                     }
-                    _ => Ok(Atom::Identifier(identifier.clone())),
+                    _ => Ok(identifier.clone().into()),
                 }
             }
             Atom::IdentifierWithMod(identifier_with_mod) => {
-                Ok(Atom::IdentifierWithMod(identifier_with_mod.clone()))
+                Ok(identifier_with_mod.clone().into())
             }
             Atom::FieldAccess(field_access) => {
                 match self.inst_field_access(field_access, param_to_arg_map)? {
-                    Obj::Identifier(new_identifier) => Ok(Atom::Identifier(new_identifier)),
+                    Obj::Identifier(new_identifier) => Ok(new_identifier.into()),
                     Obj::IdentifierWithMod(new_identifier_with_mod) => {
-                        Ok(Atom::IdentifierWithMod(new_identifier_with_mod))
+                        Ok(new_identifier_with_mod.into())
                     }
-                    Obj::FieldAccess(new_field_access) => Ok(Atom::FieldAccess(new_field_access)),
+                    Obj::FieldAccess(new_field_access) => Ok(new_field_access.into()),
                     Obj::FieldAccessWithMod(new_field_access_with_mod) => {
-                        Ok(Atom::FieldAccessWithMod(new_field_access_with_mod))
+                        Ok(new_field_access_with_mod.into())
                     }
-                    _ => Ok(Atom::FieldAccess(field_access.clone())),
+                    _ => Ok(field_access.clone().into()),
                 }
             }
             Atom::FieldAccessWithMod(field_access_with_mod) => {
-                Ok(Atom::FieldAccessWithMod(field_access_with_mod.clone()))
+                Ok(field_access_with_mod.clone().into())
             }
         }
     }
@@ -126,7 +126,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         Ok(match param_to_arg_map.get(&identifier.name) {
             Some(obj) => obj.clone(),
-            None => Obj::Identifier(identifier.clone()),
+            None => identifier.clone().into(),
         })
     }
 
@@ -136,7 +136,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
         _ = param_to_arg_map;
-        Ok(Obj::IdentifierWithMod(identifier_with_mod.clone()))
+        Ok(identifier_with_mod.clone().into())
     }
 
     pub fn inst_field_access(
@@ -185,7 +185,7 @@ impl Runtime {
                     }
                 }
             }
-            None => Ok(Obj::FieldAccess(field_access.clone())),
+            None => Ok(field_access.clone().into()),
         }
     }
 
@@ -249,7 +249,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
         _ = param_to_arg_map;
-        Ok(Obj::FieldAccessWithMod(field_access_with_mod.clone()))
+        Ok(field_access_with_mod.clone().into())
     }
 
     pub fn inst_fn_obj(
@@ -587,7 +587,7 @@ impl Runtime {
     }
 
     pub fn inst_standard_set(&self, standard_set: &StandardSet) -> Result<Obj, RuntimeError> {
-        Ok(Obj::StandardSet(standard_set.clone()))
+        Ok(standard_set.clone().into())
     }
 
     pub fn inst_param_type(

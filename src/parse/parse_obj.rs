@@ -422,13 +422,12 @@ impl Runtime {
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
         let (head_atom, mut body_vectors) = match &result {
-            Obj::Identifier(i) => (Atom::Identifier(i.clone()), vec![]),
-            Obj::IdentifierWithMod(m) => (Atom::IdentifierWithMod(m.clone()), vec![]),
-            Obj::FieldAccess(field_access) => (Atom::FieldAccess(field_access.clone()), vec![]),
-            Obj::FieldAccessWithMod(field_access_with_mod) => (
-                Atom::FieldAccessWithMod(field_access_with_mod.clone()),
-                vec![],
-            ),
+            Obj::Identifier(i) => (i.clone().into(), vec![]),
+            Obj::IdentifierWithMod(m) => (m.clone().into(), vec![]),
+            Obj::FieldAccess(field_access) => (field_access.clone().into(), vec![]),
+            Obj::FieldAccessWithMod(field_access_with_mod) => {
+                (field_access_with_mod.clone().into(), vec![])
+            }
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -947,7 +946,7 @@ impl Runtime {
         match left {
             Obj::Identifier(a) => {
                 if tb.current_token_is_equal_to(COMMA) || tb.current()? == RIGHT_CURLY_BRACE {
-                    self.parse_list_set_obj_with_leftmost_obj(tb, Obj::Identifier(a))
+                    self.parse_list_set_obj_with_leftmost_obj(tb, a.into())
                 } else {
                     self.parse_set_builder(tb, a)
                 }
@@ -1043,11 +1042,9 @@ impl Runtime {
                     );
                 }
 
-                Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(
-                    left, right, field,
-                )))
+                Ok(FieldAccessWithMod::new(left, right, field).into())
             } else {
-                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(left, right)))
+                Ok(IdentifierWithMod::new(left, right).into())
             }
         } else {
             // 如果后面有 .，则解析为 FieldAccess
@@ -1064,9 +1061,9 @@ impl Runtime {
                         ),
                     );
                 }
-                Ok(Atom::FieldAccess(FieldAccess::new(left, field)))
+                Ok(FieldAccess::new(left, field).into())
             } else {
-                Ok(Atom::from(Identifier::new(left)))
+                Ok(Identifier::new(left).into())
             }
         }
     }
