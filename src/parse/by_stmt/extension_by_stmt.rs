@@ -48,11 +48,6 @@ impl Runtime {
             proof.push(self.parse_stmt(block)?);
         }
 
-        Ok(Stmt::ByExtensionStmt(ByExtensionStmt::new(
-            left,
-            right,
-            proof,
-            tb.line_file.clone(),
-        )))
+        Ok(ByExtensionStmt::new(left, right, proof, tb.line_file.clone()).into())
     }
 }

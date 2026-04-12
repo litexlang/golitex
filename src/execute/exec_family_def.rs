@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_def_family_stmt(
         &mut self,
         def_family_stmt: &DefFamilyStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         let family_definition_infer_result = self.run_in_local_env(|rt| {
             rt.def_family_stmt_check_well_defined(def_family_stmt)
         })?;
@@ -12,20 +12,18 @@ impl Runtime {
         self.store_def_family(def_family_stmt)
             .map_err(|store_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                    def_family_stmt.clone().into(),
                     "failed to store family definition".to_string(),
                     Some(store_error.into()),
                     vec![],
                 )
             })?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
-                Stmt::DefFamilyStmt(def_family_stmt.clone()),
+        Ok((NonFactualStmtSuccess::new(
+                def_family_stmt.clone().into(),
                 family_definition_infer_result,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     fn def_family_stmt_check_well_defined(
@@ -37,7 +35,7 @@ impl Runtime {
             .define_params_with_type(&def_family_stmt.params_def_with_type, false)
             .map_err(|define_params_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                    def_family_stmt.clone().into(),
                     "".to_string(),
                     Some(define_params_error),
                     vec![],
@@ -52,7 +50,7 @@ impl Runtime {
                 )
                 .map_err(|inner_exec_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                        def_family_stmt.clone().into(),
                         "".to_string(),
                         Some(RuntimeError::from(inner_exec_error)),
                         vec![],
@@ -64,7 +62,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&def_family_stmt.equal_to, &verify_state)
             .map_err(|well_defined_error| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    Stmt::DefFamilyStmt(def_family_stmt.clone()),
+                    def_family_stmt.clone().into(),
                     "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],

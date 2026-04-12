@@ -172,10 +172,10 @@ impl Runtime {
     pub(crate) fn verify_order_atomic_fact_numeric_builtin_only(
         &self,
         atomic_fact: &AtomicFact,
-    ) -> StmtExecResult {
+    ) -> StmtResult {
         if let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact {
             if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
-                return StmtExecResult::FactualStmtSuccess(
+                return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
                         "less_equal_fact_equal".to_string(),
@@ -191,7 +191,7 @@ impl Runtime {
             let strict_key = strict_fact.to_string();
             let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&strict_key);
             if cache_ok {
-                return StmtExecResult::FactualStmtSuccess(
+                return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                         Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
                         strict_key,
@@ -204,7 +204,7 @@ impl Runtime {
         }
         if let AtomicFact::GreaterEqualFact(greater_equal_fact) = atomic_fact {
             if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
-                return StmtExecResult::FactualStmtSuccess(
+                return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         Fact::AtomicFact(AtomicFact::GreaterEqualFact(greater_equal_fact.clone())),
                         "greater_equal_fact_equal".to_string(),
@@ -214,7 +214,7 @@ impl Runtime {
             }
         }
         if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
-            StmtExecResult::FactualStmtSuccess(
+            StmtResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(atomic_fact.clone()),
                     "number comparison".to_string(),
@@ -222,7 +222,7 @@ impl Runtime {
                 ),
             )
         } else {
-            StmtExecResult::StmtUnknown(StmtUnknown::new())
+            StmtResult::StmtUnknown(StmtUnknown::new())
         }
     }
 

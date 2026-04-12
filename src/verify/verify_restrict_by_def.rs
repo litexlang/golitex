@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         restrict_fact: &RestrictFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         let function = &restrict_fact.obj;
 
         let original_fn_set =
@@ -41,7 +41,7 @@ impl Runtime {
         restrict_fact: &RestrictFact,
         original_fn_set: &FnSet,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         let restrict_to_ref = match &restrict_fact.obj_can_restrict_to_fn_set {
             Obj::FnSet(r) => r,
             _ => return Ok(None),
@@ -172,7 +172,7 @@ impl Runtime {
         restrict_ret_set: &Obj,
         original_ret_set: &Obj,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         let params_in_original_sets_forall = ForallFact::new(
             forall_params,
             forall_dom_facts,
@@ -195,12 +195,13 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtExecResult::FactualStmtSuccess(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        Ok(Some(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
                 "restrict by definition (forall param sets narrower, same ret set)".to_string(),
                 Vec::new(),
-            ),
-        )))
+            ))
+            .into(),
+        ))
     }
 }

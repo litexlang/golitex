@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&Fact::ExistFact(exist_fact.clone()))
         {
@@ -35,14 +35,14 @@ impl Runtime {
             return Ok(result);
         }
 
-        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok((StmtUnknown::new()).into())
     }
 
     pub fn verify_exist_fact_with_known_exist_fact(
         &mut self,
         exist_fact: &ExistFact,
         known_exist_fact: &ExistFact,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
                 self,
@@ -55,7 +55,7 @@ impl Runtime {
             }
         }
 
-        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok((StmtUnknown::new()).into())
     }
 
     pub fn verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
@@ -63,7 +63,7 @@ impl Runtime {
         environment: &Environment,
         exist_fact: &ExistFact,
         known_exist_fact: &ExistFact,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key())
         {
             let target_string = Self::exist_fact_normalized_string(runtime, exist_fact)
@@ -86,20 +86,18 @@ impl Runtime {
                         )
                     })?;
                 if target_string == known_string {
-                    return Ok(StmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                             Fact::ExistFact(exist_fact.clone()),
                             known_fact.to_string(),
                             Some(Fact::ExistFact(known_fact.clone())),
                             None,
                             Vec::new(),
-                        ),
-                    ));
+                        )).into());
                 }
             }
         }
 
-        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok((StmtUnknown::new()).into())
     }
 
     fn exist_fact_normalized_string(

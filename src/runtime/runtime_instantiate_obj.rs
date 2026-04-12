@@ -170,15 +170,18 @@ impl Runtime {
                 match tuple_opt {
                     Some(t) => self.inst_field_access_on_struct_tuple(field_access, &t),
                     None => {
-                        return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                            None,
-                            format!(
-                                "field `{}` of struct `{}` is not a tuple",
-                                field_access.field, field_access.name
-                            ),
-                            default_line_file(),
-                            None,
-                        )))
+                        return Err(
+                            InstantiateRuntimeError(RuntimeErrorStruct::new(
+                                None,
+                                format!(
+                                    "field `{}` of struct `{}` is not a tuple",
+                                    field_access.field, field_access.name
+                                ),
+                                default_line_file(),
+                                None,
+                            ))
+                            .into(),
+                        )
                     }
                 }
             }
@@ -194,12 +197,15 @@ impl Runtime {
         let Some(def) = self.get_definition_of_struct_where_object_satisfies(
             &IdentifierOrIdentifierWithMod::Identifier(Identifier::new(field_access.name.clone())),
         ) else {
-            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                None,
-                format!("struct `{}` is not defined", field_access.name),
-                default_line_file(),
-                None,
-            )));
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!("struct `{}` is not defined", field_access.name),
+                    default_line_file(),
+                    None,
+                ))
+                .into(),
+            );
         };
 
         let Some(field_index) = def
@@ -207,25 +213,31 @@ impl Runtime {
             .iter()
             .position(|(fname, _)| fname == &field_access.field)
         else {
-            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "field `{}` of struct `{}` is not defined",
-                    field_access.field, field_access.name
-                ),
-                default_line_file(),
-                None,
-            )));
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "field `{}` of struct `{}` is not defined",
+                        field_access.field, field_access.name
+                    ),
+                    default_line_file(),
+                    None,
+                ))
+                .into(),
+            );
         };
 
         let tuple_index = field_index + def.number_of_params();
         let Some(component) = tuple.args.get(tuple_index) else {
-            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                None,
-                format!("field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)", field_access.field, field_access.name, tuple_index, field_access.name, tuple.args.len()),
-                default_line_file(),
-                None,
-            )));
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!("field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)", field_access.field, field_access.name, tuple_index, field_access.name, tuple.args.len()),
+                    default_line_file(),
+                    None,
+                ))
+                .into(),
+            );
         };
 
         Ok((**component).clone())
@@ -622,16 +634,19 @@ impl Runtime {
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
         if total_param_count != args.len() {
-            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
-                    total_param_count,
-                    args.len()
-                ),
-                default_line_file(),
-                None,
-            )));
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "argument count mismatch: expected {} parameter(s), got {} argument(s)",
+                        total_param_count,
+                        args.len()
+                    ),
+                    default_line_file(),
+                    None,
+                ))
+                .into(),
+            );
         }
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
@@ -661,16 +676,19 @@ impl Runtime {
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = ParamGroupWithParamType::number_of_params(param_defs);
         if total_param_count != args.len() {
-            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
-                    total_param_count,
-                    args.len()
-                ),
-                default_line_file(),
-                None,
-            )));
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "argument count mismatch: expected {} parameter(s), got {} argument(s)",
+                        total_param_count,
+                        args.len()
+                    ),
+                    default_line_file(),
+                    None,
+                ))
+                .into(),
+            );
         }
 
         let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);

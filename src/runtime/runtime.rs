@@ -423,16 +423,19 @@ impl Runtime {
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let param_names = ParamGroupWithParamType::collect_param_names(param_defs);
         if param_names.len() != args.len() {
-            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "params_to_arg_map: expected {} argument(s), got {}",
-                    param_names.len(),
-                    args.len()
-                ),
-                default_line_file(),
-                None,
-            )));
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "params_to_arg_map: expected {} argument(s), got {}",
+                        param_names.len(),
+                        args.len()
+                    ),
+                    default_line_file(),
+                    None,
+                ))
+                .into(),
+            );
         }
 
         let mut flat_types: Vec<ParamType> = Vec::with_capacity(param_names.len());
@@ -456,18 +459,21 @@ impl Runtime {
                     if let Obj::Tuple(t) = arg {
                         let expected_len = def.number_of_params() + def.fields.len();
                         if t.args.len() != expected_len {
-                            return Err(RuntimeError::InstantiateError(RuntimeErrorStruct::new(
-                                None,
-                                format!(
-                                    "params_to_arg_map: tuple for `{}` has {} component(s), struct `{}` expects {}",
-                                    param_name,
-                                    t.args.len(),
-                                    struct_name,
-                                    expected_len
-                                ),
-                                default_line_file(),
-                                None,
-                            )));
+                            return Err(
+                                InstantiateRuntimeError(RuntimeErrorStruct::new(
+                                    None,
+                                    format!(
+                                        "params_to_arg_map: tuple for `{}` has {} component(s), struct `{}` expects {}",
+                                        param_name,
+                                        t.args.len(),
+                                        struct_name,
+                                        expected_len
+                                    ),
+                                    default_line_file(),
+                                    None,
+                                ))
+                                .into(),
+                            );
                         }
                         self.register_param_as_struct_instance(param_name, struct_ty.clone());
                         result.insert(param_name.clone(), arg.clone());

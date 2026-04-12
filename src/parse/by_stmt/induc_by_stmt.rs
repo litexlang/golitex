@@ -20,11 +20,6 @@ impl Runtime {
             to_prove.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
         }
 
-        Ok(Stmt::ByInducStmt(ByInducStmt::new(
-            to_prove,
-            param,
-            induc_from,
-            tb.line_file.clone(),
-        )))
+        Ok(ByInducStmt::new(to_prove, param, induc_from, tb.line_file.clone()).into())
     }
 }
