@@ -417,7 +417,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
-        let zero = Obj::Number(Number::new("0".to_string()));
+        let zero: Obj = Number::new("0".to_string()).into();
         let zero_lt_elem = AtomicFact::LessFact(LessFact::new(
             zero,
             elem.clone(),
@@ -432,7 +432,7 @@ impl Runtime {
 
         let in_z = AtomicFact::InFact(InFact::new(
             elem.clone(),
-            Obj::StandardSet(StandardSet::Z),
+            StandardSet::Z.into(),
             lf.clone(),
         ));
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
@@ -444,7 +444,7 @@ impl Runtime {
 
         let in_n = AtomicFact::InFact(InFact::new(
             elem.clone(),
-            Obj::StandardSet(StandardSet::N),
+            StandardSet::N.into(),
             lf.clone(),
         ));
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_n, verify_state)? {
@@ -531,7 +531,7 @@ impl Runtime {
                 &StandardSet::Z,
             ));
         }
-        let z_obj = Obj::StandardSet(StandardSet::Z);
+        let z_obj: Obj = StandardSet::Z.into();
         let lf = in_fact.line_file.clone();
 
         let mut require_in_z = |o: &Obj| -> Result<bool, RuntimeError> {
@@ -573,8 +573,8 @@ impl Runtime {
                 &StandardSet::Q,
             ));
         }
-        let q_obj = Obj::StandardSet(StandardSet::Q);
-        let z_obj = Obj::StandardSet(StandardSet::Z);
+        let q_obj: Obj = StandardSet::Q.into();
+        let z_obj: Obj = StandardSet::Z.into();
         let lf = in_fact.line_file.clone();
 
         let in_q =
@@ -627,7 +627,7 @@ impl Runtime {
         };
         let product_in_r_fact = AtomicFact::InFact(InFact::new(
             in_fact.element.clone(),
-            Obj::StandardSet(StandardSet::R),
+            StandardSet::R.into(),
             in_fact.line_file.clone(),
         ));
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
@@ -655,7 +655,7 @@ impl Runtime {
             StandardSet::QNeg => {
                 let product_in_q_fact = AtomicFact::InFact(InFact::new(
                     in_fact.element.clone(),
-                    Obj::StandardSet(StandardSet::Q),
+                    StandardSet::Q.into(),
                     in_fact.line_file.clone(),
                 ));
                 if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
@@ -674,7 +674,7 @@ impl Runtime {
             StandardSet::ZNeg => {
                 let product_in_z_fact = AtomicFact::InFact(InFact::new(
                     in_fact.element.clone(),
-                    Obj::StandardSet(StandardSet::Z),
+                    StandardSet::Z.into(),
                     in_fact.line_file.clone(),
                 ));
                 if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
@@ -767,68 +767,68 @@ impl Runtime {
     fn standard_subset_set_objs_for_target_set(target_set_obj: &Obj) -> Option<Vec<Obj>> {
         match target_set_obj {
             Obj::StandardSet(StandardSet::NPos) => Some(vec![]),
-            Obj::StandardSet(StandardSet::N) => Some(vec![Obj::StandardSet(StandardSet::NPos)]),
+            Obj::StandardSet(StandardSet::N) => Some(vec![StandardSet::NPos.into()]),
             Obj::StandardSet(StandardSet::ZNeg) => Some(vec![]),
             Obj::StandardSet(StandardSet::ZNz) => Some(vec![
-                Obj::StandardSet(StandardSet::NPos),
-                Obj::StandardSet(StandardSet::ZNeg),
+                StandardSet::NPos.into(),
+                StandardSet::ZNeg.into(),
             ]),
             Obj::StandardSet(StandardSet::Z) => Some(vec![
-                Obj::StandardSet(StandardSet::NPos),
-                Obj::StandardSet(StandardSet::N),
-                Obj::StandardSet(StandardSet::ZNeg),
-                Obj::StandardSet(StandardSet::ZNz),
+                StandardSet::NPos.into(),
+                StandardSet::N.into(),
+                StandardSet::ZNeg.into(),
+                StandardSet::ZNz.into(),
             ]),
-            Obj::StandardSet(StandardSet::QPos) => Some(vec![Obj::StandardSet(StandardSet::NPos)]),
-            Obj::StandardSet(StandardSet::QNeg) => Some(vec![Obj::StandardSet(StandardSet::ZNeg)]),
+            Obj::StandardSet(StandardSet::QPos) => Some(vec![StandardSet::NPos.into()]),
+            Obj::StandardSet(StandardSet::QNeg) => Some(vec![StandardSet::ZNeg.into()]),
             Obj::StandardSet(StandardSet::QNz) => Some(vec![
-                Obj::StandardSet(StandardSet::NPos),
-                Obj::StandardSet(StandardSet::ZNeg),
-                Obj::StandardSet(StandardSet::ZNz),
-                Obj::StandardSet(StandardSet::QPos),
-                Obj::StandardSet(StandardSet::QNeg),
+                StandardSet::NPos.into(),
+                StandardSet::ZNeg.into(),
+                StandardSet::ZNz.into(),
+                StandardSet::QPos.into(),
+                StandardSet::QNeg.into(),
             ]),
             Obj::StandardSet(StandardSet::Q) => Some(vec![
-                Obj::StandardSet(StandardSet::NPos),
-                Obj::StandardSet(StandardSet::N),
-                Obj::StandardSet(StandardSet::ZNeg),
-                Obj::StandardSet(StandardSet::ZNz),
-                Obj::StandardSet(StandardSet::Z),
-                Obj::StandardSet(StandardSet::QPos),
-                Obj::StandardSet(StandardSet::QNeg),
-                Obj::StandardSet(StandardSet::QNz),
+                StandardSet::NPos.into(),
+                StandardSet::N.into(),
+                StandardSet::ZNeg.into(),
+                StandardSet::ZNz.into(),
+                StandardSet::Z.into(),
+                StandardSet::QPos.into(),
+                StandardSet::QNeg.into(),
+                StandardSet::QNz.into(),
             ]),
             Obj::StandardSet(StandardSet::RPos) => Some(vec![
-                Obj::StandardSet(StandardSet::NPos),
-                Obj::StandardSet(StandardSet::QPos),
+                StandardSet::NPos.into(),
+                StandardSet::QPos.into(),
             ]),
             Obj::StandardSet(StandardSet::RNeg) => Some(vec![
-                Obj::StandardSet(StandardSet::ZNeg),
-                Obj::StandardSet(StandardSet::QNeg),
+                StandardSet::ZNeg.into(),
+                StandardSet::QNeg.into(),
             ]),
             Obj::StandardSet(StandardSet::RNz) => Some(vec![
-                Obj::StandardSet(StandardSet::NPos),
-                Obj::StandardSet(StandardSet::ZNeg),
-                Obj::StandardSet(StandardSet::ZNz),
-                Obj::StandardSet(StandardSet::QPos),
-                Obj::StandardSet(StandardSet::QNeg),
-                Obj::StandardSet(StandardSet::QNz),
-                Obj::StandardSet(StandardSet::RPos),
-                Obj::StandardSet(StandardSet::RNeg),
+                StandardSet::NPos.into(),
+                StandardSet::ZNeg.into(),
+                StandardSet::ZNz.into(),
+                StandardSet::QPos.into(),
+                StandardSet::QNeg.into(),
+                StandardSet::QNz.into(),
+                StandardSet::RPos.into(),
+                StandardSet::RNeg.into(),
             ]),
             Obj::StandardSet(StandardSet::R) => Some(vec![
-                Obj::StandardSet(StandardSet::NPos),
-                Obj::StandardSet(StandardSet::N),
-                Obj::StandardSet(StandardSet::ZNeg),
-                Obj::StandardSet(StandardSet::ZNz),
-                Obj::StandardSet(StandardSet::Z),
-                Obj::StandardSet(StandardSet::QPos),
-                Obj::StandardSet(StandardSet::QNeg),
-                Obj::StandardSet(StandardSet::QNz),
-                Obj::StandardSet(StandardSet::Q),
-                Obj::StandardSet(StandardSet::RPos),
-                Obj::StandardSet(StandardSet::RNeg),
-                Obj::StandardSet(StandardSet::RNz),
+                StandardSet::NPos.into(),
+                StandardSet::N.into(),
+                StandardSet::ZNeg.into(),
+                StandardSet::ZNz.into(),
+                StandardSet::Z.into(),
+                StandardSet::QPos.into(),
+                StandardSet::QNeg.into(),
+                StandardSet::QNz.into(),
+                StandardSet::Q.into(),
+                StandardSet::RPos.into(),
+                StandardSet::RNeg.into(),
+                StandardSet::RNz.into(),
             ]),
             _ => None,
         }
@@ -864,8 +864,8 @@ impl Runtime {
         let mut pb_map = HashMap::new();
         for i in 0..n {
             let ph = mangled_placeholders[i].clone();
-            pa_map.insert(pa[i].clone(), Obj::Identifier(Identifier::new(ph.clone())));
-            pb_map.insert(pb[i].clone(), Obj::Identifier(Identifier::new(ph)));
+            pa_map.insert(pa[i].clone(), ph.clone().into());
+            pb_map.insert(pb[i].clone(), ph.into());
         }
 
         let a_params = param_def_with_set_rename_to_mangled(
@@ -906,7 +906,7 @@ impl Runtime {
         expected_fn_set: &FnSet,
         in_fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let element_obj = Obj::Identifier(Identifier::new(identifier.name.clone()));
+        let element_obj = identifier.name.clone().into();
         let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(&element_obj) else {
             return Ok((StmtUnknown::new()).into());
         };

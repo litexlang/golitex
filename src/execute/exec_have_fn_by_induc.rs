@@ -39,8 +39,7 @@ impl Runtime {
     }
 
     // have fn by induc from 0: f(x Z: x >= 0) R: case 0: … case 1: …
-    /// 先按 `stmt.fn_set` 声明归纳参数 `param_name`，再登记 `stmt.name` 属于一个形式参数为**新生成名字**的 `FnSet`，
-    /// 其定义域满足 `random_param < param_name` 且 `random_param >= param_name - len(special_cases)`（与特例下标区间一致）。
+    // Registers stmt.name in a new FnSet whose domain matches special-case indices.
     fn have_fn_by_induc_verify_last_case_register_fn(
         &mut self,
         stmt: &HaveFnByInducStmt,
@@ -51,38 +50,39 @@ impl Runtime {
 
         let random_param = self.generate_random_unused_name();
 
-        let param_minus_n = Obj::Sub(Sub::new(
-            Obj::Identifier(Identifier::new(param_name.to_string())),
-            Obj::Number(Number::new(stmt.special_cases_equal_tos.len().to_string())),
-        ));
+        let param_minus_n: Obj =
+            Sub::new(param_name.into(), stmt.special_cases_equal_tos.len().into()).into();
 
         let dom_facts: Vec<OrAndChainAtomicFact> = vec![
-            OrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                Obj::Identifier(Identifier::new(random_param.clone())),
+            GreaterEqualFact::new(
+                random_param.clone().into(),
                 param_minus_n,
                 stmt.line_file.clone(),
-            ))),
-            OrAndChainAtomicFact::AtomicFact(AtomicFact::LessFact(LessFact::new(
-                Obj::Identifier(Identifier::new(random_param.clone())),
-                Obj::Identifier(Identifier::new(param_name.to_string())),
+            )
+            .into(),
+            LessFact::new(
+                random_param.clone().into(),
+                param_name.into(),
                 stmt.line_file.clone(),
-            ))),
+            )
+            .into(),
         ];
 
         let fn_set = self.new_fn_set_and_add_mangled_prefix(
             vec![ParamGroupWithSet::new(
                 vec![random_param.clone()],
-                Obj::StandardSet(StandardSet::Z),
+                StandardSet::Z.into(),
             )],
             dom_facts,
             stmt.ret_set.clone(),
         )?;
 
-        let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(stmt.name.clone())),
-            Obj::FnSet(fn_set),
+        let function_in_function_set_fact: Fact = InFact::new(
+            stmt.name.clone().into(),
+            fn_set.into(),
             stmt.line_file.clone(),
-        )));
+        )
+        .into();
 
         self.store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
@@ -99,16 +99,18 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(equal_to, verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
-        let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
+        let equal_to_in_ret_set_atomic_fact: AtomicFact = InFact::new(
             equal_to.clone(),
             stmt.ret_set.clone(),
             stmt.line_file.clone(),
-        ));
+        )
+        .into();
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
-            return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            return Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "have_fn_by_induc: {} is not in return set {}",
@@ -116,7 +118,8 @@ impl Runtime {
                     ),
                     None,
                     vec![],
-                )));
+                ),
+            ));
         }
         Ok(())
     }
@@ -137,46 +140,39 @@ impl Runtime {
 
         let param_name_str = stmt.param.clone();
 
-        let left_id = Obj::Identifier(Identifier::new(param_name_str.clone()));
+        let left_id: Obj = param_name_str.as_str().into();
 
         self.store_identifier_obj(&param_name_str)
             .map_err(RuntimeError::from)?;
 
         self.define_parameter_by_binding_param_type(
             &param_name_str,
-            &ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
+            &ParamType::Obj(StandardSet::Z.into()),
         )?;
 
-        let param_larger_than_induc_plus_offset =
-            AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                left_id,
-                induc_obj_plus_offset(&stmt.induc_from, n),
-                line_file.clone(),
-            )));
+        let param_larger_than_induc_plus_offset: AndChainAtomicFact = GreaterEqualFact::new(
+            left_id,
+            induc_obj_plus_offset(&stmt.induc_from, n),
+            line_file.clone(),
+        )
+        .into();
 
         self.store_fact_without_well_defined_verified_and_infer(
             param_larger_than_induc_plus_offset.to_fact(),
         )
         .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
 
-        // 归纳步里要用到 f(x-1), …, f(x-n)。仅 `store_well_defined_obj_cache` 不够：`verify_add_well_defined`
-        // 会对每个加数做 `require_obj_in_r`；若命中 well-defined 缓存则不会走 `verify_fn_obj_well_defined`，
-        // 也就不会登记 `f(x-i) ∈ ret_set` 的中间事实，加法会失败。这里显式登记与源码同形的 `FnObj` 的成员关系。
+        // Induction step needs f(x-1)..f(x-n); cache alone skips fn membership, so store FnObj and in ret_set.
         for i in 1..=n {
-            let arg = Obj::Sub(Sub::new(
-                Obj::Identifier(Identifier::new(param_name_str.to_string())),
-                Obj::Number(Number::new(i.to_string())),
-            ));
-            let fn_obj = Obj::FnObj(FnObj {
-                head: Box::new(Atom::Identifier(Identifier::new(stmt.name.clone()))),
-                body: vec![vec![Box::new(arg.clone())]],
-            });
+            let arg: Obj = Sub::new(param_name_str.as_str().into(), i.into()).into();
+            let fn_obj: Obj = FnObj::new(
+                Atom::from(Identifier::new(stmt.name.clone())),
+                vec![vec![Box::new(arg.clone())]],
+            )
+            .into();
             self.store_well_defined_obj_cache(&fn_obj);
-            let fn_in_ret = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                fn_obj,
-                stmt.ret_set.clone(),
-                line_file.clone(),
-            )));
+            let fn_in_ret: Fact =
+                InFact::new(fn_obj, stmt.ret_set.clone(), line_file.clone()).into();
             self.store_fact_without_well_defined_verified_and_infer(fn_in_ret)
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e.into()))?;
         }
@@ -190,16 +186,16 @@ impl Runtime {
             HaveFnByInducLastCase::NestedCases(last_pairs) if !last_pairs.is_empty() => {
                 let coverage_cases: Vec<AndChainAtomicFact> =
                     last_pairs.iter().map(|c| c.case_fact.clone()).collect();
-                let coverage = Fact::OrFact(OrFact::new(coverage_cases, line_file.clone()));
+                let coverage: Fact = OrFact::new(coverage_cases, line_file.clone()).into();
                 self.verify_fact_return_err_if_not_true(&coverage, &verify_state)
                     .map_err(|e| {
                         RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                stmt.clone().into(),
-                                "have_fn_by_induc: nested last cases do not cover all situations"
-                                    .to_string(),
-                                Some(e),
-                                vec![],
-                            ))
+                            stmt.clone().into(),
+                            "have_fn_by_induc: nested last cases do not cover all situations"
+                                .to_string(),
+                            Some(e),
+                            vec![],
+                        ))
                     })?;
 
                 for nested in last_pairs.iter() {
@@ -217,20 +213,21 @@ impl Runtime {
                 }
             }
             HaveFnByInducLastCase::NestedCases(_) => {
-                return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                return Err(RuntimeError::from(
+                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         "have_fn_by_induc: nested last case list must not be empty".to_string(),
                         None,
                         vec![],
-                    )));
+                    ),
+                ));
             }
         }
 
         Ok(())
     }
 
-    /// [`Runtime::infer`] 对 `ForallFact`、`f $in FnSet` 等常返回空的 [`InferResult`]，JSON 里 `infer_facts` 会误以为没有推出任何东西。
-    /// 若本步 `store_*_and_infer` 的链式推导为空，则把刚存入的 [`Fact`] 记入列表，便于展示「本语句提交的事实」。
+    // When store_*_and_infer yields an empty chain, record the stored fact for infer_facts display.
     fn merge_store_infer_with_fallback_fact(
         infer_result: &mut InferResult,
         store_infer: InferResult,
@@ -248,21 +245,24 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<InferResult, RuntimeError> {
         // stmt.induc_from 得是 Z
-        let in_fact = AtomicFact::InFact(InFact::new(
+        let in_fact: AtomicFact = InFact::new(
             stmt.induc_from.clone(),
-            Obj::StandardSet(StandardSet::Z),
+            StandardSet::Z.into(),
             stmt.line_file.clone(),
-        ));
+        )
+        .into();
         let verify_result = self
             .verify_atomic_fact(&in_fact, &VerifyState::new(0, false))
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
-            return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            return Err(RuntimeError::from(
+                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     "have_fn_by_induc: induc_from is not in Z".to_string(),
                     None,
                     vec![],
-                )));
+                ),
+            ));
         }
 
         let mut infer_result = InferResult::new();
@@ -273,40 +273,36 @@ impl Runtime {
 
         let bind_infer = self.define_parameter_by_binding_param_type(
             &stmt.name,
-            &ParamType::Obj(Obj::FnSet(fs.clone())),
+            &ParamType::Obj(fs.clone().into()),
         )?;
-        let bind_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(stmt.name.clone())),
-            Obj::FnSet(fs.clone()),
+        let bind_fact: Fact = InFact::new(
+            stmt.name.clone().into(),
+            fs.clone().into(),
             stmt.line_file.clone(),
-        )));
+        )
+        .into();
         Self::merge_store_infer_with_fallback_fact(&mut infer_result, bind_infer, &bind_fact);
 
-        // 遍历所有special case，让 stmt.name(induc_from + i) = equal_to[i]
+        // Special cases: stmt.name(induc_from + i) = equal_to[i]
         for i in 0..stmt.special_cases_equal_tos.len() {
             let raw_arg = if i == 0 {
                 stmt.induc_from.clone()
             } else {
-                Obj::Add(Add::new(
-                    stmt.induc_from.clone(),
-                    Obj::Number(Number::new(i.to_string())),
-                ))
+                Add::new(stmt.induc_from.clone(), i.into()).into()
             };
-            // 纯数字加法等折叠成字面量，避免存成 f(0 + 1) 而应 f(1)
+            // Fold numeric adds so we store f(1) not f(0 + 1)
             let arg = raw_arg.replace_with_numeric_result_if_can_be_calculated().0;
 
             let equal_to = &stmt.special_cases_equal_tos[i];
 
-            let fn_obj = Obj::FnObj(FnObj {
-                head: Box::new(Atom::Identifier(Identifier::new(stmt.name.clone()))),
-                body: vec![vec![Box::new(arg.clone())]],
-            });
+            let fn_obj: Obj = FnObj::new(
+                Atom::from(Identifier::new(stmt.name.clone())),
+                vec![vec![Box::new(arg.clone())]],
+            )
+            .into();
 
-            let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                fn_obj.clone(),
-                equal_to.clone(),
-                stmt.line_file.clone(),
-            )));
+            let equal_fact: Fact =
+                EqualFact::new(fn_obj.clone(), equal_to.clone(), stmt.line_file.clone()).into();
 
             let result = self
                 .store_fact_without_well_defined_verified_and_infer(equal_fact.clone())
@@ -320,7 +316,7 @@ impl Runtime {
                 let param_name = stmt.param.clone();
                 let param_def = vec![ParamGroupWithParamType::new(
                     vec![param_name.clone()],
-                    ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
+                    ParamType::Obj(StandardSet::Z.into()),
                 )];
 
                 let mut dom: Vec<ExistOrAndChainAtomicFact> =
@@ -330,33 +326,31 @@ impl Runtime {
                     induc_obj_plus_offset(&stmt.induc_from, stmt.special_cases_equal_tos.len())
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0;
-                dom.push(ExistOrAndChainAtomicFact::AtomicFact(
-                    AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                        Obj::Identifier(Identifier::new(param_name.clone())),
+                dom.push(
+                    GreaterEqualFact::new(
+                        param_name.clone().into(),
                         induc_plus_n,
                         stmt.line_file.clone(),
-                    )),
-                ));
+                    )
+                    .into(),
+                );
 
-                let forall_fact = Fact::ForallFact(ForallFact::new(
+                let forall_fact: Fact = ForallFact::new(
                     param_def,
                     dom,
-                    vec![ExistOrAndChainAtomicFact::AtomicFact(
-                        AtomicFact::EqualFact(EqualFact::new(
-                            Obj::FnObj(FnObj {
-                                head: Box::new(Atom::Identifier(Identifier::new(
-                                    stmt.name.clone(),
-                                ))),
-                                body: vec![vec![Box::new(Obj::Identifier(Identifier::new(
-                                    param_name.clone(),
-                                )))]],
-                            }),
-                            eq.clone(),
-                            stmt.line_file.clone(),
-                        )),
-                    )],
+                    vec![EqualFact::new(
+                        FnObj::new(
+                            Atom::from(Identifier::new(stmt.name.clone())),
+                            vec![vec![Box::new(param_name.clone().into())]],
+                        )
+                        .into(),
+                        eq.clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into()],
                     stmt.line_file.clone(),
-                ));
+                )
+                .into();
 
                 let result = self
                     .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())
@@ -368,7 +362,7 @@ impl Runtime {
                     let param_name = stmt.param.clone();
                     let param_def = vec![ParamGroupWithParamType::new(
                         vec![param_name.clone()],
-                        ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
+                        ParamType::Obj(StandardSet::Z.into()),
                     )];
                     let eq = nested.equal_to.clone();
 
@@ -379,35 +373,33 @@ impl Runtime {
                         induc_obj_plus_offset(&stmt.induc_from, stmt.special_cases_equal_tos.len())
                             .replace_with_numeric_result_if_can_be_calculated()
                             .0;
-                    dom.push(ExistOrAndChainAtomicFact::AtomicFact(
-                        AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                            Obj::Identifier(Identifier::new(param_name.clone())),
+                    dom.push(
+                        GreaterEqualFact::new(
+                            param_name.clone().into(),
                             induc_plus_n,
                             stmt.line_file.clone(),
-                        )),
-                    ));
+                        )
+                        .into(),
+                    );
 
                     dom.push(nested.case_fact.to_exist_or_and_chain_atomic_fact());
 
-                    let forall_fact = Fact::ForallFact(ForallFact::new(
+                    let forall_fact: Fact = ForallFact::new(
                         param_def,
                         dom,
-                        vec![ExistOrAndChainAtomicFact::AtomicFact(
-                            AtomicFact::EqualFact(EqualFact::new(
-                                Obj::FnObj(FnObj {
-                                    head: Box::new(Atom::Identifier(Identifier::new(
-                                        stmt.name.clone(),
-                                    ))),
-                                    body: vec![vec![Box::new(Obj::Identifier(Identifier::new(
-                                        param_name.clone(),
-                                    )))]],
-                                }),
-                                eq.clone(),
-                                stmt.line_file.clone(),
-                            )),
-                        )],
+                        vec![EqualFact::new(
+                            FnObj::new(
+                                Atom::from(Identifier::new(stmt.name.clone())),
+                                vec![vec![Box::new(param_name.clone().into())]],
+                            )
+                            .into(),
+                            eq.clone(),
+                            stmt.line_file.clone(),
+                        )
+                        .into()],
                         stmt.line_file.clone(),
-                    ));
+                    )
+                    .into();
 
                     let result = self
                         .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())

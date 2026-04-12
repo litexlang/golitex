@@ -116,7 +116,7 @@ impl Runtime {
 
                 param_to_arg_map.insert(
                     original_name.clone(),
-                    Obj::Identifier(Identifier::new(normalized_name.clone())),
+                    normalized_name.clone().into(),
                 );
                 new_param_names.push(normalized_name);
             }

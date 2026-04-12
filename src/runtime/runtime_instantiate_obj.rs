@@ -287,10 +287,8 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map)?;
-        Ok(Obj::Add(Add::new(
-            instantiated_left_obj,
-            instantiated_right_obj,
-        )))
+        Ok(Add::new(instantiated_left_obj,
+            instantiated_right_obj).into())
     }
 
     pub fn inst_sub(
@@ -300,10 +298,8 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&sub.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&sub.right, param_to_arg_map)?;
-        Ok(Obj::Sub(Sub::new(
-            instantiated_left_obj,
-            instantiated_right_obj,
-        )))
+        Ok(Sub::new(instantiated_left_obj,
+            instantiated_right_obj).into())
     }
 
     pub fn inst_mul(
@@ -313,10 +309,8 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mul.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&mul.right, param_to_arg_map)?;
-        Ok(Obj::Mul(Mul::new(
-            instantiated_left_obj,
-            instantiated_right_obj,
-        )))
+        Ok(Mul::new(instantiated_left_obj,
+            instantiated_right_obj).into())
     }
 
     pub fn inst_div(
@@ -337,10 +331,8 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mod_obj.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&mod_obj.right, param_to_arg_map)?;
-        Ok(Obj::Mod(Mod::new(
-            instantiated_left_obj,
-            instantiated_right_obj,
-        )))
+        Ok(Mod::new(instantiated_left_obj,
+            instantiated_right_obj).into())
     }
 
     pub fn inst_pow(
@@ -350,10 +342,8 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_base_obj = self.inst_obj(&pow.base, param_to_arg_map)?;
         let instantiated_exponent_obj = self.inst_obj(&pow.exponent, param_to_arg_map)?;
-        Ok(Obj::Pow(Pow::new(
-            instantiated_base_obj,
-            instantiated_exponent_obj,
-        )))
+        Ok(Pow::new(instantiated_base_obj,
+            instantiated_exponent_obj).into())
     }
 
     pub fn inst_union(

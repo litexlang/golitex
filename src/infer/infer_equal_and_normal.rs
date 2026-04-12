@@ -42,7 +42,7 @@ impl Runtime {
             "cart fact",
         )?;
 
-        let target_cart_dim_obj = Obj::CartDim(CartDim::new(target_obj.clone()));
+        let target_cart_dim_obj = CartDim::new(target_obj.clone()).into();
         let known_cart_dim_obj = Obj::Number(crate::obj::Number::new(
             known_cart_obj.args.len().to_string(),
         ));
@@ -91,7 +91,7 @@ impl Runtime {
             "tuple fact",
         )?;
 
-        let target_tuple_dim_obj = Obj::TupleDim(TupleDim::new(target_obj.clone()));
+        let target_tuple_dim_obj = TupleDim::new(target_obj.clone()).into();
         let known_tuple_dim_obj = Obj::Number(crate::obj::Number::new(
             known_tuple_obj.args.len().to_string(),
         ));

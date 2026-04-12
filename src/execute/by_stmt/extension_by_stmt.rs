@@ -55,7 +55,7 @@ impl Runtime {
                 vec![],
                 vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                     InFact::new(
-                        Obj::Identifier(Identifier::new(unused_name.clone())),
+                        unused_name.clone().into(),
                         stmt.right.clone(),
                         stmt.line_file.clone(),
                     ),
@@ -86,7 +86,7 @@ impl Runtime {
                 vec![],
                 vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                     InFact::new(
-                        Obj::Identifier(Identifier::new(unused_name.clone())),
+                        unused_name.clone().into(),
                         stmt.left.clone(),
                         stmt.line_file.clone(),
                     ),

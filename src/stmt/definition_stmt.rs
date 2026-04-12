@@ -428,10 +428,8 @@ pub(crate) fn induc_obj_plus_offset(induc_from: &Obj, offset: usize) -> Obj {
     if offset == 0 {
         induc_from.clone()
     } else {
-        Obj::Add(Add::new(
-            induc_from.clone(),
-            Obj::Number(Number::new(offset.to_string())),
-        ))
+        Add::new(induc_from.clone(),
+            Number::new(offset.to_string()).into()).into()
     }
 }
 
@@ -459,11 +457,11 @@ impl HaveFnByInducStmt {
         FnSetClause {
             params_def_with_set: vec![ParamGroupWithSet::new(
                 vec![self.param.clone()],
-                Obj::StandardSet(StandardSet::Z),
+                StandardSet::Z.into(),
             )],
             dom_facts: vec![OrAndChainAtomicFact::AtomicFact(
                 AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                    Obj::Identifier(Identifier::new(self.param.clone())),
+                    self.param.clone().into(),
                     self.induc_from.clone(),
                     self.line_file.clone(),
                 )),
@@ -476,7 +474,7 @@ impl HaveFnByInducStmt {
     pub fn forall_fn_base_dom_exist_or_facts(&self) -> Vec<ExistOrAndChainAtomicFact> {
         vec![ExistOrAndChainAtomicFact::AtomicFact(
             AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                Obj::Identifier(Identifier::new(self.param.clone())),
+                self.param.clone().into(),
                 self.induc_from.clone(),
                 self.line_file.clone(),
             )),
@@ -506,7 +504,7 @@ impl HaveFnByInducStmt {
     /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（源码最后一条为 `case >= n:`（n 为特例个数），此处仍展开为 `param = from + n` 与可选子条件的合取）。
     pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
-        let left_id = Obj::Identifier(Identifier::new(self.param.clone()));
+        let left_id: Obj = self.param.clone().into();
         let n = self.special_cases_equal_tos.len();
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
         let mut equal_tos: Vec<Obj> = Vec::new();

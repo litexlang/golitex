@@ -79,6 +79,12 @@ impl Identifier {
     }
 }
 
+impl From<Identifier> for Atom {
+    fn from(id: Identifier) -> Self {
+        Atom::Identifier(id)
+    }
+}
+
 impl IdentifierWithMod {
     pub fn new(mod_name: String, name: String) -> Self {
         IdentifierWithMod { mod_name, name }

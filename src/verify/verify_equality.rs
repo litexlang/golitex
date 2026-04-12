@@ -547,7 +547,7 @@ impl Runtime {
 
 fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) -> Obj {
     if number_of_body_groups_to_keep == 0 {
-        return Obj::from(fn_obj.head.as_ref().clone());
+        return fn_obj.head.as_ref().clone().into();
     }
 
     let mut kept_body_groups: Vec<Vec<Box<Obj>>> = Vec::new();
@@ -557,7 +557,7 @@ fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) ->
         current_group_index += 1;
     }
 
-    Obj::FnObj(FnObj::new(fn_obj.head.as_ref().clone(), kept_body_groups))
+    FnObj::new(fn_obj.head.as_ref().clone(), kept_body_groups).into()
 }
 
 fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {

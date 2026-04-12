@@ -96,7 +96,7 @@ impl Runtime {
         let mut struct_params = vec![];
         for param_def in stmt.param_defs.iter() {
             for field in param_def.params.iter() {
-                struct_params.push(Obj::Identifier(Identifier::new(field.clone())));
+                struct_params.push(field.clone().into());
             }
         }
 

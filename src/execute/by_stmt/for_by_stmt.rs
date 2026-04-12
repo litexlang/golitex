@@ -292,8 +292,8 @@ impl Runtime {
                 .map_err(RuntimeError::from)?;
 
             let parameter_in_z_atomic_fact = AtomicFact::InFact(crate::fact::InFact::new(
-                Obj::Identifier(Identifier::new(parameter_name.to_string())),
-                Obj::StandardSet(StandardSet::Z),
+                parameter_name.to_string().into(),
+                StandardSet::Z.into(),
                 stmt.line_file.clone(),
             ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
@@ -303,8 +303,8 @@ impl Runtime {
 
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(crate::fact::EqualFact::new(
-                    Obj::Identifier(Identifier::new(parameter_name.to_string())),
-                    Obj::Number(Number::new(assigned_integer_string)),
+                    parameter_name.to_string().into(),
+                    Number::new(assigned_integer_string).into(),
                     stmt.line_file.clone(),
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(

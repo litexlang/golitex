@@ -115,10 +115,7 @@ impl Runtime {
         }
     }
 
-    fn infer_numeric_order_sign_less(
-        &mut self,
-        f: &LessFact,
-    ) -> Result<InferResult, RuntimeError> {
+    fn infer_numeric_order_sign_less(&mut self, f: &LessFact) -> Result<InferResult, RuntimeError> {
         let left_num = self.resolve_obj_to_number(&f.left);
         let right_num = self.resolve_obj_to_number(&f.right);
         match (left_num, right_num) {
@@ -148,9 +145,13 @@ impl Runtime {
         }
     }
 
-    fn infer_store_gt_zero(&mut self, x: Obj, line_file: LineFile) -> Result<InferResult, RuntimeError> {
+    fn infer_store_gt_zero(
+        &mut self,
+        x: Obj,
+        line_file: LineFile,
+    ) -> Result<InferResult, RuntimeError> {
         let fact_to_store = Fact::AtomicFact(AtomicFact::LessFact(LessFact::new(
-            Obj::Number(Number::new("0".to_string())),
+            Number::new("0".to_string()).into(),
             x,
             line_file.clone(),
         )));
@@ -167,10 +168,14 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    fn infer_store_le_zero(&mut self, x: Obj, line_file: LineFile) -> Result<InferResult, RuntimeError> {
+    fn infer_store_le_zero(
+        &mut self,
+        x: Obj,
+        line_file: LineFile,
+    ) -> Result<InferResult, RuntimeError> {
         let fact_to_store = Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact::new(
             x,
-            Obj::Number(Number::new("0".to_string())),
+            Number::new("0".to_string()).into(),
             line_file.clone(),
         )));
         let mut infer_result = InferResult::new();

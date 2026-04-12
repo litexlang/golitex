@@ -56,7 +56,7 @@ impl Runtime {
             {
                 original_param_to_forall_obj.insert(
                     original_name.clone(),
-                    Obj::Identifier(Identifier::new(generated_name.clone())),
+                    generated_name.clone().into(),
                 );
             }
             flat_index = next_flat_index;
@@ -80,7 +80,7 @@ impl Runtime {
                     .clone()
             })
             .collect();
-        let forall_element_obj = Obj::Identifier(Identifier::new(forall_element_name.clone()));
+        let forall_element_obj: Obj = forall_element_name.clone().into();
         let arg_domain_factors: Vec<Obj> = forall_param_defs_with_type
             .iter()
             .map(
@@ -93,10 +93,10 @@ impl Runtime {
         let forall_arg_dom = if param_names.len() == 1 {
             arg_domain_factors[0].clone()
         } else {
-            Obj::Cart(Cart::new(arg_domain_factors))
+            Cart::new(arg_domain_factors).into()
         };
         let forall_element_cart_set =
-            Obj::Cart(Cart::new(vec![forall_arg_dom, forall_ret_set.clone()]));
+            Cart::new(vec![forall_arg_dom, forall_ret_set.clone()]).into();
         let forall_shape = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![forall_element_name.clone()],
@@ -110,21 +110,21 @@ impl Runtime {
                     line_file.clone(),
                 ))),
                 ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                    Obj::TupleDim(TupleDim::new(forall_element_obj.clone())),
-                    Obj::Number(Number::new("2".to_string())),
+                    TupleDim::new(forall_element_obj.clone()).into(),
+                    Number::new("2".to_string()).into(),
                     line_file.clone(),
                 ))),
             ],
             line_file.clone(),
         ));
-        let forall_z_obj = Obj::Identifier(Identifier::new(forall_z_name.clone()));
+        let forall_z_obj = forall_z_name.clone().into();
         let pair_in_fn = if param_names.len() == 1 {
-            Obj::Tuple(Tuple::new(vec![forall_args[0].clone(), forall_z_obj]))
+            Tuple::new(vec![forall_args[0].clone(), forall_z_obj]).into()
         } else {
-            Obj::Tuple(Tuple::new(vec![
-                Obj::Tuple(Tuple::new(forall_args)),
+            Tuple::new(vec![
+                Tuple::new(forall_args).into(),
                 forall_z_obj,
-            ]))
+            ]).into()
         };
         let forall_in = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
@@ -211,7 +211,7 @@ impl Runtime {
             {
                 original_param_to_exist_obj.insert(
                     original_name.clone(),
-                    Obj::Identifier(Identifier::new(generated_name.clone())),
+                    generated_name.clone().into(),
                 );
             }
             exist_flat_index = next_flat_index;
@@ -230,15 +230,15 @@ impl Runtime {
             .iter()
             .map(|param_name| original_param_to_exist_obj.get(param_name).unwrap().clone())
             .collect();
-        let exist_element_obj = Obj::Identifier(Identifier::new(exist_element_name.clone()));
-        let exist_z_obj = Obj::Identifier(Identifier::new(exist_z_name.clone()));
+        let exist_element_obj = exist_element_name.clone().into();
+        let exist_z_obj = exist_z_name.clone().into();
         let exist_pair = if param_names.len() == 1 {
-            Obj::Tuple(Tuple::new(vec![exist_args[0].clone(), exist_z_obj]))
+            Tuple::new(vec![exist_args[0].clone(), exist_z_obj]).into()
         } else {
-            Obj::Tuple(Tuple::new(vec![
-                Obj::Tuple(Tuple::new(exist_args)),
+            Tuple::new(vec![
+                Tuple::new(exist_args).into(),
                 exist_z_obj,
-            ]))
+            ]).into()
         };
         let exist_fact = ExistFact::new(
             vec![
@@ -286,8 +286,8 @@ impl Runtime {
         let unique_names = self.generate_random_unused_names(2);
         let unique_x1_name = unique_names[0].clone();
         let unique_x2_name = unique_names[1].clone();
-        let unique_x1_obj = Obj::Identifier(Identifier::new(unique_x1_name.clone()));
-        let unique_x2_obj = Obj::Identifier(Identifier::new(unique_x2_name.clone()));
+        let unique_x1_obj: Obj = unique_x1_name.clone().into();
+        let unique_x2_obj: Obj = unique_x2_name.clone().into();
         let unique_param_group_sets: Vec<Obj> = fn_set
             .params_def_with_set
             .iter()
@@ -296,12 +296,13 @@ impl Runtime {
         let unique_arg_dom = if param_names.len() == 1 {
             unique_param_group_sets[0].clone()
         } else {
-            Obj::Cart(Cart::new(unique_param_group_sets))
+            Cart::new(unique_param_group_sets).into()
         };
-        let unique_element_cart_set = Obj::Cart(Cart::new(vec![
+        let unique_element_cart_set: Obj = Cart::new(vec![
             unique_arg_dom,
             fn_set.ret_set.as_ref().clone(),
-        ]));
+        ])
+        .into();
         // 与手写标准一致：dom 为两元在图集内且首分量相同，then 仅为 x1 = x2
         let forall_unique = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
@@ -320,14 +321,10 @@ impl Runtime {
                     line_file.clone(),
                 ))),
                 ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                    Obj::ObjAtIndex(ObjAtIndex::new(
-                        unique_x1_obj.clone(),
-                        Obj::Number(Number::new("1".to_string())),
-                    )),
-                    Obj::ObjAtIndex(ObjAtIndex::new(
-                        unique_x2_obj.clone(),
-                        Obj::Number(Number::new("1".to_string())),
-                    )),
+                    ObjAtIndex::new(unique_x1_obj.clone(),
+                        Number::new("1".to_string()).into()).into(),
+                    ObjAtIndex::new(unique_x2_obj.clone(),
+                        Number::new("1".to_string()).into()).into(),
                     line_file.clone(),
                 ))),
             ],

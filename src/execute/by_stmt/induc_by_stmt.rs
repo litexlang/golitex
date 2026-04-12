@@ -73,7 +73,7 @@ impl Runtime {
 
         let induc_from_in_z_fact = AtomicFact::InFact(InFact::new(
             stmt.induc_from.clone(),
-            Obj::StandardSet(StandardSet::Z),
+            StandardSet::Z.into(),
             stmt.line_file.clone(),
         ));
         let verify_induc_from_in_z_result = self
@@ -97,11 +97,9 @@ impl Runtime {
             ));
         }
 
-        let param_as_identifier = Obj::Identifier(Identifier::new(stmt.param.clone()));
-        let param_plus_one_obj = Obj::Add(Add::new(
-            param_as_identifier.clone(),
-            Obj::Number(Number::new("1".to_string())),
-        ));
+        let param_as_identifier: Obj = stmt.param.clone().into();
+        let param_plus_one_obj = Add::new(param_as_identifier.clone(),
+            Number::new("1".to_string()).into()).into();
         let mut induction_step_param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         induction_step_param_to_obj_map.insert(stmt.param.clone(), param_plus_one_obj);
         let next_fact_of_induction_step = self
@@ -110,7 +108,7 @@ impl Runtime {
         let corresponding_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![stmt.param.clone()],
-                ParamType::Obj(Obj::StandardSet(StandardSet::Z)),
+                ParamType::Obj(StandardSet::Z.into()),
             )],
             vec![
                 ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(

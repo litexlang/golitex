@@ -347,7 +347,7 @@ impl Runtime {
             vec![],
             vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                 InFact::new(
-                    Obj::Identifier(Identifier::new(bound_param_name)),
+                    bound_param_name.into(),
                     subset_fact.right.clone(),
                     subset_fact.line_file.clone(),
                 ),
@@ -382,7 +382,7 @@ impl Runtime {
             vec![],
             vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                 InFact::new(
-                    Obj::Identifier(Identifier::new(bound_param_name)),
+                    bound_param_name.into(),
                     superset_fact.left.clone(),
                     superset_fact.line_file.clone(),
                 ),

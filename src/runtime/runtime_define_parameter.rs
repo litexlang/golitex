@@ -67,7 +67,7 @@ impl Runtime {
         obj: &Obj,
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
+            name.to_string().into(),
             obj.clone(),
             default_line_file(),
         )));
@@ -81,7 +81,7 @@ impl Runtime {
         _set: &Set,
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
+            name.to_string().into(),
             default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
@@ -94,7 +94,7 @@ impl Runtime {
         _nonempty_set: &NonemptySet,
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
+            name.to_string().into(),
             default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
@@ -107,7 +107,7 @@ impl Runtime {
         _finite_set: &FiniteSet,
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
+            name.to_string().into(),
             default_line_file(),
         )));
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
@@ -124,7 +124,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
 
         let new_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
+            name.to_string().into(),
             Obj::StructObj(struct_ty.clone()),
             default_line_file(),
         )));
@@ -144,7 +144,7 @@ impl Runtime {
         );
         let lf = default_line_file();
         for (field_name, field_st) in def.fields.iter() {
-            let arg = Obj::FieldAccess(FieldAccess::new(name.to_string(), field_name.clone()));
+            let arg = FieldAccess::new(name.to_string(), field_name.clone()).into();
             let param_type = self.inst_param_type(&field_st.to_param_type(), &base_map)?;
             let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
             infer_result.new_infer_result_inside(

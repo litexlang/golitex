@@ -270,8 +270,8 @@ impl Runtime {
         let reason = "same shape and paired args share known equality class";
         match (left, right) {
             (Obj::FnObj(left_fn), Obj::FnObj(right_fn)) => {
-                let left_head_obj = Obj::from(left_fn.head.as_ref().clone());
-                let right_head_obj = Obj::from(right_fn.head.as_ref().clone());
+                let left_head_obj = left_fn.head.as_ref().clone().into();
+                let right_head_obj = right_fn.head.as_ref().clone().into();
                 if !verify_equality_by_they_are_the_same(&left_head_obj, &right_head_obj) {
                     return Some((StmtUnknown::new()).into());
                 }

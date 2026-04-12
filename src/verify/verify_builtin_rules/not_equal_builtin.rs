@@ -49,7 +49,7 @@ impl Runtime {
         operand: &Obj,
         line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
-        let zero_obj = Obj::Number(Number::new("0".to_string()));
+        let zero_obj: Obj = Number::new("0".to_string()).into();
         let operand_not_equal_zero_fact =
             AtomicFact::NotEqualFact(NotEqualFact::new(operand.clone(), zero_obj, line_file));
         let verify_result = self
@@ -82,7 +82,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        let zero_obj = Obj::Number(Number::new("0".to_string()));
+        let zero_obj: Obj = Number::new("0".to_string()).into();
         let zero_less_than_left = AtomicFact::LessFact(LessFact::new(
             zero_obj.clone(),
             left_operand.clone(),
@@ -109,7 +109,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        let zero_obj = Obj::Number(Number::new("0".to_string()));
+        let zero_obj: Obj = Number::new("0".to_string()).into();
         let left_less_than_zero = AtomicFact::LessFact(LessFact::new(
             left_operand.clone(),
             zero_obj.clone(),
@@ -136,7 +136,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        let zero_obj = Obj::Number(Number::new("0".to_string()));
+        let zero_obj: Obj = Number::new("0".to_string()).into();
         let left_less_than_zero = AtomicFact::LessFact(LessFact::new(
             left_factor.clone(),
             zero_obj.clone(),
@@ -181,7 +181,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        let zero_obj = Obj::Number(Number::new("0".to_string()));
+        let zero_obj: Obj = Number::new("0".to_string()).into();
         let zero_less_than_minuend = AtomicFact::LessFact(LessFact::new(
             zero_obj.clone(),
             minuend.clone(),
@@ -292,7 +292,7 @@ impl Runtime {
                 }
             }
             other => {
-                let zero_obj = Obj::Number(Number::new("0".to_string()));
+                let zero_obj: Obj = Number::new("0".to_string()).into();
                 let zero_lt_a = AtomicFact::LessFact(LessFact::new(
                     zero_obj.clone(),
                     other.clone(),

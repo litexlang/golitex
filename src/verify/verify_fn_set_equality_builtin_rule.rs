@@ -183,7 +183,7 @@ impl Runtime {
         {
             param_to_generated_arg_map.insert(
                 param_name.clone(),
-                Obj::Identifier(Identifier::new(generated_param_name.clone())),
+                generated_param_name.clone().into(),
             );
         }
         param_to_generated_arg_map
@@ -238,7 +238,7 @@ impl Runtime {
             {
                 source_param_to_generated_arg_map.insert(
                     source_param_name.clone(),
-                    Obj::Identifier(Identifier::new(generated_param_name.clone())),
+                    generated_param_name.clone().into(),
                 );
             }
             flat_index = next_flat_index;

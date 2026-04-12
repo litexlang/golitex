@@ -111,7 +111,7 @@ fn multiply_fraction_denominators_and_get_side_monomials(
 fn split_monomial_into_fraction_factors_and_denominators(
     monomial: &MonomialWithNonZeroScalarAndOrderedOperands,
 ) -> (Vec<Obj>, Vec<Obj>) {
-    let mut factors = vec![Obj::Number(Number::new(monomial.non_zero_scalar.clone()))];
+    let mut factors = vec![Number::new(monomial.non_zero_scalar.clone()).into()];
     let mut denominators: Vec<Obj> = if let Some(operands) = monomial.ordered_operands.as_ref() {
         Vec::with_capacity(operands.len())
     } else {
@@ -225,12 +225,12 @@ fn multiply_obj_list(objs: Vec<Obj>) -> Obj {
     let mut objs = objs.into_iter();
     let first_obj = match objs.next() {
         Some(obj) => obj,
-        None => return Obj::Number(Number::new("1".to_string())),
+        None => return Number::new("1".to_string()).into(),
     };
 
     let mut result = first_obj;
     for obj in objs {
-        result = Obj::Mul(Mul::new(result, obj));
+        result = Mul::new(result, obj).into();
     }
 
     result
@@ -240,12 +240,12 @@ fn add_obj_list(objs: Vec<Obj>) -> Obj {
     let mut objs = objs.into_iter();
     let first_obj = match objs.next() {
         Some(obj) => obj,
-        None => return Obj::Number(Number::new("0".to_string())),
+        None => return Number::new("0".to_string()).into(),
     };
 
     let mut result = first_obj;
     for obj in objs {
-        result = Obj::Add(Add::new(result, obj));
+        result = Add::new(result, obj).into();
     }
 
     result

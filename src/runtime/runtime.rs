@@ -516,7 +516,7 @@ impl Runtime {
         let mut map_with_self = base_map.clone();
         map_with_self.insert(
             SELF.to_string(),
-            Obj::Identifier(Identifier::new(param_name.to_string())),
+            param_name.to_string().into(),
         );
         for fact in def.facts.iter() {
             out.push(self.inst_or_and_chain_atomic_fact(fact, &map_with_self)?);

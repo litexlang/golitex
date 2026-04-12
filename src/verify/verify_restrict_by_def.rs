@@ -119,9 +119,7 @@ impl Runtime {
         while mapping_index < original_flat_param_names.len() {
             original_to_restrict_param_map.insert(
                 original_flat_param_names[mapping_index].clone(),
-                Obj::Identifier(Identifier::new(
-                    restrict_flat_param_names[mapping_index].clone(),
-                )),
+                restrict_flat_param_names[mapping_index].clone().into(),
             );
             mapping_index += 1;
         }
@@ -145,7 +143,7 @@ impl Runtime {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
                 then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                     InFact::new(
-                        Obj::Identifier(Identifier::new(restrict_param_name)),
+                        restrict_param_name.into(),
                         instantiated_original_set.clone(),
                         line_file.clone(),
                     ),

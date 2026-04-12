@@ -162,7 +162,7 @@ impl Runtime {
                 .map_err(RuntimeError::from)?;
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    Obj::Identifier(Identifier::new(parameter_name.to_string())),
+                    parameter_name.to_string().into(),
                     assigned_obj.clone(),
                     stmt.line_file.clone(),
                 ));
