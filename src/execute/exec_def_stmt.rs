@@ -293,11 +293,11 @@ impl Runtime {
             .iter()
             .zip(have_obj_equal_stmt.objs_equal_to.iter())
         {
-            let equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
+            let equal_to_fact = EqualFact::new(
                 name.clone().into(),
                 obj.clone(),
                 have_obj_equal_stmt.line_file.clone(),
-            ));
+            ).into();
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
                 .map_err(|store_fact_error| {
@@ -451,11 +451,11 @@ impl Runtime {
         let function_identifier_obj =
             have_fn_equal_stmt.name.clone().into();
         let function_set_obj = Obj::FnSet(fn_set_stored.clone());
-        let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+        let function_in_function_set_fact = InFact::new(
             function_identifier_obj,
             function_set_obj,
             have_fn_equal_stmt.line_file.clone(),
-        )));
+        ).into();
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
@@ -475,11 +475,11 @@ impl Runtime {
         let function_obj =
             self.build_function_obj_with_param_names(&have_fn_equal_stmt.name, &param_names);
 
-        let function_equals_equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
+        let function_equals_equal_to_fact = EqualFact::new(
             function_obj,
             have_fn_equal_stmt.equal_to.clone(),
             have_fn_equal_stmt.line_file.clone(),
-        ));
+        ).into();
         let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> =
             Vec::with_capacity(have_fn_equal_stmt.fn_set_clause.dom_facts.len());
         for dom_fact in have_fn_equal_stmt.fn_set_clause.dom_facts.iter() {
@@ -570,11 +570,11 @@ impl Runtime {
                 })?;
         }
 
-        let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
+        let equal_to_in_ret_set_atomic_fact = InFact::new(
             have_fn_equal_stmt.equal_to.clone(),
             have_fn_equal_stmt.fn_set_clause.ret_set.clone(),
             have_fn_equal_stmt.line_file.clone(),
-        ));
+        ).into();
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
@@ -650,11 +650,11 @@ impl Runtime {
 
         let function_identifier_obj = have_fn_equal_case_by_case_stmt.name.clone().into();
         let function_set_obj = Obj::FnSet(fn_set_stored.clone());
-        let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+        let function_in_function_set_fact = InFact::new(
             function_identifier_obj,
             function_set_obj,
             have_fn_equal_case_by_case_stmt.line_file.clone(),
-        )));
+        ).into();
 
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
@@ -700,11 +700,11 @@ impl Runtime {
             }
             forall_dom_facts.push(case_fact.to_exist_or_and_chain_atomic_fact());
 
-            let function_equals_equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
+            let function_equals_equal_to_fact = EqualFact::new(
                 function_obj.clone(),
                 equal_to.clone(),
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
-            ));
+            ).into();
             let forall_fact = ForallFact::new(
                 param_defs_with_type.clone(),
                 forall_dom_facts,
@@ -851,14 +851,14 @@ impl Runtime {
                 )
             })?;
 
-        let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
+        let equal_to_in_ret_set_atomic_fact = InFact::new(
             equal_to.clone(),
             have_fn_equal_case_by_case_stmt
                 .fn_set_clause
                 .ret_set
                 .clone(),
             have_fn_equal_case_by_case_stmt.line_file.clone(),
-        ));
+        ).into();
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {

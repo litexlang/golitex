@@ -71,11 +71,11 @@ impl Runtime {
                 ))
             })?;
 
-        let induc_from_in_z_fact = AtomicFact::InFact(InFact::new(
+        let induc_from_in_z_fact = InFact::new(
             stmt.induc_from.clone(),
             StandardSet::Z.into(),
             stmt.line_file.clone(),
-        ));
+        ).into();
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {

@@ -34,11 +34,11 @@ impl ByInducStmt {
         let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
         dom_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
-            AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+            GreaterEqualFact::new(
                 self.param.clone().into(),
                 self.induc_from.clone(),
                 self.line_file.clone(),
-            )),
+            ).into(),
         ));
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();

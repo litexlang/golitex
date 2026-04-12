@@ -188,10 +188,10 @@ impl Runtime {
 
             let verify_state_for_proof_check = VerifyState::new(0, false);
             if let Obj::FnSet(fn_set) = &stmt.set {
-                let ret_nonempty_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                let ret_nonempty_fact = IsNonemptySetFact::new(
                     fn_set.ret_set.as_ref().clone(),
                     stmt.line_file.clone(),
-                ));
+                ).into();
                 let ret_check = rt.verify_non_equational_atomic_fact_with_builtin_rules(
                     &ret_nonempty_fact,
                     &verify_state_for_proof_check,
@@ -201,11 +201,11 @@ impl Runtime {
                 }
             }
 
-            let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            let membership_fact = InFact::new(
                 stmt.obj.clone(),
                 stmt.set.clone(),
                 stmt.line_file.clone(),
-            )));
+            ).into();
             rt.verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)?;
 
             Ok(inside_results)
@@ -218,10 +218,10 @@ impl Runtime {
 
         // 6) Store nonempty set fact into the top-level (big) environment.
         let store_result = self.store_fact_without_well_defined_verified_and_infer(
-            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+            IsNonemptySetFact::new(
                 stmt.set.clone(),
                 stmt.line_file.clone(),
-            ))),
+            ).into(),
         );
         match store_result {
             Ok(infer_result) => Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into()),

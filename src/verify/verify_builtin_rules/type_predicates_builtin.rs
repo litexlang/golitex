@@ -29,10 +29,10 @@ impl Runtime {
                 for arg_obj in &cart.args {
                     let is_nonempty_set_result = self
                         .verify_non_equational_atomic_fact_with_builtin_rules(
-                            &AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                            &IsNonemptySetFact::new(
                                 *arg_obj.clone(),
                                 is_nonempty_set_fact.line_file.clone(),
-                            )),
+                            ).into(),
                             _verify_state,
                         )?;
 
@@ -58,10 +58,10 @@ impl Runtime {
                     )).into())
             }
             Obj::FnSet(fn_set) => {
-                let ret_nonempty_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                let ret_nonempty_fact = IsNonemptySetFact::new(
                     fn_set.ret_set.as_ref().clone(),
                     is_nonempty_set_fact.line_file.clone(),
-                ));
+                ).into();
                 let ret_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
                     &ret_nonempty_fact,
                     _verify_state,

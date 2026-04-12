@@ -129,10 +129,10 @@ impl Runtime {
                     .iter()
                     .map(|f| AndChainAtomicFact::AtomicFact(f.make_reversed()))
                     .collect();
-                Some(Fact::OrFact(OrFact::new(
+                Some(OrFact::new(
                     branches,
                     and_fact.line_file.clone(),
-                )))
+                ).into())
             }
             ExistOrAndChainAtomicFact::ChainFact(_)
             | ExistOrAndChainAtomicFact::OrFact(_)

@@ -261,11 +261,11 @@ impl Runtime {
         ));
 
         let case_then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
-            AtomicFact::EqualFact(EqualFact::new(
+            EqualFact::new(
                 fn_call_obj.clone(),
                 algo_case.return_stmt.value.clone(),
                 algo_case.line_file.clone(),
-            )),
+            ).into(),
         )];
 
         Fact::ForallFact(ForallFact::new(

@@ -507,63 +507,63 @@ impl Runtime {
 
         let positive_base_and_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
-                AtomicFact::GreaterFact(GreaterFact::new(
+                GreaterFact::new(
                     (*pow.base).clone(),
                     zero_obj.clone(),
                     default_line_file(),
-                )),
-                AtomicFact::InFact(InFact::new(
+                ).into(),
+                InFact::new(
                     (*pow.exponent).clone(),
                     StandardSet::R.into(),
                     default_line_file(),
-                )),
+                ).into(),
             ],
             default_line_file(),
         ));
 
         let zero_base_and_positive_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
-                AtomicFact::EqualFact(EqualFact::new(
+                EqualFact::new(
                     (*pow.base).clone(),
                     zero_obj.clone(),
                     default_line_file(),
-                )),
-                AtomicFact::InFact(InFact::new(
+                ).into(),
+                InFact::new(
                     (*pow.exponent).clone(),
                     StandardSet::R.into(),
                     default_line_file(),
-                )),
-                AtomicFact::GreaterFact(GreaterFact::new(
+                ).into(),
+                GreaterFact::new(
                     (*pow.exponent).clone(),
                     zero_obj.clone(),
                     default_line_file(),
-                )),
+                ).into(),
             ],
             default_line_file(),
         ));
 
         let even_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
-                AtomicFact::InFact(InFact::new(
+                InFact::new(
                     (*pow.exponent).clone(),
                     StandardSet::Z.into(),
                     default_line_file(),
-                )),
-                AtomicFact::EqualFact(EqualFact::new(
+                ).into(),
+                EqualFact::new(
                     exponent_mod_two_obj,
                     zero_obj,
                     default_line_file(),
-                )),
+                ).into(),
             ],
             default_line_file(),
         ));
 
         let exponent_is_positive_integer =
-            AndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+            AndChainAtomicFact::AtomicFact(InFact::new(
                 (*pow.exponent).clone(),
                 StandardSet::NPos.into(),
                 default_line_file(),
-            )));
+            ).into());
 
         let pow_domain_or_fact = OrFact::new(
             vec![
@@ -669,11 +669,11 @@ impl Runtime {
                     Some(right_obj) => (**right_obj).clone(),
                     None => break,
                 };
-                let not_equal_atomic_fact = AtomicFact::NotEqualFact(NotEqualFact::new(
+                let not_equal_atomic_fact = NotEqualFact::new(
                     left_obj.clone(),
                     right_obj,
                     default_line_file(),
-                ));
+                ).into();
                 let verify_result = self
                     .verify_atomic_fact(&not_equal_atomic_fact, &next_verify_state)
                     .map_err(|previous_error| {
@@ -836,7 +836,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
 
         let is_cart_fact =
-            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), default_line_file()));
+            IsCartFact::new((*x.set).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
         if result.is_unknown() {
             return Err(
@@ -869,11 +869,11 @@ impl Runtime {
         let projection_dimension_obj: Obj =
             Number::new(projection_dimension_number.normalized_value).into();
 
-        let projection_dimension_is_positive_integer_fact = AtomicFact::InFact(InFact::new(
+        let projection_dimension_is_positive_integer_fact = InFact::new(
             projection_dimension_obj.clone(),
             StandardSet::NPos.into(),
             default_line_file(),
-        ));
+        ).into();
         let projection_dimension_is_positive_integer_result =
             self.verify_atomic_fact(&projection_dimension_is_positive_integer_fact, verify_state)?;
         if projection_dimension_is_positive_integer_result.is_unknown() {
@@ -890,7 +890,7 @@ impl Runtime {
         }
 
         let left_set_is_cart_fact =
-            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), default_line_file()));
+            IsCartFact::new((*x.set).clone(), default_line_file()).into();
         let left_set_is_cart_result =
             self.verify_atomic_fact(&left_set_is_cart_fact, verify_state)?;
         if left_set_is_cart_result.is_unknown() {
@@ -905,11 +905,11 @@ impl Runtime {
 
         let left_set_cart_dim_obj: Obj = CartDim::new((*x.set).clone()).into();
 
-        let proj_index_not_larger_than_cart_dim = AtomicFact::LessEqualFact(LessEqualFact::new(
+        let proj_index_not_larger_than_cart_dim = LessEqualFact::new(
             projection_dimension_obj.clone(),
             left_set_cart_dim_obj.clone(),
             default_line_file(),
-        ));
+        ).into();
         let left_set_cart_dim_less_equal_projection_dimension_result =
             self.verify_atomic_fact(&proj_index_not_larger_than_cart_dim, verify_state)?;
         if left_set_cart_dim_less_equal_projection_dimension_result.is_unknown() {
@@ -936,7 +936,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.arg, verify_state)?;
 
         let is_tuple_fact =
-            AtomicFact::IsTupleFact(IsTupleFact::new((*x.arg).clone(), default_line_file()));
+            IsTupleFact::new((*x.arg).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if result.is_unknown() {
             return Err(
@@ -971,10 +971,10 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         // 必须 is_finite_set
-        let is_finite_set_fact = AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+        let is_finite_set_fact = IsFiniteSetFact::new(
             (*x.set).clone(),
             default_line_file(),
-        ));
+        ).into();
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
         if result.is_unknown() {
             return Err(
@@ -1085,11 +1085,11 @@ impl Runtime {
         let index_calculated_obj: Obj =
             Number::new(index_calculated_number.normalized_value).into();
 
-        let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
+        let index_is_positive_integer_in_z_pos_fact = InFact::new(
             index_calculated_obj.clone(),
             StandardSet::NPos.into(),
             default_line_file(),
-        ));
+        ).into();
         let index_is_positive_integer_result =
             self.verify_atomic_fact(&index_is_positive_integer_in_z_pos_fact, verify_state)?;
         if index_is_positive_integer_result.is_unknown() {
@@ -1103,7 +1103,7 @@ impl Runtime {
         }
 
         let target_obj_is_tuple_fact =
-            AtomicFact::IsTupleFact(IsTupleFact::new((*x.obj).clone(), default_line_file()));
+            IsTupleFact::new((*x.obj).clone(), default_line_file()).into();
         let target_obj_is_tuple_result =
             self.verify_atomic_fact(&target_obj_is_tuple_fact, verify_state)?;
         if target_obj_is_tuple_result.is_unknown() {
@@ -1117,11 +1117,11 @@ impl Runtime {
         }
 
         let target_tuple_dim_obj: Obj = TupleDim::new((*x.obj).clone()).into();
-        let index_not_larger_than_tuple_dim_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
+        let index_not_larger_than_tuple_dim_fact = LessEqualFact::new(
             index_calculated_obj.clone(),
             target_tuple_dim_obj.clone(),
             default_line_file(),
-        ));
+        ).into();
         let index_not_larger_than_tuple_dim_result =
             self.verify_atomic_fact(&index_not_larger_than_tuple_dim_fact, verify_state)?;
         if index_not_larger_than_tuple_dim_result.is_unknown() {
