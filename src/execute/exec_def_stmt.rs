@@ -483,7 +483,7 @@ impl Runtime {
         let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> =
             Vec::with_capacity(have_fn_equal_stmt.fn_set_clause.dom_facts.len());
         for dom_fact in have_fn_equal_stmt.fn_set_clause.dom_facts.iter() {
-            forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
+            forall_dom_facts.push(dom_fact.clone().into());
         }
         let forall_fact = ForallFact::new(
             param_defs_with_type,
@@ -696,9 +696,9 @@ impl Runtime {
                 .dom_facts
                 .iter()
             {
-                forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
+                forall_dom_facts.push(dom_fact.clone().into());
             }
-            forall_dom_facts.push(case_fact.to_exist_or_and_chain_atomic_fact());
+            forall_dom_facts.push(case_fact.clone().into());
 
             let function_equals_equal_to_fact = EqualFact::new(
                 function_obj.clone(),

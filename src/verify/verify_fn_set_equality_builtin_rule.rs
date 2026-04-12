@@ -267,7 +267,7 @@ impl Runtime {
                     )
                 })?;
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                instantiated_dom_fact.to_exist_or_and_chain_atomic_fact(),
+                instantiated_dom_fact.into(),
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
