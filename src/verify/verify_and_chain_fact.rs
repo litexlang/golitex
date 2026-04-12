@@ -8,7 +8,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&Fact::AndFact(and_fact.clone()))
+            self.verify_fact_from_cache_using_display_string(&and_fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -16,7 +16,7 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
                 return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::AndFact(and_fact.clone()),
+                    and_fact.clone().into(),
                     String::new(),
                     and_fact.line_file(),
                     Some(e.into()),
@@ -35,7 +35,7 @@ impl Runtime {
             verify_what.push(fact.to_string());
         }
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                Fact::AndFact(and_fact.clone()),
+                and_fact.clone().into(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
                 Some(default_line_file()),
@@ -49,7 +49,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&Fact::ChainFact(chain_fact.clone()))
+            self.verify_fact_from_cache_using_display_string(&chain_fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -57,7 +57,7 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
                 return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::ChainFact(chain_fact.clone()),
+                    chain_fact.clone().into(),
                     String::new(),
                     chain_fact.line_file(),
                     Some(e.into()),
@@ -71,7 +71,7 @@ impl Runtime {
             RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                 Fact::ChainFact(chain_fact.clone()),
                 String::new(),
-                Fact::ChainFact(chain_fact.clone()).line_file(),
+                chain_fact.line_file(),
                 Some(NewAtomicFactRuntimeError(e).into()),
             )
         })?;
@@ -88,7 +88,7 @@ impl Runtime {
             verify_what.push(fact.to_string());
         }
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                Fact::ChainFact(chain_fact.clone()),
+                chain_fact.clone().into(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
                 Some(default_line_file()),

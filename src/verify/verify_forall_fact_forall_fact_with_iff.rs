@@ -9,7 +9,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&Fact::ForallFact(forall_fact.clone()))
+            self.verify_fact_from_cache_using_display_string(&forall_fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -36,13 +36,13 @@ impl Runtime {
                     .map_err(|e| {
                         let message = "failed to assume dom fact in forall".to_string();
                         RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                            Fact::ForallFact(forall_fact.clone()),
+                            forall_fact.clone().into(),
                             message.clone(),
                             forall_fact.line_file.clone(),
                             Some(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                             message,
                             forall_fact.line_file.clone(),
-                            Some(Fact::ForallFact(forall_fact.clone())),
+                            Some(forall_fact.clone().into()),
                             Some(e.into()),
                         ).into()),
                         )
@@ -61,7 +61,7 @@ impl Runtime {
                     let then_line_file = then_fact.line_file();
                     return Err(
                         RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                            Fact::ForallFact(forall_fact.clone()),
+                            forall_fact.clone().into(),
                             format!(
                                 "forall: then-fact {}/{} could not be verified (unknown):\n{}",
                                 then_one_based, then_count, then_fact
@@ -111,18 +111,18 @@ impl Runtime {
                             then_facts_builtin_verified_by_messages.join("; ")
                         )
                     };
-                infer_result.new_fact(&Fact::ForallFact(forall_fact.clone()));
+                infer_result.new_fact(&forall_fact.clone().into());
                 return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-                        Fact::ForallFact(forall_fact.clone()),
+                        forall_fact.clone().into(),
                         infer_result,
                         combined_verified_by_message,
                         Vec::new(),
                     )).into());
             }
 
-            infer_result.new_fact(&Fact::ForallFact(forall_fact.clone()));
+            infer_result.new_fact(&forall_fact.clone().into());
             Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source(
-                    Fact::ForallFact(forall_fact.clone()),
+                    forall_fact.clone().into(),
                     infer_result,
                     "".to_string(),
                     None,
@@ -138,7 +138,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
-            &Fact::ForallFactWithIff(forall_iff.clone()),
+            &forall_iff.clone().into(),
         ) {
             return Ok(cached_result);
         }
@@ -153,7 +153,7 @@ impl Runtime {
         }
 
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                Fact::ForallFactWithIff(forall_iff.clone()),
+                forall_iff.clone().into(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 None,
                 Some(default_line_file()),
