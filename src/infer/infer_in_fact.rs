@@ -268,28 +268,15 @@ impl Runtime {
 
                 Ok(infer_result)
             }
-            Obj::Range(_) | Obj::ClosedRange(_) => {
-                let inferred_in_z_fact = AtomicFact::InFact(InFact::new(
-                    in_fact.element.clone(),
-                    Obj::StandardSet(StandardSet::Z),
-                    in_fact.line_file.clone(),
-                ));
-                let mut infer_result = InferResult::new();
-                infer_result.push_atomic_fact(&inferred_in_z_fact);
-                self.store_atomic_fact_without_well_defined_verified_and_infer(
-                    inferred_in_z_fact.clone(),
-                )
-                .map_err(|previous_error| {
-                    RuntimeError::new_infer_error_with_msg_position_previous_error(
-                        format!(
-                            "failed to store inferred integer membership while inferring `{}`",
-                            in_fact
-                        ),
-                        in_fact.line_file.clone(),
-                        Some(previous_error.into()),
-                    )
-                })?;
-                Ok(infer_result)
+            Obj::Range(r) => {
+                let start = (*r.start).clone();
+                let end = (*r.end).clone();
+                self.infer_in_fact_element_in_integer_interval(in_fact, start, end, false)
+            }
+            Obj::ClosedRange(c) => {
+                let start = (*c.start).clone();
+                let end = (*c.end).clone();
+                self.infer_in_fact_element_in_integer_interval(in_fact, start, end, true)
             }
             Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::RPos)
@@ -378,5 +365,76 @@ impl Runtime {
             }
             _ => Ok(InferResult::new()),
         }
+    }
+
+    // range(a,b): a <= i and i < b; closed_range(a,b): a <= i and i <= b; also i in Z.
+    fn infer_in_fact_element_in_integer_interval(
+        &mut self,
+        in_fact: &InFact,
+        start: Obj,
+        end: Obj,
+        end_inclusive: bool,
+    ) -> Result<InferResult, RuntimeError> {
+        let element = in_fact.element.clone();
+        let lf = in_fact.line_file.clone();
+
+        let inferred_in_z_fact = AtomicFact::InFact(InFact::new(
+            element.clone(),
+            Obj::StandardSet(StandardSet::Z),
+            lf.clone(),
+        ));
+        let mut infer_result = InferResult::new();
+        infer_result.push_atomic_fact(&inferred_in_z_fact);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(
+            inferred_in_z_fact.clone(),
+        )
+        .map_err(|previous_error| {
+            RuntimeError::new_infer_error_with_msg_position_previous_error(
+                format!(
+                    "failed to store inferred integer membership while inferring `{}`",
+                    in_fact
+                ),
+                in_fact.line_file.clone(),
+                Some(previous_error.into()),
+            )
+        })?;
+
+        let lower_bound = AtomicFact::LessEqualFact(LessEqualFact::new(
+            start,
+            element.clone(),
+            lf.clone(),
+        ));
+        infer_result.push_atomic_fact(&lower_bound);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound.clone())
+            .map_err(|previous_error| {
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
+                    format!(
+                        "failed to store inferred lower bound while inferring `{}`",
+                        in_fact
+                    ),
+                    in_fact.line_file.clone(),
+                    Some(previous_error.into()),
+                )
+            })?;
+
+        let upper_bound = if end_inclusive {
+            AtomicFact::LessEqualFact(LessEqualFact::new(element, end, lf.clone()))
+        } else {
+            AtomicFact::LessFact(LessFact::new(element, end, lf.clone()))
+        };
+        infer_result.push_atomic_fact(&upper_bound);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(upper_bound.clone())
+            .map_err(|previous_error| {
+                RuntimeError::new_infer_error_with_msg_position_previous_error(
+                    format!(
+                        "failed to store inferred upper bound while inferring `{}`",
+                        in_fact
+                    ),
+                    in_fact.line_file.clone(),
+                    Some(previous_error.into()),
+                )
+            })?;
+
+        Ok(infer_result)
     }
 }

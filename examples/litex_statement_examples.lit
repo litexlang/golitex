@@ -231,9 +231,10 @@ prove:
 
 # --- Stmt::ByForStmt — finite or bounded iteration as proof skeleton ---
 prove:
-    by for i range(0, 10):
+    by for:
         prove:
-            i < 10
+            forall i range(0, 10):
+                i < 10
         do_nothing
 
 # --- Stmt::ByExtensionStmt — set equality by mutual inclusion ---

@@ -8,6 +8,10 @@ impl Runtime {
         self.get_object_equal_to_normalized_decimal_number(&obj.to_string())
     }
 
+    pub fn resolve_obj_to_number_resolved(&self, obj: &Obj) -> Option<Number> {
+        self.resolve_obj_to_number(&self.resolve_obj(obj))
+    }
+
     pub fn resolve_obj(&self, obj: &Obj) -> Obj {
         match obj {
             Obj::Number(number) => Obj::Number(number.clone()),

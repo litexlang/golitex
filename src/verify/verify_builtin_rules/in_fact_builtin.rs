@@ -312,6 +312,8 @@ impl Runtime {
                     standard_set,
                 ))
             }
+            (_, Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state),
             (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::Z),
@@ -401,6 +403,54 @@ impl Runtime {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
         }
+    }
+
+    // `N_pos` = positive integers: from `0 < x` and (`x $in Z` or `x $in N`).
+    fn verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtExecResult, RuntimeError> {
+        let elem = &in_fact.element;
+        let lf = in_fact.line_file.clone();
+        let zero = Obj::Number(Number::new("0".to_string()));
+        let zero_lt_elem = AtomicFact::LessFact(LessFact::new(
+            zero,
+            elem.clone(),
+            lf.clone(),
+        ));
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+            &zero_lt_elem,
+            verify_state,
+        )? {
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+
+        let in_z = AtomicFact::InFact(InFact::new(
+            elem.clone(),
+            Obj::StandardSet(StandardSet::Z),
+            lf.clone(),
+        ));
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "N_pos: 0 < x and x in Z",
+            ));
+        }
+
+        let in_n = AtomicFact::InFact(InFact::new(
+            elem.clone(),
+            Obj::StandardSet(StandardSet::N),
+            lf.clone(),
+        ));
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_n, verify_state)? {
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "N_pos: 0 < x and x in N",
+            ));
+        }
+
+        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and `^` when direct operands are in `Z`

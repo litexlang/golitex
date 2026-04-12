@@ -276,8 +276,8 @@ impl Runtime {
         left_obj: &Obj,
         right_obj: &Obj,
     ) -> Option<(String, String)> {
-        let left_number = self.resolve_obj_to_number(left_obj)?;
-        let right_number = self.resolve_obj_to_number(right_obj)?;
+        let left_number = self.resolve_obj_to_number_resolved(left_obj)?;
+        let right_number = self.resolve_obj_to_number_resolved(right_obj)?;
         Some((left_number.normalized_value, right_number.normalized_value))
     }
 }

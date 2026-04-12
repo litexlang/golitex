@@ -60,14 +60,14 @@ impl Runtime {
         allow_equal: bool,
     ) -> Option<bool> {
         if let (Obj::Div(left_div), Obj::Div(right_div)) = (left_obj, right_obj) {
-            let left_denominator_number = self.resolve_obj_to_number(&left_div.right)?;
-            let right_denominator_number = self.resolve_obj_to_number(&right_div.right)?;
+            let left_denominator_number = self.resolve_obj_to_number_resolved(&left_div.right)?;
+            let right_denominator_number = self.resolve_obj_to_number_resolved(&right_div.right)?;
             let left_den_str = left_denominator_number.normalized_value.as_str();
             let right_den_str = right_denominator_number.normalized_value.as_str();
             let product_positive = two_denominators_product_is_positive(left_den_str, right_den_str)?;
             let flip = !product_positive;
-            let left_numerator_number = self.resolve_obj_to_number(&left_div.left)?;
-            let right_numerator_number = self.resolve_obj_to_number(&right_div.left)?;
+            let left_numerator_number = self.resolve_obj_to_number_resolved(&left_div.left)?;
+            let right_numerator_number = self.resolve_obj_to_number_resolved(&right_div.left)?;
             let left_product = mul_signed_decimal_str(
                 &left_numerator_number.normalized_value,
                 &right_denominator_number.normalized_value,
@@ -85,10 +85,10 @@ impl Runtime {
         }
 
         if let Obj::Div(right_div) = right_obj {
-            let denominator_number = self.resolve_obj_to_number(&right_div.right)?;
+            let denominator_number = self.resolve_obj_to_number_resolved(&right_div.right)?;
             let flip = nonzero_denominator_requires_flip(&denominator_number.normalized_value)?;
-            let numerator_number = self.resolve_obj_to_number(&right_div.left)?;
-            let left_number = self.resolve_obj_to_number(left_obj)?;
+            let numerator_number = self.resolve_obj_to_number_resolved(&right_div.left)?;
+            let left_number = self.resolve_obj_to_number_resolved(left_obj)?;
             let left_scaled = mul_signed_decimal_str(
                 &left_number.normalized_value,
                 &denominator_number.normalized_value,
@@ -103,10 +103,10 @@ impl Runtime {
         }
 
         if let Obj::Div(left_div) = left_obj {
-            let denominator_number = self.resolve_obj_to_number(&left_div.right)?;
+            let denominator_number = self.resolve_obj_to_number_resolved(&left_div.right)?;
             let flip = nonzero_denominator_requires_flip(&denominator_number.normalized_value)?;
-            let numerator_number = self.resolve_obj_to_number(&left_div.left)?;
-            let right_number = self.resolve_obj_to_number(right_obj)?;
+            let numerator_number = self.resolve_obj_to_number_resolved(&left_div.left)?;
+            let right_number = self.resolve_obj_to_number_resolved(right_obj)?;
             let right_scaled = mul_signed_decimal_str(
                 &right_number.normalized_value,
                 &denominator_number.normalized_value,
