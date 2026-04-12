@@ -74,7 +74,7 @@ impl Runtime {
                     }
                     return Err(RuntimeError::from(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EvalStmt(eval_stmt.clone()),
+                            eval_stmt.clone().into(),
                             "eval: non-numeric intermediate with pending binary operation"
                                 .to_string(),
                             None,
@@ -104,7 +104,7 @@ impl Runtime {
             Some(number) => Ok(Obj::Number(number)),
             None => Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::EvalStmt(eval_stmt.clone()),
+                    eval_stmt.clone().into(),
                     "eval: failed to combine numeric sub-expression".to_string(),
                     None,
                     vec![],
@@ -144,7 +144,7 @@ impl Runtime {
                     _ => {
                         return Err(RuntimeError::from(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::EvalStmt(eval_stmt.clone()),
+                                eval_stmt.clone().into(),
                                 "eval: function arguments must evaluate to Number".to_string(),
                                 None,
                                 vec![],
@@ -160,7 +160,7 @@ impl Runtime {
             None => {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::EvalStmt(eval_stmt.clone()),
+                        eval_stmt.clone().into(),
                         format!("eval: algorithm `{}` is not defined", fn_name),
                         None,
                         vec![],
@@ -172,7 +172,7 @@ impl Runtime {
         if flattened_number_args.len() != algo_definition.params.len() {
             return Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::EvalStmt(eval_stmt.clone()),
+                    eval_stmt.clone().into(),
                     format!(
                         "eval: argument count mismatch (expected {}, got {})",
                         algo_definition.params.len(),
@@ -199,14 +199,12 @@ impl Runtime {
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EvalStmt(eval_stmt.clone()),
+                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            eval_stmt.clone().into(),
                             "eval: failed to verify case condition".to_string(),
                             Some(verify_error),
                             vec![],
-                        ),
-                    )
+                        ))
                 })?;
 
             if verify_result.is_true() {
@@ -217,19 +215,17 @@ impl Runtime {
                 let verify_reversed_result = self
                     .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
-                        RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::EvalStmt(eval_stmt.clone()),
+                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                                eval_stmt.clone().into(),
                                 "eval: failed to verify reversed case condition".to_string(),
                                 Some(verify_error),
                                 vec![],
-                            ),
-                        )
+                            ))
                     })?;
                 if verify_reversed_result.is_unknown() {
                     return Err(RuntimeError::from(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            Stmt::EvalStmt(eval_stmt.clone()),
+                            eval_stmt.clone().into(),
                             format!(
                                 "eval: case `{}` is unknown and its reverse is also unknown",
                                 instantiated_case_condition
@@ -247,7 +243,7 @@ impl Runtime {
         } else {
             Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::EvalStmt(eval_stmt.clone()),
+                    eval_stmt.clone().into(),
                     "eval: no case matched and no default return".to_string(),
                     None,
                     vec![],
@@ -256,7 +252,7 @@ impl Runtime {
         }
     }
 
-    pub fn _exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtExecResult, RuntimeError> {
+    pub fn _exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &stmt.obj_to_eval,
             &VerifyState::new(0, false),
@@ -265,7 +261,7 @@ impl Runtime {
         if !matches!(stmt.obj_to_eval, Obj::FnObj(_)) {
             return Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::EvalStmt(stmt.clone()),
+                    stmt.clone().into(),
                     "eval: obj_to_eval must be a fnObj".to_string(),
                     None,
                     vec![],
@@ -288,8 +284,6 @@ impl Runtime {
         infer_result.new_fact(&evaluated_equal_fact);
         self.store_fact_without_well_defined_verified_and_infer(evaluated_equal_fact)?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(Stmt::EvalStmt(stmt.clone()), infer_result, vec![]),
-        ))
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
 }

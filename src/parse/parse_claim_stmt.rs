@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_claim_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CLAIM)?;
-        Ok(Stmt::ClaimStmt(self.parse_multiline_fact_claim(tb)?))
+        Ok(self.parse_multiline_fact_claim(tb)?.into())
     }
 
     fn parse_multiline_fact_claim(

@@ -87,10 +87,6 @@ impl Runtime {
             proof.push(self.parse_stmt(b)?);
         }
 
-        Ok(Stmt::ByForStmt(ByForStmt::new(
-            forall_fact,
-            proof,
-            tb.line_file.clone(),
-        )))
+        Ok(ByForStmt::new(forall_fact, proof, tb.line_file.clone()).into())
     }
 }

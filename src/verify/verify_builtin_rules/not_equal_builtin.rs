@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
 
@@ -15,13 +15,11 @@ impl Runtime {
         ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
-                    return Ok(StmtExecResult::FactualStmtSuccess(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
                             "calculation".to_string(),
                             Vec::new(),
-                        ),
-                    ));
+                        )).into());
                 }
             }
             _ => {}
@@ -36,7 +34,7 @@ impl Runtime {
             None => {}
         }
 
-        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok((StmtUnknown::new()).into())
     }
 
     fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {
@@ -225,7 +223,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let expression_obj =
             if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
@@ -327,13 +325,14 @@ impl Runtime {
         };
 
         match builtin_rule_label {
-            Some(rule_label) => Ok(Some(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Some(rule_label) => Ok(Some(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
                     rule_label.to_string(),
                     Vec::new(),
-                ),
-            ))),
+                ))
+                .into(),
+            )),
             None => Ok(None),
         }
     }

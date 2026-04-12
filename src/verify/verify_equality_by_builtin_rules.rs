@@ -13,8 +13,8 @@ fn factual_equal_success_by_builtin_reason(
     right: &Obj,
     line_file: LineFile,
     reason: &str,
-) -> StmtExecResult {
-    StmtExecResult::FactualStmtSuccess(
+) -> StmtResult {
+    StmtResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                 left.clone(),
@@ -35,7 +35,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         if let (Obj::FamilyObj(fl), Obj::FamilyObj(fr)) = (left, right) {
             if let (Ok(el), Ok(er)) = (
                 self.instantiate_family_member_set(fl),
@@ -89,7 +89,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if let Some(done) = self.try_verify_objs_equal_by_expanding_family(
             left,
             right,
@@ -111,8 +111,7 @@ impl Runtime {
         }
 
         if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
-            return Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                         left.clone(),
                         right.clone(),
@@ -120,8 +119,7 @@ impl Runtime {
                     ))),
                     "calculation and rational expression simplification".to_string(),
                     Vec::new(),
-                ),
-            ));
+                )).into());
         }
 
         if let (Obj::FnSet(left_fn_set), Obj::FnSet(right_fn_set)) = (left, right) {
@@ -133,7 +131,7 @@ impl Runtime {
             );
         }
 
-        Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+        Ok((StmtUnknown::new()).into())
     }
 }
 
@@ -144,7 +142,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         let (result, _, _) = self.verify_equality_by_they_are_the_same_and_calculation(
             left,
             right,
@@ -172,7 +170,7 @@ impl Runtime {
         verify_state: &VerifyState,
         known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
         known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
-    ) -> Result<Option<StmtExecResult>, RuntimeError> {
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         match (known_objs_equal_to_left, known_objs_equal_to_right) {
             (None, None) => Ok(None),
             (Some(known_objs_equal_to_left), None) => {
@@ -268,21 +266,21 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-    ) -> Option<StmtExecResult> {
+    ) -> Option<StmtResult> {
         let reason = "same shape and paired args share known equality class";
         match (left, right) {
             (Obj::FnObj(left_fn), Obj::FnObj(right_fn)) => {
                 let left_head_obj = Obj::from(left_fn.head.as_ref().clone());
                 let right_head_obj = Obj::from(right_fn.head.as_ref().clone());
                 if !verify_equality_by_they_are_the_same(&left_head_obj, &right_head_obj) {
-                    return Some(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    return Some((StmtUnknown::new()).into());
                 }
                 if left_fn.body.len() != right_fn.body.len() {
-                    return Some(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    return Some((StmtUnknown::new()).into());
                 }
                 for (left_group, right_group) in left_fn.body.iter().zip(right_fn.body.iter()) {
                     if !self.boxed_obj_vecs_share_known_equality_class(left_group, right_group) {
-                        return Some(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                        return Some((StmtUnknown::new()).into());
                     }
                 }
                 Some(factual_equal_success_by_builtin_reason(
@@ -298,7 +296,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Sub(l), Obj::Sub(r)) => {
@@ -310,7 +308,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Mul(l), Obj::Mul(r)) => {
@@ -322,7 +320,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Div(l), Obj::Div(r)) => {
@@ -334,7 +332,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Mod(l), Obj::Mod(r)) => {
@@ -346,7 +344,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Pow(l), Obj::Pow(r)) => {
@@ -358,7 +356,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Union(l), Obj::Union(r)) => {
@@ -370,7 +368,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Intersect(l), Obj::Intersect(r)) => {
@@ -382,7 +380,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::SetMinus(l), Obj::SetMinus(r)) => {
@@ -394,7 +392,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::SetDiff(l), Obj::SetDiff(r)) => {
@@ -406,7 +404,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Cup(l), Obj::Cup(r)) => {
@@ -415,7 +413,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Cap(l), Obj::Cap(r)) => {
@@ -424,7 +422,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::PowerSet(l), Obj::PowerSet(r)) => {
@@ -433,7 +431,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Choose(l), Obj::Choose(r)) => {
@@ -442,7 +440,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::CartDim(l), Obj::CartDim(r)) => {
@@ -451,7 +449,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::TupleDim(l), Obj::TupleDim(r)) => {
@@ -460,7 +458,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Count(l), Obj::Count(r)) => {
@@ -469,7 +467,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Range(l), Obj::Range(r)) => {
@@ -480,7 +478,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::ClosedRange(l), Obj::ClosedRange(r)) => {
@@ -491,7 +489,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Proj(l), Obj::Proj(r)) => {
@@ -501,7 +499,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::ObjAtIndex(l), Obj::ObjAtIndex(r)) => {
@@ -512,7 +510,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Tuple(l), Obj::Tuple(r)) => {
@@ -521,7 +519,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::ListSet(l), Obj::ListSet(r)) => {
@@ -530,7 +528,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             (Obj::Cart(l), Obj::Cart(r)) => {
@@ -539,7 +537,7 @@ impl Runtime {
                         left, right, line_file, reason,
                     ))
                 } else {
-                    Some(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+                    Some((StmtUnknown::new()).into())
                 }
             }
             _ => None,
@@ -552,7 +550,7 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         _verify_state: &VerifyState,
-    ) -> Result<(StmtExecResult, Obj, Obj), RuntimeError> {
+    ) -> Result<(StmtResult, Obj, Obj), RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
             return Ok((
                 factual_equal_success_by_builtin_reason(
@@ -578,7 +576,7 @@ impl Runtime {
         }
 
         Ok((
-            StmtExecResult::StmtUnknown(StmtUnknown::new()),
+            StmtResult::StmtUnknown(StmtUnknown::new()),
             left_resolved,
             right_resolved,
         ))

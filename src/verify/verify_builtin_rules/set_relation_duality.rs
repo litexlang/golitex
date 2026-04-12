@@ -6,15 +6,13 @@ impl Runtime {
         &mut self,
         subset_fact: &SubsetFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if subset_fact.left.to_string() == subset_fact.right.to_string() {
-            return Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                ),
-            ));
+                )).into());
         }
 
         let converted_superset_fact = AtomicFact::SupersetFact(SupersetFact::new(
@@ -27,15 +25,13 @@ impl Runtime {
                 &converted_superset_fact,
             )?;
         if verify_result.is_true() {
-            Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                ),
-            ))
+                )).into())
         } else {
-            Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+            Ok((StmtUnknown::new()).into())
         }
     }
 
@@ -44,15 +40,13 @@ impl Runtime {
         &mut self,
         superset_fact: &SupersetFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if superset_fact.left.to_string() == superset_fact.right.to_string() {
-            return Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                ),
-            ));
+                )).into());
         }
         let converted_subset_fact = AtomicFact::SubsetFact(SubsetFact::new(
             superset_fact.right.clone(),
@@ -64,15 +58,13 @@ impl Runtime {
                 &converted_subset_fact,
             )?;
         if verify_result.is_true() {
-            Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                ),
-            ))
+                )).into())
         } else {
-            Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+            Ok((StmtUnknown::new()).into())
         }
     }
 
@@ -81,7 +73,7 @@ impl Runtime {
         &mut self,
         not_subset_fact: &NotSubsetFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let converted_not_superset_fact = AtomicFact::NotSupersetFact(NotSupersetFact::new(
             not_subset_fact.right.clone(),
             not_subset_fact.left.clone(),
@@ -92,15 +84,13 @@ impl Runtime {
                 &converted_not_superset_fact,
             )?;
         if verify_result.is_true() {
-            Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::NotSubsetFact(not_subset_fact.clone())),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                ),
-            ))
+                )).into())
         } else {
-            Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+            Ok((StmtUnknown::new()).into())
         }
     }
 
@@ -109,7 +99,7 @@ impl Runtime {
         &mut self,
         not_superset_fact: &NotSupersetFact,
         _verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let converted_not_subset_fact = AtomicFact::NotSubsetFact(NotSubsetFact::new(
             not_superset_fact.right.clone(),
             not_superset_fact.left.clone(),
@@ -120,15 +110,13 @@ impl Runtime {
                 &converted_not_subset_fact,
             )?;
         if verify_result.is_true() {
-            Ok(StmtExecResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     Fact::AtomicFact(AtomicFact::NotSupersetFact(not_superset_fact.clone())),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                ),
-            ))
+                )).into())
         } else {
-            Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+            Ok((StmtUnknown::new()).into())
         }
     }
 }

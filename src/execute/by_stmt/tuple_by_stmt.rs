@@ -5,8 +5,8 @@ impl Runtime {
     pub fn exec_by_tuple_stmt(
         &mut self,
         stmt: &ByTupleStmt,
-    ) -> Result<StmtExecResult, RuntimeError> {
-        let stmt_exec = Stmt::ByTuple(stmt.clone());
+    ) -> Result<StmtResult, RuntimeError> {
+        let stmt_exec = stmt.clone().into();
 
         let tuple_struct = match &stmt.obj {
             Obj::Tuple(tuple) => tuple.clone(),
@@ -14,14 +14,12 @@ impl Runtime {
                 if let Some(t) = self.get_obj_equal_to_tuple(&stmt.obj.to_string()) {
                     t
                 } else {
-                    return Err(RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             stmt_exec,
                             format!("by tuple: `{}` is not known to denote a tuple", stmt.obj),
                             None,
                             vec![],
-                        ),
-                    ));
+                        )));
                 }
             }
         };
@@ -29,7 +27,7 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
         self.verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!("by tuple: `{}` is not well-defined", stmt.obj),
                     Some(e.into()),
@@ -38,7 +36,7 @@ impl Runtime {
             })?;
 
         let encoded = kuratowski_encode_tuple_boxes(&tuple_struct.args).map_err(|msg| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt_exec.clone(),
                 format!("by tuple: {}", msg),
                 None,
@@ -60,9 +58,7 @@ impl Runtime {
                     None,
                     stmt.line_file.clone(),
                 );
-                Ok(StmtExecResult::NonFactualStmtSuccess(
-                    NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![]),
-                ))
+                Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())
             }
             Err(store_error) => Err(RuntimeError::from(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(

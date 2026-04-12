@@ -5,14 +5,12 @@ impl Runtime {
     pub fn exec_have_fn_by_induc(
         &mut self,
         stmt: &HaveFnByInducStmt,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_process(stmt))?;
 
         let infer_result = self.exec_have_fn_by_induc_store_process(stmt)?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(Stmt::HaveFnByInducStmt(stmt.clone()), infer_result, vec![]),
-        ))
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
 
     fn exec_have_fn_by_induc_verify_process(
@@ -32,8 +30,8 @@ impl Runtime {
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
-        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            Stmt::HaveFnByInducStmt(stmt.clone()),
+        RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
+            stmt.clone().into(),
             String::new(),
             Some(cause),
             vec![],
@@ -110,17 +108,15 @@ impl Runtime {
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnByInducStmt(stmt.clone()),
+            return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt.clone().into(),
                     format!(
                         "have_fn_by_induc: {} is not in return set {}",
                         equal_to, stmt.ret_set
                     ),
                     None,
                     vec![],
-                ),
-            ));
+                )));
         }
         Ok(())
     }
@@ -197,15 +193,13 @@ impl Runtime {
                 let coverage = Fact::OrFact(OrFact::new(coverage_cases, line_file.clone()));
                 self.verify_fact_return_err_if_not_true(&coverage, &verify_state)
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                Stmt::HaveFnByInducStmt(stmt.clone()),
+                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                                stmt.clone().into(),
                                 "have_fn_by_induc: nested last cases do not cover all situations"
                                     .to_string(),
                                 Some(e),
                                 vec![],
-                            ),
-                        )
+                            ))
                     })?;
 
                 for nested in last_pairs.iter() {
@@ -223,14 +217,12 @@ impl Runtime {
                 }
             }
             HaveFnByInducLastCase::NestedCases(_) => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        Stmt::HaveFnByInducStmt(stmt.clone()),
+                return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                        stmt.clone().into(),
                         "have_fn_by_induc: nested last case list must not be empty".to_string(),
                         None,
                         vec![],
-                    ),
-                ));
+                    )));
             }
         }
 
@@ -265,14 +257,12 @@ impl Runtime {
             .verify_atomic_fact(&in_fact, &VerifyState::new(0, false))
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    Stmt::HaveFnByInducStmt(stmt.clone()),
+            return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    stmt.clone().into(),
                     "have_fn_by_induc: induc_from is not in Z".to_string(),
                     None,
                     vec![],
-                ),
-            ));
+                )));
         }
 
         let mut infer_result = InferResult::new();

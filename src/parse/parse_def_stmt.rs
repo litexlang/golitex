@@ -45,7 +45,7 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
 
-        Ok(Stmt::DefPropStmt(stmt_ok))
+        Ok(stmt_ok.into())
     }
 
     pub fn parse_def_abstract_prop_stmt(
@@ -76,7 +76,7 @@ impl Runtime {
             &stmt_ok.name,
             tb.line_file.clone(),
         )?;
-        Ok(Stmt::DefAbstractPropStmt(stmt_ok))
+        Ok(stmt_ok.into())
     }
 
     pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -109,11 +109,7 @@ impl Runtime {
         };
         let all_param_names = ParamGroupWithParamType::collect_param_names(&param_def);
         self.register_collected_param_names_for_def_parse(&all_param_names, tb.line_file.clone())?;
-        Ok(Stmt::DefLetStmt(DefLetStmt::new(
-            param_def,
-            facts,
-            tb.line_file.clone(),
-        )))
+        Ok(DefLetStmt::new(param_def, facts, tb.line_file.clone()).into())
     }
 
     // return HaveObjInNonemptySetOrParamTypeStmt or HaveObjEqualStmt
@@ -141,9 +137,7 @@ impl Runtime {
         self.register_collected_param_names_for_def_parse(&have_param_names, tb.line_file.clone())?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
-            Ok(Stmt::HaveObjInNonemptySetStmt(
-                HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file.clone()),
-            ))
+            Ok(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file.clone()).into())
         } else {
             tb.skip_token(EQUAL)?;
             let mut objs_equal_to = vec![self.parse_obj(tb)?];
@@ -151,11 +145,7 @@ impl Runtime {
                 tb.skip_token(COMMA)?;
                 objs_equal_to.push(self.parse_obj(tb)?);
             }
-            Ok(Stmt::HaveObjEqualStmt(HaveObjEqualStmt::new(
-                param_defs,
-                objs_equal_to,
-                tb.line_file.clone(),
-            )))
+            Ok(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file.clone()).into())
         }
     }
 
@@ -181,25 +171,19 @@ impl Runtime {
                     block.skip_token(COLON)?;
                     equal_tos.push(self.parse_obj(block)?);
                 }
-                Ok(Stmt::HaveFnEqualCaseByCaseStmt(
-                    HaveFnEqualCaseByCaseStmt::new(
-                        name,
-                        fs,
-                        cases,
-                        equal_tos,
-                        tb.line_file.clone(),
-                    ),
-                ))
+                Ok(HaveFnEqualCaseByCaseStmt::new(
+                    name,
+                    fs,
+                    cases,
+                    equal_tos,
+                    tb.line_file.clone(),
+                )
+                .into())
             } else {
                 tb.skip_token(EQUAL)?;
 
                 let equal_to = self.parse_obj(tb)?;
-                Ok(Stmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
-                    name,
-                    fs,
-                    equal_to,
-                    tb.line_file.clone(),
-                )))
+                Ok(HaveFnEqualStmt::new(name, fs, equal_to, tb.line_file.clone()).into())
             }
         }
     }
@@ -477,7 +461,7 @@ impl Runtime {
                 );
         };
 
-        Ok(Stmt::HaveFnByInducStmt(HaveFnByInducStmt::new(
+        Ok(HaveFnByInducStmt::new(
             name,
             param,
             ret_set,
@@ -485,7 +469,8 @@ impl Runtime {
             special_cases_equal_tos,
             last_case,
             tb.line_file.clone(),
-        )))
+        )
+        .into())
     }
 
     fn verify_have_fn_by_induc_dom_matches_induc_from(
@@ -583,11 +568,7 @@ impl Runtime {
 
         self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
 
-        Ok(Stmt::HaveByExistStmt(HaveByExistStmt::new(
-            equal_tos,
-            true_fact,
-            tb.line_file.clone(),
-        )))
+        Ok(HaveByExistStmt::new(equal_tos, true_fact, tb.line_file.clone()).into())
     }
 
     fn parse_braced_params_and_optional_dom_facts(
@@ -661,13 +642,14 @@ impl Runtime {
             }
             tb.skip_token(EQUAL)?;
             let equal_to = this.parse_obj(tb)?;
-            Ok(Stmt::DefFamilyStmt(DefFamilyStmt::new(
+            Ok(DefFamilyStmt::new(
                 name,
                 params_def_with_type,
                 dom_facts,
                 equal_to,
                 tb.line_file.clone(),
-            )))
+            )
+            .into())
         })
     }
 
@@ -767,14 +749,15 @@ impl Runtime {
                 );
             }
             
-            Ok(Stmt::DefStructStmt(DefStructStmt::new(
+            Ok(DefStructStmt::new(
                 name,
                 param_defs,
                 dom_facts,
                 fields,
                 facts,
                 tb.line_file.clone(),
-            )))
+            )
+            .into())
         })
     }
 
@@ -807,13 +790,14 @@ impl Runtime {
                     }
                 }
             }
-            Ok(Stmt::DefAlgoStmt(DefAlgoStmt::new(
+            Ok(DefAlgoStmt::new(
                 name,
                 params,
                 algo_cases,
                 default_return,
                 tb.line_file.clone(),
-            )))
+            )
+            .into())
         })
     }
 
