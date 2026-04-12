@@ -1,27 +1,29 @@
 family matrix(s set, m, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
 
-let M family matrix(R, 3, 3):
-    M(1, 1) = 1
-    M(1, 2) = 0
-    M(1, 3) = 0
-    M(2, 1) = 0
-    M(2, 2) = 1
-    M(2, 3) = 0
-    M(3, 1) = 0
-    M(3, 2) = 0
-    M(3, 3) = 1
-
 prop is_diagonal_matrix(n N_pos,m family matrix(R, n, n)):
     forall i closed_range(1, n), j closed_range(1, n):
         i != j
         =>:
             m(i, j) = 0
 
-by for:
+claim:
     prove:
-        forall i closed_range(1, 3), j closed_range(1, 3):
-            i != j
+        forall M family matrix(R, 3, 3):
+            M(1, 1) = 1
+            M(1, 2) = 0
+            M(1, 3) = 0
+            M(2, 1) = 0
+            M(2, 2) = 1
+            M(2, 3) = 0
+            M(3, 1) = 0
+            M(3, 2) = 0
+            M(3, 3) = 1
             =>:
-                M(i, j) = 0
-
-$is_diagonal_matrix(3, M)
+                $is_diagonal_matrix(3, M)
+    
+    by for:
+        prove:
+            forall i closed_range(1, 3), j closed_range(1, 3):
+                i != j
+                =>:
+                    M(i, j) = 0
