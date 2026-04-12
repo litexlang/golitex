@@ -223,18 +223,14 @@ impl AndChainAtomicFact {
             AndChainAtomicFact::ChainFact(c) => c.key(),
         }
     }
+}
 
-    pub fn to_exist_or_and_chain_atomic_fact(&self) -> crate::fact::ExistOrAndChainAtomicFact {
-        match self {
-            AndChainAtomicFact::AtomicFact(atomic_fact) => {
-                crate::fact::ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone())
-            }
-            AndChainAtomicFact::AndFact(and_fact) => {
-                crate::fact::ExistOrAndChainAtomicFact::AndFact(and_fact.clone())
-            }
-            AndChainAtomicFact::ChainFact(chain_fact) => {
-                crate::fact::ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone())
-            }
+impl From<AndChainAtomicFact> for ExistOrAndChainAtomicFact {
+    fn from(f: AndChainAtomicFact) -> Self {
+        match f {
+            AndChainAtomicFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
+            AndChainAtomicFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
+            AndChainAtomicFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
         }
     }
 }

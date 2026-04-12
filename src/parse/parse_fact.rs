@@ -240,9 +240,7 @@ impl Runtime {
                     .parse_atomic_fact(tb, false)
                     .map(|a| ExistOrAndChainAtomicFact::AtomicFact(a))?)
             }
-            _ => Ok(self
-                .parse_or_and_chain_atomic_fact(tb)?
-                .to_exist_or_and_chain_atomic_fact()),
+            _ => Ok(self.parse_or_and_chain_atomic_fact(tb)?.into()),
         }
     }
 

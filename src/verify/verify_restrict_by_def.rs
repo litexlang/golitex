@@ -80,7 +80,7 @@ impl Runtime {
 
         let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         for dom_fact in &restrict_to_ref.dom_facts {
-            forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
+            forall_dom_facts.push(dom_fact.clone().into());
         }
 
         let then_facts = Self::build_then_facts_for_original_with_params(
@@ -156,7 +156,7 @@ impl Runtime {
         for dom_fact in &original_fn_set.dom_facts {
             let instantiated_dom_fact =
                 runtime.inst_or_and_chain_atomic_fact(dom_fact, original_to_restrict_param_map)?;
-            then_facts.push(instantiated_dom_fact.to_exist_or_and_chain_atomic_fact());
+                then_facts.push(instantiated_dom_fact.into());
         }
 
         Ok(then_facts)

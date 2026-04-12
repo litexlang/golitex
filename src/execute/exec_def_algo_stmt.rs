@@ -219,17 +219,11 @@ impl Runtime {
             Vec::with_capacity(requirement_facts.len());
         for requirement_fact in requirement_facts.iter() {
             let requirement_dom_fact = match requirement_fact {
-                Fact::AtomicFact(atomic_fact) => {
-                    ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone())
-                }
-                Fact::AndFact(and_fact) => ExistOrAndChainAtomicFact::AndFact(and_fact.clone()),
-                Fact::ChainFact(chain_fact) => {
-                    ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone())
-                }
-                Fact::OrFact(or_fact) => ExistOrAndChainAtomicFact::OrFact(or_fact.clone()),
-                Fact::ExistFact(exist_fact) => {
-                    ExistOrAndChainAtomicFact::ExistFact(exist_fact.clone())
-                }
+                Fact::AtomicFact(atomic_fact) => atomic_fact.clone().into(),
+                Fact::AndFact(and_fact) => and_fact.clone().into(),
+                Fact::ChainFact(chain_fact) => chain_fact.clone().into(),
+                Fact::OrFact(or_fact) => or_fact.clone().into(),
+                Fact::ExistFact(exist_fact) => exist_fact.clone().into(),
                 Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
                     return Err(
                         Self::def_algo_verify_exec_error_with_message_and_optional_cause(

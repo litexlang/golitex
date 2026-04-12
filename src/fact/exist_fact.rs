@@ -9,16 +9,18 @@ pub enum OrAndChainAtomicFact {
     OrFact(OrFact),
 }
 
-impl OrAndChainAtomicFact {
-    pub fn to_exist_or_and_chain_atomic_fact(self) -> ExistOrAndChainAtomicFact {
-        match self {
+impl From<OrAndChainAtomicFact> for ExistOrAndChainAtomicFact {
+    fn from(f: OrAndChainAtomicFact) -> Self {
+        match f {
             OrAndChainAtomicFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
             OrAndChainAtomicFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
             OrAndChainAtomicFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
             OrAndChainAtomicFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
         }
     }
+}
 
+impl OrAndChainAtomicFact {
     pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
         if from == to {
             return self;
