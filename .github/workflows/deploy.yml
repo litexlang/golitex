@@ -193,6 +193,8 @@ jobs:
         shell: bash
         run: |
           WIX_VERSION=$(echo "${VERSION}" | sed 's/-.*//')
+          mkdir -p target/release
+          cp "litex_${VERSION}_windows_amd64.exe" target/release/litex.exe
           cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi" --install-version "${WIX_VERSION}"
 
       - name: Upload .msi
