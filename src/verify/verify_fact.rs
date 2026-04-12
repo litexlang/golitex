@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let result = match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
             Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
@@ -22,7 +22,7 @@ impl Runtime {
         if result.is_unknown() {
             let fact_owned = fact.clone();
             let line_file = fact_owned.line_file();
-            let unknown_detail = if let StmtExecResult::StmtUnknown(u) = &result {
+            let unknown_detail = if let StmtResult::StmtUnknown(u) = &result {
                 u.detail.clone().unwrap_or_default()
             } else {
                 String::new()
@@ -52,7 +52,7 @@ impl Runtime {
         &mut self,
         exist_or_and_chain_atomic_fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         match exist_or_and_chain_atomic_fact {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact(atomic_fact, verify_state)
@@ -76,7 +76,7 @@ impl Runtime {
         &mut self,
         or_and_chain_atomic_fact: &OrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         match or_and_chain_atomic_fact {
             OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact(atomic_fact, verify_state)
@@ -93,7 +93,7 @@ impl Runtime {
         &mut self,
         and_chain_atomic_fact: &AndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         match and_chain_atomic_fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact(atomic_fact, verify_state)

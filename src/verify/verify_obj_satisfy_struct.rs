@@ -7,7 +7,7 @@ impl Runtime {
         obj: Obj,
         struct_ty: &StructObj,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let struct_name = struct_ty.name.to_string();
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
@@ -49,21 +49,21 @@ impl Runtime {
                         IdentifierOrIdentifierWithMod::IdentifierWithMod(m.clone())
                     }
                     _ => {
-                        return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                        return Ok((StmtUnknown::new()).into());
                     }
                 };
 
                 let Some(satisfied_struct) = self.get_object_satisfy_struct(&id_key).cloned()
                 else {
-                    return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    return Ok((StmtUnknown::new()).into());
                 };
 
                 if satisfied_struct.name.to_string() != struct_ty.name.to_string() {
-                    return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    return Ok((StmtUnknown::new()).into());
                 }
 
                 if satisfied_struct.args.len() != struct_ty.args.len() {
-                    return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    return Ok((StmtUnknown::new()).into());
                 }
 
                 for (env_arg, given_arg) in satisfied_struct.args.iter().zip(struct_ty.args.iter())
@@ -77,8 +77,7 @@ impl Runtime {
                     }
                 }
 
-                Ok(StmtExecResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                         Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                             obj.clone(),
                             Obj::Identifier(Identifier::new(String::from("_"))),
@@ -88,10 +87,9 @@ impl Runtime {
                         None,
                         Some(default_line_file()),
                         vec![],
-                    ),
-                ))
+                    )).into())
             }
-            _ => Ok(StmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => Ok((StmtUnknown::new()).into()),
         }
     }
 
@@ -101,7 +99,7 @@ impl Runtime {
         struct_param_type: &StructObj,
         struct_def: &DefStructStmt,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let args_of_struct_param_type = &struct_param_type.args;
         let expected_tuple_len = args_of_struct_param_type.len() + struct_def.fields.len();
         if expected_tuple_len != tuple.args.len() {
@@ -157,7 +155,7 @@ impl Runtime {
 
         // 验证：tuple_args_for_struct_param_type_fields 满足 field 对应的 实例化的 struct_type
         // e.g. (R, 0, +, neg) 中 (0, +, neg) 满足 struct group(R): zero: R, add: fn(x, y R) R, inv: fn(x R) R 中: 0 满足 zero:R, + 满足 add: fn(x, y R) R, neg 满足 inv: fn(x R) R
-        let mut last_result: Option<StmtExecResult> = None;
+        let mut last_result: Option<StmtResult> = None;
         for (i, ((_, field_type), tuple_field_arg)) in struct_def
             .fields
             .iter()
@@ -214,7 +212,7 @@ impl Runtime {
         }
 
         Ok(last_result.unwrap_or_else(|| {
-            StmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+            StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
                 DoNothingStmt::new(default_line_file()).into(),
                 InferResult::new(),
                 vec![],

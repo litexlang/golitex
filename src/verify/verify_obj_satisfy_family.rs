@@ -6,7 +6,7 @@ impl Runtime {
         obj: Obj,
         family_ty: &FamilyObj,
         verify_state: &VerifyState,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let family_name = family_ty.name.to_string();
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,

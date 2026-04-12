@@ -3,7 +3,7 @@ use crate::pipeline::run_stmt_at_global_env;
 use crate::prelude::*;
 use std::fs;
 
-pub type StmtResult = StmtExecResult;
+pub use crate::result::StmtResult;
 
 pub fn run_source_code_in_file(entry_file_path: &str) -> String {
     let source_code = match fs::read_to_string(entry_file_path) {

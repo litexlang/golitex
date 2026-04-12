@@ -5,11 +5,11 @@ impl Runtime {
     pub fn exec_by_contra_stmt(
         &mut self,
         stmt: &ByContraStmt,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let to_prove_fact = Fact::AtomicFact(stmt.to_prove.clone());
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!("by contra: failed to prove `{}`", to_prove_fact),
                     Some(verify_error.into()),
@@ -18,12 +18,12 @@ impl Runtime {
             })?;
 
         let (exec_proof_inside_results, last_error) = self.run_in_local_env(|rt| {
-            let mut inside_results: Vec<StmtExecResult> = Vec::new();
+            let mut inside_results: Vec<StmtResult> = Vec::new();
 
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
             rt.store_atomic_fact_without_well_defined_verified_and_infer(reverse_to_prove_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!("by contra: failed to know reverse of `{}`", to_prove_fact),
                         Some(store_fact_error.into()),
@@ -89,7 +89,7 @@ impl Runtime {
         let infer_result = self
             .store_fact_without_well_defined_verified_and_infer(to_prove_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by contra: failed to release `{}`",
@@ -100,12 +100,10 @@ impl Runtime {
                 ))
             })?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 stmt.clone().into(),
                 infer_result,
                 exec_proof_inside_results,
-            ),
-        ))
+            )).into())
     }
 }

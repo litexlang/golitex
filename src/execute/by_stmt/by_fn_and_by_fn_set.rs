@@ -12,14 +12,12 @@ impl Runtime {
     ) -> Result<(Fact, Fact, Fact, Fact), RuntimeError> {
         let param_names = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
         if param_names.is_empty() {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!("{}: fn set has no parameters", context),
                     None,
                     vec![],
-                ),
-            ));
+                )));
         }
 
         let mut generated_forall_names = self
@@ -85,10 +83,12 @@ impl Runtime {
         let forall_element_obj = Obj::Identifier(Identifier::new(forall_element_name.clone()));
         let arg_domain_factors: Vec<Obj> = forall_param_defs_with_type
             .iter()
-            .map(|param_def_with_type| match &param_def_with_type.param_type {
-                ParamType::Obj(obj) => obj.clone(),
-                _ => unreachable!(),
-            })
+            .map(
+                |param_def_with_type| match &param_def_with_type.param_type {
+                    ParamType::Obj(obj) => obj.clone(),
+                    _ => unreachable!(),
+                },
+            )
             .collect();
         let forall_arg_dom = if param_names.len() == 1 {
             arg_domain_factors[0].clone()
@@ -410,14 +410,13 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtExecResult, RuntimeError> {
+    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtResult, RuntimeError> {
         let stmt_exec = stmt.clone().into();
 
         let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
             Some(fs) => fs,
             None => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt_exec,
                         format!(
                             "by fn: `{}` is not known to belong to a fn set",
@@ -425,8 +424,7 @@ impl Runtime {
                         ),
                         None,
                         vec![],
-                    ),
-                ));
+                    )));
             }
         };
 
@@ -449,9 +447,7 @@ impl Runtime {
             forall_unique,
         )?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![]),
-        ))
+        Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())
     }
 
     fn exec_by_fn_set_stmt_verify_process(
@@ -461,12 +457,12 @@ impl Runtime {
         forall_in: &Fact,
         forall_exist: &Fact,
         forall_unique: &Fact,
-    ) -> Result<Vec<StmtExecResult>, RuntimeError> {
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
         let verify_state = VerifyState::new(0, false);
         let verify_shape_fact = self
             .verify_fact_return_err_if_not_true(forall_shape, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by fn set: failed to prove cart/tuple shape characterization `{}`",
@@ -479,7 +475,7 @@ impl Runtime {
         let verify_random_param_fact = self
             .verify_fact_return_err_if_not_true(forall_in, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by fn set: failed to prove graph-element characterization `{}`",
@@ -492,7 +488,7 @@ impl Runtime {
         let verify_param_to_element_fact = self
             .verify_fact_return_err_if_not_true(forall_exist, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by fn set: failed to prove graph-coverage characterization `{}`",
@@ -505,7 +501,7 @@ impl Runtime {
         let verify_uniqueness_fact = self
             .verify_fact_return_err_if_not_true(forall_unique, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by fn set: failed to prove graph-uniqueness characterization `{}`",
@@ -536,7 +532,7 @@ impl Runtime {
         ));
         self.store_atomic_fact_without_well_defined_verified_and_infer(membership_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     "by fn set: failed to store membership fact".to_string(),
                     Some(store_fact_error.into()),
@@ -545,10 +541,7 @@ impl Runtime {
             })
     }
 
-    pub fn exec_by_fn_set_stmt(
-        &mut self,
-        stmt: &ByFnSetStmt,
-    ) -> Result<StmtExecResult, RuntimeError> {
+    pub fn exec_by_fn_set_stmt(&mut self, stmt: &ByFnSetStmt) -> Result<StmtResult, RuntimeError> {
         let stmt_exec = stmt.clone().into();
         let (forall_shape, forall_in, forall_exist, forall_unique) = self
             .build_fn_characterization_facts(
@@ -571,8 +564,6 @@ impl Runtime {
 
         let infer_result = self.exec_by_fn_set_stmt_store_process(stmt, &stmt_exec)?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(stmt_exec, infer_result, verify_inside_results),
-        ))
+        Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, verify_inside_results)).into())
     }
 }

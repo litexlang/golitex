@@ -34,7 +34,7 @@ impl Runtime {
     pub fn exec_def_prop_stmt(
         &mut self,
         def_prop_stmt: &DefPropStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         self.run_in_local_env(|rt| rt.def_prop_stmt_check_well_defined(def_prop_stmt))
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
@@ -45,13 +45,11 @@ impl Runtime {
                 )
             })?;
         self.store_def_prop(def_prop_stmt)?;
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 def_prop_stmt.clone().into(),
                 InferResult::new(),
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     fn def_prop_stmt_check_well_defined(
@@ -88,7 +86,7 @@ impl Runtime {
     pub fn exec_def_abstract_prop_stmt(
         &mut self,
         def_abstract_prop_stmt: &DefAbstractPropStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         self.store_def_abstract_prop(def_abstract_prop_stmt)
             .map_err(|e| {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
@@ -98,19 +96,17 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 def_abstract_prop_stmt.clone().into(),
                 InferResult::new(),
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     pub fn exec_let_stmt(
         &mut self,
         def_let_stmt: &DefLetStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         let mut infer_result = self
             .define_params_with_type(&def_let_stmt.param_def, false)
             .map_err(|e| {
@@ -139,19 +135,17 @@ impl Runtime {
             // Body facts are not added by infer() for chain/and/or/exist; record them for JSON / CLI.
             infer_result.new_fact(fact);
         }
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 def_let_stmt.clone().into(),
                 infer_result,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     pub fn exec_have_obj_in_nonempty_set_or_param_type_stmt(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         let infer_result = self
             .define_params_with_type(&stmt.param_def, true)
             .map_err(|define_params_error| {
@@ -162,13 +156,11 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 stmt.clone().into(),
                 infer_result,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     pub fn define_params_with_set(
@@ -222,7 +214,7 @@ impl Runtime {
     pub fn exec_have_obj_equal_stmt(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         if ParamGroupWithParamType::number_of_params(&have_obj_equal_stmt.param_def)
             != have_obj_equal_stmt.objs_equal_to.len()
         {
@@ -321,19 +313,17 @@ impl Runtime {
             infer_result.new_infer_result_inside(equal_to_fact_infer_result);
         }
 
-        return Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        return Ok((NonFactualStmtSuccess::new(
                 have_obj_equal_stmt.clone().into(),
                 infer_result,
                 vec![],
-            ),
-        ));
+            )).into());
     }
 
     pub fn exec_have_exist_obj_stmt(
         &mut self,
         have_exist_obj_stmt: &HaveByExistStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         let exist_fact_in_have_obj_stmt = &have_exist_obj_stmt.exist_fact_in_have_obj_st;
         let verify_state = VerifyState::new(0, false);
 
@@ -423,19 +413,17 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
         }
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 have_exist_obj_stmt.clone().into(),
                 infer_result,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     pub fn exec_have_fn_equal_stmt(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         let fn_set_stored = self
             .add_mangled_prefix_to_fn_set_clause(
                 &have_fn_equal_stmt.fn_set_clause,
@@ -521,13 +509,11 @@ impl Runtime {
 
         infer_result.new_infer_result_inside(forall_infer_result);
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 have_fn_equal_stmt.clone().into(),
                 infer_result,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     fn have_fn_equal_stmt_verify_well_defined(
@@ -620,7 +606,7 @@ impl Runtime {
     pub fn exec_have_fn_equal_case_by_case_stmt(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         let fn_set_stored = self
             .add_mangled_prefix_to_fn_set_clause(
                 &have_fn_equal_case_by_case_stmt.fn_set_clause,
@@ -650,13 +636,11 @@ impl Runtime {
 
         let infer_result =
             self.store_have_fn_equal_case_by_case(have_fn_equal_case_by_case_stmt, &fn_set_stored)?;
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 have_fn_equal_case_by_case_stmt.clone().into(),
                 infer_result,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     fn store_have_fn_equal_case_by_case(
@@ -755,7 +739,7 @@ impl Runtime {
     pub fn exec_have_fn_by_induc_stmt(
         &mut self,
         stmt: &HaveFnByInducStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         self.exec_have_fn_by_induc(stmt)
             .map_err(|e| e.into_struct())
     }

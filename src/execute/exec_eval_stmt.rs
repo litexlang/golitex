@@ -199,14 +199,12 @@ impl Runtime {
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             eval_stmt.clone().into(),
                             "eval: failed to verify case condition".to_string(),
                             Some(verify_error),
                             vec![],
-                        ),
-                    )
+                        ))
                 })?;
 
             if verify_result.is_true() {
@@ -217,14 +215,12 @@ impl Runtime {
                 let verify_reversed_result = self
                     .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
-                        RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 eval_stmt.clone().into(),
                                 "eval: failed to verify reversed case condition".to_string(),
                                 Some(verify_error),
                                 vec![],
-                            ),
-                        )
+                            ))
                     })?;
                 if verify_reversed_result.is_unknown() {
                     return Err(RuntimeError::from(
@@ -256,7 +252,7 @@ impl Runtime {
         }
     }
 
-    pub fn _exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtExecResult, RuntimeError> {
+    pub fn _exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &stmt.obj_to_eval,
             &VerifyState::new(0, false),
@@ -288,8 +284,6 @@ impl Runtime {
         infer_result.new_fact(&evaluated_equal_fact);
         self.store_fact_without_well_defined_verified_and_infer(evaluated_equal_fact)?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]),
-        ))
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
 }

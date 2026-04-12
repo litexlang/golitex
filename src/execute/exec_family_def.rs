@@ -4,7 +4,7 @@ impl Runtime {
     pub fn exec_def_family_stmt(
         &mut self,
         def_family_stmt: &DefFamilyStmt,
-    ) -> Result<StmtExecResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
         let family_definition_infer_result = self.run_in_local_env(|rt| {
             rt.def_family_stmt_check_well_defined(def_family_stmt)
         })?;
@@ -19,13 +19,11 @@ impl Runtime {
                 )
             })?;
 
-        Ok(StmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(
+        Ok((NonFactualStmtSuccess::new(
                 def_family_stmt.clone().into(),
                 family_definition_infer_result,
                 vec![],
-            ),
-        ))
+            )).into())
     }
 
     fn def_family_stmt_check_well_defined(
