@@ -95,11 +95,12 @@ impl Runtime {
 
         let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone());
 
-        Ok(Fact::ForallFactWithIff(ForallFactWithIff::new(
+        Ok(ForallFactWithIff::new(
             forall_fact,
             iff_facts,
             tb.line_file.clone(),
-        )))
+        )
+        .into())
     }
 
     fn parse_forall(
@@ -132,23 +133,25 @@ impl Runtime {
             for block in last.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(Fact::ForallFact(ForallFact::new(
+            Ok(ForallFact::new(
                 param_def,
                 dom_facts,
                 then_facts,
                 tb.line_file.clone(),
-            )))
+            )
+            .into())
         } else {
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(Fact::ForallFact(ForallFact::new(
+            Ok(ForallFact::new(
                 param_def,
                 vec![],
                 then_facts,
                 tb.line_file.clone(),
-            )))
+            )
+            .into())
         }
     }
 

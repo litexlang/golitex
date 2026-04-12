@@ -132,24 +132,23 @@ impl Runtime {
         let forall_param_obj: Obj = forall_param.clone().into();
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
-        then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
+        then_facts.push(
             InFact::new(
                 forall_param_obj.clone(),
                 cart_obj.clone(),
                 stmt.line_file.clone(),
-            ),
-        )));
+            )
+            .into(),
+        );
         for (i, (field_name, _)) in def.fields.iter().enumerate() {
             let idx = i + 1;
             let lhs = ObjAtIndex::new(forall_param_obj.clone(),
                 Number::new(idx.to_string()).into()).into();
             let rhs = FieldAccess::new(forall_param.clone(), field_name.clone()).into();
-            then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
-                EqualFact::new(lhs, rhs, stmt.line_file.clone()).into(),
-            ));
+            then_facts.push(EqualFact::new(lhs, rhs, stmt.line_file.clone()).into());
         }
 
-        let forall_fact = Fact::ForallFact(ForallFact::new(
+        let forall_fact = ForallFact::new(
             vec![ParamGroupWithParamType::new(
                 vec![forall_param],
                 ParamType::Struct(struct_ty.clone()),
@@ -157,7 +156,8 @@ impl Runtime {
             vec![],
             then_facts,
             stmt.line_file.clone(),
-        ));
+        )
+        .into();
 
         // `<=>:` 里 `self.field` 在定义验证时按「tuple 模型」展开。set-builder 的域变量 `x` 在 cart 上，
         // 故令 `self` 为 `(R, x[1], x[2], …)`：与 `def.fields` + `number_of_params` 的 tuple 下标一致，

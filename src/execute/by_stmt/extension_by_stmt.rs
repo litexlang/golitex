@@ -47,21 +47,21 @@ impl Runtime {
 
             let unused_name = rt.generate_random_unused_name();
 
-            let left_to_right_forall_fact = Fact::ForallFact(ForallFact::new(
+            let left_to_right_forall_fact = ForallFact::new(
                 vec![ParamGroupWithParamType::new(
                     vec![unused_name.clone()],
                     ParamType::Obj(stmt.left.clone()),
                 )],
                 vec![],
-                vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
-                    InFact::new(
-                        unused_name.clone().into(),
-                        stmt.right.clone(),
-                        stmt.line_file.clone(),
-                    ),
-                ))],
+                vec![InFact::new(
+                    unused_name.clone().into(),
+                    stmt.right.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into()],
                 stmt.line_file.clone(),
-            ));
+            )
+            .into();
             rt.verify_fact_return_err_if_not_true(
                 &left_to_right_forall_fact,
                 &VerifyState::new(0, false),
@@ -78,21 +78,21 @@ impl Runtime {
                 ))
             })?;
 
-            let right_to_left_forall_fact = Fact::ForallFact(ForallFact::new(
+            let right_to_left_forall_fact = ForallFact::new(
                 vec![ParamGroupWithParamType::new(
                     vec![unused_name.clone()],
                     ParamType::Obj(stmt.right.clone()),
                 )],
                 vec![],
-                vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
-                    InFact::new(
-                        unused_name.clone().into(),
-                        stmt.left.clone(),
-                        stmt.line_file.clone(),
-                    ),
-                ))],
+                vec![InFact::new(
+                    unused_name.clone().into(),
+                    stmt.left.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into()],
                 stmt.line_file.clone(),
-            ));
+            )
+            .into();
             rt.verify_fact_return_err_if_not_true(
                 &right_to_left_forall_fact,
                 &VerifyState::new(0, false),

@@ -9,7 +9,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         if subset_fact.left.to_string() == subset_fact.right.to_string() {
             return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
+                    subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 )).into());
@@ -26,7 +26,7 @@ impl Runtime {
             )?;
         if verify_result.is_true() {
             Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
+                    subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 )).into())
@@ -43,7 +43,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         if superset_fact.left.to_string() == superset_fact.right.to_string() {
             return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
+                    superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 )).into());
@@ -59,7 +59,7 @@ impl Runtime {
             )?;
         if verify_result.is_true() {
             Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
+                    superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 )).into())
@@ -85,7 +85,7 @@ impl Runtime {
             )?;
         if verify_result.is_true() {
             Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::NotSubsetFact(not_subset_fact.clone())),
+                    not_subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 )).into())
@@ -111,7 +111,7 @@ impl Runtime {
             )?;
         if verify_result.is_true() {
             Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::NotSupersetFact(not_superset_fact.clone())),
+                    not_superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
                 )).into())

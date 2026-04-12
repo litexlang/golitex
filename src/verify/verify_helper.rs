@@ -35,12 +35,11 @@ impl Runtime {
             ParamType::Obj(param_set) => {
                 match param_set {
                     Obj::FnSet(fn_set) => {
-                        let ret_nonempty = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                            IsNonemptySetFact::new(
-                                fn_set.ret_set.as_ref().clone(),
-                                default_line_file(),
-                            ),
-                        ));
+                        let ret_nonempty = IsNonemptySetFact::new(
+                            fn_set.ret_set.as_ref().clone(),
+                            default_line_file(),
+                        )
+                        .into();
                         self.verify_fact_well_defined_and_store_and_infer(
                             ret_nonempty,
                             &VerifyState::new(2, false),
@@ -57,9 +56,8 @@ impl Runtime {
                         ),
                     ),
                     _ => {
-                        let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                            IsNonemptySetFact::new(param_set.clone(), default_line_file()),
-                        ));
+                        let nonempty_fact =
+                            IsNonemptySetFact::new(param_set.clone(), default_line_file()).into();
                         self.verify_fact_well_defined_and_store_and_infer(
                             nonempty_fact,
                             &VerifyState::new(0, false),
@@ -69,9 +67,11 @@ impl Runtime {
                 }
             }
             ParamType::Struct(struct_obj) => {
-                let is_nonempty_set = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                    IsNonemptySetFact::new(Obj::StructObj(struct_obj.clone()), default_line_file()),
-                ));
+                let is_nonempty_set = IsNonemptySetFact::new(
+                    Obj::StructObj(struct_obj.clone()),
+                    default_line_file(),
+                )
+                .into();
                 self.verify_fact_well_defined_and_store_and_infer(
                     is_nonempty_set,
                     &VerifyState::new(0, false),

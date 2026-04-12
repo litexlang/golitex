@@ -56,8 +56,26 @@ impl From<GreaterEqualFact> for ExistOrAndChainAtomicFact {
     }
 }
 
+impl From<IsNonemptySetFact> for ExistOrAndChainAtomicFact {
+    fn from(f: IsNonemptySetFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
 impl From<EqualFact> for ExistOrAndChainAtomicFact {
     fn from(f: EqualFact) -> Self {
         AtomicFact::from(f).into()
+    }
+}
+
+impl From<InFact> for ExistOrAndChainAtomicFact {
+    fn from(f: InFact) -> Self {
+        ExistOrAndChainAtomicFact::AtomicFact(f.into())
+    }
+}
+
+impl From<ExistFact> for ExistOrAndChainAtomicFact {
+    fn from(exist_fact: ExistFact) -> Self {
+        ExistOrAndChainAtomicFact::ExistFact(exist_fact)
     }
 }

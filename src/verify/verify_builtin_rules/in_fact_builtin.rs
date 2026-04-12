@@ -51,7 +51,7 @@ fn not_in_fact_verified_by_builtin_rules_result(
 ) -> StmtResult {
     StmtResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            Fact::AtomicFact(AtomicFact::NotInFact(not_in_fact.clone())),
+            not_in_fact.clone().into(),
             reason.to_string(),
             Vec::new(),
         ),

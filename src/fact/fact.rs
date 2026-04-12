@@ -133,6 +133,16 @@ impl From<ChainFact> for Fact {
     }
 }
 
+impl From<AndChainAtomicFact> for Fact {
+    fn from(f: AndChainAtomicFact) -> Self {
+        match f {
+            AndChainAtomicFact::AtomicFact(a) => a.into(),
+            AndChainAtomicFact::AndFact(a) => a.into(),
+            AndChainAtomicFact::ChainFact(c) => c.into(),
+        }
+    }
+}
+
 impl From<ForallFactWithIff> for Fact {
     fn from(forall_fact_with_iff: ForallFactWithIff) -> Self {
         Fact::ForallFactWithIff(forall_fact_with_iff)

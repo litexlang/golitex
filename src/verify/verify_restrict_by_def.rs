@@ -14,7 +14,7 @@ impl Runtime {
                 Some(fn_set) => fn_set,
                 None => {
                     return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
+                    restrict_fact.clone().into(),
                     String::new(),
                     restrict_fact.line_file.clone(),
                     Some(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
@@ -92,7 +92,7 @@ impl Runtime {
         )
         .map_err(|e| {
             RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
+                restrict_fact.clone().into(),
                 String::new(),
                 restrict_fact.line_file.clone(),
                 Some(e),
@@ -141,13 +141,14 @@ impl Runtime {
                 runtime.inst_obj(&param_def_with_set.set, original_to_restrict_param_map)?;
             for _param_name in param_def_with_set.params.iter() {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
-                then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
+                then_facts.push(
                     InFact::new(
                         restrict_param_name.into(),
                         instantiated_original_set.clone(),
                         line_file.clone(),
-                    ),
-                )));
+                    )
+                    .into(),
+                );
                 index += 1;
             }
         }
@@ -195,7 +196,7 @@ impl Runtime {
 
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
+                restrict_fact.clone().into(),
                 "restrict by definition (forall param sets narrower, same ret set)".to_string(),
                 Vec::new(),
             ))

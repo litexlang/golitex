@@ -224,14 +224,6 @@ impl AndChainAtomicFact {
         }
     }
 
-    pub fn to_fact(&self) -> Fact {
-        match self {
-            AndChainAtomicFact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.clone()),
-            AndChainAtomicFact::AndFact(and_fact) => Fact::AndFact(and_fact.clone()),
-            AndChainAtomicFact::ChainFact(chain_fact) => Fact::ChainFact(chain_fact.clone()),
-        }
-    }
-
     pub fn to_exist_or_and_chain_atomic_fact(&self) -> crate::fact::ExistOrAndChainAtomicFact {
         match self {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
