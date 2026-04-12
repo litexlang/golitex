@@ -24,7 +24,7 @@ impl Runtime {
             function_args.push(Box::new(param_name.clone().into()));
         }
 
-        let fn_head_atom = Atom::from(Identifier::new(function_name.to_string()));
+        let fn_head_atom: Atom = Identifier::new(function_name.to_string()).into();
         let fn_body_groups = vec![function_args];
         FnObj::new(fn_head_atom, fn_body_groups).into()
     }

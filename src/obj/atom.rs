@@ -85,6 +85,24 @@ impl From<Identifier> for Atom {
     }
 }
 
+impl From<IdentifierWithMod> for Atom {
+    fn from(m: IdentifierWithMod) -> Self {
+        Atom::IdentifierWithMod(m)
+    }
+}
+
+impl From<FieldAccess> for Atom {
+    fn from(f: FieldAccess) -> Self {
+        Atom::FieldAccess(f)
+    }
+}
+
+impl From<FieldAccessWithMod> for Atom {
+    fn from(f: FieldAccessWithMod) -> Self {
+        Atom::FieldAccessWithMod(f)
+    }
+}
+
 impl IdentifierWithMod {
     pub fn new(mod_name: String, name: String) -> Self {
         IdentifierWithMod { mod_name, name }
