@@ -314,6 +314,12 @@ impl Runtime {
             }
             (_, Obj::StandardSet(StandardSet::NPos)) => self
                 .verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state),
+            (_, Obj::ClosedRange(closed_range)) => {
+                self.verify_in_fact_closed_range_by_order_bounds(in_fact, closed_range, verify_state)
+            }
+            (_, Obj::Range(range)) => {
+                self.verify_in_fact_open_range_by_order_bounds(in_fact, range, verify_state)
+            }
             (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::Z),
@@ -451,6 +457,66 @@ impl Runtime {
         }
 
         Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    fn verify_in_fact_closed_range_by_order_bounds(
+        &mut self,
+        in_fact: &InFact,
+        closed_range: &ClosedRange,
+        verify_state: &VerifyState,
+    ) -> Result<StmtExecResult, RuntimeError> {
+        let elem = &in_fact.element;
+        let lf = in_fact.line_file.clone();
+        let a_le_i = AtomicFact::LessEqualFact(LessEqualFact::new(
+            (*closed_range.start).clone(),
+            elem.clone(),
+            lf.clone(),
+        ));
+        let i_le_b = AtomicFact::LessEqualFact(LessEqualFact::new(
+            elem.clone(),
+            (*closed_range.end).clone(),
+            lf.clone(),
+        ));
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&a_le_i, verify_state)? {
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&i_le_b, verify_state)? {
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            "in closed_range: a <= i and i <= b",
+        ))
+    }
+
+    fn verify_in_fact_open_range_by_order_bounds(
+        &mut self,
+        in_fact: &InFact,
+        range: &Range,
+        verify_state: &VerifyState,
+    ) -> Result<StmtExecResult, RuntimeError> {
+        let elem = &in_fact.element;
+        let lf = in_fact.line_file.clone();
+        let a_le_i = AtomicFact::LessEqualFact(LessEqualFact::new(
+            (*range.start).clone(),
+            elem.clone(),
+            lf.clone(),
+        ));
+        let i_lt_b = AtomicFact::LessFact(LessFact::new(
+            elem.clone(),
+            (*range.end).clone(),
+            lf.clone(),
+        ));
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&a_le_i, verify_state)? {
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&i_lt_b, verify_state)? {
+            return Ok(StmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            "in range: a <= i and i < b",
+        ))
     }
 
     // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and `^` when direct operands are in `Z`
