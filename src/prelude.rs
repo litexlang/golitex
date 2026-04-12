@@ -90,8 +90,9 @@ pub use crate::obj::TupleDim;
 pub use crate::obj::Union;
 pub use crate::parse::TokenBlock;
 pub use crate::pipeline::{
-    render_run_source_code_output, run_repl, run_source_code, run_source_code_in_file,
-    run_source_code_in_file_with_ok, run_stmt_at_global_env,
+    display_runtime_error_json, display_stmt_exec_result_json, render_run_source_code_output,
+    run_repl, run_source_code, run_source_code_in_file, run_source_code_in_file_with_ok,
+    run_stmt_at_global_env,
 };
 pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
