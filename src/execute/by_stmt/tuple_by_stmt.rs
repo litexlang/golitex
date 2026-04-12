@@ -44,11 +44,11 @@ impl Runtime {
             ))
         })?;
 
-        let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        let equal_fact = EqualFact::new(
             stmt.obj.clone(),
             encoded,
             stmt.line_file.clone(),
-        )));
+        ).into();
 
         match self.store_fact_without_well_defined_verified_and_infer(equal_fact) {
             Ok(infer_result) => {

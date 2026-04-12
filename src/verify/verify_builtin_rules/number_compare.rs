@@ -183,11 +183,12 @@ impl Runtime {
                     ),
                 );
             }
-            let strict_fact = Fact::AtomicFact(AtomicFact::LessFact(LessFact::new(
+            let strict_fact: Fact = LessFact::new(
                 less_equal_fact.left.clone(),
                 less_equal_fact.right.clone(),
                 less_equal_fact.line_file.clone(),
-            )));
+            )
+            .into();
             let strict_key = strict_fact.to_string();
             let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&strict_key);
             if cache_ok {

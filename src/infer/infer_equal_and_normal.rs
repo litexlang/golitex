@@ -31,10 +31,10 @@ impl Runtime {
         equal_fact: &EqualFact,
         infer_result: &mut InferResult,
     ) -> Result<(), RuntimeError> {
-        let target_is_cart_fact = Fact::AtomicFact(AtomicFact::IsCartFact(IsCartFact::new(
+        let target_is_cart_fact = IsCartFact::new(
             target_obj.clone(),
             equal_fact.line_file.clone(),
-        )));
+        ).into();
         self.store_inferred_fact_and_record_result(
             target_is_cart_fact,
             equal_fact,
@@ -46,11 +46,11 @@ impl Runtime {
         let known_cart_dim_obj = Obj::Number(crate::obj::Number::new(
             known_cart_obj.args.len().to_string(),
         ));
-        let cart_dim_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        let cart_dim_equal_fact = EqualFact::new(
             target_cart_dim_obj,
             known_cart_dim_obj,
             equal_fact.line_file.clone(),
-        )));
+        ).into();
         self.store_inferred_fact_and_record_result(
             cart_dim_equal_fact,
             equal_fact,
@@ -80,10 +80,10 @@ impl Runtime {
         if known_tuple_obj.args.len() < 2 {
             return Ok(());
         }
-        let target_is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact::new(
+        let target_is_tuple_fact = IsTupleFact::new(
             target_obj.clone(),
             equal_fact.line_file.clone(),
-        )));
+        ).into();
         self.store_inferred_fact_and_record_result(
             target_is_tuple_fact,
             equal_fact,
@@ -95,11 +95,11 @@ impl Runtime {
         let known_tuple_dim_obj = Obj::Number(crate::obj::Number::new(
             known_tuple_obj.args.len().to_string(),
         ));
-        let tuple_dim_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        let tuple_dim_equal_fact = EqualFact::new(
             target_tuple_dim_obj,
             known_tuple_dim_obj,
             equal_fact.line_file.clone(),
-        )));
+        ).into();
         self.store_inferred_fact_and_record_result(
             tuple_dim_equal_fact,
             equal_fact,

@@ -460,11 +460,11 @@ impl HaveFnByInducStmt {
                 StandardSet::Z.into(),
             )],
             dom_facts: vec![OrAndChainAtomicFact::AtomicFact(
-                AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                GreaterEqualFact::new(
                     self.param.clone().into(),
                     self.induc_from.clone(),
                     self.line_file.clone(),
-                )),
+                ).into(),
             )],
             ret_set: self.ret_set.clone(),
         }
@@ -473,11 +473,11 @@ impl HaveFnByInducStmt {
     /// `forall x Z: ...` 里与 `fn` 定义域一致的那一段：标识符用源码 [`Self::param`]，与 [`Self::fn_user_fn_set_clause`] 的 dom 语义相同。
     pub fn forall_fn_base_dom_exist_or_facts(&self) -> Vec<ExistOrAndChainAtomicFact> {
         vec![ExistOrAndChainAtomicFact::AtomicFact(
-            AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+            GreaterEqualFact::new(
                 self.param.clone().into(),
                 self.induc_from.clone(),
                 self.line_file.clone(),
-            )),
+            ).into(),
         )]
     }
 
@@ -509,19 +509,19 @@ impl HaveFnByInducStmt {
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
         let mut equal_tos: Vec<Obj> = Vec::new();
         for i in 0..n {
-            let when = AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            let when = AndChainAtomicFact::AtomicFact(EqualFact::new(
                 left_id.clone(),
                 induc_obj_plus_offset(&self.induc_from, i),
                 line_file.clone(),
-            )));
+            ).into());
             cases.push(when);
             equal_tos.push(self.special_cases_equal_tos[i].clone());
         }
-        let step = AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        let step = AndChainAtomicFact::AtomicFact(EqualFact::new(
             left_id.clone(),
             induc_obj_plus_offset(&self.induc_from, n),
             line_file.clone(),
-        )));
+        ).into());
         match &self.last_case {
             HaveFnByInducLastCase::EqualTo(eq) => {
                 cases.push(step);

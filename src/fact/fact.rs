@@ -75,7 +75,7 @@ impl Fact {
                 facts: e.facts,
                 line_file,
             }),
-            Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(or_fact.facts, line_file)),
+            Fact::OrFact(or_fact) => OrFact::new(or_fact.facts, line_file).into(),
             Fact::AndFact(and_fact) => Fact::AndFact(AndFact::new(and_fact.facts, line_file)),
             Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(
                 chain_fact.objs,
@@ -112,5 +112,29 @@ impl From<OrFact> for Fact {
 impl From<ForallFact> for Fact {
     fn from(forall_fact: ForallFact) -> Self {
         Fact::ForallFact(forall_fact)
+    }
+}
+
+impl From<ExistFact> for Fact {
+    fn from(exist_fact: ExistFact) -> Self {
+        Fact::ExistFact(exist_fact)
+    }
+}
+
+impl From<AndFact> for Fact {
+    fn from(and_fact: AndFact) -> Self {
+        Fact::AndFact(and_fact)
+    }
+}
+
+impl From<ChainFact> for Fact {
+    fn from(chain_fact: ChainFact) -> Self {
+        Fact::ChainFact(chain_fact)
+    }
+}
+
+impl From<ForallFactWithIff> for Fact {
+    fn from(forall_fact_with_iff: ForallFactWithIff) -> Self {
+        Fact::ForallFactWithIff(forall_fact_with_iff)
     }
 }

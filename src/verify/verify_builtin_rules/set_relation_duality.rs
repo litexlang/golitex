@@ -15,11 +15,11 @@ impl Runtime {
                 )).into());
         }
 
-        let converted_superset_fact = AtomicFact::SupersetFact(SupersetFact::new(
+        let converted_superset_fact = SupersetFact::new(
             subset_fact.right.clone(),
             subset_fact.left.clone(),
             subset_fact.line_file.clone(),
-        ));
+        ).into();
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
                 &converted_superset_fact,
@@ -48,11 +48,11 @@ impl Runtime {
                     Vec::new(),
                 )).into());
         }
-        let converted_subset_fact = AtomicFact::SubsetFact(SubsetFact::new(
+        let converted_subset_fact = SubsetFact::new(
             superset_fact.right.clone(),
             superset_fact.left.clone(),
             superset_fact.line_file.clone(),
-        ));
+        ).into();
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
                 &converted_subset_fact,
@@ -74,11 +74,11 @@ impl Runtime {
         not_subset_fact: &NotSubsetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let converted_not_superset_fact = AtomicFact::NotSupersetFact(NotSupersetFact::new(
+        let converted_not_superset_fact = NotSupersetFact::new(
             not_subset_fact.right.clone(),
             not_subset_fact.left.clone(),
             not_subset_fact.line_file.clone(),
-        ));
+        ).into();
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
                 &converted_not_superset_fact,
@@ -100,11 +100,11 @@ impl Runtime {
         not_superset_fact: &NotSupersetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let converted_not_subset_fact = AtomicFact::NotSubsetFact(NotSubsetFact::new(
+        let converted_not_subset_fact = NotSubsetFact::new(
             not_superset_fact.right.clone(),
             not_superset_fact.left.clone(),
             not_superset_fact.line_file.clone(),
-        ));
+        ).into();
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
                 &converted_not_subset_fact,

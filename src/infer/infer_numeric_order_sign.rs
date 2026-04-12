@@ -150,11 +150,11 @@ impl Runtime {
         x: Obj,
         line_file: LineFile,
     ) -> Result<InferResult, RuntimeError> {
-        let fact_to_store = Fact::AtomicFact(AtomicFact::LessFact(LessFact::new(
+        let fact_to_store = LessFact::new(
             Number::new("0".to_string()).into(),
             x,
             line_file.clone(),
-        )));
+        ).into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
         self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
@@ -173,11 +173,11 @@ impl Runtime {
         x: Obj,
         line_file: LineFile,
     ) -> Result<InferResult, RuntimeError> {
-        let fact_to_store = Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact::new(
+        let fact_to_store = LessEqualFact::new(
             x,
             Number::new("0".to_string()).into(),
             line_file.clone(),
-        )));
+        ).into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
         self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
