@@ -1,7 +1,7 @@
 use crate::obj::Obj;
 use std::collections::HashMap;
 
-/// 将用户写的形参名转为带前缀的存储名（如 `x` → `__x`）。
+/// Turn user-written parameter names into prefixed storage names (e.g. `x` -> `__x`).
 pub fn mangled_fn_param_names(user_written_names: &[String], prefix: &str) -> Vec<String> {
     user_written_names
         .iter()
@@ -9,7 +9,7 @@ pub fn mangled_fn_param_names(user_written_names: &[String], prefix: &str) -> Ve
         .collect()
 }
 
-/// `user_name -> Identifier(mangled)`，供 `inst_obj` / `inst_*` 替换。
+/// `user_name -> Identifier(mangled)` for `inst_obj` / `inst_*` substitution.
 pub fn fn_param_substitution_map(
     user_written_names: &[String],
     mangled_names: &[String],
@@ -22,7 +22,7 @@ pub fn fn_param_substitution_map(
     map
 }
 
-/// 生成存储名列表与替换表；`prefix` 通常取 `crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX`.
+/// Build mangled names and substitution map; `prefix` is usually `DEFAULT_MANGLED_FN_PARAM_PREFIX`.
 pub fn mangled_fn_param_binding(
     user_written_names: &[String],
     prefix: &str,

@@ -1,5 +1,3 @@
-use crate::common::keywords::{EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL};
-use crate::fact::matchable_fact_with_atomic_fact_inside::ChainFact;
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 

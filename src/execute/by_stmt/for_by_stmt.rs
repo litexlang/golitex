@@ -291,7 +291,7 @@ impl Runtime {
             self.store_identifier_obj(parameter_name)
                 .map_err(RuntimeError::from)?;
 
-            let parameter_in_z_atomic_fact = AtomicFact::InFact(crate::fact::InFact::new(
+            let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
                 parameter_name.to_string().into(),
                 StandardSet::Z.into(),
                 stmt.line_file.clone(),
@@ -302,7 +302,7 @@ impl Runtime {
             .map_err(RuntimeError::from)?;
 
             let parameter_equal_to_assigned_obj_atomic_fact =
-                AtomicFact::EqualFact(crate::fact::EqualFact::new(
+                AtomicFact::EqualFact(EqualFact::new(
                     parameter_name.to_string().into(),
                     Number::new(assigned_integer_string).into(),
                     stmt.line_file.clone(),

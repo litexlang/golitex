@@ -697,8 +697,8 @@ impl Runtime {
     fn verify_in_fact_list_set_in_power_set_defines_membership(
         &mut self,
         in_fact: &InFact,
-        list_set: &crate::obj::ListSet,
-        power_set: &crate::obj::PowerSet,
+        list_set: &ListSet,
+        power_set: &PowerSet,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
@@ -740,7 +740,7 @@ impl Runtime {
     fn verify_in_fact_by_equal_to_one_element_in_list_set(
         &mut self,
         in_fact: &InFact,
-        list_set: &crate::obj::ListSet,
+        list_set: &ListSet,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         for current_element_in_list_set in list_set.list.iter() {

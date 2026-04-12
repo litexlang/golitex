@@ -57,7 +57,7 @@ fn monomial_vectors_are_equal(
 #[cfg(test)]
 mod algebraic_identity_tests {
     use super::*;
-    use crate::obj::{Add, Identifier, Mul, Number, Obj, Pow, Sub};
+    use crate::prelude::*;
 
     #[test]
     fn a_plus_b_squared_equals_a_minus_b_squared_plus_4ab() {

@@ -25,7 +25,7 @@ impl Runtime {
 
     fn infer_equal_fact_cart_from_known_side(
         &mut self,
-        known_cart_obj: &crate::obj::Cart,
+        known_cart_obj: &Cart,
         known_cart_obj_as_symbol: &Obj,
         target_obj: &Obj,
         equal_fact: &EqualFact,
@@ -43,7 +43,7 @@ impl Runtime {
         )?;
 
         let target_cart_dim_obj = CartDim::new(target_obj.clone()).into();
-        let known_cart_dim_obj = Obj::Number(crate::obj::Number::new(
+        let known_cart_dim_obj = Obj::Number(Number::new(
             known_cart_obj.args.len().to_string(),
         ));
         let cart_dim_equal_fact = EqualFact::new(
@@ -72,7 +72,7 @@ impl Runtime {
 
     fn infer_equal_fact_tuple_from_known_side(
         &mut self,
-        known_tuple_obj: &crate::obj::Tuple,
+        known_tuple_obj: &Tuple,
         target_obj: &Obj,
         equal_fact: &EqualFact,
         infer_result: &mut InferResult,
@@ -92,7 +92,7 @@ impl Runtime {
         )?;
 
         let target_tuple_dim_obj = TupleDim::new(target_obj.clone()).into();
-        let known_tuple_dim_obj = Obj::Number(crate::obj::Number::new(
+        let known_tuple_dim_obj = Obj::Number(Number::new(
             known_tuple_obj.args.len().to_string(),
         ));
         let tuple_dim_equal_fact = EqualFact::new(

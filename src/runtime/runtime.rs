@@ -1,3 +1,4 @@
+use crate::obj::field_access_to_string;
 use crate::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -154,9 +155,9 @@ impl Runtime {
             }
         }
 
-        let (mangled, map) = crate::common::mangled_fn_param::mangled_fn_param_binding(
+        let (mangled, map) = mangled_fn_param_binding(
             user_written_names,
-            crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX,
+            DEFAULT_MANGLED_FN_PARAM_PREFIX,
         );
         self.register_collected_mangled_fn_param_names_for_def_parse(&mangled, line_file)?;
         Ok((mangled, map))
@@ -481,7 +482,7 @@ impl Runtime {
                             let ti = def.number_of_params() + fi;
                             let component = (*t.args[ti]).clone();
                             result.insert(
-                                crate::obj::field_access_to_string(param_name, field_name),
+                                field_access_to_string(param_name, field_name),
                                 component,
                             );
                         }
