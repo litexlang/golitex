@@ -41,13 +41,13 @@ Options like `-e`, `-f`, `-r`, `-fmt`, `-install`, `-uninstall`, and `-update` r
 
 ## Successful runs and JSON: the `result` field
 
-For paths that actually execute user source—**`-e`** and **`-f` / `-r`** (file runs)—the runtime emits one JSON object per successfully executed statement (see `render_run_source_code_output` and `NonErrStmtExecResult::to_display_json_string`).
+For paths that actually execute user source—**`-e`** and **`-f` / `-r`** (file runs)—the runtime emits one JSON object per successfully executed statement (see `render_run_source_code_output` and `display_stmt_exec_result_json` in `src/pipeline/display.rs`).
 
 If the **full pipeline succeeds** (builtin environment runs, then user source parses and runs without error):
 
 - The output contains **one JSON object per user statement**, separated by newlines; each object describes that statement’s outcome.
 - In each such **successful** statement object, there is a **`"result"`** field.
-- When everything succeeds, the JSON for the **last statement in your source** has **`"result": "success"`** (same constant as in `src/result/display_result_json.rs`).
+- When everything succeeds, the JSON for the **last statement in your source** has **`"result": "success"`** (same constant as in `src/pipeline/display.rs`).
 
 So in the success case, the **last statement-result JSON block** should include `"result": "success"`. Earlier statement blocks also use `"success"` when those statements succeed.
 
@@ -65,7 +65,7 @@ e.g.
 }
 ```
 
-If a runtime error occurs, an **error** JSON object is appended after the statement JSON; its `"result"` is usually **`"error"`** (see `RuntimeError::to_display_json_string` in `src/error/display_error_json.rs`). The process may exit non-zero (e.g. `1` if builtin setup fails, `2` for bad arguments on `-e`). Parsers should not rely on the exit code alone—check for error JSON as well.
+If a runtime error occurs, an **error** JSON object is appended after the statement JSON; its `"result"` is usually **`"error"`** (see `display_runtime_error_json` in `src/pipeline/display.rs`). The process may exit non-zero (e.g. `1` if builtin setup fails, `2` for bad arguments on `-e`). Parsers should not rely on the exit code alone—check for error JSON as well.
 
 e.g.
 
@@ -101,5 +101,4 @@ e.g.
 
 - Argument parsing and stubs: `src/cli.rs`
 - Concatenating per-statement JSON: `render_run_source_code_output` in `src/pipeline/pipeline.rs`
-- Success JSON: `src/result/display_result_json.rs`
-- Error JSON: `src/error/display_error_json.rs`
+- Success and error JSON field layout: `src/pipeline/display.rs` (`display_stmt_exec_result_json`, `display_runtime_error_json`)

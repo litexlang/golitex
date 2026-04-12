@@ -204,8 +204,11 @@ impl Runtime {
 
 impl Runtime {
     pub fn new_file_path_new_env_new_name_scope(&mut self, path: &str) {
-        self.module_manager.run_file_paths.push(Rc::from(path));
+        let path_rc: Rc<str> = Rc::from(path);
+        self.module_manager.run_file_paths.push(path_rc.clone());
         self.module_manager.current_file_index += 1;
+        self.module_manager.display_entry_rc = Some(path_rc);
+        self.module_manager.entry_path = path.to_string();
         self.push_parsing_time_name_scope();
         self.push_env();
     }
@@ -312,8 +315,11 @@ impl Runtime {
 
 impl Runtime {
     pub fn new_file_and_update_runtime_with_file_content(&mut self, path: &str) {
-        self.module_manager.run_file_paths.push(Rc::from(path));
+        let path_rc: Rc<str> = Rc::from(path);
+        self.module_manager.run_file_paths.push(path_rc.clone());
         self.module_manager.current_file_index = self.module_manager.run_file_paths.len() - 1;
+        self.module_manager.display_entry_rc = Some(path_rc);
+        self.module_manager.entry_path = path.to_string();
     }
 
     pub fn change_file_index_to(&mut self, file_index: usize) {
