@@ -14,20 +14,23 @@ pub struct ModuleManager {
     pub current_module_path: String,
     pub current_module_name: String,
     pub current_file_index: usize,
-    pub entrance_path: String,
+    pub entry_path: String,
+    /// Same `Rc` as the user entry slot in `run_file_paths` when set (file path, `repl`, `-e`, ...).
+    pub display_entry_rc: Option<Rc<str>>,
     pub imported_module_environments: HashMap<String, Box<ImportedModuleEnvironment>>,
 }
 
 impl ModuleManager {
-    pub fn new_empty_module_manager(entrance_file_path: &str) -> Self {
+    pub fn new_empty_module_manager(initial_path: &str) -> Self {
         ModuleManager {
-            run_file_paths: vec![Rc::from(entrance_file_path)],
+            run_file_paths: vec![Rc::from(initial_path)],
             module_name_and_path_map: HashMap::new(),
             module_path_and_names_map: HashMap::new(),
             current_module_path: String::new(),
             current_module_name: String::new(),
             current_file_index: FILE_INDEX_FOR_BUILTIN,
-            entrance_path: entrance_file_path.to_string(),
+            entry_path: initial_path.to_string(),
+            display_entry_rc: None,
             imported_module_environments: HashMap::new(),
         }
     }

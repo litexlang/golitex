@@ -1,9 +1,11 @@
-by for n range(0, 10):
+by for:
     prove:
-        n < 10
+        forall n range(0, 10):
+            n < 10
     do_nothing
 
-by for n closed_range(0, 10):
+by for:
     prove:
-        n <= 10
+        forall n closed_range(0, 10):
+            n <= 10
     do_nothing

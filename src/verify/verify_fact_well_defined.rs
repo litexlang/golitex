@@ -212,7 +212,17 @@ impl Runtime {
         })
     }
 
-    fn verify_forall_fact_well_defined_inner(
+    pub(crate) fn verify_forall_fact_params_and_dom_well_defined(
+        &mut self,
+        forall_fact: &ForallFact,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.run_in_local_env(|rt| {
+            rt.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)
+        })
+    }
+
+    fn verify_forall_fact_params_and_dom_well_defined_inner(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
@@ -243,6 +253,15 @@ impl Runtime {
                 );
             }
         }
+        Ok(())
+    }
+
+    fn verify_forall_fact_well_defined_inner(
+        &mut self,
+        forall_fact: &ForallFact,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)?;
         for fact in forall_fact.then_facts.iter() {
             if let Err(exec_stmt_error) = self
                 .verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(

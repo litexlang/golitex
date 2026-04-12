@@ -1,3 +1,4 @@
+use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::pipeline::render_run_source_code_output;
 use crate::pipeline::run_source_code;
 use crate::pipeline::run_stmt_at_global_env;
@@ -82,7 +83,7 @@ where
         ) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
-                let error_string = parse_block_error.to_display_json_string();
+                let error_string = display_runtime_error_json(&runtime, &parse_block_error);
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
                 writeln!(stdout_writer)?;
@@ -95,7 +96,7 @@ where
             let stmt: Stmt = match runtime.parse_stmt(&mut block) {
                 Ok(statement) => statement,
                 Err(parse_stmt_error) => {
-                    let message = parse_stmt_error.to_display_json_string();
+                    let message = display_runtime_error_json(&runtime, &parse_stmt_error);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
@@ -104,14 +105,14 @@ where
             let exec_result = match run_stmt_at_global_env(&stmt, &mut runtime) {
                 Ok(result) => result,
                 Err(exec_error) => {
-                    let message = exec_error.to_display_json_string();
+                    let message = display_runtime_error_json(&runtime, &exec_error);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
             };
 
             output_chunk.push('\n');
-            output_chunk.push_str(exec_result.to_display_json_string().as_str());
+            output_chunk.push_str(display_stmt_exec_result_json(&runtime, &exec_result).as_str());
             output_chunk.push('\n');
         }
 
