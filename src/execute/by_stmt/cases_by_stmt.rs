@@ -63,8 +63,8 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesStmt,
     ) -> Result<(), RuntimeErrorStruct> {
-        let all_cases_or_fact =
-            Fact::OrFact(crate::fact::OrFact::new(stmt.cases.clone(), stmt.line_file.clone()));
+        let all_cases_or_fact: Fact =
+            OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
         self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(

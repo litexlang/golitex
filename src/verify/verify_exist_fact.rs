@@ -9,7 +9,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&Fact::ExistFact(exist_fact.clone()))
+            self.verify_fact_from_cache_using_display_string(&exist_fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -17,7 +17,7 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
                 return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::ExistFact(exist_fact.clone()),
+                    exist_fact.clone().into(),
                     String::new(),
                     exist_fact.line_file(),
                     Some(e.into()),
@@ -69,7 +69,7 @@ impl Runtime {
             let target_string = Self::exist_fact_normalized_string(runtime, exist_fact)
                 .map_err(|e| {
                     RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::ExistFact(exist_fact.clone()),
+                        exist_fact.clone().into(),
                         String::new(),
                         exist_fact.line_file(),
                         Some(e),
@@ -79,7 +79,7 @@ impl Runtime {
                 let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
                     .map_err(|e| {
                         RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                            Fact::ExistFact(exist_fact.clone()),
+                            exist_fact.clone().into(),
                             String::new(),
                             exist_fact.line_file(),
                             Some(e),
@@ -87,9 +87,9 @@ impl Runtime {
                     })?;
                 if target_string == known_string {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                            Fact::ExistFact(exist_fact.clone()),
+                            exist_fact.clone().into(),
                             known_fact.to_string(),
-                            Some(Fact::ExistFact(known_fact.clone())),
+                            Some(known_fact.clone().into()),
                             None,
                             Vec::new(),
                         )).into());

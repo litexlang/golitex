@@ -100,7 +100,7 @@ impl Runtime {
             match transposed_result {
                 StmtResult::FactualStmtSuccess(inner_success) => {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                            Fact::AtomicFact(atomic_fact.clone()),
+                            atomic_fact.clone().into(),
                             inner_success.msg,
                             inner_success.verified_by_fact,
                             inner_success.verified_by_fact_known_line_file,
@@ -221,9 +221,9 @@ impl Runtime {
             for obj in all_objs_equal_to_arg.iter() {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                            Fact::AtomicFact(atomic_fact.clone()),
+                            atomic_fact.clone().into(),
                             known_atomic_fact.to_string(),
-                            Some(Fact::AtomicFact(known_atomic_fact.clone())),
+                            Some(known_atomic_fact.clone().into()),
                             None,
                             Vec::new(),
                         )).into());
@@ -250,9 +250,9 @@ impl Runtime {
                         known_facts_map.get(&(obj0.clone(), obj1.clone()))
                     {
                         return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                                Fact::AtomicFact(atomic_fact.clone()),
+                                atomic_fact.clone().into(),
                                 known_atomic_fact.to_string(),
-                                Some(Fact::AtomicFact(known_atomic_fact.clone())),
+                                Some(known_atomic_fact.clone().into()),
                                 None,
                                 Vec::new(),
                             )).into());
@@ -281,13 +281,13 @@ impl Runtime {
                         atomic_fact.to_string()
                     );
                     return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::AtomicFact(atomic_fact.clone()),
+                        atomic_fact.clone().into(),
                         message.clone(),
                         atomic_fact.line_file(),
                         Some(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
                             message,
                             atomic_fact.line_file(),
-                            Some(Fact::AtomicFact(atomic_fact.clone())),
+                            Some(atomic_fact.clone().into()),
                             None,
                         ).into()),
                     ));
@@ -302,9 +302,9 @@ impl Runtime {
                 }
                 if all_args_match {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                            Fact::AtomicFact(atomic_fact.clone()),
+                            atomic_fact.clone().into(),
                             known_fact.to_string(),
-                            Some(Fact::AtomicFact(known_fact.clone())),
+                            Some(known_fact.clone().into()),
                             None,
                             Vec::new(),
                         )).into());
@@ -565,7 +565,7 @@ impl Runtime {
         match transposed_result {
             StmtResult::FactualStmtSuccess(inner_success) => {
                 Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        Fact::AtomicFact(atomic_fact.clone()),
+                        atomic_fact.clone().into(),
                         inner_success.msg,
                         inner_success.verified_by_fact,
                         inner_success.verified_by_fact_known_line_file,
