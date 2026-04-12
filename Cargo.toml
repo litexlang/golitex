@@ -1,6 +1,6 @@
 [package]
-name = "litex"
-version = "0.9.2-beta"
+name = "litex-lang"
+version = "0.9.3-beta"
 edition = "2021"
 description = "A simple formal proof language and verifier, learnable in 2 hours"
 license = "Apache-2.0"
@@ -17,5 +17,12 @@ exclude = [
     "doc/*",
     ".github/*",
 ]
+
+[lib]
+name = "litex"
+
+[[bin]]
+name = "litex"
+path = "src/main.rs"
 
 [dependencies]
