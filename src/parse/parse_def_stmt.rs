@@ -107,7 +107,8 @@ impl Runtime {
         } else {
             vec![]
         };
-        let all_param_names = ParamGroupWithParamType::collect_param_names(&param_def);
+        let param_def = ParamDefWithType::new(param_def);
+        let all_param_names = param_def.collect_param_names();
         self.register_collected_param_names_for_def_parse(&all_param_names, tb.line_file.clone())?;
         Ok(DefLetStmt::new(param_def, facts, tb.line_file.clone()).into())
     }
@@ -133,7 +134,8 @@ impl Runtime {
                 ),
             );
         }
-        let have_param_names = ParamGroupWithParamType::collect_param_names(&param_defs);
+        let param_defs = ParamDefWithType::new(param_defs);
+        let have_param_names = param_defs.collect_param_names();
         self.register_collected_param_names_for_def_parse(&have_param_names, tb.line_file.clone())?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
@@ -164,7 +166,7 @@ impl Runtime {
                 tb.skip_token(COLON)?;
                 let case_block_count = tb.body.len();
                 let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
-                let mut equal_tos: Vec<crate::obj::Obj> = Vec::with_capacity(case_block_count);
+                let mut equal_tos: Vec<Obj> = Vec::with_capacity(case_block_count);
                 for block in tb.body.iter_mut() {
                     block.skip_token(CASE)?;
                     cases.push(self.parse_and_chain_atomic_fact(block)?);
@@ -295,10 +297,8 @@ impl Runtime {
             )?;
 
             if induc_from_is_number_obj {
-                let induc_from_add_i = Obj::Add(Add::new(
-                    induc_from.clone(),
-                    Obj::Number(Number::new(i.to_string())),
-                ));
+                let induc_from_add_i: Obj = Add::new(induc_from.clone(),
+                    Into::<Obj>::into(Number::new(i.to_string()))).into();
 
                 if !induc_from_add_i
                     .two_objs_can_be_calculated_and_equal_by_calculation(&slot_label)
@@ -315,10 +315,8 @@ impl Runtime {
                     );
                 }
             } else {
-                let induc_from_add_i = Obj::Add(Add::new(
-                    induc_from.clone(),
-                    Obj::Number(Number::new(i.to_string())),
-                ));
+                let induc_from_add_i: Obj = Add::new(induc_from.clone(),
+                    Into::<Obj>::into(Number::new(i.to_string()))).into();
 
                 if induc_from_add_i.to_string() != slot_label.to_string() {
                     return Err(
@@ -356,10 +354,8 @@ impl Runtime {
         let last_bound = self.parse_obj(last_block)?;
 
         if induc_from_is_number_obj {
-            let induc_from_add_n = Obj::Add(Add::new(
-                induc_from.clone(),
-                Obj::Number(Number::new(num_special.to_string())),
-            ));
+            let induc_from_add_n: Obj = Add::new(induc_from.clone(),
+                Into::<Obj>::into(Number::new(num_special.to_string()))).into();
             if !induc_from_add_n.two_objs_can_be_calculated_and_equal_by_calculation(&last_bound) {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -373,10 +369,8 @@ impl Runtime {
                 );
             }
         } else {
-            let induc_from_add_n = Obj::Add(Add::new(
-                induc_from.clone(),
-                Obj::Number(Number::new(num_special.to_string())),
-            ));
+            let induc_from_add_n: Obj = Add::new(induc_from.clone(),
+                Into::<Obj>::into(Number::new(num_special.to_string()))).into();
             if induc_from_add_n.to_string() != last_bound.to_string() {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -574,7 +568,7 @@ impl Runtime {
     fn parse_braced_params_and_optional_dom_facts(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<(Vec<ParamGroupWithParamType>, Vec<OrAndChainAtomicFact>), RuntimeError> {
+    ) -> Result<(ParamDefWithType, Vec<OrAndChainAtomicFact>), RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
         let params_def_with_type =
             self.parse_def_param_type_groups_until_colon_or_right_brace(tb)?;
@@ -598,15 +592,9 @@ impl Runtime {
     fn parse_braced_struct_field_params_and_optional_dom_facts(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<
-        (
-            Vec<ParamGroupWithStructFieldType>,
-            Vec<OrAndChainAtomicFact>,
-        ),
-        RuntimeError,
-    > {
+    ) -> Result<(ParamDefWithType, Vec<OrAndChainAtomicFact>), RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
-        let param_defs = self.parse_def_struct_field_groups_until_colon_or_right_brace(tb)?;
+        let param_defs = self.parse_def_struct_header_param_groups_until_colon_or_right_brace(tb)?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
@@ -680,7 +668,7 @@ impl Runtime {
                 );
             }
 
-            let mut fields: Vec<(String, StructFieldType)> = vec![];
+            let mut fields: Vec<(String, ParamType)> = vec![];
             let mut facts: Vec<OrAndChainAtomicFact> = vec![];
 
             let body_len = tb.body.len();
@@ -707,8 +695,9 @@ impl Runtime {
                     )
                 })?;
                 let field_name = block.advance()?;
-                let cond = this.parse_struct_field_type(block)?;
-                fields.push((field_name, cond));
+                let pt = this.parse_param_type(block)?;
+                this.reject_nested_struct_param_type(&pt, block.line_file.clone())?;
+                fields.push((field_name, pt));
             }
 
             if last_is_equiv {
@@ -823,7 +812,7 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub(crate) fn register_collected_param_names_for_def_parse(
+    pub fn register_collected_param_names_for_def_parse(
         &mut self,
         names: &Vec<String>,
         line_file: LineFile,
@@ -838,18 +827,19 @@ impl Runtime {
             })
     }
 
-    /// `prop name` / similar: consumes `{` … `}` of `ParamGroupWithParamType` entries and registers names.
+    /// `prop name` / similar: consumes `{` … `}` of typed param groups and registers names.
     fn parse_def_braced_param_groups_with_param_type(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Vec<ParamGroupWithParamType>, RuntimeError> {
+    ) -> Result<ParamDefWithType, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
-        let mut param_defs = Vec::new();
+        let mut groups = Vec::new();
         while tb.current()? != RIGHT_BRACE {
-            param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
+            groups.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
-        let names = ParamGroupWithParamType::collect_param_names(&param_defs);
+        let param_defs = ParamDefWithType::new(groups);
+        let names = param_defs.collect_param_names();
         self.register_collected_param_names_for_def_parse(&names, tb.line_file.clone())?;
         Ok(param_defs)
     }
@@ -858,26 +848,30 @@ impl Runtime {
     fn parse_def_param_type_groups_until_colon_or_right_brace(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Vec<ParamGroupWithParamType>, RuntimeError> {
-        let mut params_def_with_type = vec![];
+    ) -> Result<ParamDefWithType, RuntimeError> {
+        let mut groups = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
-            params_def_with_type.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
+            groups.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
         }
-        let param_names = ParamGroupWithParamType::collect_param_names(&params_def_with_type);
+        let params_def_with_type = ParamDefWithType::new(groups);
+        let param_names = params_def_with_type.collect_param_names();
         self.register_collected_param_names_for_def_parse(&param_names, tb.line_file.clone())?;
         Ok(params_def_with_type)
     }
 
-    /// After `{` is consumed: struct-field param groups until `:` or `}`; registers names.
-    fn parse_def_struct_field_groups_until_colon_or_right_brace(
+    /// After `{` is consumed: struct header param groups until `:` or `}`; no nested `struct` type; registers names.
+    fn parse_def_struct_header_param_groups_until_colon_or_right_brace(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Vec<ParamGroupWithStructFieldType>, RuntimeError> {
-        let mut param_defs = vec![];
+    ) -> Result<ParamDefWithType, RuntimeError> {
+        let mut groups = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
-            param_defs.push(self.parse_param_def_with_struct_field_type_and_skip_comma(tb)?);
+            let def = self.parse_param_def_with_param_type_and_skip_comma(tb)?;
+            self.reject_nested_struct_param_type(&def.param_type, tb.line_file.clone())?;
+            groups.push(def);
         }
-        let param_names = ParamGroupWithStructFieldType::collect_param_names(&param_defs);
+        let param_defs = ParamDefWithType::new(groups);
+        let param_names = param_defs.collect_param_names();
         self.register_collected_param_names_for_def_parse(&param_names, tb.line_file.clone())?;
         Ok(param_defs)
     }

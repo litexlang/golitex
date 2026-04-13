@@ -779,138 +779,142 @@ impl AtomicFact {
             Obj::replace_bound_identifier(o, from, to)
         }
         match self {
-            AtomicFact::NormalAtomicFact(x) => AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
+            AtomicFact::NormalAtomicFact(x) => NormalAtomicFact::new(
                 x.predicate,
                 x.body.into_iter().map(|o| r(o, from, to)).collect(),
                 x.line_file,
-            )),
+            )
+            .into(),
             AtomicFact::EqualFact(x) => {
-                AtomicFact::EqualFact(EqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file))
+                EqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
             }
             AtomicFact::LessFact(x) => {
-                AtomicFact::LessFact(LessFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file))
+                LessFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
             }
-            AtomicFact::GreaterFact(x) => AtomicFact::GreaterFact(GreaterFact::new(
+            AtomicFact::GreaterFact(x) => GreaterFact::new(
                 r(x.left, from, to),
                 r(x.right, from, to),
                 x.line_file,
-            )),
-            AtomicFact::LessEqualFact(x) => AtomicFact::LessEqualFact(LessEqualFact::new(
+            )
+            .into(),
+            AtomicFact::LessEqualFact(x) => LessEqualFact::new(
                 r(x.left, from, to),
                 r(x.right, from, to),
                 x.line_file,
-            )),
-            AtomicFact::GreaterEqualFact(x) => AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+            )
+            .into(),
+            AtomicFact::GreaterEqualFact(x) => GreaterEqualFact::new(
                 r(x.left, from, to),
                 r(x.right, from, to),
                 x.line_file,
-            )),
-            AtomicFact::IsSetFact(x) => {
-                AtomicFact::IsSetFact(IsSetFact::new(r(x.set, from, to), x.line_file))
+            )
+            .into(),
+            AtomicFact::IsSetFact(x) => IsSetFact::new(r(x.set, from, to), x.line_file).into(),
+            AtomicFact::IsNonemptySetFact(x) => {
+                IsNonemptySetFact::new(r(x.set, from, to), x.line_file).into()
             }
-            AtomicFact::IsNonemptySetFact(x) => AtomicFact::IsNonemptySetFact(
-                IsNonemptySetFact::new(r(x.set, from, to), x.line_file),
-            ),
-            AtomicFact::IsFiniteSetFact(x) => AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                r(x.set, from, to),
-                x.line_file,
-            )),
-            AtomicFact::InFact(x) => AtomicFact::InFact(InFact::new(
+            AtomicFact::IsFiniteSetFact(x) => {
+                IsFiniteSetFact::new(r(x.set, from, to), x.line_file).into()
+            }
+            AtomicFact::InFact(x) => InFact::new(
                 r(x.element, from, to),
                 r(x.set, from, to),
                 x.line_file,
-            )),
-            AtomicFact::IsCartFact(x) => {
-                AtomicFact::IsCartFact(IsCartFact::new(r(x.set, from, to), x.line_file))
-            }
-            AtomicFact::IsTupleFact(x) => {
-                AtomicFact::IsTupleFact(IsTupleFact::new(r(x.set, from, to), x.line_file))
-            }
-            AtomicFact::SubsetFact(x) => AtomicFact::SubsetFact(SubsetFact::new(
+            )
+            .into(),
+            AtomicFact::IsCartFact(x) => IsCartFact::new(r(x.set, from, to), x.line_file).into(),
+            AtomicFact::IsTupleFact(x) => IsTupleFact::new(r(x.set, from, to), x.line_file).into(),
+            AtomicFact::SubsetFact(x) => SubsetFact::new(
                 r(x.left, from, to),
                 r(x.right, from, to),
                 x.line_file,
-            )),
-            AtomicFact::SupersetFact(x) => AtomicFact::SupersetFact(SupersetFact::new(
+            )
+            .into(),
+            AtomicFact::SupersetFact(x) => SupersetFact::new(
                 r(x.left, from, to),
                 r(x.right, from, to),
                 x.line_file,
-            )),
-            AtomicFact::RestrictFact(x) => AtomicFact::RestrictFact(RestrictFact::new(
+            )
+            .into(),
+            AtomicFact::RestrictFact(x) => RestrictFact::new(
                 r(x.obj, from, to),
                 r(x.obj_can_restrict_to_fn_set, from, to),
                 x.line_file,
-            )),
-            AtomicFact::NotRestrictFact(x) => AtomicFact::NotRestrictFact(NotRestrictFact::new(
+            )
+            .into(),
+            AtomicFact::NotRestrictFact(x) => NotRestrictFact::new(
                 r(x.obj, from, to),
                 r(x.obj_cannot_restrict_to_fn_set, from, to),
                 x.line_file,
-            )),
-            AtomicFact::NotNormalAtomicFact(x) => {
-                AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
-                    x.predicate,
-                    x.body.into_iter().map(|o| r(o, from, to)).collect(),
-                    x.line_file,
-                ))
+            )
+            .into(),
+            AtomicFact::NotNormalAtomicFact(x) => NotNormalAtomicFact::new(
+                x.predicate,
+                x.body.into_iter().map(|o| r(o, from, to)).collect(),
+                x.line_file,
+            )
+            .into(),
+            AtomicFact::NotEqualFact(x) => NotEqualFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )
+            .into(),
+            AtomicFact::NotLessFact(x) => NotLessFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )
+            .into(),
+            AtomicFact::NotGreaterFact(x) => NotGreaterFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )
+            .into(),
+            AtomicFact::NotLessEqualFact(x) => NotLessEqualFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )
+            .into(),
+            AtomicFact::NotGreaterEqualFact(x) => NotGreaterEqualFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                x.line_file,
+            )
+            .into(),
+            AtomicFact::NotIsSetFact(x) => NotIsSetFact::new(r(x.set, from, to), x.line_file).into(),
+            AtomicFact::NotIsNonemptySetFact(x) => {
+                NotIsNonemptySetFact::new(r(x.set, from, to), x.line_file).into()
             }
-            AtomicFact::NotEqualFact(x) => AtomicFact::NotEqualFact(NotEqualFact::new(
-                r(x.left, from, to),
-                r(x.right, from, to),
-                x.line_file,
-            )),
-            AtomicFact::NotLessFact(x) => AtomicFact::NotLessFact(NotLessFact::new(
-                r(x.left, from, to),
-                r(x.right, from, to),
-                x.line_file,
-            )),
-            AtomicFact::NotGreaterFact(x) => AtomicFact::NotGreaterFact(NotGreaterFact::new(
-                r(x.left, from, to),
-                r(x.right, from, to),
-                x.line_file,
-            )),
-            AtomicFact::NotLessEqualFact(x) => AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
-                r(x.left, from, to),
-                r(x.right, from, to),
-                x.line_file,
-            )),
-            AtomicFact::NotGreaterEqualFact(x) => {
-                AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
-                    r(x.left, from, to),
-                    r(x.right, from, to),
-                    x.line_file,
-                ))
+            AtomicFact::NotIsFiniteSetFact(x) => {
+                NotIsFiniteSetFact::new(r(x.set, from, to), x.line_file).into()
             }
-            AtomicFact::NotIsSetFact(x) => {
-                AtomicFact::NotIsSetFact(NotIsSetFact::new(r(x.set, from, to), x.line_file))
-            }
-            AtomicFact::NotIsNonemptySetFact(x) => AtomicFact::NotIsNonemptySetFact(
-                NotIsNonemptySetFact::new(r(x.set, from, to), x.line_file),
-            ),
-            AtomicFact::NotIsFiniteSetFact(x) => AtomicFact::NotIsFiniteSetFact(
-                NotIsFiniteSetFact::new(r(x.set, from, to), x.line_file),
-            ),
-            AtomicFact::NotInFact(x) => AtomicFact::NotInFact(NotInFact::new(
+            AtomicFact::NotInFact(x) => NotInFact::new(
                 r(x.element, from, to),
                 r(x.set, from, to),
                 x.line_file,
-            )),
+            )
+            .into(),
             AtomicFact::NotIsCartFact(x) => {
-                AtomicFact::NotIsCartFact(NotIsCartFact::new(r(x.set, from, to), x.line_file))
+                NotIsCartFact::new(r(x.set, from, to), x.line_file).into()
             }
-            AtomicFact::NotIsTupleFact(x) => AtomicFact::NotIsTupleFact(NotIsTupleFact::new(
-                r(x.set, from, to),
-                x.line_file,
-            )),
-            AtomicFact::NotSubsetFact(x) => AtomicFact::NotSubsetFact(NotSubsetFact::new(
+            AtomicFact::NotIsTupleFact(x) => {
+                NotIsTupleFact::new(r(x.set, from, to), x.line_file).into()
+            }
+            AtomicFact::NotSubsetFact(x) => NotSubsetFact::new(
                 r(x.left, from, to),
                 r(x.right, from, to),
                 x.line_file,
-            )),
-            AtomicFact::NotSupersetFact(x) => AtomicFact::NotSupersetFact(NotSupersetFact::new(
+            )
+            .into(),
+            AtomicFact::NotSupersetFact(x) => NotSupersetFact::new(
                 r(x.left, from, to),
                 r(x.right, from, to),
                 x.line_file,
-            )),
+            )
+            .into(),
         }
     }
 }
@@ -992,34 +996,34 @@ impl AtomicFact {
 
     pub fn transposed_binary_order_equivalent(&self) -> Option<Self> {
         match self {
-            AtomicFact::LessFact(f) => Some(AtomicFact::GreaterFact(GreaterFact::new(
+            AtomicFact::LessFact(f) => Some(GreaterFact::new(
                 f.right.clone(),
                 f.left.clone(),
                 f.line_file.clone(),
-            ))),
-            AtomicFact::GreaterFact(f) => Some(AtomicFact::LessFact(LessFact::new(
+            ).into()),
+            AtomicFact::GreaterFact(f) => Some(LessFact::new(
                 f.right.clone(),
                 f.left.clone(),
                 f.line_file.clone(),
-            ))),
+            ).into()),
             AtomicFact::LessEqualFact(f) => Some(AtomicFact::GreaterEqualFact(
                 GreaterEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
             )),
-            AtomicFact::GreaterEqualFact(f) => Some(AtomicFact::LessEqualFact(LessEqualFact::new(
+            AtomicFact::GreaterEqualFact(f) => Some(LessEqualFact::new(
                 f.right.clone(),
                 f.left.clone(),
                 f.line_file.clone(),
-            ))),
-            AtomicFact::NotLessFact(f) => Some(AtomicFact::NotGreaterFact(NotGreaterFact::new(
+            ).into()),
+            AtomicFact::NotLessFact(f) => Some(NotGreaterFact::new(
                 f.right.clone(),
                 f.left.clone(),
                 f.line_file.clone(),
-            ))),
-            AtomicFact::NotGreaterFact(f) => Some(AtomicFact::NotLessFact(NotLessFact::new(
+            ).into()),
+            AtomicFact::NotGreaterFact(f) => Some(NotLessFact::new(
                 f.right.clone(),
                 f.left.clone(),
                 f.line_file.clone(),
-            ))),
+            ).into()),
             AtomicFact::NotLessEqualFact(f) => Some(AtomicFact::NotGreaterEqualFact(
                 NotGreaterEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
             )),
@@ -1049,11 +1053,11 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::EqualFact(EqualFact::new(a0, a1, line_file)))
+                    Ok(EqualFact::new(a0, a1, line_file).into())
                 } else {
-                    Ok(AtomicFact::NotEqualFact(NotEqualFact::new(
+                    Ok(NotEqualFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 }
             }
             NOT_EQUAL => {
@@ -1065,11 +1069,11 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::NotEqualFact(NotEqualFact::new(
+                    Ok(NotEqualFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 } else {
-                    Ok(AtomicFact::EqualFact(EqualFact::new(a0, a1, line_file)))
+                    Ok(EqualFact::new(a0, a1, line_file).into())
                 }
             }
             LESS => {
@@ -1081,9 +1085,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line_file)))
+                    Ok(LessFact::new(a0, a1, line_file).into())
                 } else {
-                    Ok(AtomicFact::NotLessFact(NotLessFact::new(a0, a1, line_file)))
+                    Ok(NotLessFact::new(a0, a1, line_file).into())
                 }
             }
             GREATER => {
@@ -1095,11 +1099,11 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line_file)))
+                    Ok(GreaterFact::new(a0, a1, line_file).into())
                 } else {
-                    Ok(AtomicFact::NotGreaterFact(NotGreaterFact::new(
+                    Ok(NotGreaterFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 }
             }
             LESS_EQUAL => {
@@ -1115,13 +1119,13 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::LessEqualFact(LessEqualFact::new(
+                    Ok(LessEqualFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 } else {
-                    Ok(AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
+                    Ok(NotLessEqualFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 }
             }
             GREATER_EQUAL => {
@@ -1137,13 +1141,13 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                    Ok(GreaterEqualFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 } else {
-                    Ok(AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
+                    Ok(NotGreaterEqualFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 }
             }
             IS_SET => {
@@ -1154,9 +1158,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsSetFact(IsSetFact::new(a0, line_file)))
+                    Ok(IsSetFact::new(a0, line_file).into())
                 } else {
-                    Ok(AtomicFact::NotIsSetFact(NotIsSetFact::new(a0, line_file)))
+                    Ok(NotIsSetFact::new(a0, line_file).into())
                 }
             }
             IS_NONEMPTY_SET => {
@@ -1171,13 +1175,13 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                    Ok(IsNonemptySetFact::new(
                         a0, line_file,
-                    )))
+                    ).into())
                 } else {
-                    Ok(AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(
+                    Ok(NotIsNonemptySetFact::new(
                         a0, line_file,
-                    )))
+                    ).into())
                 }
             }
             IS_FINITE_SET => {
@@ -1192,13 +1196,13 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+                    Ok(IsFiniteSetFact::new(
                         a0, line_file,
-                    )))
+                    ).into())
                 } else {
-                    Ok(AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(
+                    Ok(NotIsFiniteSetFact::new(
                         a0, line_file,
-                    )))
+                    ).into())
                 }
             }
             IN => {
@@ -1210,9 +1214,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::InFact(InFact::new(a0, a1, line_file)))
+                    Ok(InFact::new(a0, a1, line_file).into())
                 } else {
-                    Ok(AtomicFact::NotInFact(NotInFact::new(a0, a1, line_file)))
+                    Ok(NotInFact::new(a0, a1, line_file).into())
                 }
             }
             IS_CART => {
@@ -1223,9 +1227,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsCartFact(IsCartFact::new(a0, line_file)))
+                    Ok(IsCartFact::new(a0, line_file).into())
                 } else {
-                    Ok(AtomicFact::NotIsCartFact(NotIsCartFact::new(a0, line_file)))
+                    Ok(NotIsCartFact::new(a0, line_file).into())
                 }
             }
             IS_TUPLE => {
@@ -1236,11 +1240,11 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsTupleFact(IsTupleFact::new(a0, line_file)))
+                    Ok(IsTupleFact::new(a0, line_file).into())
                 } else {
-                    Ok(AtomicFact::NotIsTupleFact(NotIsTupleFact::new(
+                    Ok(NotIsTupleFact::new(
                         a0, line_file,
-                    )))
+                    ).into())
                 }
             }
             SUBSET => {
@@ -1252,11 +1256,11 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::SubsetFact(SubsetFact::new(a0, a1, line_file)))
+                    Ok(SubsetFact::new(a0, a1, line_file).into())
                 } else {
-                    Ok(AtomicFact::NotSubsetFact(NotSubsetFact::new(
+                    Ok(NotSubsetFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 }
             }
             SUPERSET => {
@@ -1268,13 +1272,13 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::SupersetFact(SupersetFact::new(
+                    Ok(SupersetFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 } else {
-                    Ok(AtomicFact::NotSupersetFact(NotSupersetFact::new(
+                    Ok(NotSupersetFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 }
             }
             RESTRICT => {
@@ -1286,24 +1290,24 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::RestrictFact(RestrictFact::new(
+                    Ok(RestrictFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 } else {
-                    Ok(AtomicFact::NotRestrictFact(NotRestrictFact::new(
+                    Ok(NotRestrictFact::new(
                         a0, a1, line_file,
-                    )))
+                    ).into())
                 }
             }
             _ => {
                 if is_true {
-                    Ok(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
+                    Ok(NormalAtomicFact::new(
                         prop_name, args, line_file,
-                    )))
+                    ).into())
                 } else {
-                    Ok(AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
+                    Ok(NotNormalAtomicFact::new(
                         prop_name, args, line_file,
-                    )))
+                    ).into())
                 }
             }
         }
@@ -1507,93 +1511,93 @@ impl AtomicFact {
     pub fn with_new_line_file(self, line_file: LineFile) -> Self {
         match self {
             AtomicFact::EqualFact(x) => {
-                AtomicFact::EqualFact(EqualFact::new(x.left, x.right, line_file))
+                EqualFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::LessFact(x) => {
-                AtomicFact::LessFact(LessFact::new(x.left, x.right, line_file))
+                LessFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::GreaterFact(x) => {
-                AtomicFact::GreaterFact(GreaterFact::new(x.left, x.right, line_file))
+                GreaterFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::LessEqualFact(x) => {
-                AtomicFact::LessEqualFact(LessEqualFact::new(x.left, x.right, line_file))
+                LessEqualFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::GreaterEqualFact(x) => {
-                AtomicFact::GreaterEqualFact(GreaterEqualFact::new(x.left, x.right, line_file))
+                GreaterEqualFact::new(x.left, x.right, line_file).into()
             }
-            AtomicFact::IsSetFact(x) => AtomicFact::IsSetFact(IsSetFact::new(x.set, line_file)),
+            AtomicFact::IsSetFact(x) => IsSetFact::new(x.set, line_file).into(),
             AtomicFact::IsNonemptySetFact(x) => {
-                AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(x.set, line_file))
+                IsNonemptySetFact::new(x.set, line_file).into()
             }
             AtomicFact::IsFiniteSetFact(x) => {
-                AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(x.set, line_file))
+                IsFiniteSetFact::new(x.set, line_file).into()
             }
-            AtomicFact::InFact(x) => AtomicFact::InFact(InFact::new(x.element, x.set, line_file)),
-            AtomicFact::IsCartFact(x) => AtomicFact::IsCartFact(IsCartFact::new(x.set, line_file)),
+            AtomicFact::InFact(x) => InFact::new(x.element, x.set, line_file).into(),
+            AtomicFact::IsCartFact(x) => IsCartFact::new(x.set, line_file).into(),
             AtomicFact::IsTupleFact(x) => {
-                AtomicFact::IsTupleFact(IsTupleFact::new(x.set, line_file))
+                IsTupleFact::new(x.set, line_file).into()
             }
             AtomicFact::SubsetFact(x) => {
-                AtomicFact::SubsetFact(SubsetFact::new(x.left, x.right, line_file))
+                SubsetFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::SupersetFact(x) => {
-                AtomicFact::SupersetFact(SupersetFact::new(x.left, x.right, line_file))
+                SupersetFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::NormalAtomicFact(x) => {
-                AtomicFact::NormalAtomicFact(NormalAtomicFact::new(x.predicate, x.body, line_file))
+                NormalAtomicFact::new(x.predicate, x.body, line_file).into()
             }
             AtomicFact::NotNormalAtomicFact(x) => AtomicFact::NotNormalAtomicFact(
                 NotNormalAtomicFact::new(x.predicate, x.body, line_file),
             ),
             AtomicFact::NotEqualFact(x) => {
-                AtomicFact::NotEqualFact(NotEqualFact::new(x.left, x.right, line_file))
+                NotEqualFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::NotLessFact(x) => {
-                AtomicFact::NotLessFact(NotLessFact::new(x.left, x.right, line_file))
+                NotLessFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::NotGreaterFact(x) => {
-                AtomicFact::NotGreaterFact(NotGreaterFact::new(x.left, x.right, line_file))
+                NotGreaterFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::NotLessEqualFact(x) => {
-                AtomicFact::NotLessEqualFact(NotLessEqualFact::new(x.left, x.right, line_file))
+                NotLessEqualFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::NotGreaterEqualFact(x) => AtomicFact::NotGreaterEqualFact(
                 NotGreaterEqualFact::new(x.left, x.right, line_file),
             ),
             AtomicFact::NotIsSetFact(x) => {
-                AtomicFact::NotIsSetFact(NotIsSetFact::new(x.set, line_file))
+                NotIsSetFact::new(x.set, line_file).into()
             }
             AtomicFact::NotIsNonemptySetFact(x) => {
-                AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(x.set, line_file))
+                NotIsNonemptySetFact::new(x.set, line_file).into()
             }
             AtomicFact::NotIsFiniteSetFact(x) => {
-                AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(x.set, line_file))
+                NotIsFiniteSetFact::new(x.set, line_file).into()
             }
             AtomicFact::NotInFact(x) => {
-                AtomicFact::NotInFact(NotInFact::new(x.element, x.set, line_file))
+                NotInFact::new(x.element, x.set, line_file).into()
             }
             AtomicFact::NotIsCartFact(x) => {
-                AtomicFact::NotIsCartFact(NotIsCartFact::new(x.set, line_file))
+                NotIsCartFact::new(x.set, line_file).into()
             }
             AtomicFact::NotIsTupleFact(x) => {
-                AtomicFact::NotIsTupleFact(NotIsTupleFact::new(x.set, line_file))
+                NotIsTupleFact::new(x.set, line_file).into()
             }
             AtomicFact::NotSubsetFact(x) => {
-                AtomicFact::NotSubsetFact(NotSubsetFact::new(x.left, x.right, line_file))
+                NotSubsetFact::new(x.left, x.right, line_file).into()
             }
             AtomicFact::NotSupersetFact(x) => {
-                AtomicFact::NotSupersetFact(NotSupersetFact::new(x.left, x.right, line_file))
+                NotSupersetFact::new(x.left, x.right, line_file).into()
             }
-            AtomicFact::RestrictFact(x) => AtomicFact::RestrictFact(RestrictFact::new(
+            AtomicFact::RestrictFact(x) => RestrictFact::new(
                 x.obj,
                 x.obj_can_restrict_to_fn_set,
                 line_file,
-            )),
-            AtomicFact::NotRestrictFact(x) => AtomicFact::NotRestrictFact(NotRestrictFact::new(
+            ).into(),
+            AtomicFact::NotRestrictFact(x) => NotRestrictFact::new(
                 x.obj,
                 x.obj_cannot_restrict_to_fn_set,
                 line_file,
-            )),
+            ).into(),
         }
     }
 }
@@ -1653,31 +1657,31 @@ impl AtomicFact {
             AtomicFact::NotNormalAtomicFact(a) => AtomicFact::NormalAtomicFact(
                 NormalAtomicFact::new(a.predicate.clone(), a.body.clone(), a.line_file.clone()),
             ),
-            AtomicFact::EqualFact(a) => AtomicFact::NotEqualFact(NotEqualFact::new(
+            AtomicFact::EqualFact(a) => NotEqualFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::LessFact(a) => AtomicFact::NotLessFact(NotLessFact::new(
+            ).into(),
+            AtomicFact::LessFact(a) => NotLessFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::GreaterFact(a) => AtomicFact::NotGreaterFact(NotGreaterFact::new(
+            ).into(),
+            AtomicFact::GreaterFact(a) => NotGreaterFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::LessEqualFact(a) => AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
+            ).into(),
+            AtomicFact::LessEqualFact(a) => NotLessEqualFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
+            ).into(),
             AtomicFact::GreaterEqualFact(a) => AtomicFact::NotGreaterEqualFact(
                 NotGreaterEqualFact::new(a.left.clone(), a.right.clone(), a.line_file.clone()),
             ),
             AtomicFact::IsSetFact(a) => {
-                AtomicFact::NotIsSetFact(NotIsSetFact::new(a.set.clone(), a.line_file.clone()))
+                NotIsSetFact::new(a.set.clone(), a.line_file.clone()).into()
             }
             AtomicFact::IsNonemptySetFact(a) => AtomicFact::IsNonemptySetFact(
                 IsNonemptySetFact::new(a.set.clone(), a.line_file.clone()),
@@ -1685,91 +1689,91 @@ impl AtomicFact {
             AtomicFact::IsFiniteSetFact(a) => AtomicFact::NotIsFiniteSetFact(
                 NotIsFiniteSetFact::new(a.set.clone(), a.line_file.clone()),
             ),
-            AtomicFact::InFact(a) => AtomicFact::NotInFact(NotInFact::new(
+            AtomicFact::InFact(a) => NotInFact::new(
                 a.element.clone(),
                 a.set.clone(),
                 a.line_file.clone(),
-            )),
+            ).into(),
             AtomicFact::IsCartFact(a) => {
-                AtomicFact::NotIsCartFact(NotIsCartFact::new(a.set.clone(), a.line_file.clone()))
+                NotIsCartFact::new(a.set.clone(), a.line_file.clone()).into()
             }
             AtomicFact::IsTupleFact(a) => {
-                AtomicFact::NotIsTupleFact(NotIsTupleFact::new(a.set.clone(), a.line_file.clone()))
+                NotIsTupleFact::new(a.set.clone(), a.line_file.clone()).into()
             }
-            AtomicFact::SubsetFact(a) => AtomicFact::NotSubsetFact(NotSubsetFact::new(
+            AtomicFact::SubsetFact(a) => NotSubsetFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::SupersetFact(a) => AtomicFact::NotSupersetFact(NotSupersetFact::new(
+            ).into(),
+            AtomicFact::SupersetFact(a) => NotSupersetFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::RestrictFact(a) => AtomicFact::NotRestrictFact(NotRestrictFact::new(
+            ).into(),
+            AtomicFact::RestrictFact(a) => NotRestrictFact::new(
                 a.obj.clone(),
                 a.obj_can_restrict_to_fn_set.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::NotEqualFact(a) => AtomicFact::EqualFact(EqualFact::new(
+            ).into(),
+            AtomicFact::NotEqualFact(a) => EqualFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::NotLessFact(a) => AtomicFact::LessFact(LessFact::new(
+            ).into(),
+            AtomicFact::NotLessFact(a) => LessFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::NotGreaterFact(a) => AtomicFact::GreaterFact(GreaterFact::new(
+            ).into(),
+            AtomicFact::NotGreaterFact(a) => GreaterFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::NotLessEqualFact(a) => AtomicFact::LessEqualFact(LessEqualFact::new(
+            ).into(),
+            AtomicFact::NotLessEqualFact(a) => LessEqualFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
+            ).into(),
             AtomicFact::NotGreaterEqualFact(a) => AtomicFact::GreaterEqualFact(
                 GreaterEqualFact::new(a.left.clone(), a.right.clone(), a.line_file.clone()),
             ),
             AtomicFact::NotIsSetFact(a) => {
-                AtomicFact::IsSetFact(IsSetFact::new(a.set.clone(), a.line_file.clone()))
+                IsSetFact::new(a.set.clone(), a.line_file.clone()).into()
             }
             AtomicFact::NotIsNonemptySetFact(a) => AtomicFact::IsNonemptySetFact(
                 IsNonemptySetFact::new(a.set.clone(), a.line_file.clone()),
             ),
-            AtomicFact::NotIsFiniteSetFact(a) => AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+            AtomicFact::NotIsFiniteSetFact(a) => IsFiniteSetFact::new(
                 a.set.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::NotInFact(a) => AtomicFact::InFact(InFact::new(
+            ).into(),
+            AtomicFact::NotInFact(a) => InFact::new(
                 a.element.clone(),
                 a.set.clone(),
                 a.line_file.clone(),
-            )),
+            ).into(),
             AtomicFact::NotIsCartFact(a) => {
-                AtomicFact::IsCartFact(IsCartFact::new(a.set.clone(), a.line_file.clone()))
+                IsCartFact::new(a.set.clone(), a.line_file.clone()).into()
             }
             AtomicFact::NotIsTupleFact(a) => {
-                AtomicFact::IsTupleFact(IsTupleFact::new(a.set.clone(), a.line_file.clone()))
+                IsTupleFact::new(a.set.clone(), a.line_file.clone()).into()
             }
-            AtomicFact::NotSubsetFact(a) => AtomicFact::SubsetFact(SubsetFact::new(
+            AtomicFact::NotSubsetFact(a) => SubsetFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::NotSupersetFact(a) => AtomicFact::SupersetFact(SupersetFact::new(
+            ).into(),
+            AtomicFact::NotSupersetFact(a) => SupersetFact::new(
                 a.left.clone(),
                 a.right.clone(),
                 a.line_file.clone(),
-            )),
-            AtomicFact::NotRestrictFact(a) => AtomicFact::RestrictFact(RestrictFact::new(
+            ).into(),
+            AtomicFact::NotRestrictFact(a) => RestrictFact::new(
                 a.obj.clone(),
                 a.obj_cannot_restrict_to_fn_set.clone(),
                 a.line_file.clone(),
-            )),
+            ).into(),
         }
     }
 }
@@ -1784,22 +1788,22 @@ impl AtomicFact {
     }
 
     pub fn calculate_args(&self) -> (AtomicFact, bool) {
-        let calculated_atomic_fact = match self {
+        let calculated_atomic_fact: AtomicFact = match self {
             AtomicFact::NormalAtomicFact(inner) => {
-                AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
+                NormalAtomicFact::new(
                     inner.predicate.clone(),
                     Self::body_vec_after_calculate_each_calculable_arg(&inner.body),
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
             AtomicFact::NotNormalAtomicFact(inner) => {
-                AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
+                NotNormalAtomicFact::new(
                     inner.predicate.clone(),
                     Self::body_vec_after_calculate_each_calculable_arg(&inner.body),
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
-            AtomicFact::EqualFact(inner) => AtomicFact::EqualFact(EqualFact::new(
+            AtomicFact::EqualFact(inner) => EqualFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1809,8 +1813,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::NotEqualFact(inner) => AtomicFact::NotEqualFact(NotEqualFact::new(
+            ).into(),
+            AtomicFact::NotEqualFact(inner) => NotEqualFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1820,8 +1824,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::LessFact(inner) => AtomicFact::LessFact(LessFact::new(
+            ).into(),
+            AtomicFact::LessFact(inner) => LessFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1831,8 +1835,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::NotLessFact(inner) => AtomicFact::NotLessFact(NotLessFact::new(
+            ).into(),
+            AtomicFact::NotLessFact(inner) => NotLessFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1842,8 +1846,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::GreaterFact(inner) => AtomicFact::GreaterFact(GreaterFact::new(
+            ).into(),
+            AtomicFact::GreaterFact(inner) => GreaterFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1853,8 +1857,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::NotGreaterFact(inner) => AtomicFact::NotGreaterFact(NotGreaterFact::new(
+            ).into(),
+            AtomicFact::NotGreaterFact(inner) => NotGreaterFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1864,8 +1868,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::LessEqualFact(inner) => AtomicFact::LessEqualFact(LessEqualFact::new(
+            ).into(),
+            AtomicFact::LessEqualFact(inner) => LessEqualFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1875,9 +1879,9 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
+            ).into(),
             AtomicFact::NotLessEqualFact(inner) => {
-                AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
+                NotLessEqualFact::new(
                     inner
                         .left
                         .replace_with_numeric_result_if_can_be_calculated()
@@ -1887,10 +1891,10 @@ impl AtomicFact {
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
             AtomicFact::GreaterEqualFact(inner) => {
-                AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                GreaterEqualFact::new(
                     inner
                         .left
                         .replace_with_numeric_result_if_can_be_calculated()
@@ -1900,10 +1904,10 @@ impl AtomicFact {
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
             AtomicFact::NotGreaterEqualFact(inner) => {
-                AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
+                NotGreaterEqualFact::new(
                     inner
                         .left
                         .replace_with_numeric_result_if_can_be_calculated()
@@ -1913,59 +1917,59 @@ impl AtomicFact {
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
-            AtomicFact::IsSetFact(inner) => AtomicFact::IsSetFact(IsSetFact::new(
+            AtomicFact::IsSetFact(inner) => IsSetFact::new(
                 inner
                     .set
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::NotIsSetFact(inner) => AtomicFact::NotIsSetFact(NotIsSetFact::new(
+            ).into(),
+            AtomicFact::NotIsSetFact(inner) => NotIsSetFact::new(
                 inner
                     .set
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
+            ).into(),
             AtomicFact::IsNonemptySetFact(inner) => {
-                AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                IsNonemptySetFact::new(
                     inner
                         .set
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
             AtomicFact::NotIsNonemptySetFact(inner) => {
-                AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(
+                NotIsNonemptySetFact::new(
                     inner
                         .set
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
             AtomicFact::IsFiniteSetFact(inner) => {
-                AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+                IsFiniteSetFact::new(
                     inner
                         .set
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
             AtomicFact::NotIsFiniteSetFact(inner) => {
-                AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(
+                NotIsFiniteSetFact::new(
                     inner
                         .set
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
-            AtomicFact::InFact(inner) => AtomicFact::InFact(InFact::new(
+            AtomicFact::InFact(inner) => InFact::new(
                 inner
                     .element
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1975,8 +1979,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::NotInFact(inner) => AtomicFact::NotInFact(NotInFact::new(
+            ).into(),
+            AtomicFact::NotInFact(inner) => NotInFact::new(
                 inner
                     .element
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -1986,36 +1990,36 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::IsCartFact(inner) => AtomicFact::IsCartFact(IsCartFact::new(
+            ).into(),
+            AtomicFact::IsCartFact(inner) => IsCartFact::new(
                 inner
                     .set
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::NotIsCartFact(inner) => AtomicFact::NotIsCartFact(NotIsCartFact::new(
+            ).into(),
+            AtomicFact::NotIsCartFact(inner) => NotIsCartFact::new(
                 inner
                     .set
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::IsTupleFact(inner) => AtomicFact::IsTupleFact(IsTupleFact::new(
+            ).into(),
+            AtomicFact::IsTupleFact(inner) => IsTupleFact::new(
                 inner
                     .set
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::NotIsTupleFact(inner) => AtomicFact::NotIsTupleFact(NotIsTupleFact::new(
+            ).into(),
+            AtomicFact::NotIsTupleFact(inner) => NotIsTupleFact::new(
                 inner
                     .set
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::SubsetFact(inner) => AtomicFact::SubsetFact(SubsetFact::new(
+            ).into(),
+            AtomicFact::SubsetFact(inner) => SubsetFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -2025,8 +2029,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::NotSubsetFact(inner) => AtomicFact::NotSubsetFact(NotSubsetFact::new(
+            ).into(),
+            AtomicFact::NotSubsetFact(inner) => NotSubsetFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -2036,8 +2040,8 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
-            AtomicFact::SupersetFact(inner) => AtomicFact::SupersetFact(SupersetFact::new(
+            ).into(),
+            AtomicFact::SupersetFact(inner) => SupersetFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -2047,9 +2051,9 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
+            ).into(),
             AtomicFact::NotSupersetFact(inner) => {
-                AtomicFact::NotSupersetFact(NotSupersetFact::new(
+                NotSupersetFact::new(
                     inner
                         .left
                         .replace_with_numeric_result_if_can_be_calculated()
@@ -2059,9 +2063,9 @@ impl AtomicFact {
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
-            AtomicFact::RestrictFact(inner) => AtomicFact::RestrictFact(RestrictFact::new(
+            AtomicFact::RestrictFact(inner) => RestrictFact::new(
                 inner
                     .obj
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -2071,9 +2075,9 @@ impl AtomicFact {
                     .replace_with_numeric_result_if_can_be_calculated()
                     .0,
                 inner.line_file.clone(),
-            )),
+            ).into(),
             AtomicFact::NotRestrictFact(inner) => {
-                AtomicFact::NotRestrictFact(NotRestrictFact::new(
+                NotRestrictFact::new(
                     inner
                         .obj
                         .replace_with_numeric_result_if_can_be_calculated()
@@ -2083,10 +2087,370 @@ impl AtomicFact {
                         .replace_with_numeric_result_if_can_be_calculated()
                         .0,
                     inner.line_file.clone(),
-                ))
+                ).into()
             }
         };
         let any_argument_replaced = calculated_atomic_fact.to_string() != self.to_string();
         (calculated_atomic_fact, any_argument_replaced)
+    }
+}
+
+impl From<NormalAtomicFact> for AtomicFact {
+    fn from(f: NormalAtomicFact) -> Self {
+        AtomicFact::NormalAtomicFact(f)
+    }
+}
+
+impl From<EqualFact> for AtomicFact {
+    fn from(f: EqualFact) -> Self {
+        AtomicFact::EqualFact(f)
+    }
+}
+
+impl From<LessFact> for AtomicFact {
+    fn from(f: LessFact) -> Self {
+        AtomicFact::LessFact(f)
+    }
+}
+
+impl From<GreaterFact> for AtomicFact {
+    fn from(f: GreaterFact) -> Self {
+        AtomicFact::GreaterFact(f)
+    }
+}
+
+impl From<LessEqualFact> for AtomicFact {
+    fn from(f: LessEqualFact) -> Self {
+        AtomicFact::LessEqualFact(f)
+    }
+}
+
+impl From<GreaterEqualFact> for AtomicFact {
+    fn from(f: GreaterEqualFact) -> Self {
+        AtomicFact::GreaterEqualFact(f)
+    }
+}
+
+impl From<IsSetFact> for AtomicFact {
+    fn from(f: IsSetFact) -> Self {
+        AtomicFact::IsSetFact(f)
+    }
+}
+
+impl From<IsNonemptySetFact> for AtomicFact {
+    fn from(f: IsNonemptySetFact) -> Self {
+        AtomicFact::IsNonemptySetFact(f)
+    }
+}
+
+impl From<IsFiniteSetFact> for AtomicFact {
+    fn from(f: IsFiniteSetFact) -> Self {
+        AtomicFact::IsFiniteSetFact(f)
+    }
+}
+
+impl From<InFact> for AtomicFact {
+    fn from(f: InFact) -> Self {
+        AtomicFact::InFact(f)
+    }
+}
+
+impl From<IsCartFact> for AtomicFact {
+    fn from(f: IsCartFact) -> Self {
+        AtomicFact::IsCartFact(f)
+    }
+}
+
+impl From<IsTupleFact> for AtomicFact {
+    fn from(f: IsTupleFact) -> Self {
+        AtomicFact::IsTupleFact(f)
+    }
+}
+
+impl From<SubsetFact> for AtomicFact {
+    fn from(f: SubsetFact) -> Self {
+        AtomicFact::SubsetFact(f)
+    }
+}
+
+impl From<SupersetFact> for AtomicFact {
+    fn from(f: SupersetFact) -> Self {
+        AtomicFact::SupersetFact(f)
+    }
+}
+
+impl From<RestrictFact> for AtomicFact {
+    fn from(f: RestrictFact) -> Self {
+        AtomicFact::RestrictFact(f)
+    }
+}
+
+impl From<NotRestrictFact> for AtomicFact {
+    fn from(f: NotRestrictFact) -> Self {
+        AtomicFact::NotRestrictFact(f)
+    }
+}
+
+impl From<NotNormalAtomicFact> for AtomicFact {
+    fn from(f: NotNormalAtomicFact) -> Self {
+        AtomicFact::NotNormalAtomicFact(f)
+    }
+}
+
+impl From<NotEqualFact> for AtomicFact {
+    fn from(f: NotEqualFact) -> Self {
+        AtomicFact::NotEqualFact(f)
+    }
+}
+
+impl From<NotLessFact> for AtomicFact {
+    fn from(f: NotLessFact) -> Self {
+        AtomicFact::NotLessFact(f)
+    }
+}
+
+impl From<NotGreaterFact> for AtomicFact {
+    fn from(f: NotGreaterFact) -> Self {
+        AtomicFact::NotGreaterFact(f)
+    }
+}
+
+impl From<NotLessEqualFact> for AtomicFact {
+    fn from(f: NotLessEqualFact) -> Self {
+        AtomicFact::NotLessEqualFact(f)
+    }
+}
+
+impl From<NotGreaterEqualFact> for AtomicFact {
+    fn from(f: NotGreaterEqualFact) -> Self {
+        AtomicFact::NotGreaterEqualFact(f)
+    }
+}
+
+impl From<NotIsSetFact> for AtomicFact {
+    fn from(f: NotIsSetFact) -> Self {
+        AtomicFact::NotIsSetFact(f)
+    }
+}
+
+impl From<NotIsNonemptySetFact> for AtomicFact {
+    fn from(f: NotIsNonemptySetFact) -> Self {
+        AtomicFact::NotIsNonemptySetFact(f)
+    }
+}
+
+impl From<NotIsFiniteSetFact> for AtomicFact {
+    fn from(f: NotIsFiniteSetFact) -> Self {
+        AtomicFact::NotIsFiniteSetFact(f)
+    }
+}
+
+impl From<NotInFact> for AtomicFact {
+    fn from(f: NotInFact) -> Self {
+        AtomicFact::NotInFact(f)
+    }
+}
+
+impl From<NotIsCartFact> for AtomicFact {
+    fn from(f: NotIsCartFact) -> Self {
+        AtomicFact::NotIsCartFact(f)
+    }
+}
+
+impl From<NotIsTupleFact> for AtomicFact {
+    fn from(f: NotIsTupleFact) -> Self {
+        AtomicFact::NotIsTupleFact(f)
+    }
+}
+
+impl From<NotSubsetFact> for AtomicFact {
+    fn from(f: NotSubsetFact) -> Self {
+        AtomicFact::NotSubsetFact(f)
+    }
+}
+
+impl From<NotSupersetFact> for AtomicFact {
+    fn from(f: NotSupersetFact) -> Self {
+        AtomicFact::NotSupersetFact(f)
+    }
+}
+
+impl From<NormalAtomicFact> for Fact {
+    fn from(f: NormalAtomicFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<EqualFact> for Fact {
+    fn from(f: EqualFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<LessFact> for Fact {
+    fn from(f: LessFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<GreaterFact> for Fact {
+    fn from(f: GreaterFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<LessEqualFact> for Fact {
+    fn from(f: LessEqualFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<GreaterEqualFact> for Fact {
+    fn from(f: GreaterEqualFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<IsSetFact> for Fact {
+    fn from(f: IsSetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<IsNonemptySetFact> for Fact {
+    fn from(f: IsNonemptySetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<IsFiniteSetFact> for Fact {
+    fn from(f: IsFiniteSetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<InFact> for Fact {
+    fn from(f: InFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<IsCartFact> for Fact {
+    fn from(f: IsCartFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<IsTupleFact> for Fact {
+    fn from(f: IsTupleFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<SubsetFact> for Fact {
+    fn from(f: SubsetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<SupersetFact> for Fact {
+    fn from(f: SupersetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<RestrictFact> for Fact {
+    fn from(f: RestrictFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotRestrictFact> for Fact {
+    fn from(f: NotRestrictFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotNormalAtomicFact> for Fact {
+    fn from(f: NotNormalAtomicFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotEqualFact> for Fact {
+    fn from(f: NotEqualFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotLessFact> for Fact {
+    fn from(f: NotLessFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotGreaterFact> for Fact {
+    fn from(f: NotGreaterFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotLessEqualFact> for Fact {
+    fn from(f: NotLessEqualFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotGreaterEqualFact> for Fact {
+    fn from(f: NotGreaterEqualFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotIsSetFact> for Fact {
+    fn from(f: NotIsSetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotIsNonemptySetFact> for Fact {
+    fn from(f: NotIsNonemptySetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotIsFiniteSetFact> for Fact {
+    fn from(f: NotIsFiniteSetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotInFact> for Fact {
+    fn from(f: NotInFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotIsCartFact> for Fact {
+    fn from(f: NotIsCartFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotIsTupleFact> for Fact {
+    fn from(f: NotIsTupleFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotSubsetFact> for Fact {
+    fn from(f: NotSubsetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotSupersetFact> for Fact {
+    fn from(f: NotSupersetFact) -> Self {
+        Fact::AtomicFact(f.into())
     }
 }

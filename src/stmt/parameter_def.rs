@@ -11,95 +11,44 @@ pub enum ParamType {
     Struct(StructObj),
 }
 
+/// Full parameter list with types, e.g. `a, b T, c E` as a sequence of [`ParamGroupWithParamType`].
 #[derive(Clone)]
-pub enum StructFieldType {
-    Obj(Obj),
-    Set(Set),
-    FiniteSet(FiniteSet),
-    NonemptySet(NonemptySet),
+pub struct ParamDefWithType {
+    pub groups: Vec<ParamGroupWithParamType>,
 }
 
-impl StructFieldType {
-    pub fn to_param_type(&self) -> ParamType {
-        match self {
-            StructFieldType::Obj(o) => ParamType::Obj(o.clone()),
-            StructFieldType::Set(s) => ParamType::Set(s.clone()),
-            StructFieldType::FiniteSet(f) => ParamType::FiniteSet(f.clone()),
-            StructFieldType::NonemptySet(n) => ParamType::NonemptySet(n.clone()),
-        }
-    }
-}
-
-impl fmt::Display for StructFieldType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_param_type())
-    }
-}
-
-#[derive(Clone)]
-pub struct ParamGroupWithSet {
-    pub params: Vec<String>,
-    pub set: Obj,
-}
-
-#[derive(Clone)]
-pub struct ParamGroupWithParamType {
-    pub params: Vec<String>,
-    pub param_type: ParamType,
-}
-
-#[derive(Clone)]
-pub struct ParamGroupWithStructFieldType {
-    pub params: Vec<String>,
-    pub struct_field_type: StructFieldType,
-}
-
-impl fmt::Display for ParamGroupWithStructFieldType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}",
-            vec_to_string_join_by_comma(&self.params),
-            self.struct_field_type
-        )
-    }
-}
-
-impl ParamGroupWithStructFieldType {
-    pub fn new(params: Vec<String>, struct_field_type: StructFieldType) -> Self {
-        ParamGroupWithStructFieldType {
-            params,
-            struct_field_type,
-        }
+impl ParamDefWithType {
+    pub fn new(groups: Vec<ParamGroupWithParamType>) -> Self {
+        ParamDefWithType { groups }
     }
 
-    pub fn number_of_params(defs: &Vec<ParamGroupWithStructFieldType>) -> usize {
+    pub fn len(&self) -> usize {
+        self.groups.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.groups.is_empty()
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<'_, ParamGroupWithParamType> {
+        self.groups.iter()
+    }
+
+    pub fn as_slice(&self) -> &[ParamGroupWithParamType] {
+        self.groups.as_slice()
+    }
+
+    pub fn number_of_params(&self) -> usize {
         let mut total_param_count: usize = 0;
-        for p in defs.iter() {
+        for p in self.groups.iter() {
             total_param_count += p.params.len();
         }
         total_param_count
     }
 
-    pub fn to_param_group_with_param_type(&self) -> ParamGroupWithParamType {
-        ParamGroupWithParamType::new(self.params.clone(), self.struct_field_type.to_param_type())
-    }
-
-    pub fn to_param_groups_with_param_type(
-        defs: &[ParamGroupWithStructFieldType],
-    ) -> Vec<ParamGroupWithParamType> {
-        defs.iter()
-            .map(|d| d.to_param_group_with_param_type())
-            .collect()
-    }
-
-    pub fn param_names(&self) -> &Vec<String> {
-        &self.params
-    }
-
-    pub fn collect_param_names(param_defs: &Vec<ParamGroupWithStructFieldType>) -> Vec<String> {
-        let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
-        for def in param_defs.iter() {
+    pub fn collect_param_names(&self) -> Vec<String> {
+        let mut names: Vec<String> = Vec::with_capacity(self.number_of_params());
+        for def in self.groups.iter() {
             for name in def.param_names().iter() {
                 names.push(name.clone());
             }
@@ -107,11 +56,38 @@ impl ParamGroupWithStructFieldType {
         names
     }
 
-    pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamGroupWithStructFieldType>,
-        args: &Vec<Obj>,
-    ) -> HashMap<String, Obj> {
-        let param_names = Self::collect_param_names(param_defs);
+    pub fn flat_instantiated_types_for_args(
+        &self,
+        instantiated_types: &[ParamType],
+    ) -> Vec<ParamType> {
+        let mut result = Vec::with_capacity(self.number_of_params());
+        for (param_def, param_type) in self.groups.iter().zip(instantiated_types.iter()) {
+            for _ in param_def.params.iter() {
+                result.push(param_type.clone());
+            }
+        }
+        result
+    }
+
+    pub fn param_def_params_to_arg_map(
+        &self,
+        arg_map: &HashMap<String, Obj>,
+    ) -> Option<HashMap<String, Obj>> {
+        let param_names = self.collect_param_names();
+        let mut result = HashMap::new();
+        for param_name in param_names.iter() {
+            let objs_option = arg_map.get(param_name);
+            let objs = match objs_option {
+                Some(v) => v,
+                None => return None,
+            };
+            result.insert(param_name.clone(), objs.clone());
+        }
+        Some(result)
+    }
+
+    pub fn param_defs_and_args_to_param_to_arg_map(&self, args: &[Obj]) -> HashMap<String, Obj> {
+        let param_names = self.collect_param_names();
         if param_names.len() != args.len() {
             unreachable!();
         }
@@ -126,6 +102,30 @@ impl ParamGroupWithStructFieldType {
         }
         result
     }
+}
+
+impl fmt::Display for ParamDefWithType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", vec_to_string_join_by_comma(&self.groups))
+    }
+}
+
+impl From<Vec<ParamGroupWithParamType>> for ParamDefWithType {
+    fn from(groups: Vec<ParamGroupWithParamType>) -> Self {
+        ParamDefWithType::new(groups)
+    }
+}
+
+#[derive(Clone)]
+pub struct ParamGroupWithSet {
+    pub params: Vec<String>,
+    pub set: Obj,
+}
+
+#[derive(Clone)]
+pub struct ParamGroupWithParamType {
+    pub params: Vec<String>,
+    pub param_type: ParamType,
 }
 
 #[derive(Clone)]
@@ -207,93 +207,13 @@ impl fmt::Display for ParamGroupWithParamType {
     }
 }
 
-impl ParamType {
-    pub fn get_all_param_names(param_def: &Vec<ParamGroupWithParamType>) -> Vec<String> {
-        let mut names = vec![];
-        for param_def in param_def.iter() {
-            for name in param_def.params.iter() {
-                names.push(name.clone());
-            }
-        }
-        names
-    }
-}
-
 impl ParamGroupWithParamType {
     pub fn new(params: Vec<String>, param_type: ParamType) -> Self {
         ParamGroupWithParamType { params, param_type }
     }
 
-    pub fn number_of_params(defs: &Vec<ParamGroupWithParamType>) -> usize {
-        let mut total_param_count: usize = 0;
-        for p in defs.iter() {
-            total_param_count += p.params.len();
-        }
-        return total_param_count;
-    }
-
-    pub fn flat_instantiated_types_for_args(
-        param_defs: &Vec<ParamGroupWithParamType>,
-        instantiated_types: &Vec<ParamType>,
-    ) -> Vec<ParamType> {
-        let mut result = Vec::with_capacity(Self::number_of_params(param_defs));
-        for (param_def, param_type) in param_defs.iter().zip(instantiated_types.iter()) {
-            for _ in param_def.params.iter() {
-                result.push(param_type.clone());
-            }
-        }
-        result
-    }
-
     pub fn param_names(&self) -> &Vec<String> {
         &self.params
-    }
-
-    pub fn collect_param_names(param_defs: &Vec<ParamGroupWithParamType>) -> Vec<String> {
-        let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
-        for def in param_defs.iter() {
-            for name in def.param_names().iter() {
-                names.push(name.clone());
-            }
-        }
-        names
-    }
-
-    pub fn param_def_params_to_arg_map(
-        param_defs: &Vec<ParamGroupWithParamType>,
-        arg_map: &HashMap<String, Obj>,
-    ) -> Option<HashMap<String, Obj>> {
-        let param_names = Self::collect_param_names(param_defs);
-        let mut result = HashMap::new();
-        for param_name in param_names.iter() {
-            let objs_option = arg_map.get(param_name);
-            let objs = match objs_option {
-                Some(v) => v,
-                None => return None,
-            };
-            result.insert(param_name.clone(), objs.clone());
-        }
-        Some(result)
-    }
-
-    pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamGroupWithParamType>,
-        args: &Vec<Obj>,
-    ) -> HashMap<String, Obj> {
-        let param_names = Self::collect_param_names(param_defs);
-        if param_names.len() != args.len() {
-            unreachable!();
-        }
-
-        let mut result: HashMap<String, Obj> = HashMap::new();
-        let mut index = 0;
-        while index < param_names.len() {
-            let param_name = &param_names[index];
-            let arg = &args[index];
-            result.insert(param_name.clone(), arg.clone());
-            index += 1;
-        }
-        result
     }
 }
 
@@ -305,11 +225,8 @@ impl ParamGroupWithSet {
     pub fn facts(&self) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
         for name in self.params.iter() {
-            let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(name.clone())),
-                self.set.clone(),
-                default_line_file(),
-            )));
+            let fact =
+                InFact::new(name.clone().into(), self.set.clone(), default_line_file()).into();
             facts.push(fact);
         }
         facts
@@ -328,11 +245,7 @@ impl ParamGroupWithSet {
             Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
         let mut facts = Vec::with_capacity(args.len());
         for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
-            facts.push(AtomicFact::InFact(InFact::new(
-                arg.clone(),
-                param_set.clone(),
-                default_line_file(),
-            )));
+            facts.push(InFact::new(arg.clone(), param_set.clone(), default_line_file()).into());
         }
         Ok(facts)
     }

@@ -18,13 +18,13 @@ impl Runtime {
 
             if is_key_symbol_or_keyword(&fn_name.to_string()) {
                 return match fn_name.to_string().as_str() {
-                    UNION => Ok(Obj::Union(Union::new(left, right))),
-                    INTERSECT => Ok(Obj::Intersect(Intersect::new(left, right))),
-                    SET_MINUS => Ok(Obj::SetMinus(SetMinus::new(left, right))),
-                    SET_DIFF => Ok(Obj::SetDiff(SetDiff::new(left, right))),
-                    RANGE => Ok(Obj::Range(Range::new(left, right))),
-                    CLOSED_RANGE => Ok(Obj::ClosedRange(ClosedRange::new(left, right))),
-                    PROJ => Ok(Obj::Proj(Proj::new(left, right))),
+                    UNION => Ok(Union::new(left, right).into()),
+                    INTERSECT => Ok(Intersect::new(left, right).into()),
+                    SET_MINUS => Ok(SetMinus::new(left, right).into()),
+                    SET_DIFF => Ok(SetDiff::new(left, right).into()),
+                    RANGE => Ok(Range::new(left, right).into()),
+                    CLOSED_RANGE => Ok(ClosedRange::new(left, right).into()),
+                    PROJ => Ok(Proj::new(left, right).into()),
                     _ => Err(
                         RuntimeError::new_parse_error_with_msg_position_previous_error(
                             format!("{} does not support infix function syntax", fn_name),
@@ -37,7 +37,7 @@ impl Runtime {
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
-            Ok(Obj::FnObj(FnObj::new(fn_name, body)))
+            Ok(FnObj::new(fn_name, body).into())
         } else {
             Ok(left)
         }
@@ -54,11 +54,11 @@ impl Runtime {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy2(tb)?;
 
-                left = Obj::Add(Add::new(left, right));
+                left = Add::new(left, right).into();
             } else if tb.current_token_is_equal_to(SUB) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy2(tb)?;
-                left = Obj::Sub(Sub::new(left, right));
+                left = Sub::new(left, right).into();
             } else {
                 return Ok(left);
             }
@@ -75,15 +75,15 @@ impl Runtime {
             if tb.current_token_is_equal_to(MUL) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
-                left = Obj::Mul(Mul::new(left, right));
+                left = Mul::new(left, right).into();
             } else if tb.current_token_is_equal_to(DIV) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
-                left = Obj::Div(Div::new(left, right));
+                left = Div::new(left, right).into();
             } else if tb.current_token_is_equal_to(MOD) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
-                left = Obj::Mod(Mod::new(left, right));
+                left = Mod::new(left, right).into();
             } else {
                 return Ok(left);
             }
@@ -99,7 +99,7 @@ impl Runtime {
         if tb.current_token_is_equal_to(POW) {
             tb.skip()?;
             let right = self.parse_obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
-            Ok(Obj::Pow(Pow::new(left, right)))
+            Ok(Pow::new(left, right).into())
         } else {
             Ok(left)
         }
@@ -115,7 +115,7 @@ impl Runtime {
             tb.skip_token(LEFT_BRACKET)?;
             let obj = self.parse_obj(tb)?;
             tb.skip_token(RIGHT_BRACKET)?;
-            Ok(Obj::ObjAtIndex(ObjAtIndex::new(left, obj)))
+            Ok(ObjAtIndex::new(left, obj).into())
         } else {
             Ok(left)
         }
@@ -127,9 +127,9 @@ impl Runtime {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
-            Ok(Obj::FnSet(self.parse_fn_set(tb)?))
+            Ok(self.parse_fn_set(tb)?.into())
         } else if tb.current_token_is_equal_to(FN_UPPER_CASE) {
-            Ok(Obj::FnSet(self.parse_fn_upper_case_fn_set(tb)?))
+            Ok(self.parse_fn_upper_case_fn_set(tb)?.into())
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
@@ -339,10 +339,7 @@ impl Runtime {
         if tb.current_token_is_equal_to(SUB) {
             tb.skip()?;
             let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
-            Ok(Obj::Mul(Mul::new(
-                Obj::Number(Number::new("-1".to_string())),
-                obj,
-            )))
+            Ok(Mul::new(Number::new("-1".to_string()).into(), obj).into())
         } else {
             self.parse_number_or_primary_obj_or_fn_obj(tb)
         }
@@ -368,7 +365,7 @@ impl Runtime {
                     args.push(self.parse_obj(tb)?);
                 }
                 tb.skip_token(RIGHT_BRACE)?;
-                return Ok(Obj::Tuple(Tuple::new(args)));
+                return Ok(Tuple::new(args).into());
             } else {
                 tb.skip_token(RIGHT_BRACE)?;
                 return Ok(obj);
@@ -389,7 +386,7 @@ impl Runtime {
                         ),
                     );
                 }
-                return Ok(Obj::Number(Number::new(number)));
+                return Ok(Number::new(number).into());
             }
 
             if tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
@@ -405,7 +402,7 @@ impl Runtime {
                         ),
                     );
                 }
-                return Ok(Obj::Number(Number::new(number)));
+                return Ok(Number::new(number).into());
             } else {
                 if !is_number(&number) {
                     return Err(
@@ -416,7 +413,7 @@ impl Runtime {
                         ),
                     );
                 }
-                return Ok(Obj::Number(Number::new(number)));
+                return Ok(Number::new(number).into());
             }
         }
 
@@ -425,13 +422,12 @@ impl Runtime {
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
         let (head_atom, mut body_vectors) = match &result {
-            Obj::Identifier(i) => (Atom::Identifier(i.clone()), vec![]),
-            Obj::IdentifierWithMod(m) => (Atom::IdentifierWithMod(m.clone()), vec![]),
-            Obj::FieldAccess(field_access) => (Atom::FieldAccess(field_access.clone()), vec![]),
-            Obj::FieldAccessWithMod(field_access_with_mod) => (
-                Atom::FieldAccessWithMod(field_access_with_mod.clone()),
-                vec![],
-            ),
+            Obj::Identifier(i) => (i.clone().into(), vec![]),
+            Obj::IdentifierWithMod(m) => (m.clone().into(), vec![]),
+            Obj::FieldAccess(field_access) => (field_access.clone().into(), vec![]),
+            Obj::FieldAccessWithMod(field_access_with_mod) => {
+                (field_access_with_mod.clone().into(), vec![])
+            }
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -440,7 +436,7 @@ impl Runtime {
             body_vectors.push(group);
         }
         if !body_vectors.is_empty() {
-            result = Obj::FnObj(FnObj::new(head_atom, body_vectors));
+            result = FnObj::new(head_atom, body_vectors).into();
         }
         Ok(result)
     }
@@ -452,55 +448,55 @@ impl Runtime {
         // 单符号集合（无参）
         if tok == N_POS {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::NPos));
+            return Ok(StandardSet::NPos.into());
         }
         if tok == N {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::N));
+            return Ok(StandardSet::N.into());
         }
         if tok == Q {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::Q));
+            return Ok(StandardSet::Q.into());
         }
         if tok == Z {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::Z));
+            return Ok(StandardSet::Z.into());
         }
         if tok == R {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::R));
+            return Ok(StandardSet::R.into());
         }
         if tok == Q_POS {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::QPos));
+            return Ok(StandardSet::QPos.into());
         }
         if tok == R_POS {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::RPos));
+            return Ok(StandardSet::RPos.into());
         }
         if tok == Q_NEG {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::QNeg));
+            return Ok(StandardSet::QNeg.into());
         }
         if tok == Z_NEG {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::ZNeg));
+            return Ok(StandardSet::ZNeg.into());
         }
         if tok == R_NEG {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::RNeg));
+            return Ok(StandardSet::RNeg.into());
         }
         if tok == Q_NZ {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::QNz));
+            return Ok(StandardSet::QNz.into());
         }
         if tok == Z_NZ {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::ZNz));
+            return Ok(StandardSet::ZNz.into());
         }
         if tok == R_NZ {
             tb.skip()?;
-            return Ok(Obj::StandardSet(StandardSet::RNz));
+            return Ok(StandardSet::RNz.into());
         }
 
         if tok == FAMILY {
@@ -540,7 +536,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Union(Union::new(left, right)));
+            return Ok(Union::new(left, right).into());
         }
         if tok == INTERSECT {
             tb.skip()?;
@@ -569,7 +565,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Intersect(Intersect::new(left, right)));
+            return Ok(Intersect::new(left, right).into());
         }
         if tok == SET_MINUS {
             tb.skip()?;
@@ -598,7 +594,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::SetMinus(SetMinus::new(left, right)));
+            return Ok(SetMinus::new(left, right).into());
         }
         if tok == SET_DIFF {
             tb.skip()?;
@@ -627,7 +623,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::SetDiff(SetDiff::new(left, right)));
+            return Ok(SetDiff::new(left, right).into());
         }
         if tok == CAP {
             tb.skip()?;
@@ -649,7 +645,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Cap(Cap::new(value)));
+            return Ok(Cap::new(value).into());
         }
         if tok == CUP {
             tb.skip()?;
@@ -671,7 +667,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Cup(Cup::new(value)));
+            return Ok(Cup::new(value).into());
         }
         if tok == CHOOSE {
             tb.skip()?;
@@ -693,7 +689,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Choose(Choose::new(value)));
+            return Ok(Choose::new(value).into());
         }
         if tok == PROJ {
             tb.skip()?;
@@ -722,7 +718,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Proj(Proj::new(left, right)));
+            return Ok(Proj::new(left, right).into());
         }
         if tok == RANGE {
             tb.skip()?;
@@ -751,7 +747,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Range(Range::new(left, right)));
+            return Ok(Range::new(left, right).into());
         }
         if tok == CLOSED_RANGE {
             tb.skip()?;
@@ -780,7 +776,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::ClosedRange(ClosedRange::new(left, right)));
+            return Ok(ClosedRange::new(left, right).into());
         }
 
         if tok == CUP {
@@ -803,7 +799,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Cup(Cup::new(value)));
+            return Ok(Cup::new(value).into());
         }
         if tok == POWER_SET {
             tb.skip()?;
@@ -825,7 +821,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::PowerSet(PowerSet::new(value)));
+            return Ok(PowerSet::new(value).into());
         }
         if tok == CART_DIM {
             tb.skip()?;
@@ -847,7 +843,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::CartDim(CartDim::new(value)));
+            return Ok(CartDim::new(value).into());
         }
         if tok == COUNT {
             tb.skip()?;
@@ -869,7 +865,7 @@ impl Runtime {
                     None,
                 )
             })?;
-            return Ok(Obj::Count(Count::new(value)));
+            return Ok(Count::new(value).into());
         }
         if tok == CART {
             tb.skip()?;
@@ -883,24 +879,24 @@ impl Runtime {
                     ),
                 );
             }
-            return Ok(Obj::Cart(Cart::new(args)));
+            return Ok(Cart::new(args).into());
         }
 
         if tok == TUPLE_DIM {
             tb.skip()?;
             let args = self.parse_braced_obj(tb)?;
-            return Ok(Obj::TupleDim(TupleDim::new(args)));
+            return Ok(TupleDim::new(args).into());
         }
 
         if tok == CART_DIM {
             tb.skip()?;
             let args = self.parse_braced_obj(tb)?;
-            return Ok(Obj::CartDim(CartDim::new(args)));
+            return Ok(CartDim::new(args).into());
         }
 
         // 普通 atom（标识符）
         let atom = self.parse_atom(tb)?;
-        return Ok(Obj::from(atom));
+        return Ok(atom.into());
     }
 
     pub fn parse_braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
@@ -943,14 +939,14 @@ impl Runtime {
         tb.skip_token(LEFT_CURLY_BRACE)?;
         if tb.current_token_is_equal_to(RIGHT_CURLY_BRACE) {
             tb.skip_token(RIGHT_CURLY_BRACE)?;
-            return Ok(Obj::ListSet(ListSet::new(vec![])));
+            return Ok(ListSet::new(vec![]).into());
         }
 
         let left = self.parse_obj(tb)?;
         match left {
             Obj::Identifier(a) => {
                 if tb.current_token_is_equal_to(COMMA) || tb.current()? == RIGHT_CURLY_BRACE {
-                    self.parse_list_set_obj_with_leftmost_obj(tb, Obj::Identifier(a))
+                    self.parse_list_set_obj_with_leftmost_obj(tb, a.into())
                 } else {
                     self.parse_set_builder(tb, a)
                 }
@@ -984,11 +980,7 @@ impl Runtime {
                 }
                 tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-                Ok(Obj::SetBuilder(SetBuilder::new(
-                    stored,
-                    second_inst,
-                    facts_inst,
-                )))
+                Ok(SetBuilder::new(stored, second_inst, facts_inst).into())
             } else {
                 Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -1015,7 +1007,7 @@ impl Runtime {
             objs.push(self.parse_obj(tb)?);
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
-        Ok(Obj::ListSet(ListSet::new(objs)))
+        Ok(ListSet::new(objs).into())
     }
 
     pub fn parse_list_set_obj(&mut self, tb: &mut TokenBlock) -> Result<ListSet, RuntimeError> {
@@ -1050,11 +1042,9 @@ impl Runtime {
                     );
                 }
 
-                Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(
-                    left, right, field,
-                )))
+                Ok(FieldAccessWithMod::new(left, right, field).into())
             } else {
-                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(left, right)))
+                Ok(IdentifierWithMod::new(left, right).into())
             }
         } else {
             // 如果后面有 .，则解析为 FieldAccess
@@ -1071,9 +1061,9 @@ impl Runtime {
                         ),
                     );
                 }
-                Ok(Atom::FieldAccess(FieldAccess::new(left, field)))
+                Ok(FieldAccess::new(left, field).into())
             } else {
-                Ok(Atom::Identifier(Identifier::new(left)))
+                Ok(Identifier::new(left).into())
             }
         }
     }

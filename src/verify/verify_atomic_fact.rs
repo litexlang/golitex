@@ -7,7 +7,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&Fact::AtomicFact(fact.clone()))
+            self.verify_fact_from_cache_using_display_string(&fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -16,10 +16,10 @@ impl Runtime {
             if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
                 return Err(
                     RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::AtomicFact(fact.clone()),
+                        fact.clone().into(),
                         String::new(),
                         fact.line_file(),
-                        Some(e.into()),
+                        Some(e),
                     ),
                 );
             }

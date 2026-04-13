@@ -14,7 +14,7 @@ impl Runtime {
                 if let Some(t) = self.get_obj_equal_to_tuple(&stmt.obj.to_string()) {
                     t
                 } else {
-                    return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             stmt_exec,
                             format!("by tuple: `{}` is not known to denote a tuple", stmt.obj),
                             None,
@@ -27,16 +27,16 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
         self.verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!("by tuple: `{}` is not well-defined", stmt.obj),
-                    Some(e.into()),
+                    Some(e),
                     vec![],
                 ))
             })?;
 
         let encoded = kuratowski_encode_tuple_boxes(&tuple_struct.args).map_err(|msg| {
-            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt_exec.clone(),
                 format!("by tuple: {}", msg),
                 None,
@@ -44,11 +44,11 @@ impl Runtime {
             ))
         })?;
 
-        let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        let equal_fact = EqualFact::new(
             stmt.obj.clone(),
             encoded,
             stmt.line_file.clone(),
-        )));
+        ).into();
 
         match self.store_fact_without_well_defined_verified_and_infer(equal_fact) {
             Ok(infer_result) => {
@@ -60,11 +60,11 @@ impl Runtime {
                 );
                 Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())
             }
-            Err(store_error) => Err(RuntimeError::from(
+            Err(store_error) => Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec,
                     "by tuple: failed to store definitional equality".to_string(),
-                    Some(store_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_error)),
                     vec![],
                 ),
             )),

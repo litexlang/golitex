@@ -62,7 +62,7 @@ impl Runtime {
 
     fn infer_forall_fact(&mut self, forall_fact: &ForallFact) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
-        infer_result.new_fact(&Fact::ForallFact(forall_fact.clone()));
+        infer_result.new_fact(&forall_fact.clone().into());
         Ok(infer_result)
     }
 
@@ -71,7 +71,7 @@ impl Runtime {
         forall_fact_with_iff: &ForallFactWithIff,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
-        infer_result.new_fact(&Fact::ForallFactWithIff(forall_fact_with_iff.clone()));
+        infer_result.new_fact(&forall_fact_with_iff.clone().into());
         Ok(infer_result)
     }
 }

@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         stmt: &ImportStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
+        return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
             stmt.clone().into(),
             "".to_string(),
             None,
@@ -28,7 +28,7 @@ impl Runtime {
         &mut self,
         stmt: &RunFileStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
+        return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
             stmt.clone().into(),
             "".to_string(),
             None,

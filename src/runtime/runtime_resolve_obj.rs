@@ -14,75 +14,63 @@ impl Runtime {
 
     pub fn resolve_obj(&self, obj: &Obj) -> Obj {
         match obj {
-            Obj::Number(number) => Obj::Number(number.clone()),
+            Obj::Number(number) => number.clone().into(),
             Obj::Add(add) => {
-                let result = Obj::Add(Add::new(
-                    self.resolve_obj(&add.left),
-                    self.resolve_obj(&add.right),
-                ));
+                let result: Obj = Add::new(self.resolve_obj(&add.left),
+                    self.resolve_obj(&add.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
             }
             Obj::Sub(sub) => {
-                let result = Obj::Sub(Sub::new(
-                    self.resolve_obj(&sub.left),
-                    self.resolve_obj(&sub.right),
-                ));
+                let result: Obj = Sub::new(self.resolve_obj(&sub.left),
+                    self.resolve_obj(&sub.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
             }
             Obj::Mul(mul) => {
-                let result = Obj::Mul(Mul::new(
-                    self.resolve_obj(&mul.left),
-                    self.resolve_obj(&mul.right),
-                ));
+                let result: Obj = Mul::new(self.resolve_obj(&mul.left),
+                    self.resolve_obj(&mul.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
             }
             Obj::Mod(mod_obj) => {
-                let result = Obj::Mod(Mod::new(
-                    self.resolve_obj(&mod_obj.left),
-                    self.resolve_obj(&mod_obj.right),
-                ));
+                let result: Obj = Mod::new(self.resolve_obj(&mod_obj.left),
+                    self.resolve_obj(&mod_obj.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
             }
             Obj::Pow(pow) => {
-                let result = Obj::Pow(Pow::new(
-                    self.resolve_obj(&pow.base),
-                    self.resolve_obj(&pow.exponent),
-                ));
+                let result: Obj = Pow::new(self.resolve_obj(&pow.base),
+                    self.resolve_obj(&pow.exponent)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
             }
             Obj::Div(div) => {
-                let result = Obj::Div(Div::new(
-                    self.resolve_obj(&div.left),
-                    self.resolve_obj(&div.right),
-                ));
+                let result: Obj = Div::new(self.resolve_obj(&div.left),
+                    self.resolve_obj(&div.right)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
+                    calculated_result.into()
                 } else {
                     result
                 }
@@ -93,21 +81,21 @@ impl Runtime {
             | Obj::FieldAccessWithMod(_)
             | Obj::FnObj(_) => {
                 if let Some(number) = self.resolve_obj_to_number(obj) {
-                    Obj::Number(number)
+                    number.into()
                 } else {
                     obj.clone()
                 }
             }
             Obj::Count(count) => match &*count.set {
-                Obj::ListSet(list_set) => Obj::Number(Number::new(list_set.list.len().to_string())),
+                Obj::ListSet(list_set) => Number::new(list_set.list.len().to_string()).into(),
                 _ => obj.clone(),
             },
             Obj::TupleDim(dim) => match &*dim.arg {
-                Obj::Tuple(tuple) => Obj::Number(Number::new(tuple.args.len().to_string())),
+                Obj::Tuple(tuple) => Number::new(tuple.args.len().to_string()).into(),
                 _ => obj.clone(),
             },
             Obj::CartDim(cart_dim) => match &*cart_dim.set {
-                Obj::Cart(cart) => Obj::Number(Number::new(cart.args.len().to_string())),
+                Obj::Cart(cart) => Number::new(cart.args.len().to_string()).into(),
                 _ => obj.clone(),
             },
             Obj::Proj(proj) => match &*proj.set {

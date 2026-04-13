@@ -1,14 +1,14 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
-pub(crate) enum NumberCompareResult {
+pub enum NumberCompareResult {
     Less,
     Equal,
     Greater,
 }
 
 /// Compare a normalized decimal string (same shape as [`Number::normalized_value`]) to `"0"`.
-pub(crate) fn compare_normalized_number_str_to_zero(number_value: &str) -> NumberCompareResult {
+pub fn compare_normalized_number_str_to_zero(number_value: &str) -> NumberCompareResult {
     compare_number_strings(number_value.trim(), "0")
 }
 
@@ -127,7 +127,7 @@ fn compare_non_negative_decimal_parts(
     NumberCompareResult::Equal
 }
 
-pub(crate) fn compare_number_strings(
+pub fn compare_number_strings(
     left_number_value: &str,
     right_number_value: &str,
 ) -> NumberCompareResult {
@@ -169,7 +169,7 @@ pub(crate) fn compare_number_strings(
 }
 
 impl Runtime {
-    pub(crate) fn verify_order_atomic_fact_numeric_builtin_only(
+    pub fn verify_order_atomic_fact_numeric_builtin_only(
         &self,
         atomic_fact: &AtomicFact,
     ) -> StmtResult {
@@ -177,23 +177,24 @@ impl Runtime {
             if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
                 return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
+                        less_equal_fact.clone().into(),
                         "less_equal_fact_equal".to_string(),
                         Vec::new(),
                     ),
                 );
             }
-            let strict_fact = Fact::AtomicFact(AtomicFact::LessFact(LessFact::new(
+            let strict_fact: Fact = LessFact::new(
                 less_equal_fact.left.clone(),
                 less_equal_fact.right.clone(),
                 less_equal_fact.line_file.clone(),
-            )));
+            )
+            .into();
             let strict_key = strict_fact.to_string();
             let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&strict_key);
             if cache_ok {
                 return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        Fact::AtomicFact(AtomicFact::LessEqualFact(less_equal_fact.clone())),
+                        less_equal_fact.clone().into(),
                         strict_key,
                         Some(strict_fact),
                         Some(cache_line_file),
@@ -206,7 +207,7 @@ impl Runtime {
             if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
                 return StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        Fact::AtomicFact(AtomicFact::GreaterEqualFact(greater_equal_fact.clone())),
+                        greater_equal_fact.clone().into(),
                         "greater_equal_fact_equal".to_string(),
                         Vec::new(),
                     ),
@@ -216,7 +217,7 @@ impl Runtime {
         if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
             StmtResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(atomic_fact.clone()),
+                    atomic_fact.clone().into(),
                     "number comparison".to_string(),
                     Vec::new(),
                 ),

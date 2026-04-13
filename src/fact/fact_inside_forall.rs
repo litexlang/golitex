@@ -42,4 +42,97 @@ impl ExistOrAndChainAtomicFact {
             ExistOrAndChainAtomicFact::ExistFact(exist_fact) => exist_fact.line_file(),
         }
     }
+
+    pub fn with_new_line_file(self, line_file: LineFile) -> Self {
+        match self {
+            ExistOrAndChainAtomicFact::AtomicFact(a) => {
+                ExistOrAndChainAtomicFact::AtomicFact(a.with_new_line_file(line_file))
+            }
+            ExistOrAndChainAtomicFact::AndFact(af) => {
+                ExistOrAndChainAtomicFact::AndFact(AndFact::new(
+                    af.facts
+                        .into_iter()
+                        .map(|x| x.with_new_line_file(line_file.clone()))
+                        .collect(),
+                    line_file,
+                ))
+            }
+            ExistOrAndChainAtomicFact::ChainFact(cf) => {
+                ExistOrAndChainAtomicFact::ChainFact(ChainFact::new(cf.objs, cf.prop_names, line_file))
+            }
+            ExistOrAndChainAtomicFact::OrFact(of) => {
+                ExistOrAndChainAtomicFact::OrFact(OrFact::new(
+                    of.facts
+                        .into_iter()
+                        .map(|x| x.with_new_line_file(line_file.clone()))
+                        .collect(),
+                    line_file,
+                ))
+            }
+            ExistOrAndChainAtomicFact::ExistFact(e) => {
+                ExistOrAndChainAtomicFact::ExistFact(ExistFact::new(
+                    e.params_def_with_type,
+                    e.facts
+                        .into_iter()
+                        .map(|x| x.with_new_line_file(line_file.clone()))
+                        .collect(),
+                    line_file,
+                ))
+            }
+        }
+    }
+}
+
+impl From<AtomicFact> for ExistOrAndChainAtomicFact {
+    fn from(atomic_fact: AtomicFact) -> Self {
+        ExistOrAndChainAtomicFact::AtomicFact(atomic_fact)
+    }
+}
+
+impl From<GreaterEqualFact> for ExistOrAndChainAtomicFact {
+    fn from(f: GreaterEqualFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
+impl From<IsNonemptySetFact> for ExistOrAndChainAtomicFact {
+    fn from(f: IsNonemptySetFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
+impl From<EqualFact> for ExistOrAndChainAtomicFact {
+    fn from(f: EqualFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
+impl From<InFact> for ExistOrAndChainAtomicFact {
+    fn from(f: InFact) -> Self {
+        ExistOrAndChainAtomicFact::AtomicFact(f.into())
+    }
+}
+
+impl From<ExistFact> for ExistOrAndChainAtomicFact {
+    fn from(exist_fact: ExistFact) -> Self {
+        ExistOrAndChainAtomicFact::ExistFact(exist_fact)
+    }
+}
+
+impl From<AndFact> for ExistOrAndChainAtomicFact {
+    fn from(a: AndFact) -> Self {
+        ExistOrAndChainAtomicFact::AndFact(a)
+    }
+}
+
+impl From<ChainFact> for ExistOrAndChainAtomicFact {
+    fn from(c: ChainFact) -> Self {
+        ExistOrAndChainAtomicFact::ChainFact(c)
+    }
+}
+
+impl From<OrFact> for ExistOrAndChainAtomicFact {
+    fn from(o: OrFact) -> Self {
+        ExistOrAndChainAtomicFact::OrFact(o)
+    }
 }

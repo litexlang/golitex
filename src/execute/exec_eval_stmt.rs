@@ -53,7 +53,7 @@ impl Runtime {
                     continue;
                 }
                 Obj::Number(acc_num) => {
-                    let mut acc = Obj::Number(acc_num);
+                    let mut acc: Obj = acc_num.into();
                     while let Some(pend) = pending.pop() {
                         let (combine_op, right_obj) = match pend {
                             PendingRight::Add(o) => (BinaryCombineOp::Add, o),
@@ -72,7 +72,7 @@ impl Runtime {
                     if pending.is_empty() {
                         return Ok(cur);
                     }
-                    return Err(RuntimeError::from(
+                    return Err(RuntimeError::ExecStmtError(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             eval_stmt.clone().into(),
                             "eval: non-numeric intermediate with pending binary operation"
@@ -93,16 +93,16 @@ impl Runtime {
         combine_op: BinaryCombineOp,
         eval_stmt: &EvalStmt,
     ) -> Result<Obj, RuntimeError> {
-        let combined = match combine_op {
-            BinaryCombineOp::Add => Obj::Add(crate::obj::Add::new(left, right)),
-            BinaryCombineOp::Sub => Obj::Sub(crate::obj::Sub::new(left, right)),
-            BinaryCombineOp::Mul => Obj::Mul(crate::obj::Mul::new(left, right)),
-            BinaryCombineOp::Div => Obj::Div(crate::obj::Div::new(left, right)),
+        let combined: Obj = match combine_op {
+            BinaryCombineOp::Add => Add::new(left, right).into(),
+            BinaryCombineOp::Sub => Sub::new(left, right).into(),
+            BinaryCombineOp::Mul => Mul::new(left, right).into(),
+            BinaryCombineOp::Div => Div::new(left, right).into(),
         };
         let calculated = combined.evaluate_to_normalized_decimal_number();
         match calculated {
-            Some(number) => Ok(Obj::Number(number)),
-            None => Err(RuntimeError::from(
+            Some(number) => Ok(number.into()),
+            None => Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     eval_stmt.clone().into(),
                     "eval: failed to combine numeric sub-expression".to_string(),
@@ -139,10 +139,10 @@ impl Runtime {
                     self.evaluate_symbol_obj_iterative((**arg).clone(), eval_stmt)?;
                 match evaluated_arg_obj {
                     Obj::Number(number) => {
-                        flattened_number_args.push(Obj::Number(number));
+                        flattened_number_args.push(number.into());
                     }
                     _ => {
-                        return Err(RuntimeError::from(
+                        return Err(RuntimeError::ExecStmtError(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 eval_stmt.clone().into(),
                                 "eval: function arguments must evaluate to Number".to_string(),
@@ -158,7 +158,7 @@ impl Runtime {
         let algo_definition = match self.get_algo_definition_by_name(&fn_name) {
             Some(definition) => definition.clone(),
             None => {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         eval_stmt.clone().into(),
                         format!("eval: algorithm `{}` is not defined", fn_name),
@@ -170,7 +170,7 @@ impl Runtime {
         };
 
         if flattened_number_args.len() != algo_definition.params.len() {
-            return Err(RuntimeError::from(
+            return Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     eval_stmt.clone().into(),
                     format!(
@@ -199,7 +199,7 @@ impl Runtime {
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             eval_stmt.clone().into(),
                             "eval: failed to verify case condition".to_string(),
                             Some(verify_error),
@@ -215,7 +215,7 @@ impl Runtime {
                 let verify_reversed_result = self
                     .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
-                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 eval_stmt.clone().into(),
                                 "eval: failed to verify reversed case condition".to_string(),
                                 Some(verify_error),
@@ -223,7 +223,7 @@ impl Runtime {
                             ))
                     })?;
                 if verify_reversed_result.is_unknown() {
-                    return Err(RuntimeError::from(
+                    return Err(RuntimeError::ExecStmtError(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             eval_stmt.clone().into(),
                             format!(
@@ -241,7 +241,7 @@ impl Runtime {
         if let Some(default_return_stmt) = &algo_definition.default_return {
             self.inst_obj(&default_return_stmt.value, &param_to_arg_map)
         } else {
-            Err(RuntimeError::from(
+            Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     eval_stmt.clone().into(),
                     "eval: no case matched and no default return".to_string(),
@@ -259,7 +259,7 @@ impl Runtime {
         )?;
 
         if !matches!(stmt.obj_to_eval, Obj::FnObj(_)) {
-            return Err(RuntimeError::from(
+            return Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     "eval: obj_to_eval must be a fnObj".to_string(),
@@ -274,15 +274,16 @@ impl Runtime {
         });
 
         let evaluated_obj = eval_result?;
-        let evaluated_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        let evaluated_equal_fact = EqualFact::new(
             stmt.obj_to_eval.clone(),
             evaluated_obj,
             stmt.line_file.clone(),
-        )));
+        ).into();
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&evaluated_equal_fact);
-        self.store_fact_without_well_defined_verified_and_infer(evaluated_equal_fact)?;
+        self.store_fact_without_well_defined_verified_and_infer(evaluated_equal_fact)
+            .map_err(RuntimeError::ExecStmtError)?;
 
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }

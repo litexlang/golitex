@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 impl Runtime {
     /// Resolve a family application to the `equal_to` object after substituting type arguments.
-    pub(crate) fn instantiate_family_member_set(
+    pub fn instantiate_family_member_set(
         &mut self,
         family_ty: &FamilyObj,
     ) -> Result<Obj, RuntimeError> {
@@ -12,7 +12,7 @@ impl Runtime {
             Some(d) => d,
             None => {
                 return Err(
-                    RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                         format!("family `{}` is not defined", family_name),
                         default_line_file(),
                         None,
@@ -22,10 +22,10 @@ impl Runtime {
                 );
             }
         };
-        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
             return Err(
-                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                     format!(
                         "family `{}` expects {} type argument(s), got {}",
                         family_name,
@@ -39,31 +39,30 @@ impl Runtime {
                 .into(),
             );
         }
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
-            &family_ty.params,
-        );
+        let param_to_arg_map = def
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
         self.inst_obj(&def.equal_to, &param_to_arg_map)
     }
 
     /// 参数声明为 `ParamType::Obj(Obj::FamilyObj(...))` 时：存储 `name ∈` 实例化后的 member set，并走 infer。
-    pub(crate) fn infer_membership_in_family_for_param_binding(
+    pub fn infer_membership_in_family_for_param_binding(
         &mut self,
         name: &str,
         family_ty: &FamilyObj,
     ) -> Result<InferResult, RuntimeError> {
         let member_set = self.instantiate_family_member_set(family_ty)?;
-        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
+        let type_fact = InFact::new(
+            name.to_string().into(),
             member_set,
             default_line_file(),
-        )));
+        ).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     /// [`InFact`] 右侧为 `FamilyObj` 时：先实例化为具体 member set，再对 `element ∈ member_set` 做 membership infer。
-    pub(crate) fn infer_membership_in_family_from_in_fact(
+    pub fn infer_membership_in_family_from_in_fact(
         &mut self,
         in_fact: &InFact,
         family_obj: &FamilyObj,
@@ -78,7 +77,7 @@ impl Runtime {
     }
 
     /// [`InFact`] 右侧为函数空间时：登记 `known_objs_in_fn_sets`（与 satisfy/store 路径可共用此副作用）。
-    pub(crate) fn infer_membership_in_fn_set_from_in_fact(
+    pub fn infer_membership_in_fn_set_from_in_fact(
         &mut self,
         in_fact: &InFact,
         fn_set_with_dom: &FnSet,
@@ -101,12 +100,12 @@ impl Runtime {
             .insert(key, fn_set_with_dom.clone());
 
         let mut infer_result = InferResult::new();
-        infer_result.new_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())));
+        infer_result.new_fact(&in_fact.clone().into());
         Ok(infer_result)
     }
 
     /// [`InFact`] 右侧为内涵集时：推出 `element ∈ param_set` 及实例化后的约束事实。
-    pub(crate) fn infer_membership_in_set_builder_from_in_fact(
+    pub fn infer_membership_in_set_builder_from_in_fact(
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,
@@ -114,11 +113,11 @@ impl Runtime {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         param_to_arg_map.insert(set_builder.param.clone(), in_fact.element.clone());
 
-        let element_in_param_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+        let element_in_param_set_fact = InFact::new(
             in_fact.element.clone(),
             *set_builder.param_set.clone(),
             in_fact.line_file.clone(),
-        )));
+        ).into();
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&element_in_param_set_fact);
@@ -130,7 +129,7 @@ impl Runtime {
                         in_fact
                     ),
                     in_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
 
@@ -160,7 +159,7 @@ impl Runtime {
                             in_fact
                         ),
                         in_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
         }
@@ -186,15 +185,15 @@ impl Runtime {
                 let mut or_case_facts: Vec<AndChainAtomicFact> =
                     Vec::with_capacity(list_set.list.len());
                 for obj_in_list_set in list_set.list.iter() {
-                    let equal_fact = AtomicFact::EqualFact(EqualFact::new(
+                    let equal_fact = EqualFact::new(
                         in_fact.element.clone(),
                         *obj_in_list_set.clone(),
                         in_fact.line_file.clone(),
-                    ));
+                    ).into();
                     or_case_facts.push(AndChainAtomicFact::AtomicFact(equal_fact));
                 }
 
-                let or_fact = Fact::OrFact(OrFact::new(or_case_facts, in_fact.line_file.clone()));
+                let or_fact = OrFact::new(or_case_facts, in_fact.line_file.clone()).into();
                 let mut infer_result = InferResult::new();
                 infer_result.new_fact(&or_fact);
                 self.store_fact_without_well_defined_verified_and_infer(or_fact)
@@ -205,7 +204,7 @@ impl Runtime {
                                 in_fact
                             ),
                             in_fact.line_file.clone(),
-                            Some(previous_error.into()),
+                            Some(RuntimeError::ExecStmtError(previous_error)),
                         )
                     })?;
                 Ok(infer_result)
@@ -219,10 +218,10 @@ impl Runtime {
                 }
                 let mut infer_result = InferResult::new();
 
-                let is_cart_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact::new(
+                let is_cart_fact = IsTupleFact::new(
                     in_fact.element.clone(),
                     in_fact.line_file.clone(),
-                )));
+                ).into();
 
                 infer_result.new_fact(&is_cart_fact);
                 self.store_fact_without_well_defined_verified_and_infer(is_cart_fact)
@@ -233,18 +232,18 @@ impl Runtime {
                                 in_fact
                             ),
                             in_fact.line_file.clone(),
-                            Some(previous_error.into()),
+                            Some(RuntimeError::ExecStmtError(previous_error)),
                         )
                     })?;
 
                 let cart_args_count = cart.args.len();
-                let tuple_dim_obj = Obj::TupleDim(TupleDim::new(in_fact.element.clone()));
-                let cart_args_count_obj = Obj::Number(Number::new(cart_args_count.to_string()));
-                let tuple_dim_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                let tuple_dim_obj = TupleDim::new(in_fact.element.clone()).into();
+                let cart_args_count_obj = Number::new(cart_args_count.to_string()).into();
+                let tuple_dim_fact = EqualFact::new(
                     tuple_dim_obj,
                     cart_args_count_obj,
                     in_fact.line_file.clone(),
-                )));
+                ).into();
 
                 infer_result.new_fact(&tuple_dim_fact);
                 self.store_fact_without_well_defined_verified_and_infer(tuple_dim_fact)
@@ -255,7 +254,7 @@ impl Runtime {
                                 in_fact
                             ),
                             in_fact.line_file.clone(),
-                            Some(previous_error.into()),
+                            Some(RuntimeError::ExecStmtError(previous_error)),
                         )
                     })?;
 
@@ -281,12 +280,12 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::RPos)
             | Obj::StandardSet(StandardSet::NPos) => {
-                let zero_obj = Obj::Number(Number::new("0".to_string()));
-                let inferred_atomic_fact = AtomicFact::LessFact(LessFact::new(
+                let zero_obj: Obj = Number::new("0".to_string()).into();
+                let inferred_atomic_fact = LessFact::new(
                     zero_obj,
                     in_fact.element.clone(),
                     in_fact.line_file.clone(),
-                ));
+                ).into();
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
@@ -299,7 +298,7 @@ impl Runtime {
                             in_fact
                         ),
                         in_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
                 Ok(infer_result)
@@ -307,12 +306,12 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNeg)
             | Obj::StandardSet(StandardSet::ZNeg)
             | Obj::StandardSet(StandardSet::RNeg) => {
-                let zero_obj = Obj::Number(Number::new("0".to_string()));
-                let inferred_atomic_fact = AtomicFact::LessFact(LessFact::new(
+                let zero_obj: Obj = Number::new("0".to_string()).into();
+                let inferred_atomic_fact = LessFact::new(
                     in_fact.element.clone(),
                     zero_obj,
                     in_fact.line_file.clone(),
-                ));
+                ).into();
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
@@ -325,7 +324,7 @@ impl Runtime {
                             in_fact
                         ),
                         in_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
                 Ok(infer_result)
@@ -333,12 +332,12 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNz)
             | Obj::StandardSet(StandardSet::ZNz)
             | Obj::StandardSet(StandardSet::RNz) => {
-                let zero_obj = Obj::Number(Number::new("0".to_string()));
-                let inferred_atomic_fact = AtomicFact::NotEqualFact(NotEqualFact::new(
+                let zero_obj: Obj = Number::new("0".to_string()).into();
+                let inferred_atomic_fact = NotEqualFact::new(
                     in_fact.element.clone(),
                     zero_obj,
                     in_fact.line_file.clone(),
-                ));
+                ).into();
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
@@ -351,7 +350,7 @@ impl Runtime {
                             in_fact
                         ),
                         in_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
                 Ok(infer_result)
@@ -378,11 +377,11 @@ impl Runtime {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
 
-        let inferred_in_z_fact = AtomicFact::InFact(InFact::new(
+        let inferred_in_z_fact = InFact::new(
             element.clone(),
-            Obj::StandardSet(StandardSet::Z),
+            StandardSet::Z.into(),
             lf.clone(),
-        ));
+        ).into();
         let mut infer_result = InferResult::new();
         infer_result.push_atomic_fact(&inferred_in_z_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer(
@@ -395,15 +394,15 @@ impl Runtime {
                     in_fact
                 ),
                 in_fact.line_file.clone(),
-                Some(previous_error.into()),
+                Some(RuntimeError::ExecStmtError(previous_error)),
             )
         })?;
 
-        let lower_bound = AtomicFact::LessEqualFact(LessEqualFact::new(
+        let lower_bound = LessEqualFact::new(
             start,
             element.clone(),
             lf.clone(),
-        ));
+        ).into();
         infer_result.push_atomic_fact(&lower_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound.clone())
             .map_err(|previous_error| {
@@ -413,14 +412,14 @@ impl Runtime {
                         in_fact
                     ),
                     in_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
 
         let upper_bound = if end_inclusive {
-            AtomicFact::LessEqualFact(LessEqualFact::new(element, end, lf.clone()))
+            LessEqualFact::new(element, end, lf.clone()).into()
         } else {
-            AtomicFact::LessFact(LessFact::new(element, end, lf.clone()))
+            LessFact::new(element, end, lf.clone()).into()
         };
         infer_result.push_atomic_fact(&upper_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer(upper_bound.clone())
@@ -431,7 +430,7 @@ impl Runtime {
                         in_fact
                     ),
                     in_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
 

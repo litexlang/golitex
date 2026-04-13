@@ -3,7 +3,7 @@ mod tokenizer;
 pub use token_block::TokenBlock;
 
 #[cfg(test)]
-pub(crate) use tokenizer::tokenize_line;
+pub use tokenizer::tokenize_line;
 
 mod by_stmt;
 mod parse_claim_stmt;

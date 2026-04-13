@@ -506,6 +506,11 @@ fn build_display_error_json_object(
                 JSON_KEY_MESSAGE,
                 json_string_literal(&e.msg)
             ));
+            push_optional_statement_json_field_lines(
+                &mut field_lines,
+                indent_inner.as_str(),
+                &e.statement,
+            );
         }
         RuntimeError::InferError(e) => {
             field_lines.push(format!(

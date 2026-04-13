@@ -18,11 +18,12 @@ impl Runtime {
     ) -> Result<Fact, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(FORALL)?;
-            let mut param_def: Vec<ParamGroupWithParamType> = vec![];
+            let mut groups: Vec<ParamGroupWithParamType> = vec![];
             while tb.current()? != COLON {
-                param_def.push(this.parse_param_def_with_param_type_and_skip_comma(tb)?);
+                groups.push(this.parse_param_def_with_param_type_and_skip_comma(tb)?);
             }
-            let forall_param_names = ParamGroupWithParamType::collect_param_names(&param_def);
+            let param_def = ParamDefWithType::new(groups);
+            let forall_param_names = param_def.collect_param_names();
             this.register_collected_param_names_for_def_parse(
                 &forall_param_names,
                 tb.line_file.clone(),
@@ -47,7 +48,7 @@ impl Runtime {
     fn parse_forall_with_iff(
         &mut self,
         tb: &mut TokenBlock,
-        param_def: Vec<ParamGroupWithParamType>,
+        param_def: ParamDefWithType,
     ) -> Result<Fact, RuntimeError> {
         if tb.body.len() < 2 {
             return Err(
@@ -95,17 +96,18 @@ impl Runtime {
 
         let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone());
 
-        Ok(Fact::ForallFactWithIff(ForallFactWithIff::new(
+        Ok(ForallFactWithIff::new(
             forall_fact,
             iff_facts,
             tb.line_file.clone(),
-        )))
+        )
+        .into())
     }
 
     fn parse_forall(
         &mut self,
         tb: &mut TokenBlock,
-        param_def: Vec<ParamGroupWithParamType>,
+        param_def: ParamDefWithType,
     ) -> Result<Fact, RuntimeError> {
         let last_body = tb.body.last().ok_or_else(|| {
             RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -132,23 +134,25 @@ impl Runtime {
             for block in last.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(Fact::ForallFact(ForallFact::new(
+            Ok(ForallFact::new(
                 param_def,
                 dom_facts,
                 then_facts,
                 tb.line_file.clone(),
-            )))
+            )
+            .into())
         } else {
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(Fact::ForallFact(ForallFact::new(
+            Ok(ForallFact::new(
                 param_def,
                 vec![],
                 then_facts,
                 tb.line_file.clone(),
-            )))
+            )
+            .into())
         }
     }
 
@@ -183,11 +187,12 @@ impl Runtime {
     pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(EXIST)?;
-            let mut param_def: Vec<ParamGroupWithParamType> = vec![];
+            let mut groups: Vec<ParamGroupWithParamType> = vec![];
             while tb.current()? != ST {
-                param_def.push(this.parse_param_def_with_param_type_and_skip_comma(tb)?);
+                groups.push(this.parse_param_def_with_param_type_and_skip_comma(tb)?);
             }
-            let exist_param_names = ParamGroupWithParamType::collect_param_names(&param_def);
+            let param_def = ParamDefWithType::new(groups);
+            let exist_param_names = param_def.collect_param_names();
             this.run_in_local_parsing_time_name_scope(move |inner| {
                 inner.register_collected_param_names_for_def_parse(
                     &exist_param_names,
@@ -235,11 +240,9 @@ impl Runtime {
                 tb.skip_token(NOT)?;
                 Ok(self
                     .parse_atomic_fact(tb, false)
-                    .map(|a| ExistOrAndChainAtomicFact::AtomicFact(a))?)
+                    .map(|a| a.into())?)
             }
-            _ => Ok(self
-                .parse_or_and_chain_atomic_fact(tb)?
-                .to_exist_or_and_chain_atomic_fact()),
+            _ => Ok(self.parse_or_and_chain_atomic_fact(tb)?.into()),
         }
     }
 
@@ -356,7 +359,7 @@ impl Runtime {
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
         let first_obj = self.parse_obj(tb)?;
-        let mut objs: Vec<crate::obj::Obj> = vec![first_obj];
+        let mut objs: Vec<Obj> = vec![first_obj];
         let mut prop_names: Vec<IdentifierOrIdentifierWithMod> = vec![];
         while !tb.exceed_end_of_head() {
             let tok = tb.current()?.to_string();
