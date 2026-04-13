@@ -36,12 +36,6 @@ know:
             0 < a^2
 
     forall a, b R:
-        0 <= a
-        0 <= b
-        =>:
-            0 <= a + b
-
-    forall a, b R:
         0 < a and 0 <= b or 0 <= a and 0 < b
         =>:
             0 < a + b

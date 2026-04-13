@@ -21,7 +21,7 @@ impl Runtime {
             subset_fact.line_file.clone(),
         ).into();
         let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(
                 &converted_superset_fact,
             )?;
         if verify_result.is_true() {
@@ -54,7 +54,7 @@ impl Runtime {
             superset_fact.line_file.clone(),
         ).into();
         let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(
                 &converted_subset_fact,
             )?;
         if verify_result.is_true() {
@@ -80,7 +80,7 @@ impl Runtime {
             not_subset_fact.line_file.clone(),
         ).into();
         let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(
                 &converted_not_superset_fact,
             )?;
         if verify_result.is_true() {
@@ -106,7 +106,7 @@ impl Runtime {
             not_superset_fact.line_file.clone(),
         ).into();
         let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(
                 &converted_not_subset_fact,
             )?;
         if verify_result.is_true() {

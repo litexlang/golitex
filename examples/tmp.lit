@@ -1,17 +1,16 @@
-let add_fn_R fn(f fn(x R)R, g fn(x R)R) fn(x R) R:
-    forall f, g fn(x R) R, x R:
-        add_fn_R(f, g)(x) = f(x) + g(x)
+let a, b, c, d, e, f, g R:
+    0 <= a
+    0 <= b
+    0 <= c
+    0 <= d
+    0 <= e
+    0 <= f
+    0 <= g
 
-prop increasing_fn(f fn(x R) R):
-    forall x, y R:
-        x < y
-        =>:
-            f(x) < f(y)
+0 <= a + b + c + d + e + f + g
 
-claim:
-    prove:
-        forall f2, g2 fn(x R) R:
-            $increasing_fn(f2)
-            $increasing_fn(g2)
-            =>:
-                $increasing_fn(add_fn_R(f2, g2))
+let h, i, j, k, l, m, n, o R
+
+0 <= a + b + (h + i)^2 + (j + k)^4 + (l + m)^6 + (n + o)^8
+
+0 <= a^3 + b^3 + c^3 + d^3 + e^3 + f^3 + g^3z

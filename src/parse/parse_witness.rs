@@ -17,15 +17,36 @@ impl Runtime {
     }
 
     // witness exist x, y R st {x > y} from 1, 0:
+    // Or omit ':' and proof: witness exist ... from 1, 0
     pub fn parse_witness_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         let exist_fact_in_witness = self.parse_exist_fact(tb)?;
         tb.skip_token(FROM)?;
         let equal_tos = self.parse_obj_list(tb)?;
-        tb.skip_token(COLON)?;
-        let mut proof = Vec::with_capacity(tb.body.len());
-        for block in tb.body.iter_mut() {
-            proof.push(self.parse_stmt(block)?);
-        }
+        let proof = if tb.exceed_end_of_head() {
+            if !tb.body.is_empty() {
+                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "witness exist: indented proof body requires ':' at end of header line"
+                        .to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ));
+            }
+            Vec::new()
+        } else {
+            tb.skip_token(COLON)?;
+            if !tb.exceed_end_of_head() {
+                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "witness exist: unexpected tokens after ':' in header".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ));
+            }
+            let mut proof = Vec::with_capacity(tb.body.len());
+            for block in tb.body.iter_mut() {
+                proof.push(self.parse_stmt(block)?);
+            }
+            proof
+        };
         Ok(WitnessExistFact::new(
             equal_tos,
             exist_fact_in_witness,
