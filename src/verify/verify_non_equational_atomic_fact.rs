@@ -409,35 +409,19 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
-        if predicate_name.as_str() == SUBSET {
-            if normal_atomic_fact.body.len() != 2 {
-                return Ok(None);
-            }
-            let subset_fact = SubsetFact::new(
-                normal_atomic_fact.body[0].clone(),
-                normal_atomic_fact.body[1].clone(),
-                normal_atomic_fact.line_file.clone(),
-            );
-            return self
-                .verify_subset_fact_by_membership_forall_definition(&subset_fact, verify_state);
-        }
-        if predicate_name.as_str() == SUPERSET {
-            if normal_atomic_fact.body.len() != 2 {
-                return Ok(None);
-            }
-            let superset_fact = SupersetFact::new(
-                normal_atomic_fact.body[0].clone(),
-                normal_atomic_fact.body[1].clone(),
-                normal_atomic_fact.line_file.clone(),
-            );
-            return self.verify_superset_fact_by_membership_forall_definition(
-                &superset_fact,
-                verify_state,
-            );
-        }
+
         let definition = match self.get_prop_definition_by_name(&predicate_name) {
             Some(definition_reference) => definition_reference.clone(),
-            None => return Ok(None),
+            None => {
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        normal_atomic_fact.clone().into(),
+                        format!("prop definition not found for {}", predicate_name),
+                        normal_atomic_fact.line_file.clone(),
+                        None,
+                    ),
+                )
+            }
         };
 
         let verify_state_for_definition_clauses = verify_state;
@@ -448,8 +432,16 @@ impl Runtime {
             verify_state_for_definition_clauses,
         ) {
             Ok(_) => {}
-            Err(RuntimeError::VerifyError(e)) => return Err(RuntimeError::VerifyError(e)),
-            Err(_) => return Ok(None),
+            Err(_) => {
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        normal_atomic_fact.clone().into(),
+                        format!("failed to verify parameter types for {}", predicate_name),
+                        normal_atomic_fact.line_file.clone(),
+                        None,
+                    ),
+                )
+            }
         }
 
         if definition.iff_facts.is_empty() {
@@ -562,15 +554,16 @@ impl Runtime {
         let transposed_result =
             self.verify_non_equational_atomic_fact(&transposed_fact, verify_state, false)?;
         match transposed_result {
-            StmtResult::FactualStmtSuccess(inner_success) => {
-                Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        atomic_fact.clone().into(),
-                        inner_success.msg,
-                        inner_success.verified_by_fact,
-                        inner_success.verified_by_fact_known_line_file,
-                        inner_success.inside_results,
-                    )).into())
-            }
+            StmtResult::FactualStmtSuccess(inner_success) => Ok(
+                (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                    atomic_fact.clone().into(),
+                    inner_success.msg,
+                    inner_success.verified_by_fact,
+                    inner_success.verified_by_fact_known_line_file,
+                    inner_success.inside_results,
+                ))
+                .into(),
+            ),
             other if other.is_true() => Ok(other),
             _ => Ok(result),
         }

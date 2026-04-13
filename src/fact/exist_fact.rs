@@ -193,6 +193,31 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => o.line_file.clone(),
         }
     }
+
+    pub fn with_new_line_file(self, line_file: LineFile) -> Self {
+        match self {
+            OrAndChainAtomicFact::AtomicFact(a) => {
+                OrAndChainAtomicFact::AtomicFact(a.with_new_line_file(line_file))
+            }
+            OrAndChainAtomicFact::AndFact(af) => OrAndChainAtomicFact::AndFact(AndFact::new(
+                af.facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
+                line_file,
+            )),
+            OrAndChainAtomicFact::ChainFact(cf) => {
+                OrAndChainAtomicFact::ChainFact(ChainFact::new(cf.objs, cf.prop_names, line_file))
+            }
+            OrAndChainAtomicFact::OrFact(of) => OrAndChainAtomicFact::OrFact(OrFact::new(
+                of.facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
+                line_file,
+            )),
+        }
+    }
 }
 
 impl OrAndChainAtomicFact {
