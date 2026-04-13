@@ -12,7 +12,7 @@ impl Runtime {
             Some(d) => d,
             None => {
                 return Err(
-                    RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                         format!("family `{}` is not defined", family_name),
                         default_line_file(),
                         None,
@@ -25,7 +25,7 @@ impl Runtime {
         let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
             return Err(
-                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                     format!(
                         "family `{}` expects {} type argument(s), got {}",
                         family_name,

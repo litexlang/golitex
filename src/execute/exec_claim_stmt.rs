@@ -45,10 +45,10 @@ impl Runtime {
                         )?;
                         if result.is_unknown() {
                             return Err(
-                                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                                     format!("claim failed: cannot prove `{}`", stmt.fact),
                                     stmt.line_file.clone(),
-                                    Some(stmt.fact.clone()),
+                                    Some(stmt.fact.clone().into_stmt()),
                                     None,
                                 )
                                 .into(),
@@ -71,10 +71,10 @@ impl Runtime {
                     Err(runtime_error) => return Err(runtime_error),
                 };
                 if non_err_after_body.is_unknown() {
-                    return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    return Err(RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                         format!("claim failed: cannot prove `{}`", stmt.fact),
                         stmt.line_file.clone(),
-                        Some(stmt.fact.clone()),
+                        Some(stmt.fact.clone().into_stmt()),
                         None,
                     ).into());
                 }
