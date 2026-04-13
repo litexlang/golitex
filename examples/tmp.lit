@@ -1,13 +1,5 @@
+have f fn(x R) R
 
-claim:
-    prove:
-        forall a, b R:
-            0 <= a
-            a <= 1
-            0 <= b
-            b <= 1
-            =>:
-                a * b <= 1
-    0 <= 1 - a
-    0 <= (1 - a) * b = b - a * b
-    a * b <= b <= 1
+$restrict(f, fn(x R: x > 0) R)
+
+have fn add_r_fn
