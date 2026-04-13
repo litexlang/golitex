@@ -453,7 +453,23 @@ impl Runtime {
             Obj::Add(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
-            _ => Ok(None),
+            _ => {
+                if let Obj::Number(left_left_number) = left_left {
+                    let new_given = Sub::new(given_arg.clone(), left_left_number.clone().into());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_right,
+                        &new_given.into(),
+                    );
+                } else if let Obj::Number(left_right_number) = left_right {
+                    let new_given = Sub::new(given_arg.clone(), left_right_number.clone().into());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_left,
+                        &new_given.into(),
+                    );
+                } else {
+                    return Ok(None);
+                }
+            }
         }
     }
 
@@ -466,7 +482,23 @@ impl Runtime {
             Obj::Sub(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
-            _ => Ok(None),
+            _ => {
+                if let Obj::Number(right_number) = left_right {
+                    let new_given = Add::new(right_number.clone().into(), given_arg.clone());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_left,
+                        &new_given.into(),
+                    );
+                } else if let Obj::Number(left_left_number) = left_left {
+                    let new_given = Sub::new(left_left_number.clone().into(), given_arg.clone());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_right,
+                        &new_given.into(),
+                    );
+                } else {
+                    return Ok(None);
+                }
+            }
         }
     }
 
@@ -504,6 +536,13 @@ impl Runtime {
                                 left_right, &synthetic,
                             );
                         }
+                    } else if let Obj::Number(left_right_number) = left_right {
+                        let new_given =
+                            Div::new(given_arg.clone(), left_right_number.clone().into());
+                        return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                            left_left,
+                            &new_given.into(),
+                        );
                     } else {
                         return Ok(None);
                     }
@@ -521,7 +560,17 @@ impl Runtime {
             Obj::Div(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
-            _ => Ok(None),
+            _ => {
+                if let Obj::Number(left_right_number) = left_right {
+                    let new_given = Mul::new(left_right_number.clone().into(), given_arg.clone());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_left,
+                        &new_given.into(),
+                    );
+                } else {
+                    return Ok(None);
+                }
+            }
         }
     }
 
