@@ -7,10 +7,10 @@ impl Runtime {
             Fact::ForallFact(forall_fact) => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 stmt.clone().into(),
                                 "claim: fact is not well defined".to_string(),
-                                Some(e.into()),
+                                Some(e),
                                 vec![],
                             ))
                     })?;
@@ -18,7 +18,7 @@ impl Runtime {
                 let body_exec_result = self.run_in_local_env(|rt| {
                     rt.define_params_with_type(&forall_fact.params_def_with_type, false)
                         .map_err(|define_params_error| {
-                            RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
                                 stmt.clone().into(),
                                 "".to_string(),
                                 Some(define_params_error),
@@ -29,7 +29,8 @@ impl Runtime {
                     for dom_fact in forall_fact.dom_facts.iter() {
                         rt.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                             dom_fact.clone(),
-                        )?;
+                        )
+                        .map_err(RuntimeError::ExecStmtError)?;
                     }
 
                     let mut inside_results = vec![];
@@ -79,18 +80,19 @@ impl Runtime {
                     ).into());
                 }
 
-                let infer_result_after_store =
-                    self.store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())?;
+                let infer_result_after_store = self
+                    .store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())
+                    .map_err(RuntimeError::ExecStmtError)?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))
             }
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 stmt.clone().into(),
                                 "claim: fact is not well defined".to_string(),
-                                Some(e.into()),
+                                Some(e),
                                 vec![],
                             ))
                     })?;
@@ -116,8 +118,9 @@ impl Runtime {
                     Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
                     Err(runtime_error) => return Err(runtime_error),
                 };
-                let infer_result_after_store =
-                    self.store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())?;
+                let infer_result_after_store = self
+                    .store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())
+                    .map_err(RuntimeError::ExecStmtError)?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))
             }

@@ -35,7 +35,7 @@ impl Runtime {
                         subset_fact
                     ),
                     subset_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
         Ok(infer_result)
@@ -75,7 +75,7 @@ impl Runtime {
                         superset_fact
                     ),
                     superset_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
         Ok(infer_result)

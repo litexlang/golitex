@@ -162,7 +162,7 @@ impl Runtime {
                 RuntimeError::new_infer_error_with_msg_position_previous_error(
                     "infer numeric order sign: failed to store inferred (0 < x) bound".to_string(),
                     line_file,
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
         Ok(infer_result)
@@ -185,7 +185,7 @@ impl Runtime {
                 RuntimeError::new_infer_error_with_msg_position_previous_error(
                     "infer numeric order sign: failed to store inferred <= 0 bound".to_string(),
                     line_file,
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
         Ok(infer_result)

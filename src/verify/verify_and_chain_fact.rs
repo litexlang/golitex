@@ -19,7 +19,7 @@ impl Runtime {
                     and_fact.clone().into(),
                     String::new(),
                     and_fact.line_file(),
-                    Some(e.into()),
+                    Some(e),
                 ));
             }
         }
@@ -60,7 +60,7 @@ impl Runtime {
                     chain_fact.clone().into(),
                     String::new(),
                     chain_fact.line_file(),
-                    Some(e.into()),
+                    Some(e),
                 ));
             }
         }

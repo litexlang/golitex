@@ -58,7 +58,7 @@ impl Runtime {
             default_line_file(),
         ).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     /// [`InFact`] 右侧为 `FamilyObj` 时：先实例化为具体 member set，再对 `element ∈ member_set` 做 membership infer。
@@ -129,7 +129,7 @@ impl Runtime {
                         in_fact
                     ),
                     in_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
 
@@ -159,7 +159,7 @@ impl Runtime {
                             in_fact
                         ),
                         in_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
         }
@@ -204,7 +204,7 @@ impl Runtime {
                                 in_fact
                             ),
                             in_fact.line_file.clone(),
-                            Some(previous_error.into()),
+                            Some(RuntimeError::ExecStmtError(previous_error)),
                         )
                     })?;
                 Ok(infer_result)
@@ -232,7 +232,7 @@ impl Runtime {
                                 in_fact
                             ),
                             in_fact.line_file.clone(),
-                            Some(previous_error.into()),
+                            Some(RuntimeError::ExecStmtError(previous_error)),
                         )
                     })?;
 
@@ -254,7 +254,7 @@ impl Runtime {
                                 in_fact
                             ),
                             in_fact.line_file.clone(),
-                            Some(previous_error.into()),
+                            Some(RuntimeError::ExecStmtError(previous_error)),
                         )
                     })?;
 
@@ -298,7 +298,7 @@ impl Runtime {
                             in_fact
                         ),
                         in_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
                 Ok(infer_result)
@@ -324,7 +324,7 @@ impl Runtime {
                             in_fact
                         ),
                         in_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
                 Ok(infer_result)
@@ -350,7 +350,7 @@ impl Runtime {
                             in_fact
                         ),
                         in_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
                 Ok(infer_result)
@@ -394,7 +394,7 @@ impl Runtime {
                     in_fact
                 ),
                 in_fact.line_file.clone(),
-                Some(previous_error.into()),
+                Some(RuntimeError::ExecStmtError(previous_error)),
             )
         })?;
 
@@ -412,7 +412,7 @@ impl Runtime {
                         in_fact
                     ),
                     in_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
 
@@ -430,7 +430,7 @@ impl Runtime {
                         in_fact
                     ),
                     in_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
 

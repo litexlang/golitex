@@ -20,7 +20,7 @@ impl Runtime {
                     exist_fact.clone().into(),
                     String::new(),
                     exist_fact.line_file(),
-                    Some(e.into()),
+                    Some(e),
                 ));
             }
         }

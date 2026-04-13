@@ -407,12 +407,6 @@ impl fmt::Display for RuntimeErrorStruct {
 
 impl std::error::Error for RuntimeErrorStruct {}
 
-impl From<RuntimeErrorStruct> for RuntimeError {
-    fn from(runtime_error_struct: RuntimeErrorStruct) -> Self {
-        runtime_error_struct.into()
-    }
-}
-
 fn boxed_previous_error(previous_error: Option<RuntimeError>) -> Option<Box<RuntimeError>> {
     previous_error.map(Box::new)
 }

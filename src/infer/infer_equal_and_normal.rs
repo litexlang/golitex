@@ -17,7 +17,7 @@ impl Runtime {
                         infer_step_description, equal_fact
                     ),
                     equal_fact.line_file.clone(),
-                    Some(previous_error.into()),
+                    Some(RuntimeError::ExecStmtError(previous_error)),
                 )
             })?;
         Ok(())
@@ -259,7 +259,7 @@ impl Runtime {
                             normal_atomic_fact
                         ),
                         normal_atomic_fact.line_file.clone(),
-                        Some(previous_error.into()),
+                        Some(RuntimeError::ExecStmtError(previous_error)),
                     )
                 })?;
         }

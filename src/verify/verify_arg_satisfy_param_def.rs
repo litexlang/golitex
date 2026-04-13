@@ -44,8 +44,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let verify_result = self
-                .verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)
-                .map_err(RuntimeError::from)?;
+                .verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)?;
             if verify_result.is_unknown() {
                 return Err(
                     RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
