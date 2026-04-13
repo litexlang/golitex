@@ -170,18 +170,24 @@ pub fn compare_number_strings(
 
 impl Runtime {
     pub fn verify_order_atomic_fact_numeric_builtin_only(
-        &self,
+        &mut self,
         atomic_fact: &AtomicFact,
-    ) -> StmtResult {
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) =
+            self.verify_zero_le_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+
         if let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact {
             if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
-                return StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_equal".to_string(),
                         Vec::new(),
                     ),
-                );
+                ));
             }
             let strict_fact: Fact = LessFact::new(
                 less_equal_fact.left.clone(),
@@ -192,7 +198,7 @@ impl Runtime {
             let strict_key = strict_fact.to_string();
             let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&strict_key);
             if cache_ok {
-                return StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                         less_equal_fact.clone().into(),
                         strict_key,
@@ -200,31 +206,89 @@ impl Runtime {
                         Some(cache_line_file),
                         Vec::new(),
                     ),
-                );
+                ));
             }
         }
         if let AtomicFact::GreaterEqualFact(greater_equal_fact) = atomic_fact {
             if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
-                return StmtResult::FactualStmtSuccess(
+                return Ok(StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_equal".to_string(),
                         Vec::new(),
                     ),
-                );
+                ));
             }
         }
         if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
-            StmtResult::FactualStmtSuccess(
+            Ok(StmtResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "number comparison".to_string(),
                     Vec::new(),
                 ),
-            )
+            ))
         } else {
-            StmtResult::StmtUnknown(StmtUnknown::new())
+            Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
         }
+    }
+
+    fn verify_zero_le_add_from_known_atomic_facts_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessEqualFact(less_equal_fact) = normalized_fact else {
+            return Ok(None);
+        };
+        if less_equal_fact.left.to_string() != "0" {
+            return Ok(None);
+        }
+        let Obj::Add(add_obj) = &less_equal_fact.right else {
+            return Ok(None);
+        };
+
+        let left_non_negative_fact: AtomicFact = LessEqualFact::new(
+            less_equal_fact.left.clone(),
+            add_obj.left.as_ref().clone(),
+            less_equal_fact.line_file.clone(),
+        )
+        .into();
+        let right_non_negative_fact: AtomicFact = LessEqualFact::new(
+            less_equal_fact.left.clone(),
+            add_obj.right.as_ref().clone(),
+            less_equal_fact.line_file.clone(),
+        )
+        .into();
+
+        let mut left_verify_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&left_non_negative_fact)?;
+        if !left_verify_result.is_true() {
+            left_verify_result =
+                self.verify_order_atomic_fact_numeric_builtin_only(&left_non_negative_fact)?;
+        }
+        if !left_verify_result.is_true() {
+            return Ok(None);
+        }
+        let mut right_verify_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&right_non_negative_fact)?;
+        if !right_verify_result.is_true() {
+            right_verify_result =
+                self.verify_order_atomic_fact_numeric_builtin_only(&right_non_negative_fact)?;
+        }
+        if !right_verify_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "0 <= a + b from known atomic facts 0 <= a and 0 <= b".to_string(),
+                vec![left_verify_result, right_verify_result],
+            ),
+        )))
     }
 
     pub fn verify_number_comparison_builtin_rule(&self, atomic_fact: &AtomicFact) -> Option<bool> {
@@ -249,10 +313,12 @@ impl Runtime {
                 )
             }
             AtomicFact::LessEqualFact(less_equal_fact) => {
-                if let Some(calculated_number_string_pair) = self.calculate_obj_pair_to_number_strings(
-                    &less_equal_fact.left,
-                    &less_equal_fact.right,
-                ) {
+                if let Some(calculated_number_string_pair) = self
+                    .calculate_obj_pair_to_number_strings(
+                        &less_equal_fact.left,
+                        &less_equal_fact.right,
+                    )
+                {
                     let compare_result = compare_number_strings(
                         &calculated_number_string_pair.0,
                         &calculated_number_string_pair.1,
