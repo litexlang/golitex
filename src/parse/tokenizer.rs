@@ -23,8 +23,9 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
             break;
         }
 
-        if bytes[i].is_ascii_whitespace() {
-            i += 1;
+        let ws_ch = line[i..].chars().next().unwrap_or('\0');
+        if ws_ch.is_whitespace() {
+            i += ws_ch.len_utf8();
             continue;
         }
 
