@@ -1,2 +1,18 @@
-abs(1) = 1
-abs(-1) = 1
+prove:
+    abs(-1) = 1
+
+prove:
+    abstract_prop q(a)
+
+    know forall a R:
+        $q(-a)
+
+    $q(1)
+
+prove:
+    abstract_prop p(a)
+
+    know forall a R:
+        $p(2 * a)
+        
+    $p(1)
