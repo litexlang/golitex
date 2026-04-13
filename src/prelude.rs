@@ -6,8 +6,8 @@ pub use crate::environment::{Environment, KnownForallFactParamsAndDom};
 pub use crate::error::ArithmeticRuntimeError;
 pub use crate::error::ConflictMsg;
 pub use crate::error::DefineParamsRuntimeError;
-pub use crate::error::InstantiateRuntimeError;
 pub use crate::error::InferRuntimeError;
+pub use crate::error::InstantiateRuntimeError;
 pub use crate::error::NameAlreadyUsedRuntimeError;
 pub use crate::error::NewAtomicFactRuntimeError;
 pub use crate::error::ParseRuntimeError;
@@ -164,6 +164,7 @@ pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::Stmt;
 pub use crate::verify::VerifyState;
 
+pub use crate::cli::run_cli;
 pub use crate::common::defaults::default_line_file;
 pub use crate::common::defaults::is_default_line_file;
 pub use crate::common::defaults::LineFile;

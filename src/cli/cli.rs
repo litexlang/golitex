@@ -1,4 +1,4 @@
-use litex::prelude::*;
+use crate::prelude::*;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process;
