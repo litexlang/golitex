@@ -2,12 +2,12 @@ prove:
     abs(-1) = 1
 
 prove:
-    abstract_prop p(a)
+    abstract_prop q(a)
 
     know forall a R:
-        $p(-a)
+        $q(-a)
 
-    $p(1)
+    $q(1)
 
 prove:
     abstract_prop p(a)
@@ -15,6 +15,22 @@ prove:
     know forall a R:
         $p(2 * a)
         
+    $p(1)
+
+prove:
+    abstract_prop p(a)
+
+    know forall a R:
+        $p(a * 2)
+        
+    $p(1)
+
+prove:
+    abstract_prop p(a)
+
+    know forall a R:
+        $p(a / 2)
+
     $p(1)
 
 prove:
@@ -29,6 +45,22 @@ prove:
     abstract_prop p(a)
 
     know forall a R:
-        $p(a / 2)
+        $p(2 - a)
+
+    $p(1)
+
+prove:
+    abstract_prop p(a)
+
+    know forall a R:
+        $p(a + 2)
+
+    $p(1)
+
+prove:
+    abstract_prop p(a)
+
+    know forall a R:
+        $p(a - 2)
 
     $p(1)

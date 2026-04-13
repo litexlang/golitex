@@ -284,10 +284,10 @@ impl Runtime {
                         atomic_fact.clone().into(),
                         message.clone(),
                         atomic_fact.line_file(),
-                        Some(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                        Some(RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                             message,
                             atomic_fact.line_file(),
-                            Some(atomic_fact.clone().into()),
+                            Some(Fact::from(atomic_fact.clone()).into_stmt()),
                             None,
                         ).into()),
                     ));

@@ -146,10 +146,10 @@ impl RuntimeErrorStruct {
             cause
         } else {
             Some(
-                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                     message.clone(),
                     line_file,
-                    None,
+                    Some(stmt.clone()),
                     cause,
                 ),
             )
@@ -326,18 +326,14 @@ impl RuntimeError {
         .into()
     }
 
-    pub fn new_unknown_error_with_msg_position_optional_fact_previous_error(
+    pub fn new_unknown_error_with_msg_position_optional_stmt_previous_error(
         msg: String,
         line_file: LineFile,
-        fact: Option<Fact>,
+        statement: Option<Stmt>,
         previous_error: Option<RuntimeError>,
     ) -> Self {
         UnknownRuntimeError(RuntimeErrorStruct::new(
-            if let Some(fact) = fact {
-                Some(fact.into_stmt())
-            } else {
-                None
-            },
+            statement,
             msg,
             line_file,
             previous_error,
@@ -351,10 +347,11 @@ impl RuntimeError {
         previous_error: Option<RuntimeError>,
     ) -> Self {
         let line_file = fact.line_file();
-        RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+        let stmt = fact.into_stmt();
+        RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
             msg,
             line_file,
-            Some(fact),
+            Some(stmt),
             previous_error,
         )
     }
