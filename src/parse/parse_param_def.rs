@@ -1,61 +1,23 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_param_def_with_struct_field_type_and_skip_comma(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamGroupWithStructFieldType, RuntimeError> {
-        let param = tb.advance()?;
-        let param_def = if tb.current()? != COMMA {
-            ParamGroupWithStructFieldType::new(vec![param], self.parse_struct_field_type(tb)?)
-        } else {
-            let mut vec_of_params = vec![param];
-
-            while tb.current_token_is_equal_to(COMMA) {
-                tb.skip()?;
-                vec_of_params.push(tb.advance()?);
-            }
-            let param_type = self.parse_struct_field_type(tb)?;
-
-            ParamGroupWithStructFieldType::new(vec_of_params, param_type)
-        };
-        if tb.current_token_is_equal_to(COMMA) {
-            tb.skip_token(COMMA)?;
-        }
-        Ok(param_def)
-    }
-
-    /// `struct` 头部与字段类型：不允许嵌套 `struct`（无 `struct Foo(...)`）。
-    pub fn parse_struct_field_type(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<StructFieldType, RuntimeError> {
-        match tb.current()? {
-            NONEMPTY_SET => {
-                tb.skip_token(NONEMPTY_SET)?;
-                Ok(StructFieldType::NonemptySet(NonemptySet::new()))
-            }
-            FINITE_SET => {
-                tb.skip_token(FINITE_SET)?;
-                Ok(StructFieldType::FiniteSet(FiniteSet::new()))
-            }
-            SET => {
-                tb.skip_token(SET)?;
-                Ok(StructFieldType::Set(Set::new()))
-            }
-            STRUCT => Err(
+    /// Struct type parameters and field types must not use nested `struct T(...)` (no `ParamType::Struct`).
+    pub fn reject_nested_struct_param_type(
+        &self,
+        pt: &ParamType,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        if matches!(pt, ParamType::Struct(_)) {
+            return Err(
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
                     "nested `struct` types are not allowed in struct parameter and field types"
                         .to_string(),
-                    tb.line_file.clone(),
+                    line_file,
                     None,
                 ),
-            ),
-            _ => self.parse_param_type_obj(tb).map(|pt| match pt {
-                ParamType::Obj(o) => StructFieldType::Obj(o),
-                _ => unreachable!(),
-            }),
+            );
         }
+        Ok(())
     }
 
     pub fn parse_param_def_with_param_type_and_skip_comma(

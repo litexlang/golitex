@@ -2,11 +2,11 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 fn fn_set_equality_fact(left: &FnSet, right: &FnSet, line_file: LineFile) -> Fact {
-    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Obj::FnSet(left.clone()),
-        Obj::FnSet(right.clone()),
+    EqualFact::new(
+        left.clone().into(),
+        right.clone().into(),
         line_file,
-    )))
+    ).into()
 }
 
 fn fn_set_equality_verify_error(
@@ -40,7 +40,7 @@ fn fn_set_equality_verified_by_builtin_rules_result(
 }
 
 impl Runtime {
-    pub(crate) fn verify_fn_set_with_params_equality_by_builtin_rules(
+    pub fn verify_fn_set_with_params_equality_by_builtin_rules(
         &mut self,
         left: &FnSet,
         right: &FnSet,
@@ -183,7 +183,7 @@ impl Runtime {
         {
             param_to_generated_arg_map.insert(
                 param_name.clone(),
-                Obj::Identifier(Identifier::new(generated_param_name.clone())),
+                generated_param_name.clone().into(),
             );
         }
         param_to_generated_arg_map
@@ -238,7 +238,7 @@ impl Runtime {
             {
                 source_param_to_generated_arg_map.insert(
                     source_param_name.clone(),
-                    Obj::Identifier(Identifier::new(generated_param_name.clone())),
+                    generated_param_name.clone().into(),
                 );
             }
             flat_index = next_flat_index;
@@ -267,7 +267,7 @@ impl Runtime {
                     )
                 })?;
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                instantiated_dom_fact.to_exist_or_and_chain_atomic_fact(),
+                instantiated_dom_fact.into(),
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
@@ -276,7 +276,7 @@ impl Runtime {
                     line_file.clone(),
                     "failed to assume source fnset dom fact in local equality environment"
                         .to_string(),
-                    Some(e.into()),
+                    Some(RuntimeError::ExecStmtError(e)),
                 )
             })?;
         }
@@ -316,11 +316,11 @@ impl Runtime {
                         None,
                     ));
                 };
-                let param_in_target_set_fact = AtomicFact::InFact(InFact::new(
+                let param_in_target_set_fact = InFact::new(
                     generated_param_obj,
                     instantiated_param_set.clone(),
                     line_file.clone(),
-                ));
+                ).into();
                 let verify_result =
                     self.verify_atomic_fact(&param_in_target_set_fact, verify_state)?;
                 if !verify_result.is_true() {

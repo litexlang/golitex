@@ -14,7 +14,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     def_family_stmt.clone().into(),
                     "failed to store family definition".to_string(),
-                    Some(store_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_error)),
                     vec![],
                 )
             })?;
@@ -52,7 +52,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         def_family_stmt.clone().into(),
                         "".to_string(),
-                        Some(RuntimeError::from(inner_exec_error)),
+                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
                         vec![],
                     )
                 })?;
@@ -64,7 +64,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     def_family_stmt.clone().into(),
                     "".to_string(),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 )
             })?;

@@ -14,7 +14,7 @@ impl Runtime {
                 Some(fn_set) => fn_set,
                 None => {
                     return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
+                    restrict_fact.clone().into(),
                     String::new(),
                     restrict_fact.line_file.clone(),
                     Some(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
@@ -80,7 +80,7 @@ impl Runtime {
 
         let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         for dom_fact in &restrict_to_ref.dom_facts {
-            forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
+            forall_dom_facts.push(dom_fact.clone().into());
         }
 
         let then_facts = Self::build_then_facts_for_original_with_params(
@@ -92,7 +92,7 @@ impl Runtime {
         )
         .map_err(|e| {
             RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
+                restrict_fact.clone().into(),
                 String::new(),
                 restrict_fact.line_file.clone(),
                 Some(e),
@@ -101,7 +101,7 @@ impl Runtime {
 
         self.verify_forall_and_return_restrict_success(
             restrict_fact,
-            forall_params,
+            ParamDefWithType::new(forall_params),
             forall_dom_facts,
             then_facts,
             &(*restrict_to_ref.ret_set).clone(),
@@ -119,9 +119,7 @@ impl Runtime {
         while mapping_index < original_flat_param_names.len() {
             original_to_restrict_param_map.insert(
                 original_flat_param_names[mapping_index].clone(),
-                Obj::Identifier(Identifier::new(
-                    restrict_flat_param_names[mapping_index].clone(),
-                )),
+                restrict_flat_param_names[mapping_index].clone().into(),
             );
             mapping_index += 1;
         }
@@ -143,13 +141,14 @@ impl Runtime {
                 runtime.inst_obj(&param_def_with_set.set, original_to_restrict_param_map)?;
             for _param_name in param_def_with_set.params.iter() {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
-                then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
+                then_facts.push(
                     InFact::new(
-                        Obj::Identifier(Identifier::new(restrict_param_name)),
+                        restrict_param_name.into(),
                         instantiated_original_set.clone(),
                         line_file.clone(),
-                    ),
-                )));
+                    )
+                    .into(),
+                );
                 index += 1;
             }
         }
@@ -157,7 +156,7 @@ impl Runtime {
         for dom_fact in &original_fn_set.dom_facts {
             let instantiated_dom_fact =
                 runtime.inst_or_and_chain_atomic_fact(dom_fact, original_to_restrict_param_map)?;
-            then_facts.push(instantiated_dom_fact.to_exist_or_and_chain_atomic_fact());
+                then_facts.push(instantiated_dom_fact.into());
         }
 
         Ok(then_facts)
@@ -166,7 +165,7 @@ impl Runtime {
     fn verify_forall_and_return_restrict_success(
         &mut self,
         restrict_fact: &RestrictFact,
-        forall_params: Vec<ParamGroupWithParamType>,
+        forall_params: ParamDefWithType,
         forall_dom_facts: Vec<ExistOrAndChainAtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         restrict_ret_set: &Obj,
@@ -197,7 +196,7 @@ impl Runtime {
 
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                Fact::AtomicFact(AtomicFact::RestrictFact(restrict_fact.clone())),
+                restrict_fact.clone().into(),
                 "restrict by definition (forall param sets narrower, same ret set)".to_string(),
                 Vec::new(),
             ))

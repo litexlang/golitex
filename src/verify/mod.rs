@@ -14,7 +14,7 @@ mod verify_forall_fact_forall_fact_with_iff;
 mod verify_helper;
 mod verify_builtin_rules;
 mod verify_non_equational_atomic_fact;
-pub(crate) use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
+pub use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
 mod verify_number_in_standard_set;
 mod verify_obj_well_defined;
 mod verify_or_fact;

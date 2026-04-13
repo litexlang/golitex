@@ -103,7 +103,7 @@ impl Runtime {
         given_or_fact: &OrFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let param_names = ParamGroupWithParamType::collect_param_names(&known_forall.params_def);
+        let param_names = known_forall.params_def.collect_param_names();
 
         if !param_names
             .iter()
@@ -141,16 +141,14 @@ impl Runtime {
             )
             .map_err(|e| {
                 RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::OrFact(given_or_fact.clone()),
+                    given_or_fact.clone().into(),
                     String::new(),
                     given_or_fact.line_file.clone(),
                     Some(e),
                 )
             })?;
 
-        let param_to_arg_map = match ParamGroupWithParamType::param_def_params_to_arg_map(
-            &known_forall.params_def,
-            &arg_map,
+        let param_to_arg_map = match known_forall.params_def.param_def_params_to_arg_map(&arg_map,
         ) {
             Some(m) => m,
             None => return Ok(None),
@@ -161,14 +159,22 @@ impl Runtime {
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
                     RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::OrFact(given_or_fact.clone()),
+                        given_or_fact.clone().into(),
                         String::new(),
                         given_or_fact.line_file.clone(),
                         Some(e),
                     )
                 })?;
-            let result =
-                self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
+            let result = self
+                .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
+                .map_err(|e| {
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        given_or_fact.clone().into(),
+                        String::new(),
+                        given_or_fact.line_file.clone(),
+                        Some(e),
+                    )
+                })?;
             if result.is_unknown() {
                 return Ok(None);
             }
@@ -177,15 +183,13 @@ impl Runtime {
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
             known_forall.dom.clone(),
-            vec![ExistOrAndChainAtomicFact::OrFact(
-                or_fact_in_known_forall.clone(),
-            )],
+            vec![or_fact_in_known_forall.clone().into()],
             known_forall.line_file.clone(),
         );
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-            Fact::OrFact(given_or_fact.clone()),
+            given_or_fact.clone().into(),
             verified_by_known_forall_fact.to_string(),
-            Some(Fact::ForallFact(verified_by_known_forall_fact.clone())),
+            Some(verified_by_known_forall_fact.clone().into()),
             None,
             Vec::new(),
         );

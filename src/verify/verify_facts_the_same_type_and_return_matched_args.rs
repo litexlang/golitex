@@ -139,7 +139,7 @@ impl Runtime {
         fact: &ExistFact,
         other: &ExistFact,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
-        if fact.params_def_with_type.len() != other.params_def_with_type.len() {
+        if fact.params_def_with_type.groups.len() != other.params_def_with_type.groups.len() {
             return Ok(None);
         }
         if fact.facts.len() != other.facts.len() {
@@ -150,8 +150,9 @@ impl Runtime {
 
         for (fact_param_def, other_param_def) in fact
             .params_def_with_type
+            .groups
             .iter()
-            .zip(other.params_def_with_type.iter())
+            .zip(other.params_def_with_type.groups.iter())
         {
             if fact_param_def.params.len() != other_param_def.params.len() {
                 return Ok(None);

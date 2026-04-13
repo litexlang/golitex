@@ -25,7 +25,7 @@ impl Runtime {
         true
     }
 
-    pub(crate) fn generate_one_unused_name_with_reserved(
+    pub fn generate_one_unused_name_with_reserved(
         &self,
         reserved_names: &HashSet<String>,
     ) -> String {

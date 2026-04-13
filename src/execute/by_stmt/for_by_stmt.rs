@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_by_for_stmt(&mut self, stmt: &ByForStmt) -> Result<StmtResult, RuntimeError> {
         let (params, param_sets) = stmt.expanded_range_params().map_err(|msg| {
-            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt.clone().into(),
                 msg,
                 None,
@@ -12,7 +12,7 @@ impl Runtime {
         })?;
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt.clone().into(),
                 msg,
                 None,
@@ -24,13 +24,13 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt.clone().into(),
                 format!(
                     "by for: forall parameters or domain is not well-defined (`{}`)",
                     stmt.forall_fact
                 ),
-                Some(well_defined_error.into()),
+                Some(well_defined_error),
                 vec![],
             ))
         })?;
@@ -38,7 +38,7 @@ impl Runtime {
         let param_value_strings_of_each_param = self
             .by_for_param_value_strings_of_each_param(stmt, &param_sets)
             .map_err(|msg| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     msg,
                     None,
@@ -54,13 +54,13 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             stmt.clone().into(),
                             format!(
                                 "by for: failed to store corresponding forall `{}`",
                                 corresponding_forall_fact
                             ),
-                            Some(store_fact_error.into()),
+                            Some(RuntimeError::ExecStmtError(store_fact_error)),
                             vec![],
                         ))
                 })?;
@@ -96,13 +96,13 @@ impl Runtime {
         let infer_result_from_stored_forall_fact = self
             .store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact.clone())
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by for: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 ))
             })?;
@@ -129,10 +129,10 @@ impl Runtime {
                     .iter()
                     .map(|f| AndChainAtomicFact::AtomicFact(f.make_reversed()))
                     .collect();
-                Some(Fact::OrFact(OrFact::new(
+                Some(OrFact::new(
                     branches,
                     and_fact.line_file.clone(),
-                )))
+                ).into())
             }
             ExistOrAndChainAtomicFact::ChainFact(_)
             | ExistOrAndChainAtomicFact::OrFact(_)
@@ -151,7 +151,7 @@ impl Runtime {
             match value {
                 Some(number) => number.normalized_value,
                 _ => {
-                    return Err(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    return Err(RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                         format!(
                             "by for: range boundary `{}` must be a calculable number expression",
                             number_like_obj
@@ -166,7 +166,7 @@ impl Runtime {
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
             return Err(
-                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                     format!(
                         "by for: range boundary `{}` is not an integer number",
                         number_like_obj
@@ -289,28 +289,28 @@ impl Runtime {
                 [parameter_index_assignment[parameter_position]]
                 .clone();
             self.store_identifier_obj(parameter_name)
-                .map_err(RuntimeError::from)?;
+                .map_err(RuntimeError::ExecStmtError)?;
 
-            let parameter_in_z_atomic_fact = AtomicFact::InFact(crate::fact::InFact::new(
-                Obj::Identifier(Identifier::new(parameter_name.to_string())),
-                Obj::StandardSet(StandardSet::Z),
+            let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
+                parameter_name.to_string().into(),
+                StandardSet::Z.into(),
                 stmt.line_file.clone(),
             ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_in_z_atomic_fact,
             )
-            .map_err(RuntimeError::from)?;
+            .map_err(RuntimeError::ExecStmtError)?;
 
             let parameter_equal_to_assigned_obj_atomic_fact =
-                AtomicFact::EqualFact(crate::fact::EqualFact::new(
-                    Obj::Identifier(Identifier::new(parameter_name.to_string())),
-                    Obj::Number(Number::new(assigned_integer_string)),
+                AtomicFact::EqualFact(EqualFact::new(
+                    parameter_name.to_string().into(),
+                    Number::new(assigned_integer_string).into(),
                     stmt.line_file.clone(),
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,
             )
-            .map_err(RuntimeError::from)?;
+            .map_err(RuntimeError::ExecStmtError)?;
         }
 
         let verify_state = VerifyState::new(0, false);
@@ -321,7 +321,7 @@ impl Runtime {
                 self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     dom_fact.clone(),
                 )
-                .map_err(RuntimeError::from)?;
+                .map_err(RuntimeError::ExecStmtError)?;
             } else if verify_dom_result.is_unknown() {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
                     let verify_negation_result =
@@ -330,7 +330,7 @@ impl Runtime {
                         return Ok(());
                     }
                 }
-                return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!(
                             "by for: domain fact `{}` is not decided (could not verify it or its negation)",
@@ -349,7 +349,7 @@ impl Runtime {
             let verified_result =
                 self.verify_exist_or_and_chain_atomic_fact(fact_to_prove, &verify_state)?;
             if verified_result.is_unknown() {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!("by for: failed to prove `{}`", fact_to_prove),

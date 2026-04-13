@@ -16,7 +16,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         know_stmt.clone().into(),
                         "".to_string(),
-                        Some(e.into()),
+                        Some(RuntimeError::ExecStmtError(e)),
                         vec![],
                     )
                 })?;

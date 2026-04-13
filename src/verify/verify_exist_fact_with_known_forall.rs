@@ -106,11 +106,11 @@ impl Runtime {
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         // exist param matches exist param
         let given_exist_param_names =
-            ParamGroupWithParamType::collect_param_names(&given_exist_fact.params_def_with_type);
+            given_exist_fact.params_def_with_type.collect_param_names();
 
-        let known_exist_param_names = ParamGroupWithParamType::collect_param_names(
-            &exist_fact_in_known_forall.params_def_with_type,
-        );
+        let known_exist_param_names = exist_fact_in_known_forall
+            .params_def_with_type
+            .collect_param_names();
         if !known_exist_param_names
             .iter()
             .all(|param_name| arg_map.contains_key(param_name))
@@ -149,7 +149,7 @@ impl Runtime {
         }
 
         // arg that matches forall params
-        let param_names = ParamGroupWithParamType::collect_param_names(&known_forall.params_def);
+        let param_names = known_forall.params_def.collect_param_names();
 
         if !param_names
             .iter()
@@ -187,17 +187,14 @@ impl Runtime {
             )
             .map_err(|e| {
                 RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::ExistFact(given_exist_fact.clone()),
+                    given_exist_fact.clone().into(),
                     String::new(),
-                    Fact::ExistFact(given_exist_fact.clone()).line_file(),
+                    given_exist_fact.line_file(),
                     Some(e),
                 )
             })?;
 
-        let param_to_arg_map = match ParamGroupWithParamType::param_def_params_to_arg_map(
-            &known_forall.params_def,
-            &arg_map,
-        ) {
+        let param_to_arg_map = match known_forall.params_def.param_def_params_to_arg_map(&arg_map) {
             Some(m) => m,
             None => return Ok(None),
         };
@@ -207,14 +204,22 @@ impl Runtime {
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
                     RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::ExistFact(given_exist_fact.clone()),
+                        given_exist_fact.clone().into(),
                         String::new(),
-                        Fact::ExistFact(given_exist_fact.clone()).line_file(),
+                        given_exist_fact.line_file(),
                         Some(e),
                     )
                 })?;
-            let result =
-                self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
+            let result = self
+                .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
+                .map_err(|e| {
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        given_exist_fact.clone().into(),
+                        String::new(),
+                        given_exist_fact.line_file(),
+                        Some(e),
+                    )
+                })?;
             if result.is_unknown() {
                 return Ok(None);
             }
@@ -223,15 +228,13 @@ impl Runtime {
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
             known_forall.dom.clone(),
-            vec![ExistOrAndChainAtomicFact::ExistFact(
-                exist_fact_in_known_forall.clone(),
-            )],
+            vec![exist_fact_in_known_forall.clone().into()],
             known_forall.line_file.clone(),
         );
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-            Fact::ExistFact(given_exist_fact.clone()),
+            given_exist_fact.clone().into(),
             verified_by_known_forall_fact.to_string(),
-            Some(Fact::ForallFact(verified_by_known_forall_fact.clone())),
+            Some(verified_by_known_forall_fact.clone().into()),
             None,
             Vec::new(),
         );

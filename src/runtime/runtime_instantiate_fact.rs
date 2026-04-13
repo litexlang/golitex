@@ -537,13 +537,14 @@ impl Runtime {
         exist_fact: &ExistFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<ExistFact, RuntimeError> {
-        let mut params_def_with_type = Vec::with_capacity(exist_fact.params_def_with_type.len());
-        for param_def_with_type in exist_fact.params_def_with_type.iter() {
-            params_def_with_type.push(ParamGroupWithParamType::new(
+        let mut groups = Vec::with_capacity(exist_fact.params_def_with_type.groups.len());
+        for param_def_with_type in exist_fact.params_def_with_type.groups.iter() {
+            groups.push(ParamGroupWithParamType::new(
                 param_def_with_type.params.clone(),
                 self.inst_param_type(&param_def_with_type.param_type, param_to_arg_map)?,
             ));
         }
+        let params_def_with_type = ParamDefWithType::new(groups);
         let mut facts = Vec::with_capacity(exist_fact.facts.len());
         for fact in exist_fact.facts.iter() {
             facts.push(self.inst_or_and_chain_atomic_fact(fact, param_to_arg_map)?);
@@ -606,13 +607,14 @@ impl Runtime {
         forall_fact: &ForallFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<ForallFact, RuntimeError> {
-        let mut params_def_with_type = Vec::with_capacity(forall_fact.params_def_with_type.len());
-        for param_def_with_type in forall_fact.params_def_with_type.iter() {
-            params_def_with_type.push(ParamGroupWithParamType::new(
+        let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
+        for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
+            groups.push(ParamGroupWithParamType::new(
                 param_def_with_type.params.clone(),
                 self.inst_param_type(&param_def_with_type.param_type, param_to_arg_map)?,
             ));
         }
+        let params_def_with_type = ParamDefWithType::new(groups);
         let mut dom_facts = Vec::with_capacity(forall_fact.dom_facts.len());
         for dom_fact in forall_fact.dom_facts.iter() {
             dom_facts.push(self.inst_exist_or_and_chain_atomic_fact(dom_fact, param_to_arg_map)?);

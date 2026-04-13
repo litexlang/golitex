@@ -40,7 +40,7 @@ impl Runtime {
                 self.verify_order_atomic_fact_numeric_builtin_only(atomic_fact),
             ),
             AtomicFact::IsSetFact(is_set_fact) => Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::IsSetFact(is_set_fact.clone())),
+                    is_set_fact.clone().into(),
                     "Every object is a set.".to_string(),
                     Vec::new(),
                 )).into()),
@@ -67,7 +67,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn non_equational_atomic_fact_holds_by_full_verify_pipeline(
+    pub fn non_equational_atomic_fact_holds_by_full_verify_pipeline(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,

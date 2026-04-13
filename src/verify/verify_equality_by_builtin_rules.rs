@@ -16,11 +16,11 @@ fn factual_equal_success_by_builtin_reason(
 ) -> StmtResult {
     StmtResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            EqualFact::new(
                 left.clone(),
                 right.clone(),
                 line_file,
-            ))),
+            ).into(),
             reason.to_string(),
             Vec::new(),
         ),
@@ -83,7 +83,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn verify_equality_by_builtin_rules(
+    pub fn verify_equality_by_builtin_rules(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -112,11 +112,11 @@ impl Runtime {
 
         if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
             return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    EqualFact::new(
                         left.clone(),
                         right.clone(),
                         line_file,
-                    ))),
+                    ).into(),
                     "calculation and rational expression simplification".to_string(),
                     Vec::new(),
                 )).into());
@@ -162,7 +162,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
+    pub fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -223,7 +223,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn objs_have_same_known_equality_rc_in_some_env(
+    pub fn objs_have_same_known_equality_rc_in_some_env(
         &self,
         left: &Obj,
         right: &Obj,
@@ -261,7 +261,7 @@ impl Runtime {
             .all(|(a, b)| self.objs_have_same_known_equality_rc_in_some_env(a, b))
     }
 
-    pub(crate) fn try_verify_equal_by_same_shape_and_known_equality_args(
+    pub fn try_verify_equal_by_same_shape_and_known_equality_args(
         &self,
         left: &Obj,
         right: &Obj,
@@ -270,8 +270,8 @@ impl Runtime {
         let reason = "same shape and paired args share known equality class";
         match (left, right) {
             (Obj::FnObj(left_fn), Obj::FnObj(right_fn)) => {
-                let left_head_obj = Obj::from(left_fn.head.as_ref().clone());
-                let right_head_obj = Obj::from(right_fn.head.as_ref().clone());
+                let left_head_obj = left_fn.head.as_ref().clone().into();
+                let right_head_obj = right_fn.head.as_ref().clone().into();
                 if !verify_equality_by_they_are_the_same(&left_head_obj, &right_head_obj) {
                     return Some((StmtUnknown::new()).into());
                 }
@@ -544,7 +544,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_equality_by_they_are_the_same_and_calculation(
+    pub fn verify_equality_by_they_are_the_same_and_calculation(
         &mut self,
         left: &Obj,
         right: &Obj,

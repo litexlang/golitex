@@ -46,7 +46,7 @@ impl Runtime {
                 self.run_in_local_env(|rt| rt.verify_set_builder_well_defined(x, verify_state))
             }
             Obj::FnSet(x) => {
-                self.run_in_local_env(|rt| rt.verify_fn_set_with_dom_well_defined(x, verify_state))
+                self.run_in_local_env(|rt| rt.verify_fn_set_well_defined(x, verify_state))
             }
             Obj::StandardSet(StandardSet::NPos) => self.verify_n_pos_obj_well_defined(),
             Obj::StandardSet(StandardSet::N) => self.verify_n_obj_well_defined(),
@@ -157,7 +157,7 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let function_name_obj = Obj::Identifier(Identifier::new(fn_obj.head.to_string()));
+        let function_name_obj = fn_obj.head.to_string().into();
         let mut the_set_where_current_fn_obj_is_in = self
             .get_object_in_fn_set(&function_name_obj)
             .ok_or_else(|| {
@@ -184,7 +184,7 @@ impl Runtime {
                         "object {} is not well-defined, failed to verify arguments satisfy function domain.",
                         fn_obj.to_string()
                     ),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     default_line_file(),
                 )
             })?;
@@ -200,11 +200,8 @@ impl Runtime {
             // at i=0 we store: f(a) in ret_set_of_f
             let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
                 fn_obj.body[..=i].iter().cloned().collect();
-            let fn_obj_prefix = FnObj {
-                head: fn_obj.head.clone(),
-                body: fn_obj_prefix_body,
-            };
-            let fn_obj_prefix_as_obj = Obj::FnObj(fn_obj_prefix);
+            let fn_obj_prefix_as_obj: Obj =
+                FnObj::new(*fn_obj.head.clone(), fn_obj_prefix_body).into();
             let set_where_the_next_fn_obj_is_in_obj =
                 (*set_where_the_next_fn_obj_is_in.clone()).clone();
             let intermediate_in_fact = InFact::new(
@@ -222,7 +219,7 @@ impl Runtime {
                         "failed to store intermediate fn-obj membership fact while verifying `{}`",
                         fn_obj.to_string()
                     ),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     default_line_file(),
                 )
             })?;
@@ -305,7 +302,7 @@ impl Runtime {
                                 "failed to verify arg satisfy fn set parameter set: {}",
                                 fact
                             ),
-                            Some(RuntimeError::from(verify_error)),
+                            Some(verify_error),
                             default_line_file(),
                         )
                     })?;
@@ -342,7 +339,7 @@ impl Runtime {
                             "failed to verify function domain fact:\n{}",
                             instantiated_dom_fact
                         ),
-                        Some(RuntimeError::from(verify_error)),
+                        Some(verify_error),
                         default_line_file(),
                     )
                 })?;
@@ -368,7 +365,7 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let r_obj = Obj::StandardSet(StandardSet::R);
+        let r_obj = StandardSet::R.into();
         let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -389,7 +386,7 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let z_obj = Obj::StandardSet(StandardSet::Z);
+        let z_obj = StandardSet::Z.into();
         let in_fact = InFact::new(obj.clone(), z_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -449,7 +446,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&div.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&div.right, verify_state)?;
 
-        let zero = Obj::Number(Number::new("0".to_string()));
+        let zero: Obj = Number::new("0".to_string()).into();
         let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, default_line_file());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -477,7 +474,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&m.right, verify_state)?;
         self.require_obj_in_z(&m.left, verify_state)?;
         self.require_obj_in_z(&m.right, verify_state)?;
-        let zero = Obj::Number(Number::new("0".to_string()));
+        let zero: Obj = Number::new("0".to_string()).into();
         let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, default_line_file());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -501,69 +498,63 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&pow.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
 
-        let zero_obj = Obj::Number(Number::new("0".to_string()));
-        let two_obj = Obj::Number(Number::new("2".to_string()));
-        let exponent_mod_two_obj = Obj::Mod(Mod::new((*pow.exponent).clone(), two_obj));
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let two_obj: Obj = Number::new("2".to_string()).into();
+        let exponent_mod_two_obj = Mod::new((*pow.exponent).clone(), two_obj).into();
 
         let positive_base_and_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
-                AtomicFact::GreaterFact(GreaterFact::new(
-                    (*pow.base).clone(),
-                    zero_obj.clone(),
-                    default_line_file(),
-                )),
-                AtomicFact::InFact(InFact::new(
+                GreaterFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file()).into(),
+                InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet(StandardSet::R),
+                    StandardSet::R.into(),
                     default_line_file(),
-                )),
+                )
+                .into(),
             ],
             default_line_file(),
         ));
 
         let zero_base_and_positive_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
-                AtomicFact::EqualFact(EqualFact::new(
-                    (*pow.base).clone(),
-                    zero_obj.clone(),
-                    default_line_file(),
-                )),
-                AtomicFact::InFact(InFact::new(
+                EqualFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file()).into(),
+                InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet(StandardSet::R),
+                    StandardSet::R.into(),
                     default_line_file(),
-                )),
-                AtomicFact::GreaterFact(GreaterFact::new(
+                )
+                .into(),
+                GreaterFact::new(
                     (*pow.exponent).clone(),
                     zero_obj.clone(),
                     default_line_file(),
-                )),
+                )
+                .into(),
             ],
             default_line_file(),
         ));
 
         let even_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
-                AtomicFact::InFact(InFact::new(
+                InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet(StandardSet::Z),
+                    StandardSet::Z.into(),
                     default_line_file(),
-                )),
-                AtomicFact::EqualFact(EqualFact::new(
-                    exponent_mod_two_obj,
-                    zero_obj,
-                    default_line_file(),
-                )),
+                )
+                .into(),
+                EqualFact::new(exponent_mod_two_obj, zero_obj, default_line_file()).into(),
             ],
             default_line_file(),
         ));
 
-        let exponent_is_positive_integer =
-            AndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+        let exponent_is_positive_integer = AndChainAtomicFact::AtomicFact(
+            InFact::new(
                 (*pow.exponent).clone(),
-                Obj::StandardSet(StandardSet::NPos),
+                StandardSet::NPos.into(),
                 default_line_file(),
-            )));
+            )
+            .into(),
+        );
 
         let pow_domain_or_fact = OrFact::new(
             vec![
@@ -669,11 +660,8 @@ impl Runtime {
                     Some(right_obj) => (**right_obj).clone(),
                     None => break,
                 };
-                let not_equal_atomic_fact = AtomicFact::NotEqualFact(NotEqualFact::new(
-                    left_obj.clone(),
-                    right_obj,
-                    default_line_file(),
-                ));
+                let not_equal_atomic_fact =
+                    NotEqualFact::new(left_obj.clone(), right_obj, default_line_file()).into();
                 let verify_result = self
                     .verify_atomic_fact(&not_equal_atomic_fact, &next_verify_state)
                     .map_err(|previous_error| {
@@ -682,7 +670,7 @@ impl Runtime {
                                 "failed to verify list set elements are pairwise not equal: {}",
                                 not_equal_atomic_fact
                             ),
-                            Some(RuntimeError::from(previous_error)),
+                            Some(previous_error),
                             default_line_file(),
                         )
                     })?;
@@ -733,7 +721,7 @@ impl Runtime {
                             "failed to verify well-defined of set builder {}",
                             x.to_string()
                         ),
-                        Some(RuntimeError::from(e)),
+                        Some(RuntimeError::ExecStmtError(e)),
                         default_line_file(),
                     ),
                 );
@@ -743,24 +731,11 @@ impl Runtime {
         Ok(())
     }
 
-    fn verify_fn_set_with_dom_well_defined(
+    fn verify_fn_set_well_defined(
         &mut self,
         x: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
-            return Err(
-                RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                    format!(
-                        "failed to verify well-defined of fn set with dom {}",
-                        x.to_string()
-                    ),
-                    Some(e.into()),
-                    default_line_file(),
-                ),
-            );
-        }
-
         for param_def_with_set in x.params_def_with_set.iter() {
             if let Err(e) = self.define_params_with_set(param_def_with_set) {
                 return Err(
@@ -787,11 +762,24 @@ impl Runtime {
                             "failed to verify well-defined of fn set with dom {}",
                             x.to_string()
                         ),
-                        Some(RuntimeError::from(e)),
+                        Some(RuntimeError::ExecStmtError(e)),
                         default_line_file(),
                     ),
                 );
             }
+        }
+
+        if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
+            return Err(
+                RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                    format!(
+                        "failed to verify well-defined of fn set with dom {}",
+                        x.to_string()
+                    ),
+                    Some(e),
+                    default_line_file(),
+                ),
+            );
         }
 
         Ok(())
@@ -835,8 +823,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
 
-        let is_cart_fact =
-            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), default_line_file()));
+        let is_cart_fact = IsCartFact::new((*x.set).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
         if result.is_unknown() {
             return Err(
@@ -866,14 +853,15 @@ impl Runtime {
                 default_line_file(),
             )
         })?;
-        let projection_dimension_obj =
-            Obj::Number(Number::new(projection_dimension_number.normalized_value));
+        let projection_dimension_obj: Obj =
+            Number::new(projection_dimension_number.normalized_value).into();
 
-        let projection_dimension_is_positive_integer_fact = AtomicFact::InFact(InFact::new(
+        let projection_dimension_is_positive_integer_fact = InFact::new(
             projection_dimension_obj.clone(),
-            Obj::StandardSet(StandardSet::NPos),
+            StandardSet::NPos.into(),
             default_line_file(),
-        ));
+        )
+        .into();
         let projection_dimension_is_positive_integer_result =
             self.verify_atomic_fact(&projection_dimension_is_positive_integer_fact, verify_state)?;
         if projection_dimension_is_positive_integer_result.is_unknown() {
@@ -889,8 +877,7 @@ impl Runtime {
             );
         }
 
-        let left_set_is_cart_fact =
-            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), default_line_file()));
+        let left_set_is_cart_fact = IsCartFact::new((*x.set).clone(), default_line_file()).into();
         let left_set_is_cart_result =
             self.verify_atomic_fact(&left_set_is_cart_fact, verify_state)?;
         if left_set_is_cart_result.is_unknown() {
@@ -903,13 +890,14 @@ impl Runtime {
             );
         }
 
-        let left_set_cart_dim_obj = Obj::CartDim(CartDim::new((*x.set).clone()));
+        let left_set_cart_dim_obj: Obj = CartDim::new((*x.set).clone()).into();
 
-        let proj_index_not_larger_than_cart_dim = AtomicFact::LessEqualFact(LessEqualFact::new(
+        let proj_index_not_larger_than_cart_dim = LessEqualFact::new(
             projection_dimension_obj.clone(),
             left_set_cart_dim_obj.clone(),
             default_line_file(),
-        ));
+        )
+        .into();
         let left_set_cart_dim_less_equal_projection_dimension_result =
             self.verify_atomic_fact(&proj_index_not_larger_than_cart_dim, verify_state)?;
         if left_set_cart_dim_less_equal_projection_dimension_result.is_unknown() {
@@ -935,8 +923,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.arg, verify_state)?;
 
-        let is_tuple_fact =
-            AtomicFact::IsTupleFact(IsTupleFact::new((*x.arg).clone(), default_line_file()));
+        let is_tuple_fact = IsTupleFact::new((*x.arg).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if result.is_unknown() {
             return Err(
@@ -971,10 +958,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         // 必须 is_finite_set
-        let is_finite_set_fact = AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-            (*x.set).clone(),
-            default_line_file(),
-        ));
+        let is_finite_set_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
         if result.is_unknown() {
             return Err(
@@ -1045,22 +1029,19 @@ impl Runtime {
 
         let random_param = self.generate_random_unused_name();
 
-        let nonempty_set_fact = IsNonemptySetFact::new(
-            Obj::Identifier(Identifier::new(random_param.clone().to_string())),
-            default_line_file(),
-        );
+        let nonempty_set_fact =
+            IsNonemptySetFact::new(random_param.clone().to_string().into(), default_line_file());
 
-        let forall_x_in_choose_from_x_is_nonempty = Fact::ForallFact(ForallFact::new(
-            vec![ParamGroupWithParamType::new(
+        let forall_x_in_choose_from_x_is_nonempty = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![random_param.clone().to_string()],
                 ParamType::Obj(choose_from),
-            )],
+            )]),
             vec![],
-            vec![ExistOrAndChainAtomicFact::AtomicFact(
-                AtomicFact::IsNonemptySetFact(nonempty_set_fact),
-            )],
+            vec![nonempty_set_fact.into()],
             default_line_file(),
-        ));
+        )
+        .into();
 
         self.verify_fact(&forall_x_in_choose_from_x_is_nonempty, _verify_state)?;
 
@@ -1082,14 +1063,15 @@ impl Runtime {
                 default_line_file(),
             )
         })?;
-        let index_calculated_obj =
-            Obj::Number(Number::new(index_calculated_number.normalized_value));
+        let index_calculated_obj: Obj =
+            Number::new(index_calculated_number.normalized_value).into();
 
-        let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
+        let index_is_positive_integer_in_z_pos_fact = InFact::new(
             index_calculated_obj.clone(),
-            Obj::StandardSet(StandardSet::NPos),
+            StandardSet::NPos.into(),
             default_line_file(),
-        ));
+        )
+        .into();
         let index_is_positive_integer_result =
             self.verify_atomic_fact(&index_is_positive_integer_in_z_pos_fact, verify_state)?;
         if index_is_positive_integer_result.is_unknown() {
@@ -1103,7 +1085,7 @@ impl Runtime {
         }
 
         let target_obj_is_tuple_fact =
-            AtomicFact::IsTupleFact(IsTupleFact::new((*x.obj).clone(), default_line_file()));
+            IsTupleFact::new((*x.obj).clone(), default_line_file()).into();
         let target_obj_is_tuple_result =
             self.verify_atomic_fact(&target_obj_is_tuple_fact, verify_state)?;
         if target_obj_is_tuple_result.is_unknown() {
@@ -1116,12 +1098,13 @@ impl Runtime {
             );
         }
 
-        let target_tuple_dim_obj = Obj::TupleDim(TupleDim::new((*x.obj).clone()));
-        let index_not_larger_than_tuple_dim_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
+        let target_tuple_dim_obj: Obj = TupleDim::new((*x.obj).clone()).into();
+        let index_not_larger_than_tuple_dim_fact = LessEqualFact::new(
             index_calculated_obj.clone(),
             target_tuple_dim_obj.clone(),
             default_line_file(),
-        ));
+        )
+        .into();
         let index_not_larger_than_tuple_dim_result =
             self.verify_atomic_fact(&index_not_larger_than_tuple_dim_fact, verify_state)?;
         if index_not_larger_than_tuple_dim_result.is_unknown() {
@@ -1214,7 +1197,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = def.params_def_with_type.number_of_params();
         if family_param_type.params.len() != expected_count {
             return Err(
                 RuntimeError::new_well_defined_error_with_msg_previous_error_position(
@@ -1251,10 +1234,9 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
-            &family_param_type.params,
-        );
+        let param_to_arg_map = def
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(family_param_type.params.as_slice());
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self
@@ -1277,7 +1259,7 @@ impl Runtime {
                             "failed to verify family `{}` domain fact:\n{}",
                             family_name, instantiated_dom_fact
                         ),
-                        Some(RuntimeError::from(verify_error)),
+                        Some(verify_error),
                         default_line_file(),
                     )
                 })?;
@@ -1331,7 +1313,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamGroupWithStructFieldType::number_of_params(&def.param_defs);
+        let expected_count = def.param_defs.number_of_params();
         if struct_ty.args.len() != expected_count {
             return Err(
                 RuntimeError::new_well_defined_error_with_msg_previous_error_position(
@@ -1351,10 +1333,12 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        let param_defs_pt =
-            ParamGroupWithStructFieldType::to_param_groups_with_param_type(&def.param_defs);
         let _: InferResult = self
-            .verify_args_satisfy_param_def_flat_types(&param_defs_pt, &struct_ty.args, verify_state)
+            .verify_args_satisfy_param_def_flat_types(
+                &def.param_defs,
+                &struct_ty.args,
+                verify_state,
+            )
             .map_err(|runtime_error| {
                 RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     format!(
@@ -1366,11 +1350,9 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map =
-            ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
-                &def.param_defs,
-                &struct_ty.args,
-            );
+        let param_to_arg_map = def
+            .param_defs
+            .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self
@@ -1393,7 +1375,7 @@ impl Runtime {
                             "failed to verify struct `{}` domain fact:\n{}",
                             struct_name, instantiated_dom_fact
                         ),
-                        Some(RuntimeError::from(verify_error)),
+                        Some(verify_error),
                         default_line_file(),
                     )
                 })?;

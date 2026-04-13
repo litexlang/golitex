@@ -72,11 +72,29 @@ impl Fact {
             }
             Fact::ExistFact(e) => Fact::ExistFact(ExistFact {
                 params_def_with_type: e.params_def_with_type,
-                facts: e.facts,
+                facts: e
+                    .facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
                 line_file,
             }),
-            Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(or_fact.facts, line_file)),
-            Fact::AndFact(and_fact) => Fact::AndFact(AndFact::new(and_fact.facts, line_file)),
+            Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(
+                or_fact
+                    .facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
+                line_file,
+            )),
+            Fact::AndFact(and_fact) => Fact::AndFact(AndFact::new(
+                and_fact
+                    .facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
+                line_file,
+            )),
             Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(
                 chain_fact.objs,
                 chain_fact.prop_names,
@@ -84,15 +102,106 @@ impl Fact {
             )),
             Fact::ForallFact(f) => Fact::ForallFact(ForallFact {
                 params_def_with_type: f.params_def_with_type,
-                dom_facts: f.dom_facts,
-                then_facts: f.then_facts,
+                dom_facts: f
+                    .dom_facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
+                then_facts: f
+                    .then_facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
                 line_file,
             }),
-            Fact::ForallFactWithIff(f) => Fact::ForallFactWithIff(ForallFactWithIff {
-                forall_fact: f.forall_fact,
-                iff_facts: f.iff_facts,
-                line_file,
-            }),
+            Fact::ForallFactWithIff(f) => {
+                let inner_forall = f.forall_fact;
+                Fact::ForallFactWithIff(ForallFactWithIff {
+                    forall_fact: ForallFact {
+                        params_def_with_type: inner_forall.params_def_with_type,
+                        dom_facts: inner_forall
+                            .dom_facts
+                            .into_iter()
+                            .map(|x| x.with_new_line_file(line_file.clone()))
+                            .collect(),
+                        then_facts: inner_forall
+                            .then_facts
+                            .into_iter()
+                            .map(|x| x.with_new_line_file(line_file.clone()))
+                            .collect(),
+                        line_file: line_file.clone(),
+                    },
+                    iff_facts: f
+                        .iff_facts
+                        .into_iter()
+                        .map(|x| x.with_new_line_file(line_file.clone()))
+                        .collect(),
+                    line_file,
+                })
+            }
         }
+    }
+}
+
+impl From<AtomicFact> for Fact {
+    fn from(atomic_fact: AtomicFact) -> Self {
+        Fact::AtomicFact(atomic_fact)
+    }
+}
+
+impl From<OrFact> for Fact {
+    fn from(or_fact: OrFact) -> Self {
+        Fact::OrFact(or_fact)
+    }
+}
+
+impl From<ForallFact> for Fact {
+    fn from(forall_fact: ForallFact) -> Self {
+        Fact::ForallFact(forall_fact)
+    }
+}
+
+impl From<ExistFact> for Fact {
+    fn from(exist_fact: ExistFact) -> Self {
+        Fact::ExistFact(exist_fact)
+    }
+}
+
+impl From<AndFact> for Fact {
+    fn from(and_fact: AndFact) -> Self {
+        Fact::AndFact(and_fact)
+    }
+}
+
+impl From<ChainFact> for Fact {
+    fn from(chain_fact: ChainFact) -> Self {
+        Fact::ChainFact(chain_fact)
+    }
+}
+
+impl From<AndChainAtomicFact> for Fact {
+    fn from(f: AndChainAtomicFact) -> Self {
+        match f {
+            AndChainAtomicFact::AtomicFact(a) => a.into(),
+            AndChainAtomicFact::AndFact(a) => a.into(),
+            AndChainAtomicFact::ChainFact(c) => c.into(),
+        }
+    }
+}
+
+impl From<OrAndChainAtomicFact> for Fact {
+    fn from(f: OrAndChainAtomicFact) -> Self {
+        match f {
+            OrAndChainAtomicFact::AtomicFact(a) => a.into(),
+            OrAndChainAtomicFact::AndFact(a) => a.into(),
+            OrAndChainAtomicFact::ChainFact(c) => c.into(),
+            OrAndChainAtomicFact::OrFact(o) => o.into(),
+        }
+    }
+}
+
+impl From<ForallFactWithIff> for Fact {
+    fn from(forall_fact_with_iff: ForallFactWithIff) -> Self {
+        Fact::ForallFactWithIff(forall_fact_with_iff)
     }
 }

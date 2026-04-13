@@ -13,7 +13,8 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 mod cli;
+use cli::run_cli;
 
 fn main() {
-    cli::run_cli();
+    run_cli();
 }

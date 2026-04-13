@@ -12,7 +12,7 @@ impl Runtime {
                 match exec_stmt_result {
                     Ok(result) => inside_results.push(result),
                     Err(statement_error) => {
-                        return Err(RuntimeError::from(
+                        return Err(RuntimeError::ExecStmtError(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 stmt.clone().into(),
                                 proof_stmt.to_string(),
@@ -32,7 +32,7 @@ impl Runtime {
                     InferResult::new(),
                     vec![],
                 )).into()),
-            Err(inside_results_error) => Err(RuntimeError::from(inside_results_error)),
+            Err(inside_results_error) => Err(inside_results_error),
         }
     }
 }
