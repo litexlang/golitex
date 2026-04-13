@@ -228,7 +228,6 @@ pub use crate::common::keywords::FACT_PREFIX;
 pub use crate::common::keywords::FAMILY;
 pub use crate::common::keywords::FINITE_SET;
 pub use crate::common::keywords::FN_LOWER_CASE;
-pub use crate::common::keywords::FN_UPPER_CASE;
 pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;
 pub use crate::common::keywords::FROM;
