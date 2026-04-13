@@ -1,0 +1,10 @@
+abstract_prop p(a)
+
+know forall a R:
+    $p(a)
+    =>:
+        $p(a + 1)
+
+know $p(1)
+
+$p(2)
