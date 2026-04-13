@@ -20,7 +20,7 @@ impl Runtime {
                 return Err(
                     RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                         "failed to define parameters in forall fact".to_string(),
-                        Some(e.into()),
+                        Some(e),
                         forall_fact.line_file.clone(),
                     ),
                 );
@@ -43,7 +43,7 @@ impl Runtime {
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::from(forall_fact.clone()).into_stmt()),
-                            Some(e.into()),
+                            Some(RuntimeError::ExecStmtError(e)),
                         ).into()),
                         )
                     })?;
@@ -75,7 +75,8 @@ impl Runtime {
                 // 存then
                 rt.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     then_fact.clone(),
-                )?;
+                )
+                .map_err(RuntimeError::ExecStmtError)?;
 
                 match &result {
                     StmtResult::FactualStmtSuccess(factual_verification_result)

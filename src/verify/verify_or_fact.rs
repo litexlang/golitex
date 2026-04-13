@@ -20,7 +20,7 @@ impl Runtime {
                         or_fact.clone().into(),
                         String::new(),
                         or_fact.line_file.clone(),
-                        Some(e.into()),
+                        Some(e),
                     ),
                 );
             }

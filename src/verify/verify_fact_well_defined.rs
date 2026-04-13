@@ -138,7 +138,9 @@ impl Runtime {
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let facts = chain_fact.facts()?;
+        let facts = chain_fact
+            .facts()
+            .map_err(RuntimeError::ExecStmtError)?;
         for fact in facts.iter() {
             self.verify_atomic_fact_well_defined(fact, verify_state)?;
         }
@@ -183,7 +185,7 @@ impl Runtime {
                 return Err(
                     RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                         "failed to define parameters in exist fact".to_string(),
-                        Some(e.into()),
+                        Some(e),
                         exist_fact.line_file(),
                     ),
                 );
@@ -193,7 +195,8 @@ impl Runtime {
                 rt.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
                 rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     fact.clone(),
-                )?;
+                )
+                .map_err(RuntimeError::ExecStmtError)?;
             }
             Ok(())
         })
@@ -228,7 +231,7 @@ impl Runtime {
             return Err(
                 RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     "failed to define parameters in forall fact".to_string(),
-                    Some(e.into()),
+                    Some(e),
                     forall_fact.line_file.clone(),
                 ),
             );
@@ -244,7 +247,7 @@ impl Runtime {
                 return Err(
                     RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                         String::new(),
-                        Some(RuntimeError::from(exec_stmt_error)),
+                        Some(RuntimeError::ExecStmtError(exec_stmt_error)),
                         fact.line_file(),
                     ),
                 );
@@ -269,7 +272,7 @@ impl Runtime {
                 return Err(
                     RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                         String::new(),
-                        Some(RuntimeError::from(exec_stmt_error)),
+                        Some(RuntimeError::ExecStmtError(exec_stmt_error)),
                         fact.line_file(),
                     ),
                 );

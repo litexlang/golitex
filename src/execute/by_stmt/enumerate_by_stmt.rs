@@ -6,7 +6,7 @@ impl Runtime {
         stmt: &ByEnumerateStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 stmt.clone().into(),
                 msg,
                 None,
@@ -16,13 +16,13 @@ impl Runtime {
 
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by enumerate: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
                     ),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 ))
             })?;
@@ -37,13 +37,13 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!(
                             "by enumerate: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
                         ),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         vec![],
                     ))
                 })?;
@@ -79,13 +79,13 @@ impl Runtime {
                 corresponding_forall_fact.clone(),
             )
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by enumerate: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 ))
             })?;
@@ -159,7 +159,7 @@ impl Runtime {
                 [parameter_index_assignment[parameter_position]])
                 .clone();
             self.store_identifier_obj(parameter_name)
-                .map_err(RuntimeError::from)?;
+                .map_err(RuntimeError::ExecStmtError)?;
             let parameter_equal_to_assigned_obj_atomic_fact =
                 EqualFact::new(
                     parameter_name.to_string().into(),
@@ -169,12 +169,12 @@ impl Runtime {
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,
             )
-            .map_err(RuntimeError::from)?;
+            .map_err(RuntimeError::ExecStmtError)?;
         }
 
         for proof_stmt in stmt.proof.iter() {
             if let Err(statement_error) = self.exec_stmt(proof_stmt) {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         proof_stmt.to_string(),
@@ -191,7 +191,7 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )?;
             if verified_result.is_unknown() {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!("by enumerate: failed to prove `{}`", fact_to_prove),

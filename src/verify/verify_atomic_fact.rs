@@ -19,7 +19,7 @@ impl Runtime {
                         fact.clone().into(),
                         String::new(),
                         fact.line_file(),
-                        Some(e.into()),
+                        Some(e),
                     ),
                 );
             }
