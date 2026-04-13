@@ -205,10 +205,28 @@ impl Runtime {
         Ok(result)
     }
 
+    // Lit `know` facts for the nonnegative / positive cone under field operations used to live in
+    // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
+    // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
+    // goals (possibly after `normalize_positive_order_atomic_fact`):
+    // - Chained `+`: `0 <= a + b + …` from `0 <=` on each peeled summand; `0 < a + b + …` from
+    //   `(0 < a ∧ 0 <= b) ∨ (0 <= a ∧ 0 < b)` at each binary `+`.
+    // - Powers: literal even integer exponent ⇒ `0 <= base^n`; literal integer exponent and `0 <= base`
+    //   (or `0 < base` if exponent < 0) ⇒ `0 <= base^n`; `a * a` with equal factors.
+    // - Products and quotients: `0 <= a * b`, `0 < a * b`, `0 <= a / b` (denominator strictly
+    //   positive), `0 < a / b`, each with recursive subgoals on operands.
+    // The Lit environment still has order via differences (`a <= b` iff `0 <= b - a`, etc.) and
+    // `a != 0 ⇒ 0 < a^2` (strict square), which are not duplicated by this closure-only path.
+    // Algebraic closure (+, -, *, /) on general `a <= b` / `a < b` is in `order_algebra_builtin.rs`.
     pub fn verify_order_atomic_fact_numeric_builtin_only(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) =
+            self.verify_order_algebra_structural_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
         if let Some(result) =
             self.verify_zero_le_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
         {
