@@ -68,7 +68,7 @@ impl Runtime {
             }
         };
 
-        for g in forall_fact.params_def_with_type.iter() {
+        for g in forall_fact.params_def_with_type.groups.iter() {
             match &g.param_type {
                 ParamType::Obj(Obj::Range(_)) | ParamType::Obj(Obj::ClosedRange(_)) => {}
                 _ => {

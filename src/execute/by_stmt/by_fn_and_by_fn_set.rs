@@ -98,10 +98,10 @@ impl Runtime {
         let forall_element_cart_set =
             Cart::new(vec![forall_arg_dom, forall_ret_set.clone()]).into();
         let forall_shape = ForallFact::new(
-            vec![ParamGroupWithParamType::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![forall_element_name.clone()],
                 ParamType::Obj(function.clone()),
-            )],
+            )]),
             vec![],
             vec![
                 InFact::new(
@@ -130,20 +130,20 @@ impl Runtime {
             ]).into()
         };
         let forall_in = ForallFact::new(
-            vec![ParamGroupWithParamType::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![forall_element_name],
                 ParamType::Obj(function.clone()),
-            )],
+            )]),
             vec![],
             vec![ExistFact::new(
-                {
+                ParamDefWithType::new({
                     let mut exist_param_defs = forall_param_defs_with_type;
                     exist_param_defs.push(ParamGroupWithParamType::new(
                         vec![forall_z_name],
                         ParamType::Obj(forall_ret_set),
                     ));
                     exist_param_defs
-                },
+                }),
                 {
                     let mut facts: Vec<OrAndChainAtomicFact> =
                         Vec::with_capacity(fn_set.dom_facts.len() + 1);
@@ -244,18 +244,18 @@ impl Runtime {
             ]).into()
         };
         let exist_fact = ExistFact::new(
-            vec![
+            ParamDefWithType::new(vec![
                 ParamGroupWithParamType::new(
                     vec![exist_element_name],
                     ParamType::Obj(function.clone()),
                 ),
                 ParamGroupWithParamType::new(vec![exist_z_name], ParamType::Obj(exist_ret_set)),
-            ],
+            ]),
             vec![EqualFact::new(exist_element_obj, exist_pair, line_file.clone()).into()],
             line_file.clone(),
         );
         let forall_exist = ForallFact::new(
-            exist_param_defs_with_type,
+            ParamDefWithType::new(exist_param_defs_with_type),
             {
                 let mut dom_facts: Vec<ExistOrAndChainAtomicFact> =
                     Vec::with_capacity(fn_set.dom_facts.len());
@@ -307,10 +307,10 @@ impl Runtime {
         .into();
         // 与手写标准一致：dom 为两元在图集内且首分量相同，then 仅为 x1 = x2
         let forall_unique = ForallFact::new(
-            vec![ParamGroupWithParamType::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![unique_x1_name, unique_x2_name],
                 ParamType::Obj(function.clone()),
-            )],
+            )]),
             vec![
                 InFact::new(
                     unique_x1_obj.clone(),

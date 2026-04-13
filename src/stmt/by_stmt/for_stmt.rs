@@ -50,7 +50,7 @@ impl ByForStmt {
     pub fn expanded_range_params(&self) -> Result<(Vec<String>, Vec<ClosedRangeOrRange>), String> {
         let mut params = Vec::new();
         let mut param_sets = Vec::new();
-        for g in self.forall_fact.params_def_with_type.iter() {
+        for g in self.forall_fact.params_def_with_type.groups.iter() {
             let set = match &g.param_type {
                 ParamType::Obj(Obj::Range(r)) => ClosedRangeOrRange::Range(r.clone()),
                 ParamType::Obj(Obj::ClosedRange(c)) => ClosedRangeOrRange::ClosedRange(c.clone()),

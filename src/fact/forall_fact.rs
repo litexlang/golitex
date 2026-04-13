@@ -3,7 +3,7 @@ use std::fmt;
 
 #[derive(Clone)]
 pub struct ForallFact {
-    pub params_def_with_type: Vec<ParamGroupWithParamType>,
+    pub params_def_with_type: ParamDefWithType,
     pub dom_facts: Vec<ExistOrAndChainAtomicFact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: LineFile,
@@ -11,7 +11,7 @@ pub struct ForallFact {
 
 impl ForallFact {
     pub fn new(
-        params_def_with_type: Vec<ParamGroupWithParamType>,
+        params_def_with_type: ParamDefWithType,
         dom_facts: Vec<ExistOrAndChainAtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
@@ -32,7 +32,7 @@ impl fmt::Display for ForallFact {
                 f,
                 "{} {}{}\n{}",
                 FORALL,
-                vec_to_string_join_by_comma(&self.params_def_with_type),
+                self.params_def_with_type.to_string(),
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1)
             ),
@@ -40,7 +40,7 @@ impl fmt::Display for ForallFact {
                 f,
                 "{} {}{}\n{}\n{}{}\n{}",
                 FORALL,
-                vec_to_string_join_by_comma(&self.params_def_with_type),
+                self.params_def_with_type.to_string(),
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.dom_facts, 1),
                 to_string_and_add_four_spaces_at_beginning_of_each_line(&RIGHT_ARROW, 1),

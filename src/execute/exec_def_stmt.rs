@@ -1,16 +1,16 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> Vec<ParamGroupWithParamType> {
-    let mut param_defs_with_type: Vec<ParamGroupWithParamType> =
+fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> ParamDefWithType {
+    let mut groups: Vec<ParamGroupWithParamType> =
         Vec::with_capacity(clause.params_def_with_set.len());
     for param_def_with_set in clause.params_def_with_set.iter() {
-        param_defs_with_type.push(ParamGroupWithParamType::new(
+        groups.push(ParamGroupWithParamType::new(
             param_def_with_set.params.clone(),
             ParamType::Obj(param_def_with_set.set.clone()),
         ));
     }
-    param_defs_with_type
+    ParamDefWithType::new(groups)
 }
 
 impl Runtime {
@@ -213,7 +213,7 @@ impl Runtime {
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<StmtResult, RuntimeErrorStruct> {
-        if ParamGroupWithParamType::number_of_params(&have_obj_equal_stmt.param_def)
+        if have_obj_equal_stmt.param_def.number_of_params()
             != have_obj_equal_stmt.objs_equal_to.len()
         {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -226,7 +226,7 @@ impl Runtime {
 
         let mut current_index = 0;
         let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
-        for param_def in have_obj_equal_stmt.param_def.iter() {
+        for param_def in have_obj_equal_stmt.param_def.groups.iter() {
             let current_type_holder = self
                 .inst_param_type(&param_def.param_type, &param_to_obj_map)
                 .map_err(|runtime_error| {
@@ -289,7 +289,7 @@ impl Runtime {
         infer_result.new_infer_result_inside(param_infer_result);
 
         // store obj equal to
-        for (name, obj) in ParamType::get_all_param_names(&have_obj_equal_stmt.param_def)
+        for (name, obj) in have_obj_equal_stmt.param_def.collect_param_names()
             .iter()
             .zip(have_obj_equal_stmt.objs_equal_to.iter())
         {
@@ -344,9 +344,10 @@ impl Runtime {
             ));
         }
 
-        if ParamGroupWithParamType::number_of_params(
-            &exist_fact_in_have_obj_stmt.params_def_with_type,
-        ) != have_exist_obj_stmt.equal_tos.len()
+        if exist_fact_in_have_obj_stmt
+            .params_def_with_type
+            .number_of_params()
+            != have_exist_obj_stmt.equal_tos.len()
         {
             return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 have_exist_obj_stmt.clone().into(),
@@ -381,10 +382,9 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_obj_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &exist_fact_in_have_obj_stmt.params_def_with_type,
-            &new_obj_names_as_identifier_objs,
-        );
+        let param_to_obj_map = exist_fact_in_have_obj_stmt
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
 
         for fact in exist_fact_in_have_obj_stmt.facts.iter() {
             let instantiated_fact = self

@@ -40,7 +40,7 @@ fn fn_set_equality_verified_by_builtin_rules_result(
 }
 
 impl Runtime {
-    pub(crate) fn verify_fn_set_with_params_equality_by_builtin_rules(
+    pub fn verify_fn_set_with_params_equality_by_builtin_rules(
         &mut self,
         left: &FnSet,
         right: &FnSet,

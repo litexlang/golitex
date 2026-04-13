@@ -43,7 +43,7 @@ impl ByEnumerateStmt {
             ));
         }
         let forall_fact = ForallFact::new(
-            params_def_with_type,
+            ParamDefWithType::new(params_def_with_type),
             vec![],
             self.to_prove.clone(),
             self.line_file.clone(),

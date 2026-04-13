@@ -67,7 +67,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn non_equational_atomic_fact_holds_by_full_verify_pipeline(
+    pub fn non_equational_atomic_fact_holds_by_full_verify_pipeline(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,

@@ -1,14 +1,14 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
-pub(crate) enum NumberCompareResult {
+pub enum NumberCompareResult {
     Less,
     Equal,
     Greater,
 }
 
 /// Compare a normalized decimal string (same shape as [`Number::normalized_value`]) to `"0"`.
-pub(crate) fn compare_normalized_number_str_to_zero(number_value: &str) -> NumberCompareResult {
+pub fn compare_normalized_number_str_to_zero(number_value: &str) -> NumberCompareResult {
     compare_number_strings(number_value.trim(), "0")
 }
 
@@ -127,7 +127,7 @@ fn compare_non_negative_decimal_parts(
     NumberCompareResult::Equal
 }
 
-pub(crate) fn compare_number_strings(
+pub fn compare_number_strings(
     left_number_value: &str,
     right_number_value: &str,
 ) -> NumberCompareResult {
@@ -169,7 +169,7 @@ pub(crate) fn compare_number_strings(
 }
 
 impl Runtime {
-    pub(crate) fn verify_order_atomic_fact_numeric_builtin_only(
+    pub fn verify_order_atomic_fact_numeric_builtin_only(
         &self,
         atomic_fact: &AtomicFact,
     ) -> StmtResult {

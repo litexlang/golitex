@@ -80,9 +80,9 @@ impl Runtime {
             let expected_len = if let Some(predicate_definition) =
                 self.get_prop_definition_by_name(&name_string)
             {
-                ParamGroupWithParamType::number_of_params(
-                    &predicate_definition.params_def_with_type,
-                )
+                predicate_definition
+                    .params_def_with_type
+                    .number_of_params()
             } else if let Some(abstract_prop_definition) =
                 self.get_abstract_prop_definition_by_name(&name_string)
             {
@@ -122,7 +122,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn verify_and_fact_well_defined(
+    pub fn verify_and_fact_well_defined(
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
@@ -133,7 +133,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn verify_chain_fact_well_defined(
+    pub fn verify_chain_fact_well_defined(
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
@@ -145,7 +145,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn verify_or_fact_well_defined(
+    pub fn verify_or_fact_well_defined(
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
@@ -173,23 +173,20 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn verify_exist_fact_well_defined(
+    pub fn verify_exist_fact_well_defined(
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            for param_def in exist_fact.params_def_with_type().iter() {
-                let result = rt.define_params_with_type(std::slice::from_ref(param_def), false);
-                if let Err(e) = result {
-                    return Err(
-                        RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                            "failed to define parameters in exist fact".to_string(),
-                            Some(e.into()),
-                            exist_fact.line_file(),
-                        ),
-                    );
-                }
+            if let Err(e) = rt.define_params_with_type(exist_fact.params_def_with_type(), false) {
+                return Err(
+                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                        "failed to define parameters in exist fact".to_string(),
+                        Some(e.into()),
+                        exist_fact.line_file(),
+                    ),
+                );
             }
 
             for fact in exist_fact.facts() {
@@ -202,7 +199,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn verify_forall_fact_well_defined(
+    pub fn verify_forall_fact_well_defined(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
@@ -212,7 +209,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn verify_forall_fact_params_and_dom_well_defined(
+    pub fn verify_forall_fact_params_and_dom_well_defined(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
@@ -301,7 +298,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn verify_exist_or_and_chain_atomic_fact_well_defined(
+    pub fn verify_exist_or_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
@@ -326,7 +323,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn verify_forall_fact_with_iff_well_defined(
+    pub fn verify_forall_fact_with_iff_well_defined(
         &mut self,
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
