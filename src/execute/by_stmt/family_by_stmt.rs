@@ -32,7 +32,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
             return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec,
@@ -47,10 +47,9 @@ impl Runtime {
                 )));
         }
 
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
-            &family_ty.params,
-        );
+        let param_to_arg_map = def
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
 
         let right = self
             .inst_obj(&def.equal_to, &param_to_arg_map)

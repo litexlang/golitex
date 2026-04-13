@@ -84,14 +84,14 @@ impl From<EqualFact> for OrAndChainAtomicFact {
 
 #[derive(Clone)]
 pub struct ExistFact {
-    pub params_def_with_type: Vec<ParamGroupWithParamType>,
+    pub params_def_with_type: ParamDefWithType,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
 
 impl ExistFact {
     pub fn new(
-        params_def_with_type: Vec<ParamGroupWithParamType>,
+        params_def_with_type: ParamDefWithType,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {
@@ -126,7 +126,7 @@ impl ExistFact {
         self.line_file.clone()
     }
 
-    pub fn params_def_with_type(&self) -> &Vec<ParamGroupWithParamType> {
+    pub fn params_def_with_type(&self) -> &ParamDefWithType {
         &self.params_def_with_type
     }
 
@@ -136,12 +136,12 @@ impl ExistFact {
 }
 
 fn exist_fact_string_without_exist_as_prefix(
-    param_defs: &Vec<ParamGroupWithParamType>,
+    param_defs: &ParamDefWithType,
     facts: &Vec<OrAndChainAtomicFact>,
 ) -> String {
     format!(
         "{} {} {}",
-        vec_to_string_join_by_comma(param_defs),
+        param_defs.to_string(),
         ST,
         curly_braced_vec_to_string_with_sep(
             &facts
@@ -227,7 +227,7 @@ impl OrAndChainAtomicFact {
 impl ExistFact {
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
         let mut args: Vec<Obj> = Vec::new();
-        for param_def_with_type in self.params_def_with_type.iter() {
+        for param_def_with_type in self.params_def_with_type.groups.iter() {
             if let ParamType::Obj(obj) = &param_def_with_type.param_type {
                 args.push(obj.clone());
             }

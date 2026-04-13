@@ -11,9 +11,10 @@ impl Runtime {
             let witness_stmt = stmt.clone().into();
             let verify_state_for_well_defined = VerifyState::new(0, false);
 
-            let expected_param_count = ParamGroupWithParamType::number_of_params(
-                &stmt.exist_fact_in_witness.params_def_with_type,
-            );
+            let expected_param_count = stmt
+                .exist_fact_in_witness
+                .params_def_with_type
+                .number_of_params();
             if expected_param_count != stmt.equal_tos.len() {
                 return Err(RuntimeError::from(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
@@ -87,10 +88,10 @@ impl Runtime {
                 }
             }
 
-            let param_to_obj_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-                &stmt.exist_fact_in_witness.params_def_with_type,
-                &stmt.equal_tos,
-            );
+            let param_to_obj_map = stmt
+                .exist_fact_in_witness
+                .params_def_with_type
+                .param_defs_and_args_to_param_to_arg_map(stmt.equal_tos.as_slice());
             let instantiated_exist_fact =
                 rt.inst_exist_fact(&stmt.exist_fact_in_witness, &param_to_obj_map)?;
 

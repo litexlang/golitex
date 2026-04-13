@@ -106,10 +106,10 @@ impl Runtime {
             .inst_exist_or_and_chain_atomic_fact(fact, &induction_step_param_to_obj_map)?;
 
         let corresponding_forall_fact = ForallFact::new(
-            vec![ParamGroupWithParamType::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![stmt.param.clone()],
                 ParamType::Obj(StandardSet::Z.into()),
-            )],
+            )]),
             vec![
                 GreaterEqualFact::new(
                     param_as_identifier,

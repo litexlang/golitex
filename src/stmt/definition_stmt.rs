@@ -1,7 +1,7 @@
 use crate::{
     common::keywords::GREATER_EQUAL,
     prelude::*,
-    stmt::parameter_def::{ParamGroupWithStructFieldType, StructFieldType},
+    stmt::parameter_def::ParamDefWithType,
 };
 use std::fmt;
 
@@ -54,9 +54,9 @@ impl DefAbstractPropStmt {
 #[derive(Clone)]
 pub struct DefStructStmt {
     pub name: String,
-    pub param_defs: Vec<ParamGroupWithStructFieldType>,
+    pub param_defs: ParamDefWithType,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
-    pub fields: Vec<(String, StructFieldType)>,
+    pub fields: Vec<(String, ParamType)>,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
@@ -64,7 +64,7 @@ pub struct DefStructStmt {
 #[derive(Clone)]
 pub struct DefFamilyStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamGroupWithParamType>,
+    pub params_def_with_type: ParamDefWithType,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub equal_to: Obj,
     pub line_file: LineFile,
@@ -105,20 +105,20 @@ pub struct HaveByExistStmt {
 
 #[derive(Clone)]
 pub struct HaveObjEqualStmt {
-    pub param_def: Vec<ParamGroupWithParamType>,
+    pub param_def: ParamDefWithType,
     pub objs_equal_to: Vec<Obj>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
-    pub param_def: Vec<ParamGroupWithParamType>,
+    pub param_def: ParamDefWithType,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct DefLetStmt {
-    pub param_def: Vec<ParamGroupWithParamType>,
+    pub param_def: ParamDefWithType,
     pub facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -126,7 +126,7 @@ pub struct DefLetStmt {
 #[derive(Clone)]
 pub struct DefPropStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamGroupWithParamType>,
+    pub params_def_with_type: ParamDefWithType,
     pub iff_facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -149,7 +149,7 @@ impl fmt::Display for DefStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
-        let implicit_prefix_len = ParamGroupWithStructFieldType::number_of_params(&self.param_defs);
+        let implicit_prefix_len = self.param_defs.number_of_params();
         let fields_str: String = self
             .fields
             .iter()
@@ -175,7 +175,7 @@ impl fmt::Display for DefStructStmt {
             STRUCT,
             self.name,
             LEFT_BRACE,
-            vec_to_string_join_by_comma(&self.param_defs),
+            self.param_defs.to_string(),
             RIGHT_BRACE,
             COLON,
             fields_indented,
@@ -188,7 +188,7 @@ impl fmt::Display for DefStructStmt {
 impl DefPropStmt {
     pub fn new(
         name: String,
-        params_def_with_type: Vec<ParamGroupWithParamType>,
+        params_def_with_type: ParamDefWithType,
         iff_facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
@@ -209,14 +209,14 @@ impl fmt::Display for DefPropStmt {
                 "{} {}{}",
                 PROP,
                 self.name,
-                braced_vec_to_string(&self.params_def_with_type)
+                braced_string(&self.params_def_with_type)
             ),
             _ => write!(
                 f,
                 "{} {}{}{}\n{}",
                 PROP,
                 self.name,
-                braced_vec_to_string(&self.params_def_with_type),
+                braced_string(&self.params_def_with_type),
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.iff_facts, 1)
             ),
@@ -226,7 +226,7 @@ impl fmt::Display for DefPropStmt {
 
 impl DefLetStmt {
     pub fn new(
-        param_def: Vec<ParamGroupWithParamType>,
+        param_def: ParamDefWithType,
         facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
@@ -240,7 +240,7 @@ impl DefLetStmt {
 
 impl fmt::Display for DefLetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let param_str = vec_to_string_with_sep(&self.param_def, ", ".to_string());
+        let param_str = self.param_def.to_string();
         match self.facts.len() {
             0 => write!(f, "{} {}", LET, param_str),
             _ => write!(
@@ -256,7 +256,7 @@ impl fmt::Display for DefLetStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(param_def: Vec<ParamGroupWithParamType>, line_file: LineFile) -> Self {
+    pub fn new(param_def: ParamDefWithType, line_file: LineFile) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt {
             param_def,
             line_file,
@@ -270,14 +270,14 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
             f,
             "{} {}",
             HAVE,
-            vec_to_string_join_by_comma(&self.param_def)
+            self.param_def.to_string()
         )
     }
 }
 
 impl HaveObjEqualStmt {
     pub fn new(
-        param_def: Vec<ParamGroupWithParamType>,
+        param_def: ParamDefWithType,
         objs_equal_to: Vec<Obj>,
         line_file: LineFile,
     ) -> Self {
@@ -295,7 +295,7 @@ impl fmt::Display for HaveObjEqualStmt {
             f,
             "{} {} {} {}",
             HAVE,
-            vec_to_string_with_sep(&self.param_def, ", ".to_string()),
+            self.param_def.to_string(),
             EQUAL,
             vec_to_string_join_by_comma(&self.objs_equal_to)
         )
@@ -424,7 +424,7 @@ impl HaveFnEqualCaseByCaseStmt {
     }
 }
 
-pub(crate) fn induc_obj_plus_offset(induc_from: &Obj, offset: usize) -> Obj {
+pub fn induc_obj_plus_offset(induc_from: &Obj, offset: usize) -> Obj {
     if offset == 0 {
         induc_from.clone()
     } else {
@@ -599,7 +599,7 @@ impl fmt::Display for HaveFnByInducStmt {
 impl DefFamilyStmt {
     pub fn new(
         name: String,
-        params_def_with_type: Vec<ParamGroupWithParamType>,
+        params_def_with_type: ParamDefWithType,
         dom_facts: Vec<OrAndChainAtomicFact>,
         equal_to: Obj,
         line_file: LineFile,
@@ -622,7 +622,7 @@ impl fmt::Display for DefFamilyStmt {
             FAMILY,
             self.name,
             LEFT_BRACE,
-            vec_to_string_join_by_comma(&self.params_def_with_type),
+            self.params_def_with_type.to_string(),
             COLON,
             vec_to_string_join_by_comma(&self.dom_facts),
             RIGHT_BRACE,
@@ -635,9 +635,9 @@ impl fmt::Display for DefFamilyStmt {
 impl DefStructStmt {
     pub fn new(
         name: String,
-        param_defs: Vec<ParamGroupWithStructFieldType>,
+        param_defs: ParamDefWithType,
         dom_facts: Vec<OrAndChainAtomicFact>,
-        fields: Vec<(String, StructFieldType)>,
+        fields: Vec<(String, ParamType)>,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {
@@ -656,11 +656,11 @@ impl DefStructStmt {
     }
 
     pub fn number_of_params(&self) -> usize {
-        ParamGroupWithStructFieldType::number_of_params(&self.param_defs)
+        self.param_defs.number_of_params()
     }
 
     /// 按定义顺序展开所有类型形参名（与 `struct T(...)` 中参数顺序一致）。
     pub fn get_params(&self) -> Vec<String> {
-        ParamGroupWithStructFieldType::collect_param_names(&self.param_defs)
+        self.param_defs.collect_param_names()
     }
 }

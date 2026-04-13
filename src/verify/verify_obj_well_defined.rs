@@ -1048,10 +1048,10 @@ impl Runtime {
         );
 
         let forall_x_in_choose_from_x_is_nonempty = ForallFact::new(
-            vec![ParamGroupWithParamType::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![random_param.clone().to_string()],
                 ParamType::Obj(choose_from),
-            )],
+            )]),
             vec![],
             vec![nonempty_set_fact.into()],
             default_line_file(),
@@ -1210,7 +1210,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = def.params_def_with_type.number_of_params();
         if family_param_type.params.len() != expected_count {
             return Err(
                 RuntimeError::new_well_defined_error_with_msg_previous_error_position(
@@ -1247,10 +1247,9 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
-            &family_param_type.params,
-        );
+        let param_to_arg_map = def
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(family_param_type.params.as_slice());
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self
@@ -1327,7 +1326,7 @@ impl Runtime {
             }
         };
 
-        let expected_count = ParamGroupWithStructFieldType::number_of_params(&def.param_defs);
+        let expected_count = def.param_defs.number_of_params();
         if struct_ty.args.len() != expected_count {
             return Err(
                 RuntimeError::new_well_defined_error_with_msg_previous_error_position(
@@ -1347,10 +1346,12 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        let param_defs_pt =
-            ParamGroupWithStructFieldType::to_param_groups_with_param_type(&def.param_defs);
         let _: InferResult = self
-            .verify_args_satisfy_param_def_flat_types(&param_defs_pt, &struct_ty.args, verify_state)
+            .verify_args_satisfy_param_def_flat_types(
+                &def.param_defs,
+                &struct_ty.args,
+                verify_state,
+            )
             .map_err(|runtime_error| {
                 RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                     format!(
@@ -1362,11 +1363,9 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map =
-            ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
-                &def.param_defs,
-                &struct_ty.args,
-            );
+        let param_to_arg_map = def
+            .param_defs
+            .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self

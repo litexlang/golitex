@@ -101,7 +101,7 @@ impl Runtime {
 
         self.verify_forall_and_return_restrict_success(
             restrict_fact,
-            forall_params,
+            ParamDefWithType::new(forall_params),
             forall_dom_facts,
             then_facts,
             &(*restrict_to_ref.ret_set).clone(),
@@ -165,7 +165,7 @@ impl Runtime {
     fn verify_forall_and_return_restrict_success(
         &mut self,
         restrict_fact: &RestrictFact,
-        forall_params: Vec<ParamGroupWithParamType>,
+        forall_params: ParamDefWithType,
         forall_dom_facts: Vec<ExistOrAndChainAtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         restrict_ret_set: &Obj,

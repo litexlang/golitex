@@ -48,10 +48,10 @@ impl Runtime {
             let unused_name = rt.generate_random_unused_name();
 
             let left_to_right_forall_fact = ForallFact::new(
-                vec![ParamGroupWithParamType::new(
+                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                     vec![unused_name.clone()],
                     ParamType::Obj(stmt.left.clone()),
-                )],
+                )]),
                 vec![],
                 vec![InFact::new(
                     unused_name.clone().into(),
@@ -79,10 +79,10 @@ impl Runtime {
             })?;
 
             let right_to_left_forall_fact = ForallFact::new(
-                vec![ParamGroupWithParamType::new(
+                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                     vec![unused_name.clone()],
                     ParamType::Obj(stmt.right.clone()),
-                )],
+                )]),
                 vec![],
                 vec![InFact::new(
                     unused_name.clone().into(),

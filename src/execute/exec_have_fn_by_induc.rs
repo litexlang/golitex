@@ -336,7 +336,7 @@ impl Runtime {
                 );
 
                 let forall_fact: Fact = ForallFact::new(
-                    param_def,
+                    ParamDefWithType::new(param_def),
                     dom,
                     vec![EqualFact::new(
                         FnObj::new(
@@ -385,7 +385,7 @@ impl Runtime {
                     dom.push(nested.case_fact.clone().into());
 
                     let forall_fact: Fact = ForallFact::new(
-                        param_def,
+                        ParamDefWithType::new(param_def),
                         dom,
                         vec![EqualFact::new(
                             FnObj::new(

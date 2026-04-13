@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 impl Runtime {
     /// Resolve a family application to the `equal_to` object after substituting type arguments.
-    pub(crate) fn instantiate_family_member_set(
+    pub fn instantiate_family_member_set(
         &mut self,
         family_ty: &FamilyObj,
     ) -> Result<Obj, RuntimeError> {
@@ -22,7 +22,7 @@ impl Runtime {
                 );
             }
         };
-        let expected_count = ParamGroupWithParamType::number_of_params(&def.params_def_with_type);
+        let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
             return Err(
                 RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
@@ -39,15 +39,14 @@ impl Runtime {
                 .into(),
             );
         }
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &def.params_def_with_type,
-            &family_ty.params,
-        );
+        let param_to_arg_map = def
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
         self.inst_obj(&def.equal_to, &param_to_arg_map)
     }
 
     /// 参数声明为 `ParamType::Obj(Obj::FamilyObj(...))` 时：存储 `name ∈` 实例化后的 member set，并走 infer。
-    pub(crate) fn infer_membership_in_family_for_param_binding(
+    pub fn infer_membership_in_family_for_param_binding(
         &mut self,
         name: &str,
         family_ty: &FamilyObj,
@@ -63,7 +62,7 @@ impl Runtime {
     }
 
     /// [`InFact`] 右侧为 `FamilyObj` 时：先实例化为具体 member set，再对 `element ∈ member_set` 做 membership infer。
-    pub(crate) fn infer_membership_in_family_from_in_fact(
+    pub fn infer_membership_in_family_from_in_fact(
         &mut self,
         in_fact: &InFact,
         family_obj: &FamilyObj,
@@ -78,7 +77,7 @@ impl Runtime {
     }
 
     /// [`InFact`] 右侧为函数空间时：登记 `known_objs_in_fn_sets`（与 satisfy/store 路径可共用此副作用）。
-    pub(crate) fn infer_membership_in_fn_set_from_in_fact(
+    pub fn infer_membership_in_fn_set_from_in_fact(
         &mut self,
         in_fact: &InFact,
         fn_set_with_dom: &FnSet,
@@ -106,7 +105,7 @@ impl Runtime {
     }
 
     /// [`InFact`] 右侧为内涵集时：推出 `element ∈ param_set` 及实例化后的约束事实。
-    pub(crate) fn infer_membership_in_set_builder_from_in_fact(
+    pub fn infer_membership_in_set_builder_from_in_fact(
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,

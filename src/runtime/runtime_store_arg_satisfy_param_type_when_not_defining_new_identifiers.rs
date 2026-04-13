@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn store_args_satisfy_param_type_when_not_defining_new_identifiers(
         &mut self,
-        param_defs: &Vec<ParamGroupWithParamType>,
+        param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         _line_file: LineFile,
     ) -> Result<InferResult, RuntimeError> {

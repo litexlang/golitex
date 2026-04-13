@@ -108,7 +108,7 @@ impl Runtime {
         let mut normalized_params: Vec<ParamGroupWithParamType> = Vec::new();
         let mut param_index: usize = 0;
 
-        for param_def_with_type in exist_fact.params_def_with_type().iter() {
+        for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
             let mut new_param_names: Vec<String> = Vec::new();
             for original_name in param_def_with_type.params.iter() {
                 let normalized_name = format!("#{}", param_index);

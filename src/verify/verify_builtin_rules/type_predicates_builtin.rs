@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn _verify_is_nonempty_set_fact_with_builtin_rules(
+    pub fn _verify_is_nonempty_set_fact_with_builtin_rules(
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
         _verify_state: &VerifyState,
@@ -90,7 +90,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn _verify_is_finite_set_fact_with_builtin_rules(
+    pub fn _verify_is_finite_set_fact_with_builtin_rules(
         &mut self,
         is_finite_set_fact: &IsFiniteSetFact,
         _verify_state: &VerifyState,
@@ -108,7 +108,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn _verify_is_cart_fact_with_builtin_rules(
+    pub fn _verify_is_cart_fact_with_builtin_rules(
         &mut self,
         is_cart_fact: &IsCartFact,
         _verify_state: &VerifyState,
@@ -128,7 +128,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn _verify_is_tuple_fact_with_builtin_rules(
+    pub fn _verify_is_tuple_fact_with_builtin_rules(
         &mut self,
         is_tuple_fact: &IsTupleFact,
         _verify_state: &VerifyState,
@@ -168,7 +168,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn _verify_not_is_nonempty_set_fact_with_builtin_rules(
+    pub fn _verify_not_is_nonempty_set_fact_with_builtin_rules(
         &mut self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
         _verify_state: &VerifyState,

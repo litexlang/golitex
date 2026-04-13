@@ -188,7 +188,7 @@ impl Environment {
         self.store_atomic_fact(atomic_fact.clone())
     }
 
-    pub(crate) fn store_atomic_fact(
+    pub fn store_atomic_fact(
         &mut self,
         atomic_fact: AtomicFact,
     ) -> Result<(), RuntimeErrorStruct> {
@@ -676,14 +676,14 @@ impl Environment {
 }
 
 pub struct KnownForallFactParamsAndDom {
-    pub params_def: Vec<ParamGroupWithParamType>,
+    pub params_def: ParamDefWithType,
     pub dom: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
 
 impl KnownForallFactParamsAndDom {
     pub fn new(
-        params: Vec<ParamGroupWithParamType>,
+        params: ParamDefWithType,
         dom: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {

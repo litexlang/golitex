@@ -46,8 +46,12 @@ impl ByInducStmt {
         for fact in self.to_prove.iter() {
             then_facts.push(fact.clone());
         }
-        let forall_fact =
-            ForallFact::new(params_def_with_type, dom_facts, then_facts, self.line_file.clone());
+        let forall_fact = ForallFact::new(
+            ParamDefWithType::new(params_def_with_type),
+            dom_facts,
+            then_facts,
+            self.line_file.clone(),
+        );
         Ok(forall_fact.into())
     }
 }

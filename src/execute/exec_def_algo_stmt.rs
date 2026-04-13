@@ -89,7 +89,7 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_where_algo_belongs: &FnSet,
-    ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeErrorStruct> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
             fn_set_where_algo_belongs,
@@ -100,7 +100,7 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_with_dom: &FnSet,
-    ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeErrorStruct> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
             args_for_algo_params.push(param_name.clone().into());
@@ -199,7 +199,10 @@ impl Runtime {
             requirement_facts.push(instantiated_dom_fact.into());
         }
 
-        Ok((requirement_facts, algo_param_defs_with_type))
+        Ok((
+            requirement_facts,
+            ParamDefWithType::new(algo_param_defs_with_type),
+        ))
     }
 
     fn build_algo_verification_fn_call_obj(def_algo_stmt: &DefAlgoStmt) -> Obj {
@@ -240,7 +243,7 @@ impl Runtime {
     }
 
     fn forall_fact_for_def_algo_case(
-        algo_param_defs_with_type: &[ParamGroupWithParamType],
+        algo_param_defs_with_type: &ParamDefWithType,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_case: &AlgoCase,
         fn_call_obj: &Obj,
@@ -260,7 +263,7 @@ impl Runtime {
         .into()];
 
         ForallFact::new(
-            algo_param_defs_with_type.to_vec(),
+            algo_param_defs_with_type.clone(),
             case_dom_facts,
             case_then_facts,
             algo_case.line_file.clone(),
@@ -271,7 +274,7 @@ impl Runtime {
     fn verify_each_def_algo_case_implies_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &[ParamGroupWithParamType],
+        algo_param_defs_with_type: &ParamDefWithType,
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
     ) -> Result<(), RuntimeErrorStruct> {
@@ -301,7 +304,7 @@ impl Runtime {
     fn verify_def_algo_case_coverage_when_no_default_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &[ParamGroupWithParamType],
+        algo_param_defs_with_type: &ParamDefWithType,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
     ) -> Result<(), RuntimeErrorStruct> {
         if def_algo_stmt.default_return.is_some() {
@@ -325,7 +328,7 @@ impl Runtime {
         }
         let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file.clone());
         let coverage_forall_fact = ForallFact::new(
-            algo_param_defs_with_type.to_vec(),
+            algo_param_defs_with_type.clone(),
             requirement_dom_facts.to_vec(),
             vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
             def_algo_stmt.line_file.clone(),

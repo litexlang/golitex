@@ -53,7 +53,7 @@ fn compare_result_matches_less_order(
 }
 
 impl Runtime {
-    pub(crate) fn try_verify_numeric_order_via_div_elimination(
+    pub fn try_verify_numeric_order_via_div_elimination(
         &self,
         left_obj: &Obj,
         right_obj: &Obj,

@@ -106,11 +106,11 @@ impl Runtime {
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         // exist param matches exist param
         let given_exist_param_names =
-            ParamGroupWithParamType::collect_param_names(&given_exist_fact.params_def_with_type);
+            given_exist_fact.params_def_with_type.collect_param_names();
 
-        let known_exist_param_names = ParamGroupWithParamType::collect_param_names(
-            &exist_fact_in_known_forall.params_def_with_type,
-        );
+        let known_exist_param_names = exist_fact_in_known_forall
+            .params_def_with_type
+            .collect_param_names();
         if !known_exist_param_names
             .iter()
             .all(|param_name| arg_map.contains_key(param_name))
@@ -149,7 +149,7 @@ impl Runtime {
         }
 
         // arg that matches forall params
-        let param_names = ParamGroupWithParamType::collect_param_names(&known_forall.params_def);
+        let param_names = known_forall.params_def.collect_param_names();
 
         if !param_names
             .iter()
@@ -194,10 +194,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = match ParamGroupWithParamType::param_def_params_to_arg_map(
-            &known_forall.params_def,
-            &arg_map,
-        ) {
+        let param_to_arg_map = match known_forall.params_def.param_def_params_to_arg_map(&arg_map) {
             Some(m) => m,
             None => return Ok(None),
         };

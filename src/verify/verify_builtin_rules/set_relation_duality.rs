@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 impl Runtime {
     /// Verify subset by duality: `a subset b` iff `b superset a`.
-    pub(crate) fn verify_subset_fact_with_builtin_rules(
+    pub fn verify_subset_fact_with_builtin_rules(
         &mut self,
         subset_fact: &SubsetFact,
         _verify_state: &VerifyState,
@@ -36,7 +36,7 @@ impl Runtime {
     }
 
     /// Verify superset by duality: `a superset b` iff `b subset a`.
-    pub(crate) fn verify_superset_fact_with_builtin_rules(
+    pub fn verify_superset_fact_with_builtin_rules(
         &mut self,
         superset_fact: &SupersetFact,
         _verify_state: &VerifyState,
@@ -69,7 +69,7 @@ impl Runtime {
     }
 
     /// Verify `not subset` by converting to the dual `not superset`.
-    pub(crate) fn verify_not_subset_fact_with_builtin_rules(
+    pub fn verify_not_subset_fact_with_builtin_rules(
         &mut self,
         not_subset_fact: &NotSubsetFact,
         _verify_state: &VerifyState,
@@ -95,7 +95,7 @@ impl Runtime {
     }
 
     /// Verify `not superset` by converting to the dual `not subset`.
-    pub(crate) fn verify_not_superset_fact_with_builtin_rules(
+    pub fn verify_not_superset_fact_with_builtin_rules(
         &mut self,
         not_superset_fact: &NotSupersetFact,
         _verify_state: &VerifyState,
