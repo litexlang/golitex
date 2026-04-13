@@ -15,11 +15,14 @@ impl Runtime {
         ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    return Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             not_equal_fact.clone().into(),
                             "calculation".to_string(),
                             Vec::new(),
-                        )).into());
+                        ))
+                        .into(),
+                    );
                 }
             }
             _ => {}
@@ -52,10 +55,9 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let operand_not_equal_zero_fact =
             NotEqualFact::new(operand.clone(), zero_obj, line_file).into();
-        let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
-                &operand_not_equal_zero_fact,
-            )?;
+        let verify_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+            &operand_not_equal_zero_fact,
+        )?;
         Ok(verify_result.is_true())
     }
 
@@ -83,19 +85,15 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let zero_less_than_left = LessFact::new(
-            zero_obj.clone(),
-            left_operand.clone(),
-            line_file.clone(),
-        ).into();
+        let zero_less_than_left =
+            LessFact::new(zero_obj.clone(), left_operand.clone(), line_file.clone()).into();
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &zero_less_than_left,
             verify_state,
         )? {
             return Ok(false);
         }
-        let zero_less_than_right =
-            LessFact::new(zero_obj, right_operand.clone(), line_file).into();
+        let zero_less_than_right = LessFact::new(zero_obj, right_operand.clone(), line_file).into();
         self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &zero_less_than_right,
             verify_state,
@@ -110,19 +108,15 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let left_less_than_zero = LessFact::new(
-            left_operand.clone(),
-            zero_obj.clone(),
-            line_file.clone(),
-        ).into();
+        let left_less_than_zero =
+            LessFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into();
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &left_less_than_zero,
             verify_state,
         )? {
             return Ok(false);
         }
-        let right_less_than_zero =
-            LessFact::new(right_operand.clone(), zero_obj, line_file).into();
+        let right_less_than_zero = LessFact::new(right_operand.clone(), zero_obj, line_file).into();
         self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &right_less_than_zero,
             verify_state,
@@ -137,16 +131,10 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let left_less_than_zero = LessFact::new(
-            left_factor.clone(),
-            zero_obj.clone(),
-            line_file.clone(),
-        ).into();
-        let zero_less_than_right = LessFact::new(
-            zero_obj.clone(),
-            right_factor.clone(),
-            line_file.clone(),
-        ).into();
+        let left_less_than_zero =
+            LessFact::new(left_factor.clone(), zero_obj.clone(), line_file.clone()).into();
+        let zero_less_than_right =
+            LessFact::new(zero_obj.clone(), right_factor.clone(), line_file.clone()).into();
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &left_less_than_zero,
             verify_state,
@@ -156,13 +144,9 @@ impl Runtime {
         )? {
             return Ok(true);
         }
-        let zero_less_than_left = LessFact::new(
-            zero_obj.clone(),
-            left_factor.clone(),
-            line_file.clone(),
-        ).into();
-        let right_less_than_zero =
-            LessFact::new(right_factor.clone(), zero_obj, line_file).into();
+        let zero_less_than_left =
+            LessFact::new(zero_obj.clone(), left_factor.clone(), line_file.clone()).into();
+        let right_less_than_zero = LessFact::new(right_factor.clone(), zero_obj, line_file).into();
         Ok(
             self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
                 &zero_less_than_left,
@@ -182,16 +166,10 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let zero_less_than_minuend = LessFact::new(
-            zero_obj.clone(),
-            minuend.clone(),
-            line_file.clone(),
-        ).into();
-        let subtrahend_less_than_zero = LessFact::new(
-            subtrahend.clone(),
-            zero_obj.clone(),
-            line_file.clone(),
-        ).into();
+        let zero_less_than_minuend =
+            LessFact::new(zero_obj.clone(), minuend.clone(), line_file.clone()).into();
+        let subtrahend_less_than_zero =
+            LessFact::new(subtrahend.clone(), zero_obj.clone(), line_file.clone()).into();
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &zero_less_than_minuend,
             verify_state,
@@ -201,11 +179,8 @@ impl Runtime {
         )? {
             return Ok(true);
         }
-        let minuend_less_than_zero = LessFact::new(
-            minuend.clone(),
-            zero_obj.clone(),
-            line_file.clone(),
-        ).into();
+        let minuend_less_than_zero =
+            LessFact::new(minuend.clone(), zero_obj.clone(), line_file.clone()).into();
         let zero_less_than_subtrahend =
             LessFact::new(zero_obj, subtrahend.clone(), line_file).into();
         Ok(

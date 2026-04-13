@@ -1,3 +1,4 @@
+"""
 let add_fn_R fn(f fn(x R)R, g fn(x R)R) fn(x R) R:
     forall f, g fn(x R) R, x R:
         add_fn_R(f, g)(x) = f(x) + g(x)
@@ -15,3 +16,4 @@ claim:
             $increasing_fn(g2)
             =>:
                 $increasing_fn(add_fn_R(f2, g2))
+"""
