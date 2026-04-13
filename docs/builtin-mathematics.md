@@ -22,37 +22,19 @@ a \le b \iff 0 \le b - a,\qquad
 a < b \iff 0 < b - a.
 \]
 
-#### 1.2 Squares and strict positivity when \(a \neq 0\)
+#### 1.2 Squares: weak nonnegativity and strict positivity when \(a \neq 0\)
 
-For every \(a\):
+Facts of the form \(0 \le a^n\) for literal even integer \(n\), \(0 \le a\cdot a\) with equal factors, and \(0 \le a^n\) for literal integer \(n\) from \(0 \le a\) (with \(0 < a\) when \(n<0\)) are checked by the Rust builtin `verify_order_atomic_fact_numeric_builtin_only` (see `number_compare.rs`), not by a Lit `know` block in `fundamental_comparison.rs`.
 
-\[
-0 \le a^2,\quad 0 \le a\cdot a
-\]
-
-(In the source, \(a^2\) and \(a\cdot a\) are listed together; under usual arithmetic they are equivalent.)
-
-If \(a \neq 0\):
+The Lit fragment still asserts, if \(a \neq 0\):
 
 \[
 0 < a^2,\quad 0 < a\cdot a.
 \]
 
-#### 1.3 Closure of nonnegative (positive) quantities under addition and multiplication
+#### 1.3 Closure of nonnegative (positive) quantities under addition, multiplication, division
 
-If \(0 \le a\) and \(0 \le b\), then \(0 \le a+b\) and \(0 \le ab\).
-
-If \(0 < a\) and \(0 < b\), then \(0 < ab\).
-
-Strict sum: if \((0 < a \land 0 \le b) \lor (0 \le a \land 0 < b)\), then \(0 < a+b\).
-
-(In the source the hypothesis is written without parentheses; read it with the usual precedence as above.)
-
-#### 1.4 Sign of quotients under nonnegative / positive hypotheses
-
-If \(0 \le a\) and \(0 < b\), then \(0 \le a/b\).
-
-If \(0 < a\) and \(0 < b\), then \(0 < a/b\).
+If \(0 \le a\) and \(0 \le b\), then \(0 \le a+b\) and \(0 \le ab\); if \(0 < a\) and \(0 < b\), then \(0 < ab\); strict sum from \((0 < a \land 0 \le b) \lor (0 \le a \land 0 < b)\); quotient rules \(0 \le a/b\) when \(0 \le a\) and \(0 < b\), and \(0 < a/b\) when both are strictly positive—these closure steps are implemented in Rust (`verify_order_atomic_fact_numeric_builtin_only`), not in the remaining Lit `know` text for fundamental comparison.
 
 ### Part B — Real line order facts (`common_comparison_properties`, loaded after Section 1)
 
@@ -87,33 +69,25 @@ a\ge b,\ b\ge c \Rightarrow a\ge c.
 
 ## 2. Common comparison properties (`common_comparison_properties`)
 
-Section 1 Part B (trichotomy, witnesses, zero-product, transitivity) and the following monotonicity rules all live in this module’s concatenated Lit fragments. Assuming \(\le\), \(<\), and field operations, the closure rules are:
+Section 1 Part B (trichotomy, witnesses, zero-product, transitivity) still comes from Lit fragments in this module. The **algebraic closure** facts below (2.1–2.4) are checked in Rust (`order_algebra_builtin.rs`, via `verify_order_atomic_fact_numeric_builtin_only`); only **2.5** remains as Lit `know` text in `BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES`.
 
 ### 2.1 Multiplication by nonnegative (nonpositive) factors preserves (reverses) order
 
-If \(0\le x\) and \(a\le b\), then \(ax\le bx\) and \(xa\le xb\).
-
-If \(x\le 0\) and \(a\le b\), then \(bx\le ax\) and \(xb\le xa\).
+If \(0\le x\) and \(a\le b\), then \(ax\le bx\) and \(xa\le xb\). If instead \(x\le 0\) and \(v\le u\), then \(ux\le vx\) and \(xu\le xv\) (same syntactic shape \( \cdot x\) / \(x\cdot\cdot\) with the complementary hypothesis on coefficients).
 
 ### 2.2 Addition
 
-If \(a\le b\) and \(c\le d\), then \(a+c\le b+d\).
+If \(a\le b\) and \(c\le d\), then \(a+c\le b+d\). If \(a\le b\) and \(c\le d\), then \(a-d\le b-c\).
 
-If \(a\le b\) and \(c\le d\), then \(a-d\le b-c\) (the usual “add on one side, subtract on the other” rearrangement).
-
-Strict case: if \(a<b\) and \(c<d\), then \(a+c<b+d\); with one strict and one non-strict hypothesis, the sum is strictly ordered accordingly.
+Strict sums: \(a+c<b+d\) from \((a<b \land c<d)\), or \((a<b \land c\le d)\), or \((a\le b \land c<d)\).
 
 ### 2.3 Multiplication by strictly positive (strictly negative) factors
 
-If \(0<x\) and \(a<b\), then \(ax<bx\) and \(xa<xb\); if \(a\le b\) then the conclusions use \(\le\).
-
-If \(x<0\) and \(a<b\), then \(bx<ax\) and \(xb<xa\); if \(a\le b\) then the conclusions use \(\le\) (inequalities flip).
+Analogous strict rules with \(<\) on outer order and \(0<x\) or \(x<0\) with the matching flip on coefficients.
 
 ### 2.4 Division by nonzero factors
 
-If \(0<c\) and \(a\le b\), then \(a/c\le b/c\); if \(a<b\) then \(a/c<b/c\).
-
-If \(c<0\) and \(a\le b\), then \(b/c\le a/c\); if \(a<b\) then \(b/c<a/c\).
+If \(0<c\) and \(a\le b\), then \(a/c\le b/c\); if \(a<b\) then \(a/c<b/c\). If \(c<0\) and \(a\le b\), then \(b/c\le a/c\); if \(a<b\) then \(b/c<a/c\).
 
 ### 2.5 Equivalent restatements of the difference characterization
 
