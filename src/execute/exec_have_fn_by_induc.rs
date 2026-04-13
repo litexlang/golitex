@@ -415,4 +415,12 @@ impl Runtime {
 
         Ok(infer_result)
     }
+
+    pub fn exec_have_fn_by_induc_stmt(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+    ) -> Result<StmtResult, RuntimeErrorStruct> {
+        self.exec_have_fn_by_induc(stmt)
+            .map_err(|e| e.into_struct())
+    }
 }

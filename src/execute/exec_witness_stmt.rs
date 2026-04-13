@@ -69,22 +69,16 @@ impl Runtime {
                 }
             }
 
-            let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
-                match rt.exec_stmt(proof_stmt) {
-                    Ok(proof_result) => {
-                        inside_results.push(proof_result);
-                    }
-                    Err(proof_exec_error) => {
-                        return Err(RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                witness_stmt.clone(),
-                                proof_stmt.to_string(),
-                                Some(proof_exec_error),
-                                inside_results,
-                            ),
-                        ));
-                    }
+                if let Err(proof_exec_error) = rt.exec_stmt(proof_stmt) {
+                    return Err(RuntimeError::ExecStmtError(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            witness_stmt.clone(),
+                            proof_stmt.to_string(),
+                            Some(proof_exec_error),
+                            vec![],
+                        ),
+                    ));
                 }
             }
 
@@ -105,27 +99,27 @@ impl Runtime {
                 }
             }
 
-            Ok(inside_results)
+            Ok(())
         });
 
-        let inside_results = match inside_results_when_verify {
-            Ok(proof_inside_results) => proof_inside_results,
-            Err(inside_results_error) => return Err(inside_results_error),
-        };
+        if let Err(e) = inside_results_when_verify {
+            return Err(e);
+        }
 
         // 6) Store exist fact into the top-level (big) environment.
         let store_result = self.store_fact_without_well_defined_verified_and_infer(
             stmt.exist_fact_in_witness.clone().into(),
         );
         match store_result {
-            Ok(infer_result) => Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into()),
+            Ok(infer_result) => Ok(
+                (NonFactualStmtSuccess::new(witness_stmt, infer_result, vec![])).into(),
+            ),
             Err(store_error) => Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness exist fact: failed to store exist fact".to_string(),
                     Some(RuntimeError::ExecStmtError(store_error)),
-                    // Keep inside_results for error reporting.
-                    inside_results,
+                    vec![],
                 ),
             )),
         }
@@ -168,22 +162,16 @@ impl Runtime {
                 ));
             }
 
-            let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
-                match rt.exec_stmt(proof_stmt) {
-                    Ok(proof_result) => {
-                        inside_results.push(proof_result);
-                    }
-                    Err(proof_exec_error) => {
-                        return Err(RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                witness_stmt.clone(),
-                                proof_stmt.to_string(),
-                                Some(proof_exec_error),
-                                inside_results,
-                            ),
-                        ));
-                    }
+                if let Err(proof_exec_error) = rt.exec_stmt(proof_stmt) {
+                    return Err(RuntimeError::ExecStmtError(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            witness_stmt.clone(),
+                            proof_stmt.to_string(),
+                            Some(proof_exec_error),
+                            vec![],
+                        ),
+                    ));
                 }
             }
 
@@ -198,7 +186,7 @@ impl Runtime {
                     &verify_state_for_proof_check,
                 )?;
                 if ret_check.is_true() {
-                    return Ok(inside_results);
+                    return Ok(());
                 }
             }
 
@@ -209,13 +197,12 @@ impl Runtime {
             ).into();
             rt.verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)?;
 
-            Ok(inside_results)
+            Ok(())
         });
 
-        let inside_results = match inside_results_when_verify {
-            Ok(proof_inside_results) => proof_inside_results,
-            Err(inside_results_error) => return Err(inside_results_error),
-        };
+        if let Err(e) = inside_results_when_verify {
+            return Err(e);
+        }
 
         // 6) Store nonempty set fact into the top-level (big) environment.
         let store_result = self.store_fact_without_well_defined_verified_and_infer(
@@ -225,14 +212,15 @@ impl Runtime {
             ).into(),
         );
         match store_result {
-            Ok(infer_result) => Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into()),
+            Ok(infer_result) => Ok(
+                (NonFactualStmtSuccess::new(witness_stmt, infer_result, vec![])).into(),
+            ),
             Err(store_error) => Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness nonempty set: failed to store nonempty set fact".to_string(),
                     Some(RuntimeError::ExecStmtError(store_error)),
-                    // Keep inside_results for error reporting.
-                    inside_results,
+                    vec![],
                 ),
             )),
         }

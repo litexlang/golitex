@@ -948,7 +948,7 @@ impl Runtime {
                 in_fact.line_file.clone(),
             ).into();
             let verify_result = self
-                .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                .verify_non_equational_atomic_fact_with_known_atomic_facts(
                     &in_fact_into_standard_subset,
                 )?;
             if verify_result.is_true() {
