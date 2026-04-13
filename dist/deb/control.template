@@ -1,0 +1,11 @@
+Package: litex
+Version: {{VERSION}}
+Section: math
+Priority: optional
+Architecture: {{ARCH}}
+Maintainer: Jiachen Shen <litexlang@outlook.com>
+Homepage: https://litexlang.com
+Description: A simple formal proof language and verifier
+ Litex is an intuitive and scalable formal language
+ that is learnable in 2 hours. It provides a simple
+ way to write and verify mathematical proofs.
