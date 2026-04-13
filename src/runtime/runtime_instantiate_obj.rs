@@ -78,47 +78,6 @@ impl Runtime {
         }
     }
 
-    pub fn inst_atom(
-        &self,
-        atom: &Atom,
-        param_to_arg_map: &HashMap<String, Obj>,
-    ) -> Result<Atom, RuntimeError> {
-        match atom {
-            Atom::Identifier(identifier) => {
-                match self.inst_identifier(identifier, param_to_arg_map)? {
-                    Obj::Identifier(new_identifier) => Ok(new_identifier.into()),
-                    Obj::IdentifierWithMod(new_identifier_with_mod) => {
-                        Ok(new_identifier_with_mod.into())
-                    }
-                    Obj::FieldAccess(new_field_access) => Ok(new_field_access.into()),
-                    Obj::FieldAccessWithMod(new_field_access_with_mod) => {
-                        Ok(new_field_access_with_mod.into())
-                    }
-                    _ => Ok(identifier.clone().into()),
-                }
-            }
-            Atom::IdentifierWithMod(identifier_with_mod) => {
-                Ok(identifier_with_mod.clone().into())
-            }
-            Atom::FieldAccess(field_access) => {
-                match self.inst_field_access(field_access, param_to_arg_map)? {
-                    Obj::Identifier(new_identifier) => Ok(new_identifier.into()),
-                    Obj::IdentifierWithMod(new_identifier_with_mod) => {
-                        Ok(new_identifier_with_mod.into())
-                    }
-                    Obj::FieldAccess(new_field_access) => Ok(new_field_access.into()),
-                    Obj::FieldAccessWithMod(new_field_access_with_mod) => {
-                        Ok(new_field_access_with_mod.into())
-                    }
-                    _ => Ok(field_access.clone().into()),
-                }
-            }
-            Atom::FieldAccessWithMod(field_access_with_mod) => {
-                Ok(field_access_with_mod.clone().into())
-            }
-        }
-    }
-
     pub fn inst_identifier(
         &self,
         identifier: &Identifier,
@@ -149,19 +108,15 @@ impl Runtime {
             return Ok(obj.clone());
         }
         match param_to_arg_map.get(&field_access.name) {
-            Some(Obj::Identifier(identifier)) => Ok(FieldAccess::new(
-                identifier.name.clone(),
+            Some(Obj::Identifier(identifier)) => {
+                Ok(FieldAccess::new(identifier.name.clone(), field_access.field.clone()).into())
+            }
+            Some(Obj::IdentifierWithMod(identifier_with_mod)) => Ok(FieldAccessWithMod::new(
+                identifier_with_mod.mod_name.clone(),
+                identifier_with_mod.name.clone(),
                 field_access.field.clone(),
             )
             .into()),
-            Some(Obj::IdentifierWithMod(identifier_with_mod)) => Ok(
-                FieldAccessWithMod::new(
-                    identifier_with_mod.mod_name.clone(),
-                    identifier_with_mod.name.clone(),
-                    field_access.field.clone(),
-                )
-                .into(),
-            ),
             Some(obj) => {
                 let tuple_opt = match obj {
                     Obj::Tuple(t) => Some(t.clone()),
@@ -170,18 +125,16 @@ impl Runtime {
                 match tuple_opt {
                     Some(t) => self.inst_field_access_on_struct_tuple(field_access, &t),
                     None => {
-                        return Err(
-                            InstantiateRuntimeError(RuntimeErrorStruct::new(
-                                None,
-                                format!(
-                                    "field `{}` of struct `{}` is not a tuple",
-                                    field_access.field, field_access.name
-                                ),
-                                default_line_file(),
-                                None,
-                            ))
-                            .into(),
-                        )
+                        return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "field `{}` of struct `{}` is not a tuple",
+                                field_access.field, field_access.name
+                            ),
+                            default_line_file(),
+                            None,
+                        ))
+                        .into())
                     }
                 }
             }
@@ -197,15 +150,13 @@ impl Runtime {
         let Some(def) = self.get_definition_of_struct_where_object_satisfies(
             &IdentifierOrIdentifierWithMod::Identifier(Identifier::new(field_access.name.clone())),
         ) else {
-            return Err(
-                InstantiateRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!("struct `{}` is not defined", field_access.name),
-                    default_line_file(),
-                    None,
-                ))
-                .into(),
-            );
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!("struct `{}` is not defined", field_access.name),
+                default_line_file(),
+                None,
+            ))
+            .into());
         };
 
         let Some(field_index) = def
@@ -213,18 +164,16 @@ impl Runtime {
             .iter()
             .position(|(fname, _)| fname == &field_access.field)
         else {
-            return Err(
-                InstantiateRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "field `{}` of struct `{}` is not defined",
-                        field_access.field, field_access.name
-                    ),
-                    default_line_file(),
-                    None,
-                ))
-                .into(),
-            );
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "field `{}` of struct `{}` is not defined",
+                    field_access.field, field_access.name
+                ),
+                default_line_file(),
+                None,
+            ))
+            .into());
         };
 
         let tuple_index = field_index + def.number_of_params();
@@ -257,19 +206,39 @@ impl Runtime {
         fn_obj: &FnObj,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
-        let mut body = Vec::with_capacity(fn_obj.body.len());
+        let mut merged_body = Vec::with_capacity(fn_obj.body.len());
         for obj_vec in fn_obj.body.iter() {
             let mut new_obj_vec = Vec::with_capacity(obj_vec.len());
             for obj in obj_vec.iter() {
                 new_obj_vec.push(Box::new(self.inst_obj(obj, param_to_arg_map)?));
             }
-            body.push(new_obj_vec);
+            merged_body.push(new_obj_vec);
         }
-        Ok(FnObj::new(
-            self.inst_atom(&fn_obj.head, param_to_arg_map)?,
-            body,
-        )
-        .into())
+
+        let inst_head = self.inst_obj(&(*fn_obj.head.clone()).into(), param_to_arg_map)?;
+
+        let final_head: Atom = match inst_head {
+            Obj::Identifier(x) => x.clone().into(),
+            Obj::IdentifierWithMod(x) => x.clone().into(),
+            Obj::FieldAccess(x) => x.clone().into(),
+            Obj::FieldAccessWithMod(x) => x.clone().into(),
+            Obj::FnObj(x) => {
+                let merged_body_original = merged_body.clone();
+                merged_body = vec![];
+                merged_body.extend(x.body);
+                merged_body.extend(merged_body_original);
+                (*x.head.clone()).into()
+            }
+            _ => return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!("instantiate fn object: after substitution, head must be an atom or curried fn, got {}", inst_head),
+                default_line_file(),
+                None,
+            ))
+            .into()),
+        };
+
+        Ok(FnObj::new(final_head, merged_body).into())
     }
 
     pub fn inst_number(
@@ -288,8 +257,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map)?;
-        Ok(Add::new(instantiated_left_obj,
-            instantiated_right_obj).into())
+        Ok(Add::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
     pub fn inst_sub(
@@ -299,8 +267,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&sub.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&sub.right, param_to_arg_map)?;
-        Ok(Sub::new(instantiated_left_obj,
-            instantiated_right_obj).into())
+        Ok(Sub::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
     pub fn inst_mul(
@@ -310,8 +277,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mul.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&mul.right, param_to_arg_map)?;
-        Ok(Mul::new(instantiated_left_obj,
-            instantiated_right_obj).into())
+        Ok(Mul::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
     pub fn inst_div(
@@ -333,8 +299,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mod_obj.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&mod_obj.right, param_to_arg_map)?;
-        Ok(Mod::new(instantiated_left_obj,
-            instantiated_right_obj).into())
+        Ok(Mod::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
     pub fn inst_pow(
@@ -344,8 +309,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_base_obj = self.inst_obj(&pow.base, param_to_arg_map)?;
         let instantiated_exponent_obj = self.inst_obj(&pow.exponent, param_to_arg_map)?;
-        Ok(Pow::new(instantiated_base_obj,
-            instantiated_exponent_obj).into())
+        Ok(Pow::new(instantiated_base_obj, instantiated_exponent_obj).into())
     }
 
     pub fn inst_union(
@@ -605,7 +569,10 @@ impl Runtime {
                 for param in struct_ty.args.iter() {
                     params.push(self.inst_obj(param, param_to_arg_map)?);
                 }
-                Ok(ParamType::Struct(StructObj::new(struct_ty.name.clone(), params)))
+                Ok(ParamType::Struct(StructObj::new(
+                    struct_ty.name.clone(),
+                    params,
+                )))
             }
         }
     }
@@ -617,19 +584,17 @@ impl Runtime {
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
         if total_param_count != args.len() {
-            return Err(
-                InstantiateRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "argument count mismatch: expected {} parameter(s), got {} argument(s)",
-                        total_param_count,
-                        args.len()
-                    ),
-                    default_line_file(),
-                    None,
-                ))
-                .into(),
-            );
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
+                    total_param_count,
+                    args.len()
+                ),
+                default_line_file(),
+                None,
+            ))
+            .into());
         }
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
@@ -659,19 +624,17 @@ impl Runtime {
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
-            return Err(
-                InstantiateRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "argument count mismatch: expected {} parameter(s), got {} argument(s)",
-                        total_param_count,
-                        args.len()
-                    ),
-                    default_line_file(),
-                    None,
-                ))
-                .into(),
-            );
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
+                    total_param_count,
+                    args.len()
+                ),
+                default_line_file(),
+                None,
+            ))
+            .into());
         }
 
         let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
