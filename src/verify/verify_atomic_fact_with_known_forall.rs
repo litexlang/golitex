@@ -150,8 +150,10 @@ impl Runtime {
                 )
             })?;
 
-        let param_to_arg_map = match known_forall.params_def.param_def_params_to_arg_map(&arg_map,
-        ) {
+        let param_to_arg_map = match known_forall
+            .params_def
+            .param_def_params_to_arg_map(&arg_map)
+        {
             Some(m) => m,
             None => return Ok(None),
         };
@@ -360,10 +362,7 @@ impl Runtime {
         }
 
         let mut map = HashMap::new();
-        map.insert(
-            known_arg.name.clone(),
-            given.name.clone().into(),
-        );
+        map.insert(known_arg.name.clone(), given.name.clone().into());
 
         Ok(Some(map))
     }
@@ -485,18 +484,29 @@ impl Runtime {
                 let known_left_is_neg_one = match left_left {
                     Obj::Number(n) => {
                         let left_obj: Obj = n.clone().into();
-                        left_obj.two_objs_can_be_calculated_and_equal_by_calculation(&neg_one)
+                        "-1".to_string() == left_obj.to_string()
                     }
                     _ => false,
                 };
                 if known_left_is_neg_one {
                     let synthetic: Obj = Mul::new(neg_one, given_arg.clone()).into();
-                    Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                        left_right,
-                        &synthetic,
-                    )
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_right, &synthetic,
+                    );
                 } else {
-                    Ok(None)
+                    if let Obj::Number(n) = left_left {
+                        if n.normalized_value == "0".to_string() {
+                            return Ok(None);
+                        } else {
+                            let synthetic: Obj =
+                                Div::new(given_arg.clone(), n.clone().into()).into();
+                            return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                                left_right, &synthetic,
+                            );
+                        }
+                    } else {
+                        return Ok(None);
+                    }
                 }
             }
         }
