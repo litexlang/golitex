@@ -1,0 +1,443 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1: Validate tag and run tests
+  # ─────────────────────────────────────────────
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-beta* || "$VERSION" == *-alpha* || "$VERSION" == *-rc* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify Cargo.toml version matches tag
+        run: |
+          CARGO_VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          if [ "$CARGO_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::Tag ${{ steps.version.outputs.version }} does not match Cargo.toml version $CARGO_VERSION"
+            exit 1
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Run tests
+        run: cargo test
+
+  # ─────────────────────────────────────────────
+  # Job 2: Build binaries for all platforms
+  # ─────────────────────────────────────────────
+  build:
+    name: Build ${{ matrix.os_name }}-${{ matrix.arch }}
+    needs: validate
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-latest
+            os_name: linux
+            arch: amd64
+            cross: false
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-latest
+            os_name: linux
+            arch: arm64
+            cross: true
+          - target: aarch64-apple-darwin
+            runner: macos-latest
+            os_name: darwin
+            arch: arm64
+            cross: false
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            os_name: windows
+            arch: amd64
+            cross: false
+    runs-on: ${{ matrix.runner }}
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build (native)
+        if: "!matrix.cross"
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Build (cross)
+        if: matrix.cross
+        run: cross build --release --target ${{ matrix.target }}
+
+      - name: Rename binary (unix)
+        if: matrix.os_name != 'windows'
+        run: |
+          cp target/${{ matrix.target }}/release/litex litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}
+
+      - name: Rename binary (windows)
+        if: matrix.os_name == 'windows'
+        shell: bash
+        run: |
+          cp target/${{ matrix.target }}/release/litex.exe litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.os_name }}-${{ matrix.arch }}
+          path: litex_${{ env.VERSION }}_*
+
+  # ─────────────────────────────────────────────
+  # Job 3: Package .deb files
+  # ─────────────────────────────────────────────
+  package-deb:
+    name: Package .deb (${{ matrix.arch }})
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            deb_arch: amd64
+          - arch: arm64
+            deb_arch: arm64
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-linux-${{ matrix.arch }}
+
+      - name: Build .deb
+        run: |
+          PKG_DIR="pkg_litex_${VERSION}_${{ matrix.deb_arch }}"
+          mkdir -p "${PKG_DIR}/DEBIAN"
+          mkdir -p "${PKG_DIR}/usr/local/bin"
+
+          sed -e "s/{{VERSION}}/${VERSION}/" \
+              -e "s/{{ARCH}}/${{ matrix.deb_arch }}/" \
+              dist/deb/control.template > "${PKG_DIR}/DEBIAN/control"
+
+          cp "litex_${VERSION}_linux_${{ matrix.arch }}" "${PKG_DIR}/usr/local/bin/litex"
+          chmod 755 "${PKG_DIR}/usr/local/bin/litex"
+
+          dpkg-deb --build "${PKG_DIR}" "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
+
+      - name: Upload .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.arch }}
+          path: litex_${{ env.VERSION }}_${{ matrix.deb_arch }}.deb
+
+  # ─────────────────────────────────────────────
+  # Job 4: Package .msi (Windows) - optional
+  # ─────────────────────────────────────────────
+  package-msi:
+    name: Package .msi
+    needs: [validate, build]
+    runs-on: windows-latest
+    continue-on-error: true
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Download Windows binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-windows-amd64
+
+      - name: Install cargo-wix
+        run: cargo install cargo-wix
+
+      - name: Init WiX
+        run: cargo wix init --force
+        continue-on-error: true
+
+      - name: Build .msi
+        shell: bash
+        run: |
+          WIX_VERSION=$(echo "${VERSION}" | sed 's/-.*//')
+          mkdir -p target/release
+          cp "litex_${VERSION}_windows_amd64.exe" target/release/litex.exe
+          cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi" --install-version "${WIX_VERSION}"
+
+      - name: Upload .msi
+        uses: actions/upload-artifact@v4
+        with:
+          name: msi
+          path: litex_${{ env.VERSION }}_amd64.msi
+
+  # ─────────────────────────────────────────────
+  # Job 5: Create GitHub Release
+  # ─────────────────────────────────────────────
+  release:
+    name: GitHub Release
+    needs: [validate, build, package-deb]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lah artifacts/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          body: "Release of litex version ${{ env.VERSION }}"
+          prerelease: ${{ needs.validate.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          files: artifacts/*
+
+  # ─────────────────────────────────────────────
+  # Job 6: Publish to crates.io
+  # ─────────────────────────────────────────────
+  publish-crates-io:
+    name: Publish to crates.io
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish
+        run: cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
+
+  # ─────────────────────────────────────────────
+  # Job 7: Update Homebrew tap
+  # ─────────────────────────────────────────────
+  publish-homebrew:
+    name: Update Homebrew tap
+    needs: [validate, release]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - name: Download binaries for SHA256
+        run: |
+          BASE_URL="https://github.com/litexlang/golitex/releases/download/${VERSION}"
+          for pair in "darwin_arm64" "linux_amd64" "linux_arm64"; do
+            curl -fSL -o "litex_${VERSION}_${pair}" "${BASE_URL}/litex_${VERSION}_${pair}"
+          done
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          echo "darwin_arm64=$(sha256sum litex_${VERSION}_darwin_arm64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "linux_amd64=$(sha256sum litex_${VERSION}_linux_amd64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "linux_arm64=$(sha256sum litex_${VERSION}_linux_arm64 | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout homebrew-tap
+        uses: actions/checkout@v4
+        with:
+          repository: litexlang/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        run: |
+          cat > homebrew-tap/litex.rb << 'FORMULA'
+          class Litex < Formula
+            desc "A simple formal proof language and verifier"
+            homepage "https://litexlang.com"
+            version "VERSION_PLACEHOLDER"
+            license "Apache-2.0"
+
+            on_macos do
+              url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_darwin_arm64"
+              sha256 "SHA_DARWIN_ARM64"
+            end
+
+            on_linux do
+              if Hardware::CPU.arm?
+                url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_linux_arm64"
+                sha256 "SHA_LINUX_ARM64"
+              else
+                url "https://github.com/litexlang/golitex/releases/download/VERSION_PLACEHOLDER/litex_VERSION_PLACEHOLDER_linux_amd64"
+                sha256 "SHA_LINUX_AMD64"
+              end
+            end
+
+            def install
+              bin.install Dir["litex_*"].first => "litex"
+            end
+
+            test do
+              assert_match "litex VERSION_PLACEHOLDER", shell_output("#{bin}/litex -version")
+            end
+          end
+          FORMULA
+
+          sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" homebrew-tap/litex.rb
+          sed -i "s/SHA_DARWIN_ARM64/${{ steps.sha.outputs.darwin_arm64 }}/g" homebrew-tap/litex.rb
+          sed -i "s/SHA_LINUX_AMD64/${{ steps.sha.outputs.linux_amd64 }}/g" homebrew-tap/litex.rb
+          sed -i "s/SHA_LINUX_ARM64/${{ steps.sha.outputs.linux_arm64 }}/g" homebrew-tap/litex.rb
+
+      - name: Push to homebrew-tap
+        run: |
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add litex.rb
+          git diff --quiet && echo "No changes" || git commit -m "Update litex to ${VERSION}"
+          git push
+
+  # ─────────────────────────────────────────────
+  # Job 8: Update Scoop bucket
+  # ─────────────────────────────────────────────
+  publish-scoop:
+    name: Update Scoop bucket
+    needs: [validate, release]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - name: Download Windows binary for SHA256
+        run: |
+          curl -fSL -o "litex.exe" \
+            "https://github.com/litexlang/golitex/releases/download/${VERSION}/litex_${VERSION}_windows_amd64.exe"
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          echo "windows_amd64=$(sha256sum litex.exe | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout scoop bucket
+        uses: actions/checkout@v4
+        with:
+          repository: litexlang/scoop-litex
+          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          path: scoop-litex
+
+      - name: Update manifest
+        run: |
+          cat > scoop-litex/litex.json << EOF
+          {
+              "version": "${VERSION}",
+              "description": "A simple formal proof language and verifier",
+              "homepage": "https://litexlang.com",
+              "license": "Apache-2.0",
+              "architecture": {
+                  "64bit": {
+                      "url": "https://github.com/litexlang/golitex/releases/download/${VERSION}/litex_${VERSION}_windows_amd64.exe",
+                      "hash": "${{ steps.sha.outputs.windows_amd64 }}"
+                  }
+              },
+              "bin": [["litex_${VERSION}_windows_amd64.exe", "litex"]],
+              "checkver": "github",
+              "autoupdate": {
+                  "architecture": {
+                      "64bit": {
+                          "url": "https://github.com/litexlang/golitex/releases/download/\$version/litex_\$version_windows_amd64.exe"
+                      }
+                  }
+              }
+          }
+          EOF
+
+      - name: Push to scoop bucket
+        run: |
+          cd scoop-litex
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add litex.json
+          git commit -m "Update litex to ${VERSION}"
+          git push
+
+  # ─────────────────────────────────────────────
+  # Job 9: Build and push Docker image
+  # ─────────────────────────────────────────────
+  publish-docker:
+    name: Publish Docker image
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+      PRERELEASE: ${{ needs.validate.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: binary-linux-*
+          merge-multiple: true
+
+      - name: Prepare binaries for Docker
+        run: |
+          cp "litex_${VERSION}_linux_amd64" litex-amd64
+          cp "litex_${VERSION}_linux_arm64" litex-arm64
+          chmod +x litex-amd64 litex-arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine Docker tags
+        id: tags
+        run: |
+          TAGS="ghcr.io/litexlang/litex:${VERSION}"
+          if [ "$PRERELEASE" = "false" ]; then
+            TAGS="${TAGS},ghcr.io/litexlang/litex:latest"
+          else
+            TAGS="${TAGS},ghcr.io/litexlang/litex:beta"
+          fi
+          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.tags.outputs.tags }}
