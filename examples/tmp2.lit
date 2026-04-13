@@ -1,4 +1,17 @@
-abstract_prop p(a, b)
+let add_fn_R fn(f fn(x R)R, g fn(x R)R) fn(x R) R:
+    forall f, g fn(x R) R, x R:
+        add_fn_R(f, g)(x) = f(x) + g(x)
 
-know forall a, b R:
-    $p(a, b)
+prop increasing_fn(f fn(x R) R):
+    forall x, y R:
+        x < y
+        =>:
+            f(x) < f(y)
+
+claim:
+    prove:
+        forall f2, g2 fn(x R) R:
+            $increasing_fn(f2)
+            $increasing_fn(g2)
+            =>:
+                $increasing_fn(add_fn_R(f2, g2))

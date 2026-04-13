@@ -23,21 +23,10 @@ impl Runtime {
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
 
-            if let Some(verified_by_builtin_fact_definition) =
-                self.verify_builtin_fact_with_their_definition(atomic_fact, verify_state)?
+            if let Some(verified_by_definition) =
+                self.verify_atomic_fact_using_builtin_or_prop_definition(atomic_fact, verify_state)?
             {
-                return Ok(verified_by_builtin_fact_definition);
-            }
-
-            if let AtomicFact::NormalAtomicFact(normal_atomic_fact) = atomic_fact {
-                let maybe_verified_by_prop_definition = self
-                    .verify_normal_atomic_fact_using_its_definition(
-                        normal_atomic_fact,
-                        verify_state,
-                    )?;
-                if let Some(verified_by_definition) = maybe_verified_by_prop_definition {
-                    return Ok(verified_by_definition);
-                }
+                return Ok(verified_by_definition);
             }
 
             result = self
@@ -403,11 +392,34 @@ impl Runtime {
         ))
     }
 
+    // Built-in subset/superset/restrict definitions first, then user `prop` iff-clauses.
+    fn verify_atomic_fact_using_builtin_or_prop_definition(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) =
+            self.verify_builtin_fact_with_their_definition(atomic_fact, verify_state)?
+        {
+            return Ok(Some(result));
+        }
+        if let AtomicFact::NormalAtomicFact(n) = atomic_fact {
+            return self.verify_normal_atomic_fact_using_its_definition(n, verify_state);
+        }
+        Ok(None)
+    }
+
     fn verify_normal_atomic_fact_using_its_definition(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(_) =
+            self.get_abstract_prop_definition_by_name(&normal_atomic_fact.predicate.to_string())
+        {
+            return Ok(None);
+        }
+
         let predicate_name = normal_atomic_fact.predicate.to_string();
 
         let definition = match self.get_prop_definition_by_name(&predicate_name) {
