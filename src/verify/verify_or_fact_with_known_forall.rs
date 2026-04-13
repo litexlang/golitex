@@ -165,8 +165,16 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
-            let result =
-                self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
+            let result = self
+                .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
+                .map_err(|e| {
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        given_or_fact.clone().into(),
+                        String::new(),
+                        given_or_fact.line_file.clone(),
+                        Some(e),
+                    )
+                })?;
             if result.is_unknown() {
                 return Ok(None);
             }
