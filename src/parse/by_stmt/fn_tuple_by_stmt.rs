@@ -13,7 +13,6 @@ impl Runtime {
         Ok(ByFnStmt::new(function, tb.line_file.clone()).into())
     }
 
-    /// `by fn set: <func> $in fn{ ... } <ret>` — membership in a function-set via built-in rules (exec TBD).
     pub fn parse_by_fn_set_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         let func = self.parse_obj(tb)?;
         tb.skip_token(FACT_PREFIX)?;

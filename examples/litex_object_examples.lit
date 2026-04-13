@@ -1,7 +1,7 @@
 # Object expressions: surface syntax maps to `Obj` in `src/obj/obj.rs`. Independent blocks for copy-paste.
 # IdentifierWithMod / FieldAccessWithMod use `::` between name parts (`MOD_SIGN`); FieldAccess uses a single `.`.
 # Included below: Number, Tuple, Add/Sub/Mul/Div/Mod/Pow, StandardSet (sample), ListSet, SetBuilder,
-# Union/Intersect/SetMinus/SetDiff, infix `\` forms, Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn` / `Fn`),
+# Union/Intersect/SetMinus/SetDiff, infix `\` forms, Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
 # TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, Choose, FieldAccess, FamilyObj, StructObj, FnObj (via `have fn`).
 # Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
 
@@ -79,7 +79,7 @@ prove:
         c = cart(R, Q)
     proj(c, 1) = R
 
-# --- Obj::Cart, CartDim, Obj::FnSet (`fn`), uppercase `Fn` sugar ---
+# --- Obj::Cart, CartDim ---
 prove:
     let d set:
         d = cart(R, Q)
@@ -88,7 +88,7 @@ prove:
 
 prove:
     have f fn(x R) R
-    have g set = Fn(R) R
+    have g set = fn(x R) R
 
 # --- Obj::TupleDim, Obj::ObjAtIndex ---
 prove:
