@@ -39,10 +39,10 @@ impl Runtime {
                             forall_fact.clone().into(),
                             message.clone(),
                             forall_fact.line_file.clone(),
-                            Some(RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                            Some(RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                             message,
                             forall_fact.line_file.clone(),
-                            Some(forall_fact.clone().into()),
+                            Some(Fact::from(forall_fact.clone()).into_stmt()),
                             Some(e.into()),
                         ).into()),
                         )

@@ -11,7 +11,7 @@ impl Runtime {
                     let def = self
                         .get_cloned_family_definition_by_name(&family_name)
                         .ok_or_else(|| {
-                            RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                            RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                                 format!("family `{}` is not defined", family_name),
                                 default_line_file(),
                                 None,
@@ -29,7 +29,7 @@ impl Runtime {
             | ParamType::Set(_)
             | ParamType::NonemptySet(_)
             | ParamType::FiniteSet(_) => Err(
-                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                     "by struct: this field parameter kind cannot be used as a cart dimension yet"
                         .to_string(),
                     default_line_file(),

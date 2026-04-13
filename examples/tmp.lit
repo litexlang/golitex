@@ -1,18 +1,47 @@
-prove:
-    abs(-1) = 1
+know:
+    forall a R:
+        0 <= a
+        =>:
+            -a <= 0
 
-prove:
-    abstract_prop q(a)
+    forall a R:
+        a <= 0
+        =>:
+            0 <= -a
 
-    know forall a R:
-        $q(-a)
+know:
+    forall a, b R:
+        a <= b
+        =>:
+            0 <= b - a
 
-    $q(1)
+know:
+    forall a, b, c, d R:
+        0 <= a < c
+        0 <= b < d
+        =>:
+            a * b < c * d
 
-prove:
-    abstract_prop p(a)
+claim:
+    prove:
+        forall a, b R:
+            0 <= a
+            a <= 1
+            0 <= b
+            b <= 1
+            =>:
+                a * b <= 1
+    a * b <= 1 * b = b <= 1
 
-    know forall a R:
-        $p(2 * a)
-        
-    $p(1)
+claim:
+    prove:
+        forall x, y, epsilon R:
+            0 < epsilon
+            epsilon <= 1
+            abs(x) < epsilon
+            abs(y) < epsilon
+            =>:
+                abs(x * y) < epsilon
+    0 <= abs(x)
+    0 <= abs(y)
+    abs(x * y) = abs(x) * abs(y) < epsilon * epsilon <= epsilon * 1 = epsilon

@@ -48,7 +48,7 @@ impl Runtime {
                 .map_err(RuntimeError::from)?;
             if verify_result.is_unknown() {
                 return Err(
-                    RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                    RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                         format!(
                             "argument {} does not satisfy parameter type (unknown): {}",
                             arg, param_type
