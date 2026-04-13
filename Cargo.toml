@@ -1,5 +1,5 @@
 [package]
-name = "litex"
+name = "litex-lang"
 version = "0.9.6-beta"
 edition = "2021"
 
