@@ -1,5 +1,3 @@
-use crate::common::keywords::{EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL};
-use crate::fact::matchable_fact_with_atomic_fact_inside::ChainFact;
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
@@ -144,11 +142,11 @@ impl ChainFact {
             idxs.sort_unstable();
             let rep = idxs[0];
             for &j in idxs.iter().skip(1) {
-                extra.push(AtomicFact::EqualFact(EqualFact::new(
+                extra.push(EqualFact::new(
                     self.objs[rep].clone(),
                     self.objs[j].clone(),
                     lf.clone(),
-                )));
+                ).into());
             }
         }
 
@@ -160,18 +158,18 @@ impl ChainFact {
                 let f = match polarity {
                     ChainPolarity::Up => {
                         if path_strict {
-                            AtomicFact::LessFact(LessFact::new(left, right, lf.clone()))
+                            LessFact::new(left, right, lf.clone()).into()
                         } else {
-                            AtomicFact::LessEqualFact(LessEqualFact::new(left, right, lf.clone()))
+                            LessEqualFact::new(left, right, lf.clone()).into()
                         }
                     }
                     ChainPolarity::Down => {
                         if path_strict {
-                            AtomicFact::GreaterFact(GreaterFact::new(left, right, lf.clone()))
+                            GreaterFact::new(left, right, lf.clone()).into()
                         } else {
-                            AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                            GreaterEqualFact::new(
                                 left, right, lf.clone(),
-                            ))
+                            ).into()
                         }
                     }
                 };

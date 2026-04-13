@@ -63,7 +63,7 @@ impl InferResult {
 
     pub fn push_atomic_fact(&mut self, atomic_fact: &AtomicFact) {
         self.infer_facts.push(atomic_fact.to_string());
-        self.facts.push(Fact::AtomicFact(atomic_fact.clone()));
+        self.facts.push(atomic_fact.clone().into());
     }
 
     pub fn new_infer_result_inside(&mut self, other_infer_result: InferResult) {

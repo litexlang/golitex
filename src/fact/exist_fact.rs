@@ -9,16 +9,18 @@ pub enum OrAndChainAtomicFact {
     OrFact(OrFact),
 }
 
-impl OrAndChainAtomicFact {
-    pub fn to_exist_or_and_chain_atomic_fact(self) -> ExistOrAndChainAtomicFact {
-        match self {
+impl From<OrAndChainAtomicFact> for ExistOrAndChainAtomicFact {
+    fn from(f: OrAndChainAtomicFact) -> Self {
+        match f {
             OrAndChainAtomicFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
             OrAndChainAtomicFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
             OrAndChainAtomicFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
             OrAndChainAtomicFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
         }
     }
+}
 
+impl OrAndChainAtomicFact {
     pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
         if from == to {
             return self;
@@ -56,16 +58,40 @@ impl OrAndChainAtomicFact {
     }
 }
 
+impl From<AtomicFact> for OrAndChainAtomicFact {
+    fn from(atomic_fact: AtomicFact) -> Self {
+        OrAndChainAtomicFact::AtomicFact(atomic_fact)
+    }
+}
+
+impl From<GreaterEqualFact> for OrAndChainAtomicFact {
+    fn from(f: GreaterEqualFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
+impl From<LessFact> for OrAndChainAtomicFact {
+    fn from(f: LessFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
+impl From<EqualFact> for OrAndChainAtomicFact {
+    fn from(f: EqualFact) -> Self {
+        AtomicFact::from(f).into()
+    }
+}
+
 #[derive(Clone)]
 pub struct ExistFact {
-    pub params_def_with_type: Vec<ParamGroupWithParamType>,
+    pub params_def_with_type: ParamDefWithType,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
 
 impl ExistFact {
     pub fn new(
-        params_def_with_type: Vec<ParamGroupWithParamType>,
+        params_def_with_type: ParamDefWithType,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {
@@ -100,7 +126,7 @@ impl ExistFact {
         self.line_file.clone()
     }
 
-    pub fn params_def_with_type(&self) -> &Vec<ParamGroupWithParamType> {
+    pub fn params_def_with_type(&self) -> &ParamDefWithType {
         &self.params_def_with_type
     }
 
@@ -110,12 +136,12 @@ impl ExistFact {
 }
 
 fn exist_fact_string_without_exist_as_prefix(
-    param_defs: &Vec<ParamGroupWithParamType>,
+    param_defs: &ParamDefWithType,
     facts: &Vec<OrAndChainAtomicFact>,
 ) -> String {
     format!(
         "{} {} {}",
-        vec_to_string_join_by_comma(param_defs),
+        param_defs.to_string(),
         ST,
         curly_braced_vec_to_string_with_sep(
             &facts
@@ -167,15 +193,40 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => o.line_file.clone(),
         }
     }
+
+    pub fn with_new_line_file(self, line_file: LineFile) -> Self {
+        match self {
+            OrAndChainAtomicFact::AtomicFact(a) => {
+                OrAndChainAtomicFact::AtomicFact(a.with_new_line_file(line_file))
+            }
+            OrAndChainAtomicFact::AndFact(af) => OrAndChainAtomicFact::AndFact(AndFact::new(
+                af.facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
+                line_file,
+            )),
+            OrAndChainAtomicFact::ChainFact(cf) => {
+                OrAndChainAtomicFact::ChainFact(ChainFact::new(cf.objs, cf.prop_names, line_file))
+            }
+            OrAndChainAtomicFact::OrFact(of) => OrAndChainAtomicFact::OrFact(OrFact::new(
+                of.facts
+                    .into_iter()
+                    .map(|x| x.with_new_line_file(line_file.clone()))
+                    .collect(),
+                line_file,
+            )),
+        }
+    }
 }
 
 impl OrAndChainAtomicFact {
     pub fn from_ref_to_cloned_fact(&self) -> Fact {
         match self {
-            OrAndChainAtomicFact::AtomicFact(a) => Fact::AtomicFact(a.clone()),
-            OrAndChainAtomicFact::AndFact(a) => Fact::AndFact(a.clone()),
-            OrAndChainAtomicFact::ChainFact(c) => Fact::ChainFact(c.clone()),
-            OrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o.clone()),
+            OrAndChainAtomicFact::AtomicFact(a) => a.clone().into(),
+            OrAndChainAtomicFact::AndFact(a) => a.clone().into(),
+            OrAndChainAtomicFact::ChainFact(c) => c.clone().into(),
+            OrAndChainAtomicFact::OrFact(o) => o.clone().into(),
         }
     }
 
@@ -201,7 +252,7 @@ impl OrAndChainAtomicFact {
 impl ExistFact {
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
         let mut args: Vec<Obj> = Vec::new();
-        for param_def_with_type in self.params_def_with_type.iter() {
+        for param_def_with_type in self.params_def_with_type.groups.iter() {
             if let ParamType::Obj(obj) = &param_def_with_type.param_type {
                 args.push(obj.clone());
             }

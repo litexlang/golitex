@@ -8,18 +8,17 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeErrorStruct> {
         self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process(def_algo_stmt))?;
         self.store_def_algo(def_algo_stmt)?;
-        Ok((NonFactualStmtSuccess::new(
-                def_algo_stmt.clone().into(),
-                InferResult::new(),
-                vec![],
-            )).into())
+        Ok(
+            (NonFactualStmtSuccess::new(def_algo_stmt.clone().into(), InferResult::new(), vec![]))
+                .into(),
+        )
     }
 
     fn exec_def_algo_stmt_verify_process(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<StmtResult, RuntimeErrorStruct> {
-        let function_name_obj = Obj::Identifier(Identifier::new(def_algo_stmt.name.clone()));
+        let function_name_obj: Obj = def_algo_stmt.name.clone().into();
         let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
             Some(fn_set) => fn_set,
             None => {
@@ -54,11 +53,10 @@ impl Runtime {
             &requirement_dom_facts,
         )?;
 
-        Ok((NonFactualStmtSuccess::new(
-                def_algo_stmt.clone().into(),
-                InferResult::new(),
-                vec![],
-            )).into())
+        Ok(
+            (NonFactualStmtSuccess::new(def_algo_stmt.clone().into(), InferResult::new(), vec![]))
+                .into(),
+        )
     }
 
     fn def_algo_verify_exec_error_without_message(
@@ -89,7 +87,7 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_where_algo_belongs: &FnSet,
-    ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeErrorStruct> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
             fn_set_where_algo_belongs,
@@ -100,10 +98,10 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_with_dom: &FnSet,
-    ) -> Result<(Vec<Fact>, Vec<ParamGroupWithParamType>), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeErrorStruct> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
-            args_for_algo_params.push(Obj::Identifier(Identifier::new(param_name.clone())));
+            args_for_algo_params.push(param_name.clone().into());
         }
 
         let param_satisfy_fn_param_set_facts_atomic =
@@ -139,10 +137,8 @@ impl Runtime {
         for (fn_set_param_name, algo_param_name) in
             fn_set_param_names.iter().zip(def_algo_stmt.params.iter())
         {
-            fn_set_param_name_to_algo_arg_obj.insert(
-                fn_set_param_name.clone(),
-                Obj::Identifier(Identifier::new(algo_param_name.clone())),
-            );
+            fn_set_param_name_to_algo_arg_obj
+                .insert(fn_set_param_name.clone(), algo_param_name.clone().into());
         }
 
         let mut requirement_facts: Vec<Fact> = Vec::new();
@@ -184,7 +180,7 @@ impl Runtime {
         }
 
         for in_fact_atomic in param_satisfy_fn_param_set_facts_atomic.iter() {
-            requirement_facts.push(Fact::AtomicFact(in_fact_atomic.clone()));
+            requirement_facts.push(in_fact_atomic.clone().into());
         }
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
@@ -196,23 +192,25 @@ impl Runtime {
                         Some(runtime_error),
                     )
                 })?;
-            requirement_facts.push(instantiated_dom_fact.to_fact());
+            requirement_facts.push(instantiated_dom_fact.into());
         }
 
-        Ok((requirement_facts, algo_param_defs_with_type))
+        Ok((
+            requirement_facts,
+            ParamDefWithType::new(algo_param_defs_with_type),
+        ))
     }
 
     fn build_algo_verification_fn_call_obj(def_algo_stmt: &DefAlgoStmt) -> Obj {
         let mut fn_call_arg_boxes: Vec<Box<Obj>> = Vec::with_capacity(def_algo_stmt.params.len());
         for algo_param_name in def_algo_stmt.params.iter() {
-            fn_call_arg_boxes.push(Box::new(Obj::Identifier(Identifier::new(
-                algo_param_name.clone(),
-            ))));
+            fn_call_arg_boxes.push(Box::new(algo_param_name.clone().into()));
         }
-        Obj::FnObj(FnObj::new(
-            Atom::Identifier(Identifier::new(def_algo_stmt.name.clone())),
+        FnObj::new(
+            Identifier::new(def_algo_stmt.name.clone()).into(),
             vec![fn_call_arg_boxes],
-        ))
+        )
+        .into()
     }
 
     fn requirement_facts_to_exist_or_and_chain_dom_facts(
@@ -223,17 +221,11 @@ impl Runtime {
             Vec::with_capacity(requirement_facts.len());
         for requirement_fact in requirement_facts.iter() {
             let requirement_dom_fact = match requirement_fact {
-                Fact::AtomicFact(atomic_fact) => {
-                    ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone())
-                }
-                Fact::AndFact(and_fact) => ExistOrAndChainAtomicFact::AndFact(and_fact.clone()),
-                Fact::ChainFact(chain_fact) => {
-                    ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone())
-                }
-                Fact::OrFact(or_fact) => ExistOrAndChainAtomicFact::OrFact(or_fact.clone()),
-                Fact::ExistFact(exist_fact) => {
-                    ExistOrAndChainAtomicFact::ExistFact(exist_fact.clone())
-                }
+                Fact::AtomicFact(atomic_fact) => atomic_fact.clone().into(),
+                Fact::AndFact(and_fact) => and_fact.clone().into(),
+                Fact::ChainFact(chain_fact) => chain_fact.clone().into(),
+                Fact::OrFact(or_fact) => or_fact.clone().into(),
+                Fact::ExistFact(exist_fact) => exist_fact.clone().into(),
                 Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
                     return Err(
                         Self::def_algo_verify_exec_error_with_message_and_optional_cause(
@@ -250,7 +242,7 @@ impl Runtime {
     }
 
     fn forall_fact_for_def_algo_case(
-        algo_param_defs_with_type: &[ParamGroupWithParamType],
+        algo_param_defs_with_type: &ParamDefWithType,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_case: &AlgoCase,
         fn_call_obj: &Obj,
@@ -260,30 +252,28 @@ impl Runtime {
         for requirement_dom_fact in requirement_dom_facts.iter() {
             case_dom_facts.push(requirement_dom_fact.clone());
         }
-        case_dom_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
-            algo_case.condition.clone(),
-        ));
+        case_dom_facts.push(algo_case.condition.clone().into());
 
-        let case_then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
-            AtomicFact::EqualFact(EqualFact::new(
-                fn_call_obj.clone(),
-                algo_case.return_stmt.value.clone(),
-                algo_case.line_file.clone(),
-            )),
-        )];
+        let case_then_facts = vec![EqualFact::new(
+            fn_call_obj.clone(),
+            algo_case.return_stmt.value.clone(),
+            algo_case.line_file.clone(),
+        )
+        .into()];
 
-        Fact::ForallFact(ForallFact::new(
-            algo_param_defs_with_type.to_vec(),
+        ForallFact::new(
+            algo_param_defs_with_type.clone(),
             case_dom_facts,
             case_then_facts,
             algo_case.line_file.clone(),
-        ))
+        )
+        .into()
     }
 
     fn verify_each_def_algo_case_implies_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &[ParamGroupWithParamType],
+        algo_param_defs_with_type: &ParamDefWithType,
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
     ) -> Result<(), RuntimeErrorStruct> {
@@ -313,7 +303,7 @@ impl Runtime {
     fn verify_def_algo_case_coverage_when_no_default_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &[ParamGroupWithParamType],
+        algo_param_defs_with_type: &ParamDefWithType,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
     ) -> Result<(), RuntimeErrorStruct> {
         if def_algo_stmt.default_return.is_some() {
@@ -333,15 +323,16 @@ impl Runtime {
         let mut case_conditions: Vec<AndChainAtomicFact> =
             Vec::with_capacity(def_algo_stmt.cases.len());
         for algo_case in def_algo_stmt.cases.iter() {
-            case_conditions.push(AndChainAtomicFact::AtomicFact(algo_case.condition.clone()));
+            case_conditions.push(algo_case.condition.clone().into());
         }
         let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file.clone());
-        let coverage_forall_fact = Fact::ForallFact(ForallFact::new(
-            algo_param_defs_with_type.to_vec(),
+        let coverage_forall_fact = ForallFact::new(
+            algo_param_defs_with_type.clone(),
             requirement_dom_facts.to_vec(),
             vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
             def_algo_stmt.line_file.clone(),
-        ));
+        )
+        .into();
 
         let verify_state = VerifyState::new(0, false);
         self.verify_fact_return_err_if_not_true(&coverage_forall_fact, &verify_state)

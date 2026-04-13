@@ -12,7 +12,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors.clone(),
                     "".to_string(),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 )
             })?;
@@ -23,7 +23,7 @@ impl Runtime {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
                 stmt_for_fact_errors,
                 "".to_string(),
-                Some(store_fact_error.into()),
+                Some(RuntimeError::ExecStmtError(store_fact_error)),
                 vec![],
             )
         })
@@ -40,7 +40,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors.clone(),
                     "".to_string(),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 )
             })?;
@@ -49,7 +49,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors,
                     "".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 )
             })
@@ -66,7 +66,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors.clone(),
                     "".to_string(),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 )
             })?;
@@ -75,7 +75,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt_for_fact_errors,
                     "".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 )
             })

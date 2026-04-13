@@ -9,17 +9,17 @@ impl Runtime {
         for fact in stmt.then_facts.iter() {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!("by cases: failed to prove `{}`", fact),
-                        Some(verify_error.into()),
+                        Some(verify_error),
                         vec![],
                     ))
                 })?;
         }
 
         self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)
-            .map_err(RuntimeError::from)?;
+            .map_err(RuntimeError::ExecStmtError)?;
 
         let mut inside_results: Vec<StmtResult> = Vec::new();
         for case_index in 0..stmt.cases.len() {
@@ -32,7 +32,7 @@ impl Runtime {
                     inside_results.append(&mut one_case_inside_results);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(RuntimeError::from(exec_stmt_error));
+                    return Err(RuntimeError::ExecStmtError(exec_stmt_error));
                 }
             }
         }
@@ -42,10 +42,10 @@ impl Runtime {
             let one_then_fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(then_fact.clone())
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!("by cases: failed to release `{}`", then_fact),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         vec![],
                     ))
                 })?;
@@ -63,14 +63,14 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesStmt,
     ) -> Result<(), RuntimeErrorStruct> {
-        let all_cases_or_fact =
-            Fact::OrFact(crate::fact::OrFact::new(stmt.cases.clone(), stmt.line_file.clone()));
+        let all_cases_or_fact: Fact =
+            OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
         self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     "by cases: cannot verify that all cases cover all situations".to_string(),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 )
             })?;
@@ -113,7 +113,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!("by cases: failed to assume case `{}`", case_fact),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 )
             })?;
@@ -147,7 +147,7 @@ impl Runtime {
                             impossible_fact,
                             Some(case_fact.to_string()),
                         ),
-                        Some(verify_error.into()),
+                        Some(verify_error),
                         vec![],
                     )
                 })?;
@@ -170,7 +170,7 @@ impl Runtime {
                             impossible_fact,
                             Some(case_fact.to_string()),
                         ),
-                        Some(verify_error.into()),
+                        Some(verify_error),
                         vec![],
                     )
                 })?;

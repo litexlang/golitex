@@ -103,7 +103,7 @@ impl Runtime {
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        let param_names = ParamGroupWithParamType::collect_param_names(&known_forall.params_def);
+        let param_names = known_forall.params_def.collect_param_names();
 
         if !param_names
             .iter()
@@ -143,17 +143,17 @@ impl Runtime {
             )
             .map_err(|e| {
                 RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    Fact::AtomicFact(given_atomic_fact.clone()),
+                    given_atomic_fact.clone().into(),
                     String::new(),
-                    Fact::AtomicFact(given_atomic_fact.clone()).line_file(),
+                    given_atomic_fact.line_file(),
                     Some(e),
                 )
             })?;
 
-        let param_to_arg_map = match ParamGroupWithParamType::param_def_params_to_arg_map(
-            &known_forall.params_def,
-            &arg_map,
-        ) {
+        let param_to_arg_map = match known_forall
+            .params_def
+            .param_def_params_to_arg_map(&arg_map)
+        {
             Some(m) => m,
             None => return Ok(None),
         };
@@ -163,14 +163,22 @@ impl Runtime {
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
                     RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        Fact::AtomicFact(given_atomic_fact.clone()),
+                        given_atomic_fact.clone().into(),
                         String::new(),
-                        Fact::AtomicFact(given_atomic_fact.clone()).line_file(),
+                        given_atomic_fact.line_file(),
                         Some(e),
                     )
                 })?;
-            let result =
-                self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
+            let result = self
+                .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
+                .map_err(|e| {
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        given_atomic_fact.clone().into(),
+                        String::new(),
+                        given_atomic_fact.line_file(),
+                        Some(e),
+                    )
+                })?;
             if result.is_unknown() {
                 return Ok(None);
             }
@@ -179,16 +187,14 @@ impl Runtime {
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
             known_forall.dom.clone(),
-            vec![ExistOrAndChainAtomicFact::AtomicFact(
-                atomic_fact_in_known_forall_fact.clone(),
-            )],
+            vec![atomic_fact_in_known_forall_fact.clone().into()],
             known_forall.line_file.clone(),
         );
         let fact_verified =
             FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                Fact::AtomicFact(given_atomic_fact.clone()),
+                given_atomic_fact.clone().into(),
                 verified_by_known_forall_fact.to_string(),
-                Some(Fact::ForallFact(verified_by_known_forall_fact.clone())),
+                Some(verified_by_known_forall_fact.clone().into()),
                 None,
                 Vec::new(),
             );
@@ -364,10 +370,7 @@ impl Runtime {
         }
 
         let mut map = HashMap::new();
-        map.insert(
-            known_arg.name.clone(),
-            Obj::Identifier(Identifier::new(given.name.clone())),
-        );
+        map.insert(known_arg.name.clone(), given.name.clone().into());
 
         Ok(Some(map))
     }
@@ -396,8 +399,8 @@ impl Runtime {
 
                 // heads must match
                 let head_match = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    &Obj::from(left.head.as_ref().clone()),
-                    &Obj::from(right_fn.head.as_ref().clone()),
+                    &left.head.as_ref().clone().into(),
+                    &right_fn.head.as_ref().clone().into(),
                 )?;
                 let mut head_map = match head_match {
                     Some(m) => m,
@@ -441,7 +444,7 @@ impl Runtime {
         if !given_arg.evaluate_to_normalized_decimal_number().is_some() {
             return Ok(None);
         }
-        let left_obj = Obj::Number(left.clone());
+        let left_obj: Obj = left.clone().into();
         if left_obj.two_objs_can_be_calculated_and_equal_by_calculation(given_arg) {
             Ok(Some(HashMap::new()))
         } else {
@@ -458,7 +461,23 @@ impl Runtime {
             Obj::Add(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
-            _ => Ok(None),
+            _ => {
+                if let Obj::Number(left_left_number) = left_left {
+                    let new_given = Sub::new(given_arg.clone(), left_left_number.clone().into());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_right,
+                        &new_given.into(),
+                    );
+                } else if let Obj::Number(left_right_number) = left_right {
+                    let new_given = Sub::new(given_arg.clone(), left_right_number.clone().into());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_left,
+                        &new_given.into(),
+                    );
+                } else {
+                    return Ok(None);
+                }
+            }
         }
     }
 
@@ -471,7 +490,23 @@ impl Runtime {
             Obj::Sub(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
-            _ => Ok(None),
+            _ => {
+                if let Obj::Number(right_number) = left_right {
+                    let new_given = Add::new(right_number.clone().into(), given_arg.clone());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_left,
+                        &new_given.into(),
+                    );
+                } else if let Obj::Number(left_left_number) = left_left {
+                    let new_given = Sub::new(left_left_number.clone().into(), given_arg.clone());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_right,
+                        &new_given.into(),
+                    );
+                } else {
+                    return Ok(None);
+                }
+            }
         }
     }
 
@@ -484,7 +519,43 @@ impl Runtime {
             Obj::Mul(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
-            _ => Ok(None),
+            _ => {
+                let neg_one: Obj = Number::new("-1".to_string()).into();
+                let known_left_is_neg_one = match left_left {
+                    Obj::Number(n) => {
+                        let left_obj: Obj = n.clone().into();
+                        "-1".to_string() == left_obj.to_string()
+                    }
+                    _ => false,
+                };
+                if known_left_is_neg_one {
+                    let synthetic: Obj = Mul::new(neg_one, given_arg.clone()).into();
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_right, &synthetic,
+                    );
+                } else {
+                    if let Obj::Number(n) = left_left {
+                        if n.normalized_value == "0".to_string() {
+                            return Ok(None);
+                        } else {
+                            let synthetic: Obj =
+                                Div::new(given_arg.clone(), n.clone().into()).into();
+                            return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                                left_right, &synthetic,
+                            );
+                        }
+                    } else if let Obj::Number(left_right_number) = left_right {
+                        let new_given =
+                            Div::new(given_arg.clone(), left_right_number.clone().into());
+                        return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                            left_left,
+                            &new_given.into(),
+                        );
+                    } else {
+                        return Ok(None);
+                    }
+                }
+            }
         }
     }
 
@@ -497,7 +568,17 @@ impl Runtime {
             Obj::Div(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
-            _ => Ok(None),
+            _ => {
+                if let Obj::Number(left_right_number) = left_right {
+                    let new_given = Mul::new(left_right_number.clone().into(), given_arg.clone());
+                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_left,
+                        &new_given.into(),
+                    );
+                } else {
+                    return Ok(None);
+                }
+            }
         }
     }
 

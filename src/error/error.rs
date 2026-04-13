@@ -146,10 +146,10 @@ impl RuntimeErrorStruct {
             cause
         } else {
             Some(
-                RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
                     message.clone(),
                     line_file,
-                    None,
+                    Some(stmt.clone()),
                     cause,
                 ),
             )
@@ -326,18 +326,14 @@ impl RuntimeError {
         .into()
     }
 
-    pub fn new_unknown_error_with_msg_position_optional_fact_previous_error(
+    pub fn new_unknown_error_with_msg_position_optional_stmt_previous_error(
         msg: String,
         line_file: LineFile,
-        fact: Option<Fact>,
+        statement: Option<Stmt>,
         previous_error: Option<RuntimeError>,
     ) -> Self {
         UnknownRuntimeError(RuntimeErrorStruct::new(
-            if let Some(fact) = fact {
-                Some(fact.into_stmt())
-            } else {
-                None
-            },
+            statement,
             msg,
             line_file,
             previous_error,
@@ -351,10 +347,11 @@ impl RuntimeError {
         previous_error: Option<RuntimeError>,
     ) -> Self {
         let line_file = fact.line_file();
-        RuntimeError::new_unknown_error_with_msg_position_optional_fact_previous_error(
+        let stmt = fact.into_stmt();
+        RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
             msg,
             line_file,
-            Some(fact),
+            Some(stmt),
             previous_error,
         )
     }
@@ -409,12 +406,6 @@ impl fmt::Display for RuntimeErrorStruct {
 }
 
 impl std::error::Error for RuntimeErrorStruct {}
-
-impl From<RuntimeErrorStruct> for RuntimeError {
-    fn from(runtime_error_struct: RuntimeErrorStruct) -> Self {
-        runtime_error_struct.into()
-    }
-}
 
 fn boxed_previous_error(previous_error: Option<RuntimeError>) -> Option<Box<RuntimeError>> {
     previous_error.map(Box::new)

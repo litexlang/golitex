@@ -6,29 +6,17 @@ fn fact_for_obj_satisfies_param_type_shallow(
     line_file: LineFile,
 ) -> Fact {
     match param_type {
-        ParamType::Set(_) => {
-            Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(arg, line_file)))
-        }
-        ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-            IsNonemptySetFact::new(arg, line_file),
-        )),
-        ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(
-            IsFiniteSetFact::new(arg, line_file),
-        )),
-        ParamType::Obj(obj) => {
-            Fact::AtomicFact(AtomicFact::InFact(InFact::new(arg, obj.clone(), line_file)))
-        }
-        ParamType::Struct(st) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            arg,
-            Obj::StructObj(st.clone()),
-            line_file,
-        ))),
+        ParamType::Set(_) => IsSetFact::new(arg, line_file).into(),
+        ParamType::NonemptySet(_) => IsNonemptySetFact::new(arg, line_file).into(),
+        ParamType::FiniteSet(_) => IsFiniteSetFact::new(arg, line_file).into(),
+        ParamType::Obj(obj) => InFact::new(arg, obj.clone(), line_file).into(),
+        ParamType::Struct(st) => InFact::new(arg, Obj::StructObj(st.clone()), line_file).into(),
     }
 }
 
 impl Runtime {
     /// After `store_identifier_obj`, run param-type-specific work (type facts, storage, and later hooks).
-    pub(crate) fn define_parameter_by_binding_param_type(
+    pub fn define_parameter_by_binding_param_type(
         &mut self,
         name: &str,
         param_type: &ParamType,
@@ -66,13 +54,10 @@ impl Runtime {
         name: &str,
         obj: &Obj,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
-            obj.clone(),
-            default_line_file(),
-        )));
+        let type_fact =
+            InFact::new(name.to_string().into(), obj.clone(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_set(
@@ -80,12 +65,9 @@ impl Runtime {
         name: &str,
         _set: &Set,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
-            default_line_file(),
-        )));
+        let type_fact = IsSetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_nonempty_set(
@@ -93,12 +75,9 @@ impl Runtime {
         name: &str,
         _nonempty_set: &NonemptySet,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
-            default_line_file(),
-        )));
+        let type_fact = IsNonemptySetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_finite_set(
@@ -106,15 +85,12 @@ impl Runtime {
         name: &str,
         _finite_set: &FiniteSet,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
-            default_line_file(),
-        )));
+        let type_fact = IsFiniteSetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
-    pub(crate) fn define_parameter_by_binding_struct(
+    pub fn define_parameter_by_binding_struct(
         &mut self,
         name: &str,
         struct_ty: &StructObj,
@@ -123,14 +99,15 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
 
-        let new_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-            Obj::Identifier(Identifier::new(name.to_string())),
+        let new_fact = InFact::new(
+            name.to_string().into(),
             Obj::StructObj(struct_ty.clone()),
             default_line_file(),
-        )));
+        )
+        .into();
         infer_result.new_infer_result_inside(
             self.store_fact_without_well_defined_verified_and_infer(new_fact)
-                .map_err(RuntimeError::from)?,
+                .map_err(RuntimeError::ExecStmtError)?,
         );
 
         let struct_name = struct_ty.name.to_string();
@@ -138,18 +115,17 @@ impl Runtime {
             return Ok(infer_result);
         };
 
-        let base_map = ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
-            &def.param_defs,
-            &struct_ty.args,
-        );
+        let base_map = def
+            .param_defs
+            .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
         let lf = default_line_file();
-        for (field_name, field_st) in def.fields.iter() {
-            let arg = Obj::FieldAccess(FieldAccess::new(name.to_string(), field_name.clone()));
-            let param_type = self.inst_param_type(&field_st.to_param_type(), &base_map)?;
+        for (field_name, field_ty) in def.fields.iter() {
+            let arg = FieldAccess::new(name.to_string(), field_name.clone()).into();
+            let param_type = self.inst_param_type(field_ty, &base_map)?;
             let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
             infer_result.new_infer_result_inside(
                 self.store_fact_without_well_defined_verified_and_infer(f)
-                    .map_err(RuntimeError::from)?,
+                    .map_err(RuntimeError::ExecStmtError)?,
             );
         }
 
@@ -157,7 +133,7 @@ impl Runtime {
         for ocf in iff_facts {
             infer_result.new_infer_result_inside(
                 self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)
-                    .map_err(RuntimeError::from)?,
+                    .map_err(RuntimeError::ExecStmtError)?,
             );
         }
 
@@ -177,11 +153,11 @@ impl Runtime {
 
     pub fn define_params_with_type(
         &mut self,
-        param_defs: &[ParamGroupWithParamType],
+        param_defs: &ParamDefWithType,
         check_type_nonempty: bool,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
-        for param_def in param_defs.iter() {
+        for param_def in param_defs.groups.iter() {
             self.verify_param_type_well_defined(&param_def.param_type, &VerifyState::new(0, false))
                 .map_err(|well_defined_error| {
                     let param_names_text = param_def.params.join(", ");
@@ -191,7 +167,7 @@ impl Runtime {
                             "define params with type: failed to verify type well-defined for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ),
-                        Some(well_defined_error.into()),
+                        Some(well_defined_error),
                         error_line_file,
                     )
                 })?;
@@ -203,7 +179,7 @@ impl Runtime {
                             "define params with type: nonempty check failed for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ),
-                        Some(RuntimeError::from(inner_exec_error)),
+                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
                         default_line_file(),
                     )
                 })?;
@@ -215,7 +191,7 @@ impl Runtime {
                             "define params with type: failed to declare parameter `{}`",
                             name
                         ),
-                        Some(RuntimeError::from(runtime_error)),
+                        Some(RuntimeError::ExecStmtError(runtime_error)),
                         default_line_file(),
                     )
                 })?;

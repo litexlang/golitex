@@ -12,7 +12,7 @@ impl Runtime {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
                 stmt.clone().into(),
                 "".to_string(),
-                Some(store_error.into()),
+                Some(RuntimeError::ExecStmtError(store_error)),
                 vec![],
             )
         })?;
@@ -28,10 +28,7 @@ impl Runtime {
     ) -> Result<(), RuntimeErrorStruct> {
         let verify_state = VerifyState::new(0, false);
 
-        self.define_params_with_type(
-            &ParamGroupWithStructFieldType::to_param_groups_with_param_type(&stmt.param_defs),
-            false,
-        )
+        self.define_params_with_type(&stmt.param_defs, false)
         .map_err(|define_params_error| {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
                 stmt.clone().into(),
@@ -66,19 +63,19 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt.clone().into(),
                     "".to_string(),
-                    Some(RuntimeError::from(inner_exec_error)),
+                    Some(RuntimeError::ExecStmtError(inner_exec_error)),
                     vec![],
                 )
             })?;
         }
 
         for (_, field_param_type) in stmt.fields.iter() {
-            self.verify_param_type_well_defined(&field_param_type.to_param_type(), &verify_state)
+            self.verify_param_type_well_defined(field_param_type, &verify_state)
                 .map_err(|well_defined_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         stmt.clone().into(),
                         "".to_string(),
-                        Some(well_defined_error.into()),
+                        Some(well_defined_error),
                         vec![],
                     )
                 })?;
@@ -88,15 +85,15 @@ impl Runtime {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
                 stmt.clone().into(),
                 "".to_string(),
-                Some(store_error.into()),
+                Some(RuntimeError::ExecStmtError(store_error)),
                 vec![],
             )
         })?;
 
         let mut struct_params = vec![];
-        for param_def in stmt.param_defs.iter() {
+        for param_def in stmt.param_defs.groups.iter() {
             for field in param_def.params.iter() {
-                struct_params.push(Obj::Identifier(Identifier::new(field.clone())));
+                struct_params.push(field.clone().into());
             }
         }
 
@@ -128,7 +125,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     stmt.clone().into(),
                     "".to_string(),
-                    Some(RuntimeError::from(inner_exec_error)),
+                    Some(RuntimeError::ExecStmtError(inner_exec_error)),
                     vec![],
                 )
             })?;

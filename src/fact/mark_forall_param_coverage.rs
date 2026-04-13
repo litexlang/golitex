@@ -389,7 +389,7 @@ fn mark_forall_param_coverage_in_exist_fact(
     exist_fact: &ExistFact,
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
 ) {
-    for param_def_with_type in exist_fact.params_def_with_type.iter() {
+    for param_def_with_type in exist_fact.params_def_with_type.groups.iter() {
         mark_forall_param_coverage_in_param_type(
             &param_def_with_type.param_type,
             coverage_by_forall_param,
@@ -438,7 +438,7 @@ fn mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
 impl ForallFact {
     pub fn error_messages_if_forall_param_missing_in_some_then_clause(&self) -> Vec<(usize, String)> {
         let forall_param_names =
-            ParamGroupWithParamType::collect_param_names(&self.params_def_with_type);
+            self.params_def_with_type.collect_param_names();
         if forall_param_names.is_empty() {
             return Vec::new();
         }
