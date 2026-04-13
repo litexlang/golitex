@@ -15,7 +15,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn verify_objs_are_equal(
+    pub fn verify_objs_are_equal(
         &mut self,
         left: &Obj,
         right: &Obj,

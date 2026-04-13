@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 impl Runtime {
     /// Infer `forall x in left: x in right` from `left subset right`.
-    pub(crate) fn infer_subset_fact(
+    pub fn infer_subset_fact(
         &mut self,
         subset_fact: &SubsetFact,
     ) -> Result<InferResult, RuntimeError> {
@@ -18,7 +18,7 @@ impl Runtime {
         )
         .into();
         let inferred_forall_fact = ForallFact::new(
-            vec![parameter_definition],
+            ParamDefWithType::new(vec![parameter_definition]),
             vec![],
             vec![in_fact_for_forall_then],
             subset_fact.line_file.clone(),
@@ -42,7 +42,7 @@ impl Runtime {
     }
 
     /// Infer `forall x in right: x in left` from `left superset right`.
-    pub(crate) fn infer_superset_fact(
+    pub fn infer_superset_fact(
         &mut self,
         superset_fact: &SupersetFact,
     ) -> Result<InferResult, RuntimeError> {
@@ -58,7 +58,7 @@ impl Runtime {
         )
         .into();
         let inferred_forall_fact = ForallFact::new(
-            vec![parameter_definition],
+            ParamDefWithType::new(vec![parameter_definition]),
             vec![],
             vec![in_fact_for_forall_then],
             superset_fact.line_file.clone(),

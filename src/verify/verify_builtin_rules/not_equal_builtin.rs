@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn _verify_not_equal_fact_with_builtin_rules(
+    pub fn _verify_not_equal_fact_with_builtin_rules(
         &mut self,
         not_equal_fact: &NotEqualFact,
         verify_state: &VerifyState,
@@ -129,7 +129,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+    pub fn mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
         &mut self,
         left_factor: &Obj,
         right_factor: &Obj,

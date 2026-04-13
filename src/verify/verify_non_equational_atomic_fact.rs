@@ -340,10 +340,10 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
         let membership_forall_fact = ForallFact::new(
-            vec![ParamGroupWithParamType::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
                 ParamType::Obj(subset_fact.left.clone()),
-            )],
+            )]),
             vec![],
             vec![InFact::new(
                 bound_param_name.into(),
@@ -375,10 +375,10 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
         let membership_forall_fact = ForallFact::new(
-            vec![ParamGroupWithParamType::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![bound_param_name.clone()],
                 ParamType::Obj(superset_fact.right.clone()),
-            )],
+            )]),
             vec![],
             vec![InFact::new(
                 bound_param_name.into(),
@@ -456,10 +456,9 @@ impl Runtime {
             return Ok(None);
         }
 
-        let param_to_arg_map = ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map(
-            &definition.params_def_with_type,
-            &normal_atomic_fact.body,
-        );
+        let param_to_arg_map = definition
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
 
         let mut infer_result = InferResult::new();
         let mut definition_clause_descriptions: Vec<String> = Vec::new();

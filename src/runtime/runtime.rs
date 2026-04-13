@@ -67,7 +67,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn validate_name_for_mangled_fn_param(
+    pub fn validate_name_for_mangled_fn_param(
         &mut self,
         name: &str,
         current_line_file: LineFile,
@@ -107,7 +107,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn validate_name_and_insert_mangled_fn_param(
+    pub fn validate_name_and_insert_mangled_fn_param(
         &mut self,
         name: &str,
         (line, path): LineFile,
@@ -119,7 +119,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn register_collected_mangled_fn_param_names_for_def_parse(
+    pub fn register_collected_mangled_fn_param_names_for_def_parse(
         &mut self,
         names: &Vec<String>,
         line_file: LineFile,
@@ -137,7 +137,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn register_mangled_fn_param_binding(
+    pub fn register_mangled_fn_param_binding(
         &mut self,
         user_written_names: &[String],
         line_file: LineFile,
@@ -155,10 +155,8 @@ impl Runtime {
             }
         }
 
-        let (mangled, map) = mangled_fn_param_binding(
-            user_written_names,
-            DEFAULT_MANGLED_FN_PARAM_PREFIX,
-        );
+        let (mangled, map) =
+            mangled_fn_param_binding(user_written_names, DEFAULT_MANGLED_FN_PARAM_PREFIX);
         self.register_collected_mangled_fn_param_names_for_def_parse(&mangled, line_file)?;
         Ok((mangled, map))
     }
@@ -412,35 +410,33 @@ impl Runtime {
 }
 
 impl Runtime {
-    /// Like [`ParamGroupWithParamType::param_defs_and_args_to_param_to_arg_map`], but when a
+    /// Like [`ParamDefWithType::param_defs_and_args_to_param_to_arg_map`], but when a
     /// parameter has [`ParamType::Struct`] and the argument is a [`Obj::Tuple`], loads the struct
     /// definition and inserts `param.field_name -> tuple[number_of_params + i]` for each field in
     /// definition order (same layout as [`Runtime::inst_field_access_on_struct_tuple`]), and
     /// registers the struct instance for field access on the tuple root.
     pub fn params_to_arg_map(
         &mut self,
-        param_defs: &Vec<ParamGroupWithParamType>,
+        param_defs: &ParamDefWithType,
         args: &[Obj],
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
-        let param_names = ParamGroupWithParamType::collect_param_names(param_defs);
+        let param_names = param_defs.collect_param_names();
         if param_names.len() != args.len() {
-            return Err(
-                InstantiateRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "params_to_arg_map: expected {} argument(s), got {}",
-                        param_names.len(),
-                        args.len()
-                    ),
-                    default_line_file(),
-                    None,
-                ))
-                .into(),
-            );
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "params_to_arg_map: expected {} argument(s), got {}",
+                    param_names.len(),
+                    args.len()
+                ),
+                default_line_file(),
+                None,
+            ))
+            .into());
         }
 
         let mut flat_types: Vec<ParamType> = Vec::with_capacity(param_names.len());
-        for param_def in param_defs.iter() {
+        for param_def in param_defs.groups.iter() {
             for _ in param_def.params.iter() {
                 flat_types.push(param_def.param_type.clone());
             }
@@ -481,10 +477,8 @@ impl Runtime {
                         for (fi, (field_name, _)) in def.fields.iter().enumerate() {
                             let ti = def.number_of_params() + fi;
                             let component = (*t.args[ti]).clone();
-                            result.insert(
-                                field_access_to_string(param_name, field_name),
-                                component,
-                            );
+                            result
+                                .insert(field_access_to_string(param_name, field_name), component);
                         }
                     } else {
                         result.insert(param_name.clone(), arg.clone());
@@ -500,25 +494,21 @@ impl Runtime {
 
     /// [`DefStructStmt::dom_facts`] under type arguments, then [`DefStructStmt::facts`] (`<=>:`) with
     /// [`SELF`] replaced by `param_name`, in source order.
-    pub(crate) fn instantiated_struct_def_or_and_facts_for_def(
+    pub fn instantiated_struct_def_or_and_facts_for_def(
         &self,
         struct_ty: &StructObj,
         def: &DefStructStmt,
         param_name: &str,
     ) -> Result<Vec<OrAndChainAtomicFact>, RuntimeError> {
-        let base_map = ParamGroupWithStructFieldType::param_defs_and_args_to_param_to_arg_map(
-            &def.param_defs,
-            &struct_ty.args,
-        );
+        let base_map = def
+            .param_defs
+            .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
         let mut out = Vec::new();
         for fact in def.dom_facts.iter() {
             out.push(self.inst_or_and_chain_atomic_fact(fact, &base_map)?);
         }
         let mut map_with_self = base_map.clone();
-        map_with_self.insert(
-            SELF.to_string(),
-            param_name.to_string().into(),
-        );
+        map_with_self.insert(SELF.to_string(), param_name.to_string().into());
         for fact in def.facts.iter() {
             out.push(self.inst_or_and_chain_atomic_fact(fact, &map_with_self)?);
         }

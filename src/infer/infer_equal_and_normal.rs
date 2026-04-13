@@ -31,10 +31,8 @@ impl Runtime {
         equal_fact: &EqualFact,
         infer_result: &mut InferResult,
     ) -> Result<(), RuntimeError> {
-        let target_is_cart_fact = IsCartFact::new(
-            target_obj.clone(),
-            equal_fact.line_file.clone(),
-        ).into();
+        let target_is_cart_fact =
+            IsCartFact::new(target_obj.clone(), equal_fact.line_file.clone()).into();
         self.store_inferred_fact_and_record_result(
             target_is_cart_fact,
             equal_fact,
@@ -48,7 +46,8 @@ impl Runtime {
             target_cart_dim_obj,
             known_cart_dim_obj,
             equal_fact.line_file.clone(),
-        ).into();
+        )
+        .into();
         self.store_inferred_fact_and_record_result(
             cart_dim_equal_fact,
             equal_fact,
@@ -78,10 +77,8 @@ impl Runtime {
         if known_tuple_obj.args.len() < 2 {
             return Ok(());
         }
-        let target_is_tuple_fact = IsTupleFact::new(
-            target_obj.clone(),
-            equal_fact.line_file.clone(),
-        ).into();
+        let target_is_tuple_fact =
+            IsTupleFact::new(target_obj.clone(), equal_fact.line_file.clone()).into();
         self.store_inferred_fact_and_record_result(
             target_is_tuple_fact,
             equal_fact,
@@ -95,7 +92,8 @@ impl Runtime {
             target_tuple_dim_obj,
             known_tuple_dim_obj,
             equal_fact.line_file.clone(),
-        ).into();
+        )
+        .into();
         self.store_inferred_fact_and_record_result(
             tuple_dim_equal_fact,
             equal_fact,
@@ -114,7 +112,7 @@ impl Runtime {
 
     /// Infer from equality by syncing known calculated values.
     /// Example: from `a = 1 + 2`, remember `a -> 3`.
-    pub(crate) fn infer_equal_fact(
+    pub fn infer_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<InferResult, RuntimeError> {
@@ -204,7 +202,7 @@ impl Runtime {
 
     /// Infer predicate meaning by instantiating declared iff facts.
     /// Example: from `isEven(n)`, infer the instantiated definition facts.
-    pub(crate) fn infer_normal_atomic_fact(
+    pub fn infer_normal_atomic_fact(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
     ) -> Result<InferResult, RuntimeError> {

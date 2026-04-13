@@ -83,7 +83,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn verify_equality_by_builtin_rules(
+    pub fn verify_equality_by_builtin_rules(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -162,7 +162,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
+    pub fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -223,7 +223,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn objs_have_same_known_equality_rc_in_some_env(
+    pub fn objs_have_same_known_equality_rc_in_some_env(
         &self,
         left: &Obj,
         right: &Obj,
@@ -261,7 +261,7 @@ impl Runtime {
             .all(|(a, b)| self.objs_have_same_known_equality_rc_in_some_env(a, b))
     }
 
-    pub(crate) fn try_verify_equal_by_same_shape_and_known_equality_args(
+    pub fn try_verify_equal_by_same_shape_and_known_equality_args(
         &self,
         left: &Obj,
         right: &Obj,
@@ -544,7 +544,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_equality_by_they_are_the_same_and_calculation(
+    pub fn verify_equality_by_they_are_the_same_and_calculation(
         &mut self,
         left: &Obj,
         right: &Obj,

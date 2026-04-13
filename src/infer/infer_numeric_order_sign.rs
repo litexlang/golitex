@@ -3,7 +3,7 @@ use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 
 impl Runtime {
     /// From numeric bounds on one side, infer a comparison to `0` on the other side when the constant side is numeric.
-    pub(crate) fn infer_numeric_order_sign_from_order_atomic(
+    pub fn infer_numeric_order_sign_from_order_atomic(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<InferResult, RuntimeError> {

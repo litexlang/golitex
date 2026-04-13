@@ -163,7 +163,7 @@ impl Runtime {
             .enumerate()
         {
             let instantiated_field_type = self
-                .inst_param_type(&field_type.to_param_type(), &param_arg_map)
+                .inst_param_type(field_type, &param_arg_map)
                 .map_err(|e| {
                     RuntimeError::new_verify_error_with_msg_position_previous_error(
                         format!(

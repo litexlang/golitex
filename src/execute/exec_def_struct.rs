@@ -28,10 +28,7 @@ impl Runtime {
     ) -> Result<(), RuntimeErrorStruct> {
         let verify_state = VerifyState::new(0, false);
 
-        self.define_params_with_type(
-            &ParamGroupWithStructFieldType::to_param_groups_with_param_type(&stmt.param_defs),
-            false,
-        )
+        self.define_params_with_type(&stmt.param_defs, false)
         .map_err(|define_params_error| {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
                 stmt.clone().into(),
@@ -73,7 +70,7 @@ impl Runtime {
         }
 
         for (_, field_param_type) in stmt.fields.iter() {
-            self.verify_param_type_well_defined(&field_param_type.to_param_type(), &verify_state)
+            self.verify_param_type_well_defined(field_param_type, &verify_state)
                 .map_err(|well_defined_error| {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         stmt.clone().into(),
@@ -94,7 +91,7 @@ impl Runtime {
         })?;
 
         let mut struct_params = vec![];
-        for param_def in stmt.param_defs.iter() {
+        for param_def in stmt.param_defs.groups.iter() {
             for field in param_def.params.iter() {
                 struct_params.push(field.clone().into());
             }

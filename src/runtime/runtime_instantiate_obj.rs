@@ -654,10 +654,10 @@ impl Runtime {
 
     pub fn inst_param_def_with_type_one_by_one(
         &self,
-        param_defs: &Vec<ParamGroupWithParamType>,
+        param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
     ) -> Result<Vec<ParamType>, RuntimeError> {
-        let total_param_count = ParamGroupWithParamType::number_of_params(param_defs);
+        let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
             return Err(
                 InstantiateRuntimeError(RuntimeErrorStruct::new(
@@ -676,8 +676,8 @@ impl Runtime {
 
         let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
-        let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.len());
-        for param_def in param_defs.iter() {
+        let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.groups.len());
+        for param_def in param_defs.groups.iter() {
             let new_type = if arg_index != 0 {
                 self.inst_param_type(&param_def.param_type, &param_arg_map)?
             } else {
