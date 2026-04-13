@@ -1,5 +1,18 @@
+// Fundamental order on R: difference characterization, nonnegative cone, quotients;
+// and <= / >= decomposition used by the verifier.
+
 pub const BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON: &str = r#"
 know:
+    forall a, b R:
+        a <= b
+        =>:
+            a = b or a < b
+
+    forall a, b R:
+        a >= b
+        =>:
+            a = b or a > b
+
     forall a, b R:
         =>:
             a <= b
