@@ -480,7 +480,25 @@ impl Runtime {
             Obj::Mul(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
-            _ => Ok(None),
+            _ => {
+                let neg_one: Obj = Number::new("-1".to_string()).into();
+                let known_left_is_neg_one = match left_left {
+                    Obj::Number(n) => {
+                        let left_obj: Obj = n.clone().into();
+                        left_obj.two_objs_can_be_calculated_and_equal_by_calculation(&neg_one)
+                    }
+                    _ => false,
+                };
+                if known_left_is_neg_one {
+                    let synthetic: Obj = Mul::new(neg_one, given_arg.clone()).into();
+                    Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_right,
+                        &synthetic,
+                    )
+                } else {
+                    Ok(None)
+                }
+            }
         }
     }
 
