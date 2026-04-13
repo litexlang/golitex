@@ -1,43 +1,10 @@
-have fn add_fn (f, g fn(x R) R) fn(x R) R = f(x) + g(x)
-
-have fn add_fn2 (f, g fn(x R) R) fn(x R) fn(y R) R = f(x) + g(y)
-
-add_fn2(f, g)(y)(x) = f(x) + g(y)
-
-add_fn(f, g)(x) # yes
-add_fn(f, g) # no
-
-know:
-    forall f, g fn(x R) R, x R:
-        add_fn(f, g)(x) = f(x) + g(x)
-
-"""
-x <= y
-x^3 <= y^3
-0 <= (b-a)^2
-0 <= 3 * (b + a)^2
-0 <= (b-a)^2 + 3 * (b+a)^2
- a^3 =a^3+0 <= a^3 + (b - a) *(((b - a)^2 + 3 * (b + a)^2) / 4) = b^3
-"""
-
-"""
 abstract_prop p(a)
 
-know:
-    forall x R:
-        $p(x)
-        =>:
-            $p(x + 2)
+know forall a R:
+    $p(a)
+    =>:
+        $p(a + 1)
 
 know $p(1)
 
-$p(3)
-"""
-
-tactic
-strategy xxx:
-    $p(..)
-
-open strategy xxx
-
-$p(..) 
+$p(2)

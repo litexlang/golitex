@@ -111,7 +111,6 @@ impl Runtime {
         let mut all_objs_equal_to_arg =
             self.get_all_objs_equal_to_given(&atomic_fact.args()[0].to_string());
 
-        // 得到它的 calculated obj
         if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[0]) {
             if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
                 let equal_tos = self.get_all_objs_equal_to_given(&calculated_obj.to_string());
@@ -128,6 +127,15 @@ impl Runtime {
             if result.is_true() {
                 return Ok(result);
             }
+        }
+
+        let arg = atomic_fact.args()[0].clone();
+        let arg_resolved = self.resolve_obj(&arg);
+        if arg_resolved.to_string() != arg.to_string() {
+            let rewritten =
+                Self::atomic_fact_with_resolved_unary_operand(atomic_fact, arg_resolved);
+            return self
+                .verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(&rewritten);
         }
 
         Ok((StmtUnknown::new()).into())
@@ -167,6 +175,22 @@ impl Runtime {
             }
         }
 
+        let left = atomic_fact.args()[0].clone();
+        let right = atomic_fact.args()[1].clone();
+        let left_resolved = self.resolve_obj(&left);
+        let right_resolved = self.resolve_obj(&right);
+        if left_resolved.to_string() != left.to_string()
+            || right_resolved.to_string() != right.to_string()
+        {
+            let rewritten = Self::atomic_fact_with_resolved_binary_operands(
+                atomic_fact,
+                left_resolved,
+                right_resolved,
+            );
+            return self
+                .verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(&rewritten);
+        }
+
         Ok((StmtUnknown::new()).into())
     }
 
@@ -195,7 +219,104 @@ impl Runtime {
             }
         }
 
+        let old_args = atomic_fact.args();
+        let mut new_args: Vec<Obj> = Vec::with_capacity(old_args.len());
+        let mut any_changed = false;
+        for a in old_args.iter() {
+            let r = self.resolve_obj(a);
+            if r.to_string() != a.to_string() {
+                any_changed = true;
+            }
+            new_args.push(r);
+        }
+        if any_changed {
+            let rewritten = Self::atomic_fact_with_resolved_predicate_args(atomic_fact, new_args);
+            return self
+                .verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(
+                    &rewritten,
+                );
+        }
+
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn atomic_fact_with_resolved_unary_operand(fact: &AtomicFact, x: Obj) -> AtomicFact {
+        let line_file = fact.line_file();
+        match fact {
+            AtomicFact::IsSetFact(_) => IsSetFact::new(x, line_file).into(),
+            AtomicFact::IsNonemptySetFact(_) => IsNonemptySetFact::new(x, line_file).into(),
+            AtomicFact::IsFiniteSetFact(_) => IsFiniteSetFact::new(x, line_file).into(),
+            AtomicFact::IsCartFact(_) => IsCartFact::new(x, line_file).into(),
+            AtomicFact::IsTupleFact(_) => IsTupleFact::new(x, line_file).into(),
+            AtomicFact::NotIsSetFact(_) => NotIsSetFact::new(x, line_file).into(),
+            AtomicFact::NotIsNonemptySetFact(_) => NotIsNonemptySetFact::new(x, line_file).into(),
+            AtomicFact::NotIsFiniteSetFact(_) => NotIsFiniteSetFact::new(x, line_file).into(),
+            AtomicFact::NotIsCartFact(_) => NotIsCartFact::new(x, line_file).into(),
+            AtomicFact::NotIsTupleFact(_) => NotIsTupleFact::new(x, line_file).into(),
+            AtomicFact::NormalAtomicFact(n) => {
+                NormalAtomicFact::new(n.predicate.clone(), vec![x], line_file).into()
+            }
+            AtomicFact::NotNormalAtomicFact(n) => {
+                NotNormalAtomicFact::new(n.predicate.clone(), vec![x], line_file).into()
+            }
+            _ => unreachable!(
+                "atomic_fact_with_resolved_unary_operand: expected a one-argument atomic fact"
+            ),
+        }
+    }
+
+    fn atomic_fact_with_resolved_binary_operands(
+        fact: &AtomicFact,
+        left: Obj,
+        right: Obj,
+    ) -> AtomicFact {
+        let line_file = fact.line_file();
+        match fact {
+            AtomicFact::EqualFact(_) => EqualFact::new(left, right, line_file).into(),
+            AtomicFact::LessFact(_) => LessFact::new(left, right, line_file).into(),
+            AtomicFact::GreaterFact(_) => GreaterFact::new(left, right, line_file).into(),
+            AtomicFact::LessEqualFact(_) => LessEqualFact::new(left, right, line_file).into(),
+            AtomicFact::GreaterEqualFact(_) => GreaterEqualFact::new(left, right, line_file).into(),
+            AtomicFact::InFact(_) => InFact::new(left, right, line_file).into(),
+            AtomicFact::SubsetFact(_) => SubsetFact::new(left, right, line_file).into(),
+            AtomicFact::SupersetFact(_) => SupersetFact::new(left, right, line_file).into(),
+            AtomicFact::NotEqualFact(_) => NotEqualFact::new(left, right, line_file).into(),
+            AtomicFact::NotLessFact(_) => NotLessFact::new(left, right, line_file).into(),
+            AtomicFact::NotGreaterFact(_) => NotGreaterFact::new(left, right, line_file).into(),
+            AtomicFact::NotLessEqualFact(_) => NotLessEqualFact::new(left, right, line_file).into(),
+            AtomicFact::NotGreaterEqualFact(_) => {
+                NotGreaterEqualFact::new(left, right, line_file).into()
+            }
+            AtomicFact::NotInFact(_) => NotInFact::new(left, right, line_file).into(),
+            AtomicFact::NotSubsetFact(_) => NotSubsetFact::new(left, right, line_file).into(),
+            AtomicFact::NotSupersetFact(_) => NotSupersetFact::new(left, right, line_file).into(),
+            AtomicFact::RestrictFact(_) => RestrictFact::new(left, right, line_file).into(),
+            AtomicFact::NotRestrictFact(_) => NotRestrictFact::new(left, right, line_file).into(),
+            AtomicFact::NormalAtomicFact(x) => {
+                NormalAtomicFact::new(x.predicate.clone(), vec![left, right], line_file).into()
+            }
+            AtomicFact::NotNormalAtomicFact(x) => {
+                NotNormalAtomicFact::new(x.predicate.clone(), vec![left, right], line_file).into()
+            }
+            _ => unreachable!(
+                "atomic_fact_with_resolved_binary_operands: expected a two-argument atomic fact"
+            ),
+        }
+    }
+
+    fn atomic_fact_with_resolved_predicate_args(fact: &AtomicFact, args: Vec<Obj>) -> AtomicFact {
+        let line_file = fact.line_file();
+        match fact {
+            AtomicFact::NormalAtomicFact(x) => {
+                NormalAtomicFact::new(x.predicate.clone(), args, line_file).into()
+            }
+            AtomicFact::NotNormalAtomicFact(x) => {
+                NotNormalAtomicFact::new(x.predicate.clone(), args, line_file).into()
+            }
+            _ => unreachable!(
+                "atomic_fact_with_resolved_predicate_args: expected NormalAtomicFact or NotNormalAtomicFact"
+            ),
+        }
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(
