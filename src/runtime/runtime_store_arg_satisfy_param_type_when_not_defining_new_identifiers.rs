@@ -34,7 +34,8 @@ impl Runtime {
                 ).into(),
             };
             infer_result.new_infer_result_inside(
-                self.store_fact_without_well_defined_verified_and_infer(new_fact)?,
+                self.store_fact_without_well_defined_verified_and_infer(new_fact)
+                    .map_err(RuntimeError::ExecStmtError)?,
             );
         }
 

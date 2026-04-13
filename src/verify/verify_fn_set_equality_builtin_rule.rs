@@ -276,7 +276,7 @@ impl Runtime {
                     line_file.clone(),
                     "failed to assume source fnset dom fact in local equality environment"
                         .to_string(),
-                    Some(e.into()),
+                    Some(RuntimeError::ExecStmtError(e)),
                 )
             })?;
         }

@@ -16,7 +16,7 @@ impl Runtime {
                 .params_def_with_type
                 .number_of_params();
             if expected_param_count != stmt.equal_tos.len() {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         witness_stmt,
                         "witness exist fact: parameter count mismatch".to_string(),
@@ -30,11 +30,11 @@ impl Runtime {
                 &stmt.exist_fact_in_witness,
                 &verify_state_for_well_defined,
             ) {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         witness_stmt,
                         "witness exist fact: exist fact well-defined failed".to_string(),
-                        Some(well_defined_error.into()),
+                        Some(well_defined_error),
                         vec![],
                     ),
                 ));
@@ -45,11 +45,11 @@ impl Runtime {
                     equal_to_obj,
                     &verify_state_for_well_defined,
                 ) {
-                    return Err(RuntimeError::from(
+                    return Err(RuntimeError::ExecStmtError(
                         RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             witness_stmt,
                             "witness exist fact: equal_to well-defined failed".to_string(),
-                            Some(well_defined_error.into()),
+                            Some(well_defined_error),
                             vec![],
                         ),
                     ));
@@ -65,7 +65,7 @@ impl Runtime {
             match rt.exec_have_obj_equal_stmt(&have_obj_equal_stmt) {
                 Ok(_binding_result) => {}
                 Err(exec_stmt_error) => {
-                    return Err(RuntimeError::from(exec_stmt_error));
+                    return Err(RuntimeError::ExecStmtError(exec_stmt_error));
                 }
             }
 
@@ -76,7 +76,7 @@ impl Runtime {
                         inside_results.push(proof_result);
                     }
                     Err(proof_exec_error) => {
-                        return Err(RuntimeError::from(
+                        return Err(RuntimeError::ExecStmtError(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 witness_stmt.clone(),
                                 proof_stmt.to_string(),
@@ -101,7 +101,7 @@ impl Runtime {
                 let verification_result = rt
                     .verify_fact_return_err_if_not_true(&internal_fact, &verify_state_for_proof_check);
                 if let Err(verify_error) = verification_result {
-                    return Err(RuntimeError::from(verify_error));
+                    return Err(verify_error);
                 }
             }
 
@@ -110,7 +110,7 @@ impl Runtime {
 
         let inside_results = match inside_results_when_verify {
             Ok(proof_inside_results) => proof_inside_results,
-            Err(inside_results_error) => return Err(RuntimeError::from(inside_results_error)),
+            Err(inside_results_error) => return Err(inside_results_error),
         };
 
         // 6) Store exist fact into the top-level (big) environment.
@@ -119,11 +119,11 @@ impl Runtime {
         );
         match store_result {
             Ok(infer_result) => Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into()),
-            Err(store_error) => Err(RuntimeError::from(
+            Err(store_error) => Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness exist fact: failed to store exist fact".to_string(),
-                    Some(store_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_error)),
                     // Keep inside_results for error reporting.
                     inside_results,
                 ),
@@ -145,11 +145,11 @@ impl Runtime {
             if let Err(well_defined_error) =
                 rt.verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state_for_well_defined)
             {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         witness_stmt,
                         "witness nonempty set: obj well-defined failed".to_string(),
-                        Some(well_defined_error.into()),
+                        Some(well_defined_error),
                         vec![],
                     ),
                 ));
@@ -158,11 +158,11 @@ impl Runtime {
             if let Err(well_defined_error) =
                 rt.verify_obj_well_defined_and_store_cache(&stmt.set, &verify_state_for_well_defined)
             {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         witness_stmt.clone(),
                         "witness nonempty set: set well-defined failed".to_string(),
-                        Some(well_defined_error.into()),
+                        Some(well_defined_error),
                         vec![],
                     ),
                 ));
@@ -175,7 +175,7 @@ impl Runtime {
                         inside_results.push(proof_result);
                     }
                     Err(proof_exec_error) => {
-                        return Err(RuntimeError::from(
+                        return Err(RuntimeError::ExecStmtError(
                             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                 witness_stmt.clone(),
                                 proof_stmt.to_string(),
@@ -214,7 +214,7 @@ impl Runtime {
 
         let inside_results = match inside_results_when_verify {
             Ok(proof_inside_results) => proof_inside_results,
-            Err(inside_results_error) => return Err(RuntimeError::from(inside_results_error)),
+            Err(inside_results_error) => return Err(inside_results_error),
         };
 
         // 6) Store nonempty set fact into the top-level (big) environment.
@@ -226,11 +226,11 @@ impl Runtime {
         );
         match store_result {
             Ok(infer_result) => Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into()),
-            Err(store_error) => Err(RuntimeError::from(
+            Err(store_error) => Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     witness_stmt,
                     "witness nonempty set: failed to store nonempty set fact".to_string(),
-                    Some(store_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_error)),
                     // Keep inside_results for error reporting.
                     inside_results,
                 ),

@@ -40,7 +40,7 @@ fn run_file(
         current_lit_path.as_ref(),
     );
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
-        RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
+        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
             _run_file_stmt.clone().into(),
             format!("Failed to read file: {}", path.as_str()),
             None,

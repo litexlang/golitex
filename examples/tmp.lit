@@ -1,5 +1,31 @@
-have f fn(x R) R
+let add_fn_R fn(s, f, g set: $restrict(f, fn(x s)R), $restrict(g, fn(x s)R)) fn(x s) R
 
-$restrict(f, fn(x R: x > 0) R)
+know:
+    forall s, f, g set:
+        $restrict(f, fn(x s)R)
+        $restrict(g, fn(x s)R)
+        =>:
+            add_fn_R(s, f, g)(x) = f(x) + g(x)
 
-have fn add_r_fn
+"""
+prop increasing_fn(f fn(x R) R):
+    forall x, y R:
+        x < y
+        =>:
+            f(x) < f(y)
+
+claim:
+    prove:
+        forall f fn(x R) R, g fn(x R) R:
+            increasing_fn(f)
+            increasing_fn(g)
+            =>:
+                increasing_fn(add_fn_R(R, f, g))
+
+    forall x, y R:
+        x < y
+        =>:
+            f(x) < f(y)
+            g(x) < g(y)
+            add_fn_R(R, f, g)(x) = f(x) + g(x) < f(y) + g(y) = add_fn_R(R, f, g)(y)
+            """

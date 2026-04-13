@@ -57,7 +57,7 @@ impl Runtime {
         let type_fact =
             InFact::new(name.to_string().into(), obj.clone(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_set(
@@ -67,7 +67,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsSetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_nonempty_set(
@@ -77,7 +77,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsNonemptySetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_finite_set(
@@ -87,7 +87,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsFiniteSetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::from)
+            .map_err(RuntimeError::ExecStmtError)
     }
 
     pub fn define_parameter_by_binding_struct(
@@ -107,7 +107,7 @@ impl Runtime {
         .into();
         infer_result.new_infer_result_inside(
             self.store_fact_without_well_defined_verified_and_infer(new_fact)
-                .map_err(RuntimeError::from)?,
+                .map_err(RuntimeError::ExecStmtError)?,
         );
 
         let struct_name = struct_ty.name.to_string();
@@ -125,7 +125,7 @@ impl Runtime {
             let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
             infer_result.new_infer_result_inside(
                 self.store_fact_without_well_defined_verified_and_infer(f)
-                    .map_err(RuntimeError::from)?,
+                    .map_err(RuntimeError::ExecStmtError)?,
             );
         }
 
@@ -133,7 +133,7 @@ impl Runtime {
         for ocf in iff_facts {
             infer_result.new_infer_result_inside(
                 self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)
-                    .map_err(RuntimeError::from)?,
+                    .map_err(RuntimeError::ExecStmtError)?,
             );
         }
 
@@ -167,7 +167,7 @@ impl Runtime {
                             "define params with type: failed to verify type well-defined for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ),
-                        Some(well_defined_error.into()),
+                        Some(well_defined_error),
                         error_line_file,
                     )
                 })?;
@@ -179,7 +179,7 @@ impl Runtime {
                             "define params with type: nonempty check failed for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ),
-                        Some(RuntimeError::from(inner_exec_error)),
+                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
                         default_line_file(),
                     )
                 })?;
@@ -191,7 +191,7 @@ impl Runtime {
                             "define params with type: failed to declare parameter `{}`",
                             name
                         ),
-                        Some(RuntimeError::from(runtime_error)),
+                        Some(RuntimeError::ExecStmtError(runtime_error)),
                         default_line_file(),
                     )
                 })?;

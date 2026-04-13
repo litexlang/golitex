@@ -7,22 +7,22 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!("by extension: left set `{}` is not well-defined", stmt.left),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 ))
             })?;
         self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by extension: right set `{}` is not well-defined",
                         stmt.right
                     ),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 ))
             })?;
@@ -32,7 +32,7 @@ impl Runtime {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 let one_proof_stmt_exec_result = rt.exec_stmt(proof_stmt).map_err(|stmt_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!(
                             "by extension: failed to execute proof stmt `{}`",
@@ -67,13 +67,13 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by extension: failed to prove left subset right `{}`",
                         left_to_right_forall_fact
                     ),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 ))
             })?;
@@ -98,13 +98,13 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by extension: failed to prove right subset left `{}`",
                         right_to_left_forall_fact
                     ),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 ))
             })?;
@@ -128,7 +128,8 @@ impl Runtime {
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 left_equal_to_right_atomic_fact,
-            )?,
+            )
+            .map_err(RuntimeError::ExecStmtError)?,
         );
 
         Ok((NonFactualStmtSuccess::new(

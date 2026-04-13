@@ -12,7 +12,7 @@ impl Runtime {
     ) -> Result<(Fact, Fact, Fact, Fact), RuntimeError> {
         let param_names = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
         if param_names.is_empty() {
-            return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!("{}: fn set has no parameters", context),
                     None,
@@ -38,10 +38,10 @@ impl Runtime {
             let instantiated_set = self
                 .inst_obj(&param_def_with_set.set, &original_param_to_forall_obj)
                 .map_err(|inst_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt_exec.clone(),
                         format!("{}: failed to instantiate generated parameter set", context),
-                        Some(inst_error.into()),
+                        Some(inst_error),
                         vec![],
                     ))
                 })?;
@@ -64,10 +64,10 @@ impl Runtime {
         let forall_ret_set = self
             .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_forall_obj)
             .map_err(|inst_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!("{}: failed to instantiate generated return set", context),
-                    Some(inst_error.into()),
+                    Some(inst_error),
                     vec![],
                 ))
             })?;
@@ -154,14 +154,14 @@ impl Runtime {
                                 &original_param_to_forall_obj,
                             )
                             .map_err(|inst_error| {
-                                RuntimeError::from(
+                                RuntimeError::ExecStmtError(
                                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                         stmt_exec.clone(),
                                         format!(
                                             "{}: failed to instantiate generated domain fact",
                                             context
                                         ),
-                                        Some(inst_error.into()),
+                                        Some(inst_error),
                                         vec![],
                                     ),
                                 )
@@ -196,10 +196,10 @@ impl Runtime {
             let instantiated_set = self
                 .inst_obj(&param_def_with_set.set, &original_param_to_exist_obj)
                 .map_err(|inst_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt_exec.clone(),
                         format!("{}: failed to instantiate witness parameter set", context),
-                        Some(inst_error.into()),
+                        Some(inst_error),
                         vec![],
                     ))
                 })?;
@@ -222,10 +222,10 @@ impl Runtime {
         let exist_ret_set = self
             .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_exist_obj)
             .map_err(|inst_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!("{}: failed to instantiate witness return set", context),
-                    Some(inst_error.into()),
+                    Some(inst_error),
                     vec![],
                 ))
             })?;
@@ -263,14 +263,14 @@ impl Runtime {
                     dom_facts.push(
                         self.inst_or_and_chain_atomic_fact(dom_fact, &original_param_to_exist_obj)
                             .map_err(|inst_error| {
-                                RuntimeError::from(
+                                RuntimeError::ExecStmtError(
                                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                                         stmt_exec.clone(),
                                         format!(
                                             "{}: failed to instantiate witness domain fact",
                                             context
                                         ),
-                                        Some(inst_error.into()),
+                                        Some(inst_error),
                                         vec![],
                                     ),
                                 )
@@ -365,10 +365,10 @@ impl Runtime {
         let infer_shape = self
             .store_fact_without_well_defined_verified_and_infer(forall_shape)
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     "by fn: failed to store cart/tuple shape characterization fact".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 ))
             })?;
@@ -376,10 +376,10 @@ impl Runtime {
         let infer_in = self
             .store_fact_without_well_defined_verified_and_infer(forall_in)
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     "by fn: failed to store graph-element characterization fact".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 ))
             })?;
@@ -388,10 +388,10 @@ impl Runtime {
         let infer_exist = self
             .store_fact_without_well_defined_verified_and_infer(forall_exist)
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     "by fn: failed to store element characterization fact".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 ))
             })?;
@@ -400,10 +400,10 @@ impl Runtime {
         let infer_unique = self
             .store_fact_without_forall_coverage_check_and_infer(forall_unique)
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     "by fn: failed to store uniqueness characterization fact".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 ))
             })?;
@@ -418,7 +418,7 @@ impl Runtime {
         let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
             Some(fs) => fs,
             None => {
-                return Err(RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt_exec,
                         format!(
                             "by fn: `{}` is not known to belong to a fn set",
@@ -464,52 +464,52 @@ impl Runtime {
         let verify_shape_fact = self
             .verify_fact_return_err_if_not_true(forall_shape, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by fn set: failed to prove cart/tuple shape characterization `{}`",
                         forall_shape
                     ),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 ))
             })?;
         let verify_random_param_fact = self
             .verify_fact_return_err_if_not_true(forall_in, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by fn set: failed to prove graph-element characterization `{}`",
                         forall_in
                     ),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 ))
             })?;
         let verify_param_to_element_fact = self
             .verify_fact_return_err_if_not_true(forall_exist, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by fn set: failed to prove graph-coverage characterization `{}`",
                         forall_exist
                     ),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 ))
             })?;
         let verify_uniqueness_fact = self
             .verify_fact_return_err_if_not_true(forall_unique, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     format!(
                         "by fn set: failed to prove graph-uniqueness characterization `{}`",
                         forall_unique
                     ),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 ))
             })?;
@@ -534,10 +534,10 @@ impl Runtime {
         ).into();
         self.store_atomic_fact_without_well_defined_verified_and_infer(membership_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec.clone(),
                     "by fn set: failed to store membership fact".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 ))
             })

@@ -38,7 +38,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     def_prop_stmt.clone().into(),
                     "".to_string(),
-                    Some(e.into()),
+                    Some(RuntimeError::ExecStmtError(e)),
                     vec![],
                 )
             })?;
@@ -59,7 +59,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     def_prop_stmt.clone().into(),
                     "".to_string(),
-                    Some(e.into()),
+                    Some(e),
                     vec![],
                 )
             })?;
@@ -73,7 +73,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     def_prop_stmt.clone().into(),
                     "".to_string(),
-                    Some(RuntimeError::from(inner_exec_error)),
+                    Some(RuntimeError::ExecStmtError(inner_exec_error)),
                     vec![],
                 )
             })?;
@@ -90,7 +90,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     def_abstract_prop_stmt.clone().into(),
                     "".to_string(),
-                    Some(e.into()),
+                    Some(RuntimeError::ExecStmtError(e)),
                     vec![],
                 )
             })?;
@@ -111,7 +111,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     def_let_stmt.clone().into(),
                     "".to_string(),
-                    Some(e.into()),
+                    Some(e),
                     vec![],
                 )
             })?;
@@ -125,7 +125,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         def_let_stmt.clone().into(),
                         "".to_string(),
-                        Some(RuntimeError::from(inner_exec_error)),
+                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
                         vec![],
                     )
                 })?;
@@ -174,7 +174,7 @@ impl Runtime {
                         "define params with set: failed to verify set well-defined for params [{}] with set {}",
                         param_names_text, param_def.set
                     ),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     error_line_file,
                 )
             })?;
@@ -187,7 +187,7 @@ impl Runtime {
                         "define params with set: failed to declare parameter `{}`",
                         name
                     ),
-                    Some(RuntimeError::from(runtime_error)),
+                    Some(RuntimeError::ExecStmtError(runtime_error)),
                     default_line_file(),
                 )
             })?;
@@ -199,7 +199,7 @@ impl Runtime {
                             "define params with set: failed to store in-set fact for parameter `{}`",
                             name
                         ),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         default_line_file(),
                     )
                 })?;
@@ -251,7 +251,7 @@ impl Runtime {
                         RuntimeErrorStruct::exec_stmt_new_with_stmt(
                             have_obj_equal_stmt.clone().into(),
                             "".to_string(),
-                            Some(verify_error.into()),
+                            Some(verify_error),
                             vec![],
                         )
                     })?;
@@ -304,7 +304,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         have_obj_equal_stmt.clone().into(),
                         "".to_string(),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         vec![],
                     )
                 })?;
@@ -331,7 +331,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_exist_obj_stmt.clone().into(),
                     "".to_string(),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 )
             })?;
@@ -404,7 +404,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         have_exist_obj_stmt.clone().into(),
                         "".to_string(),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         vec![],
                     )
                 })?;
@@ -431,7 +431,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     have_fn_equal_stmt.clone().into(),
                     "have_fn_equal_stmt: build fn set for storage failed".to_string(),
-                    Some(e.into()),
+                    Some(e),
                     vec![],
                 )
             })?;
@@ -441,7 +441,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     have_fn_equal_stmt.clone().into(),
                     "have_fn_equal_stmt: verify well-defined failed".to_string(),
-                    Some(e.into()),
+                    Some(RuntimeError::ExecStmtError(e)),
                     vec![],
                 )
             })?;
@@ -462,7 +462,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_fn_equal_stmt.clone().into(),
                     "".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 )
             })?;
@@ -499,7 +499,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_fn_equal_stmt.clone().into(),
                     "".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 )
             })?;
@@ -537,7 +537,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_fn_equal_stmt.clone().into(),
                     "".to_string(),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 )
             })?;
@@ -563,7 +563,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         have_fn_equal_stmt.clone().into(),
                         "".to_string(),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         vec![],
                     )
                 })?;
@@ -580,7 +580,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_fn_equal_stmt.clone().into(),
                     "".to_string(),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 )
             })?;
@@ -613,7 +613,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     have_fn_equal_case_by_case_stmt.clone().into(),
                     "have_fn_equal_case_by_case_stmt: build fn set for storage failed".to_string(),
-                    Some(e.into()),
+                    Some(e),
                     vec![],
                 )
             })?;
@@ -626,7 +626,7 @@ impl Runtime {
             RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                 have_fn_equal_case_by_case_stmt.clone().into(),
                 "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
-                Some(e.into()),
+                Some(RuntimeError::ExecStmtError(e)),
                 vec![],
             )
         })?;
@@ -661,7 +661,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_fn_equal_case_by_case_stmt.clone().into(),
                     "".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 )
             })?;
@@ -720,7 +720,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         have_fn_equal_case_by_case_stmt.clone().into(),
                         "".to_string(),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         vec![],
                     )
                 })?;
@@ -764,7 +764,7 @@ impl Runtime {
             RuntimeErrorStruct::exec_stmt_new_with_stmt(
                 have_fn_equal_case_by_case_stmt.clone().into(),
                 "".to_string(),
-                Some(well_defined_error.into()),
+                Some(well_defined_error),
                 vec![],
             )
         })?;
@@ -823,7 +823,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         have_fn_equal_case_by_case_stmt.clone().into(),
                         "".to_string(),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         vec![],
                     )
                 })?;
@@ -835,7 +835,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_fn_equal_case_by_case_stmt.clone().into(),
                     "".to_string(),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 )
             })?;
@@ -844,7 +844,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_fn_equal_case_by_case_stmt.clone().into(),
                     "".to_string(),
-                    Some(well_defined_error.into()),
+                    Some(well_defined_error),
                     vec![],
                 )
             })?;
@@ -863,7 +863,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_new_with_stmt(
                     have_fn_equal_case_by_case_stmt.clone().into(),
                     "".to_string(),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 )
             })?;

@@ -9,10 +9,10 @@ impl Runtime {
         let to_prove_fact: Fact = stmt.to_prove.clone().into();
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!("by contra: failed to prove `{}`", to_prove_fact),
-                    Some(verify_error.into()),
+                    Some(verify_error),
                     vec![],
                 ))
             })?;
@@ -23,10 +23,10 @@ impl Runtime {
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
             rt.store_atomic_fact_without_well_defined_verified_and_infer(reverse_to_prove_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         format!("by contra: failed to know reverse of `{}`", to_prove_fact),
-                        Some(store_fact_error.into()),
+                        Some(RuntimeError::ExecStmtError(store_fact_error)),
                         vec![],
                     ))
                 })?;
@@ -46,7 +46,7 @@ impl Runtime {
             let verify_impossible_fact_result =
                 rt.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
             if verify_impossible_fact_result.is_unknown() {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         impossible_proof_error_message(&stmt.impossible_fact, None),
@@ -61,7 +61,7 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )?;
             if verify_reversed_impossible_fact_result.is_unknown() {
-                return Err(RuntimeError::from(
+                return Err(RuntimeError::ExecStmtError(
                     RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                         stmt.clone().into(),
                         impossible_proof_error_message(&stmt.impossible_fact, None),
@@ -75,7 +75,7 @@ impl Runtime {
         })?;
 
         if let Some(last_error) = last_error {
-            return Err(RuntimeError::from(
+            return Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     "by contra: failed to execute proof".to_string(),
@@ -89,13 +89,13 @@ impl Runtime {
         let infer_result = self
             .store_fact_without_well_defined_verified_and_infer(to_prove_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
                     format!(
                         "by contra: failed to release `{}`",
                         to_prove_fact_display_string
                     ),
-                    Some(store_fact_error.into()),
+                    Some(RuntimeError::ExecStmtError(store_fact_error)),
                     vec![],
                 ))
             })?;
