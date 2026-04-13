@@ -138,27 +138,17 @@ impl Runtime {
             tb.skip_token(LEFT_BRACE)?;
             let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
             loop {
-                let param = tb.advance()?;
+                let param = parse_synthetically_correct_identifier_string(tb)?;
                 let mut current_params = vec![param];
 
                 while tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
-                    current_params.push(tb.advance()?);
+                    current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
                 let set = this.parse_obj(tb)?;
 
                 for p in current_params.clone().iter() {
-                    if !is_valid_litex_name(&p).is_ok() {
-                        return Err(
-                            RuntimeError::new_parse_error_with_msg_position_previous_error(
-                                format!("Invalid parameter name: {}", p),
-                                tb.line_file.clone(),
-                                None,
-                            ),
-                        );
-                    }
-
                     let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
                     this.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
                 }
@@ -224,12 +214,12 @@ impl Runtime {
             tb.skip_token(LEFT_BRACE)?;
             let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
             loop {
-                let param = tb.advance()?;
+                let param = parse_synthetically_correct_identifier_string(tb)?;
                 let mut current_params = vec![param];
 
                 while tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
-                    current_params.push(tb.advance()?);
+                    current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
                 let set = this.parse_obj(tb)?;
@@ -985,13 +975,13 @@ impl Runtime {
     }
 
     pub fn parse_atom(&self, tb: &mut TokenBlock) -> Result<Atom, RuntimeError> {
-        let left = tb.advance()?;
+        let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             tb.skip()?;
-            let right = tb.advance()?;
+            let right = parse_synthetically_correct_identifier_string(tb)?;
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                 tb.skip()?;
-                let field = tb.advance()?.to_string();
+                let field = parse_synthetically_correct_identifier_string(tb)?;
                 if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                     return Err(
                         RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -1011,7 +1001,7 @@ impl Runtime {
             // 如果后面有 .，则解析为 FieldAccess
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                 tb.skip()?;
-                let field = tb.advance()?.to_string();
+                let field = parse_synthetically_correct_identifier_string(tb)?;
                 if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                     return Err(
                         RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -1033,10 +1023,10 @@ impl Runtime {
         &self,
         tb: &mut TokenBlock,
     ) -> Result<IdentifierOrIdentifierWithMod, RuntimeError> {
-        let left = tb.advance()?;
+        let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             tb.skip()?;
-            let right = tb.advance()?;
+            let right = parse_synthetically_correct_identifier_string(tb)?;
             Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(
                 IdentifierWithMod::new(left, right),
             ))
@@ -1093,4 +1083,21 @@ fn is_number(s: &str) -> bool {
 enum FnSetOrFnSetClause {
     FnSet(FnSet),
     FnSetClause(FnSetClause),
+}
+
+// Consumes one token and checks `is_valid_litex_name`; use for every user-facing identifier (and field) name.
+fn parse_synthetically_correct_identifier_string(
+    tb: &mut TokenBlock,
+) -> Result<String, RuntimeError> {
+    let cur = tb.advance()?;
+    if let Err(reason) = is_valid_litex_name(&cur) {
+        return Err(
+            RuntimeError::new_parse_error_with_msg_position_previous_error(
+                format!("invalid identifier `{}`: {}", cur, reason),
+                tb.line_file.clone(),
+                None,
+            ),
+        );
+    }
+    Ok(cur)
 }
