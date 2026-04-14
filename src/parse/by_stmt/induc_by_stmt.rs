@@ -8,11 +8,13 @@ impl Runtime {
         let induc_from = self.parse_obj(tb)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                "by induc: expected end of head".to_string(),
-                tb.line_file.clone(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "by induc: expected end of head".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
         }
 
         let mut to_prove: Vec<ExistOrAndChainAtomicFact> = vec![];

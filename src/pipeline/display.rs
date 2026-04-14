@@ -19,7 +19,6 @@ const JSON_KEY_STMT_TYPE: &str = "type";
 const JSON_KEY_STMT: &str = "stmt";
 const JSON_KEY_INSIDE_RESULTS: &str = "inside_results";
 const JSON_KEY_PREVIOUS_ERROR: &str = "previous_error";
-const JSON_KEY_CONFLICT_WITH: &str = "conflict_with";
 const JSON_VALUE_ERROR: &str = "error";
 
 pub fn display_stmt_exec_result_json(runtime: &Runtime, r: &StmtResult) -> String {
@@ -280,53 +279,6 @@ fn stmt_json_field_lines(indent_inner: &str, stmt: &Stmt) -> Vec<String> {
     lines
 }
 
-fn push_optional_conflict_with_json_field_lines(
-    field_lines: &mut Vec<String>,
-    indent_inner: &str,
-    conflict_with: &Option<ConflictMsg>,
-) {
-    match conflict_with {
-        None => field_lines.push(format!(
-            "{}\"{}\": null",
-            indent_inner, JSON_KEY_CONFLICT_WITH
-        )),
-        Some(conflict) => {
-            let indent_nested = format!("{}  ", indent_inner);
-            let conflict_line_file = conflict.line_file.clone();
-            let message_literal = json_string_literal(&conflict.msg);
-            let mut inner_lines: Vec<String> = Vec::new();
-            inner_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_nested, JSON_KEY_MESSAGE, message_literal
-            ));
-            inner_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_nested,
-                JSON_KEY_LINE,
-                line_file_line_json_fragment(&conflict_line_file)
-            ));
-            inner_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_nested,
-                JSON_KEY_SOURCE,
-                line_file_source_json_fragment(&conflict_line_file)
-            ));
-            push_optional_statement_json_field_lines(
-                &mut inner_lines,
-                indent_nested.as_str(),
-                &conflict.stmt,
-            );
-            field_lines.push(format!(
-                "{}\"{}\": {{\n{}\n{}}}",
-                indent_inner,
-                JSON_KEY_CONFLICT_WITH,
-                inner_lines.join(",\n"),
-                indent_inner,
-            ));
-        }
-    }
-}
-
 fn push_optional_statement_json_field_lines(
     field_lines: &mut Vec<String>,
     indent_inner: &str,
@@ -409,11 +361,6 @@ fn build_display_error_json_object(
                 indent_inner.as_str(),
                 &e.statement,
             );
-            push_optional_conflict_with_json_field_lines(
-                &mut field_lines,
-                indent_inner.as_str(),
-                &e.conflict_with,
-            );
         }
         RuntimeError::NewAtomicFactError(e) => {
             field_lines.push(format!(
@@ -427,11 +374,6 @@ fn build_display_error_json_object(
                 indent_inner.as_str(),
                 &e.statement,
             );
-            push_optional_conflict_with_json_field_lines(
-                &mut field_lines,
-                indent_inner.as_str(),
-                &e.conflict_with,
-            );
         }
         RuntimeError::StoreFactError(e) => {
             field_lines.push(format!(
@@ -444,11 +386,6 @@ fn build_display_error_json_object(
                 &mut field_lines,
                 indent_inner.as_str(),
                 &e.statement,
-            );
-            push_optional_conflict_with_json_field_lines(
-                &mut field_lines,
-                indent_inner.as_str(),
-                &e.conflict_with,
             );
         }
         RuntimeError::ParseError(e) => {
@@ -531,11 +468,6 @@ fn build_display_error_json_object(
                 &mut field_lines,
                 indent_inner.as_str(),
                 &e.statement,
-            );
-            push_optional_conflict_with_json_field_lines(
-                &mut field_lines,
-                indent_inner.as_str(),
-                &e.conflict_with,
             );
         }
     }

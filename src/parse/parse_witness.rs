@@ -8,11 +8,13 @@ impl Runtime {
         } else if tb.current_token_is_equal_to(FACT_PREFIX) {
             self.parse_witness_nonempty_set(tb)
         } else {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                "witness expects a exist or nonempty set".to_string(),
-                tb.line_file.clone(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "witness expects a exist or nonempty set".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
         }
     }
 
@@ -24,22 +26,26 @@ impl Runtime {
         let equal_tos = self.parse_obj_list(tb)?;
         let proof = if tb.exceed_end_of_head() {
             if !tb.body.is_empty() {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "witness exist: indented proof body requires ':' at end of header line"
-                        .to_string(),
-                    tb.line_file.clone(),
-                    None,
-                ));
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "witness exist: indented proof body requires ':' at end of header line"
+                            .to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
             }
             Vec::new()
         } else {
             tb.skip_token(COLON)?;
             if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "witness exist: unexpected tokens after ':' in header".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                ));
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "witness exist: unexpected tokens after ':' in header".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
             }
             let mut proof = Vec::with_capacity(tb.body.len());
             for block in tb.body.iter_mut() {

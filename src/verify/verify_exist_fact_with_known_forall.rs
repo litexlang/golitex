@@ -105,8 +105,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         // exist param matches exist param
-        let given_exist_param_names =
-            given_exist_fact.params_def_with_type.collect_param_names();
+        let given_exist_param_names = given_exist_fact.params_def_with_type.collect_param_names();
 
         let known_exist_param_names = exist_fact_in_known_forall
             .params_def_with_type
@@ -197,7 +196,10 @@ impl Runtime {
             return Ok(None);
         }
 
-        let param_to_arg_map = match known_forall.params_def.param_def_params_to_arg_map(&arg_map) {
+        let param_to_arg_map = match known_forall
+            .params_def
+            .param_def_params_to_arg_map(&arg_map)
+        {
             Some(m) => m,
             None => return Ok(None),
         };
@@ -234,13 +236,14 @@ impl Runtime {
             vec![exist_fact_in_known_forall.clone().into()],
             known_forall.line_file.clone(),
         );
-        let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-            given_exist_fact.clone().into(),
-            verified_by_known_forall_fact.to_string(),
-            Some(verified_by_known_forall_fact.clone().into()),
-            None,
-            Vec::new(),
-        );
+        let fact_verified =
+            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                given_exist_fact.clone().into(),
+                verified_by_known_forall_fact.to_string(),
+                Some(verified_by_known_forall_fact.clone().into()),
+                None,
+                Vec::new(),
+            );
         Ok(Some(fact_verified))
     }
 }

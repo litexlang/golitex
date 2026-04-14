@@ -37,28 +37,29 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        format!(
-                            "by enumerate: failed to store corresponding forall `{}`",
-                            corresponding_forall_fact
+                    RuntimeError::ExecStmtError(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                            stmt.clone().into(),
+                            format!(
+                                "by enumerate: failed to store corresponding forall `{}`",
+                                corresponding_forall_fact
+                            ),
+                            Some(store_fact_error),
+                            vec![],
                         ),
-                        Some(RuntimeError::ExecStmtError(store_fact_error)),
-                        vec![],
-                    ))
+                    )
                 })?;
             let infer_result = Self::infer_result_with_generated_forall_and_store_infer(
                 &corresponding_forall_fact,
                 infer_result_from_stored_forall_fact,
             );
-            return Ok((NonFactualStmtSuccess::new(
-                    stmt.clone().into(),
-                    infer_result,
-                    vec![],
-                )).into());
+            return Ok(
+                (NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into(),
+            );
         }
 
-        let mut current_parameter_index_assignment = Self::by_enumerate_start_index_assignment(stmt);
+        let mut current_parameter_index_assignment =
+            Self::by_enumerate_start_index_assignment(stmt);
         loop {
             self.exec_by_enumerate_stmt_for_one_assignment(
                 stmt,
@@ -75,9 +76,7 @@ impl Runtime {
         }
 
         let infer_result_from_stored_forall_fact = self
-            .store_fact_without_well_defined_verified_and_infer(
-                corresponding_forall_fact.clone(),
-            )
+            .store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact.clone())
             .map_err(|store_fact_error| {
                 RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt.clone().into(),
@@ -85,7 +84,7 @@ impl Runtime {
                         "by enumerate: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
-                    Some(RuntimeError::ExecStmtError(store_fact_error)),
+                    Some(store_fact_error),
                     vec![],
                 ))
             })?;
@@ -95,11 +94,7 @@ impl Runtime {
             infer_result_from_stored_forall_fact,
         );
 
-        Ok((NonFactualStmtSuccess::new(
-                stmt.clone().into(),
-                infer_result,
-                vec![],
-            )).into())
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
 
     /// Puts the generated forall fact first via [`InferResult::new_fact`], then appends infer from store.
@@ -158,18 +153,16 @@ impl Runtime {
             let assigned_obj = (*stmt.param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
                 .clone();
-            self.store_identifier_obj(parameter_name)
-                .map_err(RuntimeError::ExecStmtError)?;
-            let parameter_equal_to_assigned_obj_atomic_fact =
-                EqualFact::new(
-                    parameter_name.to_string().into(),
-                    assigned_obj.clone(),
-                    stmt.line_file.clone(),
-                ).into();
+            self.store_identifier_obj(parameter_name)?;
+            let parameter_equal_to_assigned_obj_atomic_fact = EqualFact::new(
+                parameter_name.to_string().into(),
+                assigned_obj.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,
-            )
-            .map_err(RuntimeError::ExecStmtError)?;
+            )?;
         }
 
         for proof_stmt in stmt.proof.iter() {

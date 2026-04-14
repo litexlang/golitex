@@ -7,15 +7,12 @@ mod enumerate_by_stmt;
 mod extension_by_stmt;
 mod family_by_stmt;
 mod fn_tuple_by_stmt;
-mod struct_by_stmt;
 mod for_by_stmt;
 mod induc_by_stmt;
+mod struct_by_stmt;
 
 impl Runtime {
-    pub fn parse_by_prefixed_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Stmt, RuntimeError> {
+    pub fn parse_by_prefixed_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(BY)?;
         let second_keyword = tb.current()?;
         match second_keyword {

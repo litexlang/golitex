@@ -27,7 +27,7 @@ impl Runtime {
                         "define params with set: failed to declare parameter `{}`",
                         name
                     ),
-                    Some(RuntimeError::ExecStmtError(runtime_error)),
+                    Some(runtime_error),
                     default_line_file(),
                 )
             })?;
@@ -39,7 +39,7 @@ impl Runtime {
                             "define params with set: failed to store in-set fact for parameter `{}`",
                             name
                         ),
-                        Some(RuntimeError::ExecStmtError(store_fact_error)),
+                        Some(store_fact_error),
                         default_line_file(),
                     )
                 })?;

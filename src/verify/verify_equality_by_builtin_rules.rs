@@ -1,5 +1,7 @@
 use crate::prelude::*;
-use crate::verify::verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
+use crate::verify::verify_builtin_rules::{
+    compare_normalized_number_str_to_zero, NumberCompareResult,
+};
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 use std::rc::Rc;
 
@@ -18,11 +20,7 @@ fn factual_equal_success_by_builtin_reason(
 ) -> StmtResult {
     StmtResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            EqualFact::new(
-                left.clone(),
-                right.clone(),
-                line_file,
-            ).into(),
+            EqualFact::new(left.clone(), right.clone(), line_file).into(),
             reason.to_string(),
             Vec::new(),
         ),
@@ -227,15 +225,14 @@ impl Runtime {
         }
 
         if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
-            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(
-                        left.clone(),
-                        right.clone(),
-                        line_file,
-                    ).into(),
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
                     "calculation and rational expression simplification".to_string(),
                     Vec::new(),
-                )).into());
+                ))
+                .into(),
+            );
         }
 
         if let (Obj::FnSet(left_fn_set), Obj::FnSet(right_fn_set)) = (left, right) {
@@ -339,11 +336,7 @@ impl Runtime {
         }
     }
 
-    pub fn objs_have_same_known_equality_rc_in_some_env(
-        &self,
-        left: &Obj,
-        right: &Obj,
-    ) -> bool {
+    pub fn objs_have_same_known_equality_rc_in_some_env(&self, left: &Obj, right: &Obj) -> bool {
         let left_key: ObjString = left.to_string();
         let right_key: ObjString = right.to_string();
         for env in self.iter_environments_from_top() {

@@ -2,16 +2,12 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    pub fn exec_by_induc_stmt(
-        &mut self,
-        stmt: &ByInducStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_by_induc_stmt(&mut self, stmt: &ByInducStmt) -> Result<StmtResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         let all_inside_results: Vec<StmtResult> = Vec::new();
         for fact in stmt.to_prove.iter() {
-            let one_fact_infer_result = self.run_in_local_env(|rt| {
-                rt.exec_by_induc_stmt_for_one_fact(stmt, fact)
-            });
+            let one_fact_infer_result =
+                self.run_in_local_env(|rt| rt.exec_by_induc_stmt_for_one_fact(stmt, fact));
 
             match one_fact_infer_result {
                 Ok(one_fact_infer_result) => {
@@ -38,14 +34,12 @@ impl Runtime {
                 vec![],
             ))
         })?;
-        self.store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact)
-            .map_err(RuntimeError::ExecStmtError)?;
+        self.store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact)?;
 
-        Ok((NonFactualStmtSuccess::new(
-                stmt.clone().into(),
-                infer_result,
-                all_inside_results,
-            )).into())
+        Ok(
+            (NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, all_inside_results))
+                .into(),
+        )
     }
 }
 
@@ -76,7 +70,8 @@ impl Runtime {
             stmt.induc_from.clone(),
             StandardSet::Z.into(),
             stmt.line_file.clone(),
-        ).into();
+        )
+        .into();
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
@@ -99,12 +94,15 @@ impl Runtime {
         }
 
         let param_as_identifier: Obj = stmt.param.clone().into();
-        let param_plus_one_obj = Add::new(param_as_identifier.clone(),
-            Number::new("1".to_string()).into()).into();
+        let param_plus_one_obj = Add::new(
+            param_as_identifier.clone(),
+            Number::new("1".to_string()).into(),
+        )
+        .into();
         let mut induction_step_param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         induction_step_param_to_obj_map.insert(stmt.param.clone(), param_plus_one_obj);
-        let next_fact_of_induction_step = self
-            .inst_exist_or_and_chain_atomic_fact(fact, &induction_step_param_to_obj_map)?;
+        let next_fact_of_induction_step =
+            self.inst_exist_or_and_chain_atomic_fact(fact, &induction_step_param_to_obj_map)?;
 
         let corresponding_forall_fact = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(

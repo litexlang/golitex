@@ -21,41 +21,97 @@ pub enum RuntimeError {
 pub struct RuntimeErrorStruct {
     pub statement: Option<Stmt>,
     pub msg: String,
-    pub conflict_with: Option<ConflictMsg>,
     pub line_file: LineFile,
     pub previous_error: Option<Box<RuntimeError>>,
     pub inside_results: Vec<StmtResult>,
 }
 
-macro_rules! runtime_error_from_wrapper {
-    ($wrapper:ident, $variant:ident) => {
-        #[derive(Debug)]
-        pub struct $wrapper(pub RuntimeErrorStruct);
-        impl From<$wrapper> for RuntimeError {
-            fn from(w: $wrapper) -> Self {
-                RuntimeError::$variant(w.0)
-            }
-        }
-    };
+#[derive(Debug)]
+pub struct ArithmeticRuntimeError(pub RuntimeErrorStruct);
+impl From<ArithmeticRuntimeError> for RuntimeError {
+    fn from(w: ArithmeticRuntimeError) -> Self {
+        RuntimeError::ArithmeticError(w.0)
+    }
 }
 
-runtime_error_from_wrapper!(ArithmeticRuntimeError, ArithmeticError);
-runtime_error_from_wrapper!(NewAtomicFactRuntimeError, NewAtomicFactError);
-runtime_error_from_wrapper!(StoreFactRuntimeError, StoreFactError);
-runtime_error_from_wrapper!(ParseRuntimeError, ParseError);
-runtime_error_from_wrapper!(WellDefinedRuntimeError, WellDefinedError);
-runtime_error_from_wrapper!(VerifyRuntimeError, VerifyError);
-runtime_error_from_wrapper!(UnknownRuntimeError, UnknownError);
-runtime_error_from_wrapper!(InferRuntimeError, InferError);
-runtime_error_from_wrapper!(NameAlreadyUsedRuntimeError, NameAlreadyUsedError);
-runtime_error_from_wrapper!(DefineParamsRuntimeError, DefineParamsError);
-runtime_error_from_wrapper!(InstantiateRuntimeError, InstantiateError);
+#[derive(Debug)]
+pub struct NewAtomicFactRuntimeError(pub RuntimeErrorStruct);
+impl From<NewAtomicFactRuntimeError> for RuntimeError {
+    fn from(w: NewAtomicFactRuntimeError) -> Self {
+        RuntimeError::NewAtomicFactError(w.0)
+    }
+}
 
-#[derive(Debug, Clone)]
-pub struct ConflictMsg {
-    pub msg: String,
-    pub line_file: LineFile,
-    pub stmt: Option<Stmt>,
+#[derive(Debug)]
+pub struct StoreFactRuntimeError(pub RuntimeErrorStruct);
+impl From<StoreFactRuntimeError> for RuntimeError {
+    fn from(w: StoreFactRuntimeError) -> Self {
+        RuntimeError::StoreFactError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct ParseRuntimeError(pub RuntimeErrorStruct);
+impl From<ParseRuntimeError> for RuntimeError {
+    fn from(w: ParseRuntimeError) -> Self {
+        RuntimeError::ParseError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct WellDefinedRuntimeError(pub RuntimeErrorStruct);
+impl From<WellDefinedRuntimeError> for RuntimeError {
+    fn from(w: WellDefinedRuntimeError) -> Self {
+        RuntimeError::WellDefinedError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct VerifyRuntimeError(pub RuntimeErrorStruct);
+impl From<VerifyRuntimeError> for RuntimeError {
+    fn from(w: VerifyRuntimeError) -> Self {
+        RuntimeError::VerifyError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct UnknownRuntimeError(pub RuntimeErrorStruct);
+impl From<UnknownRuntimeError> for RuntimeError {
+    fn from(w: UnknownRuntimeError) -> Self {
+        RuntimeError::UnknownError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct InferRuntimeError(pub RuntimeErrorStruct);
+impl From<InferRuntimeError> for RuntimeError {
+    fn from(w: InferRuntimeError) -> Self {
+        RuntimeError::InferError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct NameAlreadyUsedRuntimeError(pub RuntimeErrorStruct);
+impl From<NameAlreadyUsedRuntimeError> for RuntimeError {
+    fn from(w: NameAlreadyUsedRuntimeError) -> Self {
+        RuntimeError::NameAlreadyUsedError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct DefineParamsRuntimeError(pub RuntimeErrorStruct);
+impl From<DefineParamsRuntimeError> for RuntimeError {
+    fn from(w: DefineParamsRuntimeError) -> Self {
+        RuntimeError::DefineParamsError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct InstantiateRuntimeError(pub RuntimeErrorStruct);
+impl From<InstantiateRuntimeError> for RuntimeError {
+    fn from(w: InstantiateRuntimeError) -> Self {
+        RuntimeError::InstantiateError(w.0)
+    }
 }
 
 impl RuntimeErrorStruct {
@@ -65,28 +121,25 @@ impl RuntimeErrorStruct {
         line_file: LineFile,
         previous_error: Option<RuntimeError>,
     ) -> Self {
-        RuntimeErrorStruct::new_with_conflict(
+        RuntimeErrorStruct::new_with_inside_results(
             statement,
             msg,
             line_file,
-            None,
             previous_error,
             vec![],
         )
     }
 
-    pub fn new_with_conflict(
+    pub fn new_with_inside_results(
         statement: Option<Stmt>,
         msg: String,
         line_file: LineFile,
-        conflict_with: Option<ConflictMsg>,
         previous_error: Option<RuntimeError>,
         inside_results: Vec<StmtResult>,
     ) -> Self {
         RuntimeErrorStruct {
             statement,
             msg,
-            conflict_with,
             line_file,
             previous_error: boxed_previous_error(previous_error),
             inside_results,
@@ -108,11 +161,10 @@ impl RuntimeErrorStruct {
         } else {
             default_line_file()
         };
-        RuntimeErrorStruct::new_with_conflict(
+        RuntimeErrorStruct::new_with_inside_results(
             stmt,
             info,
             line_file,
-            None,
             previous_error,
             inside_results,
         )
@@ -125,11 +177,10 @@ impl RuntimeErrorStruct {
         inside_results: Vec<StmtResult>,
     ) -> Self {
         let line_file = stmt.line_file();
-        RuntimeErrorStruct::new_with_conflict(
+        RuntimeErrorStruct::new_with_inside_results(
             Some(stmt),
             info,
             line_file,
-            None,
             previous_error,
             inside_results,
         )
@@ -160,21 +211,26 @@ impl RuntimeErrorStruct {
 
 impl std::error::Error for RuntimeError {}
 
+impl From<RuntimeErrorStruct> for RuntimeError {
+    fn from(s: RuntimeErrorStruct) -> Self {
+        RuntimeError::ExecStmtError(s)
+    }
+}
+
 impl RuntimeError {
-    pub fn into_struct(self) -> RuntimeErrorStruct {
-        match self {
-            RuntimeError::ArithmeticError(s) => s,
-            RuntimeError::NewAtomicFactError(s) => s,
-            RuntimeError::StoreFactError(s) => s,
-            RuntimeError::ParseError(s) => s,
-            RuntimeError::ExecStmtError(s) => s,
-            RuntimeError::WellDefinedError(s) => s,
-            RuntimeError::VerifyError(s) => s,
-            RuntimeError::UnknownError(s) => s,
-            RuntimeError::InferError(s) => s,
-            RuntimeError::NameAlreadyUsedError(s) => s,
-            RuntimeError::DefineParamsError(s) => s,
-            RuntimeError::InstantiateError(s) => s,
+    pub fn wrap_new_atomic_fact_as_store_conflict(e: RuntimeError) -> RuntimeError {
+        match e {
+            RuntimeError::NewAtomicFactError(s) => {
+                NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_inside_results(
+                    s.statement.clone(),
+                    s.msg.clone(),
+                    s.line_file.clone(),
+                    Some(NewAtomicFactRuntimeError(s).into()),
+                    vec![],
+                ))
+                .into()
+            }
+            _ => e,
         }
     }
 
@@ -210,13 +266,6 @@ impl RuntimeError {
             RuntimeError::DefineParamsError(_) => "DefineParamsError",
             RuntimeError::InstantiateError(_) => "InstantiateError",
         }
-    }
-
-    pub fn message_text_for_duplicate_used_name_without_line_file(name: &str) -> String {
-        format!(
-            "name `{}` is already used, cannot be used again for other definitions",
-            name
-        )
     }
 
     pub fn new_infer_error_with_msg_position_previous_error(
