@@ -20,8 +20,7 @@ impl Runtime {
     }
 
     fn verify_order_subgoal(&mut self, fact: AtomicFact) -> Result<StmtResult, RuntimeError> {
-        let mut result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fact)?;
+        let mut result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fact)?;
         if !result.is_true() {
             result = self.verify_order_atomic_fact_numeric_builtin_only(&fact)?;
         }
@@ -124,6 +123,30 @@ impl Runtime {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
         let one = Self::literal_one_obj();
+
+        if let Obj::Add(add) = &f.right {
+            let left_s = f.left.to_string();
+            let b_opt = if add.left.as_ref().to_string() == left_s {
+                Some(add.right.as_ref().clone())
+            } else if add.right.as_ref().to_string() == left_s {
+                Some(add.left.as_ref().clone())
+            } else {
+                None
+            };
+            if let Some(b) = b_opt {
+                let g0 = LessEqualFact::new(z.clone(), b, lf.clone()).into();
+                let r0 = self.verify_order_subgoal(g0)?;
+                if r0.is_true() {
+                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "a <= a + b from 0 <= b".to_string(),
+                            vec![r0],
+                        ),
+                    )));
+                }
+            }
+        }
 
         if let Obj::Mul(m) = &f.right {
             if m.right.to_string() == f.left.to_string() {
@@ -288,6 +311,30 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
+
+        if let Obj::Add(add) = &f.right {
+            let left_s = f.left.to_string();
+            let b_opt = if add.left.as_ref().to_string() == left_s {
+                Some(add.right.as_ref().clone())
+            } else if add.right.as_ref().to_string() == left_s {
+                Some(add.left.as_ref().clone())
+            } else {
+                None
+            };
+            if let Some(b) = b_opt {
+                let g0 = LessFact::new(z.clone(), b, lf.clone()).into();
+                let r0 = self.verify_order_subgoal(g0)?;
+                if r0.is_true() {
+                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "a < a + b from 0 < b".to_string(),
+                            vec![r0],
+                        ),
+                    )));
+                }
+            }
+        }
 
         if let (Obj::Mul(ml), Obj::Mul(mr)) = (&f.left, &f.right) {
             if ml.left.to_string() == mr.left.to_string() {

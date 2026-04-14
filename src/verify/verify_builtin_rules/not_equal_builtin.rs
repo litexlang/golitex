@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 
 impl Runtime {
     pub fn _verify_not_equal_fact_with_builtin_rules(
@@ -28,6 +29,18 @@ impl Runtime {
             _ => {}
         }
 
+        if let Some(verified_result) =
+            self.try_verify_not_equal_from_known_strict_order(not_equal_fact)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
+            self.try_verify_not_equal_pow_from_base_nonzero(not_equal_fact, verify_state)?
+        {
+            return Ok(verified_result);
+        }
+
         match self
             .try_verify_not_equal_fact_when_zero_and_binary_arithmetic_reduces_by_operand_facts(
                 not_equal_fact,
@@ -38,6 +51,78 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    // x < y or x > y (including y < x / y > x spellings) in known facts implies x != y.
+    fn try_verify_not_equal_from_known_strict_order(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let x = not_equal_fact.left.clone();
+        let y = not_equal_fact.right.clone();
+        let candidates: [AtomicFact; 4] = [
+            LessFact::new(x.clone(), y.clone(), line_file.clone()).into(),
+            GreaterFact::new(x.clone(), y.clone(), line_file.clone()).into(),
+            LessFact::new(y.clone(), x.clone(), line_file.clone()).into(),
+            GreaterFact::new(y.clone(), x.clone(), line_file.clone()).into(),
+        ];
+        for order_atomic in candidates {
+            let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
+            if sub.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "not_equal_from_known_strict_order".to_string(),
+                        vec![sub],
+                    )
+                    .into(),
+                ));
+            }
+        }
+        Ok(None)
+    }
+
+    // a^n != 0 with literal integer exponent n, from a != 0 (known / full non-equational verify).
+    fn try_verify_not_equal_pow_from_base_nonzero(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let pow = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (Obj::Pow(p), r) if self.obj_represents_zero_for_not_equal_builtin_rules(r) => p,
+            (l, Obj::Pow(p)) if self.obj_represents_zero_for_not_equal_builtin_rules(l) => p,
+            _ => return Ok(None),
+        };
+        let Obj::Number(exp_num) = pow.exponent.as_ref() else {
+            return Ok(None);
+        };
+        if !is_integer_after_simplification(exp_num) {
+            return Ok(None);
+        }
+
+        let base = pow.base.as_ref().clone();
+        let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
+        let mut result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&base_neq_zero)?;
+        if !result.is_true() {
+            result = self.verify_non_equational_atomic_fact(&base_neq_zero, verify_state, true)?;
+        }
+        if result.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    not_equal_fact.clone().into(),
+                    InferResult::new(),
+                    "not_equal_pow_from_base_nonzero".to_string(),
+                    vec![result],
+                )
+                .into(),
+            ));
+        }
+        Ok(None)
     }
 
     fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {

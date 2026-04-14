@@ -60,18 +60,15 @@ impl Runtime {
         Ok(InferResult::new())
     }
 
-    fn infer_forall_fact(&mut self, forall_fact: &ForallFact) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
-        infer_result.new_fact(&forall_fact.clone().into());
-        Ok(infer_result)
+    // Do not record the whole forall in CLI/JSON `infer_facts`; inner then-clauses are stored as separate facts.
+    fn infer_forall_fact(&mut self, _forall_fact: &ForallFact) -> Result<InferResult, RuntimeError> {
+        Ok(InferResult::new())
     }
 
     fn infer_forall_fact_with_iff(
         &mut self,
-        forall_fact_with_iff: &ForallFactWithIff,
+        _forall_fact_with_iff: &ForallFactWithIff,
     ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
-        infer_result.new_fact(&forall_fact_with_iff.clone().into());
-        Ok(infer_result)
+        Ok(InferResult::new())
     }
 }

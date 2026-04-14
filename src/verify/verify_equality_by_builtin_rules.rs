@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use crate::verify::verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
+use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 use std::rc::Rc;
 
 pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
@@ -83,6 +85,102 @@ impl Runtime {
         Ok(None)
     }
 
+    fn obj_is_builtin_literal_zero(obj: &Obj) -> bool {
+        match obj {
+            Obj::Number(n) => matches!(
+                compare_normalized_number_str_to_zero(&n.normalized_value),
+                NumberCompareResult::Equal
+            ),
+            _ => false,
+        }
+    }
+
+    // Literal 0 vs `x - y`: verify the equality if `x = y` holds via the full equality pipeline.
+    fn try_verify_zero_equals_subtraction_implies_equal_operands(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (x, y) = if Self::obj_is_builtin_literal_zero(left) {
+            match right {
+                Obj::Sub(s) => (s.left.as_ref(), s.right.as_ref()),
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            match left {
+                Obj::Sub(s) => (s.left.as_ref(), s.right.as_ref()),
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+
+        let inner = self.verify_objs_are_equal(x, y, line_file.clone(), verify_state)?;
+        if inner.is_true() {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: 0 = x - y with x = y (known or builtin)",
+            )));
+        }
+        Ok(None)
+    }
+
+    // 0 = a^n when n is a literal integer > 0 (avoids 0^0 /0^negative), from a = 0.
+    fn try_verify_zero_equals_pow_from_base_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let pow = if Self::obj_is_builtin_literal_zero(left) {
+            match right {
+                Obj::Pow(p) => p,
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            match left {
+                Obj::Pow(p) => p,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        let Obj::Number(exp_num) = pow.exponent.as_ref() else {
+            return Ok(None);
+        };
+        if !is_integer_after_simplification(exp_num) {
+            return Ok(None);
+        }
+        if !matches!(
+            compare_normalized_number_str_to_zero(&exp_num.normalized_value),
+            NumberCompareResult::Greater
+        ) {
+            return Ok(None);
+        }
+
+        let base = pow.base.as_ref();
+        let zero_side = if Self::obj_is_builtin_literal_zero(left) {
+            left
+        } else {
+            right
+        };
+        let inner = self.verify_objs_are_equal(base, zero_side, line_file.clone(), verify_state)?;
+        if inner.is_true() {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: 0 = a^n from a = 0, n positive integer literal",
+            )));
+        }
+        Ok(None)
+    }
+
     pub fn verify_equality_by_builtin_rules(
         &mut self,
         left: &Obj,
@@ -91,6 +189,24 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(done) = self.try_verify_objs_equal_by_expanding_family(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_zero_equals_subtraction_implies_equal_operands(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_zero_equals_pow_from_base_zero(
             left,
             right,
             line_file.clone(),
