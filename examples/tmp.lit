@@ -1,16 +1,11 @@
-let a, b, c, d, e, f, g R:
-    0 <= a
-    0 <= b
-    0 <= c
-    0 <= d
-    0 <= e
-    0 <= f
-    0 <= g
+"""
+Let r and s be rational numbers, and suppose that s + 3 >= r and s + r <= 3. Show that r <= 3.
+"""
 
-0 <= a + b + c + d + e + f + g
-
-let h, i, j, k, l, m, n, o R
-
-0 <= a + b + (h + i)^2 + (j + k)^4 + (l + m)^6 + (n + o)^8
-
-0 <= a^3 + b^3 + c^3 + d^3 + e^3 + f^3 + g^3
+forall r, s Q:
+    r<=s+3
+    s + r <= 3
+    =>:
+        2 * r = r + r <= (s + 3) + r = 3 + (s + r) <= 3 + 3 = 6
+        2 * r <= 6
+        r <= 6 / 2
