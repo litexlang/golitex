@@ -1,9 +1,18 @@
+let add_fn_R fn(f fn(x R)R, g fn(x R)R) fn(x R) R:
+    forall f, g fn(x R) R, x R:
+        add_fn_R(f, g)(x) = f(x) + g(x)
+
+prop increasing_fn(f fn(x R) R):
+    forall x, y R:
+        x < y
+        =>:
+            f(x) < f(y)
+
 claim:
     prove:
-        forall p, q R:
-            p < q
+        forall f2, g2 fn(x R) R:
+            $increasing_fn(f2)
+            $increasing_fn(g2)
             =>:
-                exist x R st {p < x, x < q}
-    witness exist x R st {p < x, x < q} from (p + q) / 2:
-        p = (p + p) / 2 < (p + q) / 2
-        (p + q) / 2 < (q + q) / 2 = q
+                add_fn_R(f2, g2) $in fn(x R) R
+                $increasing_fn(add_fn_R(f2, g2))
