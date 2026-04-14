@@ -24,7 +24,10 @@ impl fmt::Display for ByForStmt {
             FOR,
             add_four_spaces_at_beginning(PROVE.to_string(), 1),
             COLON,
-            to_string_and_add_four_spaces_at_beginning_of_each_line(&self.forall_fact.to_string(), 2)
+            to_string_and_add_four_spaces_at_beginning_of_each_line(
+                &self.forall_fact.to_string(),
+                2
+            )
         )?;
         if !self.proof.is_empty() {
             write!(

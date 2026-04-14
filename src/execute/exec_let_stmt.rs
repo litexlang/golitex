@@ -1,10 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_let_stmt(
-        &mut self,
-        def_let_stmt: &DefLetStmt,
-    ) -> Result<StmtResult, RuntimeErrorStruct> {
+    pub fn exec_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<StmtResult, RuntimeError> {
         let mut infer_result = self
             .define_params_with_type(&def_let_stmt.param_def, false)
             .map_err(|e| {
@@ -25,7 +22,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         def_let_stmt.clone().into(),
                         "".to_string(),
-                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
+                        Some(inner_exec_error),
                         vec![],
                     )
                 })?;
@@ -33,11 +30,6 @@ impl Runtime {
             // Body facts are not added by infer() for chain/and/or/exist; record them for JSON / CLI.
             infer_result.new_fact(fact);
         }
-        Ok((NonFactualStmtSuccess::new(
-            def_let_stmt.clone().into(),
-            infer_result,
-            vec![],
-        ))
-        .into())
+        Ok((NonFactualStmtSuccess::new(def_let_stmt.clone().into(), infer_result, vec![])).into())
     }
 }

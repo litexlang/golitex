@@ -173,14 +173,16 @@ impl Runtime {
                     block.skip_token(COLON)?;
                     equal_tos.push(self.parse_obj(block)?);
                 }
-                Ok(HaveFnEqualCaseByCaseStmt::new(
-                    name,
-                    fs,
-                    cases,
-                    equal_tos,
-                    tb.line_file.clone(),
+                Ok(
+                    HaveFnEqualCaseByCaseStmt::new(
+                        name,
+                        fs,
+                        cases,
+                        equal_tos,
+                        tb.line_file.clone(),
+                    )
+                    .into(),
                 )
-                .into())
             } else {
                 tb.skip_token(EQUAL)?;
 
@@ -297,8 +299,11 @@ impl Runtime {
             )?;
 
             if induc_from_is_number_obj {
-                let induc_from_add_i: Obj = Add::new(induc_from.clone(),
-                    Into::<Obj>::into(Number::new(i.to_string()))).into();
+                let induc_from_add_i: Obj = Add::new(
+                    induc_from.clone(),
+                    Into::<Obj>::into(Number::new(i.to_string())),
+                )
+                .into();
 
                 if !induc_from_add_i
                     .two_objs_can_be_calculated_and_equal_by_calculation(&slot_label)
@@ -315,8 +320,11 @@ impl Runtime {
                     );
                 }
             } else {
-                let induc_from_add_i: Obj = Add::new(induc_from.clone(),
-                    Into::<Obj>::into(Number::new(i.to_string()))).into();
+                let induc_from_add_i: Obj = Add::new(
+                    induc_from.clone(),
+                    Into::<Obj>::into(Number::new(i.to_string())),
+                )
+                .into();
 
                 if induc_from_add_i.to_string() != slot_label.to_string() {
                     return Err(
@@ -354,8 +362,11 @@ impl Runtime {
         let last_bound = self.parse_obj(last_block)?;
 
         if induc_from_is_number_obj {
-            let induc_from_add_n: Obj = Add::new(induc_from.clone(),
-                Into::<Obj>::into(Number::new(num_special.to_string()))).into();
+            let induc_from_add_n: Obj = Add::new(
+                induc_from.clone(),
+                Into::<Obj>::into(Number::new(num_special.to_string())),
+            )
+            .into();
             if !induc_from_add_n.two_objs_can_be_calculated_and_equal_by_calculation(&last_bound) {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -369,8 +380,11 @@ impl Runtime {
                 );
             }
         } else {
-            let induc_from_add_n: Obj = Add::new(induc_from.clone(),
-                Into::<Obj>::into(Number::new(num_special.to_string()))).into();
+            let induc_from_add_n: Obj = Add::new(
+                induc_from.clone(),
+                Into::<Obj>::into(Number::new(num_special.to_string())),
+            )
+            .into();
             if induc_from_add_n.to_string() != last_bound.to_string() {
                 return Err(
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -594,7 +608,8 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<(ParamDefWithType, Vec<OrAndChainAtomicFact>), RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
-        let param_defs = self.parse_def_struct_header_param_groups_until_colon_or_right_brace(tb)?;
+        let param_defs =
+            self.parse_def_struct_header_param_groups_until_colon_or_right_brace(tb)?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
@@ -884,7 +899,10 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file.clone())
             .map_err(|e| {
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    RuntimeError::message_text_for_duplicate_used_name_without_line_file(name),
+                    format!(
+                        "name `{}` is already used, cannot be used again for other definitions",
+                        name
+                    ),
                     line_file,
                     Some(e),
                 )

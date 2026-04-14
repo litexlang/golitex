@@ -10,6 +10,4 @@ mod order_normalize;
 mod set_relation_duality;
 mod type_predicates_builtin;
 
-pub use number_compare::{
-    compare_normalized_number_str_to_zero, NumberCompareResult,
-};
+pub use number_compare::{compare_normalized_number_str_to_zero, NumberCompareResult};

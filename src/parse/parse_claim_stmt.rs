@@ -12,11 +12,13 @@ impl Runtime {
     ) -> Result<ClaimStmt, RuntimeError> {
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                "claim : expects at least one body block (=>: fact)".to_string(),
-                tb.line_file.clone(),
-                None,
-            ));
+            return Err(
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "claim : expects at least one body block (=>: fact)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                ),
+            );
         }
         let fact = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
@@ -39,11 +41,13 @@ impl Runtime {
             })?;
             let f = self.parse_fact(body_block)?;
             if matches!(&f, Fact::ForallFactWithIff(_)) {
-                return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "claim multiline fact cannot be iff".to_string(),
-                    first.line_file.clone(),
-                    None,
-                ));
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "claim multiline fact cannot be iff".to_string(),
+                        first.line_file.clone(),
+                        None,
+                    ),
+                );
             }
             Ok::<Fact, RuntimeError>(f)
         }?;

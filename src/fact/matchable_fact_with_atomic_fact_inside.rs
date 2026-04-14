@@ -39,16 +39,19 @@ impl ChainFact {
         self.line_file.clone()
     }
 
-    pub fn facts(&self) -> Result<Vec<AtomicFact>, RuntimeErrorStruct> {
+    pub fn facts(&self) -> Result<Vec<AtomicFact>, RuntimeError> {
         if self.objs.len() != self.prop_names.len() + 1 {
-            return Err(RuntimeErrorStruct::new_with_msg_previous_error(
-                format!(
-                    "the number of objects ({}) is not equal to the number of property names ({}) + 1",
-                    self.objs.len(),
-                    self.prop_names.len(),
-                ),
-                None,
-            ));
+            return Err(
+                NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_previous_error(
+                    format!(
+                        "the number of objects ({}) is not equal to the number of property names ({}) + 1",
+                        self.objs.len(),
+                        self.prop_names.len(),
+                    ),
+                    None,
+                ))
+                .into(),
+            );
         }
 
         let mut facts = Vec::with_capacity(self.prop_names.len());
@@ -56,7 +59,7 @@ impl ChainFact {
             let prop_name = self.prop_names[i].clone();
             let left_obj = self.objs[i].clone();
             let right_obj = self.objs[i + 1].clone();
-            let atomic_fact =             AtomicFact::to_atomic_fact(
+            let atomic_fact = AtomicFact::to_atomic_fact(
                 prop_name,
                 true,
                 vec![left_obj, right_obj],

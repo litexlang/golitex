@@ -5,7 +5,7 @@ impl Runtime {
     pub fn store_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: Fact,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         match fact {
             Fact::AtomicFact(_)
             | Fact::ExistFact(_)
@@ -25,14 +25,14 @@ impl Runtime {
     pub fn store_fact_without_forall_coverage_check_and_infer(
         &mut self,
         fact: Fact,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         self.store_whole_fact_update_cache_known_fact_and_infer(fact)
     }
 
     fn store_forall_fact_without_well_defined_verified_and_infer(
         &mut self,
         mut forall_fact: ForallFact,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         let coverage_error_detail_lines =
             forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
 
@@ -72,7 +72,7 @@ impl Runtime {
     fn store_forall_fact_with_iff_without_well_defined_verified_and_infer(
         &mut self,
         forall_fact_with_iff: ForallFactWithIff,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         let (forall_then_implies_iff, forall_iff_implies_then) =
             forall_fact_with_iff.to_two_forall_facts();
         let mut infer_result = self
@@ -88,7 +88,7 @@ impl Runtime {
     fn store_whole_fact_update_cache_known_fact_and_infer(
         &mut self,
         fact: Fact,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
@@ -98,7 +98,12 @@ impl Runtime {
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
         let infer_result = self.infer(&fact_for_infer).map_err(|e| {
-            RuntimeErrorStruct::new_with_msg_previous_error(format!("infer error: {}", e), Some(e))
+            RuntimeError::from(InferRuntimeError(
+                RuntimeErrorStruct::new_with_msg_previous_error(
+                    format!("infer error: {}", e),
+                    Some(e),
+                ),
+            ))
         })?;
         Ok(infer_result)
     }
@@ -106,7 +111,7 @@ impl Runtime {
     pub fn store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: AndChainAtomicFact,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer: Fact = fact.clone().into();
@@ -116,7 +121,12 @@ impl Runtime {
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
         let infer_result = self.infer(&fact_for_infer).map_err(|e| {
-            RuntimeErrorStruct::new_with_msg_previous_error(format!("infer error: {}", e), Some(e))
+            RuntimeError::from(InferRuntimeError(
+                RuntimeErrorStruct::new_with_msg_previous_error(
+                    format!("infer error: {}", e),
+                    Some(e),
+                ),
+            ))
         })?;
         Ok(infer_result)
     }
@@ -124,7 +134,7 @@ impl Runtime {
     pub fn store_atomic_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: AtomicFact,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let infer_wrapped_fact: Fact = fact.clone().into();
@@ -134,7 +144,12 @@ impl Runtime {
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
         let infer_result = self.infer(&infer_wrapped_fact).map_err(|e| {
-            RuntimeErrorStruct::new_with_msg_previous_error(format!("infer error: {}", e), Some(e))
+            RuntimeError::from(InferRuntimeError(
+                RuntimeErrorStruct::new_with_msg_previous_error(
+                    format!("infer error: {}", e),
+                    Some(e),
+                ),
+            ))
         })?;
         Ok(infer_result)
     }
@@ -142,7 +157,7 @@ impl Runtime {
     pub fn store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: ExistOrAndChainAtomicFact,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
@@ -155,10 +170,12 @@ impl Runtime {
         let infer_result = self
             .infer_exist_or_and_chain_atomic_fact(&fact_for_infer)
             .map_err(|e| {
-                RuntimeErrorStruct::new_with_msg_previous_error(
-                    format!("infer error: {}", e),
-                    Some(e),
-                )
+                RuntimeError::from(InferRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_previous_error(
+                        format!("infer error: {}", e),
+                        Some(e),
+                    ),
+                ))
             })?;
         Ok(infer_result)
     }
@@ -166,7 +183,7 @@ impl Runtime {
     pub fn store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: OrAndChainAtomicFact,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
@@ -178,10 +195,12 @@ impl Runtime {
         let infer_result = self
             .infer_or_and_chain_atomic_fact(&fact_for_infer)
             .map_err(|e| {
-                RuntimeErrorStruct::new_with_msg_previous_error(
-                    format!("infer error: {}", e),
-                    Some(e),
-                )
+                RuntimeError::from(InferRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_previous_error(
+                        format!("infer error: {}", e),
+                        Some(e),
+                    ),
+                ))
             })?;
         Ok(infer_result)
     }

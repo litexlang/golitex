@@ -244,9 +244,13 @@ impl Runtime {
             let prop = self.parse_predicate(tb)?;
             let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: RuntimeErrorStruct| {
+                |e: RuntimeError| {
+                    let msg = match &e {
+                        RuntimeError::NewAtomicFactError(s) => s.msg.clone(),
+                        _ => "parse atomic fact".to_string(),
+                    };
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        e.msg.clone(),
+                        msg,
                         tb.line_file.clone(),
                         None,
                     )
@@ -283,9 +287,13 @@ impl Runtime {
         let next_obj = self.parse_obj(tb)?;
         let args = vec![first_obj, next_obj];
         let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-            |e: RuntimeErrorStruct| {
+            |e: RuntimeError| {
+                let msg = match &e {
+                    RuntimeError::NewAtomicFactError(s) => s.msg.clone(),
+                    _ => "parse atomic fact".to_string(),
+                };
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    e.msg.clone(),
+                    msg,
                     tb.line_file.clone(),
                     None,
                 )
@@ -329,9 +337,13 @@ impl Runtime {
             let prop = self.parse_predicate(tb)?;
             let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: RuntimeErrorStruct| {
+                |e: RuntimeError| {
+                    let msg = match &e {
+                        RuntimeError::NewAtomicFactError(s) => s.msg.clone(),
+                        _ => "parse atomic fact".to_string(),
+                    };
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        e.msg.clone(),
+                        msg,
                         tb.line_file.clone(),
                         None,
                     )
@@ -379,9 +391,13 @@ impl Runtime {
             let prop = prop_names.remove(0);
             let args = objs;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: RuntimeErrorStruct| {
+                |e: RuntimeError| {
+                    let msg = match &e {
+                        RuntimeError::NewAtomicFactError(s) => s.msg.clone(),
+                        _ => "parse atomic fact".to_string(),
+                    };
                     RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        e.msg.clone(),
+                        msg,
                         tb.line_file.clone(),
                         None,
                     )
