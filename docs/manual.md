@@ -113,11 +113,10 @@ prove:
 **Example.**
 
 ```litex
-know:
-    forall a R:
-        a > 0
-        =>:
-            a + 1 > 1
+forall a R:
+    a > 0
+    =>:
+        a + 1 > 1
 ```
 
 > **Hint — the word “type” in `forall` / `exist` headers.** People often read this as “programming types” or “type theory”; in Litex it is **not** that. After a parameter name, the next token is either (i) a **named set** the object is assumed to lie in—treated like `a $in Z`—or (ii) one of **`set`**, **`finite_set`**, **`nonempty_set`**, which stand for **`$is_set`**, **`$is_finite_set`**, **`$is_nonempty_set`** and do **not** mean “membership in a set called `set`.”
