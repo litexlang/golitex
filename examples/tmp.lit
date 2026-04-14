@@ -1,9 +1,4 @@
-claim:
-    prove:
-        forall p, q R:
-            p < q
-            =>:
-                exist x R st {p < x, x < q}
-    witness exist x R st {p < x, x < q} from (p + q) / 2:
-        p = (p + p) / 2 < (p + q) / 2
-        (p + q) / 2 < (q + q) / 2 = q
+forall a R:
+    a > 0
+    =>:
+        1 < a + 1

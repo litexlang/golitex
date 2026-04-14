@@ -333,6 +333,30 @@ impl Runtime {
             }
         }
 
+        // Order facts are stored under `<` vs `>` etc.; e.g. known `a > 0` must match goal `0 < a`.
+        if let Some(alt) = atomic_fact.transposed_binary_order_equivalent() {
+            if let Some(known_facts_map) = environment
+                .known_atomic_facts_with_2_args
+                .get(&(alt.key(), alt.is_true()))
+            {
+                for obj0 in all_objs_equal_to_arg1.iter() {
+                    for obj1 in all_objs_equal_to_arg0.iter() {
+                        if let Some(known_atomic_fact) =
+                            known_facts_map.get(&(obj0.clone(), obj1.clone()))
+                        {
+                            return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                                    atomic_fact.clone().into(),
+                                    known_atomic_fact.to_string(),
+                                    Some(known_atomic_fact.clone().into()),
+                                    None,
+                                    Vec::new(),
+                                )).into());
+                        }
+                    }
+                }
+            }
+        }
+
         Ok((StmtUnknown::new()).into())
     }
 
@@ -521,12 +545,12 @@ impl Runtime {
 
         let verify_state_for_definition_clauses = verify_state;
 
-        match self.verify_args_satisfy_param_def_flat_types(
+        let args_param_types = match self.verify_args_satisfy_param_def_flat_types(
             &definition.params_def_with_type,
             &normal_atomic_fact.body,
             verify_state_for_definition_clauses,
         ) {
-            Ok(_) => {}
+            Ok(x) => x,
             Err(_) => {
                 return Err(
                     RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
@@ -537,6 +561,9 @@ impl Runtime {
                     ),
                 )
             }
+        };
+        if args_param_types.is_unknown() {
+            return Ok(None);
         }
 
         if definition.iff_facts.is_empty() {
