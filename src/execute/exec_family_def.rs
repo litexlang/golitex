@@ -10,12 +10,9 @@ impl Runtime {
 
         self.store_def_family(def_family_stmt)
             .map_err(|store_error| {
-                let st: Stmt = def_family_stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeErrorStruct::new(
-                    Some(st),
-                    "failed to store family definition".to_string(),
-                    lf,
+                short_exec_error(
+                    def_family_stmt.clone().into(),
+                    "failed to store family definition",
                     Some(store_error),
                     vec![],
                 )
@@ -37,12 +34,9 @@ impl Runtime {
         let mut family_definition_infer_result = self
             .define_params_with_type(&def_family_stmt.params_def_with_type, false)
             .map_err(|define_params_error| {
-                let st: Stmt = def_family_stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeErrorStruct::new(
-                    Some(st),
-                    "".to_string(),
-                    lf,
+                short_exec_error(
+                    def_family_stmt.clone().into(),
+                    "",
                     Some(define_params_error),
                     vec![],
                 )
@@ -55,12 +49,9 @@ impl Runtime {
                     &verify_state,
                 )
                 .map_err(|inner_exec_error| {
-                    let st: Stmt = def_family_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
+                    short_exec_error(
+                        def_family_stmt.clone().into(),
+                        "",
                         Some(inner_exec_error),
                         vec![],
                     )
@@ -70,12 +61,9 @@ impl Runtime {
 
         self.verify_obj_well_defined_and_store_cache(&def_family_stmt.equal_to, &verify_state)
             .map_err(|well_defined_error| {
-                let st: Stmt = def_family_stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeErrorStruct::new(
-                    Some(st),
-                    "".to_string(),
-                    lf,
+                short_exec_error(
+                    def_family_stmt.clone().into(),
+                    "",
                     Some(well_defined_error),
                     vec![],
                 )

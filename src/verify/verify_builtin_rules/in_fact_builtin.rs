@@ -324,7 +324,8 @@ impl Runtime {
                 | Obj::Mod(_)
                 | Obj::Pow(_)
                 | Obj::Max(_)
-                | Obj::Min(_),
+                | Obj::Min(_)
+                | Obj::Abs(_),
                 Obj::StandardSet(StandardSet::Z),
             ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, verify_state),
             (
@@ -334,7 +335,8 @@ impl Runtime {
                 | Obj::Div(_)
                 | Obj::Pow(_)
                 | Obj::Max(_)
-                | Obj::Min(_),
+                | Obj::Min(_)
+                | Obj::Abs(_),
                 Obj::StandardSet(StandardSet::Q),
             ) => self.verify_in_fact_arithmetic_expression_in_q(in_fact, verify_state),
             (
@@ -390,7 +392,8 @@ impl Runtime {
                 | Obj::Mod(_)
                 | Obj::Pow(_)
                 | Obj::Max(_)
-                | Obj::Min(_),
+                | Obj::Min(_)
+                | Obj::Abs(_),
                 Obj::StandardSet(StandardSet::R),
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
@@ -558,6 +561,7 @@ impl Runtime {
             Obj::Pow(p) => require_in_z(&p.base)? && require_in_z(&p.exponent)?,
             Obj::Max(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             Obj::Min(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
+            Obj::Abs(a) => require_in_z(a.arg.as_ref())?,
             _ => false,
         };
 
@@ -610,6 +614,7 @@ impl Runtime {
             Obj::Pow(p) => in_q(self, &p.base)? && in_z(self, &p.exponent)?,
             Obj::Max(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
             Obj::Min(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
+            Obj::Abs(a) => in_q(self, a.arg.as_ref())?,
             _ => false,
         };
 

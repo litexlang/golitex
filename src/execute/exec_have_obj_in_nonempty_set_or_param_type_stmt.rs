@@ -8,15 +8,7 @@ impl Runtime {
         let infer_result = self
             .define_params_with_type(&stmt.param_def, true)
             .map_err(|define_params_error| {
-                let st: Stmt = stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeErrorStruct::new(
-                    Some(st),
-                    "".to_string(),
-                    lf,
-                    Some(define_params_error),
-                    vec![],
-                )
+                short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
             })?;
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }

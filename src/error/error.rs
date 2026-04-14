@@ -92,12 +92,6 @@ pub fn short_exec_error(
 
 impl std::error::Error for RuntimeError {}
 
-impl From<RuntimeErrorStruct> for RuntimeError {
-    fn from(s: RuntimeErrorStruct) -> Self {
-        RuntimeError::ExecStmtError(s)
-    }
-}
-
 impl RuntimeError {
     pub fn wrap_new_atomic_fact_as_store_conflict(e: RuntimeError) -> RuntimeError {
         match e {
