@@ -321,15 +321,18 @@ impl Runtime {
                 self.verify_in_fact_open_range_by_order_bounds(in_fact, range, verify_state)
             }
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Mod(_) | Obj::Pow(_) | Obj::Max(_)
+                | Obj::Min(_),
                 Obj::StandardSet(StandardSet::Z),
             ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, verify_state),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Pow(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Pow(_) | Obj::Max(_)
+                | Obj::Min(_),
                 Obj::StandardSet(StandardSet::Q),
             ) => self.verify_in_fact_arithmetic_expression_in_q(in_fact, verify_state),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_)
+                | Obj::Max(_) | Obj::Min(_),
                 Obj::StandardSet(StandardSet::RNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -337,7 +340,8 @@ impl Runtime {
                 StandardSet::RNeg,
             ),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_)
+                | Obj::Max(_) | Obj::Min(_),
                 Obj::StandardSet(StandardSet::QNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -345,7 +349,8 @@ impl Runtime {
                 StandardSet::QNeg,
             ),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_)
+                | Obj::Max(_) | Obj::Min(_),
                 Obj::StandardSet(StandardSet::ZNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -353,7 +358,8 @@ impl Runtime {
                 StandardSet::ZNeg,
             ),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_)
+                | Obj::Max(_) | Obj::Min(_),
                 Obj::StandardSet(StandardSet::R),
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
@@ -545,6 +551,8 @@ impl Runtime {
             Obj::Mul(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             Obj::Mod(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             Obj::Pow(p) => require_in_z(&p.base)? && require_in_z(&p.exponent)?,
+            Obj::Max(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
+            Obj::Min(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             _ => false,
         };
 
@@ -594,6 +602,8 @@ impl Runtime {
             Obj::Mul(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
             Obj::Div(d) => in_q(self, &d.left)? && in_q(self, &d.right)?,
             Obj::Pow(p) => in_q(self, &p.base)? && in_z(self, &p.exponent)?,
+            Obj::Max(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
+            Obj::Min(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
             _ => false,
         };
 
