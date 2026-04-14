@@ -1019,6 +1019,24 @@ impl Runtime {
         }
     }
 
+    pub fn parse_predicate(
+        &self,
+        tb: &mut TokenBlock,
+    ) -> Result<IdentifierOrIdentifierWithMod, RuntimeError> {
+        let left = tb.advance()?;
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+            tb.skip()?;
+            let right = tb.advance()?;
+            Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(
+                IdentifierWithMod::new(left, right),
+            ))
+        } else {
+            Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
+                left,
+            )))
+        }
+    }
+
     pub fn parse_identifier_or_identifier_with_mod(
         &self,
         tb: &mut TokenBlock,
@@ -1085,19 +1103,20 @@ enum FnSetOrFnSetClause {
     FnSetClause(FnSetClause),
 }
 
-// Consumes one token and checks `is_valid_litex_name`; use for every user-facing identifier (and field) name.
 fn parse_synthetically_correct_identifier_string(
     tb: &mut TokenBlock,
 ) -> Result<String, RuntimeError> {
     let cur = tb.advance()?;
-    if let Err(reason) = is_valid_litex_name(&cur) {
+
+    if cur == SET || cur == NONEMPTY_SET || cur == FINITE_SET {
         return Err(
             RuntimeError::new_parse_error_with_msg_position_previous_error(
-                format!("invalid identifier `{}`: {}", cur, reason),
+                format!("{} is not a valid identifier", cur),
                 tb.line_file.clone(),
                 None,
             ),
         );
     }
+
     Ok(cur)
 }
