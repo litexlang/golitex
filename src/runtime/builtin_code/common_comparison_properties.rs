@@ -112,4 +112,16 @@ know:
         a - b < 0
         =>:
             a < b
+
+    forall a, b, c R:
+        0 < c
+        c * a <= b or a * c <= b
+        =>:
+            a <= b / c
+
+    forall a, b, c R:
+        0 < c
+        a / c <= b
+        =>:
+            a <= b * c
 "#;
