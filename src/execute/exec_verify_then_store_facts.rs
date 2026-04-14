@@ -10,12 +10,12 @@ impl Runtime {
         self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = stmt_for_fact_errors.clone();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = stmt_for_fact_errors.clone();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(well_defined_error),
                         vec![],
                     )
@@ -26,12 +26,12 @@ impl Runtime {
         )
         .map_err(|store_fact_error| {
             RuntimeError::from({
-                let __stmt: Stmt = stmt_for_fact_errors;
-                let __line_file = __stmt.line_file();
+                let st: Stmt = stmt_for_fact_errors;
+                let lf = st.line_file();
                 RuntimeErrorStruct::new(
-                    Some(__stmt),
+                    Some(st),
                     "".to_string(),
-                    __line_file,
+                    lf,
                     Some(store_fact_error),
                     vec![],
                 )
@@ -48,12 +48,12 @@ impl Runtime {
         self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = stmt_for_fact_errors.clone();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = stmt_for_fact_errors.clone();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(well_defined_error),
                         vec![],
                     )
@@ -62,12 +62,12 @@ impl Runtime {
         self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact.clone())
             .map_err(|store_fact_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = stmt_for_fact_errors;
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = stmt_for_fact_errors;
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(store_fact_error),
                         vec![],
                     )
@@ -84,12 +84,12 @@ impl Runtime {
         self.verify_fact_well_defined(&fact, verify_state)
             .map_err(|well_defined_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = stmt_for_fact_errors.clone();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = stmt_for_fact_errors.clone();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(well_defined_error),
                         vec![],
                     )
@@ -98,12 +98,12 @@ impl Runtime {
         self.store_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = stmt_for_fact_errors;
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = stmt_for_fact_errors;
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(store_fact_error),
                         vec![],
                     )

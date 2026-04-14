@@ -143,10 +143,8 @@ impl Runtime {
             )
             .map_err(|e| {
                 {
-            let __fact: Fact = (given_atomic_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
                 String::new(),
                 given_atomic_fact.line_file(),
                 Some(e),
@@ -171,10 +169,8 @@ impl Runtime {
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
                     {
-            let __fact: Fact = (given_atomic_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
                 String::new(),
                 given_atomic_fact.line_file(),
                 Some(e),
@@ -186,10 +182,8 @@ impl Runtime {
                 .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|e| {
                     {
-            let __fact: Fact = (given_atomic_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
                 String::new(),
                 given_atomic_fact.line_file(),
                 Some(e),

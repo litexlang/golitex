@@ -16,10 +16,8 @@ impl Runtime {
             if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
                 return Err(
                     {
-            let __fact: Fact = (fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(fact.clone()).into_stmt()),
                 String::new(),
                 fact.line_file(),
                 Some(e),

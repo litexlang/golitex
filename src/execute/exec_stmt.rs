@@ -42,33 +42,11 @@ impl Runtime {
     }
 
     pub fn stmt_unsupported(stmt: Stmt) -> Result<StmtResult, RuntimeError> {
-        Err(RuntimeError::ExecStmtError({
-            let __stmt: Stmt = stmt;
-            let __message = "unimplemented".to_string();
-            let __cause = None;
-            let __inside = vec![];
-            let __line_file = __stmt.line_file();
-            let __previous_error = if __message.is_empty() {
-                __cause
-            } else {
-                Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-            };
-            RuntimeErrorStruct::new(
-                Some(__stmt),
-                __message,
-                __line_file,
-                __previous_error,
-                __inside,
-            )
-        }))
+        Err(short_exec_error(
+ stmt,
+                    "unimplemented".to_string(),
+                    None,
+                    vec![],
+                ))
     }
 }

@@ -13,69 +13,20 @@ impl Runtime {
                 Ok(one_fact_infer_result) => {
                     infer_result.new_infer_result_inside(one_fact_infer_result);
                 }
-                Err(exec_stmt_error) => {
-                    return Err(RuntimeError::ExecStmtError({
-                        let __stmt: Stmt = stmt.clone().into();
-                        let __message = format!("by induc: failed to prove `{}`", fact);
-                        let __cause = Some(exec_stmt_error);
-                        let __inside = vec![];
-                        let __line_file = __stmt.line_file();
-                        let __previous_error = if __message.is_empty() {
-                            __cause
-                        } else {
-                            Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                        };
-                        RuntimeErrorStruct::new(
-                            Some(__stmt),
-                            __message,
-                            __line_file,
-                            __previous_error,
-                            __inside,
-                        )
-                    }));
+                Err(e) => {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        format!("by induc: failed to prove `{}`", fact),
+                        Some(e),
+                        vec![],
+                    ));
                 }
             }
         }
 
-        let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError({
-                let __stmt: Stmt = stmt.clone().into();
-                let __message = msg;
-                let __cause = None;
-                let __inside = vec![];
-                let __line_file = __stmt.line_file();
-                let __previous_error = if __message.is_empty() {
-                    __cause
-                } else {
-                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                };
-                RuntimeErrorStruct::new(
-                    Some(__stmt),
-                    __message,
-                    __line_file,
-                    __previous_error,
-                    __inside,
-                )
-            })
-        })?;
+        let corresponding_forall_fact = stmt
+            .to_corresponding_forall_fact()
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
         self.store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact)?;
 
         Ok(
@@ -100,35 +51,12 @@ impl Runtime {
             .to_fact();
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt.clone().into();
-                    let __message =
-                        format!("by induc: base case is not proved `{}`", base_case_fact);
-                    let __cause = Some(verify_error);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by induc: base case is not proved `{}`", base_case_fact),
+                    Some(verify_error),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
 
         let induc_from_in_z_fact = InFact::new(
@@ -140,65 +68,20 @@ impl Runtime {
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt.clone().into();
-                    let __message =
-                        format!("by induc: failed to verify `{}`", induc_from_in_z_fact);
-                    let __cause = Some(verify_error);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
+                    Some(verify_error),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
         if verify_induc_from_in_z_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError({
-                let __stmt: Stmt = stmt.clone().into();
-                let __message = format!("by induc: failed to verify `{}`", induc_from_in_z_fact);
-                let __cause = None;
-                let __inside = vec![];
-                let __line_file = __stmt.line_file();
-                let __previous_error = if __message.is_empty() {
-                    __cause
-                } else {
-                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
+                None,
                 vec![],
-            ))
-            .into(),
-                )
-                };
-                RuntimeErrorStruct::new(
-                    Some(__stmt),
-                    __message,
-                    __line_file,
-                    __previous_error,
-                    __inside,
-                )
-            }));
+            ));
         }
 
         let param_as_identifier: Obj = stmt.param.clone().into();
@@ -236,37 +119,15 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            RuntimeError::ExecStmtError({
-                let __stmt: Stmt = stmt.clone().into();
-                let __message = format!(
+            short_exec_error(
+                stmt.clone().into(),
+                format!(
                     "by induc: generated step forall is not well-defined `{}`",
                     corresponding_forall_fact
-                );
-                let __cause = Some(well_defined_error);
-                let __inside = vec![];
-                let __line_file = __stmt.line_file();
-                let __previous_error = if __message.is_empty() {
-                    __cause
-                } else {
-                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
+                ),
+                Some(well_defined_error),
                 vec![],
-            ))
-            .into(),
-                )
-                };
-                RuntimeErrorStruct::new(
-                    Some(__stmt),
-                    __message,
-                    __line_file,
-                    __previous_error,
-                    __inside,
-                )
-            })
+            )
         })?;
 
         infer_result.new_fact(&corresponding_forall_fact);

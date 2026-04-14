@@ -18,10 +18,8 @@ impl Runtime {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
                 return Err(
                     {
-            let __fact: Fact = (exist_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(exist_fact.clone()).into_stmt()),
                 String::new(),
                 exist_fact.line_file(),
                 Some(e),
@@ -77,10 +75,8 @@ impl Runtime {
             let target_string =
                 Self::exist_fact_normalized_string(runtime, exist_fact).map_err(|e| {
                     {
-            let __fact: Fact = (exist_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(exist_fact.clone()).into_stmt()),
                 String::new(),
                 exist_fact.line_file(),
                 Some(e),
@@ -92,10 +88,8 @@ impl Runtime {
                 let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
                     .map_err(|e| {
                         {
-            let __fact: Fact = (exist_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(exist_fact.clone()).into_stmt()),
                 String::new(),
                 exist_fact.line_file(),
                 Some(e),

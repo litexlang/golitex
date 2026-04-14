@@ -73,6 +73,23 @@ impl RuntimeErrorStruct {
     }
 }
 
+pub fn short_exec_error(
+    stmt: Stmt,
+    message: impl Into<String>,
+    cause: Option<RuntimeError>,
+    inside_results: Vec<StmtResult>,
+) -> RuntimeError {
+    let message = message.into();
+    let line_file = stmt.line_file();
+    RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
+        Some(stmt.clone()),
+        message,
+        line_file.clone(),
+        cause,
+        inside_results,
+    ))
+}
+
 impl std::error::Error for RuntimeError {}
 
 impl From<RuntimeErrorStruct> for RuntimeError {
@@ -131,7 +148,6 @@ impl RuntimeError {
             RuntimeError::InstantiateError(_) => "InstantiateError",
         }
     }
-
 }
 
 // Display outputs a short placeholder; JSON: `display_runtime_error_json` in `crate::pipeline`.

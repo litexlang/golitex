@@ -94,18 +94,18 @@ fn parse_level(
         if indent > base_indent {
             return Err(
                 {
-            let __lf = ((
+            let line_file = (
                     line_no,
                     current_file_path.clone(),
-                ));
+                );
             RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
                     "unexpected indent at line {} in {}",
-                    __lf.0,
-                    __lf.1.as_ref()
+                    line_file.0,
+                    line_file.1.as_ref()
                 ),
-                __lf,
+                line_file,
                 None,
                 vec![],
             )))
@@ -127,18 +127,18 @@ fn parse_level(
             if *i >= lines.len() {
                 return Err(
                     {
-            let __lf = ((
+            let line_file = (
                         line_no,
                         current_file_path.clone(),
-                    ));
+                    );
             RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
                     "block header missing body at line {} in {}",
-                    __lf.0,
-                    __lf.1.as_ref()
+                    line_file.0,
+                    line_file.1.as_ref()
                 ),
-                __lf,
+                line_file,
                 None,
                 vec![],
             )))
@@ -150,18 +150,18 @@ fn parse_level(
             if next_indent <= indent {
                 return Err(
                     {
-            let __lf = ((
+            let line_file = (
                         *i + 1,
                         current_file_path.clone(),
-                    ));
+                    );
             RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
                     "expected indent at line {} in {}",
-                    __lf.0,
-                    __lf.1.as_ref()
+                    line_file.0,
+                    line_file.1.as_ref()
                 ),
-                __lf,
+                line_file,
                 None,
                 vec![],
             )))
@@ -187,18 +187,18 @@ fn parse_level(
             if indent != expected {
                 return Err(
                     {
-            let __lf = ((
+            let line_file = (
                         line_no,
                         current_file_path.clone(),
-                    ));
+                    );
             RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
                     "inconsistent indent at line {} in {}",
-                    __lf.0,
-                    __lf.1.as_ref()
+                    line_file.0,
+                    line_file.1.as_ref()
                 ),
-                __lf,
+                line_file,
                 None,
                 vec![],
             )))

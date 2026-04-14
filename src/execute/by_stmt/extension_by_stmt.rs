@@ -7,69 +7,24 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt.clone().into();
-                    let __message =
-                        format!("by extension: left set `{}` is not well-defined", stmt.left);
-                    let __cause = Some(well_defined_error);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                short_exec_error(
+ stmt.clone().into(),
+                    format!("by extension: left set `{}` is not well-defined", stmt.left),
+                    Some(well_defined_error),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
         self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt.clone().into();
-                    let __message = format!(
+                short_exec_error(
+ stmt.clone().into(),
+                    format!(
                         "by extension: right set `{}` is not well-defined",
                         stmt.right
-                    );
-                    let __cause = Some(well_defined_error);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                    ),
+                    Some(well_defined_error),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
 
         let local_proof_result: Result<(Vec<StmtResult>, Fact, Fact), RuntimeError> = self
@@ -78,37 +33,15 @@ impl Runtime {
                 for proof_stmt in stmt.proof.iter() {
                     let one_proof_stmt_exec_result =
                         rt.exec_stmt(proof_stmt).map_err(|stmt_error| {
-                            RuntimeError::ExecStmtError({
-                                let __stmt: Stmt = stmt.clone().into();
-                                let __message = format!(
+                            short_exec_error(
+ stmt.clone().into(),
+                    format!(
                                     "by extension: failed to execute proof stmt `{}`",
                                     proof_stmt
-                                );
-                                let __cause = Some(stmt_error);
-                                let __inside = vec![];
-                                let __line_file = __stmt.line_file();
-                                let __previous_error = if __message.is_empty() {
-                                    __cause
-                                } else {
-                                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                                ),
+                    Some(stmt_error),
+                    vec![],
                 )
-                                };
-                                RuntimeErrorStruct::new(
-                                    Some(__stmt),
-                                    __message,
-                                    __line_file,
-                                    __previous_error,
-                                    __inside,
-                                )
-                            })
                         })?;
                     inside_results.push(one_proof_stmt_exec_result);
                 }
@@ -135,37 +68,15 @@ impl Runtime {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError({
-                        let __stmt: Stmt = stmt.clone().into();
-                        let __message = format!(
+                    short_exec_error(
+ stmt.clone().into(),
+                    format!(
                             "by extension: failed to prove left subset right `{}`",
                             left_to_right_forall_fact
-                        );
-                        let __cause = Some(verify_error);
-                        let __inside = vec![];
-                        let __line_file = __stmt.line_file();
-                        let __previous_error = if __message.is_empty() {
-                            __cause
-                        } else {
-                            Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                        ),
+                    Some(verify_error),
+                    vec![],
                 )
-                        };
-                        RuntimeErrorStruct::new(
-                            Some(__stmt),
-                            __message,
-                            __line_file,
-                            __previous_error,
-                            __inside,
-                        )
-                    })
                 })?;
 
                 let right_to_left_forall_fact = ForallFact::new(
@@ -188,37 +99,15 @@ impl Runtime {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError({
-                        let __stmt: Stmt = stmt.clone().into();
-                        let __message = format!(
+                    short_exec_error(
+ stmt.clone().into(),
+                    format!(
                             "by extension: failed to prove right subset left `{}`",
                             right_to_left_forall_fact
-                        );
-                        let __cause = Some(verify_error);
-                        let __inside = vec![];
-                        let __line_file = __stmt.line_file();
-                        let __previous_error = if __message.is_empty() {
-                            __cause
-                        } else {
-                            Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                        ),
+                    Some(verify_error),
+                    vec![],
                 )
-                        };
-                        RuntimeErrorStruct::new(
-                            Some(__stmt),
-                            __message,
-                            __line_file,
-                            __previous_error,
-                            __inside,
-                        )
-                    })
                 })?;
 
                 Ok::<_, RuntimeError>((
