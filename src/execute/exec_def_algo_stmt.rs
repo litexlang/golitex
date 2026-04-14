@@ -60,12 +60,7 @@ impl Runtime {
     }
 
     fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> RuntimeError {
-        {
-            let st: Stmt = def_algo_stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeErrorStruct::new(Some(st), "".to_string(), lf, None, vec![])
-        }
-        .into()
+        short_exec_error(def_algo_stmt.clone().into(), "", None, vec![])
     }
 
     fn def_algo_verify_exec_error_with_message_and_optional_cause(

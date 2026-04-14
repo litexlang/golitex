@@ -66,17 +66,12 @@ impl Runtime {
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::from({
-                    let st: Stmt = have_fn_equal_case_by_case_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
-                        Some(store_fact_error),
-                        vec![],
-                    )
-                })
+                short_exec_error(
+                    have_fn_equal_case_by_case_stmt.clone().into(),
+                    "",
+                    Some(store_fact_error),
+                    vec![],
+                )
             })?;
 
         let param_defs_with_type = param_defs_with_type_from_have_fn_clause(
@@ -130,17 +125,12 @@ impl Runtime {
             let forall_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::from({
-                        let st: Stmt = have_fn_equal_case_by_case_stmt.clone().into();
-                        let lf = st.line_file();
-                        RuntimeErrorStruct::new(
-                            Some(st),
-                            "".to_string(),
-                            lf,
-                            Some(store_fact_error),
-                            vec![],
-                        )
-                    })
+                    short_exec_error(
+                        have_fn_equal_case_by_case_stmt.clone().into(),
+                        "",
+                        Some(store_fact_error),
+                        vec![],
+                    )
                 })?;
             infer_result.new_infer_result_inside(forall_infer_result);
         }
@@ -170,17 +160,12 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            RuntimeError::from({
-                let st: Stmt = have_fn_equal_case_by_case_stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeErrorStruct::new(
-                    Some(st),
-                    "".to_string(),
-                    lf,
-                    Some(well_defined_error),
-                    vec![],
-                )
-            })
+            short_exec_error(
+                have_fn_equal_case_by_case_stmt.clone().into(),
+                "",
+                Some(well_defined_error),
+                vec![],
+            )
         })?;
 
         for case_index in 0..have_fn_equal_case_by_case_stmt.cases.len() {
@@ -215,17 +200,12 @@ impl Runtime {
         {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
-                    RuntimeError::from({
-                        let st: Stmt = have_fn_equal_case_by_case_stmt.clone().into();
-                        let lf = st.line_file();
-                        RuntimeErrorStruct::new(
-                            Some(st),
-                            "".to_string(),
-                            lf,
-                            Some(define_params_error),
-                            vec![],
-                        )
-                    })
+                    short_exec_error(
+                        have_fn_equal_case_by_case_stmt.clone().into(),
+                        "",
+                        Some(define_params_error),
+                        vec![],
+                    )
                 })?;
         }
 
@@ -239,48 +219,33 @@ impl Runtime {
                     dom_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::from({
-                        let st: Stmt = have_fn_equal_case_by_case_stmt.clone().into();
-                        let lf = st.line_file();
-                        RuntimeErrorStruct::new(
-                            Some(st),
-                            "".to_string(),
-                            lf,
-                            Some(store_fact_error),
-                            vec![],
-                        )
-                    })
+                    short_exec_error(
+                        have_fn_equal_case_by_case_stmt.clone().into(),
+                        "",
+                        Some(store_fact_error),
+                        vec![],
+                    )
                 })?;
         }
 
         let _ = self
             .store_fact_without_well_defined_verified_and_infer(case_fact_as_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::from({
-                    let st: Stmt = have_fn_equal_case_by_case_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
-                        Some(store_fact_error),
-                        vec![],
-                    )
-                })
+                short_exec_error(
+                    have_fn_equal_case_by_case_stmt.clone().into(),
+                    "",
+                    Some(store_fact_error),
+                    vec![],
+                )
             })?;
         self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)
             .map_err(|well_defined_error| {
-                RuntimeError::from({
-                    let st: Stmt = have_fn_equal_case_by_case_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
-                        Some(well_defined_error),
-                        vec![],
-                    )
-                })
+                short_exec_error(
+                    have_fn_equal_case_by_case_stmt.clone().into(),
+                    "",
+                    Some(well_defined_error),
+                    vec![],
+                )
             })?;
 
         let equal_to_in_ret_set_atomic_fact = InFact::new(
@@ -295,17 +260,12 @@ impl Runtime {
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::from({
-                    let st: Stmt = have_fn_equal_case_by_case_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
-                        Some(verify_error),
-                        vec![],
-                    )
-                })
+                short_exec_error(
+                    have_fn_equal_case_by_case_stmt.clone().into(),
+                    "",
+                    Some(verify_error),
+                    vec![],
+                )
             })?;
         if verify_result.is_unknown() {
             let msg = format!(

@@ -9,15 +9,7 @@ impl Runtime {
         self.run_in_local_env(|rt| rt.def_struct_stmt_check_well_defined(stmt))?;
 
         self.store_struct_def(stmt).map_err(|store_error| {
-            let st: Stmt = stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeError::from(RuntimeErrorStruct::new(
-                Some(st),
-                String::new(),
-                lf,
-                Some(store_error),
-                vec![],
-            ))
+            short_exec_error(stmt.clone().into(), "", Some(store_error), vec![])
         })?;
 
         let infer_result = InferResult::new();
@@ -33,33 +25,22 @@ impl Runtime {
 
         self.define_params_with_type(&stmt.param_defs, false)
             .map_err(|define_params_error| {
-                let st: Stmt = stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeError::from(RuntimeErrorStruct::new(
-                    Some(st),
-                    String::new(),
-                    lf,
-                    Some(define_params_error),
-                    vec![],
-                ))
+                short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
             })?;
 
         // struct 的参数和 field 不应该冲突, 比如 struct p(a set): a set 这样。虽然本质上好像不影响，但这样会看起来很怪。
         let param_names: HashSet<String> = stmt.get_params().into_iter().collect();
         for (field_name, _) in stmt.fields.iter() {
             if param_names.contains(field_name) {
-                let st: Stmt = stmt.clone().into();
-                let lf = st.line_file();
-                return Err(RuntimeError::from(RuntimeErrorStruct::new(
-                    Some(st),
+                return Err(short_exec_error(
+                    stmt.clone().into(),
                     format!(
                         "struct `{}`: field `{}` must not reuse a type parameter name",
                         stmt.name, field_name
                     ),
-                    lf,
                     None,
                     vec![],
-                )));
+                ));
             }
         }
 
@@ -69,43 +50,19 @@ impl Runtime {
                 &verify_state,
             )
             .map_err(|inner_exec_error| {
-                let st: Stmt = stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeError::from(RuntimeErrorStruct::new(
-                    Some(st),
-                    String::new(),
-                    lf,
-                    Some(inner_exec_error),
-                    vec![],
-                ))
+                short_exec_error(stmt.clone().into(), "", Some(inner_exec_error), vec![])
             })?;
         }
 
         for (_, field_param_type) in stmt.fields.iter() {
             self.verify_param_type_well_defined(field_param_type, &verify_state)
                 .map_err(|well_defined_error| {
-                    let st: Stmt = stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeError::from(RuntimeErrorStruct::new(
-                        Some(st),
-                        String::new(),
-                        lf,
-                        Some(well_defined_error),
-                        vec![],
-                    ))
+                    short_exec_error(stmt.clone().into(), "", Some(well_defined_error), vec![])
                 })?;
         }
 
         self.store_identifier_obj(SELF).map_err(|store_error| {
-            let st: Stmt = stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeError::from(RuntimeErrorStruct::new(
-                Some(st),
-                String::new(),
-                lf,
-                Some(store_error),
-                vec![],
-            ))
+            short_exec_error(stmt.clone().into(), "", Some(store_error), vec![])
         })?;
 
         let mut struct_params = vec![];
@@ -140,15 +97,7 @@ impl Runtime {
                 &verify_state,
             )
             .map_err(|inner_exec_error| {
-                let st: Stmt = stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeError::from(RuntimeErrorStruct::new(
-                    Some(st),
-                    String::new(),
-                    lf,
-                    Some(inner_exec_error),
-                    vec![],
-                ))
+                short_exec_error(stmt.clone().into(), "", Some(inner_exec_error), vec![])
             })?;
         }
 
