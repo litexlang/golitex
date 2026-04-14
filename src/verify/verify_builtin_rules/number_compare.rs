@@ -62,8 +62,7 @@ fn digits_are_all_zero(digits: &[u8]) -> bool {
 }
 
 fn normalized_decimal_string_is_integer(number_value: &str) -> bool {
-    let (_, _integer_digits, fractional_digits) =
-        parse_number_parts_for_comparison(number_value);
+    let (_, _integer_digits, fractional_digits) = parse_number_parts_for_comparison(number_value);
     digits_are_all_zero(&fractional_digits)
 }
 
@@ -185,20 +184,19 @@ pub fn compare_number_strings(
 }
 
 impl Runtime {
-    fn verify_zero_order_on_subexpr(
+    fn verify_zero_order_on_sub_expr(
         &mut self,
         zero: &Obj,
-        subexpr: &Obj,
+        sub_expr: &Obj,
         weak: bool,
         line_file: &LineFile,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = if weak {
-            LessEqualFact::new(zero.clone(), subexpr.clone(), line_file.clone()).into()
+            LessEqualFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
         } else {
-            LessFact::new(zero.clone(), subexpr.clone(), line_file.clone()).into()
+            LessFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
         };
-        let mut result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fact)?;
+        let mut result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fact)?;
         if !result.is_true() {
             result = self.verify_order_atomic_fact_numeric_builtin_only(&fact)?;
         }
@@ -214,7 +212,7 @@ impl Runtime {
     // - Powers: literal even integer exponent ⇒ `0 <= base^n`; literal integer exponent and `0 <= base`
     //   (or `0 < base` if exponent < 0) ⇒ `0 <= base^n`; `a * a` with equal factors.
     // - Products and quotients: `0 <= a * b`, `0 < a * b`, `0 <= a / b` (denominator strictly
-    //   positive), `0 < a / b`, each with recursive subgoals on operands.
+    //   positive), `0 < a / b`, each with recursive sub-goals on operands.
     // The Lit environment still records order via differences (`a <= b` iff `0 <= b - a`, etc.) and
     // `a != 0 ⇒ 0 < a^2` (strict square). This path also bridges `0 <= u - v` / `0 < u - v` to `v <= u` / `v < u`.
     // Algebraic closure (+, -, *, /) on general `a <= b` / `a < b` is in `order_algebra_builtin.rs`.
@@ -222,14 +220,10 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(result) =
-            self.verify_negated_order_from_known_equivalent_order(atomic_fact)?
-        {
+        if let Some(result) = self.verify_negated_order_from_known_equivalent_order(atomic_fact)? {
             return Ok(result);
         }
-        if let Some(result) =
-            self.verify_order_algebra_structural_builtin_rule(atomic_fact)?
-        {
+        if let Some(result) = self.verify_order_algebra_structural_builtin_rule(atomic_fact)? {
             return Ok(result);
         }
         if let Some(result) =
@@ -247,9 +241,7 @@ impl Runtime {
         {
             return Ok(result);
         }
-        if let Some(result) =
-            self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact)?
-        {
+        if let Some(result) = self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact)? {
             return Ok(result);
         }
         if let Some(result) =
@@ -373,8 +365,8 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        for cand in candidates {
-            let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&cand)?;
+        for candidate in candidates {
+            let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
             if sub.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules(
@@ -477,12 +469,12 @@ impl Runtime {
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
         let left_verify_result =
-            self.verify_zero_order_on_subexpr(zero, add_obj.left.as_ref(), true, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, add_obj.left.as_ref(), true, line_file)?;
         if !left_verify_result.is_true() {
             return Ok(None);
         }
         let right_verify_result =
-            self.verify_zero_order_on_subexpr(zero, add_obj.right.as_ref(), true, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, add_obj.right.as_ref(), true, line_file)?;
         if !right_verify_result.is_true() {
             return Ok(None);
         }
@@ -518,12 +510,12 @@ impl Runtime {
 
         let strict_then_weak = |this: &mut Self| -> Result<Option<StmtResult>, RuntimeError> {
             let left_result =
-                this.verify_zero_order_on_subexpr(zero, add_obj.left.as_ref(), false, line_file)?;
+                this.verify_zero_order_on_sub_expr(zero, add_obj.left.as_ref(), false, line_file)?;
             if !left_result.is_true() {
                 return Ok(None);
             }
             let right_result =
-                this.verify_zero_order_on_subexpr(zero, add_obj.right.as_ref(), true, line_file)?;
+                this.verify_zero_order_on_sub_expr(zero, add_obj.right.as_ref(), true, line_file)?;
             if !right_result.is_true() {
                 return Ok(None);
             }
@@ -537,12 +529,12 @@ impl Runtime {
         };
         let weak_then_strict = |this: &mut Self| -> Result<Option<StmtResult>, RuntimeError> {
             let left_result =
-                this.verify_zero_order_on_subexpr(zero, add_obj.left.as_ref(), true, line_file)?;
+                this.verify_zero_order_on_sub_expr(zero, add_obj.left.as_ref(), true, line_file)?;
             if !left_result.is_true() {
                 return Ok(None);
             }
             let right_result =
-                this.verify_zero_order_on_subexpr(zero, add_obj.right.as_ref(), false, line_file)?;
+                this.verify_zero_order_on_sub_expr(zero, add_obj.right.as_ref(), false, line_file)?;
             if !right_result.is_true() {
                 return Ok(None);
             }
@@ -629,8 +621,7 @@ impl Runtime {
         let line_file = less_fact.line_file.clone();
         let base = pow_obj.base.as_ref().clone();
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let base_neq_zero: AtomicFact =
-            NotEqualFact::new(base, zero_obj, line_file.clone()).into();
+        let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
 
         let mut neq_result =
             self.verify_non_equational_atomic_fact_with_known_atomic_facts(&base_neq_zero)?;
@@ -684,10 +675,10 @@ impl Runtime {
         let exponent_vs_zero = compare_normalized_number_str_to_zero(&exp_num.normalized_value);
         let base_result = match exponent_vs_zero {
             NumberCompareResult::Less => {
-                self.verify_zero_order_on_subexpr(zero, base, false, line_file)?
+                self.verify_zero_order_on_sub_expr(zero, base, false, line_file)?
             }
             NumberCompareResult::Equal | NumberCompareResult::Greater => {
-                self.verify_zero_order_on_subexpr(zero, base, true, line_file)?
+                self.verify_zero_order_on_sub_expr(zero, base, true, line_file)?
             }
         };
         if !base_result.is_true() {
@@ -695,9 +686,7 @@ impl Runtime {
         }
 
         let msg = match exponent_vs_zero {
-            NumberCompareResult::Less => {
-                "0 <= a^n from 0 < a and integer n < 0".to_string()
-            }
+            NumberCompareResult::Less => "0 <= a^n from 0 < a and integer n < 0".to_string(),
             _ => "0 <= a^n from 0 <= a and integer n".to_string(),
         };
 
@@ -730,12 +719,12 @@ impl Runtime {
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
         let left_verify_result =
-            self.verify_zero_order_on_subexpr(zero, mul_obj.left.as_ref(), true, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, mul_obj.left.as_ref(), true, line_file)?;
         if !left_verify_result.is_true() {
             return Ok(None);
         }
         let right_verify_result =
-            self.verify_zero_order_on_subexpr(zero, mul_obj.right.as_ref(), true, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, mul_obj.right.as_ref(), true, line_file)?;
         if !right_verify_result.is_true() {
             return Ok(None);
         }
@@ -769,12 +758,12 @@ impl Runtime {
         let zero = &less_fact.left;
         let line_file = &less_fact.line_file;
         let left_verify_result =
-            self.verify_zero_order_on_subexpr(zero, mul_obj.left.as_ref(), false, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, mul_obj.left.as_ref(), false, line_file)?;
         if !left_verify_result.is_true() {
             return Ok(None);
         }
         let right_verify_result =
-            self.verify_zero_order_on_subexpr(zero, mul_obj.right.as_ref(), false, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, mul_obj.right.as_ref(), false, line_file)?;
         if !right_verify_result.is_true() {
             return Ok(None);
         }
@@ -808,12 +797,12 @@ impl Runtime {
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
         let numer_result =
-            self.verify_zero_order_on_subexpr(zero, div_obj.left.as_ref(), true, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, div_obj.left.as_ref(), true, line_file)?;
         if !numer_result.is_true() {
             return Ok(None);
         }
         let denom_result =
-            self.verify_zero_order_on_subexpr(zero, div_obj.right.as_ref(), false, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, div_obj.right.as_ref(), false, line_file)?;
         if !denom_result.is_true() {
             return Ok(None);
         }
@@ -847,12 +836,12 @@ impl Runtime {
         let zero = &less_fact.left;
         let line_file = &less_fact.line_file;
         let numer_result =
-            self.verify_zero_order_on_subexpr(zero, div_obj.left.as_ref(), false, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, div_obj.left.as_ref(), false, line_file)?;
         if !numer_result.is_true() {
             return Ok(None);
         }
         let denom_result =
-            self.verify_zero_order_on_subexpr(zero, div_obj.right.as_ref(), false, line_file)?;
+            self.verify_zero_order_on_sub_expr(zero, div_obj.right.as_ref(), false, line_file)?;
         if !denom_result.is_true() {
             return Ok(None);
         }
