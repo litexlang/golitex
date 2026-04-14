@@ -7,23 +7,13 @@ know:
     forall x, y R:
         abs(x * y) = abs(x) * abs(y)
 
-have fn max(x, y R) R:
-    case x >= y: x
-    case x < y: y
-
 know:
     forall x, y R:
         x <= max(x, y)
         y <= max(x, y)
-        max(x, y) = x or max(x, y) = y
-
-have fn min(x, y R) R:
-    case x <= y: x
-    case x > y: y
 
 know:
     forall x, y R:
         min(x, y) <= x
         min(x, y) <= y
-        min(x, y) = x or min(x, y) = y
 "#;

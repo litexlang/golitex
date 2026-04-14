@@ -89,6 +89,14 @@ impl Runtime {
                 Obj::Abs(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Max(a) => match right {
+                Obj::Max(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Min(a) => match right {
+                Obj::Min(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Union(a) => match right {
                 Obj::Union(b) => a.to_string() == b.to_string(),
                 _ => false,

@@ -17,6 +17,8 @@ pub enum Obj {
     Mod(Mod),
     Pow(Pow),
     Abs(Abs),
+    Max(Max),
+    Min(Min),
     Union(Union),
     Intersect(Intersect),
     SetMinus(SetMinus),
@@ -193,6 +195,18 @@ pub struct Abs {
 }
 
 #[derive(Clone)]
+pub struct Max {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Min {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
 pub struct Union {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
@@ -334,6 +348,24 @@ impl Abs {
     pub fn new(arg: Obj) -> Self {
         Abs {
             arg: Box::new(arg),
+        }
+    }
+}
+
+impl Max {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Max {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl Min {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Min {
+            left: Box::new(left),
+            right: Box::new(right),
         }
     }
 }
@@ -532,7 +564,7 @@ impl ClosedRange {
 fn precedence(o: &Obj) -> u8 {
     match o {
         Obj::Add(_) | Obj::Sub(_) => 3,
-        Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) => 2,
+        Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Max(_) | Obj::Min(_) => 2,
         Obj::Pow(_) | Obj::Abs(_) => 1,
         _ => 0,
     }
@@ -590,6 +622,20 @@ impl Obj {
             Obj::Abs(a) => {
                 write!(f, "{} {}", ABS, LEFT_BRACE)?;
                 a.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::Max(m) => {
+                write!(f, "{} {}", MAX, LEFT_BRACE)?;
+                m.left.fmt_with_precedence(f, 0)?;
+                write!(f, "{} ", COMMA)?;
+                m.right.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::Min(m) => {
+                write!(f, "{} {}", MIN, LEFT_BRACE)?;
+                m.left.fmt_with_precedence(f, 0)?;
+                write!(f, "{} ", COMMA)?;
+                m.right.fmt_with_precedence(f, 0)?;
                 write!(f, "{}", RIGHT_BRACE)?;
             }
             Obj::Union(x) => write!(f, "{}", x)?,
@@ -692,6 +738,10 @@ impl Obj {
             Obj::Pow(x) => Pow::new(Obj::replace_bound_identifier(*x.base, from, to),
                 Obj::replace_bound_identifier(*x.exponent, from, to)).into(),
             Obj::Abs(x) => Abs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Max(x) => Max::new(Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to)).into(),
+            Obj::Min(x) => Min::new(Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to)).into(),
             Obj::Union(x) => Union::new(Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to)).into(),
             Obj::Intersect(x) => Intersect::new(Obj::replace_bound_identifier(*x.left, from, to),
@@ -1000,6 +1050,26 @@ impl fmt::Display for Abs {
     }
 }
 
+impl fmt::Display for Max {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}{}{}{}",
+            MAX, LEFT_BRACE, self.left, COMMA, self.right, RIGHT_BRACE
+        )
+    }
+}
+
+impl fmt::Display for Min {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}{}{}{}",
+            MIN, LEFT_BRACE, self.left, COMMA, self.right, RIGHT_BRACE
+        )
+    }
+}
+
 impl fmt::Display for Union {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -1215,6 +1285,18 @@ impl From<Pow> for Obj {
 impl From<Abs> for Obj {
     fn from(a: Abs) -> Self {
         Obj::Abs(a)
+    }
+}
+
+impl From<Max> for Obj {
+    fn from(m: Max) -> Self {
+        Obj::Max(m)
+    }
+}
+
+impl From<Min> for Obj {
+    fn from(m: Min) -> Self {
+        Obj::Min(m)
     }
 }
 

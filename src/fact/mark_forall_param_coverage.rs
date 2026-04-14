@@ -98,6 +98,14 @@ fn mark_forall_param_coverage_in_obj(
         Obj::Abs(unary) => {
             mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
         }
+        Obj::Max(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Min(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
         Obj::Union(binary) => {
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
