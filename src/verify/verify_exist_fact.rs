@@ -17,12 +17,18 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
                 return Err(
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        exist_fact.clone().into(),
-                        String::new(),
-                        exist_fact.line_file(),
-                        Some(e),
-                    ),
+                    {
+            let __fact: Fact = (exist_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                String::new(),
+                exist_fact.line_file(),
+                Some(e),
+                vec![],
+            ))
+            .into()
+        },
                 );
             }
         }
@@ -70,22 +76,32 @@ impl Runtime {
         {
             let target_string =
                 Self::exist_fact_normalized_string(runtime, exist_fact).map_err(|e| {
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        exist_fact.clone().into(),
-                        String::new(),
-                        exist_fact.line_file(),
-                        Some(e),
-                    )
+                    {
+            let __fact: Fact = (exist_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                String::new(),
+                exist_fact.line_file(),
+                Some(e),
+                vec![],
+            )))
+        }
                 })?;
             for known_fact in known_exist_facts.iter() {
                 let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
                     .map_err(|e| {
-                        RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                            exist_fact.clone().into(),
-                            String::new(),
-                            exist_fact.line_file(),
-                            Some(e),
-                        )
+                        {
+            let __fact: Fact = (exist_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                String::new(),
+                exist_fact.line_file(),
+                Some(e),
+                vec![],
+            )))
+        }
                     })?;
                 if target_string == known_string {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(

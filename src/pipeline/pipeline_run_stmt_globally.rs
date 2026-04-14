@@ -37,12 +37,17 @@ fn run_file(
     let current_lit_path = _runtime.module_manager.current_file_path_rc();
     let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
-        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            _run_file_stmt.clone().into(),
-            format!("Failed to read file: {}", path.as_str()),
-            None,
-            vec![],
-        ))
+        RuntimeError::ExecStmtError({
+            let __stmt: Stmt = _run_file_stmt.clone().into();
+            let __line_file = __stmt.line_file();
+            RuntimeErrorStruct::new(
+                Some(__stmt),
+                format!("Failed to read file: {}", path.as_str()),
+                __line_file,
+                None,
+                vec![],
+            )
+        })
     })?;
 
     let current_file_index = _runtime.module_manager.current_file_index;

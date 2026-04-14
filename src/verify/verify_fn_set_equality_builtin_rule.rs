@@ -12,12 +12,18 @@ fn fn_set_equality_verify_error(
     message: String,
     cause: Option<RuntimeError>,
 ) -> RuntimeError {
-    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-        fn_set_equality_fact(left, right, line_file.clone()),
-        message,
-        line_file,
-        cause,
-    )
+    {
+            let __fact: Fact = (fn_set_equality_fact(left, right, line_file.clone()));
+            let __stmt = __fact.into_stmt();
+            VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                message,
+                line_file,
+                cause,
+                vec![],
+            ))
+            .into()
+        }
 }
 
 fn fn_set_equality_verified_by_builtin_rules_result(

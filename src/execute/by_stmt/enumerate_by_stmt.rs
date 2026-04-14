@@ -6,25 +6,69 @@ impl Runtime {
         stmt: &ByEnumerateStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                stmt.clone().into(),
-                msg,
-                None,
+            RuntimeError::ExecStmtError({
+                let __stmt: Stmt = stmt.clone().into();
+                let __message = msg;
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
                 vec![],
             ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            })
         })?;
 
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
-                    format!(
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message = format!(
                         "by enumerate: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
-                    ),
-                    Some(well_defined_error),
-                    vec![],
-                ))
+                    );
+                    let __cause = Some(well_defined_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
 
         let enumerate_cartesian_product_is_empty = stmt
@@ -37,17 +81,37 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            stmt.clone().into(),
-                            format!(
-                                "by enumerate: failed to store corresponding forall `{}`",
-                                corresponding_forall_fact
-                            ),
-                            Some(store_fact_error),
-                            vec![],
-                        ),
-                    )
+                    RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = stmt.clone().into();
+                        let __message = format!(
+                            "by enumerate: failed to store corresponding forall `{}`",
+                            corresponding_forall_fact
+                        );
+                        let __cause = Some(store_fact_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    })
                 })?;
             let infer_result = Self::infer_result_with_generated_forall_and_store_infer(
                 &corresponding_forall_fact,
@@ -78,15 +142,37 @@ impl Runtime {
         let infer_result_from_stored_forall_fact = self
             .store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact.clone())
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
-                    format!(
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message = format!(
                         "by enumerate: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
-                    ),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                    );
+                    let __cause = Some(store_fact_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
 
         let infer_result = Self::infer_result_with_generated_forall_and_store_infer(
@@ -167,14 +253,34 @@ impl Runtime {
 
         for proof_stmt in stmt.proof.iter() {
             if let Err(statement_error) = self.exec_stmt(proof_stmt) {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        proof_stmt.to_string(),
-                        Some(statement_error),
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message = proof_stmt.to_string();
+                    let __cause = Some(statement_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
         }
 
@@ -184,14 +290,34 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )?;
             if verified_result.is_unknown() {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        format!("by enumerate: failed to prove `{}`", fact_to_prove),
-                        None,
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message = format!("by enumerate: failed to prove `{}`", fact_to_prove);
+                    let __cause = None;
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
         }
         Ok(())

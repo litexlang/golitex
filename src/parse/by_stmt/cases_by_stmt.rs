@@ -5,21 +5,23 @@ impl Runtime {
         tb.skip_token(CASES)?;
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
-            return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "cases: expects at least one body block".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                ),
-            );
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "cases: expects at least one body block".to_string(),
+                tb.line_file.clone(),
+                None,
+                vec![],
+            ))));
         }
         let then_facts: Vec<Fact> = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
                     "Expected body".to_string(),
                     tb.line_file.clone(),
                     None,
-                )
+                    vec![],
+                )))
             })?;
             first.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             first
@@ -37,13 +39,13 @@ impl Runtime {
             let case = self.parse_and_chain_atomic_fact(block)?;
             block.skip_token(COLON)?;
             if !block.exceed_end_of_head() {
-                return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        "case: expected end of head after condition".to_string(),
-                        block.line_file.clone(),
-                        None,
-                    ),
-                );
+                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "case: expected end of head after condition".to_string(),
+                    block.line_file.clone(),
+                    None,
+                    vec![],
+                ))));
             }
             cases.push(case);
             let n = block.body.len();
@@ -59,11 +61,13 @@ impl Runtime {
                         .map(|b| self.parse_stmt(b))
                         .collect::<Result<_, _>>()?;
                     let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
-                        RuntimeError::new_parse_error_with_msg_position_previous_error(
-                            "Expected body".to_string(),
-                            tb.line_file.clone(),
-                            None,
-                        )
+                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                "Expected body".to_string(),
+                tb.line_file.clone(),
+                None,
+                vec![],
+            )))
                     })?;
                     last_block.skip_token(IMPOSSIBLE)?;
                     let imp = self.parse_atomic_fact(last_block, true)?;

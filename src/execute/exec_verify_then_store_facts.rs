@@ -9,23 +9,33 @@ impl Runtime {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    stmt_for_fact_errors.clone(),
-                    "".to_string(),
-                    Some(well_defined_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = stmt_for_fact_errors.clone();
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        "".to_string(),
+                        __line_file,
+                        Some(well_defined_error),
+                        vec![],
+                    )
+                })
             })?;
         self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
             fact.clone(),
         )
         .map_err(|store_fact_error| {
-            RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                stmt_for_fact_errors,
-                "".to_string(),
-                Some(store_fact_error),
-                vec![],
-            ))
+            RuntimeError::from({
+                let __stmt: Stmt = stmt_for_fact_errors;
+                let __line_file = __stmt.line_file();
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    "".to_string(),
+                    __line_file,
+                    Some(store_fact_error),
+                    vec![],
+                )
+            })
         })
     }
 
@@ -37,21 +47,31 @@ impl Runtime {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    stmt_for_fact_errors.clone(),
-                    "".to_string(),
-                    Some(well_defined_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = stmt_for_fact_errors.clone();
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        "".to_string(),
+                        __line_file,
+                        Some(well_defined_error),
+                        vec![],
+                    )
+                })
             })?;
         self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact.clone())
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    stmt_for_fact_errors,
-                    "".to_string(),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = stmt_for_fact_errors;
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        "".to_string(),
+                        __line_file,
+                        Some(store_fact_error),
+                        vec![],
+                    )
+                })
             })
     }
 
@@ -63,21 +83,31 @@ impl Runtime {
         let stmt_for_fact_errors: Stmt = fact.clone().into();
         self.verify_fact_well_defined(&fact, verify_state)
             .map_err(|well_defined_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    stmt_for_fact_errors.clone(),
-                    "".to_string(),
-                    Some(well_defined_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = stmt_for_fact_errors.clone();
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        "".to_string(),
+                        __line_file,
+                        Some(well_defined_error),
+                        vec![],
+                    )
+                })
             })?;
         self.store_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    stmt_for_fact_errors,
-                    "".to_string(),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = stmt_for_fact_errors;
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        "".to_string(),
+                        __line_file,
+                        Some(store_fact_error),
+                        vec![],
+                    )
+                })
             })
     }
 }

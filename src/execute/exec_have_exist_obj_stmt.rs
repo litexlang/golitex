@@ -11,22 +11,47 @@ impl Runtime {
         let result = self
             .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    have_exist_obj_stmt.clone().into(),
-                    "".to_string(),
-                    Some(verify_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = have_exist_obj_stmt.clone().into();
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        "".to_string(),
+                        __line_file,
+                        Some(verify_error),
+                        vec![],
+                    )
+                })
             })?;
         if result.is_unknown() {
-            return Err(RuntimeError::from(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    have_exist_obj_stmt.clone().into(),
-                    "have_exist_obj_stmt: exist fact is not verified".to_string(),
-                    None,
-                    vec![],
-                ),
-            ));
+            return Err(RuntimeError::from({
+                let __stmt: Stmt = have_exist_obj_stmt.clone().into();
+                let __message = "have_exist_obj_stmt: exist fact is not verified".to_string();
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            }));
         }
 
         if exist_fact_in_have_obj_stmt
@@ -34,14 +59,34 @@ impl Runtime {
             .number_of_params()
             != have_exist_obj_stmt.equal_tos.len()
         {
-            return Err(RuntimeError::from(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    have_exist_obj_stmt.clone().into(),
-                    "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string(),
-                    None,
-                    vec![],
-                ),
-            ));
+            return Err(RuntimeError::from({
+                let __stmt: Stmt = have_exist_obj_stmt.clone().into();
+                let __message = "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string();
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            }));
         }
 
         for obj in have_exist_obj_stmt.equal_tos.iter() {
@@ -61,12 +106,9 @@ impl Runtime {
                 have_exist_obj_stmt.line_file.clone(),
             )
             .map_err(|e| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    have_exist_obj_stmt.clone().into(),
-                    "".to_string(),
-                    Some(e),
-                    vec![],
-                )
+                let __stmt: Stmt = have_exist_obj_stmt.clone().into();
+                let __line_file = __stmt.line_file();
+                RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, Some(e), vec![])
             })?;
 
         let param_to_obj_map = exist_fact_in_have_obj_stmt
@@ -77,9 +119,12 @@ impl Runtime {
             let instantiated_fact = self
                 .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map)
                 .map_err(|runtime_error| {
-                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        have_exist_obj_stmt.clone().into(),
+                    let __stmt: Stmt = have_exist_obj_stmt.clone().into();
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
                         "".to_string(),
+                        __line_file,
                         Some(runtime_error),
                         vec![],
                     )
@@ -88,9 +133,12 @@ impl Runtime {
             let fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(instantiated_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        have_exist_obj_stmt.clone().into(),
+                    let __stmt: Stmt = have_exist_obj_stmt.clone().into();
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
                         "".to_string(),
+                        __line_file,
                         Some(store_fact_error),
                         vec![],
                     )

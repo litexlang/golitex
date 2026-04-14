@@ -8,9 +8,12 @@ impl Runtime {
         let infer_result = self
             .define_params_with_type(&stmt.param_def, true)
             .map_err(|define_params_error| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    stmt.clone().into(),
+                let __stmt: Stmt = stmt.clone().into();
+                let __line_file = __stmt.line_file();
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
                     "".to_string(),
+                    __line_file,
                     Some(define_params_error),
                     vec![],
                 )

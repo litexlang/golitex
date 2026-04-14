@@ -12,14 +12,34 @@ impl Runtime {
     ) -> Result<(Fact, Fact, Fact, Fact), RuntimeError> {
         let param_names = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
         if param_names.is_empty() {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!("{}: fn set has no parameters", context),
-                    None,
-                    vec![],
-                ),
-            ));
+            return Err(RuntimeError::ExecStmtError({
+                let __stmt: Stmt = stmt_exec.clone();
+                let __message = format!("{}: fn set has no parameters", context);
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            }));
         }
 
         let mut generated_forall_names = self
@@ -40,14 +60,35 @@ impl Runtime {
             let instantiated_set = self
                 .inst_obj(&param_def_with_set.set, &original_param_to_forall_obj)
                 .map_err(|inst_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            stmt_exec.clone(),
-                            format!("{}: failed to instantiate generated parameter set", context),
-                            Some(inst_error),
-                            vec![],
-                        ),
-                    )
+                    RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = stmt_exec.clone();
+                        let __message =
+                            format!("{}: failed to instantiate generated parameter set", context);
+                        let __cause = Some(inst_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    })
                 })?;
             forall_param_defs_with_type.push(ParamGroupWithParamType::new(
                 generated_names_for_current_group.clone(),
@@ -66,12 +107,35 @@ impl Runtime {
         let forall_ret_set = self
             .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_forall_obj)
             .map_err(|inst_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!("{}: failed to instantiate generated return set", context),
-                    Some(inst_error),
-                    vec![],
-                ))
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message =
+                        format!("{}: failed to instantiate generated return set", context);
+                    let __cause = Some(inst_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         let forall_args: Vec<Obj> = param_names
             .iter()
@@ -153,17 +217,37 @@ impl Runtime {
                                 &original_param_to_forall_obj,
                             )
                             .map_err(|inst_error| {
-                                RuntimeError::ExecStmtError(
-                                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                        stmt_exec.clone(),
-                                        format!(
-                                            "{}: failed to instantiate generated domain fact",
-                                            context
-                                        ),
-                                        Some(inst_error),
-                                        vec![],
-                                    ),
-                                )
+                                RuntimeError::ExecStmtError({
+                                    let __stmt: Stmt = stmt_exec.clone();
+                                    let __message = format!(
+                                        "{}: failed to instantiate generated domain fact",
+                                        context
+                                    );
+                                    let __cause = Some(inst_error);
+                                    let __inside = vec![];
+                                    let __line_file = __stmt.line_file();
+                                    let __previous_error = if __message.is_empty() {
+                                        __cause
+                                    } else {
+                                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                                    };
+                                    RuntimeErrorStruct::new(
+                                        Some(__stmt),
+                                        __message,
+                                        __line_file,
+                                        __previous_error,
+                                        __inside,
+                                    )
+                                })
                             })?,
                         );
                     }
@@ -197,14 +281,35 @@ impl Runtime {
             let instantiated_set = self
                 .inst_obj(&param_def_with_set.set, &original_param_to_exist_obj)
                 .map_err(|inst_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            stmt_exec.clone(),
-                            format!("{}: failed to instantiate witness parameter set", context),
-                            Some(inst_error),
-                            vec![],
-                        ),
-                    )
+                    RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = stmt_exec.clone();
+                        let __message =
+                            format!("{}: failed to instantiate witness parameter set", context);
+                        let __cause = Some(inst_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    })
                 })?;
             exist_param_defs_with_type.push(ParamGroupWithParamType::new(
                 generated_names_for_current_group.clone(),
@@ -223,12 +328,35 @@ impl Runtime {
         let exist_ret_set = self
             .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_exist_obj)
             .map_err(|inst_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!("{}: failed to instantiate witness return set", context),
-                    Some(inst_error),
-                    vec![],
-                ))
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message =
+                        format!("{}: failed to instantiate witness return set", context);
+                    let __cause = Some(inst_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         let exist_args: Vec<Obj> = param_names
             .iter()
@@ -261,17 +389,37 @@ impl Runtime {
                     dom_facts.push(
                         self.inst_or_and_chain_atomic_fact(dom_fact, &original_param_to_exist_obj)
                             .map_err(|inst_error| {
-                                RuntimeError::ExecStmtError(
-                                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                        stmt_exec.clone(),
-                                        format!(
-                                            "{}: failed to instantiate witness domain fact",
-                                            context
-                                        ),
-                                        Some(inst_error),
-                                        vec![],
-                                    ),
-                                )
+                                RuntimeError::ExecStmtError({
+                                    let __stmt: Stmt = stmt_exec.clone();
+                                    let __message = format!(
+                                        "{}: failed to instantiate witness domain fact",
+                                        context
+                                    );
+                                    let __cause = Some(inst_error);
+                                    let __inside = vec![];
+                                    let __line_file = __stmt.line_file();
+                                    let __previous_error = if __message.is_empty() {
+                                        __cause
+                                    } else {
+                                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                                    };
+                                    RuntimeErrorStruct::new(
+                                        Some(__stmt),
+                                        __message,
+                                        __line_file,
+                                        __previous_error,
+                                        __inside,
+                                    )
+                                })
                             })?
                             .into(),
                     );
@@ -355,47 +503,140 @@ impl Runtime {
         let infer_shape = self
             .store_fact_without_well_defined_verified_and_infer(forall_shape)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    "by fn: failed to store cart/tuple shape characterization fact".to_string(),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message =
+                        "by fn: failed to store cart/tuple shape characterization fact"
+                            .to_string();
+                    let __cause = Some(store_fact_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         infer_result.new_infer_result_inside(infer_shape);
         let infer_in = self
             .store_fact_without_well_defined_verified_and_infer(forall_in)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    "by fn: failed to store graph-element characterization fact".to_string(),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message =
+                        "by fn: failed to store graph-element characterization fact".to_string();
+                    let __cause = Some(store_fact_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         infer_result.new_infer_result_inside(infer_in);
 
         let infer_exist = self
             .store_fact_without_well_defined_verified_and_infer(forall_exist)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    "by fn: failed to store element characterization fact".to_string(),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message =
+                        "by fn: failed to store element characterization fact".to_string();
+                    let __cause = Some(store_fact_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         infer_result.new_infer_result_inside(infer_exist);
 
         let infer_unique = self
             .store_fact_without_forall_coverage_check_and_infer(forall_unique)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    "by fn: failed to store uniqueness characterization fact".to_string(),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message =
+                        "by fn: failed to store uniqueness characterization fact".to_string();
+                    let __cause = Some(store_fact_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         infer_result.new_infer_result_inside(infer_unique);
 
@@ -403,22 +644,42 @@ impl Runtime {
     }
 
     pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtResult, RuntimeError> {
-        let stmt_exec = stmt.clone().into();
+        let stmt_exec: Stmt = stmt.clone().into();
 
         let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
             Some(fs) => fs,
             None => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt_exec,
-                        format!(
-                            "by fn: `{}` is not known to belong to a fn set",
-                            stmt.function
-                        ),
-                        None,
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec;
+                    let __message = format!(
+                        "by fn: `{}` is not known to belong to a fn set",
+                        stmt.function
+                    );
+                    let __cause = None;
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
         };
 
@@ -456,54 +717,142 @@ impl Runtime {
         let verify_shape_fact = self
             .verify_fact_return_err_if_not_true(forall_shape, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!(
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message = format!(
                         "by fn set: failed to prove cart/tuple shape characterization `{}`",
                         forall_shape
-                    ),
-                    Some(verify_error),
-                    vec![],
-                ))
+                    );
+                    let __cause = Some(verify_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         let verify_random_param_fact = self
             .verify_fact_return_err_if_not_true(forall_in, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!(
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message = format!(
                         "by fn set: failed to prove graph-element characterization `{}`",
                         forall_in
-                    ),
-                    Some(verify_error),
-                    vec![],
-                ))
+                    );
+                    let __cause = Some(verify_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         let verify_param_to_element_fact = self
             .verify_fact_return_err_if_not_true(forall_exist, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!(
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message = format!(
                         "by fn set: failed to prove graph-coverage characterization `{}`",
                         forall_exist
-                    ),
-                    Some(verify_error),
-                    vec![],
-                ))
+                    );
+                    let __cause = Some(verify_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         let verify_uniqueness_fact = self
             .verify_fact_return_err_if_not_true(forall_unique, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    format!(
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message = format!(
                         "by fn set: failed to prove graph-uniqueness characterization `{}`",
                         forall_unique
-                    ),
-                    Some(verify_error),
-                    vec![],
-                ))
+                    );
+                    let __cause = Some(verify_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
 
         Ok(vec![
@@ -527,17 +876,39 @@ impl Runtime {
         .into();
         self.store_atomic_fact_without_well_defined_verified_and_infer(membership_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    "by fn set: failed to store membership fact".to_string(),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = stmt_exec.clone();
+                    let __message = "by fn set: failed to store membership fact".to_string();
+                    let __cause = Some(store_fact_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })
     }
 
     pub fn exec_by_fn_set_stmt(&mut self, stmt: &ByFnSetStmt) -> Result<StmtResult, RuntimeError> {
-        let stmt_exec = stmt.clone().into();
+        let stmt_exec: Stmt = stmt.clone().into();
         let (forall_shape, forall_in, forall_exist, forall_unique) = self
             .build_fn_characterization_facts(
                 &stmt.func,
