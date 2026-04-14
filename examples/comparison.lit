@@ -1,30 +1,4 @@
 know:
-    forall a R, b R:
-        a >= 0
-        b >= 1
-        =>:
-            a <= b * a
-
-    forall a, b, c R:
-        c >= 0
-        a <= b
-        =>:
-            a * c <= b * c
-
-    forall a, b, c R:
-        c > 0
-        a <= b
-        =>:
-            a / c <= b / c
-
-know:
-    forall a, b R:
-        0 <= a
-        0 <= b
-        =>:
-            0 <= a * b
-
-know:
     forall a, b, c R:
         0 < c
         =>:

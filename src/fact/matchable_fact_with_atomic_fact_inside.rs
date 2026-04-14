@@ -125,23 +125,21 @@ impl AndChainAtomicFact {
             AndChainAtomicFact::AtomicFact(a) => {
                 AndChainAtomicFact::AtomicFact(a.replace_bound_identifier(from, to))
             }
-            AndChainAtomicFact::AndFact(af) => AndChainAtomicFact::AndFact(AndFact {
-                facts: af
-                    .facts
+            AndChainAtomicFact::AndFact(af) => AndChainAtomicFact::AndFact(AndFact::new(
+                af.facts
                     .into_iter()
                     .map(|x| x.replace_bound_identifier(from, to))
                     .collect(),
-                line_file: af.line_file,
-            }),
-            AndChainAtomicFact::ChainFact(cf) => AndChainAtomicFact::ChainFact(ChainFact {
-                objs: cf
-                    .objs
+                af.line_file,
+            )),
+            AndChainAtomicFact::ChainFact(cf) => AndChainAtomicFact::ChainFact(ChainFact::new(
+                cf.objs
                     .into_iter()
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
-                prop_names: cf.prop_names,
-                line_file: cf.line_file,
-            }),
+                cf.prop_names,
+                cf.line_file,
+            )),
         }
     }
 }

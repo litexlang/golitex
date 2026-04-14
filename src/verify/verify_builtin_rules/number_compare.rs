@@ -205,10 +205,38 @@ impl Runtime {
         Ok(result)
     }
 
+    // Lit `know` facts for the nonnegative / positive cone under field operations used to live in
+    // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
+    // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
+    // goals (possibly after `normalize_positive_order_atomic_fact`):
+    // - Chained `+`: `0 <= a + b + …` from `0 <=` on each peeled summand; `0 < a + b + …` from
+    //   `(0 < a ∧ 0 <= b) ∨ (0 <= a ∧ 0 < b)` at each binary `+`.
+    // - Powers: literal even integer exponent ⇒ `0 <= base^n`; literal integer exponent and `0 <= base`
+    //   (or `0 < base` if exponent < 0) ⇒ `0 <= base^n`; `a * a` with equal factors.
+    // - Products and quotients: `0 <= a * b`, `0 < a * b`, `0 <= a / b` (denominator strictly
+    //   positive), `0 < a / b`, each with recursive subgoals on operands.
+    // The Lit environment still records order via differences (`a <= b` iff `0 <= b - a`, etc.) and
+    // `a != 0 ⇒ 0 < a^2` (strict square). This path also bridges `0 <= u - v` / `0 < u - v` to `v <= u` / `v < u`.
+    // Algebraic closure (+, -, *, /) on general `a <= b` / `a < b` is in `order_algebra_builtin.rs`.
     pub fn verify_order_atomic_fact_numeric_builtin_only(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) =
+            self.verify_negated_order_from_known_equivalent_order(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_order_algebra_structural_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_order_on_sub_from_two_sided_order_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
         if let Some(result) =
             self.verify_zero_le_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
         {
@@ -221,6 +249,11 @@ impl Runtime {
         }
         if let Some(result) =
             self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(atomic_fact)?
         {
             return Ok(result);
         }
@@ -301,6 +334,126 @@ impl Runtime {
             ))
         } else {
             Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
+        }
+    }
+
+    // `not (a < b)` etc.: only consult known atomic facts for the equivalent weak/strict order.
+    fn verify_negated_order_from_known_equivalent_order(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let candidates: Vec<AtomicFact> = match atomic_fact {
+            AtomicFact::NotLessFact(f) => {
+                let lf = f.line_file.clone();
+                vec![
+                    LessEqualFact::new(f.right.clone(), f.left.clone(), lf.clone()).into(),
+                    GreaterEqualFact::new(f.left.clone(), f.right.clone(), lf).into(),
+                ]
+            }
+            AtomicFact::NotGreaterFact(f) => {
+                let lf = f.line_file.clone();
+                vec![
+                    LessEqualFact::new(f.left.clone(), f.right.clone(), lf.clone()).into(),
+                    GreaterEqualFact::new(f.right.clone(), f.left.clone(), lf).into(),
+                ]
+            }
+            AtomicFact::NotLessEqualFact(f) => {
+                let lf = f.line_file.clone();
+                vec![
+                    LessFact::new(f.right.clone(), f.left.clone(), lf.clone()).into(),
+                    GreaterFact::new(f.left.clone(), f.right.clone(), lf).into(),
+                ]
+            }
+            AtomicFact::NotGreaterEqualFact(f) => {
+                let lf = f.line_file.clone();
+                vec![
+                    LessFact::new(f.left.clone(), f.right.clone(), lf.clone()).into(),
+                    GreaterFact::new(f.right.clone(), f.left.clone(), lf).into(),
+                ]
+            }
+            _ => return Ok(None),
+        };
+        for cand in candidates {
+            let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&cand)?;
+            if sub.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                        atomic_fact.clone().into(),
+                        InferResult::new(),
+                        "negated_order_from_known_equivalent_order".to_string(),
+                        vec![sub],
+                    )
+                    .into(),
+                ));
+            }
+        }
+        Ok(None)
+    }
+
+    // Matches Lit `a <= b` <=> `0 <= b - a` (and strict): `0 <= u - v` iff `v <= u`, `0 < u - v` iff `v < u`.
+    fn verify_zero_order_on_sub_from_two_sided_order_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        match &norm {
+            AtomicFact::LessEqualFact(f) if f.left.to_string() == "0" => {
+                let Obj::Sub(sub) = &f.right else {
+                    return Ok(None);
+                };
+                let derived: AtomicFact = LessEqualFact::new(
+                    sub.right.as_ref().clone(),
+                    sub.left.as_ref().clone(),
+                    f.line_file.clone(),
+                )
+                .into();
+                let mut result =
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&derived)?;
+                if !result.is_true() {
+                    result = self.verify_order_atomic_fact_numeric_builtin_only(&derived)?;
+                }
+                if result.is_true() {
+                    Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "0 <= u - v from v <= u".to_string(),
+                            vec![result],
+                        ),
+                    )))
+                } else {
+                    Ok(None)
+                }
+            }
+            AtomicFact::LessFact(f) if f.left.to_string() == "0" => {
+                let Obj::Sub(sub) = &f.right else {
+                    return Ok(None);
+                };
+                let derived: AtomicFact = LessFact::new(
+                    sub.right.as_ref().clone(),
+                    sub.left.as_ref().clone(),
+                    f.line_file.clone(),
+                )
+                .into();
+                let mut result =
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&derived)?;
+                if !result.is_true() {
+                    result = self.verify_order_atomic_fact_numeric_builtin_only(&derived)?;
+                }
+                if result.is_true() {
+                    Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "0 < u - v from v < u".to_string(),
+                            vec![result],
+                        ),
+                    )))
+                } else {
+                    Ok(None)
+                }
+            }
+            _ => Ok(None),
         }
     }
 
@@ -446,6 +599,57 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 msg,
                 Vec::new(),
+            ),
+        )))
+    }
+
+    fn verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessFact(less_fact) = normalized_fact else {
+            return Ok(None);
+        };
+        if less_fact.left.to_string() != "0" {
+            return Ok(None);
+        }
+        let Obj::Pow(pow_obj) = &less_fact.right else {
+            return Ok(None);
+        };
+        let Obj::Number(exp_num) = pow_obj.exponent.as_ref() else {
+            return Ok(None);
+        };
+        if !normalized_decimal_string_is_even_integer(&exp_num.normalized_value) {
+            return Ok(None);
+        }
+
+        let line_file = less_fact.line_file.clone();
+        let base = pow_obj.base.as_ref().clone();
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let base_neq_zero: AtomicFact =
+            NotEqualFact::new(base, zero_obj, line_file.clone()).into();
+
+        let mut neq_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&base_neq_zero)?;
+        if !neq_result.is_true() {
+            neq_result = self.verify_non_equational_atomic_fact(
+                &base_neq_zero,
+                &VerifyState::new(0, false),
+                true,
+            )?;
+        }
+        if !neq_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "0 < a^n for even integer n from a != 0".to_string(),
+                vec![neq_result],
             ),
         )))
     }

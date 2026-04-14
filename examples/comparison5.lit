@@ -1,0 +1,16 @@
+let a, b, c, d, e, f, g R:
+    0 <= a
+    0 <= b
+    0 <= c
+    0 <= d
+    0 <= e
+    0 <= f
+    0 <= g
+
+0 <= a + b + c + d + e + f + g
+
+let h, i, j, k, l, m, n, o R
+
+0 <= a + b + (h + i)^2 + (j + k)^4 + (l + m)^6 + (n + o)^8
+
+0 <= a^3 + b^3 + c^3 + d^3 + e^3 + f^3 + g^3

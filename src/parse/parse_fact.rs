@@ -96,12 +96,7 @@ impl Runtime {
 
         let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone());
 
-        Ok(ForallFactWithIff::new(
-            forall_fact,
-            iff_facts,
-            tb.line_file.clone(),
-        )
-        .into())
+        Ok(ForallFactWithIff::new(forall_fact, iff_facts, tb.line_file.clone()).into())
     }
 
     fn parse_forall(
@@ -134,25 +129,13 @@ impl Runtime {
             for block in last.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(ForallFact::new(
-                param_def,
-                dom_facts,
-                then_facts,
-                tb.line_file.clone(),
-            )
-            .into())
+            Ok(ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone()).into())
         } else {
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(ForallFact::new(
-                param_def,
-                vec![],
-                then_facts,
-                tb.line_file.clone(),
-            )
-            .into())
+            Ok(ForallFact::new(param_def, vec![], then_facts, tb.line_file.clone()).into())
         }
     }
 
@@ -238,9 +221,7 @@ impl Runtime {
             }
             NOT => {
                 tb.skip_token(NOT)?;
-                Ok(self
-                    .parse_atomic_fact(tb, false)
-                    .map(|a| a.into())?)
+                Ok(self.parse_atomic_fact(tb, false).map(|a| a.into())?)
             }
             _ => Ok(self.parse_or_and_chain_atomic_fact(tb)?.into()),
         }
@@ -260,7 +241,7 @@ impl Runtime {
         let line_file = tb.line_file.clone();
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
-            let prop = self.parse_identifier_or_identifier_with_mod(tb)?;
+            let prop = self.parse_predicate(tb)?;
             let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
                 |e: RuntimeErrorStruct| {
@@ -289,7 +270,7 @@ impl Runtime {
             IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone()))
         } else if tok == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
-            self.parse_identifier_or_identifier_with_mod(tb)?
+            self.parse_predicate(tb)?
         } else {
             return Err(
                 RuntimeError::new_parse_error_with_msg_position_previous_error(
@@ -345,7 +326,7 @@ impl Runtime {
         let line_file = tb.line_file.clone();
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
-            let prop = self.parse_identifier_or_identifier_with_mod(tb)?;
+            let prop = self.parse_predicate(tb)?;
             let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
                 |e: RuntimeErrorStruct| {
@@ -368,7 +349,7 @@ impl Runtime {
                 IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone()))
             } else if tok == FACT_PREFIX {
                 tb.skip_token(FACT_PREFIX)?;
-                self.parse_identifier_or_identifier_with_mod(tb)?
+                self.parse_predicate(tb)?
             } else {
                 break;
             };
