@@ -521,23 +521,28 @@ impl Runtime {
 
         let verify_state_for_definition_clauses = verify_state;
 
-        match self.verify_args_satisfy_param_def_flat_types(
-            &definition.params_def_with_type,
-            &normal_atomic_fact.body,
-            verify_state_for_definition_clauses,
-        ) {
-            Ok(_) => {}
-            Err(_) => {
-                return Err(
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        normal_atomic_fact.clone().into(),
-                        format!("failed to verify parameter types for {}", predicate_name),
-                        normal_atomic_fact.line_file.clone(),
-                        None,
-                    ),
+        let param_flat_types_result = self
+            .verify_args_satisfy_param_def_flat_types(
+                &definition.params_def_with_type,
+                &normal_atomic_fact.body,
+                verify_state_for_definition_clauses,
+            )
+            .map_err(|_| {
+                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                    normal_atomic_fact.clone().into(),
+                    format!("failed to verify parameter types for {}", predicate_name),
+                    normal_atomic_fact.line_file.clone(),
+                    None,
                 )
-            }
+            })?;
+        if param_flat_types_result.is_unknown() {
+            return Ok(None);
         }
+        let mut infer_result = match param_flat_types_result {
+            StmtResult::NonFactualStmtSuccess(x) => x.infers,
+            StmtResult::FactualStmtSuccess(x) => x.infers,
+            StmtResult::StmtUnknown(_) => unreachable!(),
+        };
 
         if definition.iff_facts.is_empty() {
             return Ok(None);
@@ -546,8 +551,6 @@ impl Runtime {
         let param_to_arg_map = definition
             .params_def_with_type
             .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
-
-        let mut infer_result = InferResult::new();
         let mut definition_clause_descriptions: Vec<String> = Vec::new();
 
         for iff_fact in definition.iff_facts.iter() {
