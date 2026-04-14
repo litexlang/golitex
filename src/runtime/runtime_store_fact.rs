@@ -97,15 +97,7 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        let infer_result = self.infer(&fact_for_infer).map_err(|e| {
-            RuntimeError::from(InferRuntimeError(
-                RuntimeErrorStruct::new_with_msg_previous_error(
-                    format!("infer error: {}", e),
-                    Some(e),
-                ),
-            ))
-        })?;
-        Ok(infer_result)
+        Ok(self.infer(&fact_for_infer)?)
     }
 
     pub fn store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
@@ -120,15 +112,7 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        let infer_result = self.infer(&fact_for_infer).map_err(|e| {
-            RuntimeError::from(InferRuntimeError(
-                RuntimeErrorStruct::new_with_msg_previous_error(
-                    format!("infer error: {}", e),
-                    Some(e),
-                ),
-            ))
-        })?;
-        Ok(infer_result)
+        Ok(self.infer(&fact_for_infer)?)
     }
 
     pub fn store_atomic_fact_without_well_defined_verified_and_infer(
@@ -143,15 +127,7 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        let infer_result = self.infer(&infer_wrapped_fact).map_err(|e| {
-            RuntimeError::from(InferRuntimeError(
-                RuntimeErrorStruct::new_with_msg_previous_error(
-                    format!("infer error: {}", e),
-                    Some(e),
-                ),
-            ))
-        })?;
-        Ok(infer_result)
+        Ok(self.infer(&infer_wrapped_fact)?)
     }
 
     pub fn store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
@@ -167,17 +143,7 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        let infer_result = self
-            .infer_exist_or_and_chain_atomic_fact(&fact_for_infer)
-            .map_err(|e| {
-                RuntimeError::from(InferRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_previous_error(
-                        format!("infer error: {}", e),
-                        Some(e),
-                    ),
-                ))
-            })?;
-        Ok(infer_result)
+        Ok(self.infer_exist_or_and_chain_atomic_fact(&fact_for_infer)?)
     }
 
     pub fn store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
@@ -192,17 +158,7 @@ impl Runtime {
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
-        let infer_result = self
-            .infer_or_and_chain_atomic_fact(&fact_for_infer)
-            .map_err(|e| {
-                RuntimeError::from(InferRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_previous_error(
-                        format!("infer error: {}", e),
-                        Some(e),
-                    ),
-                ))
-            })?;
-        Ok(infer_result)
+        Ok(self.infer_or_and_chain_atomic_fact(&fact_for_infer)?)
     }
 }
 

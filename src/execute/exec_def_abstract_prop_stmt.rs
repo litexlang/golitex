@@ -7,12 +7,9 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.store_def_abstract_prop(def_abstract_prop_stmt)
             .map_err(|e| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    def_abstract_prop_stmt.clone().into(),
-                    "".to_string(),
-                    Some(e),
-                    vec![],
-                )
+                let __stmt: Stmt = def_abstract_prop_stmt.clone().into();
+                let __line_file = __stmt.line_file();
+                RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, Some(e), vec![])
             })?;
         Ok((NonFactualStmtSuccess::new(
             def_abstract_prop_stmt.clone().into(),

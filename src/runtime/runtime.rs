@@ -34,33 +34,42 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
             return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    invalid_name_message,
-                    default_line_file(),
-                    None,
-                ),
+                ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                invalid_name_message,
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into(),
             );
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
             if let Some(_) = names_in_scope.get(name) {
                 return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        format!("name `{}` is already used", name),
-                        current_line_file,
-                        None,
-                    ),
+                    ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                format!("name `{}` is already used", name),
+                current_line_file,
+                None,
+                vec![],
+            ))
+            .into(),
                 );
             }
         }
 
         if self.is_name_used(name) {
             return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!("name `{}` is already used", name),
-                    current_line_file,
-                    None,
-                ),
+                ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                format!("name `{}` is already used", name),
+                current_line_file,
+                None,
+                vec![],
+            ))
+            .into(),
             );
         }
 
@@ -74,33 +83,42 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_mangled_fn_param_name(name) {
             return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    invalid_name_message,
-                    default_line_file(),
-                    None,
-                ),
+                ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                invalid_name_message,
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into(),
             );
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
             if let Some(_) = names_in_scope.get(name) {
                 return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        format!("name `{}` is already used", name,),
-                        current_line_file,
-                        None,
-                    ),
+                    ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                format!("name `{}` is already used", name,),
+                current_line_file,
+                None,
+                vec![],
+            ))
+            .into(),
                 );
             }
         }
 
         if self.is_name_used(name) {
             return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!("name `{}` is already used", name),
-                    current_line_file,
-                    None,
-                ),
+                ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                format!("name `{}` is already used", name),
+                current_line_file,
+                None,
+                vec![],
+            ))
+            .into(),
             );
         }
 
@@ -127,11 +145,13 @@ impl Runtime {
         for name in names {
             self.validate_name_and_insert_mangled_fn_param(name, line_file.clone())
                 .map_err(|e| {
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        String::new(),
-                        line_file.clone(),
-                        Some(e),
-                    )
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                String::new(),
+                line_file.clone(),
+                Some(e),
+                vec![],
+            )))
                 })?;
         }
         Ok(())
@@ -146,11 +166,14 @@ impl Runtime {
         for name in user_written_names {
             if let Err(e) = is_valid_litex_name(name) {
                 return Err(
-                    RuntimeError::new_parse_error_with_msg_position_previous_error(
-                        e,
-                        line_file.clone(),
-                        None,
-                    ),
+                    ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                e,
+                line_file.clone(),
+                None,
+                vec![],
+            ))
+            .into(),
                 );
             }
         }
@@ -431,6 +454,7 @@ impl Runtime {
                 ),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         }
@@ -468,6 +492,7 @@ impl Runtime {
                                     ),
                                     default_line_file(),
                                     None,
+                                    vec![],
                                 ))
                                 .into(),
                             );

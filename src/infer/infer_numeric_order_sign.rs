@@ -156,11 +156,13 @@ impl Runtime {
         infer_result.new_fact(&fact_to_store);
         self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
             .map_err(|previous_error| {
-                RuntimeError::new_infer_error_with_msg_position_previous_error(
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
                     "infer numeric order sign: failed to store inferred (0 < x) bound".to_string(),
                     line_file,
                     Some(previous_error),
-                )
+                    vec![],
+                )))
             })?;
         Ok(infer_result)
     }
@@ -176,11 +178,13 @@ impl Runtime {
         infer_result.new_fact(&fact_to_store);
         self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
             .map_err(|previous_error| {
-                RuntimeError::new_infer_error_with_msg_position_previous_error(
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
                     "infer numeric order sign: failed to store inferred <= 0 bound".to_string(),
                     line_file,
                     Some(previous_error),
-                )
+                    vec![],
+                )))
             })?;
         Ok(infer_result)
     }

@@ -10,9 +10,12 @@ impl Runtime {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|e| {
-                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        know_stmt.clone().into(),
+                    let __stmt: Stmt = know_stmt.clone().into();
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
                         "".to_string(),
+                        __line_file,
                         Some(e),
                         vec![],
                     )

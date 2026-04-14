@@ -28,18 +28,32 @@ impl Runtime {
                 String::new()
             };
             return Err(
-                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    fact_owned.clone(),
-                    unknown_detail.clone(),
-                    line_file,
-                    Some(
-                        RuntimeError::new_verify_result_unknown_with_fact_previous_error(
-                            fact_owned,
-                            unknown_detail,
-                            None,
-                        ),
+                {
+            let __fact: Fact = (fact_owned.clone());
+            let __stmt = __fact.into_stmt();
+            VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                unknown_detail.clone(),
+                line_file,
+                Some(
+                        {
+            let __fact: Fact = (fact_owned);
+            let __lf = __fact.line_file();
+            let __stmt = __fact.into_stmt();
+            UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                unknown_detail,
+                __lf,
+                None,
+                vec![],
+            ))
+            .into()
+        },
                     ),
-                ),
+                vec![],
+            ))
+            .into()
+        },
             );
         } else {
             Ok(result)

@@ -16,28 +16,69 @@ impl Runtime {
                 .params_def_with_type
                 .number_of_params();
             if expected_param_count != stmt.equal_tos.len() {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        witness_stmt,
-                        "witness exist fact: parameter count mismatch".to_string(),
-                        None,
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = witness_stmt;
+                    let __message = "witness exist fact: parameter count mismatch".to_string();
+                    let __cause = None;
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
 
             if let Err(well_defined_error) = rt.verify_exist_fact_well_defined(
                 &stmt.exist_fact_in_witness,
                 &verify_state_for_well_defined,
             ) {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        witness_stmt,
-                        "witness exist fact: exist fact well-defined failed".to_string(),
-                        Some(well_defined_error),
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = witness_stmt;
+                    let __message =
+                        "witness exist fact: exist fact well-defined failed".to_string();
+                    let __cause = Some(well_defined_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
 
             for equal_to_obj in stmt.equal_tos.iter() {
@@ -45,14 +86,35 @@ impl Runtime {
                     equal_to_obj,
                     &verify_state_for_well_defined,
                 ) {
-                    return Err(RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            witness_stmt,
-                            "witness exist fact: equal_to well-defined failed".to_string(),
-                            Some(well_defined_error),
-                            vec![],
-                        ),
-                    ));
+                    return Err(RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = witness_stmt;
+                        let __message =
+                            "witness exist fact: equal_to well-defined failed".to_string();
+                        let __cause = Some(well_defined_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    }));
                 }
             }
 
@@ -71,14 +133,34 @@ impl Runtime {
 
             for proof_stmt in stmt.proof.iter() {
                 if let Err(proof_exec_error) = rt.exec_stmt(proof_stmt) {
-                    return Err(RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            witness_stmt.clone(),
-                            proof_stmt.to_string(),
-                            Some(proof_exec_error),
-                            vec![],
-                        ),
-                    ));
+                    return Err(RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = witness_stmt.clone();
+                        let __message = proof_stmt.to_string();
+                        let __cause = Some(proof_exec_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    }));
                 }
             }
 
@@ -116,14 +198,34 @@ impl Runtime {
             Ok(infer_result) => {
                 Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, vec![])).into())
             }
-            Err(store_error) => Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    witness_stmt,
-                    "witness exist fact: failed to store exist fact".to_string(),
-                    Some(store_error),
-                    vec![],
-                ),
-            )),
+            Err(store_error) => Err(RuntimeError::ExecStmtError({
+                let __stmt: Stmt = witness_stmt;
+                let __message = "witness exist fact: failed to store exist fact".to_string();
+                let __cause = Some(store_error);
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            })),
         }
     }
 
@@ -141,39 +243,99 @@ impl Runtime {
             if let Err(well_defined_error) = rt
                 .verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state_for_well_defined)
             {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        witness_stmt,
-                        "witness nonempty set: obj well-defined failed".to_string(),
-                        Some(well_defined_error),
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = witness_stmt;
+                    let __message = "witness nonempty set: obj well-defined failed".to_string();
+                    let __cause = Some(well_defined_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
 
             if let Err(well_defined_error) = rt
                 .verify_obj_well_defined_and_store_cache(&stmt.set, &verify_state_for_well_defined)
             {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        witness_stmt.clone(),
-                        "witness nonempty set: set well-defined failed".to_string(),
-                        Some(well_defined_error),
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = witness_stmt.clone();
+                    let __message = "witness nonempty set: set well-defined failed".to_string();
+                    let __cause = Some(well_defined_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
 
             for proof_stmt in stmt.proof.iter() {
                 if let Err(proof_exec_error) = rt.exec_stmt(proof_stmt) {
-                    return Err(RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            witness_stmt.clone(),
-                            proof_stmt.to_string(),
-                            Some(proof_exec_error),
-                            vec![],
-                        ),
-                    ));
+                    return Err(RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = witness_stmt.clone();
+                        let __message = proof_stmt.to_string();
+                        let __cause = Some(proof_exec_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    }));
                 }
             }
 
@@ -210,14 +372,35 @@ impl Runtime {
             Ok(infer_result) => {
                 Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, vec![])).into())
             }
-            Err(store_error) => Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    witness_stmt,
-                    "witness nonempty set: failed to store nonempty set fact".to_string(),
-                    Some(store_error),
-                    vec![],
-                ),
-            )),
+            Err(store_error) => Err(RuntimeError::ExecStmtError({
+                let __stmt: Stmt = witness_stmt;
+                let __message =
+                    "witness nonempty set: failed to store nonempty set fact".to_string();
+                let __cause = Some(store_error);
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            })),
         }
     }
 }

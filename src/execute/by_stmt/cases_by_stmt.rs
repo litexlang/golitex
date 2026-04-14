@@ -6,14 +6,34 @@ impl Runtime {
         for fact in stmt.then_facts.iter() {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            stmt.clone().into(),
-                            format!("by cases: failed to prove `{}`", fact),
-                            Some(verify_error),
-                            vec![],
-                        ),
-                    )
+                    RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = stmt.clone().into();
+                        let __message = format!("by cases: failed to prove `{}`", fact);
+                        let __cause = Some(verify_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    })
                 })?;
         }
 
@@ -39,14 +59,34 @@ impl Runtime {
             let one_then_fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(then_fact.clone())
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            stmt.clone().into(),
-                            format!("by cases: failed to release `{}`", then_fact),
-                            Some(store_fact_error),
-                            vec![],
-                        ),
-                    )
+                    RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = stmt.clone().into();
+                        let __message = format!("by cases: failed to release `{}`", then_fact);
+                        let __cause = Some(store_fact_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    })
                 })?;
             infer_result.new_infer_result_inside(one_then_fact_infer_result);
         }
@@ -62,12 +102,35 @@ impl Runtime {
             OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
         self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
-                    "by cases: cannot verify that all cases cover all situations".to_string(),
-                    Some(verify_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message =
+                        "by cases: cannot verify that all cases cover all situations".to_string();
+                    let __cause = Some(verify_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
         Ok(())
     }
@@ -80,15 +143,37 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for then_fact in stmt.then_facts.iter() {
             let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
-                    format!(
+                RuntimeError::from({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message = format!(
                         "by cases: failed to prove `{}` under case `{}`",
                         then_fact, stmt.cases[case_index]
-                    ),
-                    Some(statement_error),
-                    std::mem::take(inside_results),
-                ))
+                    );
+                    let __cause = Some(statement_error);
+                    let __inside = std::mem::take(inside_results);
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
             inside_results.push(exec_fact_result);
         }
@@ -105,12 +190,34 @@ impl Runtime {
 
         self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact.clone())
             .map_err(|store_fact_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
-                    format!("by cases: failed to assume case `{}`", case_fact),
-                    Some(store_fact_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message = format!("by cases: failed to assume case `{}`", case_fact);
+                    let __cause = Some(store_fact_error);
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                })
             })?;
 
         for proof_stmt in stmt.proofs[case_index].iter() {
@@ -118,17 +225,37 @@ impl Runtime {
             match exec_stmt_result {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
-                    return Err(RuntimeError::from(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            stmt.clone().into(),
-                            format!(
-                                "by cases: failed while executing proof under case `{}`",
-                                case_fact
-                            ),
-                            Some(statement_error),
-                            inside_results,
-                        ),
-                    ));
+                    return Err(RuntimeError::from({
+                        let __stmt: Stmt = stmt.clone().into();
+                        let __message = format!(
+                            "by cases: failed while executing proof under case `{}`",
+                            case_fact
+                        );
+                        let __cause = Some(statement_error);
+                        let __inside = inside_results;
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    }));
                 }
             }
         }
@@ -138,57 +265,141 @@ impl Runtime {
             let verify_impossible_fact_result = self
                 .verify_atomic_fact(impossible_fact, &verify_state)
                 .map_err(|verify_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        impossible_proof_error_message(
+                    RuntimeError::from({
+                        let __stmt: Stmt = stmt.clone().into();
+                        let __message = impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
-                        ),
-                        Some(verify_error),
-                        vec![],
-                    ))
+                        );
+                        let __cause = Some(verify_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    })
                 })?;
 
             if verify_impossible_fact_result.is_unknown() {
-                return Err(RuntimeError::from(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        impossible_proof_error_message(
-                            impossible_fact,
-                            Some(case_fact.to_string()),
-                        ),
-                        None,
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::from({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message = impossible_proof_error_message(
+                        impossible_fact,
+                        Some(case_fact.to_string()),
+                    );
+                    let __cause = None;
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
 
             let verify_reversed_impossible_fact_result = self
                 .verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)
                 .map_err(|verify_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        impossible_proof_error_message(
+                    RuntimeError::from({
+                        let __stmt: Stmt = stmt.clone().into();
+                        let __message = impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
-                        ),
-                        Some(verify_error),
-                        vec![],
-                    ))
+                        );
+                        let __cause = Some(verify_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    })
                 })?;
 
             if verify_reversed_impossible_fact_result.is_unknown() {
-                return Err(RuntimeError::from(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        impossible_proof_error_message(
-                            impossible_fact,
-                            Some(case_fact.to_string()),
-                        ),
-                        None,
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::from({
+                    let __stmt: Stmt = stmt.clone().into();
+                    let __message = impossible_proof_error_message(
+                        impossible_fact,
+                        Some(case_fact.to_string()),
+                    );
+                    let __cause = None;
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
 
             inside_results.push(
