@@ -14,13 +14,13 @@ _– Steve Jobs_
 
 Litex is a **simple, set-theoretic** formal language for mathematics: enough structure for everyday arguments without a long apprenticeship. Each construct is meant to match a **real mathematical idea** and stays as close to natural language as possible.
 
-This manual provides a straightforward guide to using Litex. More on the project: [Litex](https://litexlang.com), [GitHub](https://github.com/litexlang/golitex).
+This quick reference summarizes Litex syntax and meaning alongside minimal examples. More on the project: [Litex](https://litexlang.com), [GitHub](https://github.com/litexlang/golitex).
 
 ---
 
 ## Facts (formulas the checker understands)
 
-Most mathematical content in Litex is a **fact**: it may appear after `know`, as a goal under `claim` / `prove:`, as a **bare line** the checker must verify, or nested inside `exist` / `forall`. Below, each subsection follows the same pattern as elsewhere in this manual: **Meaning**, **Syntax**, **Example**.
+Most mathematical content in Litex is a **fact**: it may appear after `know`, as a goal under `claim` / `prove:`, as a **bare line** the checker must verify, or nested inside `exist` / `forall`. Below, each subsection uses **Meaning**, **Syntax**, **Example**, and sometimes a **Hint**.
 
 ---
 
@@ -100,7 +100,7 @@ This is equivalent to:
 1 + 2 = 3
 ```
 
-> **Hint - in Litex, the nicer way to write `fact1 and fact2` is writing them in two lines
+> **Hint.** In Litex, the nicer way to write `fact1 and fact2` is to put them on separate lines in the same block.
 
 ---
 
@@ -178,30 +178,26 @@ know:
             0 <= b - a
 ```
 
----
+## Statements in general
 
-### Bare line (assert a fact as a statement)
+**Meaning.** A **statement** is usually one line or a header plus an indented block. Facts are the main payload; reserved words introduce definitions, hypotheses, witnesses, and tactics.
 
-**Meaning.** You assert one fact; the kernel tries to prove it from the current context—same role as a proof step that is only a formula.
-
-**Syntax.** A whole line that is **not** introduced by a reserved keyword (see the cheat sheet): the line is parsed as one fact.
+**Syntax.** One non-empty line starts a statement; continuation lines are indented under that header. The first token (if it is a keyword) selects which grammar applies; otherwise the line is parsed as a fact to verify.
 
 **Example.**
 
 ```litex
-prove:
-    2 = 2
+know:
+    1 + 1 = 2
+
+claim:
+    prove:
+        2 + 2 = 4
+    prove:
+        4 = 2 + 2
 ```
 
-Further patterns: **`examples/atomic_fact.lit`**, **`examples/or_fact.lit`**, **`examples/and_fact.lit`**, **`examples/chain_fact.lit`**, **`examples/verify_exist_fact.lit`**, **`examples/use_forall_arithmetic_to_prove.lit`**.
-
----
-
-## Statements in general
-
-A **statement** is usually one line or one indented block. Facts are the main payload; special keywords introduce definitions, hypotheses, witnesses, and tactics.
-
-Many proof blocks use **`prove:`** followed by indented steps. **`claim:`** introduces a stated goal (one fact) and its proof. **`know`** adds hypotheses without proof.
+> **Hint.** **`know:`** adds hypotheses without proof. **`claim:`** states one goal in an inner **`prove:`** and then discharges it with further steps. Most step-by-step work uses nested **`prove:`** blocks.
 
 ---
 
@@ -213,11 +209,28 @@ Many proof blocks use **`prove:`** followed by indented steps. **`claim:`** intr
 
 **Syntax.** `prop` *name* `(` *parameters* `)` `:` newline, indented facts; or end the header after `)` with no body.
 
+**Example.**
+
+```litex
+prop divides(a Z, b Z):
+    exist k Z st { b = k * a }
+```
+
+---
+
 ### `abstract_prop` — declared predicate only
 
 **Meaning.** Reserve a predicate symbol and its arity for abstract reasoning; no defining body.
 
 **Syntax.** `abstract_prop` *name* `(` *parameter names separated by commas* `)`.
+
+**Example.**
+
+```litex
+abstract_prop P(a R, b R)
+```
+
+---
 
 ### `struct` — structured type
 
@@ -225,11 +238,30 @@ Many proof blocks use **`prove:`** followed by indented steps. **`claim:`** intr
 
 **Syntax.** `struct` *name* `(` *parameters* `)` `:` field lines, optional `<=>:` block.
 
+**Example.**
+
+```litex
+struct point(s set):
+    x s
+    y s
+```
+
+---
+
 ### `family` — parametric type family
 
-**Meaning.** A type constructor: for fixed parameters, the right-hand side names a definite set (e.g. a function space of sequences).
+**Meaning.** A type constructor: for fixed parameters, the right-hand side names a definite set (e.g. a function space).
 
 **Syntax.** `family` *name* `(` *parameters* `)` `=` *object*.
+
+**Example.**
+
+```litex
+family matrix(s set, m N_pos, n N_pos) =
+    fn(i closed_range(1, m), j closed_range(1, n)) s
+```
+
+---
 
 ### `algo` — executable algorithm
 
@@ -237,33 +269,59 @@ Many proof blocks use **`prove:`** followed by indented steps. **`claim:`** intr
 
 **Syntax.** `algo` *name* `{` *parameters* `}` `:` newline, then `case` branches (and optionally a default return block).
 
+**Example.**
+
+```litex
+prove:
+    have fn f(x R) R = 1
+    algo f(x):
+        1
+    eval f(0)
+```
+
 ---
 
 ## Introducing objects and functions
 
 ### `have` — parameters or values
 
-**Meaning.**
+**Meaning.** Introduce names in scope for the rest of the block: **typed parameters** (membership / type keywords), **fixed values** with `=`, **functions** (single equation or `case` branches), **inductive functions** (`have fn by induc from` …), or **names from an existential** already known (`have by exist` …).
 
-- **Typed parameters:** introduce variables with types or membership, in scope for the rest of the block.
-- **With `=`:** introduce parameters and fix them to given values.
-- **Functions:** define a function on a domain, either by a single equation or by **`case`** branches (piecewise).
-- **Inductive function:** `have fn by induc from` *start* `:` … (see **`examples/have_fn_by_induc.lit`**).
-- **From an existential:** `have by exist` *existential fact* `:` *witness names* — name witnesses once an existential is already known.
+**Syntax.**
 
-**Syntax (sketch).**
-
-- `have` *groups* — only types, no `=`.
+- `have` *groups* — types only, no `=`.
 - `have` *groups* `=` *objects* …
 - `have fn` *name* *function-space clause* `=` *object*
 - `have fn` *name* *clause* `:` newline, `case` *fact* `:` *object* …
 - `have by exist` *exist … st { … }* `:` *names*
+
+**Example.**
+
+```litex
+prove:
+    have x R = 1
+    x $in R
+    have a R, b R
+    a + b = b + a
+```
+
+> **Hint.** Piecewise functions and induction variants are easier to copy from **`examples/have_fn_case_by_case.lit`** and **`examples/have_fn_by_induc.lit`**.
+
+---
 
 ### `know` — hypotheses
 
 **Meaning.** Assume facts (axioms, lemmas, or previously proved results) without proof.
 
 **Syntax.** `know` `:` newline and indented facts; or `know` followed by one `forall` / fact on the same head line; or several comma-separated atomic / exist-shaped facts on one line.
+
+**Example.**
+
+```litex
+know:
+    forall a R:
+        a + 0 = a
+```
 
 ---
 
@@ -275,17 +333,47 @@ Many proof blocks use **`prove:`** followed by indented steps. **`claim:`** intr
 
 **Syntax.** `claim` `:` newline; first sub-block is `prove` `:` with exactly one fact; following sub-blocks are proof steps.
 
+**Example.**
+
+```litex
+claim:
+    prove:
+        1 = 1 and 1 + 2 = 3
+    1 = 1
+    1 + 2 = 3
+```
+
+---
+
 ### `prove`
 
 **Meaning.** Nested proof: a sequence of statements for a sub-goal or lemma.
 
 **Syntax.** `prove` `:` newline, indented statements.
 
+**Example.**
+
+```litex
+prove:
+    know:
+        2 = 2
+    2 = 2
+```
+
+---
+
 ### `do_nothing`
 
 **Meaning.** A no-op step (e.g. when a tactic expects a non-empty body).
 
 **Syntax.** `do_nothing`.
+
+**Example.**
+
+```litex
+prove:
+    do_nothing
+```
 
 ---
 
@@ -297,17 +385,27 @@ Many proof blocks use **`prove:`** followed by indented steps. **`claim:`** intr
 
 **Syntax.** `witness exist` *existential* `from` *objects* … optional `:` and indented proof (see parser rules if you omit `:`).
 
+**Example.** See **`examples/witness_exist.lit`**.
+
+---
+
 ### `witness $is_nonempty_set(…) from …`
 
 **Meaning.** Prove a set is nonempty by naming a member and showing membership.
 
 **Syntax.** `witness $is_nonempty_set(` *set* `) from` *object* `:` proof block.
 
+**Example.** See **`examples/witness_nonempty.lit`**.
+
 ---
 
 ## Proof tactics (`by …`)
 
-All start with **`by`** and a second keyword.
+**Meaning.** Tactics all start with **`by`** and a second keyword; they package common proof patterns (cases, contradiction, induction, …).
+
+**Syntax.** `by` *tactic* `:` … (shape depends on tactic; each entry below).
+
+**Example.** See the tactic you need in **`examples/by_*.lit`**.
 
 ### `by cases`
 
@@ -315,13 +413,21 @@ All start with **`by`** and a second keyword.
 
 **Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof …
 
+**Example.** **`examples/by_cases.lit`**.
+
+---
+
 ### `by contra`
 
 **Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense.
 
 **Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*.
 
-**Note.** The fact after `prove:` is what you **conclude**, not the assumption; the assumption is its negation.
+**Example.** **`examples/by_contra.lit`**.
+
+> **Hint.** The fact after `prove:` is what you **conclude**, not the assumption; the assumption is its negation.
+
+---
 
 ### `by enumerate`
 
@@ -329,11 +435,19 @@ All start with **`by`** and a second keyword.
 
 **Syntax.** `by enumerate` *param* *list set* [, … ] `:` `prove` `:` *goals* … optional extra steps.
 
+**Example.** **`examples/list_set_and_enumerate.lit`**.
+
+---
+
 ### `by induc`
 
 **Meaning.** Induction on an integer parameter from a given base; needs a suitable induction principle in context.
 
 **Syntax.** `by induc` *param* `from` *object* `:` body blocks.
+
+**Example.** **`examples/by_induc.lit`**.
+
+---
 
 ### `by for`
 
@@ -341,11 +455,19 @@ All start with **`by`** and a second keyword.
 
 **Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps.
 
+**Example.** **`examples/for.lit`**, **`examples/diagonal_matrix.lit`**.
+
+---
+
 ### `by extension`
 
 **Meaning.** Set equality by extensionality (typically mutual inclusion).
 
 **Syntax.** `by extension` `:` `prove` `:` *set* `=` *set* newline, proof.
+
+**Example.** **`examples/by_extension.lit`**.
+
+---
 
 ### `by fn`
 
@@ -353,11 +475,19 @@ All start with **`by`** and a second keyword.
 
 **Syntax.** `by fn` `:` *object*.
 
+**Example.** **`examples/by_fn.lit`**.
+
+---
+
 ### `by fn set`
 
 **Meaning.** Show a function belongs to a **function set** `fn(… conditions …) co-domain`.
 
 **Syntax.** `by fn set` `:` *func* `$in fn` *function-set*.
+
+**Example.** **`examples/by_fn_set.lit`**.
+
+---
 
 ### `by family`
 
@@ -365,17 +495,27 @@ All start with **`by`** and a second keyword.
 
 **Syntax.** `by family` `:` *object*.
 
+**Example.** **`examples/by_family.lit`**.
+
+---
+
 ### `by struct`
 
 **Meaning.** Use the defining data of a **struct** instance.
 
 **Syntax.** `by struct` `:` *object*.
 
+**Example.** **`examples/by_struct.lit`**.
+
+---
+
 ### `by tuple`
 
 **Meaning.** Tuple / product-space reasoning on an object.
 
 **Syntax.** `by tuple` `:` *object*.
+
+**Example.** **`examples/by_tuple.lit`**.
 
 ---
 
@@ -387,17 +527,31 @@ All start with **`by`** and a second keyword.
 
 **Syntax.** `eval` *expression* (typically a function application).
 
+**Example.** **`examples/algo_eval.lit`**.
+
+---
+
 ### `import`
 
 **Meaning.** Load another module or file path into scope.
 
 **Syntax.** `import` `"path"` [`as` *name*] or `import` *module* [`as` *name*].
 
+**Example.**
+
+```litex
+import "other.lit"
+```
+
+---
+
 ### `run_file`
 
 **Meaning.** Run another `.lit` file.
 
 **Syntax.** `run_file` `"path"`.
+
+**Example.** **`examples/runfile.lit`**.
 
 ---
 
@@ -407,9 +561,24 @@ All start with **`by`** and a second keyword.
 
 **Syntax.** `let` *parameter groups with types* `:` newline, then indented facts; the `:` block can be omitted if there are no constraints.
 
+**Example.**
+
+```litex
+prove:
+    let a, b, c set:
+        $is_nonempty_set(a)
+    $is_nonempty_set(a)
+```
+
 ---
 
 ## Keyword cheat sheet (first word on a line)
+
+**Meaning.** Quick lookup: how a line is classified from its first token.
+
+**Syntax.** First column = allowed prefix; second = role.
+
+**Example.**
 
 | Starts with | Role |
 |-------------|------|
@@ -431,4 +600,4 @@ All start with **`by`** and a second keyword.
 | `do_nothing` | No-op |
 | *(other)* | Assert a fact to verify |
 
-Details and edge cases are easiest to see in **`examples/`** alongside the checker behavior you care about.
+> **Hint.** Details and edge cases are easiest to see in **`examples/`** next to the checker behavior you care about.
