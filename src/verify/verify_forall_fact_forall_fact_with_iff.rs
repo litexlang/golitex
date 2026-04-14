@@ -63,7 +63,7 @@ impl Runtime {
                         RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                             forall_fact.clone().into(),
                             format!(
-                                "forall: then-fact {}/{} could not be verified (unknown):\n{}",
+                                "forall: then-fact {}/{} could not be verified (unknown): `{}`",
                                 then_one_based, then_count, then_fact
                             ),
                             then_line_file,
@@ -138,9 +138,9 @@ impl Runtime {
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
-            &forall_iff.clone().into(),
-        ) {
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&forall_iff.clone().into())
+        {
             return Ok(cached_result);
         }
 
@@ -153,12 +153,15 @@ impl Runtime {
             }
         }
 
-        Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 forall_iff.clone().into(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 None,
                 Some(default_line_file()),
                 Vec::new(),
-            )).into())
+            ))
+            .into(),
+        )
     }
 }

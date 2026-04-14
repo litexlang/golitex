@@ -29,31 +29,28 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::AtomicFact(a) => {
                 OrAndChainAtomicFact::AtomicFact(a.replace_bound_identifier(from, to))
             }
-            OrAndChainAtomicFact::AndFact(af) => OrAndChainAtomicFact::AndFact(AndFact {
-                facts: af
-                    .facts
+            OrAndChainAtomicFact::AndFact(af) => OrAndChainAtomicFact::AndFact(AndFact::new(
+                af.facts
                     .into_iter()
                     .map(|x| x.replace_bound_identifier(from, to))
                     .collect(),
-                line_file: af.line_file,
-            }),
-            OrAndChainAtomicFact::ChainFact(cf) => OrAndChainAtomicFact::ChainFact(ChainFact {
-                objs: cf
-                    .objs
+                af.line_file,
+            )),
+            OrAndChainAtomicFact::ChainFact(cf) => OrAndChainAtomicFact::ChainFact(ChainFact::new(
+                cf.objs
                     .into_iter()
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
-                prop_names: cf.prop_names,
-                line_file: cf.line_file,
-            }),
-            OrAndChainAtomicFact::OrFact(of) => OrAndChainAtomicFact::OrFact(OrFact {
-                facts: of
-                    .facts
+                cf.prop_names,
+                cf.line_file,
+            )),
+            OrAndChainAtomicFact::OrFact(of) => OrAndChainAtomicFact::OrFact(OrFact::new(
+                of.facts
                     .into_iter()
                     .map(|x| x.replace_bound_identifier(from, to))
                     .collect(),
-                line_file: of.line_file,
-            }),
+                of.line_file,
+            )),
         }
     }
 }

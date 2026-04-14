@@ -70,15 +70,14 @@ impl Fact {
             Fact::AtomicFact(atomic_fact) => {
                 Fact::AtomicFact(atomic_fact.with_new_line_file(line_file))
             }
-            Fact::ExistFact(e) => Fact::ExistFact(ExistFact {
-                params_def_with_type: e.params_def_with_type,
-                facts: e
-                    .facts
+            Fact::ExistFact(e) => Fact::ExistFact(ExistFact::new(
+                e.params_def_with_type,
+                e.facts
                     .into_iter()
                     .map(|x| x.with_new_line_file(line_file.clone()))
                     .collect(),
                 line_file,
-            }),
+            )),
             Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(
                 or_fact
                     .facts
@@ -100,44 +99,41 @@ impl Fact {
                 chain_fact.prop_names,
                 line_file,
             )),
-            Fact::ForallFact(f) => Fact::ForallFact(ForallFact {
-                params_def_with_type: f.params_def_with_type,
-                dom_facts: f
-                    .dom_facts
+            Fact::ForallFact(f) => Fact::ForallFact(ForallFact::new(
+                f.params_def_with_type,
+                f.dom_facts
                     .into_iter()
                     .map(|x| x.with_new_line_file(line_file.clone()))
                     .collect(),
-                then_facts: f
-                    .then_facts
+                f.then_facts
                     .into_iter()
                     .map(|x| x.with_new_line_file(line_file.clone()))
                     .collect(),
                 line_file,
-            }),
+            )),
             Fact::ForallFactWithIff(f) => {
                 let inner_forall = f.forall_fact;
-                Fact::ForallFactWithIff(ForallFactWithIff {
-                    forall_fact: ForallFact {
-                        params_def_with_type: inner_forall.params_def_with_type,
-                        dom_facts: inner_forall
+                Fact::ForallFactWithIff(ForallFactWithIff::new(
+                    ForallFact::new(
+                        inner_forall.params_def_with_type,
+                        inner_forall
                             .dom_facts
                             .into_iter()
                             .map(|x| x.with_new_line_file(line_file.clone()))
                             .collect(),
-                        then_facts: inner_forall
+                        inner_forall
                             .then_facts
                             .into_iter()
                             .map(|x| x.with_new_line_file(line_file.clone()))
                             .collect(),
-                        line_file: line_file.clone(),
-                    },
-                    iff_facts: f
-                        .iff_facts
+                        line_file.clone(),
+                    ),
+                    f.iff_facts
                         .into_iter()
                         .map(|x| x.with_new_line_file(line_file.clone()))
                         .collect(),
                     line_file,
-                })
+                ))
             }
         }
     }

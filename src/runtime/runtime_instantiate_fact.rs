@@ -207,11 +207,11 @@ impl Runtime {
         for obj in normal_atomic_fact.body.iter() {
             body.push(self.inst_obj(obj, param_to_arg_map)?);
         }
-        Ok(NormalAtomicFact {
-            predicate: normal_atomic_fact.predicate.clone(),
+        Ok(NormalAtomicFact::new(
+            normal_atomic_fact.predicate.clone(),
             body,
-            line_file: normal_atomic_fact.line_file.clone(),
-        })
+            normal_atomic_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_equal_fact(
@@ -219,11 +219,11 @@ impl Runtime {
         equal_fact: &EqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<EqualFact, RuntimeError> {
-        Ok(EqualFact {
-            left: self.inst_obj(&equal_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&equal_fact.right, param_to_arg_map)?,
-            line_file: equal_fact.line_file.clone(),
-        })
+        Ok(EqualFact::new(
+            self.inst_obj(&equal_fact.left, param_to_arg_map)?,
+            self.inst_obj(&equal_fact.right, param_to_arg_map)?,
+            equal_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_less_fact(
@@ -231,11 +231,11 @@ impl Runtime {
         less_fact: &LessFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<LessFact, RuntimeError> {
-        Ok(LessFact {
-            left: self.inst_obj(&less_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&less_fact.right, param_to_arg_map)?,
-            line_file: less_fact.line_file.clone(),
-        })
+        Ok(LessFact::new(
+            self.inst_obj(&less_fact.left, param_to_arg_map)?,
+            self.inst_obj(&less_fact.right, param_to_arg_map)?,
+            less_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_greater_fact(
@@ -243,11 +243,11 @@ impl Runtime {
         greater_fact: &GreaterFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<GreaterFact, RuntimeError> {
-        Ok(GreaterFact {
-            left: self.inst_obj(&greater_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&greater_fact.right, param_to_arg_map)?,
-            line_file: greater_fact.line_file.clone(),
-        })
+        Ok(GreaterFact::new(
+            self.inst_obj(&greater_fact.left, param_to_arg_map)?,
+            self.inst_obj(&greater_fact.right, param_to_arg_map)?,
+            greater_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_less_equal_fact(
@@ -255,11 +255,11 @@ impl Runtime {
         less_equal_fact: &LessEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<LessEqualFact, RuntimeError> {
-        Ok(LessEqualFact {
-            left: self.inst_obj(&less_equal_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&less_equal_fact.right, param_to_arg_map)?,
-            line_file: less_equal_fact.line_file.clone(),
-        })
+        Ok(LessEqualFact::new(
+            self.inst_obj(&less_equal_fact.left, param_to_arg_map)?,
+            self.inst_obj(&less_equal_fact.right, param_to_arg_map)?,
+            less_equal_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_greater_equal_fact(
@@ -267,11 +267,11 @@ impl Runtime {
         greater_equal_fact: &GreaterEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<GreaterEqualFact, RuntimeError> {
-        Ok(GreaterEqualFact {
-            left: self.inst_obj(&greater_equal_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&greater_equal_fact.right, param_to_arg_map)?,
-            line_file: greater_equal_fact.line_file.clone(),
-        })
+        Ok(GreaterEqualFact::new(
+            self.inst_obj(&greater_equal_fact.left, param_to_arg_map)?,
+            self.inst_obj(&greater_equal_fact.right, param_to_arg_map)?,
+            greater_equal_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_is_set_fact(
@@ -279,10 +279,10 @@ impl Runtime {
         is_set_fact: &IsSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<IsSetFact, RuntimeError> {
-        Ok(IsSetFact {
-            set: self.inst_obj(&is_set_fact.set, param_to_arg_map)?,
-            line_file: is_set_fact.line_file.clone(),
-        })
+        Ok(IsSetFact::new(
+            self.inst_obj(&is_set_fact.set, param_to_arg_map)?,
+            is_set_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_is_nonempty_set_fact(
@@ -290,10 +290,10 @@ impl Runtime {
         is_nonempty_set_fact: &IsNonemptySetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<IsNonemptySetFact, RuntimeError> {
-        Ok(IsNonemptySetFact {
-            set: self.inst_obj(&is_nonempty_set_fact.set, param_to_arg_map)?,
-            line_file: is_nonempty_set_fact.line_file.clone(),
-        })
+        Ok(IsNonemptySetFact::new(
+            self.inst_obj(&is_nonempty_set_fact.set, param_to_arg_map)?,
+            is_nonempty_set_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_is_finite_set_fact(
@@ -301,10 +301,10 @@ impl Runtime {
         is_finite_set_fact: &IsFiniteSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<IsFiniteSetFact, RuntimeError> {
-        Ok(IsFiniteSetFact {
-            set: self.inst_obj(&is_finite_set_fact.set, param_to_arg_map)?,
-            line_file: is_finite_set_fact.line_file.clone(),
-        })
+        Ok(IsFiniteSetFact::new(
+            self.inst_obj(&is_finite_set_fact.set, param_to_arg_map)?,
+            is_finite_set_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_in_fact(
@@ -312,11 +312,11 @@ impl Runtime {
         in_fact: &InFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<InFact, RuntimeError> {
-        Ok(InFact {
-            element: self.inst_obj(&in_fact.element, param_to_arg_map)?,
-            set: self.inst_obj(&in_fact.set, param_to_arg_map)?,
-            line_file: in_fact.line_file.clone(),
-        })
+        Ok(InFact::new(
+            self.inst_obj(&in_fact.element, param_to_arg_map)?,
+            self.inst_obj(&in_fact.set, param_to_arg_map)?,
+            in_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_is_cart_fact(
@@ -324,10 +324,10 @@ impl Runtime {
         is_cart_fact: &IsCartFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<IsCartFact, RuntimeError> {
-        Ok(IsCartFact {
-            set: self.inst_obj(&is_cart_fact.set, param_to_arg_map)?,
-            line_file: is_cart_fact.line_file.clone(),
-        })
+        Ok(IsCartFact::new(
+            self.inst_obj(&is_cart_fact.set, param_to_arg_map)?,
+            is_cart_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_is_tuple_fact(
@@ -335,10 +335,10 @@ impl Runtime {
         is_tuple_fact: &IsTupleFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<IsTupleFact, RuntimeError> {
-        Ok(IsTupleFact {
-            set: self.inst_obj(&is_tuple_fact.set, param_to_arg_map)?,
-            line_file: is_tuple_fact.line_file.clone(),
-        })
+        Ok(IsTupleFact::new(
+            self.inst_obj(&is_tuple_fact.set, param_to_arg_map)?,
+            is_tuple_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_subset_fact(
@@ -346,11 +346,11 @@ impl Runtime {
         subset_fact: &SubsetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<SubsetFact, RuntimeError> {
-        Ok(SubsetFact {
-            left: self.inst_obj(&subset_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&subset_fact.right, param_to_arg_map)?,
-            line_file: subset_fact.line_file.clone(),
-        })
+        Ok(SubsetFact::new(
+            self.inst_obj(&subset_fact.left, param_to_arg_map)?,
+            self.inst_obj(&subset_fact.right, param_to_arg_map)?,
+            subset_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_superset_fact(
@@ -358,11 +358,11 @@ impl Runtime {
         superset_fact: &SupersetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<SupersetFact, RuntimeError> {
-        Ok(SupersetFact {
-            left: self.inst_obj(&superset_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&superset_fact.right, param_to_arg_map)?,
-            line_file: superset_fact.line_file.clone(),
-        })
+        Ok(SupersetFact::new(
+            self.inst_obj(&superset_fact.left, param_to_arg_map)?,
+            self.inst_obj(&superset_fact.right, param_to_arg_map)?,
+            superset_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_normal_atomic_fact(
@@ -374,11 +374,11 @@ impl Runtime {
         for obj in not_normal_atomic_fact.body.iter() {
             body.push(self.inst_obj(obj, param_to_arg_map)?);
         }
-        Ok(NotNormalAtomicFact {
-            predicate: not_normal_atomic_fact.predicate.clone(),
+        Ok(NotNormalAtomicFact::new(
+            not_normal_atomic_fact.predicate.clone(),
             body,
-            line_file: not_normal_atomic_fact.line_file.clone(),
-        })
+            not_normal_atomic_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_equal_fact(
@@ -386,11 +386,11 @@ impl Runtime {
         not_equal_fact: &NotEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotEqualFact, RuntimeError> {
-        Ok(NotEqualFact {
-            left: self.inst_obj(&not_equal_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&not_equal_fact.right, param_to_arg_map)?,
-            line_file: not_equal_fact.line_file.clone(),
-        })
+        Ok(NotEqualFact::new(
+            self.inst_obj(&not_equal_fact.left, param_to_arg_map)?,
+            self.inst_obj(&not_equal_fact.right, param_to_arg_map)?,
+            not_equal_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_less_fact(
@@ -398,11 +398,11 @@ impl Runtime {
         not_less_fact: &NotLessFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotLessFact, RuntimeError> {
-        Ok(NotLessFact {
-            left: self.inst_obj(&not_less_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&not_less_fact.right, param_to_arg_map)?,
-            line_file: not_less_fact.line_file.clone(),
-        })
+        Ok(NotLessFact::new(
+            self.inst_obj(&not_less_fact.left, param_to_arg_map)?,
+            self.inst_obj(&not_less_fact.right, param_to_arg_map)?,
+            not_less_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_greater_fact(
@@ -410,11 +410,11 @@ impl Runtime {
         not_greater_fact: &NotGreaterFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotGreaterFact, RuntimeError> {
-        Ok(NotGreaterFact {
-            left: self.inst_obj(&not_greater_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&not_greater_fact.right, param_to_arg_map)?,
-            line_file: not_greater_fact.line_file.clone(),
-        })
+        Ok(NotGreaterFact::new(
+            self.inst_obj(&not_greater_fact.left, param_to_arg_map)?,
+            self.inst_obj(&not_greater_fact.right, param_to_arg_map)?,
+            not_greater_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_less_equal_fact(
@@ -422,11 +422,11 @@ impl Runtime {
         not_less_equal_fact: &NotLessEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotLessEqualFact, RuntimeError> {
-        Ok(NotLessEqualFact {
-            left: self.inst_obj(&not_less_equal_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&not_less_equal_fact.right, param_to_arg_map)?,
-            line_file: not_less_equal_fact.line_file.clone(),
-        })
+        Ok(NotLessEqualFact::new(
+            self.inst_obj(&not_less_equal_fact.left, param_to_arg_map)?,
+            self.inst_obj(&not_less_equal_fact.right, param_to_arg_map)?,
+            not_less_equal_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_greater_equal_fact(
@@ -434,11 +434,11 @@ impl Runtime {
         not_greater_equal_fact: &NotGreaterEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotGreaterEqualFact, RuntimeError> {
-        Ok(NotGreaterEqualFact {
-            left: self.inst_obj(&not_greater_equal_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&not_greater_equal_fact.right, param_to_arg_map)?,
-            line_file: not_greater_equal_fact.line_file.clone(),
-        })
+        Ok(NotGreaterEqualFact::new(
+            self.inst_obj(&not_greater_equal_fact.left, param_to_arg_map)?,
+            self.inst_obj(&not_greater_equal_fact.right, param_to_arg_map)?,
+            not_greater_equal_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_is_set_fact(
@@ -446,10 +446,10 @@ impl Runtime {
         not_is_set_fact: &NotIsSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotIsSetFact, RuntimeError> {
-        Ok(NotIsSetFact {
-            set: self.inst_obj(&not_is_set_fact.set, param_to_arg_map)?,
-            line_file: not_is_set_fact.line_file.clone(),
-        })
+        Ok(NotIsSetFact::new(
+            self.inst_obj(&not_is_set_fact.set, param_to_arg_map)?,
+            not_is_set_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_is_nonempty_set_fact(
@@ -457,10 +457,10 @@ impl Runtime {
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotIsNonemptySetFact, RuntimeError> {
-        Ok(NotIsNonemptySetFact {
-            set: self.inst_obj(&not_is_nonempty_set_fact.set, param_to_arg_map)?,
-            line_file: not_is_nonempty_set_fact.line_file.clone(),
-        })
+        Ok(NotIsNonemptySetFact::new(
+            self.inst_obj(&not_is_nonempty_set_fact.set, param_to_arg_map)?,
+            not_is_nonempty_set_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_is_finite_set_fact(
@@ -468,10 +468,10 @@ impl Runtime {
         not_is_finite_set_fact: &NotIsFiniteSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotIsFiniteSetFact, RuntimeError> {
-        Ok(NotIsFiniteSetFact {
-            set: self.inst_obj(&not_is_finite_set_fact.set, param_to_arg_map)?,
-            line_file: not_is_finite_set_fact.line_file.clone(),
-        })
+        Ok(NotIsFiniteSetFact::new(
+            self.inst_obj(&not_is_finite_set_fact.set, param_to_arg_map)?,
+            not_is_finite_set_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_in_fact(
@@ -479,11 +479,11 @@ impl Runtime {
         not_in_fact: &NotInFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotInFact, RuntimeError> {
-        Ok(NotInFact {
-            element: self.inst_obj(&not_in_fact.element, param_to_arg_map)?,
-            set: self.inst_obj(&not_in_fact.set, param_to_arg_map)?,
-            line_file: not_in_fact.line_file.clone(),
-        })
+        Ok(NotInFact::new(
+            self.inst_obj(&not_in_fact.element, param_to_arg_map)?,
+            self.inst_obj(&not_in_fact.set, param_to_arg_map)?,
+            not_in_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_is_cart_fact(
@@ -491,10 +491,10 @@ impl Runtime {
         not_is_cart_fact: &NotIsCartFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotIsCartFact, RuntimeError> {
-        Ok(NotIsCartFact {
-            set: self.inst_obj(&not_is_cart_fact.set, param_to_arg_map)?,
-            line_file: not_is_cart_fact.line_file.clone(),
-        })
+        Ok(NotIsCartFact::new(
+            self.inst_obj(&not_is_cart_fact.set, param_to_arg_map)?,
+            not_is_cart_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_is_tuple_fact(
@@ -502,10 +502,10 @@ impl Runtime {
         not_is_tuple_fact: &NotIsTupleFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotIsTupleFact, RuntimeError> {
-        Ok(NotIsTupleFact {
-            set: self.inst_obj(&not_is_tuple_fact.set, param_to_arg_map)?,
-            line_file: not_is_tuple_fact.line_file.clone(),
-        })
+        Ok(NotIsTupleFact::new(
+            self.inst_obj(&not_is_tuple_fact.set, param_to_arg_map)?,
+            not_is_tuple_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_subset_fact(
@@ -513,11 +513,11 @@ impl Runtime {
         not_subset_fact: &NotSubsetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotSubsetFact, RuntimeError> {
-        Ok(NotSubsetFact {
-            left: self.inst_obj(&not_subset_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&not_subset_fact.right, param_to_arg_map)?,
-            line_file: not_subset_fact.line_file.clone(),
-        })
+        Ok(NotSubsetFact::new(
+            self.inst_obj(&not_subset_fact.left, param_to_arg_map)?,
+            self.inst_obj(&not_subset_fact.right, param_to_arg_map)?,
+            not_subset_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_superset_fact(
@@ -525,11 +525,11 @@ impl Runtime {
         not_superset_fact: &NotSupersetFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotSupersetFact, RuntimeError> {
-        Ok(NotSupersetFact {
-            left: self.inst_obj(&not_superset_fact.left, param_to_arg_map)?,
-            right: self.inst_obj(&not_superset_fact.right, param_to_arg_map)?,
-            line_file: not_superset_fact.line_file.clone(),
-        })
+        Ok(NotSupersetFact::new(
+            self.inst_obj(&not_superset_fact.left, param_to_arg_map)?,
+            self.inst_obj(&not_superset_fact.right, param_to_arg_map)?,
+            not_superset_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_exist_fact(
@@ -549,11 +549,11 @@ impl Runtime {
         for fact in exist_fact.facts.iter() {
             facts.push(self.inst_or_and_chain_atomic_fact(fact, param_to_arg_map)?);
         }
-        Ok(ExistFact {
+        Ok(ExistFact::new(
             params_def_with_type,
             facts,
-            line_file: exist_fact.line_file.clone(),
-        })
+            exist_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_or_fact(
@@ -565,10 +565,7 @@ impl Runtime {
         for fact in or_fact.facts.iter() {
             facts.push(self.inst_and_chain_atomic_fact(fact, param_to_arg_map)?);
         }
-        Ok(OrFact {
-            facts,
-            line_file: or_fact.line_file.clone(),
-        })
+        Ok(OrFact::new(facts, or_fact.line_file.clone()))
     }
 
     pub fn inst_and_fact(
@@ -580,10 +577,7 @@ impl Runtime {
         for fact in and_fact.facts.iter() {
             facts.push(self.inst_atomic_fact(fact, param_to_arg_map)?);
         }
-        Ok(AndFact {
-            facts,
-            line_file: and_fact.line_file.clone(),
-        })
+        Ok(AndFact::new(facts, and_fact.line_file.clone()))
     }
 
     pub fn inst_chain_fact(
@@ -595,11 +589,11 @@ impl Runtime {
         for obj in chain_fact.objs.iter() {
             objs.push(self.inst_obj(obj, param_to_arg_map)?);
         }
-        Ok(ChainFact {
+        Ok(ChainFact::new(
             objs,
-            prop_names: chain_fact.prop_names.clone(),
-            line_file: chain_fact.line_file.clone(),
-        })
+            chain_fact.prop_names.clone(),
+            chain_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_forall_fact(
@@ -623,12 +617,12 @@ impl Runtime {
         for then_fact in forall_fact.then_facts.iter() {
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(then_fact, param_to_arg_map)?);
         }
-        Ok(ForallFact {
+        Ok(ForallFact::new(
             params_def_with_type,
             dom_facts,
             then_facts,
-            line_file: forall_fact.line_file.clone(),
-        })
+            forall_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_forall_fact_with_iff(
@@ -642,11 +636,11 @@ impl Runtime {
         for iff_fact in forall_fact_with_iff.iff_facts.iter() {
             iff_facts.push(self.inst_exist_or_and_chain_atomic_fact(iff_fact, param_to_arg_map)?);
         }
-        Ok(ForallFactWithIff {
+        Ok(ForallFactWithIff::new(
             forall_fact,
             iff_facts,
-            line_file: forall_fact_with_iff.line_file.clone(),
-        })
+            forall_fact_with_iff.line_file.clone(),
+        ))
     }
 
     pub fn inst_restrict_fact(
@@ -654,12 +648,14 @@ impl Runtime {
         restrict_fact: &RestrictFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<RestrictFact, RuntimeError> {
-        Ok(RestrictFact {
-            obj: self.inst_obj(&restrict_fact.obj, param_to_arg_map)?,
-            obj_can_restrict_to_fn_set: self
-                .inst_obj(&restrict_fact.obj_can_restrict_to_fn_set, param_to_arg_map)?,
-            line_file: restrict_fact.line_file.clone(),
-        })
+        Ok(RestrictFact::new(
+            self.inst_obj(&restrict_fact.obj, param_to_arg_map)?,
+            self.inst_obj(
+                &restrict_fact.obj_can_restrict_to_fn_set,
+                param_to_arg_map,
+            )?,
+            restrict_fact.line_file.clone(),
+        ))
     }
 
     pub fn inst_not_restrict_fact(
@@ -667,13 +663,13 @@ impl Runtime {
         not_restrict_fact: &NotRestrictFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<NotRestrictFact, RuntimeError> {
-        Ok(NotRestrictFact {
-            obj: self.inst_obj(&not_restrict_fact.obj, param_to_arg_map)?,
-            obj_cannot_restrict_to_fn_set: self.inst_obj(
+        Ok(NotRestrictFact::new(
+            self.inst_obj(&not_restrict_fact.obj, param_to_arg_map)?,
+            self.inst_obj(
                 &not_restrict_fact.obj_cannot_restrict_to_fn_set,
                 param_to_arg_map,
             )?,
-            line_file: not_restrict_fact.line_file.clone(),
-        })
+            not_restrict_fact.line_file.clone(),
+        ))
     }
 }

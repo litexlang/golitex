@@ -1,8 +1,4 @@
-use crate::{
-    common::keywords::GREATER_EQUAL,
-    prelude::*,
-    stmt::parameter_def::ParamDefWithType,
-};
+use crate::{common::keywords::GREATER_EQUAL, prelude::*, stmt::parameter_def::ParamDefWithType};
 use std::fmt;
 
 #[derive(Clone)]
@@ -225,11 +221,7 @@ impl fmt::Display for DefPropStmt {
 }
 
 impl DefLetStmt {
-    pub fn new(
-        param_def: ParamDefWithType,
-        facts: Vec<Fact>,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(param_def: ParamDefWithType, facts: Vec<Fact>, line_file: LineFile) -> Self {
         DefLetStmt {
             param_def,
             facts,
@@ -266,21 +258,12 @@ impl HaveObjInNonemptySetOrParamTypeStmt {
 
 impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}",
-            HAVE,
-            self.param_def.to_string()
-        )
+        write!(f, "{} {}", HAVE, self.param_def.to_string())
     }
 }
 
 impl HaveObjEqualStmt {
-    pub fn new(
-        param_def: ParamDefWithType,
-        objs_equal_to: Vec<Obj>,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(param_def: ParamDefWithType, objs_equal_to: Vec<Obj>, line_file: LineFile) -> Self {
         HaveObjEqualStmt {
             param_def,
             objs_equal_to,
@@ -428,8 +411,7 @@ pub fn induc_obj_plus_offset(induc_from: &Obj, offset: usize) -> Obj {
     if offset == 0 {
         induc_from.clone()
     } else {
-        Add::new(induc_from.clone(),
-            Number::new(offset.to_string()).into()).into()
+        Add::new(induc_from.clone(), Number::new(offset.to_string()).into()).into()
     }
 }
 
@@ -464,7 +446,8 @@ impl HaveFnByInducStmt {
                     self.param.clone().into(),
                     self.induc_from.clone(),
                     self.line_file.clone(),
-                ).into(),
+                )
+                .into(),
             )],
             ret_set: self.ret_set.clone(),
         }
@@ -477,7 +460,8 @@ impl HaveFnByInducStmt {
                 self.param.clone().into(),
                 self.induc_from.clone(),
                 self.line_file.clone(),
-            ).into(),
+            )
+            .into(),
         )]
     }
 
@@ -509,19 +493,25 @@ impl HaveFnByInducStmt {
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
         let mut equal_tos: Vec<Obj> = Vec::new();
         for i in 0..n {
-            let when = AndChainAtomicFact::AtomicFact(EqualFact::new(
-                left_id.clone(),
-                induc_obj_plus_offset(&self.induc_from, i),
-                line_file.clone(),
-            ).into());
+            let when = AndChainAtomicFact::AtomicFact(
+                EqualFact::new(
+                    left_id.clone(),
+                    induc_obj_plus_offset(&self.induc_from, i),
+                    line_file.clone(),
+                )
+                .into(),
+            );
             cases.push(when);
             equal_tos.push(self.special_cases_equal_tos[i].clone());
         }
-        let step = AndChainAtomicFact::AtomicFact(EqualFact::new(
-            left_id.clone(),
-            induc_obj_plus_offset(&self.induc_from, n),
-            line_file.clone(),
-        ).into());
+        let step = AndChainAtomicFact::AtomicFact(
+            EqualFact::new(
+                left_id.clone(),
+                induc_obj_plus_offset(&self.induc_from, n),
+                line_file.clone(),
+            )
+            .into(),
+        );
         match &self.last_case {
             HaveFnByInducLastCase::EqualTo(eq) => {
                 cases.push(step);
