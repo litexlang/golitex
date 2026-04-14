@@ -1,4 +1,15 @@
 use crate::prelude::*;
+use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
+
+fn obj_is_infer_literal_zero(obj: &Obj) -> bool {
+    match obj {
+        Obj::Number(n) => matches!(
+            compare_normalized_number_str_to_zero(&n.normalized_value),
+            NumberCompareResult::Equal
+        ),
+        _ => false,
+    }
+}
 
 impl Runtime {
     fn store_inferred_fact_and_record_result(
@@ -117,11 +128,45 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
+        infer_result.new_infer_result_inside(
+            self.infer_equal_fact_from_subtraction_equals_zero(equal_fact)?,
+        );
         infer_result
             .new_infer_result_inside(self.infer_equal_fact_and_give_value_to_obj(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_cart(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact)?);
 
+        Ok(infer_result)
+    }
+
+    fn infer_equal_fact_from_subtraction_equals_zero(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        let (a, b) = if obj_is_infer_literal_zero(&equal_fact.left) {
+            match &equal_fact.right {
+                Obj::Sub(s) => (s.left.as_ref().clone(), s.right.as_ref().clone()),
+                _ => return Ok(infer_result),
+            }
+        } else if obj_is_infer_literal_zero(&equal_fact.right) {
+            match &equal_fact.left {
+                Obj::Sub(s) => (s.left.as_ref().clone(), s.right.as_ref().clone()),
+                _ => return Ok(infer_result),
+            }
+        } else {
+            return Ok(infer_result);
+        };
+        if a.to_string() == b.to_string() {
+            return Ok(infer_result);
+        }
+        let derived: Fact = EqualFact::new(a, b, equal_fact.line_file.clone()).into();
+        self.store_inferred_fact_and_record_result(
+            derived,
+            equal_fact,
+            &mut infer_result,
+            "equality from a - b = 0",
+        )?;
         Ok(infer_result)
     }
 

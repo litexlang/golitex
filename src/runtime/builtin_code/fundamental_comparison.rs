@@ -33,4 +33,9 @@ know:
         =>:
             0 < a * a
             0 < a^2
+
+    forall a, b R:
+        a * b = 0
+        =>:
+            a = 0 or b = 0
 "#;

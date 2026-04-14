@@ -1,11 +1,14 @@
-"""
-Let r and s be rational numbers, and suppose that s + 3 >= r and s + r <= 3. Show that r <= 3.
-"""
-
-forall r, s Q:
-    r<=s+3
-    s + r <= 3
-    =>:
-        2 * r = r + r <= (s + 3) + r = 3 + (s + r) <= 3 + 3 = 6
-        2 * r <= 6
-        r <= 6 / 2
+# when n is a even number, then a^n >= 0 is verified automatically.
+# when 0 <= b, then a <= a + b is verified automatically.
+claim:
+    prove:
+        forall a, b R:
+            a^2 + b^2 = 0
+            =>:
+                a = 0
+    by contra:
+        prove:
+            a = 0
+        a != 0
+        0 < a ^ 2
+        
