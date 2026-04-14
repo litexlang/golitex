@@ -80,9 +80,7 @@ impl Runtime {
             let expected_len = if let Some(predicate_definition) =
                 self.get_prop_definition_by_name(&name_string)
             {
-                predicate_definition
-                    .params_def_with_type
-                    .number_of_params()
+                predicate_definition.params_def_with_type.number_of_params()
             } else if let Some(abstract_prop_definition) =
                 self.get_abstract_prop_definition_by_name(&name_string)
             {
@@ -138,9 +136,7 @@ impl Runtime {
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let facts = chain_fact
-            .facts()
-            .map_err(RuntimeError::ExecStmtError)?;
+        let facts = chain_fact.facts()?;
         for fact in facts.iter() {
             self.verify_atomic_fact_well_defined(fact, verify_state)?;
         }
@@ -195,8 +191,7 @@ impl Runtime {
                 rt.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
                 rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     fact.clone(),
-                )
-                .map_err(RuntimeError::ExecStmtError)?;
+                )?;
             }
             Ok(())
         })
@@ -247,7 +242,7 @@ impl Runtime {
                 return Err(
                     RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                         String::new(),
-                        Some(RuntimeError::ExecStmtError(exec_stmt_error)),
+                        Some(exec_stmt_error),
                         fact.line_file(),
                     ),
                 );
@@ -272,7 +267,7 @@ impl Runtime {
                 return Err(
                     RuntimeError::new_well_defined_error_with_msg_previous_error_position(
                         String::new(),
-                        Some(RuntimeError::ExecStmtError(exec_stmt_error)),
+                        Some(exec_stmt_error),
                         fact.line_file(),
                     ),
                 );

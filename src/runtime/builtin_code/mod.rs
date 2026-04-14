@@ -11,9 +11,7 @@ fn concat_builtin_env_lit_fragments() -> String {
     out.push_str(common_comparison_properties::KNOW_REAL_LINE_TRICHOTOMY);
     out.push_str(common_comparison_properties::ORDER_TRANSITIVITY_PROP_DECLS);
     out.push_str(common_comparison_properties::KNOW_ORDER_TRANSITIVITY_CHAIN);
-    out.push_str(
-        common_comparison_properties::BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES,
-    );
+    out.push_str(common_comparison_properties::BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES);
     out.push_str(common_functions::BUILTIN_ENV_CODE_FOR_COMMON_FUNCTIONS);
     out.push_str(common_facts::COMMON_FACTS);
     out.push_str(builtin_families::BUILTIN_ENV_CODE_FOR_BUILTIN_FAMILIES);

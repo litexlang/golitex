@@ -43,7 +43,7 @@ impl Runtime {
                             message,
                             forall_fact.line_file.clone(),
                             Some(Fact::from(forall_fact.clone()).into_stmt()),
-                            Some(RuntimeError::ExecStmtError(e)),
+                            Some(e),
                         ).into()),
                         )
                     })?;
@@ -75,8 +75,7 @@ impl Runtime {
                 // 存then
                 rt.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     then_fact.clone(),
-                )
-                .map_err(RuntimeError::ExecStmtError)?;
+                )?;
 
                 match &result {
                     StmtResult::FactualStmtSuccess(factual_verification_result)

@@ -222,7 +222,7 @@ impl Runtime {
                         "failed to store intermediate fn-obj membership fact while verifying `{}`",
                         fn_obj.to_string()
                     ),
-                    Some(RuntimeError::ExecStmtError(store_fact_error)),
+                    Some(store_fact_error),
                     default_line_file(),
                 )
             })?;
@@ -772,7 +772,7 @@ impl Runtime {
                             "failed to verify well-defined of set builder {}",
                             x.to_string()
                         ),
-                        Some(RuntimeError::ExecStmtError(e)),
+                        Some(e),
                         default_line_file(),
                     ),
                 );
@@ -813,7 +813,7 @@ impl Runtime {
                             "failed to verify well-defined of fn set with dom {}",
                             x.to_string()
                         ),
-                        Some(RuntimeError::ExecStmtError(e)),
+                        Some(e),
                         default_line_file(),
                     ),
                 );

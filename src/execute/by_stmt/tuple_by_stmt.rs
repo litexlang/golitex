@@ -2,10 +2,7 @@ use super::kuratowski_by_stmt::kuratowski_encode_tuple_boxes;
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_tuple_stmt(
-        &mut self,
-        stmt: &ByTupleStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_by_tuple_stmt(&mut self, stmt: &ByTupleStmt) -> Result<StmtResult, RuntimeError> {
         let stmt_exec = stmt.clone().into();
 
         let tuple_struct = match &stmt.obj {
@@ -14,12 +11,14 @@ impl Runtime {
                 if let Some(t) = self.get_obj_equal_to_tuple(&stmt.obj.to_string()) {
                     t
                 } else {
-                    return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                    return Err(RuntimeError::ExecStmtError(
+                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                             stmt_exec,
                             format!("by tuple: `{}` is not known to denote a tuple", stmt.obj),
                             None,
                             vec![],
-                        )));
+                        ),
+                    ));
                 }
             }
         };
@@ -44,11 +43,7 @@ impl Runtime {
             ))
         })?;
 
-        let equal_fact = EqualFact::new(
-            stmt.obj.clone(),
-            encoded,
-            stmt.line_file.clone(),
-        ).into();
+        let equal_fact = EqualFact::new(stmt.obj.clone(), encoded, stmt.line_file.clone()).into();
 
         match self.store_fact_without_well_defined_verified_and_infer(equal_fact) {
             Ok(infer_result) => {
@@ -64,7 +59,7 @@ impl Runtime {
                 RuntimeErrorStruct::exec_stmt_with_message_and_cause(
                     stmt_exec,
                     "by tuple: failed to store definitional equality".to_string(),
-                    Some(RuntimeError::ExecStmtError(store_error)),
+                    Some(store_error),
                     vec![],
                 ),
             )),

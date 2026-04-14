@@ -2,11 +2,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 fn fn_set_equality_fact(left: &FnSet, right: &FnSet, line_file: LineFile) -> Fact {
-    EqualFact::new(
-        left.clone().into(),
-        right.clone().into(),
-        line_file,
-    ).into()
+    EqualFact::new(left.clone().into(), right.clone().into(), line_file).into()
 }
 
 fn fn_set_equality_verify_error(
@@ -181,10 +177,8 @@ impl Runtime {
         for (param_name, generated_param_name) in
             flat_param_names.iter().zip(generated_param_names.iter())
         {
-            param_to_generated_arg_map.insert(
-                param_name.clone(),
-                generated_param_name.clone().into(),
-            );
+            param_to_generated_arg_map
+                .insert(param_name.clone(), generated_param_name.clone().into());
         }
         param_to_generated_arg_map
     }
@@ -276,7 +270,7 @@ impl Runtime {
                     line_file.clone(),
                     "failed to assume source fnset dom fact in local equality environment"
                         .to_string(),
-                    Some(RuntimeError::ExecStmtError(e)),
+                    Some(e),
                 )
             })?;
         }
@@ -320,7 +314,8 @@ impl Runtime {
                     generated_param_obj,
                     instantiated_param_set.clone(),
                     line_file.clone(),
-                ).into();
+                )
+                .into();
                 let verify_result =
                     self.verify_atomic_fact(&param_in_target_set_fact, verify_state)?;
                 if !verify_result.is_true() {

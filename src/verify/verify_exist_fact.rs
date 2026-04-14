@@ -16,12 +16,14 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    exist_fact.clone().into(),
-                    String::new(),
-                    exist_fact.line_file(),
-                    Some(e),
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        exist_fact.clone().into(),
+                        String::new(),
+                        exist_fact.line_file(),
+                        Some(e),
+                    ),
+                );
             }
         }
 
@@ -66,8 +68,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key())
         {
-            let target_string = Self::exist_fact_normalized_string(runtime, exist_fact)
-                .map_err(|e| {
+            let target_string =
+                Self::exist_fact_normalized_string(runtime, exist_fact).map_err(|e| {
                     RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
                         exist_fact.clone().into(),
                         String::new(),
@@ -114,10 +116,7 @@ impl Runtime {
                 let normalized_name = format!("#{}", param_index);
                 param_index += 1;
 
-                param_to_arg_map.insert(
-                    original_name.clone(),
-                    normalized_name.clone().into(),
-                );
+                param_to_arg_map.insert(original_name.clone(), normalized_name.clone().into());
                 new_param_names.push(normalized_name);
             }
 

@@ -1,10 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_know_stmt(
-        &mut self,
-        know_stmt: &KnowStmt,
-    ) -> Result<StmtResult, RuntimeErrorStruct> {
+    pub fn exec_know_stmt(&mut self, know_stmt: &KnowStmt) -> Result<StmtResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for fact in know_stmt.facts.iter() {
             let fact_infer_result = self
@@ -16,7 +13,7 @@ impl Runtime {
                     RuntimeErrorStruct::exec_stmt_new_with_stmt(
                         know_stmt.clone().into(),
                         "".to_string(),
-                        Some(RuntimeError::ExecStmtError(e)),
+                        Some(e),
                         vec![],
                     )
                 })?;

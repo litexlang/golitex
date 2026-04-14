@@ -346,9 +346,7 @@ impl Pow {
 
 impl Abs {
     pub fn new(arg: Obj) -> Self {
-        Abs {
-            arg: Box::new(arg),
-        }
+        Abs { arg: Box::new(arg) }
     }
 }
 
@@ -725,40 +723,79 @@ impl Obj {
                 FnObj::new(head, body).into()
             }
             Obj::Number(n) => n.into(),
-            Obj::Add(x) => Add::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::Sub(x) => Sub::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::Mul(x) => Mul::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::Div(x) => Div::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::Mod(x) => Mod::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::Pow(x) => Pow::new(Obj::replace_bound_identifier(*x.base, from, to),
-                Obj::replace_bound_identifier(*x.exponent, from, to)).into(),
+            Obj::Add(x) => Add::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Sub(x) => Sub::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Mul(x) => Mul::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Div(x) => Div::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Mod(x) => Mod::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Pow(x) => Pow::new(
+                Obj::replace_bound_identifier(*x.base, from, to),
+                Obj::replace_bound_identifier(*x.exponent, from, to),
+            )
+            .into(),
             Obj::Abs(x) => Abs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
-            Obj::Max(x) => Max::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::Min(x) => Min::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::Union(x) => Union::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::Intersect(x) => Intersect::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::SetMinus(x) => SetMinus::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
-            Obj::SetDiff(x) => SetDiff::new(Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to)).into(),
+            Obj::Max(x) => Max::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Min(x) => Min::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Union(x) => Union::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Intersect(x) => Intersect::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::SetMinus(x) => SetMinus::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::SetDiff(x) => SetDiff::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
             Obj::Cup(x) => Cup::new(Obj::replace_bound_identifier(*x.left, from, to)).into(),
             Obj::Cap(x) => Cap::new(Obj::replace_bound_identifier(*x.left, from, to)).into(),
-            Obj::PowerSet(x) => PowerSet::new(Obj::replace_bound_identifier(
-                *x.set, from, to,
-            )).into(),
-            Obj::ListSet(x) => ListSet::new(x.list
+            Obj::PowerSet(x) => {
+                PowerSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
+            }
+            Obj::ListSet(x) => ListSet::new(
+                x.list
                     .into_iter()
                     .map(|b| Obj::replace_bound_identifier(*b, from, to))
-                    .collect()).into(),
+                    .collect(),
+            )
+            .into(),
             Obj::SetBuilder(sb) => {
                 let param = if sb.param == from {
                     to.to_string()
@@ -785,13 +822,7 @@ impl Obj {
                         params: pg
                             .params
                             .into_iter()
-                            .map(|p| {
-                                if p == from {
-                                    to.to_string()
-                                } else {
-                                    p
-                                }
-                            })
+                            .map(|p| if p == from { to.to_string() } else { p })
                             .collect(),
                         set: Obj::replace_bound_identifier(pg.set, from, to),
                     })
@@ -804,30 +835,46 @@ impl Obj {
                 let ret_set = Obj::replace_bound_identifier(*fs.ret_set, from, to);
                 FnSet::new(params_def_with_set, dom_facts, ret_set).into()
             }
-            Obj::Cart(c) => Cart::new(c.args
+            Obj::Cart(c) => Cart::new(
+                c.args
                     .into_iter()
                     .map(|b| Obj::replace_bound_identifier(*b, from, to))
-                    .collect()).into(),
-            Obj::CartDim(x) => CartDim::new(Obj::replace_bound_identifier(
-                *x.set, from, to,
-            )).into(),
-            Obj::Proj(x) => Proj::new(Obj::replace_bound_identifier(*x.set, from, to),
-                Obj::replace_bound_identifier(*x.dim, from, to)).into(),
-            Obj::TupleDim(x) => TupleDim::new(Obj::replace_bound_identifier(
-                *x.arg, from, to,
-            )).into(),
-            Obj::Tuple(t) => Tuple::new(t.args
+                    .collect(),
+            )
+            .into(),
+            Obj::CartDim(x) => CartDim::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
+            Obj::Proj(x) => Proj::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
+                Obj::replace_bound_identifier(*x.dim, from, to),
+            )
+            .into(),
+            Obj::TupleDim(x) => {
+                TupleDim::new(Obj::replace_bound_identifier(*x.arg, from, to)).into()
+            }
+            Obj::Tuple(t) => Tuple::new(
+                t.args
                     .into_iter()
                     .map(|b| Obj::replace_bound_identifier(*b, from, to))
-                    .collect()).into(),
+                    .collect(),
+            )
+            .into(),
             Obj::Count(x) => Count::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
-            Obj::Range(x) => Range::new(Obj::replace_bound_identifier(*x.start, from, to),
-                Obj::replace_bound_identifier(*x.end, from, to)).into(),
-            Obj::ClosedRange(x) => ClosedRange::new(Obj::replace_bound_identifier(*x.start, from, to),
-                Obj::replace_bound_identifier(*x.end, from, to)).into(),
+            Obj::Range(x) => Range::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+            )
+            .into(),
+            Obj::ClosedRange(x) => ClosedRange::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+            )
+            .into(),
             Obj::Choose(x) => Choose::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
-            Obj::ObjAtIndex(x) => ObjAtIndex::new(Obj::replace_bound_identifier(*x.obj, from, to),
-                Obj::replace_bound_identifier(*x.index, from, to)).into(),
+            Obj::ObjAtIndex(x) => ObjAtIndex::new(
+                Obj::replace_bound_identifier(*x.obj, from, to),
+                Obj::replace_bound_identifier(*x.index, from, to),
+            )
+            .into(),
             Obj::StandardSet(s) => s.into(),
             Obj::FamilyObj(f) => FamilyObj {
                 name: f.name,

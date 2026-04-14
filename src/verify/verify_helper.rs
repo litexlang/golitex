@@ -2,20 +2,20 @@ use crate::prelude::*;
 
 impl Runtime {
     /// If the fact string is in the known-facts cache, return the cached verification result.
-    pub fn verify_fact_from_cache_using_display_string(
-        &self,
-        fact: &Fact,
-    ) -> Option<StmtResult> {
+    pub fn verify_fact_from_cache_using_display_string(&self, fact: &Fact) -> Option<StmtResult> {
         let key = fact.to_string();
         let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&key);
         if cache_ok {
-            Some((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+            Some(
+                (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                     fact.clone(),
                     key,
                     None,
                     Some(cache_line_file),
                     Vec::new(),
-                )).into())
+                ))
+                .into(),
+            )
         } else {
             None
         }
@@ -26,7 +26,7 @@ impl Runtime {
         &mut self,
         param_type: &ParamType,
         check_type_nonempty: bool,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         if !check_type_nonempty {
             return Ok(());
         }
@@ -46,7 +46,7 @@ impl Runtime {
                         )?;
                         Ok(())
                     }
-                    Obj::SetBuilder(_) => Err(
+                    Obj::SetBuilder(_) => Err(RuntimeError::from(
                         RuntimeErrorStruct::exec_stmt_new(
                             None,
                             "set builder param type is not supported yet in verify_param_type_nonempty_if_required"
@@ -54,7 +54,7 @@ impl Runtime {
                             None,
                             vec![],
                         ),
-                    ),
+                    )),
                     _ => {
                         let nonempty_fact =
                             IsNonemptySetFact::new(param_set.clone(), default_line_file()).into();

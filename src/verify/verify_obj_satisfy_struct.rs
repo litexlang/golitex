@@ -37,11 +37,9 @@ impl Runtime {
         }
 
         match &obj {
-            Obj::Tuple(tuple) => {
-                self.run_in_local_env(|rt| {
-                    rt.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state)
-                })
-            }
+            Obj::Tuple(tuple) => self.run_in_local_env(|rt| {
+                rt.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state)
+            }),
             Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
                 let id_key = match &obj {
                     Obj::Identifier(i) => IdentifierOrIdentifierWithMod::Identifier(i.clone()),
@@ -77,17 +75,17 @@ impl Runtime {
                     }
                 }
 
-                Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        InFact::new(
-                            obj.clone(),
-                            String::from("_").into(),
-                            default_line_file(),
-                        ).into(),
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                        InFact::new(obj.clone(), String::from("_").into(), default_line_file())
+                            .into(),
                         "".to_string(),
                         None,
                         Some(default_line_file()),
                         vec![],
-                    )).into())
+                    ))
+                    .into(),
+                )
             }
             _ => Ok((StmtUnknown::new()).into()),
         }

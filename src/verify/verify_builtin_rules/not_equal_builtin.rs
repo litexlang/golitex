@@ -68,7 +68,8 @@ impl Runtime {
             GreaterFact::new(y.clone(), x.clone(), line_file.clone()).into(),
         ];
         for order_atomic in candidates {
-            let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
+            let sub =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
             if sub.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules(

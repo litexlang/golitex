@@ -1,10 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_prove_stmt(
-        &mut self,
-        stmt: &ProveStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_prove_stmt(&mut self, stmt: &ProveStmt) -> Result<StmtResult, RuntimeError> {
         let inside_results = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in &stmt.proof {
@@ -27,11 +24,12 @@ impl Runtime {
         });
 
         match inside_results {
-            Ok(_) => Ok((NonFactualStmtSuccess::new(
-                    stmt.clone().into(),
-                    InferResult::new(),
-                    vec![],
-                )).into()),
+            Ok(_) => {
+                Ok(
+                    (NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![]))
+                        .into(),
+                )
+            }
             Err(inside_results_error) => Err(inside_results_error),
         }
     }

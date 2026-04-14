@@ -156,7 +156,7 @@ impl Runtime {
         for dom_fact in &original_fn_set.dom_facts {
             let instantiated_dom_fact =
                 runtime.inst_or_and_chain_atomic_fact(dom_fact, original_to_restrict_param_map)?;
-                then_facts.push(instantiated_dom_fact.into());
+            then_facts.push(instantiated_dom_fact.into());
         }
 
         Ok(then_facts)

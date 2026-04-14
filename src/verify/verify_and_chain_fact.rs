@@ -15,12 +15,14 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    and_fact.clone().into(),
-                    String::new(),
-                    and_fact.line_file(),
-                    Some(e),
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        and_fact.clone().into(),
+                        String::new(),
+                        and_fact.line_file(),
+                        Some(e),
+                    ),
+                );
             }
         }
 
@@ -34,13 +36,16 @@ impl Runtime {
             }
             verify_what.push(fact.to_string());
         }
-        Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 and_fact.clone().into(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
                 Some(default_line_file()),
                 Vec::new(),
-            )).into())
+            ))
+            .into(),
+        )
     }
 
     pub fn verify_chain_fact(
@@ -56,12 +61,14 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
-                return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    chain_fact.clone().into(),
-                    String::new(),
-                    chain_fact.line_file(),
-                    Some(e),
-                ));
+                return Err(
+                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
+                        chain_fact.clone().into(),
+                        String::new(),
+                        chain_fact.line_file(),
+                        Some(e),
+                    ),
+                );
             }
         }
 
@@ -72,7 +79,7 @@ impl Runtime {
                 Fact::ChainFact(chain_fact.clone()),
                 String::new(),
                 chain_fact.line_file(),
-                Some(NewAtomicFactRuntimeError(e).into()),
+                Some(e),
             )
         })?;
         let mut verify_what = Vec::with_capacity(facts.len());
@@ -82,17 +89,21 @@ impl Runtime {
                 return Ok((StmtUnknown::new_with_detail(format!(
                     "unverified chain step: {}",
                     fact
-                ))).into());
+                )))
+                .into());
             }
 
             verify_what.push(fact.to_string());
         }
-        Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 chain_fact.clone().into(),
                 format!("{} are verified", verify_what.join(", ")),
                 None,
                 Some(default_line_file()),
                 Vec::new(),
-            )).into())
+            ))
+            .into(),
+        )
     }
 }

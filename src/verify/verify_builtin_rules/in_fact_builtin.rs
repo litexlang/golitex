@@ -32,10 +32,7 @@ fn param_def_with_set_rename_to_mangled(
     out
 }
 
-fn number_in_set_verified_by_builtin_rules_result(
-    in_fact: &InFact,
-    reason: &str,
-) -> StmtResult {
+fn number_in_set_verified_by_builtin_rules_result(in_fact: &InFact, reason: &str) -> StmtResult {
     StmtResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
@@ -312,27 +309,43 @@ impl Runtime {
                     standard_set,
                 ))
             }
-            (_, Obj::StandardSet(StandardSet::NPos)) => self
-                .verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state),
-            (_, Obj::ClosedRange(closed_range)) => {
-                self.verify_in_fact_closed_range_by_order_bounds(in_fact, closed_range, verify_state)
+            (_, Obj::StandardSet(StandardSet::NPos)) => {
+                self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
             }
+            (_, Obj::ClosedRange(closed_range)) => self
+                .verify_in_fact_closed_range_by_order_bounds(in_fact, closed_range, verify_state),
             (_, Obj::Range(range)) => {
                 self.verify_in_fact_open_range_by_order_bounds(in_fact, range, verify_state)
             }
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Mod(_) | Obj::Pow(_) | Obj::Max(_)
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
                 | Obj::Min(_),
                 Obj::StandardSet(StandardSet::Z),
             ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, verify_state),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Pow(_) | Obj::Max(_)
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
                 | Obj::Min(_),
                 Obj::StandardSet(StandardSet::Q),
             ) => self.verify_in_fact_arithmetic_expression_in_q(in_fact, verify_state),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_)
-                | Obj::Max(_) | Obj::Min(_),
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_),
                 Obj::StandardSet(StandardSet::RNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -340,8 +353,14 @@ impl Runtime {
                 StandardSet::RNeg,
             ),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_)
-                | Obj::Max(_) | Obj::Min(_),
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_),
                 Obj::StandardSet(StandardSet::QNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -349,8 +368,14 @@ impl Runtime {
                 StandardSet::QNeg,
             ),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_)
-                | Obj::Max(_) | Obj::Min(_),
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_),
                 Obj::StandardSet(StandardSet::ZNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -358,8 +383,14 @@ impl Runtime {
                 StandardSet::ZNeg,
             ),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_)
-                | Obj::Max(_) | Obj::Min(_),
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_),
                 Obj::StandardSet(StandardSet::R),
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
@@ -377,7 +408,8 @@ impl Runtime {
                     *choose_from,
                     where_is_obj.clone(),
                     in_fact.line_file.clone(),
-                ).into();
+                )
+                .into();
                 let equal_fact_verify_result =
                     self.verify_atomic_fact(&equal_fact, verify_state)?;
                 if equal_fact_verify_result.is_true() {
@@ -424,23 +456,14 @@ impl Runtime {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
         let zero: Obj = Number::new("0".to_string()).into();
-        let zero_lt_elem = LessFact::new(
-            zero,
-            elem.clone(),
-            lf.clone(),
-        ).into();
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
-            &zero_lt_elem,
-            verify_state,
-        )? {
+        let zero_lt_elem = LessFact::new(zero, elem.clone(), lf.clone()).into();
+        if !self
+            .non_equational_atomic_fact_holds_by_full_verify_pipeline(&zero_lt_elem, verify_state)?
+        {
             return Ok((StmtUnknown::new()).into());
         }
 
-        let in_z = InFact::new(
-            elem.clone(),
-            StandardSet::Z.into(),
-            lf.clone(),
-        ).into();
+        let in_z = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
             return Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
@@ -448,11 +471,7 @@ impl Runtime {
             ));
         }
 
-        let in_n = InFact::new(
-            elem.clone(),
-            StandardSet::N.into(),
-            lf.clone(),
-        ).into();
+        let in_n = InFact::new(elem.clone(), StandardSet::N.into(), lf.clone()).into();
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_n, verify_state)? {
             return Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
@@ -471,16 +490,10 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
-        let a_le_i = LessEqualFact::new(
-            (*closed_range.start).clone(),
-            elem.clone(),
-            lf.clone(),
-        ).into();
-        let i_le_b = LessEqualFact::new(
-            elem.clone(),
-            (*closed_range.end).clone(),
-            lf.clone(),
-        ).into();
+        let a_le_i =
+            LessEqualFact::new((*closed_range.start).clone(), elem.clone(), lf.clone()).into();
+        let i_le_b =
+            LessEqualFact::new(elem.clone(), (*closed_range.end).clone(), lf.clone()).into();
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&a_le_i, verify_state)? {
             return Ok((StmtUnknown::new()).into());
         }
@@ -501,16 +514,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
-        let a_le_i = LessEqualFact::new(
-            (*range.start).clone(),
-            elem.clone(),
-            lf.clone(),
-        ).into();
-        let i_lt_b = LessFact::new(
-            elem.clone(),
-            (*range.end).clone(),
-            lf.clone(),
-        ).into();
+        let a_le_i = LessEqualFact::new((*range.start).clone(), elem.clone(), lf.clone()).into();
+        let i_lt_b = LessFact::new(elem.clone(), (*range.end).clone(), lf.clone()).into();
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&a_le_i, verify_state)? {
             return Ok((StmtUnknown::new()).into());
         }
@@ -560,11 +565,14 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "Z closure: operands in Z".to_string(),
                 Vec::new(),
-            )).into())
+            ))
+            .into(),
+        )
     }
 
     // Builtin closure of `Q` under `+`, `-`, `*`, `/` when both operands are in `Q`. For `^`, require
@@ -585,16 +593,14 @@ impl Runtime {
         let z_obj: Obj = StandardSet::Z.into();
         let lf = in_fact.line_file.clone();
 
-        let in_q =
-            |slf: &mut Self, o: &Obj| -> Result<bool, RuntimeError> {
-                let f = InFact::new(o.clone(), q_obj.clone(), lf.clone()).into();
-                slf.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)
-            };
-        let in_z =
-            |slf: &mut Self, o: &Obj| -> Result<bool, RuntimeError> {
-                let f = InFact::new(o.clone(), z_obj.clone(), lf.clone()).into();
-                slf.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)
-            };
+        let in_q = |slf: &mut Self, o: &Obj| -> Result<bool, RuntimeError> {
+            let f = InFact::new(o.clone(), q_obj.clone(), lf.clone()).into();
+            slf.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)
+        };
+        let in_z = |slf: &mut Self, o: &Obj| -> Result<bool, RuntimeError> {
+            let f = InFact::new(o.clone(), z_obj.clone(), lf.clone()).into();
+            slf.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)
+        };
 
         let ok = match &in_fact.element {
             Obj::Add(a) => in_q(self, &a.left)? && in_q(self, &a.right)?,
@@ -611,11 +617,14 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "Q closure: +-*/ operands in Q; pow base in Q and exponent in Z".to_string(),
                 Vec::new(),
-            )).into())
+            ))
+            .into(),
+        )
     }
 
     fn verify_in_fact_arithmetic_expression_in_standard_negative_set(
@@ -639,7 +648,8 @@ impl Runtime {
             in_fact.element.clone(),
             StandardSet::R.into(),
             in_fact.line_file.clone(),
-        ).into();
+        )
+        .into();
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &product_in_r_fact,
             verify_state,
@@ -657,26 +667,33 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         match target_negative_standard_set {
-            StandardSet::RNeg => Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            StandardSet::RNeg => Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "mul_opposite_signs_product_in_R_neg".to_string(),
                     Vec::new(),
-                )).into()),
+                ))
+                .into(),
+            ),
             StandardSet::QNeg => {
                 let product_in_q_fact = InFact::new(
                     in_fact.element.clone(),
                     StandardSet::Q.into(),
                     in_fact.line_file.clone(),
-                ).into();
+                )
+                .into();
                 if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
                     &product_in_q_fact,
                     verify_state,
                 )? {
-                    Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_Q_neg".to_string(),
                             Vec::new(),
-                        )).into())
+                        ))
+                        .into(),
+                    )
                 } else {
                     Ok((StmtUnknown::new()).into())
                 }
@@ -686,16 +703,20 @@ impl Runtime {
                     in_fact.element.clone(),
                     StandardSet::Z.into(),
                     in_fact.line_file.clone(),
-                ).into();
+                )
+                .into();
                 if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
                     &product_in_z_fact,
                     verify_state,
                 )? {
-                    Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_Z_neg".to_string(),
                             Vec::new(),
-                        )).into())
+                        ))
+                        .into(),
+                    )
                 } else {
                     Ok((StmtUnknown::new()).into())
                 }
@@ -715,11 +736,8 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for element_box in list_set.list.iter() {
             let element_obj = *element_box.clone();
-            let element_in_base_fact = InFact::new(
-                element_obj,
-                base_set.clone(),
-                in_fact.line_file.clone(),
-            ).into();
+            let element_in_base_fact =
+                InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()).into();
             let verify_one_element_result =
                 self.verify_atomic_fact(&element_in_base_fact, verify_state)?;
             if !verify_one_element_result.is_true() {
@@ -740,11 +758,12 @@ impl Runtime {
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-                stmt,
-                infer_result,
-                "list_set in power_set: each element is in the base set".to_string(),
-                Vec::new(),
-            )).into())
+            stmt,
+            infer_result,
+            "list_set in power_set: each element is in the base set".to_string(),
+            Vec::new(),
+        ))
+        .into())
     }
 
     fn verify_in_fact_by_equal_to_one_element_in_list_set(
@@ -758,17 +777,21 @@ impl Runtime {
                 in_fact.element.clone(),
                 *current_element_in_list_set.clone(),
                 in_fact.line_file.clone(),
-            ).into();
+            )
+            .into();
             let equal_fact_verify_result = self.verify_atomic_fact(&equal_fact, verify_state)?;
             if equal_fact_verify_result.is_true() {
-                return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} equals one element in list_set {}",
                             in_fact.element, in_fact.set
                         ),
                         Vec::new(),
-                    )).into());
+                    ))
+                    .into(),
+                );
             }
         }
         Ok((StmtUnknown::new()).into())
@@ -779,10 +802,9 @@ impl Runtime {
             Obj::StandardSet(StandardSet::NPos) => Some(vec![]),
             Obj::StandardSet(StandardSet::N) => Some(vec![StandardSet::NPos.into()]),
             Obj::StandardSet(StandardSet::ZNeg) => Some(vec![]),
-            Obj::StandardSet(StandardSet::ZNz) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::ZNeg.into(),
-            ]),
+            Obj::StandardSet(StandardSet::ZNz) => {
+                Some(vec![StandardSet::NPos.into(), StandardSet::ZNeg.into()])
+            }
             Obj::StandardSet(StandardSet::Z) => Some(vec![
                 StandardSet::NPos.into(),
                 StandardSet::N.into(),
@@ -808,14 +830,12 @@ impl Runtime {
                 StandardSet::QNeg.into(),
                 StandardSet::QNz.into(),
             ]),
-            Obj::StandardSet(StandardSet::RPos) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::QPos.into(),
-            ]),
-            Obj::StandardSet(StandardSet::RNeg) => Some(vec![
-                StandardSet::ZNeg.into(),
-                StandardSet::QNeg.into(),
-            ]),
+            Obj::StandardSet(StandardSet::RPos) => {
+                Some(vec![StandardSet::NPos.into(), StandardSet::QPos.into()])
+            }
+            Obj::StandardSet(StandardSet::RNeg) => {
+                Some(vec![StandardSet::ZNeg.into(), StandardSet::QNeg.into()])
+            }
             Obj::StandardSet(StandardSet::RNz) => Some(vec![
                 StandardSet::NPos.into(),
                 StandardSet::ZNeg.into(),
@@ -931,12 +951,15 @@ impl Runtime {
                 )
             })?
         {
-            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS (α-renamed compare)"
                         .to_string(),
                     Vec::new(),
-                )).into());
+                ))
+                .into(),
+            );
         }
         Ok((StmtUnknown::new()).into())
     }
@@ -956,20 +979,23 @@ impl Runtime {
                 in_fact.element.clone(),
                 standard_subset_set_obj.clone(),
                 in_fact.line_file.clone(),
-            ).into();
-            let verify_result = self
-                .verify_non_equational_atomic_fact_with_known_atomic_facts(
-                    &in_fact_into_standard_subset,
-                )?;
+            )
+            .into();
+            let verify_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+                &in_fact_into_standard_subset,
+            )?;
             if verify_result.is_true() {
-                return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
                             in_fact.element, standard_subset_set_obj, target_set_obj
                         ),
                         Vec::new(),
-                    )).into());
+                    ))
+                    .into(),
+                );
             }
         }
         Ok((StmtUnknown::new()).into())
@@ -996,7 +1022,8 @@ impl Runtime {
                 tuple_component_obj,
                 cart_component_obj,
                 in_fact.line_file.clone(),
-            ).into();
+            )
+            .into();
             let component_verify_result =
                 self.verify_atomic_fact(&component_in_fact, verify_state)?;
             if !component_verify_result.is_true() {
@@ -1004,10 +1031,13 @@ impl Runtime {
             }
         }
 
-        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "tuple in cart: each component is in the corresponding cart factor".to_string(),
                 Vec::new(),
-            )).into())
+            ))
+            .into(),
+        )
     }
 }

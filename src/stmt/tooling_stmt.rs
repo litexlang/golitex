@@ -102,8 +102,12 @@ impl fmt::Display for ImportGlobalModuleStmt {
 impl ImportStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
-            ImportStmt::ImportRelativePath(import_relative_path) => import_relative_path.line_file.clone(),
-            ImportStmt::ImportGlobalModule(import_global_mod) => import_global_mod.line_file.clone(),
+            ImportStmt::ImportRelativePath(import_relative_path) => {
+                import_relative_path.line_file.clone()
+            }
+            ImportStmt::ImportGlobalModule(import_global_mod) => {
+                import_global_mod.line_file.clone()
+            }
         }
     }
 }

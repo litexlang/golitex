@@ -5,9 +5,9 @@ mod enumerate;
 mod extension;
 mod family;
 mod fn_cart_tuple;
-mod struct_stmt;
 mod for_stmt;
 mod induc;
+mod struct_stmt;
 
 pub use cases::ByCasesStmt;
 pub use contra::ByContraStmt;
@@ -15,6 +15,6 @@ pub use enumerate::ByEnumerateStmt;
 pub use extension::ByExtensionStmt;
 pub use family::ByFamilyStmt;
 pub use fn_cart_tuple::{ByFnSetStmt, ByFnStmt, ByTupleStmt};
-pub use struct_stmt::ByStructStmt;
 pub use for_stmt::{ByForStmt, ClosedRangeOrRange};
 pub use induc::ByInducStmt;
+pub use struct_stmt::ByStructStmt;

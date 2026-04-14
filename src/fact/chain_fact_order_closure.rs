@@ -61,7 +61,7 @@ fn dedup_atomic_facts(mut facts: Vec<AtomicFact>) -> Vec<AtomicFact> {
 }
 
 impl ChainFact {
-    pub fn facts_with_order_transitive_closure(&self) -> Result<Vec<AtomicFact>, RuntimeErrorStruct> {
+    pub fn facts_with_order_transitive_closure(&self) -> Result<Vec<AtomicFact>, RuntimeError> {
         let base = self.facts()?;
         let n = self.objs.len();
         if n < 2 {
@@ -142,11 +142,9 @@ impl ChainFact {
             idxs.sort_unstable();
             let rep = idxs[0];
             for &j in idxs.iter().skip(1) {
-                extra.push(EqualFact::new(
-                    self.objs[rep].clone(),
-                    self.objs[j].clone(),
-                    lf.clone(),
-                ).into());
+                extra.push(
+                    EqualFact::new(self.objs[rep].clone(), self.objs[j].clone(), lf.clone()).into(),
+                );
             }
         }
 
@@ -167,9 +165,7 @@ impl ChainFact {
                         if path_strict {
                             GreaterFact::new(left, right, lf.clone()).into()
                         } else {
-                            GreaterEqualFact::new(
-                                left, right, lf.clone(),
-                            ).into()
+                            GreaterEqualFact::new(left, right, lf.clone()).into()
                         }
                     }
                 };
