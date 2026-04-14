@@ -2,6 +2,9 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+// Label for the kernel-injected builtin fragment in `ModuleManager` (not a Litex keyword).
+pub const BUILTIN_CODE_PATH: &str = "builtin_code";
+
 pub struct ImportedModuleEnvironment {
     pub environment: Environment,
     pub name_scope: HashMap<String, LineFile>,
