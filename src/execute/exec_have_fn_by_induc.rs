@@ -31,12 +31,12 @@ impl Runtime {
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
         RuntimeError::ExecStmtError({
-            let __stmt: Stmt = stmt.clone().into();
-            let __line_file = __stmt.line_file();
+            let st: Stmt = stmt.clone().into();
+            let lf = st.line_file();
             RuntimeErrorStruct::new(
-                Some(__stmt),
+                Some(st),
                 String::new(),
-                __line_file,
+                lf,
                 Some(cause),
                 vec![],
             )
@@ -113,37 +113,15 @@ impl Runtime {
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError({
-                let __stmt: Stmt = stmt.clone().into();
-                let __message = format!(
+            return Err(short_exec_error(
+ stmt.clone().into(),
+                    format!(
                     "have_fn_by_induc: {} is not in return set {}",
                     equal_to, stmt.ret_set
-                );
-                let __cause = None;
-                let __inside = vec![];
-                let __line_file = __stmt.line_file();
-                let __previous_error = if __message.is_empty() {
-                    __cause
-                } else {
-                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                };
-                RuntimeErrorStruct::new(
-                    Some(__stmt),
-                    __message,
-                    __line_file,
-                    __previous_error,
-                    __inside,
-                )
-            }));
+                ),
+                    None,
+                    vec![],
+                ));
         }
         Ok(())
     }
@@ -212,36 +190,13 @@ impl Runtime {
                 let coverage: Fact = OrFact::new(coverage_cases, line_file.clone()).into();
                 self.verify_fact_return_err_if_not_true(&coverage, &verify_state)
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError({
-                            let __stmt: Stmt = stmt.clone().into();
-                            let __message =
-                                "have_fn_by_induc: nested last cases do not cover all situations"
-                                    .to_string();
-                            let __cause = Some(e);
-                            let __inside = vec![];
-                            let __line_file = __stmt.line_file();
-                            let __previous_error = if __message.is_empty() {
-                                __cause
-                            } else {
-                                Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                        short_exec_error(
+ stmt.clone().into(),
+                    "have_fn_by_induc: nested last cases do not cover all situations"
+                                    .to_string(),
+                    Some(e),
+                    vec![],
                 )
-                            };
-                            RuntimeErrorStruct::new(
-                                Some(__stmt),
-                                __message,
-                                __line_file,
-                                __previous_error,
-                                __inside,
-                            )
-                        })
                     })?;
 
                 for nested in last_pairs.iter() {
@@ -259,35 +214,12 @@ impl Runtime {
                 }
             }
             HaveFnByInducLastCase::NestedCases(_) => {
-                return Err(RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt.clone().into();
-                    let __message =
-                        "have_fn_by_induc: nested last case list must not be empty".to_string();
-                    let __cause = None;
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                }));
+                return Err(short_exec_error(
+ stmt.clone().into(),
+                    "have_fn_by_induc: nested last case list must not be empty".to_string(),
+                    None,
+                    vec![],
+                ));
             }
         }
 
@@ -322,34 +254,12 @@ impl Runtime {
             .verify_atomic_fact(&in_fact, &VerifyState::new(0, false))
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError({
-                let __stmt: Stmt = stmt.clone().into();
-                let __message = "have_fn_by_induc: induc_from is not in Z".to_string();
-                let __cause = None;
-                let __inside = vec![];
-                let __line_file = __stmt.line_file();
-                let __previous_error = if __message.is_empty() {
-                    __cause
-                } else {
-                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                };
-                RuntimeErrorStruct::new(
-                    Some(__stmt),
-                    __message,
-                    __line_file,
-                    __previous_error,
-                    __inside,
-                )
-            }));
+            return Err(short_exec_error(
+ stmt.clone().into(),
+                    "have_fn_by_induc: induc_from is not in Z".to_string(),
+                    None,
+                    vec![],
+                ));
         }
 
         let mut infer_result = InferResult::new();

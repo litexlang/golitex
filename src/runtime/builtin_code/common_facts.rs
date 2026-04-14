@@ -1,8 +1,9 @@
 pub const COMMON_FACTS: &str = r#"
 know:
     forall a, b R:
-        a = 0 and b = 0
         =>:
+            a = 0 and b = 0
+        <=>:
             a ^ 2 + b ^ 2 = 0
 
 

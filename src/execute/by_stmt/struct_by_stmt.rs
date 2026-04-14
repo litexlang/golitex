@@ -51,34 +51,12 @@ impl Runtime {
         let struct_ty = match &stmt.struct_obj {
             Obj::StructObj(s) => s.clone(),
             _ => {
-                return Err(RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt_exec;
-                    let __message = "by struct: expected `struct name(...)` object".to_string();
-                    let __cause = None;
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                }));
+                return Err(short_exec_error(
+ stmt_exec,
+                    "by struct: expected `struct name(...)` object".to_string(),
+                    None,
+                    vec![],
+                ));
             }
         };
 
@@ -86,72 +64,28 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt_exec.clone();
-                    let __message = format!("by struct: struct `{}` is not defined", struct_name);
-                    let __cause = None;
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                }));
+                return Err(short_exec_error(
+ stmt_exec.clone(),
+                    format!("by struct: struct `{}` is not defined", struct_name),
+                    None,
+                    vec![],
+                ));
             }
         };
 
         let expected_count = def.param_defs.number_of_params();
         if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::ExecStmtError({
-                let __stmt: Stmt = stmt_exec;
-                let __message = format!(
+            return Err(short_exec_error(
+ stmt_exec,
+                    format!(
                     "by struct: struct `{}` expects {} type argument(s), got {}",
                     struct_name,
                     expected_count,
                     struct_ty.args.len()
-                );
-                let __cause = None;
-                let __inside = vec![];
-                let __line_file = __stmt.line_file();
-                let __previous_error = if __message.is_empty() {
-                    __cause
-                } else {
-                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                };
-                RuntimeErrorStruct::new(
-                    Some(__stmt),
-                    __message,
-                    __line_file,
-                    __previous_error,
-                    __inside,
-                )
-            }));
+                ),
+                    None,
+                    vec![],
+                ));
         }
 
         let param_to_arg_map = def
@@ -168,68 +102,24 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
         self.verify_obj_well_defined_and_store_cache(&stmt.struct_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt_exec.clone();
-                    let __message = format!(
+                short_exec_error(
+ stmt_exec.clone(),
+                    format!(
                         "by struct: struct type object `{}` is not well-defined",
                         stmt.struct_obj
-                    );
-                    let __cause = Some(e);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                    ),
+                    Some(e),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
         self.verify_obj_well_defined_and_store_cache(&cart_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt_exec.clone();
-                    let __message = format!("by struct: cart `{}` is not well-defined", cart_obj);
-                    let __cause = Some(e);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                short_exec_error(
+ stmt_exec.clone(),
+                    format!("by struct: cart `{}` is not well-defined", cart_obj),
+                    Some(e),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
 
         let random_names = self.generate_random_unused_names(2);
@@ -302,36 +192,13 @@ impl Runtime {
         let rhs_sb_obj: Obj = set_builder.clone().into();
         self.verify_obj_well_defined_and_store_cache(&rhs_sb_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError({
-                    let __stmt: Stmt = stmt_exec.clone();
-                    let __message =
-                        "by struct: set-builder (right-hand side) is not well-defined"
-                            .to_string();
-                    let __cause = Some(e);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                short_exec_error(
+ stmt_exec.clone(),
+                    "by struct: set-builder (right-hand side) is not well-defined"
+                            .to_string(),
+                    Some(e),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
 
         let definitional_eq = EqualFact::new(

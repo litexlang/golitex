@@ -15,67 +15,22 @@ impl Runtime {
                 have_fn_equal_stmt.line_file.clone(),
             )
             .map_err(|e| {
-                RuntimeError::from({
-                    let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                    let __message =
-                        "have_fn_equal_stmt: build fn set for storage failed".to_string();
-                    let __cause = Some(e);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                short_exec_error(
+                    have_fn_equal_stmt.clone().into(),
+                    "have_fn_equal_stmt: build fn set for storage failed".to_string(),
+                    Some(e),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
 
         self.have_fn_equal_stmt_verify_well_defined(have_fn_equal_stmt, &fn_set_stored)
             .map_err(|e| {
-                RuntimeError::from({
-                    let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                    let __message = "have_fn_equal_stmt: verify well-defined failed".to_string();
-                    let __cause = Some(e);
-                    let __inside = vec![];
-                    let __line_file = __stmt.line_file();
-                    let __previous_error = if __message.is_empty() {
-                        __cause
-                    } else {
-                        Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                short_exec_error(
+                    have_fn_equal_stmt.clone().into(),
+                    "have_fn_equal_stmt: verify well-defined failed".to_string(),
+                    Some(e),
+                    vec![],
                 )
-                    };
-                    RuntimeErrorStruct::new(
-                        Some(__stmt),
-                        __message,
-                        __line_file,
-                        __previous_error,
-                        __inside,
-                    )
-                })
             })?;
 
         self.store_identifier_obj(&have_fn_equal_stmt.name)?;
@@ -92,12 +47,12 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = have_fn_equal_stmt.clone().into();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(store_fact_error),
                         vec![],
                     )
@@ -134,12 +89,12 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
             .map_err(|store_fact_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = have_fn_equal_stmt.clone().into();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(store_fact_error),
                         vec![],
                     )
@@ -175,12 +130,12 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state)
             .map_err(|well_defined_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = have_fn_equal_stmt.clone().into();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(well_defined_error),
                         vec![],
                     )
@@ -191,12 +146,12 @@ impl Runtime {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
                     RuntimeError::from({
-                        let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                        let __line_file = __stmt.line_file();
+                        let st: Stmt = have_fn_equal_stmt.clone().into();
+                        let lf = st.line_file();
                         RuntimeErrorStruct::new(
-                            Some(__stmt),
+                            Some(st),
                             "".to_string(),
-                            __line_file,
+                            lf,
                             Some(define_params_error),
                             vec![],
                         )
@@ -211,12 +166,12 @@ impl Runtime {
                 )
                 .map_err(|store_fact_error| {
                     RuntimeError::from({
-                        let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                        let __line_file = __stmt.line_file();
+                        let st: Stmt = have_fn_equal_stmt.clone().into();
+                        let lf = st.line_file();
                         RuntimeErrorStruct::new(
-                            Some(__stmt),
+                            Some(st),
                             "".to_string(),
-                            __line_file,
+                            lf,
                             Some(store_fact_error),
                             vec![],
                         )
@@ -234,12 +189,12 @@ impl Runtime {
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = have_fn_equal_stmt.clone().into();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(verify_error),
                         vec![],
                     )
@@ -250,34 +205,12 @@ impl Runtime {
                 "have_fn_equal_stmt: {} is not in return set {}",
                 have_fn_equal_stmt.equal_to, have_fn_equal_stmt.fn_set_clause.ret_set
             );
-            return Err(RuntimeError::from({
-                let __stmt: Stmt = have_fn_equal_stmt.clone().into();
-                let __message = msg;
-                let __cause = None;
-                let __inside = vec![];
-                let __line_file = __stmt.line_file();
-                let __previous_error = if __message.is_empty() {
-                    __cause
-                } else {
-                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
+            return Err(short_exec_error(
+                have_fn_equal_stmt.clone().into(),
+                msg,
+                None,
                 vec![],
-            ))
-            .into(),
-                )
-                };
-                RuntimeErrorStruct::new(
-                    Some(__stmt),
-                    __message,
-                    __line_file,
-                    __previous_error,
-                    __inside,
-                )
-            }));
+            ));
         }
 
         Ok(())

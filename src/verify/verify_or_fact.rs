@@ -17,10 +17,8 @@ impl Runtime {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
                 return Err(
                     {
-            let __fact: Fact = (or_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(or_fact.clone()).into_stmt()),
                 String::new(),
                 or_fact.line_file.clone(),
                 Some(e),

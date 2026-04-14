@@ -14,10 +14,8 @@ impl Runtime {
                 Some(fn_set) => fn_set,
                 None => {
                     return Err({
-            let __fact: Fact = (restrict_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(restrict_fact.clone()).into_stmt()),
                 String::new(),
                 restrict_fact.line_file.clone(),
                 Some(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -101,10 +99,8 @@ impl Runtime {
         )
         .map_err(|e| {
             {
-            let __fact: Fact = (restrict_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(restrict_fact.clone()).into_stmt()),
                 String::new(),
                 restrict_fact.line_file.clone(),
                 Some(e),

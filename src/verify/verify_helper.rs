@@ -45,15 +45,14 @@ impl Runtime {
                     )?;
                     Ok(())
                 }
-                Obj::SetBuilder(_) => Err(RuntimeError::from({
-                    let __opt_stmt: Option<Stmt> = None;
-                    let __line_file = __opt_stmt
-                        .as_ref()
-                        .map(|s| s.line_file())
-                        .unwrap_or_else(default_line_file);
-                    RuntimeErrorStruct::new(__opt_stmt, "set builder param type is not supported yet in verify_param_type_nonempty_if_required"
-                                .to_string(), __line_file, None, vec![])
-                })),
+                Obj::SetBuilder(_) => Err(RuntimeError::from(RuntimeErrorStruct::new(
+                    None,
+                    "set builder param type is not supported yet in verify_param_type_nonempty_if_required"
+                        .to_string(),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ))),
                 _ => {
                     let nonempty_fact =
                         IsNonemptySetFact::new(param_set.clone(), default_line_file()).into();

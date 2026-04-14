@@ -377,10 +377,8 @@ impl Runtime {
                         atomic_fact.to_string()
                     );
                     return Err({
-            let __fact: Fact = (atomic_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(atomic_fact.clone()).into_stmt()),
                 message.clone(),
                 atomic_fact.line_file(),
                 Some(UnknownRuntimeError(RuntimeErrorStruct::new(
@@ -542,10 +540,8 @@ impl Runtime {
             None => {
                 return Err(
                     {
-            let __fact: Fact = (normal_atomic_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
                 format!("prop definition not found for {}", predicate_name),
                 normal_atomic_fact.line_file.clone(),
                 None,
@@ -568,10 +564,8 @@ impl Runtime {
             Err(_) => {
                 return Err(
                     {
-            let __fact: Fact = (normal_atomic_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
                 format!("failed to verify parameter types for {}", predicate_name),
                 normal_atomic_fact.line_file.clone(),
                 None,
@@ -602,10 +596,8 @@ impl Runtime {
                 .inst_fact(iff_fact, &param_to_arg_map)
                 .map_err(|e| {
                     {
-            let __fact: Fact = (normal_atomic_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
                 String::new(),
                 normal_atomic_fact.line_file.clone(),
                 Some(e),

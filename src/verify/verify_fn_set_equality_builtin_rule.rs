@@ -13,10 +13,8 @@ fn fn_set_equality_verify_error(
     cause: Option<RuntimeError>,
 ) -> RuntimeError {
     {
-            let __fact: Fact = (fn_set_equality_fact(left, right, line_file.clone()));
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(fn_set_equality_fact(left, right, line_file.clone()).into_stmt()),
                 message,
                 line_file,
                 cause,

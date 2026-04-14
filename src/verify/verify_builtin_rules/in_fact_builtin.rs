@@ -944,10 +944,8 @@ impl Runtime {
             .fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
             .map_err(|e| {
                 {
-            let __fact: Fact = (in_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(in_fact.clone()).into_stmt()),
                 String::new(),
                 in_fact.line_file.clone(),
                 Some(e),

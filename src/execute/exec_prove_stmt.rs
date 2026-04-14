@@ -9,34 +9,12 @@ impl Runtime {
                 match exec_stmt_result {
                     Ok(result) => inside_results.push(result),
                     Err(statement_error) => {
-                        return Err(RuntimeError::ExecStmtError({
-                            let __stmt: Stmt = stmt.clone().into();
-                            let __message = proof_stmt.to_string();
-                            let __cause = Some(statement_error);
-                            let __inside = inside_results;
-                            let __line_file = __stmt.line_file();
-                            let __previous_error = if __message.is_empty() {
-                                __cause
-                            } else {
-                                Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                            };
-                            RuntimeErrorStruct::new(
-                                Some(__stmt),
-                                __message,
-                                __line_file,
-                                __previous_error,
-                                __inside,
-                            )
-                        }));
+                        return Err(short_exec_error(
+                            stmt.clone().into(),
+                            proof_stmt.to_string(),
+                            Some(statement_error),
+                            std::mem::take(&mut inside_results),
+                        ));
                     }
                 }
             }

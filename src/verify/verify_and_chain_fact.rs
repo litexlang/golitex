@@ -15,20 +15,13 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
-                return Err(
-                    {
-            let __fact: Fact = (and_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
-                String::new(),
-                and_fact.line_file(),
-                Some(e),
-                vec![],
-            ))
-            .into()
-        },
-                );
+                return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                    Some(Fact::from(and_fact.clone()).into_stmt()),
+                    String::new(),
+                    and_fact.line_file(),
+                    Some(e),
+                    vec![],
+                ))));
             }
         }
 
@@ -67,37 +60,26 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
-                return Err(
-                    {
-            let __fact: Fact = (chain_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
-                String::new(),
-                chain_fact.line_file(),
-                Some(e),
-                vec![],
-            ))
-            .into()
-        },
-                );
+                return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                    Some(Fact::from(chain_fact.clone()).into_stmt()),
+                    String::new(),
+                    chain_fact.line_file(),
+                    Some(e),
+                    vec![],
+                ))));
             }
         }
 
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
         let facts = chain_fact.facts().map_err(|e| {
-            {
-            let __fact: Fact = (Fact::ChainFact(chain_fact.clone()));
-            let __stmt = __fact.into_stmt();
             RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                Some(Fact::ChainFact(chain_fact.clone()).into_stmt()),
                 String::new(),
                 chain_fact.line_file(),
                 Some(e),
                 vec![],
             )))
-        }
         })?;
         let mut verify_what = Vec::with_capacity(facts.len());
         for fact in &facts {

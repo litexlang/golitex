@@ -61,9 +61,9 @@ impl Runtime {
 
     fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> RuntimeError {
         {
-            let __stmt: Stmt = def_algo_stmt.clone().into();
-            let __line_file = __stmt.line_file();
-            RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, None, vec![])
+            let st: Stmt = def_algo_stmt.clone().into();
+            let lf = st.line_file();
+            RuntimeErrorStruct::new(Some(st), "".to_string(), lf, None, vec![])
         }
         .into()
     }
@@ -73,35 +73,7 @@ impl Runtime {
         message: String,
         cause: Option<RuntimeError>,
     ) -> RuntimeError {
-        {
-            let __stmt: Stmt = def_algo_stmt.clone().into();
-            let __message = message;
-            let __cause = cause;
-            let __inside = vec![];
-            let __line_file = __stmt.line_file();
-            let __previous_error = if __message.is_empty() {
-                __cause
-            } else {
-                Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-            };
-            RuntimeErrorStruct::new(
-                Some(__stmt),
-                __message,
-                __line_file,
-                __previous_error,
-                __inside,
-            )
-        }
-        .into()
+        short_exec_error(def_algo_stmt.clone().into(), message, cause, vec![])
     }
 
     fn collect_requirement_facts_and_algo_param_defs(

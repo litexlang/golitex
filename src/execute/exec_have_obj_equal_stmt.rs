@@ -10,34 +10,12 @@ impl Runtime {
         if have_obj_equal_stmt.param_def.number_of_params()
             != have_obj_equal_stmt.objs_equal_to.len()
         {
-            return Err(RuntimeError::from({
-                let __stmt: Stmt = have_obj_equal_stmt.clone().into();
-                let __message = "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string();
-                let __cause = None;
-                let __inside = vec![];
-                let __line_file = __stmt.line_file();
-                let __previous_error = if __message.is_empty() {
-                    __cause
-                } else {
-                    Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                };
-                RuntimeErrorStruct::new(
-                    Some(__stmt),
-                    __message,
-                    __line_file,
-                    __previous_error,
-                    __inside,
-                )
-            }));
+            return Err(short_exec_error(
+ have_obj_equal_stmt.clone().into(),
+                    "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(),
+                    None,
+                    vec![],
+                ));
         }
 
         let mut current_index = 0;
@@ -47,12 +25,12 @@ impl Runtime {
                 .inst_param_type(&param_def.param_type, &param_to_obj_map)
                 .map_err(|runtime_error| {
                     RuntimeError::from({
-                        let __stmt: Stmt = have_obj_equal_stmt.clone().into();
-                        let __line_file = __stmt.line_file();
+                        let st: Stmt = have_obj_equal_stmt.clone().into();
+                        let lf = st.line_file();
                         RuntimeErrorStruct::new(
-                            Some(__stmt),
+                            Some(st),
                             "".to_string(),
-                            __line_file,
+                            lf,
                             Some(runtime_error),
                             vec![],
                         )
@@ -70,12 +48,12 @@ impl Runtime {
                     )
                     .map_err(|verify_error| {
                         RuntimeError::from({
-                            let __stmt: Stmt = have_obj_equal_stmt.clone().into();
-                            let __line_file = __stmt.line_file();
+                            let st: Stmt = have_obj_equal_stmt.clone().into();
+                            let lf = st.line_file();
                             RuntimeErrorStruct::new(
-                                Some(__stmt),
+                                Some(st),
                                 "".to_string(),
-                                __line_file,
+                                lf,
                                 Some(verify_error),
                                 vec![],
                             )
@@ -86,34 +64,12 @@ impl Runtime {
                         "have_obj_equal_stmt: {} is not in type {}",
                         current_param_equal_to, current_type
                     );
-                    return Err(RuntimeError::from({
-                        let __stmt: Stmt = have_obj_equal_stmt.clone().into();
-                        let __message = msg;
-                        let __cause = None;
-                        let __inside = vec![];
-                        let __line_file = __stmt.line_file();
-                        let __previous_error = if __message.is_empty() {
-                            __cause
-                        } else {
-                            Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
-                )
-                        };
-                        RuntimeErrorStruct::new(
-                            Some(__stmt),
-                            __message,
-                            __line_file,
-                            __previous_error,
-                            __inside,
-                        )
-                    }));
+                    return Err(short_exec_error(
+ have_obj_equal_stmt.clone().into(),
+                    msg,
+                    None,
+                    vec![],
+                ));
                 }
 
                 param_to_obj_map.insert(name.clone(), current_param_equal_to.clone());
@@ -127,12 +83,12 @@ impl Runtime {
             .define_params_with_type(&have_obj_equal_stmt.param_def, true)
             .map_err(|define_params_error| {
                 RuntimeError::from({
-                    let __stmt: Stmt = have_obj_equal_stmt.clone().into();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = have_obj_equal_stmt.clone().into();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(define_params_error),
                         vec![],
                     )
@@ -156,12 +112,12 @@ impl Runtime {
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
                 .map_err(|store_fact_error| {
                     RuntimeError::from({
-                        let __stmt: Stmt = have_obj_equal_stmt.clone().into();
-                        let __line_file = __stmt.line_file();
+                        let st: Stmt = have_obj_equal_stmt.clone().into();
+                        let lf = st.line_file();
                         RuntimeErrorStruct::new(
-                            Some(__stmt),
+                            Some(st),
                             "".to_string(),
-                            __line_file,
+                            lf,
                             Some(store_fact_error),
                             vec![],
                         )
