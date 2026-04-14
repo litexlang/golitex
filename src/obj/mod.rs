@@ -7,7 +7,7 @@ pub use atom::{
     IdentifierOrIdentifierWithMod, IdentifierWithMod,
 };
 pub use obj::{
-    fn_obj_to_string, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FamilyObj,
+    fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FamilyObj,
     FnObj, FnSet, Intersect, ListSet, Mod, Mul, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj,
     Range, SetBuilder, SetDiff, SetMinus, StructObj, Sub, Tuple, TupleDim, Union,
 };

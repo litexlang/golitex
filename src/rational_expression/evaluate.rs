@@ -97,6 +97,17 @@ impl Obj {
                     return None;
                 }
             }
+            Obj::Abs(a) => match a.arg.evaluate_to_normalized_decimal_number() {
+                Some(inner) => {
+                    let s = inner.normalized_value.trim();
+                    if let Some(rest) = s.strip_prefix('-') {
+                        Some(Number::new(rest.trim().to_string()))
+                    } else {
+                        Some(inner)
+                    }
+                }
+                None => None,
+            },
             Obj::CartDim(cart_dim) => match &*cart_dim.set {
                 Obj::Cart(cart) => Some(Number::new(cart.args.len().to_string())),
                 _ => None,

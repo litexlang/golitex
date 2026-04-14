@@ -36,6 +36,7 @@ impl Runtime {
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map),
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map),
+            Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map),
             Obj::Union(inner) => self.inst_union(inner, param_to_arg_map),
             Obj::Intersect(inner) => self.inst_intersect(inner, param_to_arg_map),
             Obj::SetMinus(inner) => self.inst_set_minus(inner, param_to_arg_map),
@@ -310,6 +311,14 @@ impl Runtime {
         let instantiated_base_obj = self.inst_obj(&pow.base, param_to_arg_map)?;
         let instantiated_exponent_obj = self.inst_obj(&pow.exponent, param_to_arg_map)?;
         Ok(Pow::new(instantiated_base_obj, instantiated_exponent_obj).into())
+    }
+
+    pub fn inst_abs(
+        &self,
+        abs: &Abs,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Abs::new(self.inst_obj(&abs.arg, param_to_arg_map)?).into())
     }
 
     pub fn inst_union(

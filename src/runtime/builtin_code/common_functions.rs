@@ -1,8 +1,4 @@
 pub const BUILTIN_ENV_CODE_FOR_COMMON_FUNCTIONS: &str = r#"
-have fn abs(x R) R:
-    case x >= 0: x
-    case x < 0: -x
-
 know:
     forall x R:
         0 <= abs(x)

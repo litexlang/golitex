@@ -269,6 +269,7 @@ impl Runtime {
             Obj::Div(ref a) => Self::match_arg_when_left_is_div(&a.left, &a.right, given_arg),
             Obj::Mod(ref a) => Self::match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
             Obj::Pow(ref a) => Self::match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
+            Obj::Abs(ref a) => Self::match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
             Obj::Union(ref a) => Self::match_arg_when_left_is_union(&a.left, &a.right, given_arg),
             Obj::Intersect(ref a) => {
                 Self::match_arg_when_left_is_intersect(&a.left, &a.right, given_arg)
@@ -606,6 +607,18 @@ impl Runtime {
         match given_arg {
             Obj::Pow(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.base, &g.exponent)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_abs(
+        left_arg: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Abs(ref g) => {
+                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_arg, &g.arg)
             }
             _ => Ok(None),
         }

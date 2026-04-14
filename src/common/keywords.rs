@@ -100,6 +100,7 @@ pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
+pub const ABS: &str = "abs";
 pub const Q_POS: &str = "Q_pos";
 pub const R_POS: &str = "R_pos";
 pub const Q_NEG: &str = "Q_neg";
@@ -222,6 +223,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         IMPOSSIBLE,
         TUPLE,
         ALGO,
+        ABS,
         Q_POS,
         R_POS,
         Q_NEG,

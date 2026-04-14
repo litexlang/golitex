@@ -1,7 +1,28 @@
 pub const COMMON_FACTS: &str = r#"
-forall a, b R:
-    =>:
-        a ^ 2 + b ^ 2 = 0
-    <=>:
+know:
+    forall a, b R:
         a = 0 and b = 0
+        =>:
+            a ^ 2 + b ^ 2 = 0
+
+
+    forall a R:
+        a >= 0
+        =>:
+            abs(a) = a
+    
+    forall a R:
+        a <= 0
+        =>:
+            abs(a) = -a
+
+    forall a R:
+        abs(a) >= 0
+        abs(a) = a or abs(a) = -a
+
+    forall a R:
+        =>:
+            abs(a) = 0
+        <=>:
+            a = 0
 "#;
