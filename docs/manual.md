@@ -1,317 +1,395 @@
 # Manual
 
-_Simplicity is the ultimate sophistication._
+_Jiachen Shen and The Litex Team_
 
-_– Leonardo da Vinci_
+---
 
-Litex gives you a **lean, set-theoretic** idiom for mathematics—**just enough** structure to handle most day-to-day mathematical situations **without a long apprenticeship**. Each language feature is meant to **track a real mathematical concept**, not an ad hoc gadget. 
+_Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it’s worth it in the end because once you get there, you can move mountains._
 
-The emphasis is on **how ideas relate**: constructs are **woven together** so you can say what depends on what, in the same spirit as the mathematics itself, rather than as isolated syntax rules. 
+_– Steve Jobs_
 
-**This manual** is a compact reference to **syntax and semantics** across Litex. Go to [Litex](litexlang.com), [Litex Github](https://github.com/litexlang/golitex) for more details.
+---
 
-# Abstract Proposition
+Litex is a **simple, set-theoretic** formal language for mathematics: enough structure for everyday arguments without a long apprenticeship. Each construct is meant to match a **real mathematical idea** and stays as close to natural language as possible.
 
-Purpose:
+This manual provides a straightforward guide to using Litex. More on the project: [Litex](https://litexlang.com), [GitHub](https://github.com/litexlang/golitex).
 
-Define a proposition symbol without giving it a body. Such a proposition has no built-in defining equivalence to unfold. Use it when you want to talk about a proposition abstractly without committing to its internal meaning.
+---
 
-Syntax:
+## Facts (formulas the checker understands)
 
-```text
-abstract_prop <proposition_name> ( [ <parameter> [, <parameter> ]… ] )
-```
+Most mathematical content in Litex is a **fact**: it may appear after `know`, as a goal under `claim` / `prove:`, as a **bare line** the checker must verify, or nested inside `exist` / `forall`. Below, each subsection follows the same pattern as elsewhere in this manual: **Meaning**, **Syntax**, **Example**.
 
-- `<proposition_name>`: one **string** token (the name of the proposition).
-- Inside the parentheses: **zero or more** `<parameter>` tokens, each a **string**, separated **only by commas** `,` (whitespace around commas is optional).  
+---
 
-## Examples:
+### Atomic fact
 
-```litex
-abstract_prop r()
-abstract_prop p(x)
-abstract_prop q(x, y, z)
-```
+**Meaning.** A single primitive judgment: equality or inequality between expressions, membership (`$in`), a built-in predicate (`$is_nonempty_set`, …), a user-defined predicate call (`$p(…)`), or the negation of such a statement (`not …`). These are the building blocks of larger facts.
 
-# by cases
+**Syntax.** One atomic formula, e.g. *expr* `=` *expr*, *expr* `<` *expr*, *expr* `$in` *set*, `$`*name*`(` *args* `)`, `not` *atomic*, etc.
 
-Purpose:
-
-Prove a target fact by splitting the proof into exhaustive cases and proving the target separately in each case.
-
-Syntax:
-
-```text
-by cases:
-    prove:
-        fact
-    case fact1:
-        proof_of_case_1
-    case fact2:
-        proof_of_case_2
-    ...
-    case factn:
-        proof_of_case_n
-```
-
-1. fact1 or fact2 or ... or factn must be true.
-2. under each case, proof_of_case_i must be a valid proof of facti.
-
-e.g.
+**Example.**
 
 ```litex
-have fn g(x R) R =:
-    case x = 2: 3
-    case x != 2: 4
-
-have x R
-
-x = 2 or x != 2
-
-by cases:
-    prove:
-        g(x) > 2
-    case x = 2:
-        g(x) = 3
-        g(x) > 2
-    case x != 2:
-        g(x) = 4
-        g(x) > 2
+prove:
+    know:
+        1 + 1 = 2
+    1 + 1 = 2
 ```
 
-# by contra
+---
 
-Purpose:
+### Existential fact
 
-Prove a target fact indirectly by assuming its negation and deriving a contradiction.
+**Meaning.** “There exist values for the parameters such that every fact in the brace holds (∃).”
 
-Syntax:
+**Syntax.** `exist` *parameter groups (names and types / sets)* `st` `{` *facts separated by commas* `}`.
 
-```text
-by contra:
-    prove:
-        fact
-    proof
-    ...
-    impossible impossible_fact
-```
-
-1. The goal is to prove `fact`. In the body, `fact` is handled as if its negation were true; you then derive a contradiction: the fact after `impossible` must be both true and false at once.
-2. `impossible_fact` must be false and true at the same time.
-
-e.g.
+**Example.**
 
 ```litex
-abstract_prop p(x, y)
-abstract_prop q(x, y)
-
-know forall a, b R:
-    $p(a, b)
-    =>:
-        $q(a, b)
-
-know not $q(1, 2)
-
-by contra:
-    prove:
-        not $p(1, 2)
-    $p(1, 2)
-    impossible $q(1,2 )
-```
-
-# witness exist … from …
-
-Purpose:
-
-Prove an existential statement by explicitly giving witnesses and then verifying that they satisfy the required conditions.
-
-Syntax:
-
-```text
-witness exist <params_and_types> st { … } from <obj> [, <obj> ]…:
-    <proof statements>
-```
-
-1. `exist … st { … }` has the same shape as an `exist` fact (parameters, optional type constraints, facts in braces).
-2. After `from`, give one object per bound parameter, in order; they must make the `st { … }` facts true.
-3. The indented block is the proof obligation (e.g. inequalities, membership).
-
-e.g.
-
-```litex
-witness exist x, y R st {x > y} from 1, 0:
-    1 > 0
-
-exist x, y R st {x > y}
-```
-
-# witness nonempty set
-
-Purpose:
-
-Prove that a set is nonempty by exhibiting a concrete element of that set.
-
-Syntax:
-
-```text
-witness $is_nonempty_set( <set> ) from <obj>:
-    <proof statements>
-```
-
-1. `<obj>` should lie in `<set>` (typically proved in the block, e.g. `know obj $in set`).
-2. After verification, `$is_nonempty_set(<set>)` may be used.
-
-e.g.
-
-```litex
-have s set
-
-witness $is_nonempty_set(s) from 1:
-    know 1 $in s
-
-$is_nonempty_set(s)
-```
-
-# by enumerate
-
-Purpose:
-
-Prove facts by checking all cases for parameters ranging over **finite list sets** (`{ … }`).
-
-Syntax:
-
-```text
-by enumerate <param> <list_set> [, <param> <list_set> ]…:
-    prove:
-        <facts to prove (exist / or / chain atomic facts)>
-    <optional further proof statements>
-```
-
-1. Each parameter is constrained to the given list set.
-2. The `prove:` block lists what must hold for all those combinations (corresponds to a `forall` over those list sets).
-3. Extra statements after `prove:` complete the proof.
-
-e.g.
-
-```litex
-let a R:
-    a $in {1, 2}
-
-a = 1 or a = 2
-
-by enumerate a {1, 2, 3}:
-    prove:
-        a < 4
-```
-
-# by induc
-
-Purpose:
-
-Prove facts by induction on an integer parameter starting from a given lower bound.
-
-Syntax:
-
-```text
-by induc <param> from <obj>:
-    <facts to prove (exist / or / chain atomic facts), one block each>
-```
-
-1. `<param>` is the induction variable; `<obj>` is the start (e.g. `0`).
-2. Each body block under the header is part of what the induction establishes (base + step are verified according to the kernel rules).
-3. Requires a supporting `forall`‑style hypothesis in context when used in full proofs.
-
-e.g.
-
-```litex
-abstract_prop p(a)
-
 know:
-    $p(0)
-    forall n Z:
-        n >= 0
-        $p(n)
+    exist x R st {x > 0, x < 1}
+```
+
+---
+
+### Disjunction (`or`)
+
+**Meaning.** At least one of the disjuncts is true.
+
+**Syntax.** *fact* `or` *fact* (you can nest longer `or` chains).
+
+**Example.**
+
+```litex
+prove:
+    have a R = 1
+    a = 1 or a = 2
+```
+
+---
+
+### Conjunction (`and`)
+
+**Meaning.** Every conjunct is true at the same time.
+
+**Syntax.** *fact* `and` *fact* (you can chain with repeated `and`).
+
+**Example.**
+
+```litex
+prove:
+    know:
+        1 = 1 and 1 + 2 = 3
+    1 = 1 and 1 + 2 = 3
+```
+
+---
+
+### Chain fact
+
+**Meaning.** The same relation is repeated along a list of terms (e.g. *a < b < c* packages *a < b* and *b < c* in one surface form).
+
+**Syntax.** *expr* *rel* *expr* *rel* *expr* … with one relational symbol throughout the chain.
+
+**Example.**
+
+```litex
+prove:
+    1 < 2 < 3
+```
+
+---
+
+### Universal fact (`forall` with `=>:`)
+
+**Meaning.** “For all instantiations of the parameters, if the optional domain facts hold, then each conclusion holds.” This is the usual hypothetical universal: lemmas, axioms, theorems with hypotheses.
+
+**Syntax.** `forall` *parameter groups* `:` optional domain facts (one or more lines), then `=>:` and one or more conclusion facts (typically indented).
+
+**Example.**
+
+```litex
+know:
+    forall a R:
+        a > 0
         =>:
-            $p(n + 1)
-
-by induc n from 0:
-    $p(n)
-
-forall n Z:
-    n >= 0
-    =>:
-        $p(n)
+            a + 1 > 1
 ```
 
-# by for
+---
 
-Purpose:
+### Universal fact with iff (`forall` with `<=>:`)
 
-Prove facts uniformly for parameters ranging over **`range(…)`** or **`closed_range(…)`**, using a single **`forall`** fact that carries the bounds and (optionally) domain / `=>:` conclusions.
+**Meaning.** “For all …, the left fact is equivalent to the right fact.” Used for **definitions** and reversible characterizations. Some places (e.g. certain `claim` goals) do not allow an iff-`forall` as the stated goal.
 
-Syntax:
+**Syntax.** `forall` *parameter groups* `:` optional domain facts, then `<=>:` and the two directions (layout matches your `know` / library style).
 
-```text
-by for:
-    prove:
-        forall <param_groups with range or closed_range>:
-            [ domain facts … ]
-            =>:
-                <then facts …>
-    <proof statements>
-```
-
-1. After `for` comes only `:` (no parameter list in the header).
-2. The first body block must be `prove:` containing **exactly one** `forall` fact. Every parameter type in that `forall` must be `range(…)` or `closed_range(…)` (possibly comma-grouped, e.g. `i, j closed_range(0, 3)`).
-3. The executor enumerates integer values in those ranges, assumes domain facts when they verify, runs `<proof statements>`, then checks each `then` fact. `forall` with `<=>:` is not allowed here.
-4. See `examples/for.lit` and `examples/tmp.lit`.
-
-e.g.
+**Example.**
 
 ```litex
-by for:
-    prove:
-        forall n range(0, 10):
-            n < 10
-    do_nothing
-
-by for:
-    prove:
-        forall n closed_range(0, 10):
-            n <= 10
-    do_nothing
+know:
+    forall a, b R:
+        =>:
+            a <= b
+        <=>:
+            0 <= b - a
 ```
 
-# by extension
+---
 
-Purpose:
+### Bare line (assert a fact as a statement)
 
-Prove **set equality** by **extensionality**: show that each side is a subset of the other.
+**Meaning.** You assert one fact; the kernel tries to prove it from the current context—same role as a proof step that is only a formula.
 
-Syntax:
+**Syntax.** A whole line that is **not** introduced by a reserved keyword (see the cheat sheet): the line is parsed as one fact.
 
-```text
-by extension:
-    prove:
-        <left> = <right>
-    <proof statements>
-```
-
-1. The `prove:` block must contain a single **equality** atomic fact between two sets (or set‑denoting objects).
-2. The following statements prove subset both ways (whatever the verifier expects for the proof body).
-
-e.g.
+**Example.**
 
 ```litex
-by extension:
-    prove:
-        {1, 2} = {2, 1}
-    by enumerate x {1, 2}:
-        prove:
-            x $in {2, 1}
-    by enumerate y {2, 1}:
-        prove:
-            y $in {1, 2}
-
-{1, 2} = {2, 1}
+prove:
+    know:
+        2 = 2
+    2 = 2
 ```
+
+Further patterns: **`examples/atomic_fact.lit`**, **`examples/or_fact.lit`**, **`examples/and_fact.lit`**, **`examples/chain_fact.lit`**, **`examples/verify_exist_fact.lit`**, **`examples/use_forall_arithmetic_to_prove.lit`**.
+
+---
+
+## Statements in general
+
+A **statement** is usually one line or one indented block. Facts are the main payload; special keywords introduce definitions, hypotheses, witnesses, and tactics.
+
+Many proof blocks use **`prove:`** followed by indented steps. **`claim:`** introduces a stated goal (one fact) and its proof. **`know`** adds hypotheses without proof.
+
+---
+
+## Definitions and declarations
+
+### `prop` — defined predicate
+
+**Meaning.** Give a named proposition and its **definition** as a list of facts (what holds iff the predicate holds).
+
+**Syntax.** `prop` *name* `(` *parameters* `)` `:` newline, indented facts; or end the header after `)` with no body.
+
+### `abstract_prop` — declared predicate only
+
+**Meaning.** Reserve a predicate symbol and its arity for abstract reasoning; no defining body.
+
+**Syntax.** `abstract_prop` *name* `(` *parameter names separated by commas* `)`.
+
+### `struct` — structured type
+
+**Meaning.** A record-like type: field declarations, optionally an iff-block (`<=>:`) tying instances to a predicate on `self`.
+
+**Syntax.** `struct` *name* `(` *parameters* `)` `:` field lines, optional `<=>:` block.
+
+### `family` — parametric type family
+
+**Meaning.** A type constructor: for fixed parameters, the right-hand side names a definite set (e.g. a function space of sequences).
+
+**Syntax.** `family` *name* `(` *parameters* `)` `=` *object*.
+
+### `algo` — executable algorithm
+
+**Meaning.** A computational definition used with **`eval`**: branch on parameters with `case` … and returns.
+
+**Syntax.** `algo` *name* `{` *parameters* `}` `:` newline, then `case` branches (and optionally a default return block).
+
+---
+
+## Introducing objects and functions
+
+### `have` — parameters or values
+
+**Meaning.**
+
+- **Typed parameters:** introduce variables with types or membership, in scope for the rest of the block.
+- **With `=`:** introduce parameters and fix them to given values.
+- **Functions:** define a function on a domain, either by a single equation or by **`case`** branches (piecewise).
+- **Inductive function:** `have fn by induc from` *start* `:` … (see **`examples/have_fn_by_induc.lit`**).
+- **From an existential:** `have by exist` *existential fact* `:` *witness names* — name witnesses once an existential is already known.
+
+**Syntax (sketch).**
+
+- `have` *groups* — only types, no `=`.
+- `have` *groups* `=` *objects* …
+- `have fn` *name* *function-space clause* `=` *object*
+- `have fn` *name* *clause* `:` newline, `case` *fact* `:` *object* …
+- `have by exist` *exist … st { … }* `:` *names*
+
+### `know` — hypotheses
+
+**Meaning.** Assume facts (axioms, lemmas, or previously proved results) without proof.
+
+**Syntax.** `know` `:` newline and indented facts; or `know` followed by one `forall` / fact on the same head line; or several comma-separated atomic / exist-shaped facts on one line.
+
+---
+
+## Claims and proof structure
+
+### `claim`
+
+**Meaning.** State a **goal** (one fact after inner `prove:`) and then a linear proof. The goal cannot be an iff-`forall` form.
+
+**Syntax.** `claim` `:` newline; first sub-block is `prove` `:` with exactly one fact; following sub-blocks are proof steps.
+
+### `prove`
+
+**Meaning.** Nested proof: a sequence of statements for a sub-goal or lemma.
+
+**Syntax.** `prove` `:` newline, indented statements.
+
+### `do_nothing`
+
+**Meaning.** A no-op step (e.g. when a tactic expects a non-empty body).
+
+**Syntax.** `do_nothing`.
+
+---
+
+## Witnesses
+
+### `witness exist … from …`
+
+**Meaning.** Prove an existential by giving concrete witnesses and a small proof that the brace conditions hold.
+
+**Syntax.** `witness exist` *existential* `from` *objects* … optional `:` and indented proof (see parser rules if you omit `:`).
+
+### `witness $is_nonempty_set(…) from …`
+
+**Meaning.** Prove a set is nonempty by naming a member and showing membership.
+
+**Syntax.** `witness $is_nonempty_set(` *set* `) from` *object* `:` proof block.
+
+---
+
+## Proof tactics (`by …`)
+
+All start with **`by`** and a second keyword.
+
+### `by cases`
+
+**Meaning.** Prove a goal under each case of a cover (disjunction of case assumptions).
+
+**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof …
+
+### `by contra`
+
+**Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense.
+
+**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*.
+
+**Note.** The fact after `prove:` is what you **conclude**, not the assumption; the assumption is its negation.
+
+### `by enumerate`
+
+**Meaning.** Prove a universal claim over parameters ranging in **finite list sets** `{ … }`.
+
+**Syntax.** `by enumerate` *param* *list set* [, … ] `:` `prove` `:` *goals* … optional extra steps.
+
+### `by induc`
+
+**Meaning.** Induction on an integer parameter from a given base; needs a suitable induction principle in context.
+
+**Syntax.** `by induc` *param* `from` *object* `:` body blocks.
+
+### `by for`
+
+**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions.
+
+**Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps.
+
+### `by extension`
+
+**Meaning.** Set equality by extensionality (typically mutual inclusion).
+
+**Syntax.** `by extension` `:` `prove` `:` *set* `=` *set* newline, proof.
+
+### `by fn`
+
+**Meaning.** Use the graph / membership characterization of a function you already introduced.
+
+**Syntax.** `by fn` `:` *object*.
+
+### `by fn set`
+
+**Meaning.** Show a function belongs to a **function set** `fn(… conditions …) codomain`.
+
+**Syntax.** `by fn set` `:` *func* `$in fn` *function-set*.
+
+### `by family`
+
+**Meaning.** Use an instantiated **family** (e.g. `family` *name* `(` *args* `)`).
+
+**Syntax.** `by family` `:` *object*.
+
+### `by struct`
+
+**Meaning.** Use the defining data of a **struct** instance.
+
+**Syntax.** `by struct` `:` *object*.
+
+### `by tuple`
+
+**Meaning.** Tuple / product-space reasoning on an object.
+
+**Syntax.** `by tuple` `:` *object*.
+
+---
+
+## Evaluation and files
+
+### `eval`
+
+**Meaning.** Evaluate a call using the **`algo`** attached to a function.
+
+**Syntax.** `eval` *expression* (typically a function application).
+
+### `import`
+
+**Meaning.** Load another module or file path into scope.
+
+**Syntax.** `import` `"path"` [`as` *name*] or `import` *module* [`as` *name*].
+
+### `run_file`
+
+**Meaning.** Run another `.lit` file.
+
+**Syntax.** `run_file` `"path"`.
+
+---
+
+## Local parameters (`let`)
+
+**Meaning.** Introduce names with types (membership in a set, or built-in kinds like `set` / `finite_set` / `nonempty_set`) **without** requiring the checker to prove the ambient set nonempty first; optionally add an indented block of facts that constrain those names (“let … such that …”). Less common than `have` for introducing working variables in proofs.
+
+**Syntax.** `let` *parameter groups with types* `:` newline, then indented facts; the `:` block can be omitted if there are no constraints.
+
+---
+
+## Keyword cheat sheet (first word on a line)
+
+| Starts with | Role |
+|-------------|------|
+| `prop` | Define predicate |
+| `abstract_prop` | Declare predicate |
+| `struct` | Define structure type |
+| `family` | Define type family |
+| `algo` | Define algorithm for `eval` |
+| `have` | Introduce parameters, values, functions, or witnesses from `exist` |
+| `let` | Local parameters / constraints (optional block) |
+| `know` | Assume facts |
+| `claim` | Theorem + proof |
+| `prove` | Nested proof block |
+| `witness` | Witness for `exist` or nonempty set |
+| `by` | Proof tactic (`cases`, `contra`, `enumerate`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `struct`, `tuple`) |
+| `eval` | Run algorithm |
+| `import` | Import module/file |
+| `run_file` | Run a file |
+| `do_nothing` | No-op |
+| *(other)* | Assert a fact to verify |
+
+Details and edge cases are easiest to see in **`examples/`** alongside the checker behavior you care about.
