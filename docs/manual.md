@@ -32,9 +32,11 @@ Most mathematical content in Litex is a **fact**: it may appear after `know`, as
 
 ```litex
 prove:
-    know:
-        1 + 1 = 2
     1 + 1 = 2
+    2/3 < 4/5
+    1.5 $in R
+    $is_set(Z)
+    not $is_nonempty_set({})
 ```
 
 ---

@@ -1220,7 +1220,7 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        let _: InferResult = self
+        let args_param_types = self
             .verify_args_satisfy_param_def_flat_types(
                 &def.params_def_with_type,
                 &family_param_type.params,
@@ -1236,6 +1236,18 @@ impl Runtime {
                     default_line_file(),
                 )
             })?;
+        if args_param_types.is_unknown() {
+            return Err(
+                RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                    format!(
+                        "failed to verify family `{}` arguments satisfy parameter types",
+                        family_name
+                    ),
+                    None,
+                    default_line_file(),
+                ),
+            );
+        }
 
         let param_to_arg_map = def
             .params_def_with_type
@@ -1336,7 +1348,7 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        let _: InferResult = self
+        let args_param_types = self
             .verify_args_satisfy_param_def_flat_types(
                 &def.param_defs,
                 &struct_ty.args,
@@ -1352,6 +1364,18 @@ impl Runtime {
                     default_line_file(),
                 )
             })?;
+        if args_param_types.is_unknown() {
+            return Err(
+                RuntimeError::new_well_defined_error_with_msg_previous_error_position(
+                    format!(
+                        "failed to verify struct `{}` arguments satisfy parameter types",
+                        struct_name
+                    ),
+                    None,
+                    default_line_file(),
+                ),
+            );
+        }
 
         let param_to_arg_map = def
             .param_defs
