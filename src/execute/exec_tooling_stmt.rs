@@ -2,14 +2,11 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_import_stmt(&mut self, stmt: &ImportStmt) -> Result<StmtResult, RuntimeError> {
-        return Err(RuntimeError::ExecStmtError(
-            RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                stmt.clone().into(),
-                "".to_string(),
-                None,
-                vec![],
-            ),
-        ));
+        return Err(RuntimeError::ExecStmtError({
+            let __stmt: Stmt = stmt.clone().into();
+            let __line_file = __stmt.line_file();
+            RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, None, vec![])
+        }));
     }
 
     pub fn exec_do_nothing_stmt(
@@ -22,13 +19,10 @@ impl Runtime {
     }
 
     pub fn exec_run_file_stmt(&mut self, stmt: &RunFileStmt) -> Result<StmtResult, RuntimeError> {
-        return Err(RuntimeError::ExecStmtError(
-            RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                stmt.clone().into(),
-                "".to_string(),
-                None,
-                vec![],
-            ),
-        ));
+        return Err(RuntimeError::ExecStmtError({
+            let __stmt: Stmt = stmt.clone().into();
+            let __line_file = __stmt.line_file();
+            RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, None, vec![])
+        }));
     }
 }

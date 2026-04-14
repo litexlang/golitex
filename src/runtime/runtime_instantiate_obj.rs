@@ -136,6 +136,7 @@ impl Runtime {
                             ),
                             default_line_file(),
                             None,
+                            vec![],
                         ))
                         .into())
                     }
@@ -158,6 +159,7 @@ impl Runtime {
                 format!("struct `{}` is not defined", field_access.name),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         };
@@ -175,6 +177,7 @@ impl Runtime {
                 ),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         };
@@ -187,6 +190,7 @@ impl Runtime {
                     format!("field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)", field_access.field, field_access.name, tuple_index, field_access.name, tuple.args.len()),
                     default_line_file(),
                     None,
+                    vec![],
                 ))
                 .into(),
             );
@@ -237,6 +241,7 @@ impl Runtime {
                 format!("instantiate fn object: after substitution, head must be an atom or curried fn, got {}", inst_head),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into()),
         };
@@ -628,6 +633,7 @@ impl Runtime {
                 ),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         }
@@ -668,6 +674,7 @@ impl Runtime {
                 ),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         }

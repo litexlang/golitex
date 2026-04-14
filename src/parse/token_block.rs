@@ -93,10 +93,23 @@ fn parse_level(
 
         if indent > base_indent {
             return Err(
-                RuntimeError::new_parse_error_for_block_unexpected_indent_at_line_file((
+                {
+            let __lf = ((
                     line_no,
                     current_file_path.clone(),
-                )),
+                ));
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "unexpected indent at line {} in {}",
+                    __lf.0,
+                    __lf.1.as_ref()
+                ),
+                __lf,
+                None,
+                vec![],
+            )))
+        },
             );
         }
 
@@ -113,20 +126,46 @@ fn parse_level(
             // 必须有 body
             if *i >= lines.len() {
                 return Err(
-                    RuntimeError::new_parse_error_for_block_missing_body_at_line_file((
+                    {
+            let __lf = ((
                         line_no,
                         current_file_path.clone(),
-                    )),
+                    ));
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "block header missing body at line {} in {}",
+                    __lf.0,
+                    __lf.1.as_ref()
+                ),
+                __lf,
+                None,
+                vec![],
+            )))
+        },
                 );
             }
 
             let next_indent = indent_level(lines[*i]);
             if next_indent <= indent {
                 return Err(
-                    RuntimeError::new_parse_error_for_block_expected_indent_at_line_file((
+                    {
+            let __lf = ((
                         *i + 1,
                         current_file_path.clone(),
-                    )),
+                    ));
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "expected indent at line {} in {}",
+                    __lf.0,
+                    __lf.1.as_ref()
+                ),
+                __lf,
+                None,
+                vec![],
+            )))
+        },
                 );
             }
 
@@ -147,10 +186,23 @@ fn parse_level(
         if let Some(expected) = body_indent {
             if indent != expected {
                 return Err(
-                    RuntimeError::new_parse_error_for_block_inconsistent_indent_at_line_file((
+                    {
+            let __lf = ((
                         line_no,
                         current_file_path.clone(),
-                    )),
+                    ));
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "inconsistent indent at line {} in {}",
+                    __lf.0,
+                    __lf.1.as_ref()
+                ),
+                __lf,
+                None,
+                vec![],
+            )))
+        },
                 );
             }
         } else {
@@ -168,11 +220,13 @@ impl TokenBlock {
             .get(self.parse_index)
             .map(|s| s.as_str())
             .ok_or_else(|| {
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "Unexpected end of tokens".to_string(),
-                    self.line_file.clone(),
-                    None,
-                )
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                "Unexpected end of tokens".to_string(),
+                self.line_file.clone(),
+                None,
+                vec![],
+            )))
             })
     }
 
@@ -182,12 +236,13 @@ impl TokenBlock {
             Ok(())
         } else {
             Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    format!("Expected token: {}", token),
-                    self.line_file.clone(),
-                    None,
-                ),
-            )
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                format!("Expected token: {}", token),
+                self.line_file.clone(),
+                None,
+                vec![],
+            ))))
         }
     }
 
@@ -215,23 +270,26 @@ impl TokenBlock {
         self.skip_token(COLON)?;
         if !self.exceed_end_of_head() {
             return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "Expected token: at head".to_string(),
-                    self.line_file.clone(),
-                    None,
-                ),
-            );
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                "Expected token: at head".to_string(),
+                self.line_file.clone(),
+                None,
+                vec![],
+            ))));
         }
         Ok(())
     }
 
     pub fn token_at_index(&self, index: usize) -> Result<&str, RuntimeError> {
         self.header.get(index).map(|s| s.as_str()).ok_or_else(|| {
-            RuntimeError::new_parse_error_with_msg_position_previous_error(
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
                 format!("Expected token: at index {}", index),
                 self.line_file.clone(),
                 None,
-            )
+                vec![],
+            )))
         })
     }
 

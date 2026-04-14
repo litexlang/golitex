@@ -12,41 +12,39 @@ impl Runtime {
             Some(d) => d,
             None => {
                 return Err(
-                    RuntimeError::new_verify_error_with_msg_position_previous_error(
-                        format!("family `{}` is not defined", family_name),
-                        default_line_file(),
-                        None,
-                    ),
+                    VerifyRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!("family `{}` is not defined", family_name),
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into(),
                 );
             }
         };
         let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
             return Err(
-                RuntimeError::new_verify_error_with_msg_position_previous_error(
-                    format!(
+                VerifyRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                         "family `{}` expects {} type argument(s), got {}",
                         family_name,
                         expected_count,
                         family_ty.params.len()
                     ),
-                    default_line_file(),
-                    None,
-                ),
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into(),
             );
         }
         let param_to_arg_map = def
             .params_def_with_type
             .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
-        let member_set = self
-            .inst_obj(&def.equal_to, &param_to_arg_map)
-            .map_err(|e| {
-                RuntimeError::new_verify_error_with_msg_position_previous_error(
-                    String::new(),
-                    default_line_file(),
-                    Some(e),
-                )
-            })?;
+        let member_set = self.inst_obj(&def.equal_to, &param_to_arg_map)?;
         let fact = InFact::new(obj, member_set, default_line_file()).into();
         self.verify_atomic_fact(&fact, verify_state)
     }

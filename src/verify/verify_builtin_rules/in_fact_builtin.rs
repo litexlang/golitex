@@ -943,12 +943,17 @@ impl Runtime {
         if self
             .fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
             .map_err(|e| {
-                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    in_fact.clone().into(),
-                    String::new(),
-                    in_fact.line_file.clone(),
-                    Some(e),
-                )
+                {
+            let __fact: Fact = (in_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                String::new(),
+                in_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            )))
+        }
             })?
         {
             return Ok(

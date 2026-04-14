@@ -10,14 +10,34 @@ impl Runtime {
         if have_obj_equal_stmt.param_def.number_of_params()
             != have_obj_equal_stmt.objs_equal_to.len()
         {
-            return Err(RuntimeError::from(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    have_obj_equal_stmt.clone().into(),
-                    "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(),
-                    None,
-                    vec![],
-                ),
-            ));
+            return Err(RuntimeError::from({
+                let __stmt: Stmt = have_obj_equal_stmt.clone().into();
+                let __message = "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string();
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            }));
         }
 
         let mut current_index = 0;
@@ -26,12 +46,17 @@ impl Runtime {
             let current_type_holder = self
                 .inst_param_type(&param_def.param_type, &param_to_obj_map)
                 .map_err(|runtime_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        have_obj_equal_stmt.clone().into(),
-                        "".to_string(),
-                        Some(runtime_error),
-                        vec![],
-                    ))
+                    RuntimeError::from({
+                        let __stmt: Stmt = have_obj_equal_stmt.clone().into();
+                        let __line_file = __stmt.line_file();
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            "".to_string(),
+                            __line_file,
+                            Some(runtime_error),
+                            vec![],
+                        )
+                    })
                 })?;
             let current_type = &current_type_holder;
             for name in param_def.params.iter() {
@@ -44,26 +69,51 @@ impl Runtime {
                         &VerifyState::new(0, false),
                     )
                     .map_err(|verify_error| {
-                        RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                            have_obj_equal_stmt.clone().into(),
-                            "".to_string(),
-                            Some(verify_error),
-                            vec![],
-                        ))
+                        RuntimeError::from({
+                            let __stmt: Stmt = have_obj_equal_stmt.clone().into();
+                            let __line_file = __stmt.line_file();
+                            RuntimeErrorStruct::new(
+                                Some(__stmt),
+                                "".to_string(),
+                                __line_file,
+                                Some(verify_error),
+                                vec![],
+                            )
+                        })
                     })?;
                 if verify_result.is_unknown() {
                     let msg = format!(
                         "have_obj_equal_stmt: {} is not in type {}",
                         current_param_equal_to, current_type
                     );
-                    return Err(RuntimeError::from(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            have_obj_equal_stmt.clone().into(),
-                            msg,
-                            None,
-                            vec![],
-                        ),
-                    ));
+                    return Err(RuntimeError::from({
+                        let __stmt: Stmt = have_obj_equal_stmt.clone().into();
+                        let __message = msg;
+                        let __cause = None;
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    }));
                 }
 
                 param_to_obj_map.insert(name.clone(), current_param_equal_to.clone());
@@ -76,12 +126,17 @@ impl Runtime {
         let param_infer_result = self
             .define_params_with_type(&have_obj_equal_stmt.param_def, true)
             .map_err(|define_params_error| {
-                RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    have_obj_equal_stmt.clone().into(),
-                    "".to_string(),
-                    Some(define_params_error),
-                    vec![],
-                ))
+                RuntimeError::from({
+                    let __stmt: Stmt = have_obj_equal_stmt.clone().into();
+                    let __line_file = __stmt.line_file();
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        "".to_string(),
+                        __line_file,
+                        Some(define_params_error),
+                        vec![],
+                    )
+                })
             })?;
         infer_result.new_infer_result_inside(param_infer_result);
 
@@ -100,12 +155,17 @@ impl Runtime {
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                        have_obj_equal_stmt.clone().into(),
-                        "".to_string(),
-                        Some(store_fact_error),
-                        vec![],
-                    ))
+                    RuntimeError::from({
+                        let __stmt: Stmt = have_obj_equal_stmt.clone().into();
+                        let __line_file = __stmt.line_file();
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            "".to_string(),
+                            __line_file,
+                            Some(store_fact_error),
+                            vec![],
+                        )
+                    })
                 })?;
             infer_result.new_infer_result_inside(equal_to_fact_infer_result);
         }

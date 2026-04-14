@@ -7,12 +7,9 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| rt.def_prop_stmt_check_well_defined(def_prop_stmt))
             .map_err(|e| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    def_prop_stmt.clone().into(),
-                    "".to_string(),
-                    Some(e),
-                    vec![],
-                )
+                let __stmt: Stmt = def_prop_stmt.clone().into();
+                let __line_file = __stmt.line_file();
+                RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, Some(e), vec![])
             })?;
         self.store_def_prop(def_prop_stmt)?;
         Ok(
@@ -27,12 +24,9 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.define_params_with_type(&def_prop_stmt.params_def_with_type, false)
             .map_err(|e| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    def_prop_stmt.clone().into(),
-                    "".to_string(),
-                    Some(e),
-                    vec![],
-                )
+                let __stmt: Stmt = def_prop_stmt.clone().into();
+                let __line_file = __stmt.line_file();
+                RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, Some(e), vec![])
             })?;
 
         for fact in def_prop_stmt.iff_facts.iter() {
@@ -41,9 +35,12 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )
             .map_err(|inner_exec_error| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                    def_prop_stmt.clone().into(),
+                let __stmt: Stmt = def_prop_stmt.clone().into();
+                let __line_file = __stmt.line_file();
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
                     "".to_string(),
+                    __line_file,
                     Some(inner_exec_error),
                     vec![],
                 )

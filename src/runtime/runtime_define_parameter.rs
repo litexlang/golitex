@@ -155,50 +155,58 @@ impl Runtime {
                 .map_err(|well_defined_error| {
                     let param_names_text = param_def.params.join(", ");
                     let error_line_file = well_defined_error.line_file().clone();
-                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
-                        format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "define params with type: failed to verify type well-defined for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ),
-                        Some(well_defined_error),
-                        error_line_file,
-                    )
+                error_line_file,
+                Some(well_defined_error),
+                vec![],
+            )))
                 })?;
             self.verify_param_type_nonempty_if_required(&param_def.param_type, check_type_nonempty)
                 .map_err(|inner_exec_error| {
                     let param_names_text = param_def.params.join(", ");
-                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
-                        format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "define params with type: nonempty check failed for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ),
-                        Some(inner_exec_error),
-                        default_line_file(),
-                    )
+                default_line_file(),
+                Some(inner_exec_error),
+                vec![],
+            )))
                 })?;
 
             for name in param_def.params.iter() {
                 self.store_identifier_obj(name).map_err(|runtime_error| {
-                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
-                        format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "define params with type: failed to declare parameter `{}`",
                             name
                         ),
-                        Some(runtime_error),
-                        default_line_file(),
-                    )
+                default_line_file(),
+                Some(runtime_error),
+                vec![],
+            )))
                 })?;
                 let fact_infer_result = self
                     .define_parameter_by_binding_param_type(name, &param_def.param_type)
                     .map_err(|runtime_error| {
-                        RuntimeError::new_define_params_error_with_msg_previous_error_position(
-                            format!(
+                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                                 "define params with type: failed to apply param type for parameter `{}` with type {}",
                                 name, param_def.param_type
                             ),
-                            Some(runtime_error),
-                            default_line_file(),
-                        )
+                default_line_file(),
+                Some(runtime_error),
+                vec![],
+            )))
                     })?;
                 infer_result.new_infer_result_inside(fact_infer_result);
             }

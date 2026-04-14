@@ -72,15 +72,36 @@ impl Runtime {
                     if pending.is_empty() {
                         return Ok(cur);
                     }
-                    return Err(RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            eval_stmt.clone().into(),
+                    return Err(RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = eval_stmt.clone().into();
+                        let __message =
                             "eval: non-numeric intermediate with pending binary operation"
-                                .to_string(),
-                            None,
-                            vec![],
-                        ),
-                    ));
+                                .to_string();
+                        let __cause = None;
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    }));
                 }
             }
         }
@@ -102,14 +123,34 @@ impl Runtime {
         let calculated = combined.evaluate_to_normalized_decimal_number();
         match calculated {
             Some(number) => Ok(number.into()),
-            None => Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    eval_stmt.clone().into(),
-                    "eval: failed to combine numeric sub-expression".to_string(),
-                    None,
-                    vec![],
-                ),
-            )),
+            None => Err(RuntimeError::ExecStmtError({
+                let __stmt: Stmt = eval_stmt.clone().into();
+                let __message = "eval: failed to combine numeric sub-expression".to_string();
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            })),
         }
     }
 
@@ -142,14 +183,35 @@ impl Runtime {
                         flattened_number_args.push(number.into());
                     }
                     _ => {
-                        return Err(RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                eval_stmt.clone().into(),
-                                "eval: function arguments must evaluate to Number".to_string(),
-                                None,
-                                vec![],
-                            ),
-                        ));
+                        return Err(RuntimeError::ExecStmtError({
+                            let __stmt: Stmt = eval_stmt.clone().into();
+                            let __message =
+                                "eval: function arguments must evaluate to Number".to_string();
+                            let __cause = None;
+                            let __inside = vec![];
+                            let __line_file = __stmt.line_file();
+                            let __previous_error = if __message.is_empty() {
+                                __cause
+                            } else {
+                                Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                            };
+                            RuntimeErrorStruct::new(
+                                Some(__stmt),
+                                __message,
+                                __line_file,
+                                __previous_error,
+                                __inside,
+                            )
+                        }));
                     }
                 }
             }
@@ -158,30 +220,70 @@ impl Runtime {
         let algo_definition = match self.get_algo_definition_by_name(&fn_name) {
             Some(definition) => definition.clone(),
             None => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        eval_stmt.clone().into(),
-                        format!("eval: algorithm `{}` is not defined", fn_name),
-                        None,
-                        vec![],
-                    ),
-                ));
+                return Err(RuntimeError::ExecStmtError({
+                    let __stmt: Stmt = eval_stmt.clone().into();
+                    let __message = format!("eval: algorithm `{}` is not defined", fn_name);
+                    let __cause = None;
+                    let __inside = vec![];
+                    let __line_file = __stmt.line_file();
+                    let __previous_error = if __message.is_empty() {
+                        __cause
+                    } else {
+                        Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                    };
+                    RuntimeErrorStruct::new(
+                        Some(__stmt),
+                        __message,
+                        __line_file,
+                        __previous_error,
+                        __inside,
+                    )
+                }));
             }
         };
 
         if flattened_number_args.len() != algo_definition.params.len() {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    eval_stmt.clone().into(),
-                    format!(
-                        "eval: argument count mismatch (expected {}, got {})",
-                        algo_definition.params.len(),
-                        flattened_number_args.len()
-                    ),
-                    None,
-                    vec![],
-                ),
-            ));
+            return Err(RuntimeError::ExecStmtError({
+                let __stmt: Stmt = eval_stmt.clone().into();
+                let __message = format!(
+                    "eval: argument count mismatch (expected {}, got {})",
+                    algo_definition.params.len(),
+                    flattened_number_args.len()
+                );
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            }));
         }
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
@@ -199,14 +301,34 @@ impl Runtime {
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
-                    RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            eval_stmt.clone().into(),
-                            "eval: failed to verify case condition".to_string(),
-                            Some(verify_error),
-                            vec![],
-                        ),
-                    )
+                    RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = eval_stmt.clone().into();
+                        let __message = "eval: failed to verify case condition".to_string();
+                        let __cause = Some(verify_error);
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    })
                 })?;
 
             if verify_result.is_true() {
@@ -217,27 +339,68 @@ impl Runtime {
                 let verify_reversed_result = self
                     .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
-                        RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                eval_stmt.clone().into(),
-                                "eval: failed to verify reversed case condition".to_string(),
-                                Some(verify_error),
-                                vec![],
-                            ),
-                        )
+                        RuntimeError::ExecStmtError({
+                            let __stmt: Stmt = eval_stmt.clone().into();
+                            let __message =
+                                "eval: failed to verify reversed case condition".to_string();
+                            let __cause = Some(verify_error);
+                            let __inside = vec![];
+                            let __line_file = __stmt.line_file();
+                            let __previous_error = if __message.is_empty() {
+                                __cause
+                            } else {
+                                Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                            };
+                            RuntimeErrorStruct::new(
+                                Some(__stmt),
+                                __message,
+                                __line_file,
+                                __previous_error,
+                                __inside,
+                            )
+                        })
                     })?;
                 if verify_reversed_result.is_unknown() {
-                    return Err(RuntimeError::ExecStmtError(
-                        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            eval_stmt.clone().into(),
-                            format!(
-                                "eval: case `{}` is unknown and its reverse is also unknown",
-                                instantiated_case_condition
-                            ),
-                            None,
-                            vec![],
-                        ),
-                    ));
+                    return Err(RuntimeError::ExecStmtError({
+                        let __stmt: Stmt = eval_stmt.clone().into();
+                        let __message = format!(
+                            "eval: case `{}` is unknown and its reverse is also unknown",
+                            instantiated_case_condition
+                        );
+                        let __cause = None;
+                        let __inside = vec![];
+                        let __line_file = __stmt.line_file();
+                        let __previous_error = if __message.is_empty() {
+                            __cause
+                        } else {
+                            Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                        };
+                        RuntimeErrorStruct::new(
+                            Some(__stmt),
+                            __message,
+                            __line_file,
+                            __previous_error,
+                            __inside,
+                        )
+                    }));
                 }
             }
         }
@@ -245,14 +408,34 @@ impl Runtime {
         if let Some(default_return_stmt) = &algo_definition.default_return {
             self.inst_obj(&default_return_stmt.value, &param_to_arg_map)
         } else {
-            Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    eval_stmt.clone().into(),
-                    "eval: no case matched and no default return".to_string(),
-                    None,
-                    vec![],
-                ),
+            Err(RuntimeError::ExecStmtError({
+                let __stmt: Stmt = eval_stmt.clone().into();
+                let __message = "eval: no case matched and no default return".to_string();
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
             ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            }))
         }
     }
 
@@ -263,14 +446,34 @@ impl Runtime {
         )?;
 
         if !matches!(stmt.obj_to_eval, Obj::FnObj(_)) {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
-                    "eval: obj_to_eval must be a fnObj".to_string(),
-                    None,
-                    vec![],
-                ),
-            ));
+            return Err(RuntimeError::ExecStmtError({
+                let __stmt: Stmt = stmt.clone().into();
+                let __message = "eval: obj_to_eval must be a fnObj".to_string();
+                let __cause = None;
+                let __inside = vec![];
+                let __line_file = __stmt.line_file();
+                let __previous_error = if __message.is_empty() {
+                    __cause
+                } else {
+                    Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                };
+                RuntimeErrorStruct::new(
+                    Some(__stmt),
+                    __message,
+                    __line_file,
+                    __previous_error,
+                    __inside,
+                )
+            }));
         }
 
         let eval_result = self.run_in_local_env(|rt| {

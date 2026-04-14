@@ -7,25 +7,44 @@ impl Runtime {
             Fact::ForallFact(forall_fact) => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                stmt.clone().into(),
-                                "claim: fact is not well defined".to_string(),
-                                Some(e),
-                                vec![],
-                            ),
-                        )
+                        RuntimeError::ExecStmtError({
+                            let __stmt: Stmt = stmt.clone().into();
+                            let __message = "claim: fact is not well defined".to_string();
+                            let __cause = Some(e);
+                            let __inside = vec![];
+                            let __line_file = __stmt.line_file();
+                            let __previous_error = if __message.is_empty() {
+                                __cause
+                            } else {
+                                Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                            };
+                            RuntimeErrorStruct::new(
+                                Some(__stmt),
+                                __message,
+                                __line_file,
+                                __previous_error,
+                                __inside,
+                            )
+                        })
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {
                     rt.define_params_with_type(&forall_fact.params_def_with_type, false)
                         .map_err(|define_params_error| {
-                            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-                                stmt.clone().into(),
-                                "".to_string(),
-                                Some(define_params_error),
-                                vec![],
-                            ))
+                            RuntimeError::ExecStmtError({
+            let __stmt: Stmt = stmt.clone().into();
+            let __line_file = __stmt.line_file();
+            RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, Some(define_params_error), vec![])
+        })
                         })?;
 
                     for dom_fact in forall_fact.dom_facts.iter() {
@@ -47,13 +66,14 @@ impl Runtime {
                         )?;
                         if result.is_unknown() {
                             return Err(
-                                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
-                                    format!("claim failed: cannot prove `{}`", stmt.fact),
-                                    stmt.line_file.clone(),
-                                    Some(stmt.fact.clone().into_stmt()),
-                                    None,
-                                )
-                                .into(),
+                                UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(stmt.fact.clone().into_stmt()),
+                format!("claim failed: cannot prove `{}`", stmt.fact),
+                stmt.line_file.clone(),
+                None,
+                vec![],
+            ))
+            .into(),
                             );
                         }
 
@@ -73,12 +93,14 @@ impl Runtime {
                     Err(runtime_error) => return Err(runtime_error),
                 };
                 if non_err_after_body.is_unknown() {
-                    return Err(RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
-                        format!("claim failed: cannot prove `{}`", stmt.fact),
-                        stmt.line_file.clone(),
-                        Some(stmt.fact.clone().into_stmt()),
-                        None,
-                    ).into());
+                    return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(stmt.fact.clone().into_stmt()),
+                format!("claim failed: cannot prove `{}`", stmt.fact),
+                stmt.line_file.clone(),
+                None,
+                vec![],
+            ))
+            .into());
                 }
 
                 let infer_result_after_store =
@@ -89,14 +111,34 @@ impl Runtime {
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                stmt.clone().into(),
-                                "claim: fact is not well defined".to_string(),
-                                Some(e),
-                                vec![],
-                            ),
-                        )
+                        RuntimeError::ExecStmtError({
+                            let __stmt: Stmt = stmt.clone().into();
+                            let __message = "claim: fact is not well defined".to_string();
+                            let __cause = Some(e);
+                            let __inside = vec![];
+                            let __line_file = __stmt.line_file();
+                            let __previous_error = if __message.is_empty() {
+                                __cause
+                            } else {
+                                Some(
+                    UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt.clone()),
+                __message.clone(),
+                __line_file.clone(),
+                __cause,
+                vec![],
+            ))
+            .into(),
+                )
+                            };
+                            RuntimeErrorStruct::new(
+                                Some(__stmt),
+                                __message,
+                                __line_file,
+                                __previous_error,
+                                __inside,
+                            )
+                        })
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {

@@ -140,12 +140,17 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|e| {
-                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    given_or_fact.clone().into(),
-                    String::new(),
-                    given_or_fact.line_file.clone(),
-                    Some(e),
-                )
+                {
+            let __fact: Fact = (given_or_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                String::new(),
+                given_or_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            )))
+        }
             })?;
         if args_param_types.is_unknown() {
             return Ok(None);
@@ -163,22 +168,32 @@ impl Runtime {
             let instantiated_dom_fact = self
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        given_or_fact.clone().into(),
-                        String::new(),
-                        given_or_fact.line_file.clone(),
-                        Some(e),
-                    )
+                    {
+            let __fact: Fact = (given_or_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                String::new(),
+                given_or_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            )))
+        }
                 })?;
             let result = self
                 .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|e| {
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        given_or_fact.clone().into(),
-                        String::new(),
-                        given_or_fact.line_file.clone(),
-                        Some(e),
-                    )
+                    {
+            let __fact: Fact = (given_or_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                String::new(),
+                given_or_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            )))
+        }
                 })?;
             if result.is_unknown() {
                 return Ok(None);

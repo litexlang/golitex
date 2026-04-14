@@ -1003,6 +1003,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1023,6 +1024,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1043,6 +1045,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1063,6 +1066,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1087,6 +1091,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1111,6 +1116,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1131,6 +1137,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1154,6 +1161,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1177,6 +1185,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1196,6 +1205,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1216,6 +1226,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1235,6 +1246,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1254,6 +1266,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1274,6 +1287,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }
@@ -1294,6 +1308,7 @@ impl AtomicFact {
                         msg,
                         line_file.clone(),
                         None,
+                        vec![],
                     ))
                     .into());
                 }

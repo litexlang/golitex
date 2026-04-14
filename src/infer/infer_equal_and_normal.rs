@@ -22,14 +22,16 @@ impl Runtime {
         infer_result.new_fact(&inferred_fact);
         self.store_fact_without_well_defined_verified_and_infer(inferred_fact)
             .map_err(|previous_error| {
-                RuntimeError::new_infer_error_with_msg_position_previous_error(
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
                     format!(
                         "failed to store inferred {} while inferring `{}`",
                         infer_step_description, equal_fact
                     ),
                     equal_fact.line_file.clone(),
                     Some(previous_error),
-                )
+                    vec![],
+                )))
             })?;
         Ok(())
     }
@@ -265,14 +267,16 @@ impl Runtime {
                 normal_atomic_fact.line_file.clone(),
             )
             .map_err(|previous_error| {
-                RuntimeError::new_infer_error_with_msg_position_previous_error(
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
                     format!(
                         "failed to verify parameter types for `{}`",
                         normal_atomic_fact
                     ),
                     normal_atomic_fact.line_file.clone(),
                     Some(previous_error),
-                )
+                    vec![],
+                )))
             })?;
         infer_result.new_infer_result_inside(param_type_infer);
 
@@ -284,28 +288,32 @@ impl Runtime {
         for iff_fact in predicate_definition.iff_facts.iter() {
             let instantiated_iff_fact =
                 self.inst_fact(iff_fact, &param_to_arg_map).map_err(|e| {
-                    RuntimeError::new_infer_error_with_msg_position_previous_error(
-                        format!(
+                    RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
                             "failed to instantiate iff fact while inferring `{}`",
                             normal_atomic_fact
                         ),
-                        normal_atomic_fact.line_file.clone(),
-                        Some(e),
-                    )
+                    normal_atomic_fact.line_file.clone(),
+                    Some(e),
+                    vec![],
+                )))
                 })?;
             let fact_to_store =
                 instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file.clone());
             infer_result.new_fact(&fact_to_store);
             self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
                 .map_err(|previous_error| {
-                    RuntimeError::new_infer_error_with_msg_position_previous_error(
-                        format!(
+                    RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
                             "failed to store instantiated iff fact while inferring `{}`",
                             normal_atomic_fact
                         ),
-                        normal_atomic_fact.line_file.clone(),
-                        Some(previous_error),
-                    )
+                    normal_atomic_fact.line_file.clone(),
+                    Some(previous_error),
+                    vec![],
+                )))
                 })?;
         }
 

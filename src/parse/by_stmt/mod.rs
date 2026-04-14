@@ -26,14 +26,16 @@ impl Runtime {
             FAMILY => self.parse_by_family_stmt(tb),
             STRUCT => self.parse_by_struct_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
-            _ => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
                 format!(
                     "by: expected cases, contra, enumerate, induc, for, extension, fn, fn set, family, struct, or tuple after `by`, got `{}`",
                     second_keyword
                 ),
                 tb.line_file.clone(),
                 None,
-            )),
+                vec![],
+            )))),
         }
     }
 }

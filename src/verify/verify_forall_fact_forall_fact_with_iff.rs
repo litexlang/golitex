@@ -18,11 +18,14 @@ impl Runtime {
             let mut infer_result = InferResult::new();
             if let Err(e) = rt.define_params_with_type(&forall_fact.params_def_with_type, false) {
                 return Err(
-                    RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                        "failed to define parameters in forall fact".to_string(),
-                        Some(e),
-                        forall_fact.line_file.clone(),
-                    ),
+                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "failed to define parameters in forall fact".to_string(),
+                forall_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            ))
+            .into(),
                 );
             }
 
@@ -35,17 +38,23 @@ impl Runtime {
                     )
                     .map_err(|e| {
                         let message = "failed to assume dom fact in forall".to_string();
-                        RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                            forall_fact.clone().into(),
-                            message.clone(),
-                            forall_fact.line_file.clone(),
-                            Some(RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
-                            message,
-                            forall_fact.line_file.clone(),
-                            Some(Fact::from(forall_fact.clone()).into_stmt()),
-                            Some(e),
-                        ).into()),
-                        )
+                        {
+            let __fact: Fact = (forall_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                message.clone(),
+                forall_fact.line_file.clone(),
+                Some(RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(forall_fact.clone()).into_stmt()),
+                message,
+                forall_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            )))),
+                vec![],
+            )))
+        }
                     })?;
                 infer_result.new_infer_result_inside(dom_infer_result);
             }
@@ -60,15 +69,21 @@ impl Runtime {
                     let then_one_based = then_index + 1;
                     let then_line_file = then_fact.line_file();
                     return Err(
-                        RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                            forall_fact.clone().into(),
-                            format!(
+                        {
+            let __fact: Fact = (forall_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                format!(
                                 "forall: then-fact {}/{} could not be verified (unknown): `{}`",
                                 then_one_based, then_count, then_fact
                             ),
-                            then_line_file,
-                            None,
-                        ),
+                then_line_file,
+                None,
+                vec![],
+            ))
+            .into()
+        },
                     );
                 }
 

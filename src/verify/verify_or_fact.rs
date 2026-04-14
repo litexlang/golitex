@@ -16,12 +16,18 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
                 return Err(
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        or_fact.clone().into(),
-                        String::new(),
-                        or_fact.line_file.clone(),
-                        Some(e),
-                    ),
+                    {
+            let __fact: Fact = (or_fact.clone().into());
+            let __stmt = __fact.into_stmt();
+            VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(__stmt),
+                String::new(),
+                or_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            ))
+            .into()
+        },
                 );
             }
         }
