@@ -21,9 +21,12 @@ forall a R:
 forall a R:
     abs(a) = 0
     =>:
-        a = 0forall a, b R:
-    a = 0 and b = 0
+        a = 0
+        
+forall a, b R:
     =>:
+        a = 0 and b = 0
+    <=>:
         a ^ 2 + b ^ 2 = 0
 
 

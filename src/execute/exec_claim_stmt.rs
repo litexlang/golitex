@@ -7,43 +7,21 @@ impl Runtime {
             Fact::ForallFact(forall_fact) => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError({
-                            let __stmt: Stmt = stmt.clone().into();
-                            let __message = "claim: fact is not well defined".to_string();
-                            let __cause = Some(e);
-                            let __inside = vec![];
-                            let __line_file = __stmt.line_file();
-                            let __previous_error = if __message.is_empty() {
-                                __cause
-                            } else {
-                                Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                        short_exec_error(
+ stmt.clone().into(),
+                    "claim: fact is not well defined".to_string(),
+                    Some(e),
+                    vec![],
                 )
-                            };
-                            RuntimeErrorStruct::new(
-                                Some(__stmt),
-                                __message,
-                                __line_file,
-                                __previous_error,
-                                __inside,
-                            )
-                        })
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {
                     rt.define_params_with_type(&forall_fact.params_def_with_type, false)
                         .map_err(|define_params_error| {
                             RuntimeError::ExecStmtError({
-            let __stmt: Stmt = stmt.clone().into();
-            let __line_file = __stmt.line_file();
-            RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, Some(define_params_error), vec![])
+            let st: Stmt = stmt.clone().into();
+            let lf = st.line_file();
+            RuntimeErrorStruct::new(Some(st), "".to_string(), lf, Some(define_params_error), vec![])
         })
                         })?;
 
@@ -111,34 +89,12 @@ impl Runtime {
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError({
-                            let __stmt: Stmt = stmt.clone().into();
-                            let __message = "claim: fact is not well defined".to_string();
-                            let __cause = Some(e);
-                            let __inside = vec![];
-                            let __line_file = __stmt.line_file();
-                            let __previous_error = if __message.is_empty() {
-                                __cause
-                            } else {
-                                Some(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt.clone()),
-                __message.clone(),
-                __line_file.clone(),
-                __cause,
-                vec![],
-            ))
-            .into(),
+                        short_exec_error(
+ stmt.clone().into(),
+                    "claim: fact is not well defined".to_string(),
+                    Some(e),
+                    vec![],
                 )
-                            };
-                            RuntimeErrorStruct::new(
-                                Some(__stmt),
-                                __message,
-                                __line_file,
-                                __previous_error,
-                                __inside,
-                            )
-                        })
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {

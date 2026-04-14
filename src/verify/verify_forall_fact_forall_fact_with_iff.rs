@@ -39,10 +39,8 @@ impl Runtime {
                     .map_err(|e| {
                         let message = "failed to assume dom fact in forall".to_string();
                         {
-            let __fact: Fact = (forall_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(forall_fact.clone()).into_stmt()),
                 message.clone(),
                 forall_fact.line_file.clone(),
                 Some(RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new(
@@ -70,10 +68,8 @@ impl Runtime {
                     let then_line_file = then_fact.line_file();
                     return Err(
                         {
-            let __fact: Fact = (forall_fact.clone().into());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(forall_fact.clone()).into_stmt()),
                 format!(
                                 "forall: then-fact {}/{} could not be verified (unknown): `{}`",
                                 then_one_based, then_count, then_fact

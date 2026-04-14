@@ -38,12 +38,12 @@ fn run_file(
     let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
         RuntimeError::ExecStmtError({
-            let __stmt: Stmt = _run_file_stmt.clone().into();
-            let __line_file = __stmt.line_file();
+            let st: Stmt = _run_file_stmt.clone().into();
+            let lf = st.line_file();
             RuntimeErrorStruct::new(
-                Some(__stmt),
+                Some(st),
                 format!("Failed to read file: {}", path.as_str()),
-                __line_file,
+                lf,
                 None,
                 vec![],
             )

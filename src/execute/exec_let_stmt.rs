@@ -5,9 +5,9 @@ impl Runtime {
         let mut infer_result = self
             .define_params_with_type(&def_let_stmt.param_def, false)
             .map_err(|e| {
-                let __stmt: Stmt = def_let_stmt.clone().into();
-                let __line_file = __stmt.line_file();
-                RuntimeErrorStruct::new(Some(__stmt), "".to_string(), __line_file, Some(e), vec![])
+                let st: Stmt = def_let_stmt.clone().into();
+                let lf = st.line_file();
+                RuntimeErrorStruct::new(Some(st), "".to_string(), lf, Some(e), vec![])
             })?;
         for fact in def_let_stmt.facts.iter() {
             let fact_infer_result = self
@@ -16,12 +16,12 @@ impl Runtime {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|inner_exec_error| {
-                    let __stmt: Stmt = def_let_stmt.clone().into();
-                    let __line_file = __stmt.line_file();
+                    let st: Stmt = def_let_stmt.clone().into();
+                    let lf = st.line_file();
                     RuntimeErrorStruct::new(
-                        Some(__stmt),
+                        Some(st),
                         "".to_string(),
-                        __line_file,
+                        lf,
                         Some(inner_exec_error),
                         vec![],
                     )

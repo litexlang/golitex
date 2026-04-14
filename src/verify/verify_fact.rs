@@ -27,34 +27,19 @@ impl Runtime {
             } else {
                 String::new()
             };
-            return Err(
-                {
-            let __fact: Fact = (fact_owned.clone());
-            let __stmt = __fact.into_stmt();
-            VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
+            return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(fact_owned.clone().into_stmt()),
                 unknown_detail.clone(),
-                line_file,
-                Some(
-                        {
-            let __fact: Fact = (fact_owned);
-            let __lf = __fact.line_file();
-            let __stmt = __fact.into_stmt();
-            UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(__stmt),
-                unknown_detail,
-                __lf,
-                None,
+                line_file.clone(),
+                Some(RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new(
+                    Some(fact_owned.into_stmt()),
+                    String::new(),
+                    line_file,
+                    None,
+                    vec![],
+                )))),
                 vec![],
-            ))
-            .into()
-        },
-                    ),
-                vec![],
-            ))
-            .into()
-        },
-            );
+            ))));
         } else {
             Ok(result)
         }
