@@ -32,13 +32,12 @@ impl Runtime {
         }
     }
 
-    /// 对每个实参调用 [`Self::verify_obj_satisfies_param_type`]（含 `family` / `struct`），并合并各步的 [`InferResult`]。
     pub fn verify_args_satisfy_param_def_flat_types(
         &mut self,
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         verify_state: &VerifyState,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let instantiated_types = self.inst_param_def_with_type_one_by_one(param_defs, args)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
         let mut infer_result = InferResult::new();
@@ -46,7 +45,7 @@ impl Runtime {
             let verify_result =
                 self.verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)?;
             if verify_result.is_unknown() {
-                return verify_result;
+                return Ok(verify_result);
             }
             match verify_result {
                 StmtResult::NonFactualStmtSuccess(x) => {
@@ -58,7 +57,12 @@ impl Runtime {
                 StmtResult::StmtUnknown(_) => unreachable!(),
             }
         }
-        Ok(infer_result)
+        Ok(NonFactualStmtSuccess::new(
+            DoNothingStmt::new(default_line_file()).into(),
+            infer_result,
+            vec![],
+        )
+        .into())
     }
 }
 
