@@ -1,14 +1,9 @@
-# when n is a even number, then a^n >= 0 is verified automatically.
-# when 0 <= b, then a <= a + b is verified automatically.
 claim:
     prove:
-        forall a, b R:
-            a^2 + b^2 = 0
+        forall p, q R:
+            p < q
             =>:
-                a = 0
-    by contra:
-        prove:
-            a = 0
-        a != 0
-        0 < a ^ 2
-        
+                exist x R st {p < x, x < q}
+    witness exist x R st {p < x, x < q} from (p + q) / 2:
+        p = (p + p) / 2 < (p + q) / 2
+        (p + q) / 2 < (q + q) / 2 = q
