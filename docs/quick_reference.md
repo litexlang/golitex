@@ -170,12 +170,11 @@ forall a R:
 **Example.**
 
 ```litex
-know:
-    forall a, b R:
-        =>:
-            a <= b
-        <=>:
-            0 <= b - a
+forall a, b R:
+    =>:
+        a <= b
+    <=>:
+        0 <= b - a
 ```
 
 ## Statements in general
