@@ -1,5 +1,6 @@
 pub mod builtin_families;
 pub mod common_comparison_properties;
+pub mod common_facts;
 pub mod common_functions;
 pub mod fundamental_comparison;
 pub mod set_operators;
@@ -14,6 +15,7 @@ fn concat_builtin_env_lit_fragments() -> String {
         common_comparison_properties::BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES,
     );
     out.push_str(common_functions::BUILTIN_ENV_CODE_FOR_COMMON_FUNCTIONS);
+    out.push_str(common_facts::COMMON_FACTS);
     out.push_str(builtin_families::BUILTIN_ENV_CODE_FOR_BUILTIN_FAMILIES);
     out.push_str(set_operators::BUILTIN_ENV_CODE_FOR_SET_OPERATORS);
     out
