@@ -135,7 +135,7 @@ impl Runtime {
             }
         }
 
-        let _: InferResult = self
+        let args_param_types = self
             .verify_args_satisfy_param_def_flat_types(
                 &known_forall.params_def,
                 &args_for_params,
@@ -149,6 +149,9 @@ impl Runtime {
                     Some(e),
                 )
             })?;
+        if args_param_types.is_unknown() {
+            return Ok(None);
+        }
 
         let param_to_arg_map = match known_forall
             .params_def

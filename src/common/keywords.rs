@@ -112,8 +112,9 @@ pub const FAMILY: &str = "family";
 pub const STRUCT: &str = "struct";
 pub const SELF: &str = "self";
 pub const RESTRICT: &str = "restrict";
-
-pub const BUILTIN_CODE_PATH: &str = "builtin_code";
+pub const STRATEGY: &str = "strategy";
+pub const BEGIN: &str = "begin";
+pub const END: &str = "end";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -233,7 +234,9 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         STRUCT,
         SELF,
         RESTRICT,
-        BUILTIN_CODE_PATH,
+        STRATEGY,
+        BEGIN,
+        END,
     ];
     for &s in &words {
         m.insert(s, s);
