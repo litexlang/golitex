@@ -35,6 +35,7 @@ impl Runtime {
             Obj::Div(div) => self.verify_div_well_defined(div, verify_state),
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
             Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
+            Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
             Obj::Union(x) => self.verify_union_well_defined(x, verify_state),
             Obj::Intersect(x) => self.verify_intersect_well_defined(x, verify_state),
             Obj::SetMinus(x) => self.verify_set_minus_well_defined(x, verify_state),
@@ -368,6 +369,9 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        if let Obj::Abs(a) = obj {
+            return self.require_obj_in_r(&a.arg, verify_state);
+        }
         let r_obj = StandardSet::R.into();
         let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
@@ -490,6 +494,16 @@ impl Runtime {
                 ),
             );
         }
+        Ok(())
+    }
+
+    fn verify_abs_well_defined(
+        &mut self,
+        abs: &Abs,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&abs.arg, verify_state)?;
+        self.require_obj_in_r(&abs.arg, verify_state)?;
         Ok(())
     }
 

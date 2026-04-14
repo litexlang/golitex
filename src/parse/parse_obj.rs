@@ -459,6 +459,14 @@ impl Runtime {
             return Ok(Obj::StructObj(struct_obj.into()));
         }
 
+        if tok == ABS {
+            tb.skip()?;
+            tb.skip_token(LEFT_BRACE)?;
+            let arg = self.parse_obj(tb)?;
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(Abs::new(arg).into());
+        }
+
         // 多元关键字：吃关键字 + 括号里若干 obj
         if tok == UNION {
             tb.skip()?;

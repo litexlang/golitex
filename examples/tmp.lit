@@ -1,15 +1,1 @@
-let a, b, c R:
-    0 <= a
-    0 <= b
-    0 <= c
-
-0 <= a ^ 100 + (a +b)^2 + (a+b) + (a+b*c) + 100
-
-strategy 可积(a)
-    case a 长成 a = c + d =》 c 和 d 是否都可积
-    case a 长成 a = c * d =》 c 和 d 是否都可积
-    case a 长成 a = c ^ d =》 c 和 d 是否都可积
-
-begin strategy 可积
-
-end strategy 可积
+abs(-1) = 1

@@ -85,6 +85,10 @@ impl Runtime {
                 Obj::Pow(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Abs(a) => match right {
+                Obj::Abs(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Union(a) => match right {
                 Obj::Union(b) => a.to_string() == b.to_string(),
                 _ => false,

@@ -16,6 +16,7 @@ pub enum Obj {
     Div(Div),
     Mod(Mod),
     Pow(Pow),
+    Abs(Abs),
     Union(Union),
     Intersect(Intersect),
     SetMinus(SetMinus),
@@ -187,6 +188,11 @@ pub struct Pow {
 }
 
 #[derive(Clone)]
+pub struct Abs {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
 pub struct Union {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
@@ -320,6 +326,14 @@ impl Pow {
         Pow {
             base: Box::new(base),
             exponent: Box::new(exponent),
+        }
+    }
+}
+
+impl Abs {
+    pub fn new(arg: Obj) -> Self {
+        Abs {
+            arg: Box::new(arg),
         }
     }
 }
@@ -519,7 +533,7 @@ fn precedence(o: &Obj) -> u8 {
     match o {
         Obj::Add(_) | Obj::Sub(_) => 3,
         Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) => 2,
-        Obj::Pow(_) => 1,
+        Obj::Pow(_) | Obj::Abs(_) => 1,
         _ => 0,
     }
 }
@@ -572,6 +586,11 @@ impl Obj {
                 p.base.fmt_with_precedence(f, 1)?;
                 write!(f, " {} ", POW)?;
                 p.exponent.fmt_with_precedence(f, 1)?;
+            }
+            Obj::Abs(a) => {
+                write!(f, "{} {}", ABS, LEFT_BRACE)?;
+                a.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
             }
             Obj::Union(x) => write!(f, "{}", x)?,
             Obj::Intersect(x) => write!(f, "{}", x)?,
@@ -672,6 +691,7 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.right, from, to)).into(),
             Obj::Pow(x) => Pow::new(Obj::replace_bound_identifier(*x.base, from, to),
                 Obj::replace_bound_identifier(*x.exponent, from, to)).into(),
+            Obj::Abs(x) => Abs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
             Obj::Union(x) => Union::new(Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to)).into(),
             Obj::Intersect(x) => Intersect::new(Obj::replace_bound_identifier(*x.left, from, to),
@@ -974,6 +994,12 @@ impl fmt::Display for Pow {
     }
 }
 
+impl fmt::Display for Abs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{}{}", ABS, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
 impl fmt::Display for Union {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -1183,6 +1209,12 @@ impl From<Mod> for Obj {
 impl From<Pow> for Obj {
     fn from(p: Pow) -> Self {
         Obj::Pow(p)
+    }
+}
+
+impl From<Abs> for Obj {
+    fn from(a: Abs) -> Self {
+        Obj::Abs(a)
     }
 }
 

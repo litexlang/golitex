@@ -75,6 +75,15 @@ impl Runtime {
                     result
                 }
             }
+            Obj::Abs(a) => {
+                let result: Obj = Abs::new(self.resolve_obj(&a.arg)).into();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
+                if let Some(calculated_result) = calculated_result {
+                    calculated_result.into()
+                } else {
+                    result
+                }
+            }
             Obj::Identifier(_)
             | Obj::IdentifierWithMod(_)
             | Obj::FieldAccess(_)
