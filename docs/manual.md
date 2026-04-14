@@ -120,6 +120,20 @@ know:
             a + 1 > 1
 ```
 
+> **Hint — the word “type” in `forall` / `exist` headers.** People often read this as “programming types” or “type theory”; in Litex it is **not** that. After a parameter name, the next token is either (i) a **named set** the object is assumed to lie in—treated like `a $in Z`—or (ii) one of **`set`**, **`finite_set`**, **`nonempty_set`**, which stand for **`$is_set`**, **`$is_finite_set`**, **`$is_nonempty_set`** and do **not** mean “membership in a set called `set`.”
+>
+> ```litex
+> forall a Z:
+>     a $in Z
+>
+> forall a set, b finite_set, c nonempty_set:
+>     $is_set(a)
+>     $is_finite_set(b)
+>     $is_nonempty_set(c)
+> ```
+>
+> So in `forall a Z:`, the header already gives `a $in Z`. The only exceptions are those three keywords: they are **predicates on the parameter**, not a containing set. `forall a set, b finite_set, c nonempty_set:` gives you `$is_set(a)`, `$is_finite_set(b)`, `$is_nonempty_set(c)`. Keep in mind that `set`, `finite_set`, `nonempty_set` are **syntax sugar** to express properties of the parameter, not a containing set.
+
 ---
 
 ### Universal fact with iff (`forall` with `<=>:`)
@@ -318,7 +332,7 @@ All start with **`by`** and a second keyword.
 
 ### `by fn set`
 
-**Meaning.** Show a function belongs to a **function set** `fn(… conditions …) codomain`.
+**Meaning.** Show a function belongs to a **function set** `fn(… conditions …) co-domain`.
 
 **Syntax.** `by fn set` `:` *func* `$in fn` *function-set*.
 
