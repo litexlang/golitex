@@ -84,6 +84,24 @@ impl Runtime {
                     result
                 }
             }
+            Obj::Max(m) => {
+                let result: Obj = Max::new(self.resolve_obj(&m.left), self.resolve_obj(&m.right)).into();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
+                if let Some(calculated_result) = calculated_result {
+                    calculated_result.into()
+                } else {
+                    result
+                }
+            }
+            Obj::Min(m) => {
+                let result: Obj = Min::new(self.resolve_obj(&m.left), self.resolve_obj(&m.right)).into();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
+                if let Some(calculated_result) = calculated_result {
+                    calculated_result.into()
+                } else {
+                    result
+                }
+            }
             Obj::Identifier(_)
             | Obj::IdentifierWithMod(_)
             | Obj::FieldAccess(_)

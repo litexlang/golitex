@@ -36,6 +36,8 @@ impl Runtime {
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
             Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
             Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
+            Obj::Max(max) => self.verify_max_well_defined(max, verify_state),
+            Obj::Min(min) => self.verify_min_well_defined(min, verify_state),
             Obj::Union(x) => self.verify_union_well_defined(x, verify_state),
             Obj::Intersect(x) => self.verify_intersect_well_defined(x, verify_state),
             Obj::SetMinus(x) => self.verify_set_minus_well_defined(x, verify_state),
@@ -372,6 +374,14 @@ impl Runtime {
         if let Obj::Abs(a) = obj {
             return self.require_obj_in_r(&a.arg, verify_state);
         }
+        if let Obj::Max(m) = obj {
+            self.require_obj_in_r(&m.left, verify_state)?;
+            return self.require_obj_in_r(&m.right, verify_state);
+        }
+        if let Obj::Min(m) = obj {
+            self.require_obj_in_r(&m.left, verify_state)?;
+            return self.require_obj_in_r(&m.right, verify_state);
+        }
         let r_obj = StandardSet::R.into();
         let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
@@ -504,6 +514,30 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&abs.arg, verify_state)?;
         self.require_obj_in_r(&abs.arg, verify_state)?;
+        Ok(())
+    }
+
+    fn verify_max_well_defined(
+        &mut self,
+        max: &Max,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&max.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&max.right, verify_state)?;
+        self.require_obj_in_r(&max.left, verify_state)?;
+        self.require_obj_in_r(&max.right, verify_state)?;
+        Ok(())
+    }
+
+    fn verify_min_well_defined(
+        &mut self,
+        min: &Min,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&min.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&min.right, verify_state)?;
+        self.require_obj_in_r(&min.left, verify_state)?;
+        self.require_obj_in_r(&min.right, verify_state)?;
         Ok(())
     }
 

@@ -466,6 +466,64 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Abs::new(arg).into());
         }
+        if tok == MAX {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "max expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
+            }
+            let mut it = args.into_iter();
+            let left = it.next().ok_or_else(|| {
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "max expects 2 arguments".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                )
+            })?;
+            let right = it.next().ok_or_else(|| {
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "max expects 2 arguments".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                )
+            })?;
+            return Ok(Max::new(left, right).into());
+        }
+        if tok == MIN {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(
+                    RuntimeError::new_parse_error_with_msg_position_previous_error(
+                        "min expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                    ),
+                );
+            }
+            let mut it = args.into_iter();
+            let left = it.next().ok_or_else(|| {
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "min expects 2 arguments".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                )
+            })?;
+            let right = it.next().ok_or_else(|| {
+                RuntimeError::new_parse_error_with_msg_position_previous_error(
+                    "min expects 2 arguments".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                )
+            })?;
+            return Ok(Min::new(left, right).into());
+        }
 
         // 多元关键字：吃关键字 + 括号里若干 obj
         if tok == UNION {
