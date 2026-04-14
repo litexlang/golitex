@@ -1,4 +1,6 @@
-# Manual
+# Quick Reference                           
+
+*version: 0.1.0*
 
 _Jiachen Shen and The Litex Team_
 
@@ -50,9 +52,12 @@ prove:
 **Example.**
 
 ```litex
-know:
-    exist x R st {x > 0, x < 1}
+witness exist x R st {x > 0, x < 1} from 0.5
+
+exist x R st {x > 0, x < 1}
 ```
+
+> **Hint — the word “witness” is used for proving exist fact by giving a concrete object for the parameter.** Here 0.5 is a witness for the parameter `x`.
 
 ---
 
@@ -70,6 +75,10 @@ prove:
     a = 1 or a = 2
 ```
 
+> **Hint — the word “have” is used for introducing a parameter and fixing it to a given value.** Here `a` is introduced and fixed to 1.
+
+> **Hint - when fact1 is correct then fact1 or fact2 or ... factn is correct.**
+
 ---
 
 ### Conjunction (`and`)
@@ -81,11 +90,17 @@ prove:
 **Example.**
 
 ```litex
-prove:
-    know:
-        1 = 1 and 1 + 2 = 3
-    1 = 1 and 1 + 2 = 3
+1 = 1 and 1 + 2 = 3
 ```
+
+This is equivalent to:
+
+```litex
+1 = 1
+1 + 2 = 3
+```
+
+> **Hint - in Litex, the nicer way to write `fact1 and fact2` is writing them in two lines
 
 ---
 
@@ -99,8 +114,19 @@ prove:
 
 ```litex
 prove:
-    1 < 2 < 3
+    1 < 2 < 3 = 3 * 1 <= 8
 ```
+
+This is equivalent to:
+
+```litex
+1 < 2
+2 < 3
+3 = 3 * 1
+3 * 1 <= 8
+```
+
+> **Hint — chains and what gets stored.** When you write a **single-direction** chain of order and equality along the line (e.g. *a ≤ b = c < d*, mixing `=`, `<=`, `<` in one “increasing” direction), the checker does not only keep the **step-by-step** facts along the chain. It also **adds the implied comparisons between farther-apart endpoints** (transitive closure respecting `=` blocks and where strict `<` must stay strict). For that example you effectively get facts such as *a ≤ c*, *a < d*, and *b < d* in the context as well. That is usually very convenient—you can cite the short chain once and reuse the consequences later.
 
 ---
 
@@ -164,8 +190,6 @@ know:
 
 ```litex
 prove:
-    know:
-        2 = 2
     2 = 2
 ```
 
