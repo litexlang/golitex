@@ -203,6 +203,31 @@ impl Runtime {
         Ok(result)
     }
 
+    fn verify_zero_le_abs_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessEqualFact(f) = &norm else {
+            return Ok(None);
+        };
+        if f.left.to_string() != "0" {
+            return Ok(None);
+        }
+        if !matches!(&f.right, Obj::Abs(_)) {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "0 <= abs(x) for x in R".to_string(),
+                Vec::new(),
+            ),
+        )))
+    }
+
     // Lit `know` facts for the nonnegative / positive cone under field operations used to live in
     // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
     // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
@@ -224,6 +249,9 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) = self.verify_order_algebra_structural_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_zero_le_abs_builtin_rule(atomic_fact)? {
             return Ok(result);
         }
         if let Some(result) =

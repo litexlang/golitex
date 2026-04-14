@@ -45,7 +45,7 @@ impl Runtime {
                     )?;
                     Ok(())
                 }
-                Obj::SetBuilder(_) => Err(RuntimeError::from(RuntimeErrorStruct::new(
+                Obj::SetBuilder(_) => Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
                     None,
                     "set builder param type is not supported yet in verify_param_type_nonempty_if_required"
                         .to_string(),

@@ -11,17 +11,12 @@ impl Runtime {
         let result = self
             .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
             .map_err(|verify_error| {
-                RuntimeError::from({
-                    let st: Stmt = have_exist_obj_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
-                        Some(verify_error),
-                        vec![],
-                    )
-                })
+                short_exec_error(
+                    have_exist_obj_stmt.clone().into(),
+                    "",
+                    Some(verify_error),
+                    vec![],
+                )
             })?;
         if result.is_unknown() {
             return Err(short_exec_error(
@@ -62,9 +57,7 @@ impl Runtime {
                 have_exist_obj_stmt.line_file.clone(),
             )
             .map_err(|e| {
-                let st: Stmt = have_exist_obj_stmt.clone().into();
-                let lf = st.line_file();
-                RuntimeErrorStruct::new(Some(st), "".to_string(), lf, Some(e), vec![])
+                short_exec_error(have_exist_obj_stmt.clone().into(), "", Some(e), vec![])
             })?;
 
         let param_to_obj_map = exist_fact_in_have_obj_stmt
@@ -75,12 +68,9 @@ impl Runtime {
             let instantiated_fact = self
                 .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map)
                 .map_err(|runtime_error| {
-                    let st: Stmt = have_exist_obj_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
+                    short_exec_error(
+                        have_exist_obj_stmt.clone().into(),
+                        "",
                         Some(runtime_error),
                         vec![],
                     )
@@ -89,12 +79,9 @@ impl Runtime {
             let fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(instantiated_fact)
                 .map_err(|store_fact_error| {
-                    let st: Stmt = have_exist_obj_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
+                    short_exec_error(
+                        have_exist_obj_stmt.clone().into(),
+                        "",
                         Some(store_fact_error),
                         vec![],
                     )

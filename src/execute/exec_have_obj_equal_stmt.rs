@@ -24,17 +24,12 @@ impl Runtime {
             let current_type_holder = self
                 .inst_param_type(&param_def.param_type, &param_to_obj_map)
                 .map_err(|runtime_error| {
-                    RuntimeError::from({
-                        let st: Stmt = have_obj_equal_stmt.clone().into();
-                        let lf = st.line_file();
-                        RuntimeErrorStruct::new(
-                            Some(st),
-                            "".to_string(),
-                            lf,
-                            Some(runtime_error),
-                            vec![],
-                        )
-                    })
+                    short_exec_error(
+                        have_obj_equal_stmt.clone().into(),
+                        "",
+                        Some(runtime_error),
+                        vec![],
+                    )
                 })?;
             let current_type = &current_type_holder;
             for name in param_def.params.iter() {
@@ -47,17 +42,12 @@ impl Runtime {
                         &VerifyState::new(0, false),
                     )
                     .map_err(|verify_error| {
-                        RuntimeError::from({
-                            let st: Stmt = have_obj_equal_stmt.clone().into();
-                            let lf = st.line_file();
-                            RuntimeErrorStruct::new(
-                                Some(st),
-                                "".to_string(),
-                                lf,
-                                Some(verify_error),
-                                vec![],
-                            )
-                        })
+                        short_exec_error(
+                            have_obj_equal_stmt.clone().into(),
+                            "",
+                            Some(verify_error),
+                            vec![],
+                        )
                     })?;
                 if verify_result.is_unknown() {
                     let msg = format!(
@@ -82,17 +72,12 @@ impl Runtime {
         let param_infer_result = self
             .define_params_with_type(&have_obj_equal_stmt.param_def, true)
             .map_err(|define_params_error| {
-                RuntimeError::from({
-                    let st: Stmt = have_obj_equal_stmt.clone().into();
-                    let lf = st.line_file();
-                    RuntimeErrorStruct::new(
-                        Some(st),
-                        "".to_string(),
-                        lf,
-                        Some(define_params_error),
-                        vec![],
-                    )
-                })
+                short_exec_error(
+                    have_obj_equal_stmt.clone().into(),
+                    "",
+                    Some(define_params_error),
+                    vec![],
+                )
             })?;
         infer_result.new_infer_result_inside(param_infer_result);
 
@@ -111,17 +96,12 @@ impl Runtime {
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer(equal_to_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::from({
-                        let st: Stmt = have_obj_equal_stmt.clone().into();
-                        let lf = st.line_file();
-                        RuntimeErrorStruct::new(
-                            Some(st),
-                            "".to_string(),
-                            lf,
-                            Some(store_fact_error),
-                            vec![],
-                        )
-                    })
+                    short_exec_error(
+                        have_obj_equal_stmt.clone().into(),
+                        "",
+                        Some(store_fact_error),
+                        vec![],
+                    )
                 })?;
             infer_result.new_infer_result_inside(equal_to_fact_infer_result);
         }
