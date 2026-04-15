@@ -14,6 +14,21 @@ impl Runtime {
         {
             return Ok((fact_verified).into());
         }
+
+        if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
+            let fact_with_reversed_args = EqualFact::new(
+                equal_fact.right.clone(),
+                equal_fact.left.clone(),
+                equal_fact.line_file.clone(),
+            );
+            if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_envs(
+                &fact_with_reversed_args.into(),
+                verify_state,
+            )? {
+                return Ok((fact_verified).into());
+            }
+        }
+
         Ok((StmtUnknown::new()).into())
     }
 
@@ -221,18 +236,7 @@ impl Runtime {
             atomic_fact_args_in_known_forall,
             &given_args,
         )?;
-        if forward.is_some() {
-            return Ok(forward);
-        }
-        if let AtomicFact::EqualFact(_) = given_fact {
-            if given_args.len() == 2 {
-                return Self::match_args_in_fact_in_known_forall_fact_with_given_args(
-                    atomic_fact_args_in_known_forall,
-                    &vec![given_args[1].clone(), given_args[0].clone()],
-                );
-            }
-        }
-        Ok(None)
+        return Ok(forward);
     }
 
     pub fn match_args_in_fact_in_known_forall_fact_with_given_args(
