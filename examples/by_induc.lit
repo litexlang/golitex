@@ -1,3 +1,6 @@
+# Minimal `by induc` example: first block is `prove:` (one or more goals);
+# optional proof blocks follow (here empty — lemmas come from `know`).
+
 abstract_prop p(a)
 
 know:
@@ -9,7 +12,8 @@ know:
             $p(n + 1)
 
 by induc n from 0:
-    $p(n)
+    prove:
+        $p(n)
 
 forall n Z:
     n >= 0
