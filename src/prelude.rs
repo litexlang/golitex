@@ -114,7 +114,7 @@ pub use crate::result::FactualStmtSuccess;
 pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::StmtResult;
 pub use crate::result::StmtUnknown;
-pub use crate::runtime::builtin_code;
+pub use crate::builtin_code::builtin_code;
 pub use crate::runtime::Runtime;
 pub use crate::stmt::by_stmt::ByCasesStmt;
 pub use crate::stmt::by_stmt::ByContraStmt;

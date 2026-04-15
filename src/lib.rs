@@ -1,3 +1,4 @@
+pub mod builtin_code;
 pub mod cli;
 pub mod common;
 pub mod environment;
