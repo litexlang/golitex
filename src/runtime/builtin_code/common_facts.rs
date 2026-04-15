@@ -37,4 +37,10 @@ know:
     forall a, b R:
         max(a, b) = max(b, a)
         min(a, b) = min(b, a)
+
+    forall a,b R:
+        a*b!=0
+        =>:
+            a!=0 and b!=0
+
 "#;

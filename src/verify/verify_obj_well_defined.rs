@@ -158,7 +158,18 @@ impl Runtime {
         x: &FieldAccessWithMod,
     ) -> Result<(), RuntimeError> {
         let _ = x;
-        unreachable!()
+        return Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "field access with mod `{}` is not well-defined",
+                    x.to_string()
+                ),
+                default_line_file(),
+                None,
+                vec![],
+            ),
+        )));
     }
 
     fn verify_fn_obj_well_defined(
