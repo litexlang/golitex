@@ -16,29 +16,30 @@ impl Runtime {
             )
             .map_err(|e| {
                 short_exec_error(
- have_fn_equal_case_by_case_stmt.clone().into(),
-                    "have_fn_equal_case_by_case_stmt: build fn set for storage failed"
-                            .to_string(),
+                    have_fn_equal_case_by_case_stmt.clone().into(),
+                    "have_fn_equal_case_by_case_stmt: build fn set for storage failed".to_string(),
                     Some(e),
                     vec![],
                 )
             })?;
 
-        self.verify_have_fn_equal_case_by_case_stmt(
+        self.have_fn_equal_case_by_case_stmt_verify_well_defined(
             have_fn_equal_case_by_case_stmt,
             &fn_set_stored,
         )
         .map_err(|e| {
             short_exec_error(
- have_fn_equal_case_by_case_stmt.clone().into(),
-                    "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
-                    Some(e),
-                    vec![],
-                )
+                have_fn_equal_case_by_case_stmt.clone().into(),
+                "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
+                Some(e),
+                vec![],
+            )
         })?;
 
-        let infer_result =
-            self.store_have_fn_equal_case_by_case(have_fn_equal_case_by_case_stmt, &fn_set_stored)?;
+        let infer_result = self.store_have_fn_equal_case_by_case_stmt_facts(
+            have_fn_equal_case_by_case_stmt,
+            &fn_set_stored,
+        )?;
         Ok((NonFactualStmtSuccess::new(
             have_fn_equal_case_by_case_stmt.clone().into(),
             infer_result,
@@ -47,7 +48,7 @@ impl Runtime {
         .into())
     }
 
-    fn store_have_fn_equal_case_by_case(
+    fn store_have_fn_equal_case_by_case_stmt_facts(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
@@ -138,7 +139,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    fn verify_have_fn_equal_case_by_case_stmt(
+    fn have_fn_equal_case_by_case_stmt_verify_well_defined(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
@@ -147,11 +148,12 @@ impl Runtime {
             != have_fn_equal_case_by_case_stmt.equal_tos.len()
         {
             return Err(short_exec_error(
- have_fn_equal_case_by_case_stmt.clone().into(),
-                    "have_fn_equal_case_by_case_stmt: number of cases does not match number of equal_tos".to_string(),
-                    None,
-                    vec![],
-                ));
+                have_fn_equal_case_by_case_stmt.clone().into(),
+                "have_fn_equal_case_by_case_stmt: number of cases does not match number of equal_tos"
+                    .to_string(),
+                None,
+                vec![],
+            ));
         }
 
         let function_set_obj = fn_set_stored.clone().into();
@@ -173,7 +175,7 @@ impl Runtime {
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
 
             self.run_in_local_env(|rt| {
-                rt.have_fn_equal_case_by_case_stmt_verify_well_defined_body_for_one_case(
+                rt.have_fn_equal_case_by_case_stmt_verify_well_defined_body(
                     have_fn_equal_case_by_case_stmt,
                     case_fact,
                     equal_to,
@@ -184,7 +186,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn have_fn_equal_case_by_case_stmt_verify_well_defined_body_for_one_case(
+    fn have_fn_equal_case_by_case_stmt_verify_well_defined_body(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         case_fact: &AndChainAtomicFact,
@@ -273,11 +275,11 @@ impl Runtime {
                 equal_to, have_fn_equal_case_by_case_stmt.fn_set_clause.ret_set, case_fact,
             );
             return Err(short_exec_error(
- have_fn_equal_case_by_case_stmt.clone().into(),
-                    msg,
-                    None,
-                    vec![],
-                ));
+                have_fn_equal_case_by_case_stmt.clone().into(),
+                msg,
+                None,
+                vec![],
+            ));
         }
 
         Ok(())

@@ -3,36 +3,34 @@ use std::collections::HashMap;
 
 impl Runtime {
     pub fn exec_by_induc_stmt(&mut self, stmt: &ByInducStmt) -> Result<StmtResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
-        let all_inside_results: Vec<StmtResult> = Vec::new();
-        for fact in stmt.to_prove.iter() {
-            let one_fact_infer_result =
-                self.run_in_local_env(|rt| rt.exec_by_induc_stmt_for_one_fact(stmt, fact));
-
-            match one_fact_infer_result {
-                Ok(one_fact_infer_result) => {
-                    infer_result.new_infer_result_inside(one_fact_infer_result);
-                }
-                Err(e) => {
-                    return Err(short_exec_error(
-                        stmt.clone().into(),
-                        format!("by induc: failed to prove `{}`", fact),
-                        Some(e),
-                        vec![],
-                    ));
-                }
+        let body_exec_result: Result<StmtResult, RuntimeError> = self.run_in_local_env(|rt| {
+            let mut infer_result = InferResult::new();
+            let mut inside_results: Vec<StmtResult> = Vec::new();
+            for proof_stmt in stmt.proof.iter() {
+                inside_results.push(rt.exec_stmt(proof_stmt)?);
             }
-        }
+            for fact in stmt.to_prove.iter() {
+                let one_fact_infer_result = rt.exec_by_induc_stmt_for_one_fact(stmt, fact)?;
+                infer_result.new_infer_result_inside(one_fact_infer_result);
+            }
+            Ok(
+                NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)
+                    .into(),
+            )
+        });
+
+        let non_err_after_body: StmtResult = match body_exec_result {
+            Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
+            Err(runtime_error) => return Err(runtime_error),
+        };
 
         let corresponding_forall_fact = stmt
             .to_corresponding_forall_fact()
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
-        self.store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact)?;
+        let infer_after_store =
+            self.store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact)?;
 
-        Ok(
-            (NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, all_inside_results))
-                .into(),
-        )
+        Ok(non_err_after_body.with_infers(infer_after_store))
     }
 }
 
