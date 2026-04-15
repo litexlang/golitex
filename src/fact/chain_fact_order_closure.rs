@@ -140,11 +140,15 @@ impl ChainFact {
                 continue;
             }
             idxs.sort_unstable();
-            let rep = idxs[0];
-            for &j in idxs.iter().skip(1) {
-                extra.push(
-                    EqualFact::new(self.objs[rep].clone(), self.objs[j].clone(), lf.clone()).into(),
-                );
+            for ii in 0..idxs.len() {
+                for jj in ii + 1..idxs.len() {
+                    let i = idxs[ii];
+                    let j = idxs[jj];
+                    extra.push(
+                        EqualFact::new(self.objs[i].clone(), self.objs[j].clone(), lf.clone())
+                            .into(),
+                    );
+                }
             }
         }
 
