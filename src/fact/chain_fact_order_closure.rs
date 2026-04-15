@@ -196,6 +196,23 @@ mod tests {
     }
 
     #[test]
+    fn eq_chain_adds_all_pairs_between_equal_nodes() {
+        let lf = default_line_file();
+        let chain = ChainFact::new(
+            vec![id("x"), id("y"), id("z")],
+            vec![prop("="), prop("=")],
+            lf.clone(),
+        );
+        let facts = chain.facts_with_order_transitive_closure().unwrap();
+        let displayed: Vec<_> = facts.iter().map(|f| f.to_string()).collect();
+        assert!(
+            displayed.iter().any(|s| s.contains("y") && s.contains("z") && s.contains("=")),
+            "expected y = z from equality clique, got {:?}",
+            displayed
+        );
+    }
+
+    #[test]
     fn le_eq_lt_chain_adds_transitive_facts() {
         let lf = default_line_file();
         let chain = ChainFact::new(
