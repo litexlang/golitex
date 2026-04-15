@@ -8,14 +8,14 @@ impl Runtime {
     pub fn exec_have_fn_equal_case_by_case_stmt(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
-    ) -> Result<StmtResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeError> {
         let fn_set_stored = self
             .add_mangled_prefix_to_fn_set_clause(
                 &have_fn_equal_case_by_case_stmt.fn_set_clause,
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
             )
             .map_err(|e| {
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+                short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
                     "have_fn_equal_case_by_case_stmt: build fn set for storage failed".to_string(),
                     Some(e),
@@ -23,21 +23,23 @@ impl Runtime {
                 )
             })?;
 
-        self.verify_have_fn_equal_case_by_case_stmt(
+        self.have_fn_equal_case_by_case_stmt_verify_well_defined(
             have_fn_equal_case_by_case_stmt,
             &fn_set_stored,
         )
         .map_err(|e| {
-            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            short_exec_error(
                 have_fn_equal_case_by_case_stmt.clone().into(),
                 "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
-                Some(RuntimeError::ExecStmtError(e)),
+                Some(e),
                 vec![],
             )
         })?;
 
-        let infer_result =
-            self.store_have_fn_equal_case_by_case(have_fn_equal_case_by_case_stmt, &fn_set_stored)?;
+        let infer_result = self.store_have_fn_equal_case_by_case_stmt_facts(
+            have_fn_equal_case_by_case_stmt,
+            &fn_set_stored,
+        )?;
         Ok((NonFactualStmtSuccess::new(
             have_fn_equal_case_by_case_stmt.clone().into(),
             infer_result,
@@ -46,11 +48,11 @@ impl Runtime {
         .into())
     }
 
-    fn store_have_fn_equal_case_by_case(
+    fn store_have_fn_equal_case_by_case_stmt_facts(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
-    ) -> Result<InferResult, RuntimeErrorStruct> {
+    ) -> Result<InferResult, RuntimeError> {
         self.store_identifier_obj(&have_fn_equal_case_by_case_stmt.name)?;
 
         let function_identifier_obj = have_fn_equal_case_by_case_stmt.name.clone().into();
@@ -65,10 +67,10 @@ impl Runtime {
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
-                    "".to_string(),
-                    Some(RuntimeError::ExecStmtError(store_fact_error)),
+                    "",
+                    Some(store_fact_error),
                     vec![],
                 )
             })?;
@@ -124,10 +126,10 @@ impl Runtime {
             let forall_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                    short_exec_error(
                         have_fn_equal_case_by_case_stmt.clone().into(),
-                        "".to_string(),
-                        Some(RuntimeError::ExecStmtError(store_fact_error)),
+                        "",
+                        Some(store_fact_error),
                         vec![],
                     )
                 })?;
@@ -137,17 +139,18 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    fn verify_have_fn_equal_case_by_case_stmt(
+    fn have_fn_equal_case_by_case_stmt_verify_well_defined(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         if have_fn_equal_case_by_case_stmt.cases.len()
             != have_fn_equal_case_by_case_stmt.equal_tos.len()
         {
-            return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            return Err(short_exec_error(
                 have_fn_equal_case_by_case_stmt.clone().into(),
-                "have_fn_equal_case_by_case_stmt: number of cases does not match number of equal_tos".to_string(),
+                "have_fn_equal_case_by_case_stmt: number of cases does not match number of equal_tos"
+                    .to_string(),
                 None,
                 vec![],
             ));
@@ -159,9 +162,9 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            RuntimeErrorStruct::exec_stmt_new_with_stmt(
+            short_exec_error(
                 have_fn_equal_case_by_case_stmt.clone().into(),
-                "".to_string(),
+                "",
                 Some(well_defined_error),
                 vec![],
             )
@@ -172,7 +175,7 @@ impl Runtime {
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
 
             self.run_in_local_env(|rt| {
-                rt.have_fn_equal_case_by_case_stmt_verify_well_defined_body_for_one_case(
+                rt.have_fn_equal_case_by_case_stmt_verify_well_defined_body(
                     have_fn_equal_case_by_case_stmt,
                     case_fact,
                     equal_to,
@@ -183,12 +186,12 @@ impl Runtime {
         Ok(())
     }
 
-    fn have_fn_equal_case_by_case_stmt_verify_well_defined_body_for_one_case(
+    fn have_fn_equal_case_by_case_stmt_verify_well_defined_body(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         case_fact: &AndChainAtomicFact,
         equal_to: &Obj,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let verify_state = VerifyState::new(0, false);
         let case_fact_as_fact: Fact = case_fact.clone().into();
 
@@ -199,9 +202,9 @@ impl Runtime {
         {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
-                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                    short_exec_error(
                         have_fn_equal_case_by_case_stmt.clone().into(),
-                        "".to_string(),
+                        "",
                         Some(define_params_error),
                         vec![],
                     )
@@ -218,10 +221,10 @@ impl Runtime {
                     dom_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                    short_exec_error(
                         have_fn_equal_case_by_case_stmt.clone().into(),
-                        "".to_string(),
-                        Some(RuntimeError::ExecStmtError(store_fact_error)),
+                        "",
+                        Some(store_fact_error),
                         vec![],
                     )
                 })?;
@@ -230,18 +233,18 @@ impl Runtime {
         let _ = self
             .store_fact_without_well_defined_verified_and_infer(case_fact_as_fact)
             .map_err(|store_fact_error| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
-                    "".to_string(),
-                    Some(RuntimeError::ExecStmtError(store_fact_error)),
+                    "",
+                    Some(store_fact_error),
                     vec![],
                 )
             })?;
         self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)
             .map_err(|well_defined_error| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
-                    "".to_string(),
+                    "",
                     Some(well_defined_error),
                     vec![],
                 )
@@ -259,9 +262,9 @@ impl Runtime {
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
-                RuntimeErrorStruct::exec_stmt_new_with_stmt(
+                short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
-                    "".to_string(),
+                    "",
                     Some(verify_error),
                     vec![],
                 )
@@ -271,7 +274,7 @@ impl Runtime {
                 "have_fn_equal_case_by_case_stmt: {} is not in return set {} under case {}",
                 equal_to, have_fn_equal_case_by_case_stmt.fn_set_clause.ret_set, case_fact,
             );
-            return Err(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
+            return Err(short_exec_error(
                 have_fn_equal_case_by_case_stmt.clone().into(),
                 msg,
                 None,

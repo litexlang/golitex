@@ -9,13 +9,14 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         if matches!(pt, ParamType::Struct(_)) {
             return Err(
-                RuntimeError::new_parse_error_with_msg_position_previous_error(
-                    "nested `struct` types are not allowed in struct parameter and field types"
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                "nested `struct` types are not allowed in struct parameter and field types"
                         .to_string(),
-                    line_file,
-                    None,
-                ),
-            );
+                line_file,
+                None,
+                vec![],
+            ))));
         }
         Ok(())
     }

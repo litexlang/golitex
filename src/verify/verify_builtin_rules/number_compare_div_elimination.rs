@@ -64,7 +64,8 @@ impl Runtime {
             let right_denominator_number = self.resolve_obj_to_number_resolved(&right_div.right)?;
             let left_den_str = left_denominator_number.normalized_value.as_str();
             let right_den_str = right_denominator_number.normalized_value.as_str();
-            let product_positive = two_denominators_product_is_positive(left_den_str, right_den_str)?;
+            let product_positive =
+                two_denominators_product_is_positive(left_den_str, right_den_str)?;
             let flip = !product_positive;
             let left_numerator_number = self.resolve_obj_to_number_resolved(&left_div.left)?;
             let right_numerator_number = self.resolve_obj_to_number_resolved(&right_div.left)?;

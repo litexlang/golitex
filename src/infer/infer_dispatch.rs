@@ -61,7 +61,10 @@ impl Runtime {
     }
 
     // Do not record the whole forall in CLI/JSON `infer_facts`; inner then-clauses are stored as separate facts.
-    fn infer_forall_fact(&mut self, _forall_fact: &ForallFact) -> Result<InferResult, RuntimeError> {
+    fn infer_forall_fact(
+        &mut self,
+        _forall_fact: &ForallFact,
+    ) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }
 

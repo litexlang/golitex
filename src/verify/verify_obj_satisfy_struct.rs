@@ -13,18 +13,22 @@ impl Runtime {
             Some(d) => d,
             None => {
                 return Err(
-                    RuntimeError::new_verify_error_with_msg_position_previous_error(
-                        format!("struct `{}` is not defined", struct_name),
-                        default_line_file(),
-                        None,
-                    ),
+                    VerifyRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!("struct `{}` is not defined", struct_name),
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into(),
                 );
             }
         };
 
         let number_of_params_in_def = def.number_of_params();
         if number_of_params_in_def != struct_ty.args.len() {
-            return Err(RuntimeError::new_verify_error_with_msg_position_previous_error(
+            return Err(VerifyRuntimeError(RuntimeErrorStruct::new(
+                None,
                 format!(
                     "struct `{}` definition expects {} parameter(s), but struct type has {} argument(s)",
                     def.name,
@@ -33,15 +37,15 @@ impl Runtime {
                 ),
                 default_line_file(),
                 None,
-            ));
+                vec![],
+            ))
+            .into());
         }
 
         match &obj {
-            Obj::Tuple(tuple) => {
-                self.run_in_local_env(|rt| {
-                    rt.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state)
-                })
-            }
+            Obj::Tuple(tuple) => self.run_in_local_env(|rt| {
+                rt.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state)
+            }),
             Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
                 let id_key = match &obj {
                     Obj::Identifier(i) => IdentifierOrIdentifierWithMod::Identifier(i.clone()),
@@ -77,17 +81,17 @@ impl Runtime {
                     }
                 }
 
-                Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        InFact::new(
-                            obj.clone(),
-                            String::from("_").into(),
-                            default_line_file(),
-                        ).into(),
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                        InFact::new(obj.clone(), String::from("_").into(), default_line_file())
+                            .into(),
                         "".to_string(),
                         None,
                         Some(default_line_file()),
                         vec![],
-                    )).into())
+                    ))
+                    .into(),
+                )
             }
             _ => Ok((StmtUnknown::new()).into()),
         }
@@ -104,16 +108,19 @@ impl Runtime {
         let expected_tuple_len = args_of_struct_param_type.len() + struct_def.fields.len();
         if expected_tuple_len != tuple.args.len() {
             return Err(
-                RuntimeError::new_verify_error_with_msg_position_previous_error(
-                    format!(
+                VerifyRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                         "tuple for struct `{}` should have {} component(s), got {}",
                         struct_param_type.name,
                         expected_tuple_len,
                         tuple.args.len()
                     ),
-                    default_line_file(),
-                    None,
-                ),
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into(),
             );
         }
 
@@ -165,14 +172,16 @@ impl Runtime {
             let instantiated_field_type = self
                 .inst_param_type(field_type, &param_arg_map)
                 .map_err(|e| {
-                    RuntimeError::new_verify_error_with_msg_position_previous_error(
-                        format!(
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "failed to instantiate field type {} of struct `{}`",
                             i, struct_def.name
                         ),
-                        default_line_file(),
-                        Some(e),
-                    )
+                default_line_file(),
+                Some(e),
+                vec![],
+            )))
                 })?;
             let result = self.verify_obj_satisfies_param_type(
                 tuple_field_arg.clone(),
@@ -194,14 +203,16 @@ impl Runtime {
             let instantiated = self
                 .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map)
                 .map_err(|e| {
-                    RuntimeError::new_verify_error_with_msg_position_previous_error(
-                        format!(
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "struct `{}`: failed to instantiate `<=>:` fact: {}",
                             struct_def.name, e
                         ),
-                        default_line_file(),
-                        Some(e),
-                    )
+                default_line_file(),
+                Some(e),
+                vec![],
+            )))
                 })?;
 
             let result = self.verify_or_and_chain_atomic_fact(&instantiated, verify_state)?;

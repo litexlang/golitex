@@ -1,10 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn store_def_prop(
-        &mut self,
-        def_prop_stmt: &DefPropStmt,
-    ) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_def_prop(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), RuntimeError> {
         let name = def_prop_stmt.name.clone();
         self.top_level_env()
             .defined_def_props
@@ -15,7 +12,7 @@ impl Runtime {
     pub fn store_def_abstract_prop(
         &mut self,
         def_abstract_prop_stmt: &DefAbstractPropStmt,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let name = def_abstract_prop_stmt.name.clone();
         self.top_level_env()
             .defined_abstract_props
@@ -23,7 +20,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_def_algo(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_def_algo(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<(), RuntimeError> {
         let name = def_algo_stmt.name.clone();
         self.top_level_env()
             .defined_algorithms
@@ -31,7 +28,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_identifier_obj(&mut self, name: &str) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_identifier_obj(&mut self, name: &str) -> Result<(), RuntimeError> {
         self.top_level_env()
             .defined_identifiers
             .insert(name.to_string(), ());
@@ -41,7 +38,7 @@ impl Runtime {
     pub fn store_struct_def(
         &mut self,
         def_struct_stmt: &DefStructStmt,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let name = def_struct_stmt.name.clone();
 
         self.top_level_env()
@@ -53,7 +50,7 @@ impl Runtime {
     pub fn store_def_family(
         &mut self,
         def_family_stmt: &DefFamilyStmt,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let name = def_family_stmt.name.clone();
         self.top_level_env()
             .defined_families

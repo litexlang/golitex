@@ -5,7 +5,7 @@ impl Runtime {
     pub fn exec_def_algo_stmt(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-    ) -> Result<StmtResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process(def_algo_stmt))?;
         self.store_def_algo(def_algo_stmt)?;
         Ok(
@@ -17,7 +17,7 @@ impl Runtime {
     fn exec_def_algo_stmt_verify_process(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-    ) -> Result<StmtResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeError> {
         let function_name_obj: Obj = def_algo_stmt.name.clone().into();
         let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
             Some(fn_set) => fn_set,
@@ -59,35 +59,23 @@ impl Runtime {
         )
     }
 
-    fn def_algo_verify_exec_error_without_message(
-        def_algo_stmt: &DefAlgoStmt,
-    ) -> RuntimeErrorStruct {
-        RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            def_algo_stmt.clone().into(),
-            "".to_string(),
-            None,
-            vec![],
-        )
+    fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> RuntimeError {
+        short_exec_error(def_algo_stmt.clone().into(), "", None, vec![])
     }
 
     fn def_algo_verify_exec_error_with_message_and_optional_cause(
         def_algo_stmt: &DefAlgoStmt,
         message: String,
         cause: Option<RuntimeError>,
-    ) -> RuntimeErrorStruct {
-        RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-            def_algo_stmt.clone().into(),
-            message,
-            cause,
-            vec![],
-        )
+    ) -> RuntimeError {
+        short_exec_error(def_algo_stmt.clone().into(), message, cause, vec![])
     }
 
     fn collect_requirement_facts_and_algo_param_defs(
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_where_algo_belongs: &FnSet,
-    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
             fn_set_where_algo_belongs,
@@ -98,7 +86,7 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_with_dom: &FnSet,
-    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeErrorStruct> {
+    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
             args_for_algo_params.push(param_name.clone().into());
@@ -216,7 +204,7 @@ impl Runtime {
     fn requirement_facts_to_exist_or_and_chain_dom_facts(
         def_algo_stmt: &DefAlgoStmt,
         requirement_facts: &[Fact],
-    ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeErrorStruct> {
+    ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeError> {
         let mut requirement_dom_facts: Vec<ExistOrAndChainAtomicFact> =
             Vec::with_capacity(requirement_facts.len());
         for requirement_fact in requirement_facts.iter() {
@@ -276,7 +264,7 @@ impl Runtime {
         algo_param_defs_with_type: &ParamDefWithType,
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let verify_state = VerifyState::new(0, false);
         for algo_case in def_algo_stmt.cases.iter() {
             let case_forall_fact = Self::forall_fact_for_def_algo_case(
@@ -293,7 +281,7 @@ impl Runtime {
                             "algo verify: case `{}` does not imply expected return",
                             algo_case
                         ),
-                        Some(runtime_error.into()),
+                        Some(runtime_error),
                     )
                 })?;
         }
@@ -305,7 +293,7 @@ impl Runtime {
         def_algo_stmt: &DefAlgoStmt,
         algo_param_defs_with_type: &ParamDefWithType,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         if def_algo_stmt.default_return.is_some() {
             return Ok(());
         }
@@ -340,7 +328,7 @@ impl Runtime {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                     def_algo_stmt,
                     "algo verify: cases do not cover all situations".to_string(),
-                    Some(runtime_error.into()),
+                    Some(runtime_error),
                 )
             })?;
 

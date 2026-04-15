@@ -6,25 +6,25 @@ impl Runtime {
         stmt: &ByEnumerateStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                stmt.clone().into(),
-                msg,
-                None,
-                vec![],
-            ))
+            short_exec_error(
+ stmt.clone().into(),
+                    msg,
+                    None,
+                    vec![],
+                )
         })?;
 
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
+                short_exec_error(
+ stmt.clone().into(),
                     format!(
                         "by enumerate: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
                     ),
                     Some(well_defined_error),
                     vec![],
-                ))
+                )
             })?;
 
         let enumerate_cartesian_product_is_empty = stmt
@@ -37,28 +37,27 @@ impl Runtime {
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        format!(
+                    short_exec_error(
+ stmt.clone().into(),
+                    format!(
                             "by enumerate: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
                         ),
-                        Some(RuntimeError::ExecStmtError(store_fact_error)),
-                        vec![],
-                    ))
+                    Some(store_fact_error),
+                    vec![],
+                )
                 })?;
             let infer_result = Self::infer_result_with_generated_forall_and_store_infer(
                 &corresponding_forall_fact,
                 infer_result_from_stored_forall_fact,
             );
-            return Ok((NonFactualStmtSuccess::new(
-                    stmt.clone().into(),
-                    infer_result,
-                    vec![],
-                )).into());
+            return Ok(
+                (NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into(),
+            );
         }
 
-        let mut current_parameter_index_assignment = Self::by_enumerate_start_index_assignment(stmt);
+        let mut current_parameter_index_assignment =
+            Self::by_enumerate_start_index_assignment(stmt);
         loop {
             self.exec_by_enumerate_stmt_for_one_assignment(
                 stmt,
@@ -75,19 +74,17 @@ impl Runtime {
         }
 
         let infer_result_from_stored_forall_fact = self
-            .store_fact_without_well_defined_verified_and_infer(
-                corresponding_forall_fact.clone(),
-            )
+            .store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact.clone())
             .map_err(|store_fact_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
+                short_exec_error(
+ stmt.clone().into(),
                     format!(
                         "by enumerate: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
-                    Some(RuntimeError::ExecStmtError(store_fact_error)),
+                    Some(store_fact_error),
                     vec![],
-                ))
+                )
             })?;
 
         let infer_result = Self::infer_result_with_generated_forall_and_store_infer(
@@ -95,11 +92,7 @@ impl Runtime {
             infer_result_from_stored_forall_fact,
         );
 
-        Ok((NonFactualStmtSuccess::new(
-                stmt.clone().into(),
-                infer_result,
-                vec![],
-            )).into())
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
 
     /// Puts the generated forall fact first via [`InferResult::new_fact`], then appends infer from store.
@@ -158,29 +151,25 @@ impl Runtime {
             let assigned_obj = (*stmt.param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
                 .clone();
-            self.store_identifier_obj(parameter_name)
-                .map_err(RuntimeError::ExecStmtError)?;
-            let parameter_equal_to_assigned_obj_atomic_fact =
-                EqualFact::new(
-                    parameter_name.to_string().into(),
-                    assigned_obj.clone(),
-                    stmt.line_file.clone(),
-                ).into();
+            self.store_identifier_obj(parameter_name)?;
+            let parameter_equal_to_assigned_obj_atomic_fact = EqualFact::new(
+                parameter_name.to_string().into(),
+                assigned_obj.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 parameter_equal_to_assigned_obj_atomic_fact,
-            )
-            .map_err(RuntimeError::ExecStmtError)?;
+            )?;
         }
 
         for proof_stmt in stmt.proof.iter() {
             if let Err(statement_error) = self.exec_stmt(proof_stmt) {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        proof_stmt.to_string(),
-                        Some(statement_error),
-                        vec![],
-                    ),
+                return Err(short_exec_error(
+ stmt.clone().into(),
+                    proof_stmt.to_string(),
+                    Some(statement_error),
+                    vec![],
                 ));
             }
         }
@@ -191,13 +180,11 @@ impl Runtime {
                 &VerifyState::new(0, false),
             )?;
             if verified_result.is_unknown() {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        format!("by enumerate: failed to prove `{}`", fact_to_prove),
-                        None,
-                        vec![],
-                    ),
+                return Err(short_exec_error(
+ stmt.clone().into(),
+                    format!("by enumerate: failed to prove `{}`", fact_to_prove),
+                    None,
+                    vec![],
                 ));
             }
         }

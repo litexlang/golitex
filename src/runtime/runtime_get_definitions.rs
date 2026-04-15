@@ -91,10 +91,7 @@ impl Runtime {
         Some(def)
     }
 
-    pub fn get_definition_of_struct_by_name(
-        &self,
-        struct_name: &str,
-    ) -> Option<&DefStructStmt> {
+    pub fn get_definition_of_struct_by_name(&self, struct_name: &str) -> Option<&DefStructStmt> {
         let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
@@ -108,13 +105,8 @@ impl Runtime {
         None
     }
 
-    pub fn get_cloned_definition_of_struct(
-        &self,
-        struct_name: &str,
-    ) -> Option<DefStructStmt> {
-        let parts = struct_name
-            .split(MOD_SIGN)
-            .collect::<Vec<&str>>();
+    pub fn get_cloned_definition_of_struct(&self, struct_name: &str) -> Option<DefStructStmt> {
+        let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             unimplemented!();
         }

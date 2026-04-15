@@ -376,17 +376,23 @@ impl Runtime {
                         known_fact.to_string(),
                         atomic_fact.to_string()
                     );
-                    return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        atomic_fact.clone().into(),
-                        message.clone(),
-                        atomic_fact.line_file(),
-                        Some(RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
-                            message,
-                            atomic_fact.line_file(),
-                            Some(Fact::from(atomic_fact.clone()).into_stmt()),
-                            None,
-                        ).into()),
-                    ));
+                    return Err({
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(atomic_fact.clone()).into_stmt()),
+                message.clone(),
+                atomic_fact.line_file(),
+                Some(UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(atomic_fact.clone()).into_stmt()),
+                message,
+                atomic_fact.line_file(),
+                None,
+                vec![],
+            ))
+            .into()),
+                vec![],
+            ))
+            .into()
+        });
                 }
                 let mut all_args_match = true;
                 for (index, known_arg) in known_fact.args().iter().enumerate() {
@@ -533,12 +539,16 @@ impl Runtime {
             Some(definition_reference) => definition_reference.clone(),
             None => {
                 return Err(
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        normal_atomic_fact.clone().into(),
-                        format!("prop definition not found for {}", predicate_name),
-                        normal_atomic_fact.line_file.clone(),
-                        None,
-                    ),
+                    {
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                format!("prop definition not found for {}", predicate_name),
+                normal_atomic_fact.line_file.clone(),
+                None,
+                vec![],
+            ))
+            .into()
+        },
                 )
             }
         };
@@ -553,12 +563,16 @@ impl Runtime {
             Ok(x) => x,
             Err(_) => {
                 return Err(
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        normal_atomic_fact.clone().into(),
-                        format!("failed to verify parameter types for {}", predicate_name),
-                        normal_atomic_fact.line_file.clone(),
-                        None,
-                    ),
+                    {
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                format!("failed to verify parameter types for {}", predicate_name),
+                normal_atomic_fact.line_file.clone(),
+                None,
+                vec![],
+            ))
+            .into()
+        },
                 )
             }
         };
@@ -581,12 +595,15 @@ impl Runtime {
             let instantiated_iff_fact = self
                 .inst_fact(iff_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        normal_atomic_fact.clone().into(),
-                        String::new(),
-                        normal_atomic_fact.line_file.clone(),
-                        Some(e),
-                    )
+                    {
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                String::new(),
+                normal_atomic_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            )))
+        }
                 })?
                 .with_new_line_file(normal_atomic_fact.line_file.clone());
             let iff_clause_verify_result =

@@ -57,9 +57,9 @@ impl ExistOrAndChainAtomicFact {
                     line_file,
                 ))
             }
-            ExistOrAndChainAtomicFact::ChainFact(cf) => {
-                ExistOrAndChainAtomicFact::ChainFact(ChainFact::new(cf.objs, cf.prop_names, line_file))
-            }
+            ExistOrAndChainAtomicFact::ChainFact(cf) => ExistOrAndChainAtomicFact::ChainFact(
+                ChainFact::new(cf.objs, cf.prop_names, line_file),
+            ),
             ExistOrAndChainAtomicFact::OrFact(of) => {
                 ExistOrAndChainAtomicFact::OrFact(OrFact::new(
                     of.facts

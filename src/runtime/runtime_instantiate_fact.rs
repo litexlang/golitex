@@ -650,10 +650,7 @@ impl Runtime {
     ) -> Result<RestrictFact, RuntimeError> {
         Ok(RestrictFact::new(
             self.inst_obj(&restrict_fact.obj, param_to_arg_map)?,
-            self.inst_obj(
-                &restrict_fact.obj_can_restrict_to_fn_set,
-                param_to_arg_map,
-            )?,
+            self.inst_obj(&restrict_fact.obj_can_restrict_to_fn_set, param_to_arg_map)?,
             restrict_fact.line_file.clone(),
         ))
     }

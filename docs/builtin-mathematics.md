@@ -1,6 +1,6 @@
 # Builtin environment: mathematical summary
 
-This document restates the Lit fragments concatenated into the kernel’s initial environment from `src/runtime/builtin_code/` in mathematical language, so axioms and conclusions can be checked against the intended semantics (mainly the ordered field \(\mathbb{R}\) plus a fragment of set theory).
+This document restates the Lit fragments concatenated into the kernel’s initial environment from `src/builtin_code/` in mathematical language, so axioms and conclusions can be checked against the intended semantics (mainly the ordered field \(\mathbb{R}\) plus a fragment of set theory).
 
 ---
 
@@ -157,6 +157,6 @@ If \(A,B\) are `finite_set` and \(A\subseteq B\), then \(\mathrm{count}(A)\le \m
 
 ## 6. How to use this document
 
-- This is a **semantic summary**, not a substitute for the source; if Lit inside the Rust strings disagrees with this file, `src/runtime/builtin_code/*.rs` wins.  
+- This is a **semantic summary**, not a substitute for the source; if Lit inside the Rust strings disagrees with this file, `src/builtin_code/*.rs` wins.  
 - Section 1.1 and Section 2.5 (difference characterization vs. \(a-b\le 0\)) overlap on purpose so different proof paths in the kernel can reuse the same facts.  
 - If you shrink the axiom set (e.g. drop redundant difference characterizations or duplicate square laws), update this document when you change the source.

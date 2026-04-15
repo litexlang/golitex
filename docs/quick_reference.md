@@ -170,12 +170,11 @@ forall a R:
 **Example.**
 
 ```litex
-know:
-    forall a, b R:
-        =>:
-            a <= b
-        <=>:
-            0 <= b - a
+forall a, b R:
+    =>:
+        a <= b
+    <=>:
+        0 <= b - a
 ```
 
 ## Statements in general
@@ -441,9 +440,23 @@ prove:
 
 ### `by induc`
 
-**Meaning.** Induction on an integer parameter from a given base; needs a suitable induction principle in context.
+**Meaning.** Induction on an integer parameter from a given base. In a local environment, optional proof steps run first; then for each goal the checker verifies the base instance (with *param* := *object*), that *object* lies in `Z`, and that the usual induction-step `forall` (hypothesis *param* ≥ base together with the goal template implies the *param*+1 instance) holds. On success, the corresponding universal fact (`forall` *param* in `Z`, *param* ≥ base ⇒ goals) is stored. You still need a usable induction principle in context (e.g. from `know`).
 
-**Syntax.** `by induc` *param* `from` *object* `:` body blocks.
+**Syntax.**
+
+```text
+by induc param from object:
+    prove:
+        goal_1
+        goal_2
+        …
+    proof_statement
+    …
+```
+
+- The first body block must be `prove:`; each nested block under it is one atomic-style goal (`ExistOrAndChainAtomicFact`).
+- Further blocks are optional proof steps (same idea as after `prove:` in `claim` / `by enumerate`). They are parsed under a local parsing-time name scope so names introduced there do not leak to the file.
+- Multiple goals share one proof segment and one local run; each goal is checked in turn after that proof.
 
 **Example.** **`examples/by_induc.lit`**.
 
