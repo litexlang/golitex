@@ -273,6 +273,48 @@ impl Runtime {
         }
     }
 
+    fn maybe_verify_in_fact_max_min_pair_closed_standard_set(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (left, right, set) = match (&in_fact.element, &in_fact.set) {
+            (Obj::Max(m), Obj::StandardSet(s)) => {
+                (m.left.as_ref(), m.right.as_ref(), s.clone())
+            }
+            (Obj::Min(m), Obj::StandardSet(s)) => {
+                (m.left.as_ref(), m.right.as_ref(), s.clone())
+            }
+            _ => return Ok(None),
+        };
+        if !matches!(
+            set,
+            StandardSet::RPos
+                | StandardSet::QPos
+                | StandardSet::RNeg
+                | StandardSet::QNeg
+                | StandardSet::ZNeg
+                | StandardSet::N
+                | StandardSet::NPos
+        ) {
+            return Ok(None);
+        }
+        let reason = format!("max/min: both operands in {}", set);
+        let set_obj: Obj = set.into();
+        let lf = in_fact.line_file.clone();
+        for operand in [left, right] {
+            let f: AtomicFact = InFact::new(operand.clone(), set_obj.clone(), lf.clone()).into();
+            if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)?
+            {
+                return Ok(Some((StmtUnknown::new()).into()));
+            }
+        }
+        Ok(Some(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        )))
+    }
+
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,
@@ -292,6 +334,11 @@ impl Runtime {
                     return Ok(evaluation_membership_result);
                 }
             }
+        }
+        if let Some(result) =
+            self.maybe_verify_in_fact_max_min_pair_closed_standard_set(in_fact, verify_state)?
+        {
+            return Ok(result);
         }
         match (&in_fact.element, &in_fact.set) {
             (Obj::Tuple(tuple), Obj::Cart(cart)) => {

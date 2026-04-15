@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 use super::exec_have_fn_equal_shared::{
     build_function_obj_with_param_names, param_defs_with_type_from_have_fn_clause,
@@ -154,9 +155,64 @@ impl Runtime {
                 })?;
         }
 
+        let mut ret_set = have_fn_equal_stmt.fn_set_clause.ret_set.clone();
+        let mut equal_to_for_in_fact = have_fn_equal_stmt.equal_to.clone();
+        while let Obj::FnSet(inner) = ret_set {
+            for param_def_with_set in inner.params_def_with_set.iter() {
+                self.define_params_with_set(param_def_with_set)
+                    .map_err(|define_params_error| {
+                        short_exec_error(
+                            have_fn_equal_stmt.clone().into(),
+                            "",
+                            Some(define_params_error),
+                            vec![],
+                        )
+                    })?;
+                // Nested `fn` in ret_set uses mangled stored names (`__x`); RHS of `=` still has `x`.
+                let mut user_to_mangled: HashMap<String, Obj> = HashMap::new();
+                for stored_param in param_def_with_set.params.iter() {
+                    if let Some(user_param) =
+                        stored_param.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
+                    {
+                        if user_param.is_empty() {
+                            continue;
+                        }
+                        user_to_mangled.insert(user_param.to_string(), stored_param.clone().into());
+                    }
+                }
+                if !user_to_mangled.is_empty() {
+                    equal_to_for_in_fact = self
+                        .inst_obj(&equal_to_for_in_fact, &user_to_mangled)
+                        .map_err(|e| {
+                            short_exec_error(
+                                have_fn_equal_stmt.clone().into(),
+                                "",
+                                Some(e),
+                                vec![],
+                            )
+                        })?;
+                }
+            }
+            for dom_fact in inner.dom_facts.iter() {
+                let _ = self
+                    .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                        dom_fact.clone(),
+                    )
+                    .map_err(|store_fact_error| {
+                        short_exec_error(
+                            have_fn_equal_stmt.clone().into(),
+                            "",
+                            Some(store_fact_error),
+                            vec![],
+                        )
+                    })?;
+            }
+            ret_set = (*inner.ret_set).clone();
+        }
+
         let equal_to_in_ret_set_atomic_fact = InFact::new(
-            have_fn_equal_stmt.equal_to.clone(),
-            have_fn_equal_stmt.fn_set_clause.ret_set.clone(),
+            equal_to_for_in_fact.clone(),
+            ret_set.clone(),
             have_fn_equal_stmt.line_file.clone(),
         )
         .into();
@@ -173,7 +229,7 @@ impl Runtime {
         if verify_result.is_unknown() {
             let msg = format!(
                 "have_fn_equal_stmt: {} is not in return set {}",
-                have_fn_equal_stmt.equal_to, have_fn_equal_stmt.fn_set_clause.ret_set
+                equal_to_for_in_fact, ret_set
             );
             return Err(short_exec_error(
                 have_fn_equal_stmt.clone().into(),
