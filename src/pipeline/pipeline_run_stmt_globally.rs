@@ -35,22 +35,23 @@ fn run_file(
     _runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
     let current_lit_path = _runtime.module_manager.current_file_path_rc();
-    let path = resolve_run_file_path(
-        _run_file_stmt.file_path.as_str(),
-        current_lit_path.as_ref(),
-    );
+    let path = resolve_run_file_path(_run_file_stmt.file_path.as_str(), current_lit_path.as_ref());
     let content = fs::read_to_string(path.as_str()).map_err(|_| {
-        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            _run_file_stmt.clone().into(),
-            format!("Failed to read file: {}", path.as_str()),
-            None,
-            vec![],
-        ))
+        RuntimeError::ExecStmtError({
+            let st: Stmt = _run_file_stmt.clone().into();
+            let lf = st.line_file();
+            RuntimeErrorStruct::new(
+                Some(st),
+                format!("Failed to read file: {}", path.as_str()),
+                lf,
+                None,
+                vec![],
+            )
+        })
     })?;
 
     let current_file_index = _runtime.module_manager.current_file_index;
-    _runtime
-        .new_file_and_update_runtime_with_file_content(path.as_str());
+    _runtime.new_file_and_update_runtime_with_file_content(path.as_str());
 
     let result = run_source_code(content.as_str(), _runtime);
 
@@ -61,10 +62,11 @@ fn run_file(
     };
 
     return Ok((NonFactualStmtSuccess::new(
-            _run_file_stmt.clone().into(),
-            InferResult::new(),
-            result.0,
-        )).into());
+        _run_file_stmt.clone().into(),
+        InferResult::new(),
+        result.0,
+    ))
+    .into());
 }
 
 fn run_import_stmt(

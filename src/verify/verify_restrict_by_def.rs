@@ -13,19 +13,26 @@ impl Runtime {
             match self.get_cloned_object_in_fn_set(function) {
                 Some(fn_set) => fn_set,
                 None => {
-                    return Err(RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    restrict_fact.clone().into(),
-                    String::new(),
-                    restrict_fact.line_file.clone(),
-                    Some(RuntimeError::new_well_defined_error_with_msg_previous_error_position(
-                        format!(
+                    return Err({
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(restrict_fact.clone()).into_stmt()),
+                String::new(),
+                restrict_fact.line_file.clone(),
+                Some(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "function `{}` belongs to what function set is unknown",
                             function.to_string()
                         ),
-                        None,
-                        default_line_file(),
-                    )),
-                ));
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into()),
+                vec![],
+            ))
+            .into()
+        });
                 }
             };
 
@@ -91,12 +98,15 @@ impl Runtime {
             restrict_fact.line_file.clone(),
         )
         .map_err(|e| {
-            RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                restrict_fact.clone().into(),
+            {
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(restrict_fact.clone()).into_stmt()),
                 String::new(),
                 restrict_fact.line_file.clone(),
                 Some(e),
-            )
+                vec![],
+            )))
+        }
         })?;
 
         self.verify_forall_and_return_restrict_success(
@@ -156,7 +166,7 @@ impl Runtime {
         for dom_fact in &original_fn_set.dom_facts {
             let instantiated_dom_fact =
                 runtime.inst_or_and_chain_atomic_fact(dom_fact, original_to_restrict_param_map)?;
-                then_facts.push(instantiated_dom_fact.into());
+            then_facts.push(instantiated_dom_fact.into());
         }
 
         Ok(then_facts)

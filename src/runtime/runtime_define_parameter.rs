@@ -57,7 +57,6 @@ impl Runtime {
         let type_fact =
             InFact::new(name.to_string().into(), obj.clone(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_set(
@@ -67,7 +66,6 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsSetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_nonempty_set(
@@ -77,7 +75,6 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsNonemptySetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::ExecStmtError)
     }
 
     fn define_parameter_by_binding_finite_set(
@@ -87,7 +84,6 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsFiniteSetFact::new(name.to_string().into(), default_line_file()).into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-            .map_err(RuntimeError::ExecStmtError)
     }
 
     pub fn define_parameter_by_binding_struct(
@@ -106,8 +102,7 @@ impl Runtime {
         )
         .into();
         infer_result.new_infer_result_inside(
-            self.store_fact_without_well_defined_verified_and_infer(new_fact)
-                .map_err(RuntimeError::ExecStmtError)?,
+            self.store_fact_without_well_defined_verified_and_infer(new_fact)?,
         );
 
         let struct_name = struct_ty.name.to_string();
@@ -124,16 +119,14 @@ impl Runtime {
             let param_type = self.inst_param_type(field_ty, &base_map)?;
             let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
             infer_result.new_infer_result_inside(
-                self.store_fact_without_well_defined_verified_and_infer(f)
-                    .map_err(RuntimeError::ExecStmtError)?,
+                self.store_fact_without_well_defined_verified_and_infer(f)?,
             );
         }
 
         let iff_facts = self.instantiated_struct_def_or_and_facts_for_def(struct_ty, &def, name)?;
         for ocf in iff_facts {
             infer_result.new_infer_result_inside(
-                self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)
-                    .map_err(RuntimeError::ExecStmtError)?,
+                self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)?,
             );
         }
 
@@ -162,50 +155,58 @@ impl Runtime {
                 .map_err(|well_defined_error| {
                     let param_names_text = param_def.params.join(", ");
                     let error_line_file = well_defined_error.line_file().clone();
-                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
-                        format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "define params with type: failed to verify type well-defined for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ),
-                        Some(well_defined_error),
-                        error_line_file,
-                    )
+                error_line_file,
+                Some(well_defined_error),
+                vec![],
+            )))
                 })?;
             self.verify_param_type_nonempty_if_required(&param_def.param_type, check_type_nonempty)
                 .map_err(|inner_exec_error| {
                     let param_names_text = param_def.params.join(", ");
-                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
-                        format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "define params with type: nonempty check failed for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ),
-                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
-                        default_line_file(),
-                    )
+                default_line_file(),
+                Some(inner_exec_error),
+                vec![],
+            )))
                 })?;
 
             for name in param_def.params.iter() {
                 self.store_identifier_obj(name).map_err(|runtime_error| {
-                    RuntimeError::new_define_params_error_with_msg_previous_error_position(
-                        format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                             "define params with type: failed to declare parameter `{}`",
                             name
                         ),
-                        Some(RuntimeError::ExecStmtError(runtime_error)),
-                        default_line_file(),
-                    )
+                default_line_file(),
+                Some(runtime_error),
+                vec![],
+            )))
                 })?;
                 let fact_infer_result = self
                     .define_parameter_by_binding_param_type(name, &param_def.param_type)
                     .map_err(|runtime_error| {
-                        RuntimeError::new_define_params_error_with_msg_previous_error_position(
-                            format!(
+                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
                                 "define params with type: failed to apply param type for parameter `{}` with type {}",
                                 name, param_def.param_type
                             ),
-                            Some(runtime_error),
-                            default_line_file(),
-                        )
+                default_line_file(),
+                Some(runtime_error),
+                vec![],
+            )))
                     })?;
                 infer_result.new_infer_result_inside(fact_infer_result);
             }

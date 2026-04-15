@@ -184,14 +184,11 @@ impl Environment {
     pub fn store_atomic_fact_by_ref(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         self.store_atomic_fact(atomic_fact.clone())
     }
 
-    pub fn store_atomic_fact(
-        &mut self,
-        atomic_fact: AtomicFact,
-    ) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_atomic_fact(&mut self, atomic_fact: AtomicFact) -> Result<(), RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => self.store_equality(&equal_fact),
             _ => {
@@ -238,7 +235,7 @@ impl Environment {
         }
     }
 
-    fn store_exist_fact(&mut self, exist_fact: ExistFact) -> Result<(), RuntimeErrorStruct> {
+    fn store_exist_fact(&mut self, exist_fact: ExistFact) -> Result<(), RuntimeError> {
         let key: ExistFactKey = exist_fact.key();
         if let Some(vec_ref) = self.known_exist_facts.get_mut(&key) {
             vec_ref.push(exist_fact);
@@ -248,7 +245,7 @@ impl Environment {
         Ok(())
     }
 
-    fn store_or_fact(&mut self, or_fact: OrFact) -> Result<(), RuntimeErrorStruct> {
+    fn store_or_fact(&mut self, or_fact: OrFact) -> Result<(), RuntimeError> {
         let key: OrFactKey = or_fact.key();
         if let Some(vec_ref) = self.known_or_facts.get_mut(&key) {
             vec_ref.push(or_fact);
@@ -262,7 +259,7 @@ impl Environment {
         &mut self,
         atomic_fact: AtomicFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let key: AtomicFactKey = atomic_fact.key();
         let is_true = atomic_fact.is_true();
         if let Some(vec_ref) = self
@@ -281,7 +278,7 @@ impl Environment {
         &mut self,
         or_fact: &OrFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let key: OrFactKey = or_fact.key();
         if let Some(vec_ref) = self.known_or_facts_in_forall_facts.get_mut(&key) {
             vec_ref.push((or_fact.clone(), forall_params_and_dom));
@@ -296,7 +293,7 @@ impl Environment {
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(spec_fact) => {
                 self.store_atomic_fact_in_forall_fact(spec_fact.clone(), forall_params_and_dom)
@@ -320,19 +317,10 @@ impl Environment {
         &mut self,
         chain_fact: &ChainFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         for fact in chain_fact
             .facts()
-            .map_err(|e| {
-                RuntimeErrorStruct::new_with_conflict(
-                    e.statement.clone(),
-                    e.msg.clone(),
-                    e.line_file.clone(),
-                    e.conflict_with.clone(),
-                    Some(NewAtomicFactRuntimeError(e).into()),
-                    vec![],
-                )
-            })?
+            .map_err(RuntimeError::wrap_new_atomic_fact_as_store_conflict)?
             .into_iter()
         {
             self.store_atomic_fact_in_forall_fact(fact, forall_params_and_dom.clone())?;
@@ -344,7 +332,7 @@ impl Environment {
         &mut self,
         exist_fact: &ExistFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let key: ExistFactKey = exist_fact.key();
         if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&key) {
             vec_ref.push((exist_fact.clone(), forall_params_and_dom));
@@ -359,14 +347,14 @@ impl Environment {
         &mut self,
         and_fact: &AndFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         for fact in and_fact.facts.iter() {
             self.store_atomic_fact_in_forall_fact(fact.clone(), forall_params_and_dom.clone())?;
         }
         Ok(())
     }
 
-    fn store_forall_fact(&mut self, forall_fact: Rc<ForallFact>) -> Result<(), RuntimeErrorStruct> {
+    fn store_forall_fact(&mut self, forall_fact: Rc<ForallFact>) -> Result<(), RuntimeError> {
         let forall_params_and_dom = Rc::new(KnownForallFactParamsAndDom::new(
             forall_fact.params_def_with_type.clone(),
             forall_fact.dom_facts.clone(),
@@ -379,7 +367,7 @@ impl Environment {
         Ok(())
     }
 
-    fn store_and_fact(&mut self, and_fact: AndFact) -> Result<(), RuntimeErrorStruct> {
+    fn store_and_fact(&mut self, and_fact: AndFact) -> Result<(), RuntimeError> {
         for atomic_fact in and_fact.facts {
             self.store_atomic_fact(atomic_fact)?;
         }
@@ -389,7 +377,7 @@ impl Environment {
     fn store_forall_fact_with_iff(
         &mut self,
         forall_fact_with_iff: ForallFactWithIff,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         let (forall_then_implies_iff, forall_iff_implies_then) =
             forall_fact_with_iff.to_two_forall_facts();
         self.store_forall_fact(Rc::new(forall_then_implies_iff))?;
@@ -397,7 +385,7 @@ impl Environment {
         Ok(())
     }
 
-    pub fn store_fact(&mut self, fact: Fact) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_fact(&mut self, fact: Fact) -> Result<(), RuntimeError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
             Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
@@ -411,17 +399,14 @@ impl Environment {
         }
     }
 
-    pub fn store_exist_fact_by_ref(
-        &mut self,
-        exist_fact: &ExistFact,
-    ) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_exist_fact_by_ref(&mut self, exist_fact: &ExistFact) -> Result<(), RuntimeError> {
         self.store_exist_fact(exist_fact.clone())
     }
 
     pub fn store_exist_or_and_chain_atomic_fact(
         &mut self,
         fact: ExistOrAndChainAtomicFact,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.store_atomic_fact(atomic_fact)
@@ -436,7 +421,7 @@ impl Environment {
     pub fn store_and_chain_atomic_fact(
         &mut self,
         and_chain_atomic_fact: AndChainAtomicFact,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         match and_chain_atomic_fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
             AndChainAtomicFact::AndFact(and_fact) => self.store_and_fact(and_fact),
@@ -447,7 +432,7 @@ impl Environment {
     pub fn store_or_and_chain_atomic_fact(
         &mut self,
         fact: OrAndChainAtomicFact,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         match fact {
             OrAndChainAtomicFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
             OrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact(and_fact),
@@ -456,33 +441,21 @@ impl Environment {
         }
     }
 
-    fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeErrorStruct> {
+    fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeError> {
         let atomic_facts = chain_fact
             .facts_with_order_transitive_closure()
-            .map_err(|e| {
-                RuntimeErrorStruct::new_with_conflict(
-                    e.statement.clone(),
-                    e.msg.clone(),
-                    e.line_file.clone(),
-                    e.conflict_with.clone(),
-                    Some(NewAtomicFactRuntimeError(e).into()),
-                    vec![],
-                )
-            })?;
+            .map_err(RuntimeError::wrap_new_atomic_fact_as_store_conflict)?;
         for atomic_fact in atomic_facts {
             self.store_atomic_fact(atomic_fact)?;
         }
         Ok(())
     }
 
-    pub fn store_chain_fact_by_ref(
-        &mut self,
-        chain_fact: &ChainFact,
-    ) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_chain_fact_by_ref(&mut self, chain_fact: &ChainFact) -> Result<(), RuntimeError> {
         self.store_chain_fact(chain_fact.clone())
     }
 
-    pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), RuntimeErrorStruct> {
+    pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), RuntimeError> {
         let left_as_string: ObjString = equality.left.to_string();
         let right_as_string: ObjString = equality.right.to_string();
         if left_as_string == right_as_string {
@@ -669,7 +642,7 @@ impl Environment {
         &mut self,
         fact_key: FactString,
         fact_line_file: LineFile,
-    ) -> Result<(), RuntimeErrorStruct> {
+    ) -> Result<(), RuntimeError> {
         self.cache_known_fact.insert(fact_key, fact_line_file);
         Ok(())
     }

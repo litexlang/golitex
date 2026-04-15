@@ -13,14 +13,7 @@ impl fmt::Display for ByFnSetStmt {
         write!(
             f,
             "{} {} {}{} {} {}{} {}",
-            BY,
-            FN_LOWER_CASE,
-            SET,
-            COLON,
-            self.func,
-            FACT_PREFIX,
-            IN,
-            self.fn_set
+            BY, FN_LOWER_CASE, SET, COLON, self.func, FACT_PREFIX, IN, self.fn_set
         )
     }
 }

@@ -95,6 +95,17 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.base.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.exponent.as_ref(), coverage_by_forall_param);
         }
+        Obj::Abs(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Max(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Min(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
         Obj::Union(binary) => {
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
@@ -436,9 +447,10 @@ fn mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
 }
 
 impl ForallFact {
-    pub fn error_messages_if_forall_param_missing_in_some_then_clause(&self) -> Vec<(usize, String)> {
-        let forall_param_names =
-            self.params_def_with_type.collect_param_names();
+    pub fn error_messages_if_forall_param_missing_in_some_then_clause(
+        &self,
+    ) -> Vec<(usize, String)> {
+        let forall_param_names = self.params_def_with_type.collect_param_names();
         if forall_param_names.is_empty() {
             return Vec::new();
         }
@@ -482,7 +494,9 @@ impl ForallFact {
 
 impl ForallFactWithIff {
     /// Only checks the embedded [`ForallFact`]'s `then_facts` (not `iff_facts`).
-    pub fn error_messages_if_forall_param_missing_in_forall_then_clause(&self) -> Vec<(usize, String)> {
+    pub fn error_messages_if_forall_param_missing_in_forall_then_clause(
+        &self,
+    ) -> Vec<(usize, String)> {
         self.forall_fact
             .error_messages_if_forall_param_missing_in_some_then_clause()
     }

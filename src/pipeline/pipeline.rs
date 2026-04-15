@@ -8,10 +8,7 @@ pub use crate::result::StmtResult;
 pub fn run_source_code_in_file(entry_file_path: &str) -> String {
     let source_code = match fs::read_to_string(entry_file_path) {
         Ok(content) => content,
-        Err(read_error) => panic!(
-            "Could not read file {:?}: {}",
-            entry_file_path, read_error
-        ),
+        Err(read_error) => panic!("Could not read file {:?}: {}", entry_file_path, read_error),
     };
     run_source_code_with_output(&source_code, entry_file_path).1
 }
@@ -22,10 +19,7 @@ pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) 
         Err(read_error) => {
             return (
                 false,
-                format!(
-                    "Could not read file {:?}: {}",
-                    entry_file_path, read_error
-                ),
+                format!("Could not read file {:?}: {}", entry_file_path, read_error),
             );
         }
     };

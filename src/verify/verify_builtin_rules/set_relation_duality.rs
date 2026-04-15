@@ -8,28 +8,33 @@ impl Runtime {
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if subset_fact.left.to_string() == subset_fact.right.to_string() {
-            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                )).into());
+                ))
+                .into(),
+            );
         }
 
         let converted_superset_fact = SupersetFact::new(
             subset_fact.right.clone(),
             subset_fact.left.clone(),
             subset_fact.line_file.clone(),
-        ).into();
+        )
+        .into();
         let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &converted_superset_fact,
-            )?;
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&converted_superset_fact)?;
         if verify_result.is_true() {
-            Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                )).into())
+                ))
+                .into(),
+            )
         } else {
             Ok((StmtUnknown::new()).into())
         }
@@ -42,27 +47,32 @@ impl Runtime {
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if superset_fact.left.to_string() == superset_fact.right.to_string() {
-            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                )).into());
+                ))
+                .into(),
+            );
         }
         let converted_subset_fact = SubsetFact::new(
             superset_fact.right.clone(),
             superset_fact.left.clone(),
             superset_fact.line_file.clone(),
-        ).into();
-        let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &converted_subset_fact,
-            )?;
+        )
+        .into();
+        let verify_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&converted_subset_fact)?;
         if verify_result.is_true() {
-            Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                )).into())
+                ))
+                .into(),
+            )
         } else {
             Ok((StmtUnknown::new()).into())
         }
@@ -78,17 +88,20 @@ impl Runtime {
             not_subset_fact.right.clone(),
             not_subset_fact.left.clone(),
             not_subset_fact.line_file.clone(),
-        ).into();
-        let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &converted_not_superset_fact,
-            )?;
+        )
+        .into();
+        let verify_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+            &converted_not_superset_fact,
+        )?;
         if verify_result.is_true() {
-            Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     not_subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                )).into())
+                ))
+                .into(),
+            )
         } else {
             Ok((StmtUnknown::new()).into())
         }
@@ -104,17 +117,20 @@ impl Runtime {
             not_superset_fact.right.clone(),
             not_superset_fact.left.clone(),
             not_superset_fact.line_file.clone(),
-        ).into();
-        let verify_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &converted_not_subset_fact,
-            )?;
+        )
+        .into();
+        let verify_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+            &converted_not_subset_fact,
+        )?;
         if verify_result.is_true() {
-            Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     not_superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
-                )).into())
+                ))
+                .into(),
+            )
         } else {
             Ok((StmtUnknown::new()).into())
         }

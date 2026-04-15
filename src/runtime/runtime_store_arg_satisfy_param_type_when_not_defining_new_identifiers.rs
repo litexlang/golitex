@@ -12,30 +12,25 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for (arg, param_type) in args.iter().zip(instantiated_types.iter()) {
             let new_fact: Fact = match param_type {
-                ParamType::Set(_) => IsSetFact::new(
-                    arg.clone(),
-                    _line_file.clone(),
-                ).into(),
+                ParamType::Set(_) => IsSetFact::new(arg.clone(), _line_file.clone()).into(),
                 ParamType::NonemptySet(_) => {
                     IsNonemptySetFact::new(arg.clone(), _line_file.clone()).into()
                 }
                 ParamType::FiniteSet(_) => {
                     IsFiniteSetFact::new(arg.clone(), _line_file.clone()).into()
                 }
-                ParamType::Obj(obj) => InFact::new(
-                    arg.clone(),
-                    obj.clone(),
-                    _line_file.clone(),
-                ).into(),
+                ParamType::Obj(obj) => {
+                    InFact::new(arg.clone(), obj.clone(), _line_file.clone()).into()
+                }
                 ParamType::Struct(struct_ty) => InFact::new(
                     arg.clone(),
                     Obj::StructObj(struct_ty.clone()),
                     _line_file.clone(),
-                ).into(),
+                )
+                .into(),
             };
             infer_result.new_infer_result_inside(
-                self.store_fact_without_well_defined_verified_and_infer(new_fact)
-                    .map_err(RuntimeError::ExecStmtError)?,
+                self.store_fact_without_well_defined_verified_and_infer(new_fact)?,
             );
         }
 

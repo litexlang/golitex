@@ -7,15 +7,12 @@ mod enumerate_by_stmt;
 mod extension_by_stmt;
 mod family_by_stmt;
 mod fn_tuple_by_stmt;
-mod struct_by_stmt;
 mod for_by_stmt;
 mod induc_by_stmt;
+mod struct_by_stmt;
 
 impl Runtime {
-    pub fn parse_by_prefixed_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Stmt, RuntimeError> {
+    pub fn parse_by_prefixed_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(BY)?;
         let second_keyword = tb.current()?;
         match second_keyword {
@@ -29,14 +26,16 @@ impl Runtime {
             FAMILY => self.parse_by_family_stmt(tb),
             STRUCT => self.parse_by_struct_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
-            _ => Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
                 format!(
                     "by: expected cases, contra, enumerate, induc, for, extension, fn, fn set, family, struct, or tuple after `by`, got `{}`",
                     second_keyword
                 ),
                 tb.line_file.clone(),
                 None,
-            )),
+                vec![],
+            )))),
         }
     }
 }

@@ -1,7 +1,10 @@
 prove:
     have fn f(a, b R: a > b)R = a + b
-    have fn g(c R: c > 0) fn(a, b R: a > b)R = f
-    g(2) = f
+    have fn g(c R: c > 0) fn(a, b R: a > b)R = a + b
+    forall a, b R:
+        a > b
+        =>:
+            g(2)(a, b) = a + b = f(a, b)
     g(2)(2, 1) = f(2, 1)
 
 prove:
@@ -11,3 +14,4 @@ prove:
         f(x)(y) = x + y
 
     f(2)(1) = 2 + 1 = 3
+
