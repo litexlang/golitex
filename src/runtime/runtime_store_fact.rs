@@ -33,6 +33,8 @@ impl Runtime {
         &mut self,
         mut forall_fact: ForallFact,
     ) -> Result<InferResult, RuntimeError> {
+        forall_fact.expand_then_facts_with_order_chain_closure()?;
+
         let coverage_error_detail_lines =
             forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
 

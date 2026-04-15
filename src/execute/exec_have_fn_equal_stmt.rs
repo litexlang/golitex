@@ -1,9 +1,7 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-use super::exec_have_fn_equal_shared::{
-    build_function_obj_with_param_names, param_defs_with_type_from_have_fn_clause,
-};
+use super::exec_have_fn_equal_shared::build_curried_function_obj_from_layers;
 
 impl Runtime {
     pub fn exec_have_fn_equal_stmt(
@@ -34,6 +32,104 @@ impl Runtime {
                 )
             })?;
 
+        let infer_result =
+            self.store_have_fn_equal_stmt_facts(have_fn_equal_stmt, &fn_set_stored)?;
+
+        Ok(
+            (NonFactualStmtSuccess::new(have_fn_equal_stmt.clone().into(), infer_result, vec![]))
+                .into(),
+        )
+    }
+
+    fn have_fn_equal_stmt_forall_binders_dom_and_curried_layers(
+        &self,
+        clause: &FnSetClause,
+    ) -> Result<
+        (
+            ParamDefWithType,
+            Vec<ExistOrAndChainAtomicFact>,
+            Vec<Vec<String>>,
+        ),
+        RuntimeError,
+    > {
+        let mut type_groups: Vec<ParamGroupWithParamType> = Vec::new();
+        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        let mut layers: Vec<Vec<String>> = Vec::new();
+
+        for pg in clause.params_def_with_set.iter() {
+            type_groups.push(ParamGroupWithParamType::new(
+                pg.params.clone(),
+                ParamType::Obj(pg.set.clone()),
+            ));
+        }
+        for d in clause.dom_facts.iter() {
+            dom_facts.push(d.clone().into());
+        }
+        layers.push(ParamGroupWithSet::collect_param_names(
+            &clause.params_def_with_set,
+        ));
+
+        let mut ret_set = clause.ret_set.clone();
+        while let Obj::FnSet(inner) = ret_set {
+            let mut dem_map: HashMap<String, Obj> = HashMap::new();
+            for pg in inner.params_def_with_set.iter() {
+                for p in pg.params.iter() {
+                    if let Some(user_param) =
+                        p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
+                    {
+                        if !user_param.is_empty() {
+                            dem_map.insert(p.clone(), user_param.to_string().into());
+                        }
+                    }
+                }
+            }
+
+            for pg in inner.params_def_with_set.iter() {
+                let user_params: Vec<String> = pg
+                    .params
+                    .iter()
+                    .map(|p| {
+                        p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
+                            .filter(|s| !s.is_empty())
+                            .map(String::from)
+                            .unwrap_or_else(|| p.clone())
+                    })
+                    .collect();
+                type_groups.push(ParamGroupWithParamType::new(
+                    user_params,
+                    ParamType::Obj(pg.set.clone()),
+                ));
+            }
+
+            for d in inner.dom_facts.iter() {
+                let inst = self.inst_or_and_chain_atomic_fact(d, &dem_map)?;
+                dom_facts.push(inst.into());
+            }
+
+            let layer_names: Vec<String> = inner
+                .params_def_with_set
+                .iter()
+                .flat_map(|pg| pg.params.iter())
+                .map(|p| {
+                    p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
+                        .filter(|s| !s.is_empty())
+                        .map(String::from)
+                        .unwrap_or_else(|| p.clone())
+                })
+                .collect();
+            layers.push(layer_names);
+
+            ret_set = (*inner.ret_set).clone();
+        }
+
+        Ok((ParamDefWithType::new(type_groups), dom_facts, layers))
+    }
+
+    fn store_have_fn_equal_stmt_facts(
+        &mut self,
+        have_fn_equal_stmt: &HaveFnEqualStmt,
+        fn_set_stored: &FnSet,
+    ) -> Result<InferResult, RuntimeError> {
         self.store_identifier_obj(&have_fn_equal_stmt.name)?;
 
         let function_identifier_obj = have_fn_equal_stmt.name.clone().into();
@@ -55,13 +151,13 @@ impl Runtime {
                 )
             })?;
 
-        let param_defs_with_type =
-            param_defs_with_type_from_have_fn_clause(&have_fn_equal_stmt.fn_set_clause);
-        let param_names = ParamGroupWithSet::collect_param_names(
-            &have_fn_equal_stmt.fn_set_clause.params_def_with_set,
-        );
+        let (param_defs_with_type, forall_dom_facts, curried_layers) = self
+            .have_fn_equal_stmt_forall_binders_dom_and_curried_layers(
+                &have_fn_equal_stmt.fn_set_clause,
+            )?;
+
         let function_obj =
-            build_function_obj_with_param_names(&have_fn_equal_stmt.name, &param_names);
+            build_curried_function_obj_from_layers(&have_fn_equal_stmt.name, &curried_layers);
 
         let function_equals_equal_to_fact: AtomicFact = EqualFact::new(
             function_obj,
@@ -69,11 +165,6 @@ impl Runtime {
             have_fn_equal_stmt.line_file.clone(),
         )
         .into();
-        let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> =
-            Vec::with_capacity(have_fn_equal_stmt.fn_set_clause.dom_facts.len());
-        for dom_fact in have_fn_equal_stmt.fn_set_clause.dom_facts.iter() {
-            forall_dom_facts.push(dom_fact.clone().into());
-        }
         let forall_fact = ForallFact::new(
             param_defs_with_type,
             forall_dom_facts,
@@ -94,10 +185,7 @@ impl Runtime {
 
         infer_result.new_infer_result_inside(forall_infer_result);
 
-        Ok(
-            (NonFactualStmtSuccess::new(have_fn_equal_stmt.clone().into(), infer_result, vec![]))
-                .into(),
-        )
+        Ok(infer_result)
     }
 
     fn have_fn_equal_stmt_verify_well_defined(

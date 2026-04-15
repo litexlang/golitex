@@ -17,16 +17,14 @@ impl Runtime {
         self.run_in_local_env(|rt| {
             let mut infer_result = InferResult::new();
             if let Err(e) = rt.define_params_with_type(&forall_fact.params_def_with_type, false) {
-                return Err(
-                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "failed to define parameters in forall fact".to_string(),
-                forall_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "failed to define parameters in forall fact".to_string(),
+                    forall_fact.line_file.clone(),
+                    Some(e),
+                    vec![],
+                ))
+                .into());
             }
 
             for dom_fact in forall_fact.dom_facts.iter() {
@@ -39,20 +37,22 @@ impl Runtime {
                     .map_err(|e| {
                         let message = "failed to assume dom fact in forall".to_string();
                         {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(forall_fact.clone()).into_stmt()),
-                message.clone(),
-                forall_fact.line_file.clone(),
-                Some(RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(forall_fact.clone()).into_stmt()),
-                message,
-                forall_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            )))),
-                vec![],
-            )))
-        }
+                            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                                Some(Fact::from(forall_fact.clone()).into_stmt()),
+                                message.clone(),
+                                forall_fact.line_file.clone(),
+                                Some(RuntimeError::from(UnknownRuntimeError(
+                                    RuntimeErrorStruct::new(
+                                        Some(Fact::from(forall_fact.clone()).into_stmt()),
+                                        message,
+                                        forall_fact.line_file.clone(),
+                                        Some(e),
+                                        vec![],
+                                    ),
+                                ))),
+                                vec![],
+                            )))
+                        }
                     })?;
                 infer_result.new_infer_result_inside(dom_infer_result);
             }
@@ -65,22 +65,14 @@ impl Runtime {
                 let result = rt.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
                 if result.is_unknown() {
                     let then_one_based = then_index + 1;
-                    let then_line_file = then_fact.line_file();
-                    return Err(
-                        {
-                        VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(forall_fact.clone()).into_stmt()),
-                format!(
-                                "forall: then-fact {}/{} could not be verified (unknown): `{}`",
-                                then_one_based, then_count, then_fact
-                            ),
-                then_line_file,
-                None,
-                vec![],
-            ))
-            .into()
-        },
-                    );
+                    return Ok((StmtUnknown::new_with_detail(format!(
+                        "forall: then-fact {}/{} could not be verified (unknown): `{}`\n{}",
+                        then_one_based,
+                        then_count,
+                        then_fact,
+                        result.body_string()
+                    )))
+                    .into());
                 }
 
                 // 存then
@@ -124,22 +116,24 @@ impl Runtime {
                     };
                 infer_result.new_fact(&forall_fact.clone().into());
                 return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-                        forall_fact.clone().into(),
-                        infer_result,
-                        combined_verified_by_message,
-                        Vec::new(),
-                    )).into());
+                    forall_fact.clone().into(),
+                    infer_result,
+                    combined_verified_by_message,
+                    Vec::new(),
+                ))
+                .into());
             }
 
             infer_result.new_fact(&forall_fact.clone().into());
             Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source(
-                    forall_fact.clone().into(),
-                    infer_result,
-                    "".to_string(),
-                    None,
-                    Some(forall_fact.line_file.clone()),
-                    Vec::new(),
-                )).into())
+                forall_fact.clone().into(),
+                infer_result,
+                "".to_string(),
+                None,
+                Some(forall_fact.line_file.clone()),
+                Vec::new(),
+            ))
+            .into())
         })
     }
 

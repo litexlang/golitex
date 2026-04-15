@@ -45,11 +45,10 @@ impl Runtime {
                     let current_known_forall =
                         &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
                     let atomic_fact_args_in_known_forall = current_known_forall.0.args();
-                    let given_atomic_fact_args = given_fact.args();
                     let match_result =
-                        Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+                        Self::match_atomic_fact_args_against_known_forall_ordered_args(
                             &atomic_fact_args_in_known_forall,
-                            &given_atomic_fact_args,
+                            given_fact,
                         )?;
                     if let Some(arg_map) = match_result {
                         return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
@@ -143,14 +142,14 @@ impl Runtime {
             )
             .map_err(|e| {
                 {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                String::new(),
-                given_atomic_fact.line_file(),
-                Some(e),
-                vec![],
-            )))
-        }
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
+                        String::new(),
+                        given_atomic_fact.line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                }
             })?;
         if args_param_types.is_unknown() {
             return Ok(None);
@@ -170,26 +169,26 @@ impl Runtime {
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                String::new(),
-                given_atomic_fact.line_file(),
-                Some(e),
-                vec![],
-            )))
-        }
+                            Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
+                            String::new(),
+                            given_atomic_fact.line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             let result = self
                 .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
-                String::new(),
-                given_atomic_fact.line_file(),
-                Some(e),
-                vec![],
-            )))
-        }
+                            Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
+                            String::new(),
+                            given_atomic_fact.line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             if result.is_unknown() {
                 return Ok(None);
@@ -211,6 +210,29 @@ impl Runtime {
                 Vec::new(),
             );
         Ok(Some(fact_verified))
+    }
+
+    fn match_atomic_fact_args_against_known_forall_ordered_args(
+        atomic_fact_args_in_known_forall: &Vec<Obj>,
+        given_fact: &AtomicFact,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let given_args = given_fact.args();
+        let forward = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+            atomic_fact_args_in_known_forall,
+            &given_args,
+        )?;
+        if forward.is_some() {
+            return Ok(forward);
+        }
+        if let AtomicFact::EqualFact(_) = given_fact {
+            if given_args.len() == 2 {
+                return Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+                    atomic_fact_args_in_known_forall,
+                    &vec![given_args[1].clone(), given_args[0].clone()],
+                );
+            }
+        }
+        Ok(None)
     }
 
     pub fn match_args_in_fact_in_known_forall_fact_with_given_args(
