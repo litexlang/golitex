@@ -28,8 +28,12 @@ impl Runtime {
             return Ok(result);
         }
 
-        result =
-            self.verify_equality_with_known_equalities(left, right, line_file.clone(), verify_state)?;
+        result = self.verify_equality_with_known_equalities(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )?;
         if result.is_true() {
             return Ok(result);
         }
@@ -42,15 +46,14 @@ impl Runtime {
                 line_file.clone(),
             )?;
         if verified_by_arg_to_arg {
-            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(
-                        left.clone(),
-                        right.clone(),
-                        line_file.clone(),
-                    ).into(),
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file.clone()).into(),
                     same_shape_and_equal_args_reason(left, right),
                     Vec::new(),
-                )).into());
+                ))
+                .into(),
+            );
         }
 
         if verify_state.is_round_0() {
@@ -341,6 +344,24 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::Max(left_max), Obj::Max(right_max)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_max.left,
+                    &left_max.right,
+                    &right_max.left,
+                    &right_max.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Min(left_min), Obj::Min(right_min)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_min.left,
+                    &left_min.right,
+                    &right_min.left,
+                    &right_min.right,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Union(left_union), Obj::Union(right_union)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_union.left,
@@ -501,15 +522,19 @@ impl Runtime {
             verify_state,
         )?;
         if result.is_true() {
-            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     EqualFact::new(
                         left_obj.clone(),
                         right_obj.clone(),
                         equality_line_file.clone(),
-                    ).into(),
+                    )
+                    .into(),
                     "builtin rules".to_string(),
                     Vec::new(),
-                )).into());
+                ))
+                .into(),
+            );
         }
 
         result = self.verify_equality_with_known_equalities(
@@ -530,15 +555,14 @@ impl Runtime {
                 equality_line_file.clone(),
             )?;
         if verified_by_arg_to_arg {
-            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(
-                        left_obj.clone(),
-                        right_obj.clone(),
-                        equality_line_file,
-                    ).into(),
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left_obj.clone(), right_obj.clone(), equality_line_file).into(),
                     same_shape_and_equal_args_reason(left_obj, right_obj),
                     Vec::new(),
-                )).into());
+                ))
+                .into(),
+            );
         }
 
         Ok((StmtUnknown::new()).into())

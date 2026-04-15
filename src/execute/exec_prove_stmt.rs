@@ -1,10 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_prove_stmt(
-        &mut self,
-        stmt: &ProveStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_prove_stmt(&mut self, stmt: &ProveStmt) -> Result<StmtResult, RuntimeError> {
         let inside_results = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in &stmt.proof {
@@ -12,13 +9,11 @@ impl Runtime {
                 match exec_stmt_result {
                     Ok(result) => inside_results.push(result),
                     Err(statement_error) => {
-                        return Err(RuntimeError::ExecStmtError(
-                            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                                stmt.clone().into(),
-                                proof_stmt.to_string(),
-                                Some(statement_error),
-                                inside_results,
-                            ),
+                        return Err(short_exec_error(
+                            stmt.clone().into(),
+                            proof_stmt.to_string(),
+                            Some(statement_error),
+                            std::mem::take(&mut inside_results),
                         ));
                     }
                 }
@@ -27,11 +22,12 @@ impl Runtime {
         });
 
         match inside_results {
-            Ok(_) => Ok((NonFactualStmtSuccess::new(
-                    stmt.clone().into(),
-                    InferResult::new(),
-                    vec![],
-                )).into()),
+            Ok(_) => {
+                Ok(
+                    (NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![]))
+                        .into(),
+                )
+            }
             Err(inside_results_error) => Err(inside_results_error),
         }
     }

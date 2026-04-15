@@ -36,6 +36,9 @@ impl Runtime {
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map),
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map),
+            Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map),
+            Obj::Max(inner) => self.inst_max(inner, param_to_arg_map),
+            Obj::Min(inner) => self.inst_min(inner, param_to_arg_map),
             Obj::Union(inner) => self.inst_union(inner, param_to_arg_map),
             Obj::Intersect(inner) => self.inst_intersect(inner, param_to_arg_map),
             Obj::SetMinus(inner) => self.inst_set_minus(inner, param_to_arg_map),
@@ -133,6 +136,7 @@ impl Runtime {
                             ),
                             default_line_file(),
                             None,
+                            vec![],
                         ))
                         .into())
                     }
@@ -155,6 +159,7 @@ impl Runtime {
                 format!("struct `{}` is not defined", field_access.name),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         };
@@ -172,6 +177,7 @@ impl Runtime {
                 ),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         };
@@ -184,6 +190,7 @@ impl Runtime {
                     format!("field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)", field_access.field, field_access.name, tuple_index, field_access.name, tuple.args.len()),
                     default_line_file(),
                     None,
+                    vec![],
                 ))
                 .into(),
             );
@@ -234,6 +241,7 @@ impl Runtime {
                 format!("instantiate fn object: after substitution, head must be an atom or curried fn, got {}", inst_head),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into()),
         };
@@ -310,6 +318,38 @@ impl Runtime {
         let instantiated_base_obj = self.inst_obj(&pow.base, param_to_arg_map)?;
         let instantiated_exponent_obj = self.inst_obj(&pow.exponent, param_to_arg_map)?;
         Ok(Pow::new(instantiated_base_obj, instantiated_exponent_obj).into())
+    }
+
+    pub fn inst_abs(
+        &self,
+        abs: &Abs,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Abs::new(self.inst_obj(&abs.arg, param_to_arg_map)?).into())
+    }
+
+    pub fn inst_max(
+        &self,
+        max: &Max,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Max::new(
+            self.inst_obj(&max.left, param_to_arg_map)?,
+            self.inst_obj(&max.right, param_to_arg_map)?,
+        )
+        .into())
+    }
+
+    pub fn inst_min(
+        &self,
+        min: &Min,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Min::new(
+            self.inst_obj(&min.left, param_to_arg_map)?,
+            self.inst_obj(&min.right, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_union(
@@ -593,6 +633,7 @@ impl Runtime {
                 ),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         }
@@ -633,6 +674,7 @@ impl Runtime {
                 ),
                 default_line_file(),
                 None,
+                vec![],
             ))
             .into());
         }

@@ -7,114 +7,115 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
+                short_exec_error(
+ stmt.clone().into(),
                     format!("by extension: left set `{}` is not well-defined", stmt.left),
                     Some(well_defined_error),
                     vec![],
-                ))
+                )
             })?;
         self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
+                short_exec_error(
+ stmt.clone().into(),
                     format!(
                         "by extension: right set `{}` is not well-defined",
                         stmt.right
                     ),
                     Some(well_defined_error),
                     vec![],
-                ))
+                )
             })?;
 
-        let local_proof_result: Result<(Vec<StmtResult>, Fact, Fact), RuntimeError> =
-            self.run_in_local_env(|rt| {
-            let mut inside_results: Vec<StmtResult> = Vec::new();
-            for proof_stmt in stmt.proof.iter() {
-                let one_proof_stmt_exec_result = rt.exec_stmt(proof_stmt).map_err(|stmt_error| {
-                    RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        format!(
-                            "by extension: failed to execute proof stmt `{}`",
-                            proof_stmt
+        let local_proof_result: Result<(Vec<StmtResult>, Fact, Fact), RuntimeError> = self
+            .run_in_local_env(|rt| {
+                let mut inside_results: Vec<StmtResult> = Vec::new();
+                for proof_stmt in stmt.proof.iter() {
+                    let one_proof_stmt_exec_result =
+                        rt.exec_stmt(proof_stmt).map_err(|stmt_error| {
+                            short_exec_error(
+ stmt.clone().into(),
+                    format!(
+                                    "by extension: failed to execute proof stmt `{}`",
+                                    proof_stmt
+                                ),
+                    Some(stmt_error),
+                    vec![],
+                )
+                        })?;
+                    inside_results.push(one_proof_stmt_exec_result);
+                }
+
+                let unused_name = rt.generate_random_unused_name();
+
+                let left_to_right_forall_fact = ForallFact::new(
+                    ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                        vec![unused_name.clone()],
+                        ParamType::Obj(stmt.left.clone()),
+                    )]),
+                    vec![],
+                    vec![InFact::new(
+                        unused_name.clone().into(),
+                        stmt.right.clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into()],
+                    stmt.line_file.clone(),
+                )
+                .into();
+                rt.verify_fact_return_err_if_not_true(
+                    &left_to_right_forall_fact,
+                    &VerifyState::new(0, false),
+                )
+                .map_err(|verify_error| {
+                    short_exec_error(
+ stmt.clone().into(),
+                    format!(
+                            "by extension: failed to prove left subset right `{}`",
+                            left_to_right_forall_fact
                         ),
-                        Some(stmt_error),
-                        vec![],
-                    ))
+                    Some(verify_error),
+                    vec![],
+                )
                 })?;
-                inside_results.push(one_proof_stmt_exec_result);
-            }
 
-            let unused_name = rt.generate_random_unused_name();
-
-            let left_to_right_forall_fact = ForallFact::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec![unused_name.clone()],
-                    ParamType::Obj(stmt.left.clone()),
-                )]),
-                vec![],
-                vec![InFact::new(
-                    unused_name.clone().into(),
-                    stmt.right.clone(),
+                let right_to_left_forall_fact = ForallFact::new(
+                    ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                        vec![unused_name.clone()],
+                        ParamType::Obj(stmt.right.clone()),
+                    )]),
+                    vec![],
+                    vec![InFact::new(
+                        unused_name.clone().into(),
+                        stmt.left.clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into()],
                     stmt.line_file.clone(),
                 )
-                .into()],
-                stmt.line_file.clone(),
-            )
-            .into();
-            rt.verify_fact_return_err_if_not_true(
-                &left_to_right_forall_fact,
-                &VerifyState::new(0, false),
-            )
-            .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
-                    format!(
-                        "by extension: failed to prove left subset right `{}`",
-                        left_to_right_forall_fact
-                    ),
-                    Some(verify_error),
-                    vec![],
-                ))
-            })?;
-
-            let right_to_left_forall_fact = ForallFact::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec![unused_name.clone()],
-                    ParamType::Obj(stmt.right.clone()),
-                )]),
-                vec![],
-                vec![InFact::new(
-                    unused_name.clone().into(),
-                    stmt.left.clone(),
-                    stmt.line_file.clone(),
+                .into();
+                rt.verify_fact_return_err_if_not_true(
+                    &right_to_left_forall_fact,
+                    &VerifyState::new(0, false),
                 )
-                .into()],
-                stmt.line_file.clone(),
-            )
-            .into();
-            rt.verify_fact_return_err_if_not_true(
-                &right_to_left_forall_fact,
-                &VerifyState::new(0, false),
-            )
-            .map_err(|verify_error| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
+                .map_err(|verify_error| {
+                    short_exec_error(
+ stmt.clone().into(),
                     format!(
-                        "by extension: failed to prove right subset left `{}`",
-                        right_to_left_forall_fact
-                    ),
+                            "by extension: failed to prove right subset left `{}`",
+                            right_to_left_forall_fact
+                        ),
                     Some(verify_error),
                     vec![],
-                ))
-            })?;
+                )
+                })?;
 
-            Ok::<_, RuntimeError>((
-                inside_results,
-                left_to_right_forall_fact,
-                right_to_left_forall_fact,
-            ))
-        });
+                Ok::<_, RuntimeError>((
+                    inside_results,
+                    left_to_right_forall_fact,
+                    right_to_left_forall_fact,
+                ))
+            });
         let local_proof_result = local_proof_result?;
         let (inside_results, _, _) = local_proof_result;
 
@@ -128,14 +129,9 @@ impl Runtime {
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 left_equal_to_right_atomic_fact,
-            )
-            .map_err(RuntimeError::ExecStmtError)?,
+            )?,
         );
 
-        Ok((NonFactualStmtSuccess::new(
-                stmt.clone().into(),
-                infer_result,
-                inside_results,
-            )).into())
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
     }
 }

@@ -222,7 +222,8 @@ prove:
                 $r0(n + 1)
 
     by induc n from 0:
-        $r0(n)
+        prove:
+            $r0(n)
 
     forall m Z:
         m >= 0

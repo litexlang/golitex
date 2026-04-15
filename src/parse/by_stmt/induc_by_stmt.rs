@@ -8,18 +8,57 @@ impl Runtime {
         let induc_from = self.parse_obj(tb)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::new_parse_error_with_msg_position_previous_error(
+            return Err(
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
                 "by induc: expected end of head".to_string(),
                 tb.line_file.clone(),
                 None,
-            ));
+                vec![],
+            ))));
         }
 
-        let mut to_prove: Vec<ExistOrAndChainAtomicFact> = vec![];
-        for block in tb.body.iter_mut() {
+        if tb.body.is_empty() {
+            return Err(
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "by induc: expects prove: block".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                ))),
+            );
+        }
+
+        tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+
+        if tb.body[0].body.is_empty() {
+            return Err(
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "by induc prove: expects at least one fact to prove".to_string(),
+                    tb.body[0].line_file.clone(),
+                    None,
+                    vec![],
+                ))),
+            );
+        }
+
+        let mut to_prove: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        for block in tb.body[0].body.iter_mut() {
             to_prove.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
         }
 
-        Ok(ByInducStmt::new(to_prove, param, induc_from, tb.line_file.clone()).into())
+        let proof: Vec<Stmt> = self.run_in_local_parsing_time_name_scope(|this| {
+            tb.body
+                .iter_mut()
+                .skip(1)
+                .map(|b| this.parse_stmt(b))
+                .collect::<Result<_, _>>()
+        })?;
+
+        Ok(
+            ByInducStmt::new(to_prove, param, induc_from, proof, tb.line_file.clone()).into(),
+        )
     }
 }

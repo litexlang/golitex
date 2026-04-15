@@ -3,31 +3,21 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
         match stmt {
-            Stmt::DefLetStmt(d) => self.exec_let_stmt(d).map_err(RuntimeError::ExecStmtError),
-            Stmt::DefPropStmt(d) => self.exec_def_prop_stmt(d).map_err(RuntimeError::ExecStmtError),
-            Stmt::DefAbstractPropStmt(d) => self
-                .exec_def_abstract_prop_stmt(d)
-                .map_err(RuntimeError::ExecStmtError),
-            Stmt::HaveObjInNonemptySetStmt(d) => self
-                .exec_have_obj_in_nonempty_set_or_param_type_stmt(d)
-                .map_err(RuntimeError::ExecStmtError),
-            Stmt::HaveObjEqualStmt(d) => {
-                self.exec_have_obj_equal_stmt(d).map_err(RuntimeError::ExecStmtError)
+            Stmt::DefLetStmt(d) => self.exec_let_stmt(d),
+            Stmt::DefPropStmt(d) => self.exec_def_prop_stmt(d),
+            Stmt::DefAbstractPropStmt(d) => self.exec_def_abstract_prop_stmt(d),
+            Stmt::HaveObjInNonemptySetStmt(d) => {
+                self.exec_have_obj_in_nonempty_set_or_param_type_stmt(d)
             }
-            Stmt::HaveByExistStmt(d) => {
-                self.exec_have_exist_obj_stmt(d).map_err(RuntimeError::ExecStmtError)
-            }
-            Stmt::HaveFnEqualStmt(d) => self.exec_have_fn_equal_stmt(d).map_err(RuntimeError::ExecStmtError),
-            Stmt::HaveFnEqualCaseByCaseStmt(d) => self
-                .exec_have_fn_equal_case_by_case_stmt(d)
-                .map_err(RuntimeError::ExecStmtError),
-            Stmt::HaveFnByInducStmt(d) => self
-                .exec_have_fn_by_induc_stmt(d)
-                .map_err(RuntimeError::ExecStmtError),
-            Stmt::DefStructStmt(d) => self.exec_def_struct_stmt(d).map_err(RuntimeError::ExecStmtError),
-            Stmt::DefFamilyStmt(d) => self.exec_def_family_stmt(d).map_err(RuntimeError::ExecStmtError),
-            Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d).map_err(RuntimeError::ExecStmtError),
-            Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt).map_err(RuntimeError::ExecStmtError),
+            Stmt::HaveObjEqualStmt(d) => self.exec_have_obj_equal_stmt(d),
+            Stmt::HaveByExistStmt(d) => self.exec_have_exist_obj_stmt(d),
+            Stmt::HaveFnEqualStmt(d) => self.exec_have_fn_equal_stmt(d),
+            Stmt::HaveFnEqualCaseByCaseStmt(d) => self.exec_have_fn_equal_case_by_case_stmt(d),
+            Stmt::HaveFnByInducStmt(d) => self.exec_have_fn_by_induc_stmt(d),
+            Stmt::DefStructStmt(d) => self.exec_def_struct_stmt(d),
+            Stmt::DefFamilyStmt(d) => self.exec_def_family_stmt(d),
+            Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d),
+            Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt),
             Stmt::Fact(fact) => self.exec_fact(fact),
             Stmt::ClaimStmt(s) => self.exec_claim_stmt(s),
             Stmt::ProveStmt(s) => self.exec_prove_stmt(s),
@@ -52,13 +42,11 @@ impl Runtime {
     }
 
     pub fn stmt_unsupported(stmt: Stmt) -> Result<StmtResult, RuntimeError> {
-        Err(RuntimeError::ExecStmtError(
-            RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                stmt,
-                "unimplemented".to_string(),
-                None,
-                vec![],
-            ),
-        ))
+        Err(short_exec_error(
+ stmt,
+                    "unimplemented".to_string(),
+                    None,
+                    vec![],
+                ))
     }
 }

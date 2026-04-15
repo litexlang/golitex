@@ -14,6 +14,21 @@ impl Runtime {
         {
             return Ok((fact_verified).into());
         }
+
+        if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
+            let fact_with_reversed_args = EqualFact::new(
+                equal_fact.right.clone(),
+                equal_fact.left.clone(),
+                equal_fact.line_file.clone(),
+            );
+            if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_envs(
+                &fact_with_reversed_args.into(),
+                verify_state,
+            )? {
+                return Ok((fact_verified).into());
+            }
+        }
+
         Ok((StmtUnknown::new()).into())
     }
 
@@ -45,11 +60,10 @@ impl Runtime {
                     let current_known_forall =
                         &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
                     let atomic_fact_args_in_known_forall = current_known_forall.0.args();
-                    let given_atomic_fact_args = given_fact.args();
                     let match_result =
-                        Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+                        Self::match_atomic_fact_args_against_known_forall_ordered_args(
                             &atomic_fact_args_in_known_forall,
-                            &given_atomic_fact_args,
+                            given_fact,
                         )?;
                     if let Some(arg_map) = match_result {
                         return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
@@ -142,12 +156,15 @@ impl Runtime {
                 verify_state,
             )
             .map_err(|e| {
-                RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                    given_atomic_fact.clone().into(),
-                    String::new(),
-                    given_atomic_fact.line_file(),
-                    Some(e),
-                )
+                {
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
+                        String::new(),
+                        given_atomic_fact.line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                }
             })?;
         if args_param_types.is_unknown() {
             return Ok(None);
@@ -165,22 +182,28 @@ impl Runtime {
             let instantiated_dom_fact = self
                 .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        given_atomic_fact.clone().into(),
-                        String::new(),
-                        given_atomic_fact.line_file(),
-                        Some(e),
-                    )
+                    {
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                            Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
+                            String::new(),
+                            given_atomic_fact.line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             let result = self
                 .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|e| {
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        given_atomic_fact.clone().into(),
-                        String::new(),
-                        given_atomic_fact.line_file(),
-                        Some(e),
-                    )
+                    {
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                            Some(Fact::from(given_atomic_fact.clone()).into_stmt()),
+                            String::new(),
+                            given_atomic_fact.line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             if result.is_unknown() {
                 return Ok(None);
@@ -202,6 +225,18 @@ impl Runtime {
                 Vec::new(),
             );
         Ok(Some(fact_verified))
+    }
+
+    fn match_atomic_fact_args_against_known_forall_ordered_args(
+        atomic_fact_args_in_known_forall: &Vec<Obj>,
+        given_fact: &AtomicFact,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let given_args = given_fact.args();
+        let forward = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+            atomic_fact_args_in_known_forall,
+            &given_args,
+        )?;
+        return Ok(forward);
     }
 
     pub fn match_args_in_fact_in_known_forall_fact_with_given_args(
@@ -269,6 +304,9 @@ impl Runtime {
             Obj::Div(ref a) => Self::match_arg_when_left_is_div(&a.left, &a.right, given_arg),
             Obj::Mod(ref a) => Self::match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
             Obj::Pow(ref a) => Self::match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
+            Obj::Abs(ref a) => Self::match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
+            Obj::Max(ref a) => Self::match_arg_when_left_is_max(&a.left, &a.right, given_arg),
+            Obj::Min(ref a) => Self::match_arg_when_left_is_min(&a.left, &a.right, given_arg),
             Obj::Union(ref a) => Self::match_arg_when_left_is_union(&a.left, &a.right, given_arg),
             Obj::Intersect(ref a) => {
                 Self::match_arg_when_left_is_intersect(&a.left, &a.right, given_arg)
@@ -606,6 +644,44 @@ impl Runtime {
         match given_arg {
             Obj::Pow(ref g) => {
                 Self::match_arg_binary_then_merge(left_left, left_right, &g.base, &g.exponent)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_abs(
+        left_arg: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Abs(ref g) => {
+                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_arg, &g.arg)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_max(
+        left_left: &Obj,
+        left_right: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Max(ref g) => {
+                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_min(
+        left_left: &Obj,
+        left_right: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Min(ref g) => {
+                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }

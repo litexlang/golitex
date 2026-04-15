@@ -97,6 +97,51 @@ impl Obj {
                     return None;
                 }
             }
+            Obj::Abs(a) => match a.arg.evaluate_to_normalized_decimal_number() {
+                Some(inner) => {
+                    let s = inner.normalized_value.trim();
+                    if let Some(rest) = s.strip_prefix('-') {
+                        Some(Number::new(rest.trim().to_string()))
+                    } else {
+                        Some(inner)
+                    }
+                }
+                None => None,
+            },
+            Obj::Max(m) => {
+                let left_number = m.left.evaluate_to_normalized_decimal_number();
+                let right_number = m.right.evaluate_to_normalized_decimal_number();
+                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
+                    let a = left_number.normalized_value.trim();
+                    let b = right_number.normalized_value.trim();
+                    let diff = sub_signed_decimal_str(a, b);
+                    let d = diff.trim();
+                    if d.starts_with('-') {
+                        Some(right_number)
+                    } else {
+                        Some(left_number)
+                    }
+                } else {
+                    None
+                }
+            }
+            Obj::Min(m) => {
+                let left_number = m.left.evaluate_to_normalized_decimal_number();
+                let right_number = m.right.evaluate_to_normalized_decimal_number();
+                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
+                    let a = left_number.normalized_value.trim();
+                    let b = right_number.normalized_value.trim();
+                    let diff = sub_signed_decimal_str(a, b);
+                    let d = diff.trim();
+                    if d.starts_with('-') || d == "0" {
+                        Some(left_number)
+                    } else {
+                        Some(right_number)
+                    }
+                } else {
+                    None
+                }
+            }
             Obj::CartDim(cart_dim) => match &*cart_dim.set {
                 Obj::Cart(cart) => Some(Number::new(cart.args.len().to_string())),
                 _ => None,

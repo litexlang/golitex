@@ -16,12 +16,16 @@ impl Runtime {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
                 return Err(
-                    RuntimeError::new_verify_error_with_fact_msg_position_previous_error(
-                        or_fact.clone().into(),
-                        String::new(),
-                        or_fact.line_file.clone(),
-                        Some(e),
-                    ),
+                    {
+                        VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(or_fact.clone()).into_stmt()),
+                String::new(),
+                or_fact.line_file.clone(),
+                Some(e),
+                vec![],
+            ))
+            .into()
+        },
                 );
             }
         }
@@ -35,12 +39,15 @@ impl Runtime {
             ) = (&or_fact.facts[0], &or_fact.facts[1])
             {
                 if first_atomic.make_reversed().to_string() == second_atomic.to_string() {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    return Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             or_fact.clone().into(),
                             "or: complementary atomic facts (make_reversed first equals second)"
                                 .to_string(),
                             Vec::new(),
-                        )).into());
+                        ))
+                        .into(),
+                    );
                 }
             }
         }
@@ -48,13 +55,16 @@ impl Runtime {
         for fact in or_fact.facts.iter() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
-                return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                         or_fact.clone().into(),
                         fact.to_string(),
                         None,
                         Some(fact.line_file()),
                         Vec::new(),
-                    )).into());
+                    ))
+                    .into(),
+                );
             }
         }
 

@@ -30,12 +30,17 @@ impl Runtime {
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
-        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_new_with_stmt(
-            stmt.clone().into(),
-            String::new(),
-            Some(cause),
-            vec![],
-        ))
+        RuntimeError::ExecStmtError({
+            let st: Stmt = stmt.clone().into();
+            let lf = st.line_file();
+            RuntimeErrorStruct::new(
+                Some(st),
+                String::new(),
+                lf,
+                Some(cause),
+                vec![],
+            )
+        })
     }
 
     // have fn by induc from 0: f(x Z: x >= 0) R: case 0: … case 1: …
@@ -45,8 +50,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         param_name: &str,
     ) -> Result<(), RuntimeError> {
-        self.store_identifier_obj(&stmt.name)
-            .map_err(RuntimeError::ExecStmtError)?;
+        self.store_identifier_obj(&stmt.name)?;
 
         let random_param = self.generate_random_unused_name();
 
@@ -85,7 +89,7 @@ impl Runtime {
         .into();
 
         self.store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
-            .map_err(|e| Self::have_fn_by_induc_err(stmt, RuntimeError::ExecStmtError(e)))?;
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         Ok(())
     }
@@ -109,17 +113,15 @@ impl Runtime {
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
+            return Err(short_exec_error(
+ stmt.clone().into(),
                     format!(
-                        "have_fn_by_induc: {} is not in return set {}",
-                        equal_to, stmt.ret_set
-                    ),
+                    "have_fn_by_induc: {} is not in return set {}",
+                    equal_to, stmt.ret_set
+                ),
                     None,
                     vec![],
-                ),
-            ));
+                ));
         }
         Ok(())
     }
@@ -142,8 +144,7 @@ impl Runtime {
 
         let left_id: Obj = param_name_str.as_str().into();
 
-        self.store_identifier_obj(&param_name_str)
-            .map_err(RuntimeError::ExecStmtError)?;
+        self.store_identifier_obj(&param_name_str)?;
 
         self.define_parameter_by_binding_param_type(
             &param_name_str,
@@ -160,7 +161,7 @@ impl Runtime {
         self.store_fact_without_well_defined_verified_and_infer(
             param_larger_than_induc_plus_offset.into(),
         )
-        .map_err(|e| Self::have_fn_by_induc_err(stmt, RuntimeError::ExecStmtError(e)))?;
+        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         // Induction step needs f(x-1)..f(x-n); cache alone skips fn membership, so store FnObj and in ret_set.
         for i in 1..=n {
@@ -174,7 +175,7 @@ impl Runtime {
             let fn_in_ret: Fact =
                 InFact::new(fn_obj, stmt.ret_set.clone(), line_file.clone()).into();
             self.store_fact_without_well_defined_verified_and_infer(fn_in_ret)
-                .map_err(|e| Self::have_fn_by_induc_err(stmt, RuntimeError::ExecStmtError(e)))?;
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         }
 
         self.have_fn_by_induc_verify_last_case_register_fn(stmt, &param_name_str)?;
@@ -189,13 +190,13 @@ impl Runtime {
                 let coverage: Fact = OrFact::new(coverage_cases, line_file.clone()).into();
                 self.verify_fact_return_err_if_not_true(&coverage, &verify_state)
                     .map_err(|e| {
-                        RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                            stmt.clone().into(),
-                            "have_fn_by_induc: nested last cases do not cover all situations"
-                                .to_string(),
-                            Some(e),
-                            vec![],
-                        ))
+                        short_exec_error(
+ stmt.clone().into(),
+                    "have_fn_by_induc: nested last cases do not cover all situations"
+                                    .to_string(),
+                    Some(e),
+                    vec![],
+                )
                     })?;
 
                 for nested in last_pairs.iter() {
@@ -203,7 +204,7 @@ impl Runtime {
                         rt.store_fact_without_well_defined_verified_and_infer(
                             nested.case_fact.clone().into(),
                         )
-                        .map_err(|e| Self::have_fn_by_induc_err(stmt, RuntimeError::ExecStmtError(e)))?;
+                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
                         rt.have_fn_by_induc_verify_one_equal_to_well_defined(
                             stmt,
                             &nested.equal_to,
@@ -213,13 +214,11 @@ impl Runtime {
                 }
             }
             HaveFnByInducLastCase::NestedCases(_) => {
-                return Err(RuntimeError::ExecStmtError(
-                    RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt.clone().into(),
-                        "have_fn_by_induc: nested last case list must not be empty".to_string(),
-                        None,
-                        vec![],
-                    ),
+                return Err(short_exec_error(
+ stmt.clone().into(),
+                    "have_fn_by_induc: nested last case list must not be empty".to_string(),
+                    None,
+                    vec![],
                 ));
             }
         }
@@ -255,14 +254,12 @@ impl Runtime {
             .verify_atomic_fact(&in_fact, &VerifyState::new(0, false))
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
-            return Err(RuntimeError::ExecStmtError(
-                RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt.clone().into(),
+            return Err(short_exec_error(
+ stmt.clone().into(),
                     "have_fn_by_induc: induc_from is not in Z".to_string(),
                     None,
                     vec![],
-                ),
-            ));
+                ));
         }
 
         let mut infer_result = InferResult::new();
@@ -306,7 +303,7 @@ impl Runtime {
 
             let result = self
                 .store_fact_without_well_defined_verified_and_infer(equal_fact.clone())
-                .map_err(|e| Self::have_fn_by_induc_err(stmt, RuntimeError::ExecStmtError(e)))?;
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
             Self::merge_store_infer_with_fallback_fact(&mut infer_result, result, &equal_fact);
         }
@@ -354,7 +351,7 @@ impl Runtime {
 
                 let result = self
                     .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())
-                    .map_err(|e| Self::have_fn_by_induc_err(stmt, RuntimeError::ExecStmtError(e)))?;
+                    .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
                 Self::merge_store_infer_with_fallback_fact(&mut infer_result, result, &forall_fact);
             }
             HaveFnByInducLastCase::NestedCases(last_pairs) => {
@@ -403,7 +400,7 @@ impl Runtime {
 
                     let result = self
                         .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())
-                        .map_err(|e| Self::have_fn_by_induc_err(stmt, RuntimeError::ExecStmtError(e)))?;
+                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
                     Self::merge_store_infer_with_fallback_fact(
                         &mut infer_result,
                         result,
@@ -419,8 +416,7 @@ impl Runtime {
     pub fn exec_have_fn_by_induc_stmt(
         &mut self,
         stmt: &HaveFnByInducStmt,
-    ) -> Result<StmtResult, RuntimeErrorStruct> {
+    ) -> Result<StmtResult, RuntimeError> {
         self.exec_have_fn_by_induc(stmt)
-            .map_err(|e| e.into_struct())
     }
 }

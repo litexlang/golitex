@@ -22,6 +22,12 @@ know:
         =>:
             a * b < c * d
 
+    forall a, b, c, d R:
+        0 <= a < c
+        0 <= b < d
+        =>:
+            a * b < c * d
+
 claim:
     prove:
         forall x, y, epsilon R:
@@ -31,6 +37,6 @@ claim:
             abs(y) < epsilon
             =>:
                 abs(x * y) < epsilon
-    0 <= abs(x)
-    0 <= abs(y)
+    0 <= abs(x) < epsilon
+    0 <= abs(y) < epsilon
     abs(x * y) = abs(x) * abs(y) < epsilon * epsilon <= epsilon * 1 = epsilon

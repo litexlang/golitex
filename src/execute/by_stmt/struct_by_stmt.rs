@@ -11,12 +11,13 @@ impl Runtime {
                     let def = self
                         .get_cloned_family_definition_by_name(&family_name)
                         .ok_or_else(|| {
-                            RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
+                            RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new(
+                                None,
                                 format!("family `{}` is not defined", family_name),
                                 default_line_file(),
                                 None,
-                                None,
-                            )
+                                vec![],
+                            )))
                         })?;
                     let map = def
                         .params_def_with_type
@@ -29,13 +30,15 @@ impl Runtime {
             | ParamType::Set(_)
             | ParamType::NonemptySet(_)
             | ParamType::FiniteSet(_) => Err(
-                RuntimeError::new_unknown_error_with_msg_position_optional_stmt_previous_error(
-                    "by struct: this field parameter kind cannot be used as a cart dimension yet"
+                UnknownRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "by struct: this field parameter kind cannot be used as a cart dimension yet"
                         .to_string(),
-                    default_line_file(),
-                    None,
-                    None,
-                ),
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into(),
             ),
         }
     }
@@ -43,20 +46,17 @@ impl Runtime {
     /// `by struct: struct q(R)` — 生成
     /// 1) `struct q(R) = { x cart(...): inst(<=>:) }`；
     /// 2) `forall <fresh> struct q(R): ...`（成员在 cart 内且 `t[i] = t.field`）。
-    pub fn exec_by_struct_stmt(
-        &mut self,
-        stmt: &ByStructStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let stmt_exec = stmt.clone().into();
+    pub fn exec_by_struct_stmt(&mut self, stmt: &ByStructStmt) -> Result<StmtResult, RuntimeError> {
+        let stmt_exec: Stmt = stmt.clone().into();
         let struct_ty = match &stmt.struct_obj {
             Obj::StructObj(s) => s.clone(),
             _ => {
-                return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt_exec,
-                        "by struct: expected `struct name(...)` object".to_string(),
-                        None,
-                        vec![],
-                    )));
+                return Err(short_exec_error(
+ stmt_exec,
+                    "by struct: expected `struct name(...)` object".to_string(),
+                    None,
+                    vec![],
+                ));
             }
         };
 
@@ -64,28 +64,28 @@ impl Runtime {
         let def = match self.get_cloned_definition_of_struct(&struct_name) {
             Some(d) => d,
             None => {
-                return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                        stmt_exec.clone(),
-                        format!("by struct: struct `{}` is not defined", struct_name),
-                        None,
-                        vec![],
-                    )));
+                return Err(short_exec_error(
+ stmt_exec.clone(),
+                    format!("by struct: struct `{}` is not defined", struct_name),
+                    None,
+                    vec![],
+                ));
             }
         };
 
         let expected_count = def.param_defs.number_of_params();
         if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec,
+            return Err(short_exec_error(
+ stmt_exec,
                     format!(
-                        "by struct: struct `{}` expects {} type argument(s), got {}",
-                        struct_name,
-                        expected_count,
-                        struct_ty.args.len()
-                    ),
+                    "by struct: struct `{}` expects {} type argument(s), got {}",
+                    struct_name,
+                    expected_count,
+                    struct_ty.args.len()
+                ),
                     None,
                     vec![],
-                )));
+                ));
         }
 
         let param_to_arg_map = def
@@ -102,24 +102,24 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
         self.verify_obj_well_defined_and_store_cache(&stmt.struct_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
+                short_exec_error(
+ stmt_exec.clone(),
                     format!(
                         "by struct: struct type object `{}` is not well-defined",
                         stmt.struct_obj
                     ),
                     Some(e),
                     vec![],
-                ))
+                )
             })?;
         self.verify_obj_well_defined_and_store_cache(&cart_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
+                short_exec_error(
+ stmt_exec.clone(),
                     format!("by struct: cart `{}` is not well-defined", cart_obj),
                     Some(e),
                     vec![],
-                ))
+                )
             })?;
 
         let random_names = self.generate_random_unused_names(2);
@@ -139,8 +139,11 @@ impl Runtime {
         );
         for (i, (field_name, _)) in def.fields.iter().enumerate() {
             let idx = i + 1;
-            let lhs = ObjAtIndex::new(forall_param_obj.clone(),
-                Number::new(idx.to_string()).into()).into();
+            let lhs = ObjAtIndex::new(
+                forall_param_obj.clone(),
+                Number::new(idx.to_string()).into(),
+            )
+            .into();
             let rhs = FieldAccess::new(forall_param.clone(), field_name.clone()).into();
             then_facts.push(EqualFact::new(lhs, rhs, stmt.line_file.clone()).into());
         }
@@ -166,8 +169,9 @@ impl Runtime {
             tuple_components.push(a.clone());
         }
         for i in 0..def.fields.len() {
-            tuple_components.push(ObjAtIndex::new(x_obj.clone(),
-                Number::new((i + 1).to_string()).into()).into());
+            tuple_components.push(
+                ObjAtIndex::new(x_obj.clone(), Number::new((i + 1).to_string()).into()).into(),
+            );
         }
         let self_as_tuple = Tuple::new(tuple_components).into();
 
@@ -183,39 +187,36 @@ impl Runtime {
             inst_body_facts.push(self.inst_or_and_chain_atomic_fact(fact, &extended_for_sb)?);
         }
 
-        let set_builder = SetBuilder::new_with_mangled_name(
-            set_builder_param,
-            cart_obj.clone(),
-            inst_body_facts,
-        );
+        let set_builder =
+            SetBuilder::new_with_mangled_name(set_builder_param, cart_obj.clone(), inst_body_facts);
         let rhs_sb_obj: Obj = set_builder.clone().into();
         self.verify_obj_well_defined_and_store_cache(&rhs_sb_obj, &verify_state)
             .map_err(|e| {
-                RuntimeError::ExecStmtError(RuntimeErrorStruct::exec_stmt_with_message_and_cause(
-                    stmt_exec.clone(),
-                    "by struct: set-builder (right-hand side) is not well-defined".to_string(),
+                short_exec_error(
+ stmt_exec.clone(),
+                    "by struct: set-builder (right-hand side) is not well-defined"
+                            .to_string(),
                     Some(e),
                     vec![],
-                ))
+                )
             })?;
 
         let definitional_eq = EqualFact::new(
             Obj::StructObj(struct_ty.clone()),
             rhs_sb_obj,
             stmt.line_file.clone(),
-        ).into();
+        )
+        .into();
 
         let mut infer_result = InferResult::new();
         infer_result.push_atomic_fact(&definitional_eq);
         infer_result.new_infer_result_inside(
-            self.store_atomic_fact_without_well_defined_verified_and_infer(definitional_eq)
-                .map_err(RuntimeError::ExecStmtError)?,
+            self.store_atomic_fact_without_well_defined_verified_and_infer(definitional_eq)?,
         );
 
         infer_result.new_fact(&forall_fact);
         infer_result.new_infer_result_inside(
-            self.store_fact_without_well_defined_verified_and_infer(forall_fact)
-                .map_err(RuntimeError::ExecStmtError)?,
+            self.store_fact_without_well_defined_verified_and_infer(forall_fact)?,
         );
 
         Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())

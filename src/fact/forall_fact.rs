@@ -23,6 +23,25 @@ impl ForallFact {
             line_file,
         }
     }
+
+    pub fn expand_then_facts_with_order_chain_closure(&mut self) -> Result<(), RuntimeError> {
+        let mut new_then: Vec<ExistOrAndChainAtomicFact> =
+            Vec::with_capacity(self.then_facts.len().saturating_mul(2));
+        for tf in std::mem::take(&mut self.then_facts) {
+            match tf {
+                ExistOrAndChainAtomicFact::ChainFact(c) => {
+                    let atomics = c.facts_with_order_transitive_closure()?;
+                    new_then.push(ExistOrAndChainAtomicFact::ChainFact(c));
+                    for af in atomics {
+                        new_then.push(ExistOrAndChainAtomicFact::AtomicFact(af));
+                    }
+                }
+                other => new_then.push(other),
+            }
+        }
+        self.then_facts = new_then;
+        Ok(())
+    }
 }
 
 impl fmt::Display for ForallFact {

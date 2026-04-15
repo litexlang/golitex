@@ -61,7 +61,7 @@ fn dedup_atomic_facts(mut facts: Vec<AtomicFact>) -> Vec<AtomicFact> {
 }
 
 impl ChainFact {
-    pub fn facts_with_order_transitive_closure(&self) -> Result<Vec<AtomicFact>, RuntimeErrorStruct> {
+    pub fn facts_with_order_transitive_closure(&self) -> Result<Vec<AtomicFact>, RuntimeError> {
         let base = self.facts()?;
         let n = self.objs.len();
         if n < 2 {
@@ -140,13 +140,15 @@ impl ChainFact {
                 continue;
             }
             idxs.sort_unstable();
-            let rep = idxs[0];
-            for &j in idxs.iter().skip(1) {
-                extra.push(EqualFact::new(
-                    self.objs[rep].clone(),
-                    self.objs[j].clone(),
-                    lf.clone(),
-                ).into());
+            for ii in 0..idxs.len() {
+                for jj in ii + 1..idxs.len() {
+                    let i = idxs[ii];
+                    let j = idxs[jj];
+                    extra.push(
+                        EqualFact::new(self.objs[i].clone(), self.objs[j].clone(), lf.clone())
+                            .into(),
+                    );
+                }
             }
         }
 
@@ -167,9 +169,7 @@ impl ChainFact {
                         if path_strict {
                             GreaterFact::new(left, right, lf.clone()).into()
                         } else {
-                            GreaterEqualFact::new(
-                                left, right, lf.clone(),
-                            ).into()
+                            GreaterEqualFact::new(left, right, lf.clone()).into()
                         }
                     }
                 };
@@ -193,6 +193,23 @@ mod tests {
 
     fn prop(s: &str) -> IdentifierOrIdentifierWithMod {
         IdentifierOrIdentifierWithMod::Identifier(Identifier::new(s.to_string()))
+    }
+
+    #[test]
+    fn eq_chain_adds_all_pairs_between_equal_nodes() {
+        let lf = default_line_file();
+        let chain = ChainFact::new(
+            vec![id("x"), id("y"), id("z")],
+            vec![prop("="), prop("=")],
+            lf.clone(),
+        );
+        let facts = chain.facts_with_order_transitive_closure().unwrap();
+        let displayed: Vec<_> = facts.iter().map(|f| f.to_string()).collect();
+        assert!(
+            displayed.iter().any(|s| s.contains("y") && s.contains("z") && s.contains("=")),
+            "expected y = z from equality clique, got {:?}",
+            displayed
+        );
     }
 
     #[test]
