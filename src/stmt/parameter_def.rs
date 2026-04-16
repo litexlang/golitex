@@ -56,6 +56,16 @@ impl ParamDefWithType {
         names
     }
 
+    pub fn collect_param_names_with_types(&self) -> Vec<(String, ParamType)> {
+        let mut out: Vec<(String, ParamType)> = Vec::with_capacity(self.number_of_params());
+        for def in self.groups.iter() {
+            for name in def.param_names().iter() {
+                out.push((name.clone(), def.param_type.clone()));
+            }
+        }
+        out
+    }
+
     pub fn flat_instantiated_types_for_args(
         &self,
         instantiated_types: &[ParamType],

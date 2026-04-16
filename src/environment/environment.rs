@@ -32,8 +32,10 @@ pub struct Environment {
 
     pub known_objs_equal_to_tuple: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
     pub known_objs_equal_to_cart: HashMap<ObjString, (Cart, LineFile)>,
-    pub known_objs_equal_to_finite_seq_list: HashMap<ObjString, (FiniteSeqListObj, LineFile)>,
-    pub known_objs_equal_to_matrix_list: HashMap<ObjString, (MatrixListObj, LineFile)>,
+    pub known_objs_equal_to_finite_seq_list:
+        HashMap<ObjString, (FiniteSeqListObj, Option<FiniteSeqSet>, LineFile)>,
+    pub known_objs_equal_to_matrix_list:
+        HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
     pub known_objs_equal_to_normalized_decimal_number: HashMap<ObjString, Number>,
 
     pub known_identifier_satisfy_struct: HashMap<FieldAccessName, StructObj>,
@@ -83,8 +85,11 @@ impl Environment {
         >,
         known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
         known_cart_objs: HashMap<ObjString, (Cart, LineFile)>,
-        known_finite_seq_list_objs: HashMap<ObjString, (FiniteSeqListObj, LineFile)>,
-        known_matrix_list_objs: HashMap<ObjString, (MatrixListObj, LineFile)>,
+        known_finite_seq_list_objs: HashMap<
+            ObjString,
+            (FiniteSeqListObj, Option<FiniteSeqSet>, LineFile),
+        >,
+        known_matrix_list_objs: HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
         known_calculated_value_of_obj: HashMap<ObjString, Number>,
         cache_known_valid_obj: HashMap<ObjString, ()>,
         cache_known_fact: HashMap<FactString, LineFile>,

@@ -28,22 +28,16 @@ impl Runtime {
                 }
                 Obj::FiniteSeqSet(fs) => {
                     let fn_set = self.finite_seq_set_to_fn_set(fs, default_line_file());
-                    let type_fact = InFact::new(
-                        name.to_string().into(),
-                        fn_set.into(),
-                        default_line_file(),
-                    )
-                    .into();
+                    let type_fact =
+                        InFact::new(name.to_string().into(), fn_set.into(), default_line_file())
+                            .into();
                     self.store_fact_without_well_defined_verified_and_infer(type_fact)
                 }
                 Obj::MatrixSet(ms) => {
                     let fn_set = self.matrix_set_to_fn_set(ms, default_line_file());
-                    let type_fact = InFact::new(
-                        name.to_string().into(),
-                        fn_set.into(),
-                        default_line_file(),
-                    )
-                    .into();
+                    let type_fact =
+                        InFact::new(name.to_string().into(), fn_set.into(), default_line_file())
+                            .into();
                     self.store_fact_without_well_defined_verified_and_infer(type_fact)
                 }
                 _ => self.define_parameter_by_binding_obj(name, obj),
@@ -204,15 +198,15 @@ impl Runtime {
             for name in param_def.params.iter() {
                 self.store_identifier_obj(name).map_err(|runtime_error| {
                     RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+                        None,
+                        format!(
                             "define params with type: failed to declare parameter `{}`",
                             name
                         ),
-                default_line_file(),
-                Some(runtime_error),
-                vec![],
-            )))
+                        default_line_file(),
+                        Some(runtime_error),
+                        vec![],
+                    )))
                 })?;
                 let fact_infer_result = self
                     .define_parameter_by_binding_param_type(name, &param_def.param_type)

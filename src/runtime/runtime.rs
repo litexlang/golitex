@@ -374,36 +374,46 @@ impl Runtime {
         &mut self,
         name: &str,
         list: FiniteSeqListObj,
+        member_of_finite_seq_set: Option<FiniteSeqSet>,
         line_file: LineFile,
     ) {
-        self.top_level_env()
-            .known_objs_equal_to_finite_seq_list
-            .insert(name.to_string(), (list, line_file));
+        let map = &mut self.top_level_env().known_objs_equal_to_finite_seq_list;
+        let old = map.get(name).cloned();
+        let merged_member = match (member_of_finite_seq_set, old.as_ref()) {
+            (Some(new_s), _) => Some(new_s),
+            (None, Some((_, Some(old_s), _))) => Some(old_s.clone()),
+            (None, _) => None,
+        };
+        map.insert(
+            name.to_string(),
+            (list, merged_member, line_file),
+        );
     }
 
     pub fn store_known_matrix_list_obj(
         &mut self,
         name: &str,
         matrix: MatrixListObj,
+        member_of_matrix_set: Option<MatrixSet>,
         line_file: LineFile,
     ) {
-        self.top_level_env()
-            .known_objs_equal_to_matrix_list
-            .insert(name.to_string(), (matrix, line_file));
+        let map = &mut self.top_level_env().known_objs_equal_to_matrix_list;
+        let old = map.get(name).cloned();
+        let merged_member = match (member_of_matrix_set, old.as_ref()) {
+            (Some(new_s), _) => Some(new_s),
+            (None, Some((_, Some(old_s), _))) => Some(old_s.clone()),
+            (None, _) => None,
+        };
+        map.insert(
+            name.to_string(),
+            (matrix, merged_member, line_file),
+        );
     }
 
     pub fn matrix_set_to_fn_set(&self, ms: &MatrixSet, line_file: LineFile) -> FnSet {
         let pair = self.generate_random_unused_names(2);
-        let p1 = format!(
-            "{}{}",
-            DEFAULT_MANGLED_FN_PARAM_PREFIX,
-            pair[0]
-        );
-        let p2 = format!(
-            "{}{}",
-            DEFAULT_MANGLED_FN_PARAM_PREFIX,
-            pair[1]
-        );
+        let p1 = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, pair[0]);
+        let p2 = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, pair[1]);
         FnSet::new(
             vec![
                 ParamGroupWithSet::new(vec![p1.clone()], StandardSet::NPos.into()),
