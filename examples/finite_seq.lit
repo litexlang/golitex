@@ -1,3 +1,5 @@
+family self_finite_seq(s set, n N_pos) = fn(x N_pos: x <= n) s
+
 finite_seq(R, 3) = finite_seq(R, 3)
 
 have a finite_seq(R, 3) = [1, 2, 3]

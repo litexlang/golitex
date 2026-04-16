@@ -84,7 +84,11 @@ impl Runtime {
                 let infer_result_after_store =
                     self.store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())?;
 
-                Ok(non_err_after_body.with_infers(infer_result_after_store))
+                let mut result = non_err_after_body;
+                if let StmtResult::NonFactualStmtSuccess(ref mut nfs) = result {
+                    nfs.inside_results.clear();
+                }
+                Ok(result.with_infers(infer_result_after_store))
             }
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
