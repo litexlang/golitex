@@ -506,16 +506,16 @@ impl Runtime {
             }
             (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
                 let lf = in_fact.line_file.clone();
-                let nrows_obj: Obj = Number::new(list.rows.len().to_string()).into();
+                let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
                 let row_eq: AtomicFact =
-                    EqualFact::new(nrows_obj, (*ms.row_len).clone(), lf.clone()).into();
+                    EqualFact::new(n_rows_obj, (*ms.row_len).clone(), lf.clone()).into();
                 if !self.verify_atomic_fact(&row_eq, verify_state)?.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
                 for row in list.rows.iter() {
-                    let ncol_obj: Obj = Number::new(row.len().to_string()).into();
+                    let n_col_obj: Obj = Number::new(row.len().to_string()).into();
                     let col_eq: AtomicFact =
-                        EqualFact::new(ncol_obj, (*ms.col_len).clone(), lf.clone()).into();
+                        EqualFact::new(n_col_obj, (*ms.col_len).clone(), lf.clone()).into();
                     if !self.verify_atomic_fact(&col_eq, verify_state)?.is_true() {
                         return Ok((StmtUnknown::new()).into());
                     }

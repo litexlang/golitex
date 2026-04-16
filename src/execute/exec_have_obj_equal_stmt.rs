@@ -106,6 +106,34 @@ impl Runtime {
             infer_result.new_infer_result_inside(equal_to_fact_infer_result);
         }
 
+        let lf = have_obj_equal_stmt.line_file.clone();
+        for ((name, param_type), obj) in have_obj_equal_stmt
+            .param_def
+            .collect_param_names_with_types()
+            .into_iter()
+            .zip(have_obj_equal_stmt.objs_equal_to.iter())
+        {
+            match (param_type, obj) {
+                (ParamType::Obj(Obj::FiniteSeqSet(fs)), Obj::FiniteSeqListObj(list)) => {
+                    self.store_known_finite_seq_list_obj(
+                        &name,
+                        list.clone(),
+                        Some(fs.clone()),
+                        lf.clone(),
+                    );
+                }
+                (ParamType::Obj(Obj::MatrixSet(ms)), Obj::MatrixListObj(m)) => {
+                    self.store_known_matrix_list_obj(
+                        &name,
+                        m.clone(),
+                        Some(ms.clone()),
+                        lf.clone(),
+                    );
+                }
+                _ => {}
+            }
+        }
+
         Ok(
             (NonFactualStmtSuccess::new(have_obj_equal_stmt.clone().into(), infer_result, vec![]))
                 .into(),
