@@ -36,6 +36,11 @@ impl Runtime {
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map),
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map),
+            Obj::MatrixAdd(inner) => self.inst_matrix_add(inner, param_to_arg_map),
+            Obj::MatrixSub(inner) => self.inst_matrix_sub(inner, param_to_arg_map),
+            Obj::MatrixMul(inner) => self.inst_matrix_mul(inner, param_to_arg_map),
+            Obj::MatrixScalarMul(inner) => self.inst_matrix_scalar_mul(inner, param_to_arg_map),
+            Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map),
             Obj::Max(inner) => self.inst_max(inner, param_to_arg_map),
             Obj::Min(inner) => self.inst_min(inner, param_to_arg_map),
@@ -270,6 +275,56 @@ impl Runtime {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map)?;
         Ok(Add::new(instantiated_left_obj, instantiated_right_obj).into())
+    }
+
+    pub fn inst_matrix_add(
+        &self,
+        ma: &MatrixAdd,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let instantiated_left_obj = self.inst_obj(&ma.left, param_to_arg_map)?;
+        let instantiated_right_obj = self.inst_obj(&ma.right, param_to_arg_map)?;
+        Ok(MatrixAdd::new(instantiated_left_obj, instantiated_right_obj).into())
+    }
+
+    pub fn inst_matrix_sub(
+        &self,
+        ms: &MatrixSub,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let l = self.inst_obj(&ms.left, param_to_arg_map)?;
+        let r = self.inst_obj(&ms.right, param_to_arg_map)?;
+        Ok(MatrixSub::new(l, r).into())
+    }
+
+    pub fn inst_matrix_mul(
+        &self,
+        mm: &MatrixMul,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let l = self.inst_obj(&mm.left, param_to_arg_map)?;
+        let r = self.inst_obj(&mm.right, param_to_arg_map)?;
+        Ok(MatrixMul::new(l, r).into())
+    }
+
+    pub fn inst_matrix_scalar_mul(
+        &self,
+        m: &MatrixScalarMul,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let s = self.inst_obj(&m.scalar, param_to_arg_map)?;
+        let mat = self.inst_obj(&m.matrix, param_to_arg_map)?;
+        Ok(MatrixScalarMul::new(s, mat).into())
+    }
+
+    pub fn inst_matrix_pow(
+        &self,
+        m: &MatrixPow,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let b = self.inst_obj(&m.base, param_to_arg_map)?;
+        let e = self.inst_obj(&m.exponent, param_to_arg_map)?;
+        Ok(MatrixPow::new(b, e).into())
     }
 
     pub fn inst_sub(

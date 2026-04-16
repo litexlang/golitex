@@ -367,6 +367,51 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::MatrixAdd(left_m), Obj::MatrixAdd(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.left,
+                    &left_m.right,
+                    &right_m.left,
+                    &right_m.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixSub(left_m), Obj::MatrixSub(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.left,
+                    &left_m.right,
+                    &right_m.left,
+                    &right_m.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixMul(left_m), Obj::MatrixMul(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.left,
+                    &left_m.right,
+                    &right_m.left,
+                    &right_m.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixScalarMul(left_m), Obj::MatrixScalarMul(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.scalar,
+                    &left_m.matrix,
+                    &right_m.scalar,
+                    &right_m.matrix,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixPow(left_m), Obj::MatrixPow(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.base,
+                    &left_m.exponent,
+                    &right_m.base,
+                    &right_m.exponent,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Max(left_max), Obj::Max(right_max)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_max.left,

@@ -299,6 +299,21 @@ impl Runtime {
             Obj::FnObj(ref f) => Self::match_arg_when_left_is_fn_obj(f, given_arg),
             Obj::Number(ref left) => Self::match_arg_when_left_is_number(left, given_arg),
             Obj::Add(ref a) => Self::match_arg_when_left_is_add(&a.left, &a.right, given_arg),
+            Obj::MatrixAdd(ref a) => {
+                Self::match_arg_when_left_is_matrix_add(&a.left, &a.right, given_arg)
+            }
+            Obj::MatrixSub(ref a) => {
+                Self::match_arg_when_left_is_matrix_sub(&a.left, &a.right, given_arg)
+            }
+            Obj::MatrixMul(ref a) => {
+                Self::match_arg_when_left_is_matrix_mul(&a.left, &a.right, given_arg)
+            }
+            Obj::MatrixScalarMul(ref a) => {
+                Self::match_arg_when_left_is_matrix_scalar_mul(&a.scalar, &a.matrix, given_arg)
+            }
+            Obj::MatrixPow(ref a) => {
+                Self::match_arg_when_left_is_matrix_pow(&a.base, &a.exponent, given_arg)
+            }
             Obj::Sub(ref a) => Self::match_arg_when_left_is_sub(&a.left, &a.right, given_arg),
             Obj::Mul(ref a) => Self::match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
             Obj::Div(ref a) => Self::match_arg_when_left_is_div(&a.left, &a.right, given_arg),
@@ -507,6 +522,71 @@ impl Runtime {
             Ok(Some(HashMap::new()))
         } else {
             Ok(None)
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_add(
+        left_left: &Obj,
+        left_right: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixAdd(ref g) => {
+                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_sub(
+        left_left: &Obj,
+        left_right: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixSub(ref g) => {
+                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_mul(
+        left_left: &Obj,
+        left_right: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixMul(ref g) => {
+                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_scalar_mul(
+        left_scalar: &Obj,
+        left_matrix: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixScalarMul(ref g) => {
+                Self::match_arg_binary_then_merge(left_scalar, left_matrix, &g.scalar, &g.matrix)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_pow(
+        left_base: &Obj,
+        left_exp: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixPow(ref g) => {
+                Self::match_arg_binary_then_merge(left_base, left_exp, &g.base, &g.exponent)
+            }
+            _ => Ok(None),
         }
     }
 

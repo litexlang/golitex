@@ -85,6 +85,26 @@ impl Runtime {
                 Obj::Pow(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::MatrixAdd(a) => match right {
+                Obj::MatrixAdd(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixSub(a) => match right {
+                Obj::MatrixSub(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixMul(a) => match right {
+                Obj::MatrixMul(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixScalarMul(a) => match right {
+                Obj::MatrixScalarMul(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixPow(a) => match right {
+                Obj::MatrixPow(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Abs(a) => match right {
                 Obj::Abs(b) => a.to_string() == b.to_string(),
                 _ => false,
