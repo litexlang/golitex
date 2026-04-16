@@ -18,6 +18,39 @@ enum BinaryCombineOp {
 }
 
 impl Runtime {
+    fn object_supported_by_eval_stmt(obj: &Obj) -> bool {
+        matches!(
+            obj,
+            Obj::Number(_)
+                | Obj::FnObj(_)
+                | Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Pow(_)
+        )
+    }
+
+    fn finish_numeric_accumulator_with_pending_rights(
+        &mut self,
+        acc: Obj,
+        pending: &mut Vec<PendingRight>,
+        eval_stmt: &EvalStmt,
+    ) -> Result<Obj, RuntimeError> {
+        let mut acc = acc;
+        while let Some(pend) = pending.pop() {
+            let (combine_op, right_obj) = match pend {
+                PendingRight::Add(o) => (BinaryCombineOp::Add, o),
+                PendingRight::Sub(o) => (BinaryCombineOp::Sub, o),
+                PendingRight::Mul(o) => (BinaryCombineOp::Mul, o),
+                PendingRight::Div(o) => (BinaryCombineOp::Div, o),
+            };
+            let right_eval = self.evaluate_symbol_obj_iterative(right_obj, eval_stmt)?;
+            acc = self.combine_two_numeric_objs(acc, right_eval, combine_op, eval_stmt)?;
+        }
+        Ok(acc)
+    }
+
     /// Evaluates numeric expressions for `eval` without deep recursion on the Rust stack.
     /// Algorithm calls are expanded in a loop; `Add`/`Sub`/`Mul`/`Div` use an explicit stack for the left spine.
     fn evaluate_symbol_obj_iterative(
@@ -53,32 +86,49 @@ impl Runtime {
                     continue;
                 }
                 Obj::Number(acc_num) => {
-                    let mut acc: Obj = acc_num.into();
-                    while let Some(pend) = pending.pop() {
-                        let (combine_op, right_obj) = match pend {
-                            PendingRight::Add(o) => (BinaryCombineOp::Add, o),
-                            PendingRight::Sub(o) => (BinaryCombineOp::Sub, o),
-                            PendingRight::Mul(o) => (BinaryCombineOp::Mul, o),
-                            PendingRight::Div(o) => (BinaryCombineOp::Div, o),
-                        };
-                        let right_eval =
-                            self.evaluate_symbol_obj_iterative(right_obj, eval_stmt)?;
-                        acc =
-                            self.combine_two_numeric_objs(acc, right_eval, combine_op, eval_stmt)?;
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        acc_num.into(),
+                        &mut pending,
+                        eval_stmt,
+                    );
+                }
+                Obj::Pow(pow) => {
+                    let left = self.evaluate_symbol_obj_iterative((*pow.base).clone(), eval_stmt)?;
+                    let right =
+                        self.evaluate_symbol_obj_iterative((*pow.exponent).clone(), eval_stmt)?;
+                    let combined: Obj = Pow::new(left, right).into();
+                    match combined.evaluate_to_normalized_decimal_number() {
+                        Some(acc_num) => {
+                            return self.finish_numeric_accumulator_with_pending_rights(
+                                acc_num.into(),
+                                &mut pending,
+                                eval_stmt,
+                            );
+                        }
+                        None => {
+                            if pending.is_empty() {
+                                return Ok(combined);
+                            }
+                            return Err(short_exec_error(
+                                eval_stmt.clone().into(),
+                                "eval: non-numeric power with pending binary operation"
+                                    .to_string(),
+                                None,
+                                vec![],
+                            ));
+                        }
                     }
-                    return Ok(acc);
                 }
                 _ => {
                     if pending.is_empty() {
                         return Ok(cur);
                     }
                     return Err(short_exec_error(
- eval_stmt.clone().into(),
-                    "eval: non-numeric intermediate with pending binary operation"
-                                .to_string(),
-                    None,
-                    vec![],
-                ));
+                        eval_stmt.clone().into(),
+                        "eval: non-numeric intermediate with pending binary operation".to_string(),
+                        None,
+                        vec![],
+                    ));
                 }
             }
         }
@@ -101,11 +151,11 @@ impl Runtime {
         match calculated {
             Some(number) => Ok(number.into()),
             None => Err(short_exec_error(
- eval_stmt.clone().into(),
-                    "eval: failed to combine numeric sub-expression".to_string(),
-                    None,
-                    vec![],
-                )),
+                eval_stmt.clone().into(),
+                "eval: failed to combine numeric sub-expression".to_string(),
+                None,
+                vec![],
+            )),
         }
     }
 
@@ -139,11 +189,11 @@ impl Runtime {
                     }
                     _ => {
                         return Err(short_exec_error(
- eval_stmt.clone().into(),
-                    "eval: function arguments must evaluate to Number".to_string(),
-                    None,
-                    vec![],
-                ));
+                            eval_stmt.clone().into(),
+                            "eval: function arguments must evaluate to Number".to_string(),
+                            None,
+                            vec![],
+                        ));
                     }
                 }
             }
@@ -153,7 +203,7 @@ impl Runtime {
             Some(definition) => definition.clone(),
             None => {
                 return Err(short_exec_error(
- eval_stmt.clone().into(),
+                    eval_stmt.clone().into(),
                     format!("eval: algorithm `{}` is not defined", fn_name),
                     None,
                     vec![],
@@ -163,15 +213,15 @@ impl Runtime {
 
         if flattened_number_args.len() != algo_definition.params.len() {
             return Err(short_exec_error(
- eval_stmt.clone().into(),
-                    format!(
+                eval_stmt.clone().into(),
+                format!(
                     "eval: argument count mismatch (expected {}, got {})",
                     algo_definition.params.len(),
                     flattened_number_args.len()
                 ),
-                    None,
-                    vec![],
-                ));
+                None,
+                vec![],
+            ));
         }
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
@@ -190,11 +240,11 @@ impl Runtime {
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
                     short_exec_error(
- eval_stmt.clone().into(),
-                    "eval: failed to verify case condition".to_string(),
-                    Some(verify_error),
-                    vec![],
-                )
+                        eval_stmt.clone().into(),
+                        "eval: failed to verify case condition".to_string(),
+                        Some(verify_error),
+                        vec![],
+                    )
                 })?;
 
             if verify_result.is_true() {
@@ -206,22 +256,22 @@ impl Runtime {
                     .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
                         short_exec_error(
- eval_stmt.clone().into(),
-                    "eval: failed to verify reversed case condition".to_string(),
-                    Some(verify_error),
-                    vec![],
-                )
+                            eval_stmt.clone().into(),
+                            "eval: failed to verify reversed case condition".to_string(),
+                            Some(verify_error),
+                            vec![],
+                        )
                     })?;
                 if verify_reversed_result.is_unknown() {
                     return Err(short_exec_error(
- eval_stmt.clone().into(),
-                    format!(
+                        eval_stmt.clone().into(),
+                        format!(
                             "eval: case `{}` is unknown and its reverse is also unknown",
                             instantiated_case_condition
                         ),
-                    None,
-                    vec![],
-                ));
+                        None,
+                        vec![],
+                    ));
                 }
             }
         }
@@ -230,31 +280,33 @@ impl Runtime {
             self.inst_obj(&default_return_stmt.value, &param_to_arg_map)
         } else {
             Err(short_exec_error(
- eval_stmt.clone().into(),
-                    "eval: no case matched and no default return".to_string(),
-                    None,
-                    vec![],
-                ))
+                eval_stmt.clone().into(),
+                "eval: no case matched and no default return".to_string(),
+                None,
+                vec![],
+            ))
         }
     }
 
-    pub fn _exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &stmt.obj_to_eval,
             &VerifyState::new(0, false),
         )?;
 
-        if !matches!(stmt.obj_to_eval, Obj::FnObj(_)) {
+        let resolved_obj = self.resolve_obj(&stmt.obj_to_eval);
+        if !Self::object_supported_by_eval_stmt(&resolved_obj) {
             return Err(short_exec_error(
- stmt.clone().into(),
-                    "eval: obj_to_eval must be a fnObj".to_string(),
-                    None,
-                    vec![],
-                ));
+                stmt.clone().into(),
+                "eval: need a function call or a resolved numeric expression (+, -, *, /, powers)"
+                    .to_string(),
+                None,
+                vec![],
+            ));
         }
 
         let eval_result = self.run_in_local_env(|rt| {
-            rt.evaluate_symbol_obj_iterative(stmt.obj_to_eval.clone(), stmt)
+            rt.evaluate_symbol_obj_iterative(resolved_obj.clone(), stmt)
         });
 
         let evaluated_obj = eval_result?;

@@ -24,7 +24,7 @@ impl Runtime {
             Stmt::ImportStmt(s) => self.exec_import_stmt(s),
             Stmt::DoNothingStmt(s) => self.exec_do_nothing_stmt(s),
             Stmt::RunFileStmt(s) => self.exec_run_file_stmt(s),
-            Stmt::EvalStmt(s) => self._exec_eval_stmt(s),
+            Stmt::EvalStmt(s) => self.exec_eval_stmt(s),
             Stmt::WitnessExistFact(s) => self.exec_witness_exist_fact(s),
             Stmt::WitnessNonemptySet(s) => self.exec_witness_nonempty_set(s),
             Stmt::ByCasesStmt(s) => self.exec_by_cases_stmt(s),
@@ -43,10 +43,10 @@ impl Runtime {
 
     pub fn stmt_unsupported(stmt: Stmt) -> Result<StmtResult, RuntimeError> {
         Err(short_exec_error(
- stmt,
-                    "unimplemented".to_string(),
-                    None,
-                    vec![],
-                ))
+            stmt,
+            "unimplemented".to_string(),
+            None,
+            vec![],
+        ))
     }
 }
