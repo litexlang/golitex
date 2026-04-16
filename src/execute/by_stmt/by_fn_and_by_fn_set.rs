@@ -166,6 +166,7 @@ impl Runtime {
                     );
                     facts
                 },
+                false,
                 line_file.clone(),
             )
             .into()],
@@ -242,6 +243,7 @@ impl Runtime {
                 ParamGroupWithParamType::new(vec![exist_z_name], ParamType::Obj(exist_ret_set)),
             ]),
             vec![EqualFact::new(exist_element_obj, exist_pair, line_file.clone()).into()],
+            false,
             line_file.clone(),
         );
         let forall_exist = ForallFact::new(

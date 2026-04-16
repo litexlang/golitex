@@ -54,6 +54,23 @@ impl Runtime {
         }
     }
 
+    pub fn parse_by_seq_set_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(SEQ)?;
+        tb.skip_token(COLON)?;
+        let obj = self.parse_obj(tb)?;
+        let line_file = tb.line_file.clone();
+        match obj {
+            Obj::SeqSet(ss) => Ok(BySeqSetStmt::new(ss, line_file).into()),
+            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!("by seq: expected a seq(...) object, got `{}`", obj),
+                line_file,
+                None,
+                vec![],
+            )))),
+        }
+    }
+
     /// `by matrix: matrix(S, r, c)` — expand to the corresponding `fn` set.
     pub fn parse_by_matrix_set_stmt(
         &mut self,

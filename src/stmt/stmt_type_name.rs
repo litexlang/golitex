@@ -147,6 +147,12 @@ impl ByFiniteSeqSetStmt {
     }
 }
 
+impl BySeqSetStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "BySeqSetStmt".to_string()
+    }
+}
+
 impl ByMatrixSetStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByMatrixSetStmt".to_string()

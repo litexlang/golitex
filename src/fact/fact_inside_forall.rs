@@ -76,6 +76,7 @@ impl ExistOrAndChainAtomicFact {
                         .into_iter()
                         .map(|x| x.with_new_line_file(line_file.clone()))
                         .collect(),
+                    e.is_exist_unique,
                     line_file,
                 ))
             }

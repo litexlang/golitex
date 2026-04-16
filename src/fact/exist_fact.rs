@@ -83,6 +83,7 @@ impl From<EqualFact> for OrAndChainAtomicFact {
 pub struct ExistFact {
     pub params_def_with_type: ParamDefWithType,
     pub facts: Vec<OrAndChainAtomicFact>,
+    pub is_exist_unique: bool,
     pub line_file: LineFile,
 }
 
@@ -90,11 +91,13 @@ impl ExistFact {
     pub fn new(
         params_def_with_type: ParamDefWithType,
         facts: Vec<OrAndChainAtomicFact>,
+        is_exist_unique: bool,
         line_file: LineFile,
     ) -> Self {
         ExistFact {
             params_def_with_type,
             facts,
+            is_exist_unique,
             line_file,
         }
     }
@@ -104,9 +107,14 @@ impl ExistFact {
     }
 
     pub fn key(&self) -> String {
+        let head = if self.is_exist_unique {
+            EXIST_UNIQUE
+        } else {
+            EXIST
+        };
         format!(
             "{} {}{}{}",
-            EXIST,
+            head,
             LEFT_CURLY_BRACE,
             vec_to_string_join_by_comma(
                 &self
@@ -152,10 +160,15 @@ fn exist_fact_string_without_exist_as_prefix(
 
 impl fmt::Display for ExistFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let head = if self.is_exist_unique {
+            EXIST_UNIQUE
+        } else {
+            EXIST
+        };
         write!(
             f,
             "{} {}",
-            EXIST,
+            head,
             self.exist_fact_string_without_exist_as_prefix()
         )
     }

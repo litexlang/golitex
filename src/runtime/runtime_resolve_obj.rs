@@ -110,6 +110,7 @@ impl Runtime {
             Obj::FiniteSeqSet(fs) => {
                 FiniteSeqSet::new(self.resolve_obj(&fs.set), self.resolve_obj(&fs.n)).into()
             }
+            Obj::SeqSet(ss) => SeqSet::new(self.resolve_obj(&ss.set)).into(),
             Obj::MatrixSet(ms) => MatrixSet::new(
                 self.resolve_obj(&ms.set),
                 self.resolve_obj(&ms.row_len),

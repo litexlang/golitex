@@ -985,6 +985,31 @@ impl Runtime {
             })?;
             return Ok(FiniteSeqSet::new(set, n).into());
         }
+        if tok == SEQ {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 1 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "seq expects 1 argument".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+            let set = args.into_iter().next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "seq expects 1 argument".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            return Ok(SeqSet::new(set).into());
+        }
         if tok == MATRIX {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
