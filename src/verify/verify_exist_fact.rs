@@ -53,7 +53,7 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    fn build_exist_unique_uniqueness_forall_fact(
+    pub(crate) fn build_exist_unique_uniqueness_forall_fact(
         &self,
         exist_fact: &ExistFact,
     ) -> Result<ForallFact, RuntimeError> {
