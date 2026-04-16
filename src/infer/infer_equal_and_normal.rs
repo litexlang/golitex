@@ -123,6 +123,92 @@ impl Runtime {
         Ok(())
     }
 
+    fn infer_equal_fact_finite_seq_list_from_known_side(
+        &mut self,
+        known_list: &FiniteSeqListObj,
+        target_obj: &Obj,
+        equal_fact: &EqualFact,
+    ) -> Result<(), RuntimeError> {
+        let lf = equal_fact.line_file.clone();
+        self.store_known_finite_seq_list_obj(
+            &target_obj.to_string(),
+            known_list.clone(),
+            None,
+            lf,
+        );
+        Ok(())
+    }
+
+    fn infer_equal_fact_matrix_list_from_known_side(
+        &mut self,
+        known_matrix: &MatrixListObj,
+        target_obj: &Obj,
+        equal_fact: &EqualFact,
+    ) -> Result<(), RuntimeError> {
+        let lf = equal_fact.line_file.clone();
+        self.store_known_matrix_list_obj(
+            &target_obj.to_string(),
+            known_matrix.clone(),
+            None,
+            lf,
+        );
+        Ok(())
+    }
+
+    fn infer_equal_fact_by_finite_seq_list(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let infer_result = InferResult::new();
+
+        if let Obj::FiniteSeqListObj(list) = &equal_fact.left {
+            if !matches!(&equal_fact.right, Obj::FiniteSeqListObj(_)) {
+                self.infer_equal_fact_finite_seq_list_from_known_side(
+                    list,
+                    &equal_fact.right,
+                    equal_fact,
+                )?;
+            }
+        }
+
+        if let Obj::FiniteSeqListObj(list) = &equal_fact.right {
+            if !matches!(&equal_fact.left, Obj::FiniteSeqListObj(_)) {
+                self.infer_equal_fact_finite_seq_list_from_known_side(
+                    list,
+                    &equal_fact.left,
+                    equal_fact,
+                )?;
+            }
+        }
+
+        Ok(infer_result)
+    }
+
+    fn infer_equal_fact_by_matrix_list(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let infer_result = InferResult::new();
+
+        if let Obj::MatrixListObj(m) = &equal_fact.left {
+            if !matches!(&equal_fact.right, Obj::MatrixListObj(_)) {
+                self.infer_equal_fact_matrix_list_from_known_side(
+                    m,
+                    &equal_fact.right,
+                    equal_fact,
+                )?;
+            }
+        }
+
+        if let Obj::MatrixListObj(m) = &equal_fact.right {
+            if !matches!(&equal_fact.left, Obj::MatrixListObj(_)) {
+                self.infer_equal_fact_matrix_list_from_known_side(m, &equal_fact.left, equal_fact)?;
+            }
+        }
+
+        Ok(infer_result)
+    }
+
     /// Infer from equality by syncing known calculated values.
     /// Example: from `a = 1 + 2`, remember `a -> 3`.
     pub fn infer_equal_fact(
@@ -137,6 +223,8 @@ impl Runtime {
             .new_infer_result_inside(self.infer_equal_fact_and_give_value_to_obj(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_cart(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact)?);
+        infer_result.new_infer_result_inside(self.infer_equal_fact_by_finite_seq_list(equal_fact)?);
+        infer_result.new_infer_result_inside(self.infer_equal_fact_by_matrix_list(equal_fact)?);
 
         Ok(infer_result)
     }
@@ -289,15 +377,15 @@ impl Runtime {
             let instantiated_iff_fact =
                 self.inst_fact(iff_fact, &param_to_arg_map).map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                        None,
+                        format!(
                             "failed to instantiate iff fact while inferring `{}`",
                             normal_atomic_fact
                         ),
-                    normal_atomic_fact.line_file.clone(),
-                    Some(e),
-                    vec![],
-                )))
+                        normal_atomic_fact.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
                 })?;
             let fact_to_store =
                 instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file.clone());
@@ -305,15 +393,15 @@ impl Runtime {
             self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
                 .map_err(|previous_error| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                        None,
+                        format!(
                             "failed to store instantiated iff fact while inferring `{}`",
                             normal_atomic_fact
                         ),
-                    normal_atomic_fact.line_file.clone(),
-                    Some(previous_error),
-                    vec![],
-                )))
+                        normal_atomic_fact.line_file.clone(),
+                        Some(previous_error),
+                        vec![],
+                    )))
                 })?;
         }
 

@@ -277,6 +277,36 @@ impl Runtime {
             Obj::FamilyObj(family_obj) => {
                 self.infer_membership_in_family_from_in_fact(in_fact, family_obj)
             }
+            Obj::FiniteSeqSet(fs) => {
+                let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
+                let mut infer_result =
+                    self.infer_membership_in_fn_set_from_in_fact(in_fact, &fn_set)?;
+                let expanded_atomic: AtomicFact = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
+                infer_result.new_infer_result_inside(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_atomic)?,
+                );
+                Ok(infer_result)
+            }
+            Obj::MatrixSet(ms) => {
+                let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
+                let mut infer_result =
+                    self.infer_membership_in_fn_set_from_in_fact(in_fact, &fn_set)?;
+                let expanded_atomic: AtomicFact = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
+                infer_result.new_infer_result_inside(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_atomic)?,
+                );
+                Ok(infer_result)
+            }
             _ => Ok(InferResult::new()),
         }
     }

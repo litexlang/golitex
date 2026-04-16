@@ -299,6 +299,21 @@ impl Runtime {
             Obj::FnObj(ref f) => Self::match_arg_when_left_is_fn_obj(f, given_arg),
             Obj::Number(ref left) => Self::match_arg_when_left_is_number(left, given_arg),
             Obj::Add(ref a) => Self::match_arg_when_left_is_add(&a.left, &a.right, given_arg),
+            Obj::MatrixAdd(ref a) => {
+                Self::match_arg_when_left_is_matrix_add(&a.left, &a.right, given_arg)
+            }
+            Obj::MatrixSub(ref a) => {
+                Self::match_arg_when_left_is_matrix_sub(&a.left, &a.right, given_arg)
+            }
+            Obj::MatrixMul(ref a) => {
+                Self::match_arg_when_left_is_matrix_mul(&a.left, &a.right, given_arg)
+            }
+            Obj::MatrixScalarMul(ref a) => {
+                Self::match_arg_when_left_is_matrix_scalar_mul(&a.scalar, &a.matrix, given_arg)
+            }
+            Obj::MatrixPow(ref a) => {
+                Self::match_arg_when_left_is_matrix_pow(&a.base, &a.exponent, given_arg)
+            }
             Obj::Sub(ref a) => Self::match_arg_when_left_is_sub(&a.left, &a.right, given_arg),
             Obj::Mul(ref a) => Self::match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
             Obj::Div(ref a) => Self::match_arg_when_left_is_div(&a.left, &a.right, given_arg),
@@ -342,6 +357,9 @@ impl Runtime {
                 Self::match_arg_when_left_is_dim(left.arg.as_ref(), given_arg)
             }
             Obj::Tuple(ref left) => Self::match_arg_when_left_is_tuple(&left.args, given_arg),
+            Obj::FiniteSeqListObj(ref left) => {
+                Self::match_arg_when_left_is_finite_seq_list(&left.objs, given_arg)
+            },
             Obj::Count(ref left) => {
                 Self::match_arg_when_left_is_count(left.set.as_ref(), given_arg)
             }
@@ -353,6 +371,20 @@ impl Runtime {
             Obj::ClosedRange(ref left) => Self::match_arg_when_left_is_closed_range(
                 left.start.as_ref(),
                 left.end.as_ref(),
+                given_arg,
+            ),
+            Obj::FiniteSeqSet(ref left) => Self::match_arg_when_left_is_finite_seq_set(
+                left.set.as_ref(),
+                left.n.as_ref(),
+                given_arg,
+            ),
+            Obj::MatrixListObj(ref left) => {
+                Self::match_arg_when_left_is_matrix_list(&left.rows, given_arg)
+            }
+            Obj::MatrixSet(ref left) => Self::match_arg_when_left_is_matrix_set(
+                left.set.as_ref(),
+                left.row_len.as_ref(),
+                left.col_len.as_ref(),
                 given_arg,
             ),
             Obj::PowerSet(ref left) => {
@@ -490,6 +522,71 @@ impl Runtime {
             Ok(Some(HashMap::new()))
         } else {
             Ok(None)
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_add(
+        left_left: &Obj,
+        left_right: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixAdd(ref g) => {
+                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_sub(
+        left_left: &Obj,
+        left_right: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixSub(ref g) => {
+                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_mul(
+        left_left: &Obj,
+        left_right: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixMul(ref g) => {
+                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_scalar_mul(
+        left_scalar: &Obj,
+        left_matrix: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixScalarMul(ref g) => {
+                Self::match_arg_binary_then_merge(left_scalar, left_matrix, &g.scalar, &g.matrix)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_pow(
+        left_base: &Obj,
+        left_exp: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixPow(ref g) => {
+                Self::match_arg_binary_then_merge(left_base, left_exp, &g.base, &g.exponent)
+            }
+            _ => Ok(None),
         }
     }
 
@@ -786,6 +883,27 @@ impl Runtime {
         Ok(merged)
     }
 
+    fn match_arg_ternary_then_merge(
+        a1: &Obj,
+        a2: &Obj,
+        a3: &Obj,
+        b1: &Obj,
+        b2: &Obj,
+        b3: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let m12 = Self::match_arg_binary_then_merge(a1, a2, b1, b2)?;
+        let map12 = match m12 {
+            Some(m) => m,
+            None => return Ok(None),
+        };
+        let m3 = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(a3, b3)?;
+        let map3 = match m3 {
+            Some(m) => m,
+            None => return Ok(None),
+        };
+        Ok(Self::merge_arg_match_maps(map12, map3))
+    }
+
     fn merge_arg_match_maps(
         map1: HashMap<String, Obj>,
         map2: HashMap<String, Obj>,
@@ -818,6 +936,32 @@ impl Runtime {
                 left_elem.as_ref(),
                 given_elem.as_ref(),
             )? {
+                Some(m) => m,
+                None => return Ok(None),
+            };
+            for (k, v) in sub_map {
+                if let Some(existing_obj) = merged.get(&k) {
+                    if existing_obj.to_string() != v.to_string() {
+                        return Ok(None);
+                    }
+                }
+                merged.insert(k, v);
+            }
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_arg_matrix_rows_then_merge(
+        left_rows: &[Vec<Box<Obj>>],
+        given_rows: &[Vec<Box<Obj>>],
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if left_rows.len() != given_rows.len() {
+            return Ok(None);
+        }
+        let mut merged: HashMap<String, Obj> = HashMap::new();
+        for (lr, gr) in left_rows.iter().zip(given_rows.iter()) {
+            let sub = Self::match_arg_vec_then_merge(lr, gr)?;
+            let sub_map = match sub {
                 Some(m) => m,
                 None => return Ok(None),
             };
@@ -1004,6 +1148,18 @@ impl Runtime {
         }
     }
 
+    fn match_arg_when_left_is_finite_seq_list(
+        left_elements: &[Box<Obj>],
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::FiniteSeqListObj(ref given) => {
+                Self::match_arg_vec_then_merge(left_elements, &given.objs)
+            }
+            _ => Ok(None),
+        }
+    }
+
     fn match_arg_when_left_is_count(
         left_set: &Obj,
         given_arg: &Obj,
@@ -1044,6 +1200,53 @@ impl Runtime {
                 left_end,
                 given.start.as_ref(),
                 given.end.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_finite_seq_set(
+        left_set: &Obj,
+        left_n: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::FiniteSeqSet(ref given) => Self::match_arg_binary_then_merge(
+                left_set,
+                left_n,
+                given.set.as_ref(),
+                given.n.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_list(
+        left_rows: &[Vec<Box<Obj>>],
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixListObj(ref given) => {
+                Self::match_arg_matrix_rows_then_merge(left_rows, &given.rows)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_matrix_set(
+        left_set: &Obj,
+        left_row_len: &Obj,
+        left_col_len: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::MatrixSet(ref given) => Self::match_arg_ternary_then_merge(
+                left_set,
+                left_row_len,
+                left_col_len,
+                given.set.as_ref(),
+                given.row_len.as_ref(),
+                given.col_len.as_ref(),
             ),
             _ => Ok(None),
         }

@@ -2,8 +2,26 @@
 
 pub const FUNDAMENTAL_NUMBER_PROPERTIES: &str = r#"
 know:
-    forall x Z:
-        0 < x
+    forall x Z, y Z:
+        y < x
         =>:
-            1 <= x
+            y + 1 <= x
+
+    forall x Z, y Z:
+        x < y
+        =>:
+            x <= y - 1
+
+    forall x Z, y Z:
+        y <= x < y + 1
+        =>:
+            x = y
+
+    forall x Q:
+        exist p, q Z st {q > 0, x = p / q}
+
+    forall x, y R:
+        x < y
+        =>:
+            exist z Q st {x < z < y}
 "#;

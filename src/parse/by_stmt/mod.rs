@@ -26,10 +26,12 @@ impl Runtime {
             FAMILY => self.parse_by_family_stmt(tb),
             STRUCT => self.parse_by_struct_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
+            FINITE_SEQ => self.parse_by_finite_seq_set_stmt(tb),
+            MATRIX => self.parse_by_matrix_set_stmt(tb),
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
-                    "by: expected cases, contra, enumerate, induc, for, extension, fn, fn set, family, struct, or tuple after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate, induc, for, extension, fn, fn set, family, finite_seq, matrix, struct, or tuple after `by`, got `{}`",
                     second_keyword
                 ),
                 tb.line_file.clone(),
