@@ -46,6 +46,41 @@ pub enum Obj {
     StructObj(StructObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
+    MatrixAdd(MatrixAdd),
+    MatrixSub(MatrixSub),
+    MatrixMul(MatrixMul),
+    MatrixScalarMul(MatrixScalarMul),
+    MatrixPow(MatrixPow),
+}
+
+#[derive(Clone)]
+pub struct MatrixAdd {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixSub {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixMul {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixScalarMul {
+    pub scalar: Box<Obj>,
+    pub matrix: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixPow {
+    pub base: Box<Obj>,
+    pub exponent: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -624,12 +659,67 @@ impl MatrixListObj {
     }
 }
 
-/// 算术运算符优先级：数值越小绑定越紧。^=1, * / %=2, + -=3；非算术=0 不参与括号。
+impl MatrixAdd {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        MatrixAdd {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl MatrixSub {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        MatrixSub {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl MatrixMul {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        MatrixMul {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl MatrixScalarMul {
+    pub fn new(scalar: Obj, matrix: Obj) -> Self {
+        MatrixScalarMul {
+            scalar: Box::new(scalar),
+            matrix: Box::new(matrix),
+        }
+    }
+}
+
+impl MatrixPow {
+    pub fn new(base: Obj, exponent: Obj) -> Self {
+        MatrixPow {
+            base: Box::new(base),
+            exponent: Box::new(exponent),
+        }
+    }
+}
+
+/// 算术运算符优先级：数值越小绑定越紧。^ / matrix ops =1, * / % / *. =2, + -=3；非算术=0 不参与括号。
 fn precedence(o: &Obj) -> u8 {
     match o {
         Obj::Add(_) | Obj::Sub(_) => 3,
-        Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Max(_) | Obj::Min(_) => 2,
-        Obj::Pow(_) | Obj::Abs(_) => 1,
+        Obj::Mul(_)
+        | Obj::Div(_)
+        | Obj::Mod(_)
+        | Obj::Max(_)
+        | Obj::Min(_)
+        | Obj::MatrixScalarMul(_) => 2,
+        Obj::Pow(_)
+        | Obj::Abs(_)
+        | Obj::MatrixAdd(_)
+        | Obj::MatrixSub(_)
+        | Obj::MatrixMul(_)
+        | Obj::MatrixPow(_) => 1,
         _ => 0,
     }
 }
@@ -682,6 +772,31 @@ impl Obj {
                 p.base.fmt_with_precedence(f, 1)?;
                 write!(f, " {} ", POW)?;
                 p.exponent.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixAdd(m) => {
+                m.left.fmt_with_precedence(f, 1)?;
+                write!(f, " {} ", MATRIX_ADD)?;
+                m.right.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixSub(m) => {
+                m.left.fmt_with_precedence(f, 1)?;
+                write!(f, " {} ", MATRIX_SUB)?;
+                m.right.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixMul(m) => {
+                m.left.fmt_with_precedence(f, 1)?;
+                write!(f, " {} ", MATRIX_MUL)?;
+                m.right.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixPow(m) => {
+                m.base.fmt_with_precedence(f, 1)?;
+                write!(f, " {} ", MATRIX_POW)?;
+                m.exponent.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixScalarMul(m) => {
+                m.scalar.fmt_with_precedence(f, 2)?;
+                write!(f, " {} ", MATRIX_SCALAR_MUL)?;
+                m.matrix.fmt_with_precedence(f, 2)?;
             }
             Obj::Abs(a) => {
                 write!(f, "{} {}", ABS, LEFT_BRACE)?;
@@ -968,6 +1083,31 @@ impl Obj {
                     .collect(),
             )
             .into(),
+            Obj::MatrixAdd(x) => MatrixAdd::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::MatrixSub(x) => MatrixSub::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::MatrixMul(x) => MatrixMul::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::MatrixScalarMul(x) => MatrixScalarMul::new(
+                Obj::replace_bound_identifier(*x.scalar, from, to),
+                Obj::replace_bound_identifier(*x.matrix, from, to),
+            )
+            .into(),
+            Obj::MatrixPow(x) => MatrixPow::new(
+                Obj::replace_bound_identifier(*x.base, from, to),
+                Obj::replace_bound_identifier(*x.exponent, from, to),
+            )
+            .into(),
             Obj::Choose(x) => Choose::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::ObjAtIndex(x) => ObjAtIndex::new(
                 Obj::replace_bound_identifier(*x.obj, from, to),
@@ -1249,6 +1389,36 @@ impl fmt::Display for Pow {
     }
 }
 
+impl fmt::Display for MatrixAdd {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.left, MATRIX_ADD, self.right)
+    }
+}
+
+impl fmt::Display for MatrixSub {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.left, MATRIX_SUB, self.right)
+    }
+}
+
+impl fmt::Display for MatrixMul {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.left, MATRIX_MUL, self.right)
+    }
+}
+
+impl fmt::Display for MatrixScalarMul {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.scalar, MATRIX_SCALAR_MUL, self.matrix)
+    }
+}
+
+impl fmt::Display for MatrixPow {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.base, MATRIX_POW, self.exponent)
+    }
+}
+
 impl fmt::Display for Abs {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}{}{}", ABS, LEFT_BRACE, self.arg, RIGHT_BRACE)
@@ -1448,6 +1618,36 @@ impl From<Number> for Obj {
 impl From<Add> for Obj {
     fn from(a: Add) -> Self {
         Obj::Add(a)
+    }
+}
+
+impl From<MatrixAdd> for Obj {
+    fn from(m: MatrixAdd) -> Self {
+        Obj::MatrixAdd(m)
+    }
+}
+
+impl From<MatrixSub> for Obj {
+    fn from(m: MatrixSub) -> Self {
+        Obj::MatrixSub(m)
+    }
+}
+
+impl From<MatrixMul> for Obj {
+    fn from(m: MatrixMul) -> Self {
+        Obj::MatrixMul(m)
+    }
+}
+
+impl From<MatrixScalarMul> for Obj {
+    fn from(m: MatrixScalarMul) -> Self {
+        Obj::MatrixScalarMul(m)
+    }
+}
+
+impl From<MatrixPow> for Obj {
+    fn from(m: MatrixPow) -> Self {
+        Obj::MatrixPow(m)
     }
 }
 
