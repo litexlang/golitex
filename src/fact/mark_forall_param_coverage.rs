@@ -206,6 +206,18 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(o.as_ref(), coverage_by_forall_param);
             }
         }
+        Obj::MatrixSet(ms) => {
+            mark_forall_param_coverage_in_obj(ms.set.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(ms.row_len.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(ms.col_len.as_ref(), coverage_by_forall_param);
+        }
+        Obj::MatrixListObj(v) => {
+            for row in v.rows.iter() {
+                for o in row.iter() {
+                    mark_forall_param_coverage_in_obj(o.as_ref(), coverage_by_forall_param);
+                }
+            }
+        }
         Obj::Choose(choose) => {
             mark_forall_param_coverage_in_obj(choose.set.as_ref(), coverage_by_forall_param);
         }

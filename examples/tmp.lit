@@ -1,3 +1,11 @@
-by finite_seq: finite_seq(R, 3)
+matrix(R, 3, 3) = matrix(R, 3, 3)
 
-finite_seq(R, 3) = fn(x1 N_pos: x1 <= 3) R
+have m matrix(R, 3, 3) = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+by matrix: matrix(R, 3, 3)
+
+m(1, 1) = 1
+
+have m2 matrix(R, 3, 3)
+
+m2(1, 1) = m2(1, 1)

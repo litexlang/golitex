@@ -129,7 +129,50 @@ impl Runtime {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(LEFT_BRACKET) {
             tb.skip_token(LEFT_BRACKET)?;
-            if tb.current_token_is_equal_to(RIGHT_BRACKET) {
+            if tb.current_token_is_equal_to(LEFT_BRACKET) {
+                let mut rows: Vec<Vec<Obj>> = vec![];
+                loop {
+                    tb.skip_token(LEFT_BRACKET)?;
+                    let mut row: Vec<Obj> = vec![];
+                    if !tb.current_token_is_equal_to(RIGHT_BRACKET) {
+                        row.push(self.parse_obj(tb)?);
+                        while tb.current_token_is_equal_to(COMMA) {
+                            tb.skip_token(COMMA)?;
+                            row.push(self.parse_obj(tb)?);
+                        }
+                    }
+                    tb.skip_token(RIGHT_BRACKET)?;
+                    rows.push(row);
+                    if tb.current_token_is_equal_to(COMMA) {
+                        tb.skip_token(COMMA)?;
+                        if !tb.current_token_is_equal_to(LEFT_BRACKET) {
+                            return Err(RuntimeError::from(ParseRuntimeError(
+                                RuntimeErrorStruct::new(
+                                    None,
+                                    "matrix literal: expected `[` after `,` between rows"
+                                        .to_string(),
+                                    tb.line_file.clone(),
+                                    None,
+                                    vec![],
+                                ),
+                            )));
+                        }
+                    } else if tb.current_token_is_equal_to(RIGHT_BRACKET) {
+                        tb.skip_token(RIGHT_BRACKET)?;
+                        return Ok(MatrixListObj::new(rows).into());
+                    } else {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new(
+                                None,
+                                "matrix literal: expected `,` or closing `]`".to_string(),
+                                tb.line_file.clone(),
+                                None,
+                                vec![],
+                            ),
+                        )));
+                    }
+                }
+            } else if tb.current_token_is_equal_to(RIGHT_BRACKET) {
                 tb.skip_token(RIGHT_BRACKET)?;
                 Ok(FiniteSeqListObj::new(vec![]).into())
             } else {
@@ -921,6 +964,50 @@ impl Runtime {
                 )))
             })?;
             return Ok(FiniteSeqSet::new(set, n).into());
+        }
+        if tok == MATRIX {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 3 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "matrix expects 3 arguments".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "matrix expects 3 arguments".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            let row_len = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "matrix expects 3 arguments".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            let col_len = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "matrix expects 3 arguments".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            return Ok(MatrixSet::new(set, row_len, col_len).into());
         }
 
         if tok == CUP {

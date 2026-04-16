@@ -381,6 +381,52 @@ impl Runtime {
             .insert(name.to_string(), (list, line_file));
     }
 
+    pub fn store_known_matrix_list_obj(
+        &mut self,
+        name: &str,
+        matrix: MatrixListObj,
+        line_file: LineFile,
+    ) {
+        self.top_level_env()
+            .known_objs_equal_to_matrix_list
+            .insert(name.to_string(), (matrix, line_file));
+    }
+
+    pub fn matrix_set_to_fn_set(&self, ms: &MatrixSet, line_file: LineFile) -> FnSet {
+        let pair = self.generate_random_unused_names(2);
+        let p1 = format!(
+            "{}{}",
+            DEFAULT_MANGLED_FN_PARAM_PREFIX,
+            pair[0]
+        );
+        let p2 = format!(
+            "{}{}",
+            DEFAULT_MANGLED_FN_PARAM_PREFIX,
+            pair[1]
+        );
+        FnSet::new(
+            vec![
+                ParamGroupWithSet::new(vec![p1.clone()], StandardSet::NPos.into()),
+                ParamGroupWithSet::new(vec![p2.clone()], StandardSet::NPos.into()),
+            ],
+            vec![
+                AtomicFact::from(LessEqualFact::new(
+                    p1.into(),
+                    (*ms.row_len).clone(),
+                    line_file.clone(),
+                ))
+                .into(),
+                AtomicFact::from(LessEqualFact::new(
+                    p2.into(),
+                    (*ms.col_len).clone(),
+                    line_file.clone(),
+                ))
+                .into(),
+            ],
+            (*ms.set).clone(),
+        )
+    }
+
     pub fn finite_seq_set_to_fn_set(&self, fs: &FiniteSeqSet, line_file: LineFile) -> FnSet {
         let param = format!(
             "{}{}",

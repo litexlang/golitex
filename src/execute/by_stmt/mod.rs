@@ -6,6 +6,7 @@ mod enumerate_by_stmt;
 mod extension_by_stmt;
 mod family_by_stmt;
 mod finite_seq_by_stmt;
+mod matrix_by_stmt;
 mod for_by_stmt;
 mod helpers_by_stmt;
 mod induc_by_stmt;

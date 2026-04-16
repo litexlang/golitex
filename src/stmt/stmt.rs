@@ -37,6 +37,7 @@ pub enum Stmt {
     ByTuple(ByTupleStmt),
     ByFnSetStmt(ByFnSetStmt),
     ByFiniteSeqSetStmt(ByFiniteSeqSetStmt),
+    ByMatrixSetStmt(ByMatrixSetStmt),
 }
 
 #[derive(Clone)]
@@ -56,6 +57,28 @@ impl ByFiniteSeqSetStmt {
     pub fn new(finite_seq_set: FiniteSeqSet, line_file: LineFile) -> Self {
         ByFiniteSeqSetStmt {
             finite_seq_set,
+            line_file,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct ByMatrixSetStmt {
+    pub matrix_set: MatrixSet,
+    pub line_file: LineFile,
+}
+
+impl fmt::Display for ByMatrixSetStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let o: Obj = self.matrix_set.clone().into();
+        write!(f, "{} {}{} {}", BY, MATRIX, COLON, o)
+    }
+}
+
+impl ByMatrixSetStmt {
+    pub fn new(matrix_set: MatrixSet, line_file: LineFile) -> Self {
+        ByMatrixSetStmt {
+            matrix_set,
             line_file,
         }
     }
@@ -104,6 +127,7 @@ impl fmt::Display for Stmt {
             Stmt::ByTuple(x) => write!(f, "{}", x),
             Stmt::ByFnSetStmt(x) => write!(f, "{}", x),
             Stmt::ByFiniteSeqSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByMatrixSetStmt(x) => write!(f, "{}", x),
         }
     }
 }
@@ -145,6 +169,7 @@ impl Stmt {
             Stmt::ByTuple(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByMatrixSetStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -184,6 +209,7 @@ impl Stmt {
             Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByMatrixSetStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 }
@@ -389,5 +415,11 @@ impl From<ByFnSetStmt> for Stmt {
 impl From<ByFiniteSeqSetStmt> for Stmt {
     fn from(v: ByFiniteSeqSetStmt) -> Self {
         Stmt::ByFiniteSeqSetStmt(v)
+    }
+}
+
+impl From<ByMatrixSetStmt> for Stmt {
+    fn from(v: ByMatrixSetStmt) -> Self {
+        Stmt::ByMatrixSetStmt(v)
     }
 }

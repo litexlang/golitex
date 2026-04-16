@@ -504,8 +504,48 @@ impl Runtime {
                     "finite_seq list: length equals n and each entry in co-domain",
                 ))
             }
+            (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
+                let lf = in_fact.line_file.clone();
+                let nrows_obj: Obj = Number::new(list.rows.len().to_string()).into();
+                let row_eq: AtomicFact =
+                    EqualFact::new(nrows_obj, (*ms.row_len).clone(), lf.clone()).into();
+                if !self.verify_atomic_fact(&row_eq, verify_state)?.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                for row in list.rows.iter() {
+                    let ncol_obj: Obj = Number::new(row.len().to_string()).into();
+                    let col_eq: AtomicFact =
+                        EqualFact::new(ncol_obj, (*ms.col_len).clone(), lf.clone()).into();
+                    if !self.verify_atomic_fact(&col_eq, verify_state)?.is_true() {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                    for o in row.iter() {
+                        let f: AtomicFact =
+                            InFact::new((**o).clone(), (*ms.set).clone(), lf.clone()).into();
+                        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &f,
+                            verify_state,
+                        )? {
+                            return Ok((StmtUnknown::new()).into());
+                        }
+                    }
+                }
+                Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "matrix literal: shape matches matrix(...) and each entry in co-domain",
+                ))
+            }
             (_, Obj::FiniteSeqSet(fs)) => {
                 let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
+                let expanded = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                );
+                self.verify_atomic_fact(&expanded.into(), verify_state)
+            }
+            (_, Obj::MatrixSet(ms)) => {
+                let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
                 let expanded = InFact::new(
                     in_fact.element.clone(),
                     fn_set.into(),
