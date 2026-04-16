@@ -239,6 +239,7 @@ pub use crate::common::keywords::EQUAL;
 pub use crate::common::keywords::EQUIVALENT_SIGN;
 pub use crate::common::keywords::EVAL;
 pub use crate::common::keywords::EXIST;
+pub use crate::common::keywords::EXIST_UNIQUE;
 pub use crate::common::keywords::EXTENSION;
 pub use crate::common::keywords::FACT_PREFIX;
 pub use crate::common::keywords::FAMILY;

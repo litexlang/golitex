@@ -180,7 +180,30 @@ impl Runtime {
 
     pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
-            tb.skip_token(EXIST)?;
+            let is_exist_unique = match tb.current()? {
+                EXIST_UNIQUE => {
+                    tb.skip_token(EXIST_UNIQUE)?;
+                    true
+                }
+                EXIST => {
+                    tb.skip_token(EXIST)?;
+                    false
+                }
+                _ => {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "expected `{}` or `{}` at start of exist fact",
+                                EXIST, EXIST_UNIQUE
+                            ),
+                            tb.line_file.clone(),
+                            None,
+                            vec![],
+                        ),
+                    )));
+                }
+            };
             let mut groups: Vec<ParamGroupWithParamType> = vec![];
             while tb.current()? != ST {
                 groups.push(this.parse_param_def_with_param_type_and_skip_comma(tb)?);
@@ -208,7 +231,7 @@ impl Runtime {
                 tb.skip_token(RIGHT_CURLY_BRACE)?;
 
                 let line_file = tb.line_file.clone();
-                Ok(ExistFact::new(param_def, facts, line_file))
+                Ok(ExistFact::new(param_def, facts, is_exist_unique, line_file))
             })
         })
     }
@@ -226,7 +249,7 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
         match tb.current()? {
-            EXIST => {
+            EXIST | EXIST_UNIQUE => {
                 let exist_fact = self.parse_exist_fact(tb)?;
                 Ok(ExistOrAndChainAtomicFact::ExistFact(exist_fact))
             }
