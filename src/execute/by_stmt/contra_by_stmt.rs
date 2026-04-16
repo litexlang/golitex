@@ -40,6 +40,10 @@ impl Runtime {
                 }
             }
 
+            if last_error.is_some() {
+                return Ok((inside_results, last_error));
+            }
+
             let verify_impossible_fact_result =
                 rt.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
             if verify_impossible_fact_result.is_unknown() {
