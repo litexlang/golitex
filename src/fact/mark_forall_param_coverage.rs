@@ -221,6 +221,9 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(fs.set.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(fs.n.as_ref(), coverage_by_forall_param);
         }
+        Obj::SeqSet(ss) => {
+            mark_forall_param_coverage_in_obj(ss.set.as_ref(), coverage_by_forall_param);
+        }
         Obj::FiniteSeqListObj(v) => {
             for o in v.objs.iter() {
                 mark_forall_param_coverage_in_obj(o.as_ref(), coverage_by_forall_param);

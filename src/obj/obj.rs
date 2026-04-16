@@ -38,6 +38,7 @@ pub enum Obj {
     Range(Range),
     ClosedRange(ClosedRange),
     FiniteSeqSet(FiniteSeqSet),
+    SeqSet(SeqSet),
     FiniteSeqListObj(FiniteSeqListObj),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
@@ -171,6 +172,12 @@ pub struct ClosedRange {
 pub struct FiniteSeqSet {
     pub set: Box<Obj>,
     pub n: Box<Obj>,
+}
+
+/// `seq(s)` — functions `fn(x N_pos) s` (no length bound; surface: keyword `seq(s)`).
+#[derive(Clone)]
+pub struct SeqSet {
+    pub set: Box<Obj>,
 }
 
 /// Literal `[a, b, ...]` as a finite sequence value (for membership in `finite_seq(s, n)`).
@@ -630,6 +637,14 @@ impl FiniteSeqSet {
     }
 }
 
+impl SeqSet {
+    pub fn new(set: Obj) -> Self {
+        SeqSet {
+            set: Box::new(set),
+        }
+    }
+}
+
 impl FiniteSeqListObj {
     pub fn new(objs: Vec<Obj>) -> Self {
         FiniteSeqListObj {
@@ -842,6 +857,7 @@ impl Obj {
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
+            Obj::SeqSet(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqListObj(x) => write!(f, "{}", x)?,
             Obj::MatrixSet(x) => write!(f, "{}", x)?,
             Obj::MatrixListObj(x) => write!(f, "{}", x)?,
@@ -1059,6 +1075,9 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.n, from, to),
             )
             .into(),
+            Obj::SeqSet(x) => {
+                SeqSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
+            }
             Obj::FiniteSeqListObj(x) => FiniteSeqListObj::new(
                 x.objs
                     .into_iter()
@@ -1225,6 +1244,17 @@ impl fmt::Display for FiniteSeqSet {
             "{}{}",
             FINITE_SEQ,
             braced_vec_to_string(&vec![self.set.as_ref(), self.n.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for SeqSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            SEQ,
+            braced_vec_to_string(&vec![self.set.as_ref()])
         )
     }
 }
@@ -1816,6 +1846,12 @@ impl From<ClosedRange> for Obj {
 impl From<FiniteSeqSet> for Obj {
     fn from(v: FiniteSeqSet) -> Self {
         Obj::FiniteSeqSet(v)
+    }
+}
+
+impl From<SeqSet> for Obj {
+    fn from(v: SeqSet) -> Self {
+        Obj::SeqSet(v)
     }
 }
 

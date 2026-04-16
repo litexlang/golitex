@@ -378,6 +378,9 @@ impl Runtime {
                 left.n.as_ref(),
                 given_arg,
             ),
+            Obj::SeqSet(ref left) => {
+                Self::match_arg_when_left_is_seq_set(left.set.as_ref(), given_arg)
+            }
             Obj::MatrixListObj(ref left) => {
                 Self::match_arg_when_left_is_matrix_list(&left.rows, given_arg)
             }
@@ -1217,6 +1220,21 @@ impl Runtime {
                 given.set.as_ref(),
                 given.n.as_ref(),
             ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_seq_set(
+        left_set: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::SeqSet(ref given) => {
+                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    left_set,
+                    given.set.as_ref(),
+                )
+            }
             _ => Ok(None),
         }
     }
