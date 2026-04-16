@@ -51,6 +51,10 @@ impl Runtime {
                             &given_fact_args,
                         )?;
                     if let Some(arg_map) = match_result {
+                        let exist_in_forall = &current_known_forall.0;
+                        if exist_in_forall.is_exist_unique != given_exist_fact.is_exist_unique {
+                            continue;
+                        }
                         return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
                     }
                 }
@@ -104,6 +108,9 @@ impl Runtime {
         given_exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        if exist_fact_in_known_forall.is_exist_unique != given_exist_fact.is_exist_unique {
+            return Ok(None);
+        }
         // exist param matches exist param
         let given_exist_param_names = given_exist_fact.params_def_with_type.collect_param_names();
 
@@ -186,14 +193,14 @@ impl Runtime {
             )
             .map_err(|e| {
                 {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_exist_fact.clone()).into_stmt()),
-                String::new(),
-                given_exist_fact.line_file(),
-                Some(e),
-                vec![],
-            )))
-        }
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(given_exist_fact.clone()).into_stmt()),
+                        String::new(),
+                        given_exist_fact.line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                }
             })?;
         if args_param_types.is_unknown() {
             return Ok(None);
@@ -213,26 +220,26 @@ impl Runtime {
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_exist_fact.clone()).into_stmt()),
-                String::new(),
-                given_exist_fact.line_file(),
-                Some(e),
-                vec![],
-            )))
-        }
+                            Some(Fact::from(given_exist_fact.clone()).into_stmt()),
+                            String::new(),
+                            given_exist_fact.line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             let result = self
                 .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_exist_fact.clone()).into_stmt()),
-                String::new(),
-                given_exist_fact.line_file(),
-                Some(e),
-                vec![],
-            )))
-        }
+                            Some(Fact::from(given_exist_fact.clone()).into_stmt()),
+                            String::new(),
+                            given_exist_fact.line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             if result.is_unknown() {
                 return Ok(None);
