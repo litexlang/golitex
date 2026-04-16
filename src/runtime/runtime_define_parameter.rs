@@ -27,7 +27,7 @@ impl Runtime {
                     self.define_parameter_by_binding_family(name, family_ty)
                 }
                 Obj::FiniteSeqSet(fs) => {
-                    let fn_set = fs.to_fn_set(default_line_file());
+                    let fn_set = self.finite_seq_set_to_fn_set(fs, default_line_file());
                     let type_fact = InFact::new(
                         name.to_string().into(),
                         fn_set.into(),

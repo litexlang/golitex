@@ -141,6 +141,12 @@ impl ByTupleStmt {
     }
 }
 
+impl ByFiniteSeqSetStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByFiniteSeqSetStmt".to_string()
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAbstractPropStmt".to_string()
