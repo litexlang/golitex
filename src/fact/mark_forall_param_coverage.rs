@@ -197,6 +197,10 @@ fn mark_forall_param_coverage_in_obj(
             );
             mark_forall_param_coverage_in_obj(closed_range.end.as_ref(), coverage_by_forall_param);
         }
+        Obj::FiniteSeqSet(fs) => {
+            mark_forall_param_coverage_in_obj(fs.set.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(fs.n.as_ref(), coverage_by_forall_param);
+        }
         Obj::Choose(choose) => {
             mark_forall_param_coverage_in_obj(choose.set.as_ref(), coverage_by_forall_param);
         }

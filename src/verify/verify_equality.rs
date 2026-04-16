@@ -465,6 +465,15 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::FiniteSeqSet(left_fs), Obj::FiniteSeqSet(right_fs)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_fs.set,
+                    &left_fs.n,
+                    &right_fs.set,
+                    &right_fs.n,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Proj(left_proj), Obj::Proj(right_proj)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_proj.set,

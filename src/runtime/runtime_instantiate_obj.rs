@@ -57,6 +57,7 @@ impl Runtime {
             Obj::Count(inner) => self.inst_count(inner, param_to_arg_map),
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map),
             Obj::ClosedRange(inner) => self.inst_closed_range(inner, param_to_arg_map),
+            Obj::FiniteSeqSet(inner) => self.inst_finite_seq_set(inner, param_to_arg_map),
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map),
             Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map),
             Obj::ObjAtIndex(inner) => self.inst_obj_at_index(inner, param_to_arg_map),
@@ -566,6 +567,18 @@ impl Runtime {
         Ok(ClosedRange::new(
             self.inst_obj(&closed_range.start, param_to_arg_map)?,
             self.inst_obj(&closed_range.end, param_to_arg_map)?,
+        )
+        .into())
+    }
+
+    pub fn inst_finite_seq_set(
+        &self,
+        fs: &FiniteSeqSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(FiniteSeqSet::new(
+            self.inst_obj(&fs.set, param_to_arg_map)?,
+            self.inst_obj(&fs.n, param_to_arg_map)?,
         )
         .into())
     }

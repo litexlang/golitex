@@ -355,6 +355,11 @@ impl Runtime {
                 left.end.as_ref(),
                 given_arg,
             ),
+            Obj::FiniteSeqSet(ref left) => Self::match_arg_when_left_is_finite_seq_set(
+                left.set.as_ref(),
+                left.n.as_ref(),
+                given_arg,
+            ),
             Obj::PowerSet(ref left) => {
                 Self::match_arg_when_left_is_power_set(left.set.as_ref(), given_arg)
             }
@@ -1044,6 +1049,22 @@ impl Runtime {
                 left_end,
                 given.start.as_ref(),
                 given.end.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_finite_seq_set(
+        left_set: &Obj,
+        left_n: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::FiniteSeqSet(ref given) => Self::match_arg_binary_then_merge(
+                left_set,
+                left_n,
+                given.set.as_ref(),
+                given.n.as_ref(),
             ),
             _ => Ok(None),
         }
