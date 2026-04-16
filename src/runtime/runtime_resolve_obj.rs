@@ -107,6 +107,9 @@ impl Runtime {
                     result
                 }
             }
+            Obj::FiniteSeqSet(fs) => {
+                FiniteSeqSet::new(self.resolve_obj(&fs.set), self.resolve_obj(&fs.n)).into()
+            }
             Obj::Identifier(_)
             | Obj::IdentifierWithMod(_)
             | Obj::FieldAccess(_)

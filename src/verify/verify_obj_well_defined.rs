@@ -64,6 +64,7 @@ impl Runtime {
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
+            Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
@@ -1121,6 +1122,50 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
+        Ok(())
+    }
+
+    fn verify_finite_seq_set_well_defined(
+        &mut self,
+        x: &FiniteSeqSet,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.n, verify_state)?;
+        let is_set_fact = IsSetFact::new((*x.set).clone(), default_line_file()).into();
+        let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
+        if set_ok.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!("finite_seq_set: first argument {} is not a set", x.set),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        let n_in_npos = InFact::new(
+            (*x.n).clone(),
+            StandardSet::NPos.into(),
+            default_line_file(),
+        )
+        .into();
+        let n_ok = self.verify_atomic_fact(&n_in_npos, verify_state)?;
+        if n_ok.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "finite_seq_set: length argument {} is not verified in N_pos",
+                        x.n
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
         Ok(())
     }
 

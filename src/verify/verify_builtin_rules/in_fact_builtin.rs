@@ -279,12 +279,8 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (left, right, set) = match (&in_fact.element, &in_fact.set) {
-            (Obj::Max(m), Obj::StandardSet(s)) => {
-                (m.left.as_ref(), m.right.as_ref(), s.clone())
-            }
-            (Obj::Min(m), Obj::StandardSet(s)) => {
-                (m.left.as_ref(), m.right.as_ref(), s.clone())
-            }
+            (Obj::Max(m), Obj::StandardSet(s)) => (m.left.as_ref(), m.right.as_ref(), s.clone()),
+            (Obj::Min(m), Obj::StandardSet(s)) => (m.left.as_ref(), m.right.as_ref(), s.clone()),
             _ => return Ok(None),
         };
         if !matches!(
@@ -304,8 +300,7 @@ impl Runtime {
         let lf = in_fact.line_file.clone();
         for operand in [left, right] {
             let f: AtomicFact = InFact::new(operand.clone(), set_obj.clone(), lf.clone()).into();
-            if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)?
-            {
+            if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)? {
                 return Ok(Some((StmtUnknown::new()).into()));
             }
         }
@@ -485,6 +480,15 @@ impl Runtime {
                 ),
             (_, Obj::FamilyObj(family_ty)) => {
                 self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
+            }
+            (_, Obj::FiniteSeqSet(fs)) => {
+                let fn_set = fs.to_fn_set(in_fact.line_file.clone());
+                let expanded = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                );
+                self.verify_atomic_fact(&expanded.into(), verify_state)
             }
             (_, Obj::StructObj(struct_ty)) => self.verify_obj_satisfies_struct_param_type(
                 in_fact.element.clone(),
@@ -996,14 +1000,14 @@ impl Runtime {
             .fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
             .map_err(|e| {
                 {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(in_fact.clone()).into_stmt()),
-                String::new(),
-                in_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            )))
-        }
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(in_fact.clone()).into_stmt()),
+                        String::new(),
+                        in_fact.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
+                }
             })?
         {
             return Ok(

@@ -277,6 +277,10 @@ impl Runtime {
             Obj::FamilyObj(family_obj) => {
                 self.infer_membership_in_family_from_in_fact(in_fact, family_obj)
             }
+            Obj::FiniteSeqSet(fs) => {
+                let fn_set = fs.to_fn_set(in_fact.line_file.clone());
+                self.infer_membership_in_fn_set_from_in_fact(in_fact, &fn_set)
+            }
             _ => Ok(InferResult::new()),
         }
     }

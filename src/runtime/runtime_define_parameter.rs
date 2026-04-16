@@ -26,6 +26,16 @@ impl Runtime {
                 Obj::FamilyObj(family_ty) => {
                     self.define_parameter_by_binding_family(name, family_ty)
                 }
+                Obj::FiniteSeqSet(fs) => {
+                    let fn_set = fs.to_fn_set(default_line_file());
+                    let type_fact = InFact::new(
+                        name.to_string().into(),
+                        fn_set.into(),
+                        default_line_file(),
+                    )
+                    .into();
+                    self.store_fact_without_well_defined_verified_and_infer(type_fact)
+                }
                 _ => self.define_parameter_by_binding_obj(name, obj),
             },
             ParamType::Set(set) => self.define_parameter_by_binding_set(name, set),

@@ -37,11 +37,17 @@ pub enum Obj {
     Count(Count),
     Range(Range),
     ClosedRange(ClosedRange),
+    FiniteSeqSet(FiniteSeqSet),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
     FamilyObj(FamilyObj),
     StructObj(StructObj),
+}
+
+#[derive(Clone)]
+pub struct FiniteSeqListObj {
+    pub objs: Vec<Box<Obj>>,
 }
 
 /// Instantiated family type: `family` name followed by argument objects (often sets).
@@ -114,6 +120,13 @@ pub struct Range {
 pub struct ClosedRange {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
+}
+
+/// Set of functions `fn(x N_pos: x <= n) s` (Lit surface syntax: keyword `finite_seq(s, n)`).
+#[derive(Clone)]
+pub struct FiniteSeqSet {
+    pub set: Box<Obj>,
+    pub n: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -558,6 +571,32 @@ impl ClosedRange {
     }
 }
 
+impl FiniteSeqSet {
+    pub fn new(set: Obj, n: Obj) -> Self {
+        FiniteSeqSet {
+            set: Box::new(set),
+            n: Box::new(n),
+        }
+    }
+
+    pub fn to_fn_set(&self, line_file: LineFile) -> FnSet {
+        let param = "x".to_string();
+        FnSet::new(
+            vec![ParamGroupWithSet::new(
+                vec![param.clone()],
+                StandardSet::NPos.into(),
+            )],
+            vec![AtomicFact::from(LessEqualFact::new(
+                param.into(),
+                (*self.n).clone(),
+                line_file,
+            ))
+            .into()],
+            (*self.set).clone(),
+        )
+    }
+}
+
 /// 算术运算符优先级：数值越小绑定越紧。^=1, * / %=2, + -=3；非算术=0 不参与括号。
 fn precedence(o: &Obj) -> u8 {
     match o {
@@ -660,6 +699,7 @@ impl Obj {
             Obj::Count(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
+            Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
@@ -869,6 +909,11 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.end, from, to),
             )
             .into(),
+            Obj::FiniteSeqSet(x) => FiniteSeqSet::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
+                Obj::replace_bound_identifier(*x.n, from, to),
+            )
+            .into(),
             Obj::Choose(x) => Choose::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::ObjAtIndex(x) => ObjAtIndex::new(
                 Obj::replace_bound_identifier(*x.obj, from, to),
@@ -975,6 +1020,17 @@ impl fmt::Display for ClosedRange {
             "{}{}",
             CLOSED_RANGE,
             braced_vec_to_string(&vec![self.start.as_ref(), self.end.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for FiniteSeqSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            FINITE_SEQ,
+            braced_vec_to_string(&vec![self.set.as_ref(), self.n.as_ref()])
         )
     }
 }
@@ -1452,6 +1508,12 @@ impl From<Range> for Obj {
 impl From<ClosedRange> for Obj {
     fn from(r: ClosedRange) -> Self {
         Obj::ClosedRange(r)
+    }
+}
+
+impl From<FiniteSeqSet> for Obj {
+    fn from(v: FiniteSeqSet) -> Self {
+        Obj::FiniteSeqSet(v)
     }
 }
 

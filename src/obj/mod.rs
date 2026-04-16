@@ -8,7 +8,8 @@ pub use atom::{
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
-    FamilyObj, FnObj, FnSet, Intersect, ListSet, Max, Min, Mod, Mul, Number, Obj, ObjAtIndex, Pow,
-    PowerSet, Proj, Range, SetBuilder, SetDiff, SetMinus, StructObj, Sub, Tuple, TupleDim, Union,
+    FamilyObj, FiniteSeqSet, FnObj, FnSet, Intersect, ListSet, Max, Min, Mod, Mul, Number, Obj,
+    ObjAtIndex, Pow, PowerSet, Proj, Range, SetBuilder, SetDiff, SetMinus, StructObj, Sub, Tuple,
+    TupleDim, Union,
 };
 pub use standard_set::StandardSet;
