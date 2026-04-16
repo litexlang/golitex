@@ -29,7 +29,7 @@ impl Runtime {
         self.store_whole_fact_update_cache_known_fact_and_infer(fact)
     }
 
-    fn store_forall_fact_without_well_defined_verified_and_infer(
+    pub(crate) fn store_forall_fact_without_well_defined_verified_and_infer(
         &mut self,
         mut forall_fact: ForallFact,
     ) -> Result<InferResult, RuntimeError> {
