@@ -37,14 +37,64 @@ pub enum Obj {
     Count(Count),
     Range(Range),
     ClosedRange(ClosedRange),
+    FiniteSeqSet(FiniteSeqSet),
+    FiniteSeqListObj(FiniteSeqListObj),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
     FamilyObj(FamilyObj),
     StructObj(StructObj),
+    MatrixSet(MatrixSet),
+    MatrixListObj(MatrixListObj),
+    MatrixAdd(MatrixAdd),
+    MatrixSub(MatrixSub),
+    MatrixMul(MatrixMul),
+    MatrixScalarMul(MatrixScalarMul),
+    MatrixPow(MatrixPow),
 }
 
-/// Instantiated family type: `family` name followed by argument objects (often sets).
+#[derive(Clone)]
+pub struct MatrixAdd {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixSub {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixMul {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixScalarMul {
+    pub scalar: Box<Obj>,
+    pub matrix: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixPow {
+    pub base: Box<Obj>,
+    pub exponent: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixSet {
+    pub set: Box<Obj>,
+    pub row_len: Box<Obj>,
+    pub col_len: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixListObj {
+    pub rows: Vec<Vec<Box<Obj>>>,
+}
+
 #[derive(Clone)]
 pub struct FamilyObj {
     pub name: IdentifierOrIdentifierWithMod,
@@ -114,6 +164,19 @@ pub struct Range {
 pub struct ClosedRange {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
+}
+
+/// Set of functions `fn(x N_pos: x <= n) s` (Lit surface syntax: keyword `finite_seq(s, n)`).
+#[derive(Clone)]
+pub struct FiniteSeqSet {
+    pub set: Box<Obj>,
+    pub n: Box<Obj>,
+}
+
+/// Literal `[a, b, ...]` as a finite sequence value (for membership in `finite_seq(s, n)`).
+#[derive(Clone)]
+pub struct FiniteSeqListObj {
+    pub objs: Vec<Box<Obj>>,
 }
 
 #[derive(Clone)]
@@ -558,12 +621,105 @@ impl ClosedRange {
     }
 }
 
-/// 算术运算符优先级：数值越小绑定越紧。^=1, * / %=2, + -=3；非算术=0 不参与括号。
+impl FiniteSeqSet {
+    pub fn new(set: Obj, n: Obj) -> Self {
+        FiniteSeqSet {
+            set: Box::new(set),
+            n: Box::new(n),
+        }
+    }
+}
+
+impl FiniteSeqListObj {
+    pub fn new(objs: Vec<Obj>) -> Self {
+        FiniteSeqListObj {
+            objs: objs.into_iter().map(Box::new).collect(),
+        }
+    }
+}
+
+impl MatrixSet {
+    pub fn new(set: Obj, row_len: Obj, col_len: Obj) -> Self {
+        MatrixSet {
+            set: Box::new(set),
+            row_len: Box::new(row_len),
+            col_len: Box::new(col_len),
+        }
+    }
+}
+
+impl MatrixListObj {
+    pub fn new(rows: Vec<Vec<Obj>>) -> Self {
+        MatrixListObj {
+            rows: rows
+                .into_iter()
+                .map(|row| row.into_iter().map(Box::new).collect())
+                .collect(),
+        }
+    }
+}
+
+impl MatrixAdd {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        MatrixAdd {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl MatrixSub {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        MatrixSub {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl MatrixMul {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        MatrixMul {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl MatrixScalarMul {
+    pub fn new(scalar: Obj, matrix: Obj) -> Self {
+        MatrixScalarMul {
+            scalar: Box::new(scalar),
+            matrix: Box::new(matrix),
+        }
+    }
+}
+
+impl MatrixPow {
+    pub fn new(base: Obj, exponent: Obj) -> Self {
+        MatrixPow {
+            base: Box::new(base),
+            exponent: Box::new(exponent),
+        }
+    }
+}
+
+/// 算术运算符优先级：数值越小绑定越紧。^ / matrix ops =1, * / % / *. =2, + -=3；非算术=0 不参与括号。
 fn precedence(o: &Obj) -> u8 {
     match o {
         Obj::Add(_) | Obj::Sub(_) => 3,
-        Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Max(_) | Obj::Min(_) => 2,
-        Obj::Pow(_) | Obj::Abs(_) => 1,
+        Obj::Mul(_)
+        | Obj::Div(_)
+        | Obj::Mod(_)
+        | Obj::Max(_)
+        | Obj::Min(_)
+        | Obj::MatrixScalarMul(_) => 2,
+        Obj::Pow(_)
+        | Obj::Abs(_)
+        | Obj::MatrixAdd(_)
+        | Obj::MatrixSub(_)
+        | Obj::MatrixMul(_)
+        | Obj::MatrixPow(_) => 1,
         _ => 0,
     }
 }
@@ -617,6 +773,31 @@ impl Obj {
                 write!(f, " {} ", POW)?;
                 p.exponent.fmt_with_precedence(f, 1)?;
             }
+            Obj::MatrixAdd(m) => {
+                m.left.fmt_with_precedence(f, 1)?;
+                write!(f, " {} ", MATRIX_ADD)?;
+                m.right.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixSub(m) => {
+                m.left.fmt_with_precedence(f, 1)?;
+                write!(f, " {} ", MATRIX_SUB)?;
+                m.right.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixMul(m) => {
+                m.left.fmt_with_precedence(f, 1)?;
+                write!(f, " {} ", MATRIX_MUL)?;
+                m.right.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixPow(m) => {
+                m.base.fmt_with_precedence(f, 1)?;
+                write!(f, " {} ", MATRIX_POW)?;
+                m.exponent.fmt_with_precedence(f, 1)?;
+            }
+            Obj::MatrixScalarMul(m) => {
+                m.scalar.fmt_with_precedence(f, 2)?;
+                write!(f, " {} ", MATRIX_SCALAR_MUL)?;
+                m.matrix.fmt_with_precedence(f, 2)?;
+            }
             Obj::Abs(a) => {
                 write!(f, "{} {}", ABS, LEFT_BRACE)?;
                 a.arg.fmt_with_precedence(f, 0)?;
@@ -660,6 +841,10 @@ impl Obj {
             Obj::Count(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
+            Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
+            Obj::FiniteSeqListObj(x) => write!(f, "{}", x)?,
+            Obj::MatrixSet(x) => write!(f, "{}", x)?,
+            Obj::MatrixListObj(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
@@ -869,6 +1054,60 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.end, from, to),
             )
             .into(),
+            Obj::FiniteSeqSet(x) => FiniteSeqSet::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
+                Obj::replace_bound_identifier(*x.n, from, to),
+            )
+            .into(),
+            Obj::FiniteSeqListObj(x) => FiniteSeqListObj::new(
+                x.objs
+                    .into_iter()
+                    .map(|b| Obj::replace_bound_identifier(*b, from, to))
+                    .collect(),
+            )
+            .into(),
+            Obj::MatrixSet(x) => MatrixSet::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
+                Obj::replace_bound_identifier(*x.row_len, from, to),
+                Obj::replace_bound_identifier(*x.col_len, from, to),
+            )
+            .into(),
+            Obj::MatrixListObj(x) => MatrixListObj::new(
+                x.rows
+                    .into_iter()
+                    .map(|row| {
+                        row.into_iter()
+                            .map(|b| Obj::replace_bound_identifier(*b, from, to))
+                            .collect()
+                    })
+                    .collect(),
+            )
+            .into(),
+            Obj::MatrixAdd(x) => MatrixAdd::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::MatrixSub(x) => MatrixSub::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::MatrixMul(x) => MatrixMul::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::MatrixScalarMul(x) => MatrixScalarMul::new(
+                Obj::replace_bound_identifier(*x.scalar, from, to),
+                Obj::replace_bound_identifier(*x.matrix, from, to),
+            )
+            .into(),
+            Obj::MatrixPow(x) => MatrixPow::new(
+                Obj::replace_bound_identifier(*x.base, from, to),
+                Obj::replace_bound_identifier(*x.exponent, from, to),
+            )
+            .into(),
             Obj::Choose(x) => Choose::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::ObjAtIndex(x) => ObjAtIndex::new(
                 Obj::replace_bound_identifier(*x.obj, from, to),
@@ -976,6 +1215,65 @@ impl fmt::Display for ClosedRange {
             CLOSED_RANGE,
             braced_vec_to_string(&vec![self.start.as_ref(), self.end.as_ref()])
         )
+    }
+}
+
+impl fmt::Display for FiniteSeqSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            FINITE_SEQ,
+            braced_vec_to_string(&vec![self.set.as_ref(), self.n.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for FiniteSeqListObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", LEFT_BRACKET)?;
+        for (i, o) in self.objs.iter().enumerate() {
+            if i > 0 {
+                write!(f, "{} ", COMMA)?;
+            }
+            write!(f, "{}", o)?;
+        }
+        write!(f, "{}", RIGHT_BRACKET)
+    }
+}
+
+impl fmt::Display for MatrixSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            MATRIX,
+            braced_vec_to_string(&vec![
+                self.set.as_ref(),
+                self.row_len.as_ref(),
+                self.col_len.as_ref(),
+            ])
+        )
+    }
+}
+
+impl fmt::Display for MatrixListObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", LEFT_BRACKET)?;
+        for (ri, row) in self.rows.iter().enumerate() {
+            if ri > 0 {
+                write!(f, "{} ", COMMA)?;
+            }
+            write!(f, "{}", LEFT_BRACKET)?;
+            for (ci, o) in row.iter().enumerate() {
+                if ci > 0 {
+                    write!(f, "{} ", COMMA)?;
+                }
+                write!(f, "{}", o)?;
+            }
+            write!(f, "{}", RIGHT_BRACKET)?;
+        }
+        write!(f, "{}", RIGHT_BRACKET)
     }
 }
 
@@ -1088,6 +1386,36 @@ impl fmt::Display for Mod {
 impl fmt::Display for Pow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {}", self.base, POW, self.exponent)
+    }
+}
+
+impl fmt::Display for MatrixAdd {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.left, MATRIX_ADD, self.right)
+    }
+}
+
+impl fmt::Display for MatrixSub {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.left, MATRIX_SUB, self.right)
+    }
+}
+
+impl fmt::Display for MatrixMul {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.left, MATRIX_MUL, self.right)
+    }
+}
+
+impl fmt::Display for MatrixScalarMul {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.scalar, MATRIX_SCALAR_MUL, self.matrix)
+    }
+}
+
+impl fmt::Display for MatrixPow {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.base, MATRIX_POW, self.exponent)
     }
 }
 
@@ -1293,6 +1621,36 @@ impl From<Add> for Obj {
     }
 }
 
+impl From<MatrixAdd> for Obj {
+    fn from(m: MatrixAdd) -> Self {
+        Obj::MatrixAdd(m)
+    }
+}
+
+impl From<MatrixSub> for Obj {
+    fn from(m: MatrixSub) -> Self {
+        Obj::MatrixSub(m)
+    }
+}
+
+impl From<MatrixMul> for Obj {
+    fn from(m: MatrixMul) -> Self {
+        Obj::MatrixMul(m)
+    }
+}
+
+impl From<MatrixScalarMul> for Obj {
+    fn from(m: MatrixScalarMul) -> Self {
+        Obj::MatrixScalarMul(m)
+    }
+}
+
+impl From<MatrixPow> for Obj {
+    fn from(m: MatrixPow) -> Self {
+        Obj::MatrixPow(m)
+    }
+}
+
 impl From<Sub> for Obj {
     fn from(s: Sub) -> Self {
         Obj::Sub(s)
@@ -1452,6 +1810,30 @@ impl From<Range> for Obj {
 impl From<ClosedRange> for Obj {
     fn from(r: ClosedRange) -> Self {
         Obj::ClosedRange(r)
+    }
+}
+
+impl From<FiniteSeqSet> for Obj {
+    fn from(v: FiniteSeqSet) -> Self {
+        Obj::FiniteSeqSet(v)
+    }
+}
+
+impl From<FiniteSeqListObj> for Obj {
+    fn from(v: FiniteSeqListObj) -> Self {
+        Obj::FiniteSeqListObj(v)
+    }
+}
+
+impl From<MatrixSet> for Obj {
+    fn from(v: MatrixSet) -> Self {
+        Obj::MatrixSet(v)
+    }
+}
+
+impl From<MatrixListObj> for Obj {
+    fn from(v: MatrixListObj) -> Self {
+        Obj::MatrixListObj(v)
     }
 }
 

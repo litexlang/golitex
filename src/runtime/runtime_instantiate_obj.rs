@@ -36,6 +36,11 @@ impl Runtime {
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map),
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map),
+            Obj::MatrixAdd(inner) => self.inst_matrix_add(inner, param_to_arg_map),
+            Obj::MatrixSub(inner) => self.inst_matrix_sub(inner, param_to_arg_map),
+            Obj::MatrixMul(inner) => self.inst_matrix_mul(inner, param_to_arg_map),
+            Obj::MatrixScalarMul(inner) => self.inst_matrix_scalar_mul(inner, param_to_arg_map),
+            Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map),
             Obj::Max(inner) => self.inst_max(inner, param_to_arg_map),
             Obj::Min(inner) => self.inst_min(inner, param_to_arg_map),
@@ -57,6 +62,10 @@ impl Runtime {
             Obj::Count(inner) => self.inst_count(inner, param_to_arg_map),
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map),
             Obj::ClosedRange(inner) => self.inst_closed_range(inner, param_to_arg_map),
+            Obj::FiniteSeqSet(inner) => self.inst_finite_seq_set(inner, param_to_arg_map),
+            Obj::FiniteSeqListObj(inner) => self.inst_finite_seq_list_obj(inner, param_to_arg_map),
+            Obj::MatrixSet(inner) => self.inst_matrix_set(inner, param_to_arg_map),
+            Obj::MatrixListObj(inner) => self.inst_matrix_list_obj(inner, param_to_arg_map),
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map),
             Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map),
             Obj::ObjAtIndex(inner) => self.inst_obj_at_index(inner, param_to_arg_map),
@@ -266,6 +275,56 @@ impl Runtime {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map)?;
         Ok(Add::new(instantiated_left_obj, instantiated_right_obj).into())
+    }
+
+    pub fn inst_matrix_add(
+        &self,
+        ma: &MatrixAdd,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let instantiated_left_obj = self.inst_obj(&ma.left, param_to_arg_map)?;
+        let instantiated_right_obj = self.inst_obj(&ma.right, param_to_arg_map)?;
+        Ok(MatrixAdd::new(instantiated_left_obj, instantiated_right_obj).into())
+    }
+
+    pub fn inst_matrix_sub(
+        &self,
+        ms: &MatrixSub,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let l = self.inst_obj(&ms.left, param_to_arg_map)?;
+        let r = self.inst_obj(&ms.right, param_to_arg_map)?;
+        Ok(MatrixSub::new(l, r).into())
+    }
+
+    pub fn inst_matrix_mul(
+        &self,
+        mm: &MatrixMul,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let l = self.inst_obj(&mm.left, param_to_arg_map)?;
+        let r = self.inst_obj(&mm.right, param_to_arg_map)?;
+        Ok(MatrixMul::new(l, r).into())
+    }
+
+    pub fn inst_matrix_scalar_mul(
+        &self,
+        m: &MatrixScalarMul,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let s = self.inst_obj(&m.scalar, param_to_arg_map)?;
+        let mat = self.inst_obj(&m.matrix, param_to_arg_map)?;
+        Ok(MatrixScalarMul::new(s, mat).into())
+    }
+
+    pub fn inst_matrix_pow(
+        &self,
+        m: &MatrixPow,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let b = self.inst_obj(&m.base, param_to_arg_map)?;
+        let e = self.inst_obj(&m.exponent, param_to_arg_map)?;
+        Ok(MatrixPow::new(b, e).into())
     }
 
     pub fn inst_sub(
@@ -568,6 +627,59 @@ impl Runtime {
             self.inst_obj(&closed_range.end, param_to_arg_map)?,
         )
         .into())
+    }
+
+    pub fn inst_finite_seq_set(
+        &self,
+        fs: &FiniteSeqSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(FiniteSeqSet::new(
+            self.inst_obj(&fs.set, param_to_arg_map)?,
+            self.inst_obj(&fs.n, param_to_arg_map)?,
+        )
+        .into())
+    }
+
+    pub fn inst_finite_seq_list_obj(
+        &self,
+        v: &FiniteSeqListObj,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let mut objs = Vec::with_capacity(v.objs.len());
+        for o in v.objs.iter() {
+            objs.push(self.inst_obj(o, param_to_arg_map)?);
+        }
+        Ok(FiniteSeqListObj::new(objs).into())
+    }
+
+    pub fn inst_matrix_set(
+        &self,
+        ms: &MatrixSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(MatrixSet::new(
+            self.inst_obj(&ms.set, param_to_arg_map)?,
+            self.inst_obj(&ms.row_len, param_to_arg_map)?,
+            self.inst_obj(&ms.col_len, param_to_arg_map)?,
+        )
+        .into())
+    }
+
+    pub fn inst_matrix_list_obj(
+        &self,
+        m: &MatrixListObj,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let mut rows: Vec<Vec<Obj>> = Vec::with_capacity(m.rows.len());
+        for row in m.rows.iter() {
+            let mut inst_row = Vec::with_capacity(row.len());
+            for o in row.iter() {
+                inst_row.push(self.inst_obj(o, param_to_arg_map)?);
+            }
+            rows.push(inst_row);
+        }
+        Ok(MatrixListObj::new(rows).into())
     }
 
     pub fn inst_choose(

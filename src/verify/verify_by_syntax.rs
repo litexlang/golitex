@@ -85,6 +85,26 @@ impl Runtime {
                 Obj::Pow(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::MatrixAdd(a) => match right {
+                Obj::MatrixAdd(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixSub(a) => match right {
+                Obj::MatrixSub(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixMul(a) => match right {
+                Obj::MatrixMul(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixScalarMul(a) => match right {
+                Obj::MatrixScalarMul(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixPow(a) => match right {
+                Obj::MatrixPow(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Abs(a) => match right {
                 Obj::Abs(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -183,6 +203,22 @@ impl Runtime {
             },
             Obj::ClosedRange(a) => match right {
                 Obj::ClosedRange(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::FiniteSeqSet(a) => match right {
+                Obj::FiniteSeqSet(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::FiniteSeqListObj(a) => match right {
+                Obj::FiniteSeqListObj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixSet(a) => match right {
+                Obj::MatrixSet(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixListObj(a) => match right {
+                Obj::MatrixListObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::PowerSet(a) => match right {

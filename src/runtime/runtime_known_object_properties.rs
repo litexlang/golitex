@@ -81,6 +81,45 @@ impl Runtime {
         None
     }
 
+    pub fn get_obj_equal_to_finite_seq_list(&self, name: &str) -> Option<FiniteSeqListObj> {
+        for env in self.iter_environments_from_top() {
+            if let Some((known_list, _, _)) = env.known_objs_equal_to_finite_seq_list.get(name) {
+                return Some(known_list.clone());
+            }
+        }
+        None
+    }
+
+    pub fn get_finite_seq_set_for_obj_equal_to_seq_list(
+        &self,
+        name: &str,
+    ) -> Option<FiniteSeqSet> {
+        for env in self.iter_environments_from_top() {
+            if let Some((_, member_of, _)) = env.known_objs_equal_to_finite_seq_list.get(name) {
+                return member_of.clone();
+            }
+        }
+        None
+    }
+
+    pub fn get_obj_equal_to_matrix_list(&self, name: &str) -> Option<MatrixListObj> {
+        for env in self.iter_environments_from_top() {
+            if let Some((known_matrix, _, _)) = env.known_objs_equal_to_matrix_list.get(name) {
+                return Some(known_matrix.clone());
+            }
+        }
+        None
+    }
+
+    pub fn get_matrix_set_for_obj_equal_to_matrix_list(&self, name: &str) -> Option<MatrixSet> {
+        for env in self.iter_environments_from_top() {
+            if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(name) {
+                return member_of.clone();
+            }
+        }
+        None
+    }
+
     pub fn get_object_equal_to_tuple(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
             if let Some(cart) = env.known_objs_equal_to_tuple.get(name) {
