@@ -10,6 +10,11 @@ pub const MUL: &str = "*";
 pub const DIV: &str = "/";
 pub const MOD: &str = "%";
 pub const POW: &str = "^";
+pub const MATRIX_ADD: &str = "++";
+pub const MATRIX_SUB: &str = "--";
+pub const MATRIX_MUL: &str = "**";
+pub const MATRIX_SCALAR_MUL: &str = "*.";
+pub const MATRIX_POW: &str = "^^";
 pub const LEFT_BRACE: &str = "(";
 pub const RIGHT_BRACE: &str = ")";
 pub const COMMA: &str = ",";
@@ -51,6 +56,8 @@ pub const CART_DIM: &str = "cart_dim";
 pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
+pub const FINITE_SEQ: &str = "finite_seq";
+pub const MATRIX: &str = "matrix";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
 pub const EXIST: &str = "exist";
@@ -136,6 +143,11 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         DIV,
         MOD,
         POW,
+        MATRIX_POW,
+        MATRIX_MUL,
+        MATRIX_SCALAR_MUL,
+        MATRIX_ADD,
+        MATRIX_SUB,
         LEFT_BRACE,
         RIGHT_BRACE,
         COMMA,
@@ -181,6 +193,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE_DIM,
         PROJ,
         COUNT,
+        FINITE_SEQ,
+        MATRIX,
         RANGE,
         CLOSED_RANGE,
         EXIST,
@@ -313,6 +327,11 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == DIV
         || atom_name == MOD
         || atom_name == POW
+        || atom_name == MATRIX_ADD
+        || atom_name == MATRIX_SUB
+        || atom_name == MATRIX_MUL
+        || atom_name == MATRIX_SCALAR_MUL
+        || atom_name == MATRIX_POW
         || atom_name == Q_POS
         || atom_name == R_POS
         || atom_name == Q_NEG

@@ -196,6 +196,29 @@ impl Runtime {
         Ok(true)
     }
 
+    fn verify_matrix_list_objs_equal_when_all_cells_equal(
+        &mut self,
+        left: &MatrixListObj,
+        right: &MatrixListObj,
+        verify_state: &VerifyState,
+        equality_line_file: LineFile,
+    ) -> Result<bool, RuntimeError> {
+        if left.rows.len() != right.rows.len() {
+            return Ok(false);
+        }
+        for (lr, rr) in left.rows.iter().zip(right.rows.iter()) {
+            if !self.verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
+                lr,
+                rr,
+                verify_state,
+                equality_line_file.clone(),
+            )? {
+                return Ok(false);
+            }
+        }
+        Ok(true)
+    }
+
     fn verify_fn_objs_equal_when_they_have_same_head_and_equal_args(
         &mut self,
         left_fn_obj: &FnObj,
@@ -344,6 +367,51 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::MatrixAdd(left_m), Obj::MatrixAdd(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.left,
+                    &left_m.right,
+                    &right_m.left,
+                    &right_m.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixSub(left_m), Obj::MatrixSub(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.left,
+                    &left_m.right,
+                    &right_m.left,
+                    &right_m.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixMul(left_m), Obj::MatrixMul(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.left,
+                    &left_m.right,
+                    &right_m.left,
+                    &right_m.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixScalarMul(left_m), Obj::MatrixScalarMul(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.scalar,
+                    &left_m.matrix,
+                    &right_m.scalar,
+                    &right_m.matrix,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixPow(left_m), Obj::MatrixPow(right_m)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.base,
+                    &left_m.exponent,
+                    &right_m.base,
+                    &right_m.exponent,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Max(left_max), Obj::Max(right_max)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_max.left,
@@ -462,6 +530,51 @@ impl Runtime {
                     &left_closed_range.end,
                     &right_closed_range.start,
                     &right_closed_range.end,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::FiniteSeqSet(left_fs), Obj::FiniteSeqSet(right_fs)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_fs.set,
+                    &left_fs.n,
+                    &right_fs.set,
+                    &right_fs.n,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::FiniteSeqListObj(left_v), Obj::FiniteSeqListObj(right_v)) => self
+                .verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
+                    &left_v.objs,
+                    &right_v.objs,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::MatrixSet(left_m), Obj::MatrixSet(right_m)) => {
+                if !self.verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_m.set,
+                    &left_m.row_len,
+                    &right_m.set,
+                    &right_m.row_len,
+                    verify_state,
+                    equality_line_file.clone(),
+                )? {
+                    return Ok(false);
+                }
+                let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
+                    &left_m.col_len,
+                    &right_m.col_len,
+                    verify_state,
+                    equality_line_file,
+                )?;
+                if result.is_unknown() {
+                    return Ok(false);
+                }
+                Ok(true)
+            }
+            (Obj::MatrixListObj(left_m), Obj::MatrixListObj(right_m)) => self
+                .verify_matrix_list_objs_equal_when_all_cells_equal(
+                    left_m,
+                    right_m,
                     verify_state,
                     equality_line_file,
                 ),

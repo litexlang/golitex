@@ -279,12 +279,8 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (left, right, set) = match (&in_fact.element, &in_fact.set) {
-            (Obj::Max(m), Obj::StandardSet(s)) => {
-                (m.left.as_ref(), m.right.as_ref(), s.clone())
-            }
-            (Obj::Min(m), Obj::StandardSet(s)) => {
-                (m.left.as_ref(), m.right.as_ref(), s.clone())
-            }
+            (Obj::Max(m), Obj::StandardSet(s)) => (m.left.as_ref(), m.right.as_ref(), s.clone()),
+            (Obj::Min(m), Obj::StandardSet(s)) => (m.left.as_ref(), m.right.as_ref(), s.clone()),
             _ => return Ok(None),
         };
         if !matches!(
@@ -304,8 +300,7 @@ impl Runtime {
         let lf = in_fact.line_file.clone();
         for operand in [left, right] {
             let f: AtomicFact = InFact::new(operand.clone(), set_obj.clone(), lf.clone()).into();
-            if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)?
-            {
+            if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&f, verify_state)? {
                 return Ok(Some((StmtUnknown::new()).into()));
             }
         }
@@ -485,6 +480,78 @@ impl Runtime {
                 ),
             (_, Obj::FamilyObj(family_ty)) => {
                 self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
+            }
+            (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
+                let lf = in_fact.line_file.clone();
+                let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
+                let len_eq_n: AtomicFact =
+                    EqualFact::new(len_obj, (*fs.n).clone(), lf.clone()).into();
+                if !self.verify_atomic_fact(&len_eq_n, verify_state)?.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                for o in list.objs.iter() {
+                    let f: AtomicFact =
+                        InFact::new((**o).clone(), (*fs.set).clone(), lf.clone()).into();
+                    if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                        &f,
+                        verify_state,
+                    )? {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                }
+                Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "finite_seq list: length equals n and each entry in co-domain",
+                ))
+            }
+            (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
+                let lf = in_fact.line_file.clone();
+                let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
+                let row_eq: AtomicFact =
+                    EqualFact::new(n_rows_obj, (*ms.row_len).clone(), lf.clone()).into();
+                if !self.verify_atomic_fact(&row_eq, verify_state)?.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                for row in list.rows.iter() {
+                    let n_col_obj: Obj = Number::new(row.len().to_string()).into();
+                    let col_eq: AtomicFact =
+                        EqualFact::new(n_col_obj, (*ms.col_len).clone(), lf.clone()).into();
+                    if !self.verify_atomic_fact(&col_eq, verify_state)?.is_true() {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                    for o in row.iter() {
+                        let f: AtomicFact =
+                            InFact::new((**o).clone(), (*ms.set).clone(), lf.clone()).into();
+                        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &f,
+                            verify_state,
+                        )? {
+                            return Ok((StmtUnknown::new()).into());
+                        }
+                    }
+                }
+                Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "matrix literal: shape matches matrix(...) and each entry in co-domain",
+                ))
+            }
+            (_, Obj::FiniteSeqSet(fs)) => {
+                let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
+                let expanded = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                );
+                self.verify_atomic_fact(&expanded.into(), verify_state)
+            }
+            (_, Obj::MatrixSet(ms)) => {
+                let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
+                let expanded = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                );
+                self.verify_atomic_fact(&expanded.into(), verify_state)
             }
             (_, Obj::StructObj(struct_ty)) => self.verify_obj_satisfies_struct_param_type(
                 in_fact.element.clone(),
@@ -996,14 +1063,14 @@ impl Runtime {
             .fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
             .map_err(|e| {
                 {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(in_fact.clone()).into_stmt()),
-                String::new(),
-                in_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            )))
-        }
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(in_fact.clone()).into_stmt()),
+                        String::new(),
+                        in_fact.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
+                }
             })?
         {
             return Ok(

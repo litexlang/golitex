@@ -86,6 +86,52 @@ impl Runtime {
                     Ok((StmtUnknown::new()).into())
                 }
             }
+            Obj::FiniteSeqSet(fs) => {
+                let codomain_nonempty = IsNonemptySetFact::new(
+                    (*fs.set).clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
+                let codomain_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                    &codomain_nonempty,
+                    _verify_state,
+                )?;
+                if codomain_check.is_true() {
+                    Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "finite_seq_set_is_nonempty_when_codomain_set_is_nonempty".to_string(),
+                            Vec::new(),
+                        ))
+                        .into(),
+                    )
+                } else {
+                    Ok((StmtUnknown::new()).into())
+                }
+            }
+            Obj::MatrixSet(ms) => {
+                let codomain_nonempty = IsNonemptySetFact::new(
+                    (*ms.set).clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
+                let codomain_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                    &codomain_nonempty,
+                    _verify_state,
+                )?;
+                if codomain_check.is_true() {
+                    Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "matrix_set_is_nonempty_when_codomain_set_is_nonempty".to_string(),
+                            Vec::new(),
+                        ))
+                        .into(),
+                    )
+                } else {
+                    Ok((StmtUnknown::new()).into())
+                }
+            }
             _ => Ok((StmtUnknown::new()).into()),
         }
     }

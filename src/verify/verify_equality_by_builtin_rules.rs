@@ -408,6 +408,66 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::MatrixAdd(l), Obj::MatrixAdd(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.left, &r.left),
+                    (&l.right, &r.right),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::MatrixSub(l), Obj::MatrixSub(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.left, &r.left),
+                    (&l.right, &r.right),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::MatrixMul(l), Obj::MatrixMul(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.left, &r.left),
+                    (&l.right, &r.right),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::MatrixScalarMul(l), Obj::MatrixScalarMul(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.scalar, &r.scalar),
+                    (&l.matrix, &r.matrix),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::MatrixPow(l), Obj::MatrixPow(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.base, &r.base),
+                    (&l.exponent, &r.exponent),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::Sub(l), Obj::Sub(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.left, &r.left),
@@ -618,6 +678,28 @@ impl Runtime {
                 if self
                     .arg_pairs_share_known_equality_class(&[(&l.start, &r.start), (&l.end, &r.end)])
                 {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::FiniteSeqSet(l), Obj::FiniteSeqSet(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[(&l.set, &r.set), (&l.n, &r.n)]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::MatrixSet(l), Obj::MatrixSet(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.set, &r.set),
+                    (&l.row_len, &r.row_len),
+                    (&l.col_len, &r.col_len),
+                ]) {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,
                     ))

@@ -64,6 +64,17 @@ impl Runtime {
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
+            Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
+            Obj::FiniteSeqListObj(x) => {
+                self.verify_finite_seq_list_obj_well_defined(x, verify_state)
+            }
+            Obj::MatrixSet(x) => self.verify_matrix_set_well_defined(x, verify_state),
+            Obj::MatrixListObj(x) => self.verify_matrix_list_obj_well_defined(x, verify_state),
+            Obj::MatrixAdd(x) => self.verify_matrix_add_well_defined(x, verify_state),
+            Obj::MatrixSub(x) => self.verify_matrix_sub_well_defined(x, verify_state),
+            Obj::MatrixMul(x) => self.verify_matrix_mul_well_defined(x, verify_state),
+            Obj::MatrixScalarMul(x) => self.verify_matrix_scalar_mul_well_defined(x, verify_state),
+            Obj::MatrixPow(x) => self.verify_matrix_pow_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
@@ -1122,6 +1133,444 @@ impl Runtime {
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         Ok(())
+    }
+
+    fn verify_finite_seq_set_well_defined(
+        &mut self,
+        x: &FiniteSeqSet,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.n, verify_state)?;
+        let is_set_fact = IsSetFact::new((*x.set).clone(), default_line_file()).into();
+        let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
+        if set_ok.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!("finite_seq_set: first argument {} is not a set", x.set),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        let n_in_n_pos = InFact::new(
+            (*x.n).clone(),
+            StandardSet::NPos.into(),
+            default_line_file(),
+        )
+        .into();
+        let n_ok = self.verify_atomic_fact(&n_in_n_pos, verify_state)?;
+        if n_ok.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "finite_seq_set: length argument {} is not verified in N_pos",
+                        x.n
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    fn verify_finite_seq_list_obj_well_defined(
+        &mut self,
+        x: &FiniteSeqListObj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        for o in x.objs.iter() {
+            self.verify_obj_well_defined_and_store_cache(o, verify_state)?;
+        }
+        Ok(())
+    }
+
+    fn verify_matrix_set_well_defined(
+        &mut self,
+        x: &MatrixSet,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.row_len, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.col_len, verify_state)?;
+        let is_set_fact = IsSetFact::new((*x.set).clone(), default_line_file()).into();
+        let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
+        if set_ok.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!("matrix: first argument {} is not a set", x.set),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        for (label, len_obj) in [("row_len", &x.row_len), ("col_len", &x.col_len)] {
+            let in_n_pos = InFact::new(
+                (**len_obj).clone(),
+                StandardSet::NPos.into(),
+                default_line_file(),
+            )
+            .into();
+            let ok = self.verify_atomic_fact(&in_n_pos, verify_state)?;
+            if ok.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "matrix: {} argument {} is not verified in N_pos",
+                            label, len_obj
+                        ),
+                        default_line_file(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_matrix_list_obj_well_defined(
+        &mut self,
+        x: &MatrixListObj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        if !x.rows.is_empty() {
+            let col_len = x.rows[0].len();
+            for row in x.rows.iter() {
+                if row.len() != col_len {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "matrix literal: row length {} differs from first row length {}",
+                                row.len(),
+                                col_len
+                            ),
+                            default_line_file(),
+                            None,
+                            vec![],
+                        ),
+                    )));
+                }
+            }
+        }
+        for row in x.rows.iter() {
+            for o in row.iter() {
+                self.verify_obj_well_defined_and_store_cache(o, verify_state)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_matrix_add_well_defined(
+        &mut self,
+        ma: &MatrixAdd,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&ma.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&ma.right, verify_state)?;
+        let shape_left = Self::matrix_value_shape(self, &ma.left)?;
+        let shape_right = Self::matrix_value_shape(self, &ma.right)?;
+        if shape_left != shape_right {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "matrix ++: shape {:?} and {:?} do not match",
+                        shape_left, shape_right
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    fn verify_matrix_sub_well_defined(
+        &mut self,
+        ms: &MatrixSub,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&ms.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&ms.right, verify_state)?;
+        let shape_left = Self::matrix_value_shape(self, &ms.left)?;
+        let shape_right = Self::matrix_value_shape(self, &ms.right)?;
+        if shape_left != shape_right {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "matrix --: shape {:?} and {:?} do not match",
+                        shape_left, shape_right
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    fn verify_matrix_mul_well_defined(
+        &mut self,
+        mm: &MatrixMul,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&mm.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&mm.right, verify_state)?;
+        let shape_left = Self::matrix_value_shape(self, &mm.left)?;
+        let shape_right = Self::matrix_value_shape(self, &mm.right)?;
+        if shape_left.1 != shape_right.0 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "matrix **: left columns {} != right rows {}",
+                        shape_left.1, shape_right.0
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    fn verify_matrix_scalar_mul_well_defined(
+        &mut self,
+        m: &MatrixScalarMul,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&m.scalar, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&m.matrix, verify_state)?;
+        let _ = Self::matrix_value_shape(self, &m.matrix)?;
+        Ok(())
+    }
+
+    fn verify_matrix_pow_well_defined(
+        &mut self,
+        m: &MatrixPow,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&m.base, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&m.exponent, verify_state)?;
+        let shape_base = Self::matrix_value_shape(self, &m.base)?;
+        if shape_base.0 != shape_base.1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "matrix ^^: base must be square, got {}x{}",
+                        shape_base.0, shape_base.1
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        let exp_in_n_pos = InFact::new(
+            (*m.exponent).clone(),
+            StandardSet::NPos.into(),
+            default_line_file(),
+        )
+        .into();
+        let ok = self.verify_atomic_fact(&exp_in_n_pos, verify_state)?;
+        if ok.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "matrix ^^: exponent {} is not verified in N_pos",
+                        m.exponent
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    /// Dimensions of a matrix-valued expression (literal, known name, or matrix operators).
+    fn matrix_value_shape(rt: &Runtime, obj: &Obj) -> Result<(usize, usize), RuntimeError> {
+        match obj {
+            Obj::MatrixListObj(m) => Self::rectangular_shape_of_matrix_list_obj(m),
+            Obj::Identifier(id) => Self::matrix_list_shape_for_name_known_as_matrix_list(rt, &id.name),
+            Obj::MatrixAdd(inner) => Self::matrix_value_shape(rt, &inner.left),
+            Obj::MatrixSub(inner) => Self::matrix_value_shape(rt, &inner.left),
+            Obj::MatrixMul(inner) => {
+                let sl = Self::matrix_value_shape(rt, &inner.left)?;
+                let sr = Self::matrix_value_shape(rt, &inner.right)?;
+                if sl.1 != sr.0 {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "matrix **: left columns {} != right rows {}",
+                                sl.1, sr.0
+                            ),
+                            default_line_file(),
+                            None,
+                            vec![],
+                        ),
+                    )));
+                }
+                Ok((sl.0, sr.1))
+            }
+            Obj::MatrixScalarMul(inner) => Self::matrix_value_shape(rt, &inner.matrix),
+            Obj::MatrixPow(inner) => {
+                let s = Self::matrix_value_shape(rt, &inner.base)?;
+                if s.0 != s.1 {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "matrix ^^: base must be square, got {}x{}",
+                                s.0, s.1
+                            ),
+                            default_line_file(),
+                            None,
+                            vec![],
+                        ),
+                    )));
+                }
+                Ok(s)
+            }
+            _ => Self::matrix_list_shape_for_name_known_as_matrix_list(rt, &obj.to_string()),
+        }
+    }
+
+    /// Shape of a matrix list stored under `key` in `known_objs_equal_to_matrix_list`.
+    /// When the entry carries a `MatrixSet`, resolved `row_len` / `col_len` must match the list shape.
+    fn matrix_list_shape_for_name_known_as_matrix_list(
+        rt: &Runtime,
+        key: &str,
+    ) -> Result<(usize, usize), RuntimeError> {
+        let Some(known) = rt.get_obj_equal_to_matrix_list(key) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "`{}` is not known as a matrix list value",
+                        key
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        };
+        let shape = Self::rectangular_shape_of_matrix_list_obj(&known)?;
+        if let Some(ms) = rt.get_matrix_set_for_obj_equal_to_matrix_list(key) {
+            Self::ensure_matrix_list_matches_matrix_set(rt, &known, &ms)?;
+        }
+        Ok(shape)
+    }
+
+    fn ensure_matrix_list_matches_matrix_set(
+        rt: &Runtime,
+        m: &MatrixListObj,
+        ms: &MatrixSet,
+    ) -> Result<(), RuntimeError> {
+        let (rows, cols) = Self::rectangular_shape_of_matrix_list_obj(m)?;
+        let row_expect = rt.resolve_obj_to_number(ms.row_len.as_ref()).ok_or_else(|| {
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "matrix: cannot resolve row_len {} of matrix type for list shape check",
+                    ms.row_len
+                ),
+                default_line_file(),
+                None,
+                vec![],
+            )))
+        })?;
+        let col_expect = rt.resolve_obj_to_number(ms.col_len.as_ref()).ok_or_else(|| {
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "matrix: cannot resolve col_len {} of matrix type for list shape check",
+                    ms.col_len
+                ),
+                default_line_file(),
+                None,
+                vec![],
+            )))
+        })?;
+        let r = row_expect.normalized_value.parse::<usize>().map_err(|_| {
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "matrix: row_len `{}` is not a valid size",
+                    row_expect.normalized_value
+                ),
+                default_line_file(),
+                None,
+                vec![],
+            )))
+        })?;
+        let c = col_expect.normalized_value.parse::<usize>().map_err(|_| {
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "matrix: col_len `{}` is not a valid size",
+                    col_expect.normalized_value
+                ),
+                default_line_file(),
+                None,
+                vec![],
+            )))
+        })?;
+        if r != rows || c != cols {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "matrix list has shape {}x{} but matrix type expects {}x{}",
+                        rows, cols, r, c
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    fn rectangular_shape_of_matrix_list_obj(
+        m: &MatrixListObj,
+    ) -> Result<(usize, usize), RuntimeError> {
+        let rows = m.rows.len();
+        let cols = if rows == 0 { 0 } else { m.rows[0].len() };
+        for row in m.rows.iter() {
+            if row.len() != cols {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "matrix list is not rectangular (row lengths differ)".to_string(),
+                        default_line_file(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+        }
+        Ok((rows, cols))
     }
 
     fn verify_power_set_well_defined(
