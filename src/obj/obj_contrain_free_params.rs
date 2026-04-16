@@ -1,4 +1,5 @@
-pub type ObjContainFreeParamsType = u8;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ObjContainFreeParamsType(u8);
 
 impl ObjContainFreeParamsType {
     pub fn new(
@@ -7,35 +8,35 @@ impl ObjContainFreeParamsType {
         contain_fn_set_free_params: bool,
         contain_set_builder_free_params: bool,
     ) -> Self {
-        let mut type_value: ObjContainFreeParamsType = 0;
+        let mut bits: u8 = 0;
         if contain_exist_free_params {
-            type_value |= 1;
+            bits |= 1;
         }
         if contain_forall_free_params {
-            type_value |= 2;
+            bits |= 2;
         }
         if contain_fn_set_free_params {
-            type_value |= 4;
+            bits |= 4;
         }
         if contain_set_builder_free_params {
-            type_value |= 8;
+            bits |= 8;
         }
-        type_value
+        Self(bits)
     }
 
     pub fn contain_exist_free_params(&self) -> bool {
-        self & 1 == 1
+        self.0 & 1 != 0
     }
 
     pub fn contain_forall_free_params(&self) -> bool {
-        self & 2 == 2
+        self.0 & 2 != 0
     }
 
     pub fn contain_fn_set_free_params(&self) -> bool {
-        self & 4 == 4
+        self.0 & 4 != 0
     }
 
     pub fn contain_set_builder_free_params(&self) -> bool {
-        self & 8 == 8
+        self.0 & 8 != 0
     }
 }
