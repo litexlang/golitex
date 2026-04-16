@@ -16,18 +16,16 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
-                return Err(
-                    {
-                        VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(exist_fact.clone()).into_stmt()),
-                String::new(),
-                exist_fact.line_file(),
-                Some(e),
-                vec![],
-            ))
-            .into()
-        },
-                );
+                return Err({
+                    VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(exist_fact.clone()).into_stmt()),
+                        String::new(),
+                        exist_fact.line_file(),
+                        Some(e),
+                        vec![],
+                    ))
+                    .into()
+                });
             }
         }
 
@@ -36,12 +34,161 @@ impl Runtime {
             return Ok(result);
         }
 
-        let result = self.verify_exist_fact_with_known_forall(exist_fact, verify_state)?;
-        if result.is_true() {
-            return Ok(result);
+        if verify_state.is_round_0() {
+            let result = self.verify_exist_fact_with_known_forall(exist_fact, verify_state)?;
+            if result.is_true() {
+                return Ok(result);
+            }
+
+            if exist_fact.is_exist_unique {
+                if let Some(proved) = self.try_verify_exist_unique_by_exist_and_uniqueness_forall(
+                    exist_fact,
+                    verify_state,
+                )? {
+                    return Ok(proved);
+                }
+            }
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn build_exist_unique_uniqueness_forall_fact(
+        &self,
+        exist_fact: &ExistFact,
+    ) -> Result<ForallFact, RuntimeError> {
+        let lf = exist_fact.line_file();
+        let n = exist_fact.params_def_with_type.number_of_params();
+        let flat_orig = exist_fact.params_def_with_type.collect_param_names();
+        let flat_all = self.generate_random_unused_names(2 * n);
+        let flat_a: Vec<String> = flat_all[..n].to_vec();
+        let flat_b: Vec<String> = flat_all[n..2 * n].to_vec();
+
+        let mut map_running_a: HashMap<String, Obj> = HashMap::new();
+        let mut map_running_b: HashMap<String, Obj> = HashMap::new();
+        let mut forall_groups: Vec<ParamGroupWithParamType> = Vec::new();
+        let mut idx: usize = 0;
+        for group in exist_fact.params_def_with_type.groups.iter() {
+            let len = group.params.len();
+            let chunk_a = flat_a[idx..idx + len].to_vec();
+            for (orig, nm) in group.params.iter().zip(chunk_a.iter()) {
+                map_running_a.insert(orig.clone(), nm.clone().into());
+            }
+            let pt_a = self.inst_param_type(&group.param_type, &map_running_a)?;
+            forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
+            idx += len;
+        }
+        idx = 0;
+        for group in exist_fact.params_def_with_type.groups.iter() {
+            let len = group.params.len();
+            let chunk_b = flat_b[idx..idx + len].to_vec();
+            for (orig, nm) in group.params.iter().zip(chunk_b.iter()) {
+                map_running_b.insert(orig.clone(), nm.clone().into());
+            }
+            let pt_b = self.inst_param_type(&group.param_type, &map_running_b)?;
+            forall_groups.push(ParamGroupWithParamType::new(chunk_b, pt_b));
+            idx += len;
+        }
+
+        let map_a: HashMap<String, Obj> = flat_orig
+            .iter()
+            .cloned()
+            .zip(flat_a.iter().cloned().map(|s| s.into()))
+            .collect();
+        let map_b: HashMap<String, Obj> = flat_orig
+            .iter()
+            .cloned()
+            .zip(flat_b.iter().cloned().map(|s| s.into()))
+            .collect();
+
+        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        for inner in exist_fact.facts.iter() {
+            let f_a = self.inst_or_and_chain_atomic_fact(inner, &map_a)?;
+            dom_facts.push(f_a.into());
+        }
+        for inner in exist_fact.facts.iter() {
+            let f_b = self.inst_or_and_chain_atomic_fact(inner, &map_b)?;
+            dom_facts.push(f_b.into());
+        }
+
+        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        if n == 1 {
+            let eq = EqualFact::new(
+                flat_a[0].clone().into(),
+                flat_b[0].clone().into(),
+                lf.clone(),
+            );
+            then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
+        } else {
+            let left_tuple: Obj = Tuple::new(
+                flat_a
+                    .iter()
+                    .cloned()
+                    .map(|s| s.into())
+                    .collect::<Vec<Obj>>(),
+            )
+            .into();
+            let right_tuple: Obj = Tuple::new(
+                flat_b
+                    .iter()
+                    .cloned()
+                    .map(|s| s.into())
+                    .collect::<Vec<Obj>>(),
+            )
+            .into();
+            let eq = EqualFact::new(left_tuple, right_tuple, lf.clone());
+            then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
+        }
+
+        Ok(ForallFact::new(
+            ParamDefWithType::new(forall_groups),
+            dom_facts,
+            then_facts,
+            lf,
+        ))
+    }
+
+    fn try_verify_exist_unique_by_exist_and_uniqueness_forall(
+        &mut self,
+        exist_fact: &ExistFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if exist_fact.params_def_with_type.number_of_params() == 0 {
+            return Ok(None);
+        }
+        let plain = ExistFact::new(
+            exist_fact.params_def_with_type.clone(),
+            exist_fact.facts.clone(),
+            false,
+            exist_fact.line_file.clone(),
+        );
+        let wd_ok = verify_state.make_state_with_req_ok_set_to_true();
+        let plain_res = self.verify_exist_fact(&plain, &wd_ok)?;
+        if !plain_res.is_true() {
+            return Ok(None);
+        }
+        let uniqueness_forall = self.build_exist_unique_uniqueness_forall_fact(exist_fact)?;
+        let uniqueness_fact: Fact = uniqueness_forall.clone().into();
+        let uniq_res = self.verify_fact(&uniqueness_fact, &wd_ok)?;
+        if !uniq_res.is_true() {
+            return Ok(None);
+        }
+
+        let mut infers = InferResult::new();
+        infers.new_fact(&exist_fact.clone().into());
+        infers.new_infer_result_inside(stmt_result_infers(&plain_res));
+        infers.new_infer_result_inside(stmt_result_infers(&uniq_res));
+        infers.new_fact(&uniqueness_fact);
+
+        let out = FactualStmtSuccess::new_with_verified_by_known_fact_source(
+            exist_fact.clone().into(),
+            infers,
+            "exist_unique: witness exist and uniqueness forall verified".to_string(),
+            Some(uniqueness_fact),
+            None,
+            vec![],
+        );
+        Ok(Some(out.into()))
     }
 
     pub fn verify_exist_fact_with_known_exist_fact(
@@ -70,32 +217,38 @@ impl Runtime {
         exist_fact: &ExistFact,
         known_exist_fact: &ExistFact,
     ) -> Result<StmtResult, RuntimeError> {
+        if exist_fact.is_exist_unique != known_exist_fact.is_exist_unique {
+            return Ok((StmtUnknown::new()).into());
+        }
         if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key())
         {
             let target_string =
                 Self::exist_fact_normalized_string(runtime, exist_fact).map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(exist_fact.clone()).into_stmt()),
-                String::new(),
-                exist_fact.line_file(),
-                Some(e),
-                vec![],
-            )))
-        }
+                            Some(Fact::from(exist_fact.clone()).into_stmt()),
+                            String::new(),
+                            exist_fact.line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             for known_fact in known_exist_facts.iter() {
+                if known_fact.is_exist_unique != exist_fact.is_exist_unique {
+                    continue;
+                }
                 let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
                     .map_err(|e| {
                         {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(exist_fact.clone()).into_stmt()),
-                String::new(),
-                exist_fact.line_file(),
-                Some(e),
-                vec![],
-            )))
-        }
+                            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                                Some(Fact::from(exist_fact.clone()).into_stmt()),
+                                String::new(),
+                                exist_fact.line_file(),
+                                Some(e),
+                                vec![],
+                            )))
+                        }
                     })?;
                 if target_string == known_string {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
@@ -156,7 +309,20 @@ impl Runtime {
         }
         let params_string = params_string_parts.join("; ");
         let facts_string = fact_strings.join("; ");
+        let head = if exist_fact.is_exist_unique {
+            EXIST_UNIQUE
+        } else {
+            EXIST
+        };
 
-        Ok(format!("{} || {}", params_string, facts_string))
+        Ok(format!("{} || {} || {}", head, params_string, facts_string))
+    }
+}
+
+fn stmt_result_infers(result: &StmtResult) -> InferResult {
+    match result {
+        StmtResult::FactualStmtSuccess(x) => x.infers.clone(),
+        StmtResult::NonFactualStmtSuccess(x) => x.infers.clone(),
+        StmtResult::StmtUnknown(_) => InferResult::new(),
     }
 }

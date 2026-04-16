@@ -209,6 +209,10 @@ impl Runtime {
                 Obj::FiniteSeqSet(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::SeqSet(a) => match right {
+                Obj::SeqSet(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::FiniteSeqListObj(a) => match right {
                 Obj::FiniteSeqListObj(b) => a.to_string() == b.to_string(),
                 _ => false,

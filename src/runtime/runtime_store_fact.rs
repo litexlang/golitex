@@ -163,7 +163,6 @@ impl Runtime {
         Ok(self.infer_or_and_chain_atomic_fact(&fact_for_infer)?)
     }
 }
-
 fn forall_fact_coverage_warn_after_drop_then(
     coverage_error_detail_lines: &[(usize, String)],
 ) -> String {

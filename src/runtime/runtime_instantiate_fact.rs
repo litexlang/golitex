@@ -552,6 +552,7 @@ impl Runtime {
         Ok(ExistFact::new(
             params_def_with_type,
             facts,
+            exist_fact.is_exist_unique,
             exist_fact.line_file.clone(),
         ))
     }

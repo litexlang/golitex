@@ -33,6 +33,13 @@ impl Runtime {
                             .into();
                     self.store_fact_without_well_defined_verified_and_infer(type_fact)
                 }
+                Obj::SeqSet(ss) => {
+                    let fn_set = self.seq_set_to_fn_set(ss, default_line_file());
+                    let type_fact =
+                        InFact::new(name.to_string().into(), fn_set.into(), default_line_file())
+                            .into();
+                    self.store_fact_without_well_defined_verified_and_infer(type_fact)
+                }
                 Obj::MatrixSet(ms) => {
                     let fn_set = self.matrix_set_to_fn_set(ms, default_line_file());
                     let type_fact =
