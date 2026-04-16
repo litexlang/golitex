@@ -95,6 +95,26 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.base.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.exponent.as_ref(), coverage_by_forall_param);
         }
+        Obj::MatrixAdd(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::MatrixSub(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::MatrixMul(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::MatrixScalarMul(binary) => {
+            mark_forall_param_coverage_in_obj(binary.scalar.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.matrix.as_ref(), coverage_by_forall_param);
+        }
+        Obj::MatrixPow(binary) => {
+            mark_forall_param_coverage_in_obj(binary.base.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.exponent.as_ref(), coverage_by_forall_param);
+        }
         Obj::Abs(unary) => {
             mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
         }

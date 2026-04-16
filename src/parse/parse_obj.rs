@@ -86,6 +86,10 @@ impl Runtime {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
                 left = Mod::new(left, right).into();
+            } else if tb.current_token_is_equal_to(MATRIX_SCALAR_MUL) {
+                tb.skip()?;
+                let right = self.parse_obj_hierarchy3(tb)?;
+                left = MatrixScalarMul::new(left, right).into();
             } else {
                 return Ok(left);
             }
@@ -102,6 +106,22 @@ impl Runtime {
             tb.skip()?;
             let right = self.parse_obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
             Ok(Pow::new(left, right).into())
+        } else if tb.current_token_is_equal_to(MATRIX_POW) {
+            tb.skip()?;
+            let right = self.parse_obj_hierarchy3(tb)?;
+            Ok(MatrixPow::new(left, right).into())
+        } else if tb.current_token_is_equal_to(MATRIX_MUL) {
+            tb.skip()?;
+            let right = self.parse_obj_hierarchy3(tb)?;
+            Ok(MatrixMul::new(left, right).into())
+        } else if tb.current_token_is_equal_to(MATRIX_SUB) {
+            tb.skip()?;
+            let right = self.parse_obj_hierarchy3(tb)?;
+            Ok(MatrixSub::new(left, right).into())
+        } else if tb.current_token_is_equal_to(MATRIX_ADD) {
+            tb.skip()?;
+            let right = self.parse_obj_hierarchy3(tb)?;
+            Ok(MatrixAdd::new(left, right).into())
         } else {
             Ok(left)
         }

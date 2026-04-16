@@ -10,6 +10,11 @@ pub const MUL: &str = "*";
 pub const DIV: &str = "/";
 pub const MOD: &str = "%";
 pub const POW: &str = "^";
+pub const MATRIX_ADD: &str = "++";
+pub const MATRIX_SUB: &str = "--";
+pub const MATRIX_MUL: &str = "**";
+pub const MATRIX_SCALAR_MUL: &str = "*.";
+pub const MATRIX_POW: &str = "^^";
 pub const LEFT_BRACE: &str = "(";
 pub const RIGHT_BRACE: &str = ")";
 pub const COMMA: &str = ",";
@@ -138,6 +143,11 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         DIV,
         MOD,
         POW,
+        MATRIX_POW,
+        MATRIX_MUL,
+        MATRIX_SCALAR_MUL,
+        MATRIX_ADD,
+        MATRIX_SUB,
         LEFT_BRACE,
         RIGHT_BRACE,
         COMMA,
@@ -317,6 +327,11 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == DIV
         || atom_name == MOD
         || atom_name == POW
+        || atom_name == MATRIX_ADD
+        || atom_name == MATRIX_SUB
+        || atom_name == MATRIX_MUL
+        || atom_name == MATRIX_SCALAR_MUL
+        || atom_name == MATRIX_POW
         || atom_name == Q_POS
         || atom_name == R_POS
         || atom_name == Q_NEG

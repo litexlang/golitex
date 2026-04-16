@@ -28,7 +28,293 @@ impl Runtime {
                 | Obj::Mul(_)
                 | Obj::Div(_)
                 | Obj::Pow(_)
+                | Obj::MatrixListObj(_)
+                | Obj::MatrixAdd(_)
+                | Obj::MatrixSub(_)
+                | Obj::MatrixMul(_)
+                | Obj::MatrixScalarMul(_)
+                | Obj::MatrixPow(_)
+                | Obj::Identifier(_)
         )
+    }
+
+    fn eval_matrix_list_cells_for_eval_stmt(
+        &mut self,
+        m: MatrixListObj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<MatrixListObj, RuntimeError> {
+        let mut rows_out = Vec::with_capacity(m.rows.len());
+        for row in m.rows {
+            let mut out_row = Vec::with_capacity(row.len());
+            for cell in row {
+                let v = self.evaluate_symbol_obj_iterative(*cell, eval_stmt)?;
+                out_row.push(Box::new(v));
+            }
+            rows_out.push(out_row);
+        }
+        Ok(MatrixListObj { rows: rows_out })
+    }
+
+    fn add_matrix_lists_under_eval(
+        &self,
+        left: MatrixListObj,
+        right: MatrixListObj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<MatrixListObj, RuntimeError> {
+        if left.rows.len() != right.rows.len() {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: matrix ++ row count mismatch".to_string(),
+                None,
+                vec![],
+            ));
+        }
+        let mut rows = Vec::with_capacity(left.rows.len());
+        for (lr, rr) in left.rows.into_iter().zip(right.rows.into_iter()) {
+            if lr.len() != rr.len() {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    "eval: matrix ++ column count mismatch".to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+            let mut row = Vec::with_capacity(lr.len());
+            for (a, b) in lr.into_iter().zip(rr.into_iter()) {
+                let sum_obj: Obj = Add::new(*a, *b).into();
+                let Some(n) = sum_obj.evaluate_to_normalized_decimal_number() else {
+                    return Err(short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: matrix ++ needs numeric cells".to_string(),
+                        None,
+                        vec![],
+                    ));
+                };
+                row.push(Box::new(n.into()));
+            }
+            rows.push(row);
+        }
+        Ok(MatrixListObj { rows })
+    }
+
+    fn sub_matrix_lists_under_eval(
+        &self,
+        left: MatrixListObj,
+        right: MatrixListObj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<MatrixListObj, RuntimeError> {
+        if left.rows.len() != right.rows.len() {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: matrix -- row count mismatch".to_string(),
+                None,
+                vec![],
+            ));
+        }
+        let mut rows = Vec::with_capacity(left.rows.len());
+        for (lr, rr) in left.rows.into_iter().zip(right.rows.into_iter()) {
+            if lr.len() != rr.len() {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    "eval: matrix -- column count mismatch".to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+            let mut row = Vec::with_capacity(lr.len());
+            for (a, b) in lr.into_iter().zip(rr.into_iter()) {
+                let diff_obj: Obj = Sub::new(*a, *b).into();
+                let Some(n) = diff_obj.evaluate_to_normalized_decimal_number() else {
+                    return Err(short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: matrix -- needs numeric cells".to_string(),
+                        None,
+                        vec![],
+                    ));
+                };
+                row.push(Box::new(n.into()));
+            }
+            rows.push(row);
+        }
+        Ok(MatrixListObj { rows })
+    }
+
+    fn multiply_matrix_lists_under_eval(
+        &self,
+        left: MatrixListObj,
+        right: MatrixListObj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<MatrixListObj, RuntimeError> {
+        let r1 = left.rows.len();
+        let c1 = if r1 == 0 {
+            0
+        } else {
+            left.rows[0].len()
+        };
+        let r2 = right.rows.len();
+        let c2 = if r2 == 0 {
+            0
+        } else {
+            right.rows[0].len()
+        };
+        if c1 != r2 {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: matrix ** inner dimension mismatch".to_string(),
+                None,
+                vec![],
+            ));
+        }
+        let mut rows: Vec<Vec<Box<Obj>>> = Vec::with_capacity(r1);
+        for i in 0..r1 {
+            let mut row: Vec<Box<Obj>> = Vec::with_capacity(c2);
+            for k in 0..c2 {
+                let mut acc_num = Number::new("0".to_string());
+                for j in 0..c1 {
+                    let prod_obj: Obj = Mul::new(
+                        (*left.rows[i][j]).clone(),
+                        (*right.rows[j][k]).clone(),
+                    )
+                    .into();
+                    let Some(p) = prod_obj.evaluate_to_normalized_decimal_number() else {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: matrix ** cell multiply failed".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    };
+                    let sum_obj: Obj = Add::new(acc_num.into(), p.into()).into();
+                    let Some(s) = sum_obj.evaluate_to_normalized_decimal_number() else {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: matrix ** accumulation failed".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    };
+                    acc_num = s;
+                }
+                row.push(Box::new(acc_num.into()));
+            }
+            rows.push(row);
+        }
+        Ok(MatrixListObj { rows })
+    }
+
+    fn scalar_matrix_mul_under_eval(
+        &self,
+        scalar: Obj,
+        matrix: MatrixListObj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<MatrixListObj, RuntimeError> {
+        let mut rows_out = Vec::with_capacity(matrix.rows.len());
+        for row in matrix.rows {
+            let mut out_row = Vec::with_capacity(row.len());
+            for cell in row {
+                let prod_obj: Obj = Mul::new(scalar.clone(), (*cell).clone()).into();
+                let Some(n) = prod_obj.evaluate_to_normalized_decimal_number() else {
+                    return Err(short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: *. needs scalar and numeric matrix cells".to_string(),
+                        None,
+                        vec![],
+                    ));
+                };
+                out_row.push(Box::new(n.into()));
+            }
+            rows_out.push(out_row);
+        }
+        Ok(MatrixListObj { rows: rows_out })
+    }
+
+    fn matrix_pow_under_eval(
+        &self,
+        base: MatrixListObj,
+        exponent: usize,
+        eval_stmt: &EvalStmt,
+    ) -> Result<MatrixListObj, RuntimeError> {
+        if exponent == 0 {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: matrix ^^ exponent must be at least 1".to_string(),
+                None,
+                vec![],
+            ));
+        }
+        let mut acc = base.clone();
+        for _ in 1..exponent {
+            acc = self.multiply_matrix_lists_under_eval(acc, base.clone(), eval_stmt)?;
+        }
+        Ok(acc)
+    }
+
+    fn eval_to_matrix_list_for_eval_stmt(
+        &mut self,
+        obj: Obj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<MatrixListObj, RuntimeError> {
+        let cur = self.peel_fn_obj_dispatch_loop(obj, eval_stmt)?;
+        match cur {
+            Obj::MatrixListObj(m) => self.eval_matrix_list_cells_for_eval_stmt(m, eval_stmt),
+            Obj::MatrixAdd(ma) => {
+                let l = self.eval_to_matrix_list_for_eval_stmt((*ma.left).clone(), eval_stmt)?;
+                let r = self.eval_to_matrix_list_for_eval_stmt((*ma.right).clone(), eval_stmt)?;
+                self.add_matrix_lists_under_eval(l, r, eval_stmt)
+            }
+            Obj::MatrixSub(ms) => {
+                let l = self.eval_to_matrix_list_for_eval_stmt((*ms.left).clone(), eval_stmt)?;
+                let r = self.eval_to_matrix_list_for_eval_stmt((*ms.right).clone(), eval_stmt)?;
+                self.sub_matrix_lists_under_eval(l, r, eval_stmt)
+            }
+            Obj::MatrixMul(mm) => {
+                let l = self.eval_to_matrix_list_for_eval_stmt((*mm.left).clone(), eval_stmt)?;
+                let r = self.eval_to_matrix_list_for_eval_stmt((*mm.right).clone(), eval_stmt)?;
+                self.multiply_matrix_lists_under_eval(l, r, eval_stmt)
+            }
+            Obj::MatrixScalarMul(m) => {
+                let s = self.evaluate_symbol_obj_iterative((*m.scalar).clone(), eval_stmt)?;
+                let mat = self.eval_to_matrix_list_for_eval_stmt((*m.matrix).clone(), eval_stmt)?;
+                self.scalar_matrix_mul_under_eval(s, mat, eval_stmt)
+            }
+            Obj::MatrixPow(mp) => {
+                let base = self.eval_to_matrix_list_for_eval_stmt((*mp.base).clone(), eval_stmt)?;
+                let exp_obj =
+                    self.evaluate_symbol_obj_iterative((*mp.exponent).clone(), eval_stmt)?;
+                let Some(exp_num) = exp_obj.evaluate_to_normalized_decimal_number() else {
+                    return Err(short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: matrix ^^ exponent must evaluate to a number".to_string(),
+                        None,
+                        vec![],
+                    ));
+                };
+                let exp_u = exp_num.normalized_value.parse::<usize>().map_err(|_| {
+                    short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: matrix ^^ exponent must be a non-negative integer".to_string(),
+                        None,
+                        vec![],
+                    )
+                })?;
+                self.matrix_pow_under_eval(base, exp_u, eval_stmt)
+            }
+            other => {
+                let lookup_key = match &other {
+                    Obj::Identifier(id) => id.name.clone(),
+                    _ => other.to_string(),
+                };
+                let Some(ml) = self.get_obj_equal_to_matrix_list(&lookup_key) else {
+                    return Err(short_exec_error(
+                        eval_stmt.clone().into(),
+                        format!("eval: `{}` is not a matrix list", lookup_key),
+                        None,
+                        vec![],
+                    ));
+                };
+                self.eval_to_matrix_list_for_eval_stmt(ml.into(), eval_stmt)
+            }
+        }
     }
 
     fn finish_numeric_accumulator_with_pending_rights(
@@ -118,6 +404,79 @@ impl Runtime {
                             ));
                         }
                     }
+                }
+                Obj::MatrixListObj(m) => {
+                    if !pending.is_empty() {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: matrix value with pending binary operation".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    }
+                    let done = self.eval_matrix_list_cells_for_eval_stmt(m, eval_stmt)?;
+                    return Ok(done.into());
+                }
+                Obj::MatrixAdd(ma) => {
+                    if !pending.is_empty() {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: matrix ++ with pending binary operation".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    }
+                    let done = self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixAdd(ma), eval_stmt)?;
+                    return Ok(done.into());
+                }
+                Obj::MatrixSub(ms) => {
+                    if !pending.is_empty() {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: matrix -- with pending binary operation".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    }
+                    let done = self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixSub(ms), eval_stmt)?;
+                    return Ok(done.into());
+                }
+                Obj::MatrixMul(mm) => {
+                    if !pending.is_empty() {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: matrix ** with pending binary operation".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    }
+                    let done = self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixMul(mm), eval_stmt)?;
+                    return Ok(done.into());
+                }
+                Obj::MatrixScalarMul(m) => {
+                    if !pending.is_empty() {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: *. with pending binary operation".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    }
+                    let done =
+                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixScalarMul(m), eval_stmt)?;
+                    return Ok(done.into());
+                }
+                Obj::MatrixPow(mp) => {
+                    if !pending.is_empty() {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: matrix ^^ with pending binary operation".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    }
+                    let done = self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixPow(mp), eval_stmt)?;
+                    return Ok(done.into());
                 }
                 _ => {
                     if pending.is_empty() {
@@ -298,7 +657,7 @@ impl Runtime {
         if !Self::object_supported_by_eval_stmt(&resolved_obj) {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "eval: need a function call or a resolved numeric expression (+, -, *, /, powers)"
+                "eval: need a function call, numeric expression (+ - * / ^), or matrix ++ -- ** *. ^^ / matrix literal"
                     .to_string(),
                 None,
                 vec![],
