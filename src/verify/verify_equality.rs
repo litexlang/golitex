@@ -542,6 +542,13 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::SeqSet(left_s), Obj::SeqSet(right_s)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    left_s.set.as_ref(),
+                    right_s.set.as_ref(),
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::FiniteSeqListObj(left_v), Obj::FiniteSeqListObj(right_v)) => self
                 .verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
                     &left_v.objs,

@@ -65,6 +65,7 @@ impl Runtime {
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
             Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
+            Obj::SeqSet(x) => self.verify_seq_set_well_defined(x, verify_state),
             Obj::FiniteSeqListObj(x) => {
                 self.verify_finite_seq_list_obj_well_defined(x, verify_state)
             }
@@ -1170,6 +1171,28 @@ impl Runtime {
                         "finite_seq_set: length argument {} is not verified in N_pos",
                         x.n
                     ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    fn verify_seq_set_well_defined(
+        &mut self,
+        x: &SeqSet,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        let is_set_fact = IsSetFact::new((*x.set).clone(), default_line_file()).into();
+        let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
+        if set_ok.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!("seq: argument {} is not a set", x.set),
                     default_line_file(),
                     None,
                     vec![],

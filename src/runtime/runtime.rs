@@ -456,6 +456,22 @@ impl Runtime {
         )
     }
 
+    pub fn seq_set_to_fn_set(&self, ss: &SeqSet, _line_file: LineFile) -> FnSet {
+        let param = format!(
+            "{}{}",
+            DEFAULT_MANGLED_FN_PARAM_PREFIX,
+            self.generate_random_unused_name()
+        );
+        FnSet::new(
+            vec![ParamGroupWithSet::new(
+                vec![param.clone()],
+                StandardSet::NPos.into(),
+            )],
+            vec![],
+            (*ss.set).clone(),
+        )
+    }
+
     /// Same mangling as `parse_fn_set`: surface `x` becomes stored `__x`, etc.
     pub fn finite_seq_set_to_fn_set_from_surface_dom_param(
         &self,
