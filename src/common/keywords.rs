@@ -52,6 +52,7 @@ pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
 pub const FINITE_SEQ: &str = "finite_seq";
+pub const MATRIX: &str = "matrix";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
 pub const EXIST: &str = "exist";
@@ -183,6 +184,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         PROJ,
         COUNT,
         FINITE_SEQ,
+        MATRIX,
         RANGE,
         CLOSED_RANGE,
         EXIST,

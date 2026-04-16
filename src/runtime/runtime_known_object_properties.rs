@@ -90,6 +90,15 @@ impl Runtime {
         None
     }
 
+    pub fn get_obj_equal_to_matrix_list(&self, name: &str) -> Option<MatrixListObj> {
+        for env in self.iter_environments_from_top() {
+            if let Some((known_matrix, _)) = env.known_objs_equal_to_matrix_list.get(name) {
+                return Some(known_matrix.clone());
+            }
+        }
+        None
+    }
+
     pub fn get_object_equal_to_tuple(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
             if let Some(cart) = env.known_objs_equal_to_tuple.get(name) {

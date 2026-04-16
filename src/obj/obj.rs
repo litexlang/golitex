@@ -44,6 +44,20 @@ pub enum Obj {
     StandardSet(StandardSet),
     FamilyObj(FamilyObj),
     StructObj(StructObj),
+    MatrixSet(MatrixSet),
+    MatrixListObj(MatrixListObj),
+}
+
+#[derive(Clone)]
+pub struct MatrixSet {
+    pub set: Box<Obj>,
+    pub row_len: Box<Obj>,
+    pub col_len: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct MatrixListObj {
+    pub rows: Vec<Vec<Box<Obj>>>,
 }
 
 #[derive(Clone)]
@@ -589,6 +603,27 @@ impl FiniteSeqListObj {
     }
 }
 
+impl MatrixSet {
+    pub fn new(set: Obj, row_len: Obj, col_len: Obj) -> Self {
+        MatrixSet {
+            set: Box::new(set),
+            row_len: Box::new(row_len),
+            col_len: Box::new(col_len),
+        }
+    }
+}
+
+impl MatrixListObj {
+    pub fn new(rows: Vec<Vec<Obj>>) -> Self {
+        MatrixListObj {
+            rows: rows
+                .into_iter()
+                .map(|row| row.into_iter().map(Box::new).collect())
+                .collect(),
+        }
+    }
+}
+
 /// 算术运算符优先级：数值越小绑定越紧。^=1, * / %=2, + -=3；非算术=0 不参与括号。
 fn precedence(o: &Obj) -> u8 {
     match o {
@@ -693,6 +728,8 @@ impl Obj {
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqListObj(x) => write!(f, "{}", x)?,
+            Obj::MatrixSet(x) => write!(f, "{}", x)?,
+            Obj::MatrixListObj(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
@@ -914,6 +951,23 @@ impl Obj {
                     .collect(),
             )
             .into(),
+            Obj::MatrixSet(x) => MatrixSet::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
+                Obj::replace_bound_identifier(*x.row_len, from, to),
+                Obj::replace_bound_identifier(*x.col_len, from, to),
+            )
+            .into(),
+            Obj::MatrixListObj(x) => MatrixListObj::new(
+                x.rows
+                    .into_iter()
+                    .map(|row| {
+                        row.into_iter()
+                            .map(|b| Obj::replace_bound_identifier(*b, from, to))
+                            .collect()
+                    })
+                    .collect(),
+            )
+            .into(),
             Obj::Choose(x) => Choose::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::ObjAtIndex(x) => ObjAtIndex::new(
                 Obj::replace_bound_identifier(*x.obj, from, to),
@@ -1043,6 +1097,41 @@ impl fmt::Display for FiniteSeqListObj {
                 write!(f, "{} ", COMMA)?;
             }
             write!(f, "{}", o)?;
+        }
+        write!(f, "{}", RIGHT_BRACKET)
+    }
+}
+
+impl fmt::Display for MatrixSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            MATRIX,
+            braced_vec_to_string(&vec![
+                self.set.as_ref(),
+                self.row_len.as_ref(),
+                self.col_len.as_ref(),
+            ])
+        )
+    }
+}
+
+impl fmt::Display for MatrixListObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", LEFT_BRACKET)?;
+        for (ri, row) in self.rows.iter().enumerate() {
+            if ri > 0 {
+                write!(f, "{} ", COMMA)?;
+            }
+            write!(f, "{}", LEFT_BRACKET)?;
+            for (ci, o) in row.iter().enumerate() {
+                if ci > 0 {
+                    write!(f, "{} ", COMMA)?;
+                }
+                write!(f, "{}", o)?;
+            }
+            write!(f, "{}", RIGHT_BRACKET)?;
         }
         write!(f, "{}", RIGHT_BRACKET)
     }
@@ -1533,6 +1622,18 @@ impl From<FiniteSeqSet> for Obj {
 impl From<FiniteSeqListObj> for Obj {
     fn from(v: FiniteSeqListObj) -> Self {
         Obj::FiniteSeqListObj(v)
+    }
+}
+
+impl From<MatrixSet> for Obj {
+    fn from(v: MatrixSet) -> Self {
+        Obj::MatrixSet(v)
+    }
+}
+
+impl From<MatrixListObj> for Obj {
+    fn from(v: MatrixListObj) -> Self {
+        Obj::MatrixListObj(v)
     }
 }
 
