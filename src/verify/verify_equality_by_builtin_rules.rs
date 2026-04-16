@@ -694,6 +694,15 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::SeqSet(l), Obj::SeqSet(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[(&l.set, &r.set)]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::MatrixSet(l), Obj::MatrixSet(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.set, &r.set),

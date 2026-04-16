@@ -11,7 +11,8 @@ pub use obj::{
     FamilyObj, FiniteSeqListObj, FiniteSeqSet, FnObj, FnSet, Intersect, ListSet, MatrixAdd,
     MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul,
     Number, Obj,
-    ObjAtIndex, Pow, PowerSet, Proj, Range, SetBuilder, SetDiff, SetMinus, StructObj, Sub, Tuple,
+    ObjAtIndex, Pow, PowerSet, Proj, Range, SeqSet, SetBuilder, SetDiff, SetMinus, StructObj, Sub,
+    Tuple,
     TupleDim, Union,
 };
 pub use standard_set::StandardSet;

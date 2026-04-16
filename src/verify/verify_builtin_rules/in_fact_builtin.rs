@@ -544,6 +544,15 @@ impl Runtime {
                 );
                 self.verify_atomic_fact(&expanded.into(), verify_state)
             }
+            (_, Obj::SeqSet(ss)) => {
+                let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
+                let expanded = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                );
+                self.verify_atomic_fact(&expanded.into(), verify_state)
+            }
             (_, Obj::MatrixSet(ms)) => {
                 let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
                 let expanded = InFact::new(

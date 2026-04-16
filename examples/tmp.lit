@@ -1,24 +1,26 @@
-# Matrix ++: same shape, cell-wise add
-eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]]
+abstract_prop p(a, b)
+abstract_prop q(a, b)
 
-have m matrix(R, 2, 2) = [[1, 0], [0, 1]]
+know:
+    exist a, b, c R st {$p(a, b), $q(b, c)}
+    forall a1, b1, c1 R, a2, b2, c2 R:
+        $p(a1, b1)
+        $q(b1, c1)
+        $p(a2, b2)
+        $q(b2, c2)
+        =>:
+            (a1, b1, c1) = (a2, b2, c2)
 
-# Named matrix ++
-eval m ++ m
+exist_unique a, b, c R st {$p(a, b), $q(b, c)}
 
-# Matrix --: same shape, cell-wise subtract
-eval [[2, 0], [0, 2]] -- [[1, 0], [0, 1]]
+abstract_prop t(a)
 
-# Matrix **: columns of left = rows of right
-# [[1,2],[0,1]] * [[1,0],[1,1]] = [[3,2],[1,1]]
-eval [[1, 2], [0, 1]] ** [[1, 0], [1, 1]]
+know:
+    exist a R st {$t(a)}
+    forall a1, a2 R:
+        $t(a1)
+        $t(a2)
+        =>:
+            a1 = a2
 
-# *. : scalar (left) times matrix (right)
-eval 3 *. [[1, 2], [4, 5]]
-
-# ^^ : square matrix to power n (n in N_pos)
-eval [[2, 0], [0, 2]] ^^ 2
-
-# Named identity: ** and scalar
-eval m ** m
-eval 2 *. m
+exist_unique a R st {$t(a)}
