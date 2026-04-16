@@ -147,6 +147,12 @@ impl ByFiniteSeqSetStmt {
     }
 }
 
+impl ByMatrixSetStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByMatrixSetStmt".to_string()
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAbstractPropStmt".to_string()

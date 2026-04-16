@@ -53,4 +53,28 @@ impl Runtime {
             )))),
         }
     }
+
+    /// `by matrix: matrix(S, r, c)` — expand to the corresponding `fn` set.
+    pub fn parse_by_matrix_set_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(MATRIX)?;
+        tb.skip_token(COLON)?;
+        let obj = self.parse_obj(tb)?;
+        let line_file = tb.line_file.clone();
+        match obj {
+            Obj::MatrixSet(ms) => Ok(ByMatrixSetStmt::new(ms, line_file).into()),
+            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "by matrix: expected a matrix(...) object, got `{}`",
+                    obj
+                ),
+                line_file,
+                None,
+                vec![],
+            )))),
+        }
+    }
 }

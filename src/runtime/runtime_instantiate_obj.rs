@@ -59,6 +59,8 @@ impl Runtime {
             Obj::ClosedRange(inner) => self.inst_closed_range(inner, param_to_arg_map),
             Obj::FiniteSeqSet(inner) => self.inst_finite_seq_set(inner, param_to_arg_map),
             Obj::FiniteSeqListObj(inner) => self.inst_finite_seq_list_obj(inner, param_to_arg_map),
+            Obj::MatrixSet(inner) => self.inst_matrix_set(inner, param_to_arg_map),
+            Obj::MatrixListObj(inner) => self.inst_matrix_list_obj(inner, param_to_arg_map),
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map),
             Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map),
             Obj::ObjAtIndex(inner) => self.inst_obj_at_index(inner, param_to_arg_map),
@@ -594,6 +596,35 @@ impl Runtime {
             objs.push(self.inst_obj(o, param_to_arg_map)?);
         }
         Ok(FiniteSeqListObj::new(objs).into())
+    }
+
+    pub fn inst_matrix_set(
+        &self,
+        ms: &MatrixSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(MatrixSet::new(
+            self.inst_obj(&ms.set, param_to_arg_map)?,
+            self.inst_obj(&ms.row_len, param_to_arg_map)?,
+            self.inst_obj(&ms.col_len, param_to_arg_map)?,
+        )
+        .into())
+    }
+
+    pub fn inst_matrix_list_obj(
+        &self,
+        m: &MatrixListObj,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let mut rows: Vec<Vec<Obj>> = Vec::with_capacity(m.rows.len());
+        for row in m.rows.iter() {
+            let mut inst_row = Vec::with_capacity(row.len());
+            for o in row.iter() {
+                inst_row.push(self.inst_obj(o, param_to_arg_map)?);
+            }
+            rows.push(inst_row);
+        }
+        Ok(MatrixListObj::new(rows).into())
     }
 
     pub fn inst_choose(

@@ -193,6 +193,14 @@ impl Runtime {
                 Obj::FiniteSeqListObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::MatrixSet(a) => match right {
+                Obj::MatrixSet(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::MatrixListObj(a) => match right {
+                Obj::MatrixListObj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::PowerSet(a) => match right {
                 Obj::PowerSet(b) => a.to_string() == b.to_string(),
                 _ => false,

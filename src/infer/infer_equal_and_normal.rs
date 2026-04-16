@@ -173,6 +173,50 @@ impl Runtime {
         Ok(())
     }
 
+    fn infer_equal_fact_matrix_list_from_known_side(
+        &mut self,
+        known_matrix: &MatrixListObj,
+        target_obj: &Obj,
+        equal_fact: &EqualFact,
+        infer_result: &mut InferResult,
+    ) -> Result<(), RuntimeError> {
+        let lf = equal_fact.line_file.clone();
+        let Some(head_atom) = atom_for_fn_obj_application_head(target_obj) else {
+            self.store_known_matrix_list_obj(
+                &target_obj.to_string(),
+                known_matrix.clone(),
+                lf,
+            );
+            return Ok(());
+        };
+        for (ri, row) in known_matrix.rows.iter().enumerate() {
+            for (ci, boxed_elt) in row.iter().enumerate() {
+                let lhs: Obj = FnObj::new(
+                    head_atom.clone(),
+                    vec![vec![
+                        Box::new(Number::new((ri + 1).to_string()).into()),
+                        Box::new(Number::new((ci + 1).to_string()).into()),
+                    ]],
+                )
+                .into();
+                let indexed_eq: Fact =
+                    EqualFact::new(lhs, (**boxed_elt).clone(), lf.clone()).into();
+                self.store_inferred_fact_and_record_result(
+                    indexed_eq,
+                    equal_fact,
+                    infer_result,
+                    "matrix literal index equality",
+                )?;
+            }
+        }
+        self.store_known_matrix_list_obj(
+            &target_obj.to_string(),
+            known_matrix.clone(),
+            lf,
+        );
+        Ok(())
+    }
+
     fn infer_equal_fact_by_finite_seq_list(
         &mut self,
         equal_fact: &EqualFact,
@@ -204,6 +248,37 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    fn infer_equal_fact_by_matrix_list(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+
+        if let Obj::MatrixListObj(m) = &equal_fact.left {
+            if !matches!(&equal_fact.right, Obj::MatrixListObj(_)) {
+                self.infer_equal_fact_matrix_list_from_known_side(
+                    m,
+                    &equal_fact.right,
+                    equal_fact,
+                    &mut infer_result,
+                )?;
+            }
+        }
+
+        if let Obj::MatrixListObj(m) = &equal_fact.right {
+            if !matches!(&equal_fact.left, Obj::MatrixListObj(_)) {
+                self.infer_equal_fact_matrix_list_from_known_side(
+                    m,
+                    &equal_fact.left,
+                    equal_fact,
+                    &mut infer_result,
+                )?;
+            }
+        }
+
+        Ok(infer_result)
+    }
+
     /// Infer from equality by syncing known calculated values.
     /// Example: from `a = 1 + 2`, remember `a -> 3`.
     pub fn infer_equal_fact(
@@ -220,6 +295,8 @@ impl Runtime {
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact)?);
         infer_result
             .new_infer_result_inside(self.infer_equal_fact_by_finite_seq_list(equal_fact)?);
+        infer_result
+            .new_infer_result_inside(self.infer_equal_fact_by_matrix_list(equal_fact)?);
 
         Ok(infer_result)
     }
