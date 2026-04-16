@@ -65,6 +65,9 @@ impl Runtime {
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
             Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
+            Obj::FiniteSeqListObj(x) => {
+                self.verify_finite_seq_list_obj_well_defined(x, verify_state)
+            }
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
@@ -1145,13 +1148,13 @@ impl Runtime {
                 ),
             )));
         }
-        let n_in_npos = InFact::new(
+        let n_in_n_pos = InFact::new(
             (*x.n).clone(),
             StandardSet::NPos.into(),
             default_line_file(),
         )
         .into();
-        let n_ok = self.verify_atomic_fact(&n_in_npos, verify_state)?;
+        let n_ok = self.verify_atomic_fact(&n_in_n_pos, verify_state)?;
         if n_ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new(
@@ -1165,6 +1168,17 @@ impl Runtime {
                     vec![],
                 ),
             )));
+        }
+        Ok(())
+    }
+
+    fn verify_finite_seq_list_obj_well_defined(
+        &mut self,
+        x: &FiniteSeqListObj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        for o in x.objs.iter() {
+            self.verify_obj_well_defined_and_store_cache(o, verify_state)?;
         }
         Ok(())
     }

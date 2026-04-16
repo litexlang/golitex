@@ -481,8 +481,31 @@ impl Runtime {
             (_, Obj::FamilyObj(family_ty)) => {
                 self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
             }
+            (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
+                let lf = in_fact.line_file.clone();
+                let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
+                let len_eq_n: AtomicFact =
+                    EqualFact::new(len_obj, (*fs.n).clone(), lf.clone()).into();
+                if !self.verify_atomic_fact(&len_eq_n, verify_state)?.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                for o in list.objs.iter() {
+                    let f: AtomicFact =
+                        InFact::new((**o).clone(), (*fs.set).clone(), lf.clone()).into();
+                    if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                        &f,
+                        verify_state,
+                    )? {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                }
+                Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "finite_seq list: length equals n and each entry in co-domain",
+                ))
+            }
             (_, Obj::FiniteSeqSet(fs)) => {
-                let fn_set = fs.to_fn_set(in_fact.line_file.clone());
+                let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
                 let expanded = InFact::new(
                     in_fact.element.clone(),
                     fn_set.into(),

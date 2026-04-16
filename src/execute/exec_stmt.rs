@@ -38,6 +38,7 @@ impl Runtime {
             Stmt::ByStructStmt(s) => self.exec_by_struct_stmt(s),
             Stmt::ByTuple(s) => self.exec_by_tuple_stmt(s),
             Stmt::ByFnSetStmt(s) => self.exec_by_fn_set_stmt(s),
+            Stmt::ByFiniteSeqSetStmt(s) => self.exec_by_finite_seq_set_stmt(s),
         }
     }
 

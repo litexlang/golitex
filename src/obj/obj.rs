@@ -38,6 +38,7 @@ pub enum Obj {
     Range(Range),
     ClosedRange(ClosedRange),
     FiniteSeqSet(FiniteSeqSet),
+    FiniteSeqListObj(FiniteSeqListObj),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
@@ -45,12 +46,6 @@ pub enum Obj {
     StructObj(StructObj),
 }
 
-#[derive(Clone)]
-pub struct FiniteSeqListObj {
-    pub objs: Vec<Box<Obj>>,
-}
-
-/// Instantiated family type: `family` name followed by argument objects (often sets).
 #[derive(Clone)]
 pub struct FamilyObj {
     pub name: IdentifierOrIdentifierWithMod,
@@ -127,6 +122,12 @@ pub struct ClosedRange {
 pub struct FiniteSeqSet {
     pub set: Box<Obj>,
     pub n: Box<Obj>,
+}
+
+/// Literal `[a, b, ...]` as a finite sequence value (for membership in `finite_seq(s, n)`).
+#[derive(Clone)]
+pub struct FiniteSeqListObj {
+    pub objs: Vec<Box<Obj>>,
 }
 
 #[derive(Clone)]
@@ -578,22 +579,13 @@ impl FiniteSeqSet {
             n: Box::new(n),
         }
     }
+}
 
-    pub fn to_fn_set(&self, line_file: LineFile) -> FnSet {
-        let param = "x".to_string();
-        FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec![param.clone()],
-                StandardSet::NPos.into(),
-            )],
-            vec![AtomicFact::from(LessEqualFact::new(
-                param.into(),
-                (*self.n).clone(),
-                line_file,
-            ))
-            .into()],
-            (*self.set).clone(),
-        )
+impl FiniteSeqListObj {
+    pub fn new(objs: Vec<Obj>) -> Self {
+        FiniteSeqListObj {
+            objs: objs.into_iter().map(Box::new).collect(),
+        }
     }
 }
 
@@ -700,6 +692,7 @@ impl Obj {
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
+            Obj::FiniteSeqListObj(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
@@ -914,6 +907,13 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.n, from, to),
             )
             .into(),
+            Obj::FiniteSeqListObj(x) => FiniteSeqListObj::new(
+                x.objs
+                    .into_iter()
+                    .map(|b| Obj::replace_bound_identifier(*b, from, to))
+                    .collect(),
+            )
+            .into(),
             Obj::Choose(x) => Choose::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::ObjAtIndex(x) => ObjAtIndex::new(
                 Obj::replace_bound_identifier(*x.obj, from, to),
@@ -1032,6 +1032,19 @@ impl fmt::Display for FiniteSeqSet {
             FINITE_SEQ,
             braced_vec_to_string(&vec![self.set.as_ref(), self.n.as_ref()])
         )
+    }
+}
+
+impl fmt::Display for FiniteSeqListObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", LEFT_BRACKET)?;
+        for (i, o) in self.objs.iter().enumerate() {
+            if i > 0 {
+                write!(f, "{} ", COMMA)?;
+            }
+            write!(f, "{}", o)?;
+        }
+        write!(f, "{}", RIGHT_BRACKET)
     }
 }
 
@@ -1514,6 +1527,12 @@ impl From<ClosedRange> for Obj {
 impl From<FiniteSeqSet> for Obj {
     fn from(v: FiniteSeqSet) -> Self {
         Obj::FiniteSeqSet(v)
+    }
+}
+
+impl From<FiniteSeqListObj> for Obj {
+    fn from(v: FiniteSeqListObj) -> Self {
+        Obj::FiniteSeqListObj(v)
     }
 }
 
