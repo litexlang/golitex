@@ -76,6 +76,7 @@ impl Fact {
                     .into_iter()
                     .map(|x| x.with_new_line_file(line_file.clone()))
                     .collect(),
+                e.is_exist_unique,
                 line_file,
             )),
             Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(
