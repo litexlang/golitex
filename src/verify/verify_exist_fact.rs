@@ -39,13 +39,14 @@ impl Runtime {
             if result.is_true() {
                 return Ok(result);
             }
-        }
 
-        if exist_fact.is_exist_unique {
-            if let Some(proved) = self
-                .try_verify_exist_unique_by_exist_and_uniqueness_forall(exist_fact, verify_state)?
-            {
-                return Ok(proved);
+            if exist_fact.is_exist_unique {
+                if let Some(proved) = self.try_verify_exist_unique_by_exist_and_uniqueness_forall(
+                    exist_fact,
+                    verify_state,
+                )? {
+                    return Ok(proved);
+                }
             }
         }
 
@@ -112,7 +113,11 @@ impl Runtime {
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         if n == 1 {
-            let eq = EqualFact::new(flat_a[0].clone().into(), flat_b[0].clone().into(), lf.clone());
+            let eq = EqualFact::new(
+                flat_a[0].clone().into(),
+                flat_b[0].clone().into(),
+                lf.clone(),
+            );
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
         } else {
             let left_tuple: Obj = Tuple::new(
