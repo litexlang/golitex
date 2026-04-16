@@ -63,6 +63,7 @@ impl Runtime {
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map),
             Obj::ClosedRange(inner) => self.inst_closed_range(inner, param_to_arg_map),
             Obj::FiniteSeqSet(inner) => self.inst_finite_seq_set(inner, param_to_arg_map),
+            Obj::SeqSet(inner) => self.inst_seq_set(inner, param_to_arg_map),
             Obj::FiniteSeqListObj(inner) => self.inst_finite_seq_list_obj(inner, param_to_arg_map),
             Obj::MatrixSet(inner) => self.inst_matrix_set(inner, param_to_arg_map),
             Obj::MatrixListObj(inner) => self.inst_matrix_list_obj(inner, param_to_arg_map),
@@ -639,6 +640,14 @@ impl Runtime {
             self.inst_obj(&fs.n, param_to_arg_map)?,
         )
         .into())
+    }
+
+    pub fn inst_seq_set(
+        &self,
+        ss: &SeqSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(SeqSet::new(self.inst_obj(&ss.set, param_to_arg_map)?).into())
     }
 
     pub fn inst_finite_seq_list_obj(
