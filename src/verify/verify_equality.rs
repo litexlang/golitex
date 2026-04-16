@@ -474,6 +474,13 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::FiniteSeqListObj(left_v), Obj::FiniteSeqListObj(right_v)) => self
+                .verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
+                    &left_v.objs,
+                    &right_v.objs,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Proj(left_proj), Obj::Proj(right_proj)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_proj.set,

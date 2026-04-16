@@ -33,44 +33,38 @@ impl Runtime {
         current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(
-                ParseRuntimeError(RuntimeErrorStruct::new(
- None,
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
                 invalid_name_message,
                 default_line_file(),
                 None,
                 vec![],
             ))
-            .into(),
-            );
+            .into());
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
             if let Some(_) = names_in_scope.get(name) {
-                return Err(
-                    ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                format!("name `{}` is already used", name),
-                current_line_file,
-                None,
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!("name `{}` is already used", name),
+                    current_line_file,
+                    None,
+                    vec![],
+                ))
+                .into());
             }
         }
 
         if self.is_name_used(name) {
-            return Err(
-                ParseRuntimeError(RuntimeErrorStruct::new(
- None,
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
                 format!("name `{}` is already used", name),
                 current_line_file,
                 None,
                 vec![],
             ))
-            .into(),
-            );
+            .into());
         }
 
         Ok(())
@@ -82,44 +76,38 @@ impl Runtime {
         current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_mangled_fn_param_name(name) {
-            return Err(
-                ParseRuntimeError(RuntimeErrorStruct::new(
- None,
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
                 invalid_name_message,
                 default_line_file(),
                 None,
                 vec![],
             ))
-            .into(),
-            );
+            .into());
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
             if let Some(_) = names_in_scope.get(name) {
-                return Err(
-                    ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                format!("name `{}` is already used", name,),
-                current_line_file,
-                None,
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!("name `{}` is already used", name,),
+                    current_line_file,
+                    None,
+                    vec![],
+                ))
+                .into());
             }
         }
 
         if self.is_name_used(name) {
-            return Err(
-                ParseRuntimeError(RuntimeErrorStruct::new(
- None,
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
                 format!("name `{}` is already used", name),
                 current_line_file,
                 None,
                 vec![],
             ))
-            .into(),
-            );
+            .into());
         }
 
         Ok(())
@@ -146,12 +134,12 @@ impl Runtime {
             self.validate_name_and_insert_mangled_fn_param(name, line_file.clone())
                 .map_err(|e| {
                     RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                String::new(),
-                line_file.clone(),
-                Some(e),
-                vec![],
-            )))
+                        None,
+                        String::new(),
+                        line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
                 })?;
         }
         Ok(())
@@ -165,16 +153,14 @@ impl Runtime {
         // 虽然本质上存的是 __param，但param本身也要符合litex命名规则，比如你不能让 param 是 1
         for name in user_written_names {
             if let Err(e) = is_valid_litex_name(name) {
-                return Err(
-                    ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                e,
-                line_file.clone(),
-                None,
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    e,
+                    line_file.clone(),
+                    None,
+                    vec![],
+                ))
+                .into());
             }
         }
 
@@ -382,6 +368,58 @@ impl Runtime {
         self.top_level_env()
             .known_objs_equal_to_cart
             .insert(name.to_string(), (cart, line_file));
+    }
+
+    pub fn store_known_finite_seq_list_obj(
+        &mut self,
+        name: &str,
+        list: FiniteSeqListObj,
+        line_file: LineFile,
+    ) {
+        self.top_level_env()
+            .known_objs_equal_to_finite_seq_list
+            .insert(name.to_string(), (list, line_file));
+    }
+
+    pub fn finite_seq_set_to_fn_set(&self, fs: &FiniteSeqSet, line_file: LineFile) -> FnSet {
+        let param = format!(
+            "{}{}",
+            DEFAULT_MANGLED_FN_PARAM_PREFIX,
+            self.generate_random_unused_name()
+        );
+        FnSet::new(
+            vec![ParamGroupWithSet::new(
+                vec![param.clone()],
+                StandardSet::NPos.into(),
+            )],
+            vec![
+                AtomicFact::from(LessEqualFact::new(param.into(), (*fs.n).clone(), line_file))
+                    .into(),
+            ],
+            (*fs.set).clone(),
+        )
+    }
+
+    /// Same mangling as `parse_fn_set`: surface `x` becomes stored `__x`, etc.
+    pub fn finite_seq_set_to_fn_set_from_surface_dom_param(
+        &self,
+        fs: &FiniteSeqSet,
+        line_file: LineFile,
+        surface_dom_param: &str,
+    ) -> Result<FnSet, RuntimeError> {
+        let params = vec![ParamGroupWithSet::new(
+            vec![surface_dom_param.to_string()],
+            StandardSet::NPos.into(),
+        )];
+        let dom_facts: Vec<OrAndChainAtomicFact> = vec![OrAndChainAtomicFact::AtomicFact(
+            LessEqualFact::new(
+                Identifier::new(surface_dom_param.to_string()).into(),
+                (*fs.n).clone(),
+                line_file,
+            )
+            .into(),
+        )];
+        self.new_fn_set_and_add_mangled_prefix(params, dom_facts, (*fs.set).clone())
     }
 
     pub fn store_well_defined_obj_cache(&mut self, obj: &Obj) {

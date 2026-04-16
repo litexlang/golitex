@@ -73,6 +73,7 @@ pub use crate::obj::Count;
 pub use crate::obj::Cup;
 pub use crate::obj::Div;
 pub use crate::obj::FamilyObj;
+pub use crate::obj::FiniteSeqListObj;
 pub use crate::obj::FiniteSeqSet;
 pub use crate::obj::FieldAccess;
 pub use crate::obj::FieldAccessWithMod;
@@ -165,6 +166,7 @@ pub use crate::stmt::tooling_stmt::ImportStmt;
 pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
+pub use crate::stmt::ByFiniteSeqSetStmt;
 pub use crate::stmt::Stmt;
 pub use crate::verify::VerifyState;
 

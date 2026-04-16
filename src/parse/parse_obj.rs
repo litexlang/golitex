@@ -127,6 +127,20 @@ impl Runtime {
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
+        } else if tb.current_token_is_equal_to(LEFT_BRACKET) {
+            tb.skip_token(LEFT_BRACKET)?;
+            if tb.current_token_is_equal_to(RIGHT_BRACKET) {
+                tb.skip_token(RIGHT_BRACKET)?;
+                Ok(FiniteSeqListObj::new(vec![]).into())
+            } else {
+                let mut objs = vec![self.parse_obj(tb)?];
+                while tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    objs.push(self.parse_obj(tb)?);
+                }
+                tb.skip_token(RIGHT_BRACKET)?;
+                Ok(FiniteSeqListObj::new(objs).into())
+            }
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
             Ok(self.parse_fn_set(tb)?.into())

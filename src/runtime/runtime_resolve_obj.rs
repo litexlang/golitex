@@ -110,11 +110,34 @@ impl Runtime {
             Obj::FiniteSeqSet(fs) => {
                 FiniteSeqSet::new(self.resolve_obj(&fs.set), self.resolve_obj(&fs.n)).into()
             }
+            Obj::FiniteSeqListObj(list) => {
+                let objs: Vec<Obj> = list.objs.iter().map(|o| self.resolve_obj(o)).collect();
+                FiniteSeqListObj::new(objs).into()
+            }
+            Obj::FnObj(fn_obj) => {
+                if fn_obj.body.len() == 1 && fn_obj.body[0].len() == 1 {
+                    let head_key = fn_obj.head.to_string();
+                    if let Some(list) = self.get_obj_equal_to_finite_seq_list(&head_key) {
+                        let arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
+                        if let Some(ix) = self.resolve_obj_to_number(&arg) {
+                            if let Ok(one_based) = ix.normalized_value.parse::<usize>() {
+                                if one_based >= 1 && one_based <= list.objs.len() {
+                                    return (*list.objs[one_based - 1]).clone();
+                                }
+                            }
+                        }
+                    }
+                }
+                if let Some(number) = self.resolve_obj_to_number(obj) {
+                    number.into()
+                } else {
+                    obj.clone()
+                }
+            }
             Obj::Identifier(_)
             | Obj::IdentifierWithMod(_)
             | Obj::FieldAccess(_)
-            | Obj::FieldAccessWithMod(_)
-            | Obj::FnObj(_) => {
+            | Obj::FieldAccessWithMod(_) => {
                 if let Some(number) = self.resolve_obj_to_number(obj) {
                     number.into()
                 } else {
@@ -185,6 +208,17 @@ impl Runtime {
                     }
                     obj.clone()
                 }
+                Obj::FiniteSeqListObj(list) => {
+                    let ix = self.resolve_obj_to_number(&obj_at_index.index);
+                    if let Some(ix) = ix {
+                        if let Ok(one_based) = ix.normalized_value.parse::<usize>() {
+                            if one_based >= 1 && one_based <= list.objs.len() {
+                                return (*list.objs[one_based - 1]).clone();
+                            }
+                        }
+                    }
+                    obj.clone()
+                }
                 _ => {
                     let known_tuple_obj =
                         self.get_obj_equal_to_tuple(&obj_at_index.obj.to_string());
@@ -199,6 +233,18 @@ impl Runtime {
                                 {
                                     return (*known_tuple_obj.args[tuple_index_one_based - 1])
                                         .clone();
+                                }
+                            }
+                        }
+                    }
+                    if let Some(known_list) =
+                        self.get_obj_equal_to_finite_seq_list(&obj_at_index.obj.to_string())
+                    {
+                        let ix = self.resolve_obj_to_number(&obj_at_index.index);
+                        if let Some(ix) = ix {
+                            if let Ok(one_based) = ix.normalized_value.parse::<usize>() {
+                                if one_based >= 1 && one_based <= known_list.objs.len() {
+                                    return (*known_list.objs[one_based - 1]).clone();
                                 }
                             }
                         }

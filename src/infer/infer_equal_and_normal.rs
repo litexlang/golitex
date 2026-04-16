@@ -11,6 +11,16 @@ fn obj_is_infer_literal_zero(obj: &Obj) -> bool {
     }
 }
 
+fn atom_for_fn_obj_application_head(target_obj: &Obj) -> Option<Atom> {
+    match target_obj {
+        Obj::Identifier(i) => Some(i.clone().into()),
+        Obj::IdentifierWithMod(m) => Some(m.clone().into()),
+        Obj::FieldAccess(f) => Some(f.clone().into()),
+        Obj::FieldAccessWithMod(f) => Some(f.clone().into()),
+        _ => None,
+    }
+}
+
 impl Runtime {
     fn store_inferred_fact_and_record_result(
         &mut self,
@@ -123,6 +133,77 @@ impl Runtime {
         Ok(())
     }
 
+    fn infer_equal_fact_finite_seq_list_from_known_side(
+        &mut self,
+        known_list: &FiniteSeqListObj,
+        target_obj: &Obj,
+        equal_fact: &EqualFact,
+        infer_result: &mut InferResult,
+    ) -> Result<(), RuntimeError> {
+        let lf = equal_fact.line_file.clone();
+        let Some(head_atom) = atom_for_fn_obj_application_head(target_obj) else {
+            self.store_known_finite_seq_list_obj(
+                &target_obj.to_string(),
+                known_list.clone(),
+                lf,
+            );
+            return Ok(());
+        };
+        for (i, boxed_elt) in known_list.objs.iter().enumerate() {
+            let idx_one_based = i + 1;
+            let lhs: Obj = FnObj::new(
+                head_atom.clone(),
+                vec![vec![Box::new(Number::new(idx_one_based.to_string()).into())]],
+            )
+            .into();
+            let indexed_eq: Fact =
+                EqualFact::new(lhs, (**boxed_elt).clone(), lf.clone()).into();
+            self.store_inferred_fact_and_record_result(
+                indexed_eq,
+                equal_fact,
+                infer_result,
+                "finite sequence list index equality",
+            )?;
+        }
+        self.store_known_finite_seq_list_obj(
+            &target_obj.to_string(),
+            known_list.clone(),
+            lf,
+        );
+        Ok(())
+    }
+
+    fn infer_equal_fact_by_finite_seq_list(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+
+        if let Obj::FiniteSeqListObj(list) = &equal_fact.left {
+            if !matches!(&equal_fact.right, Obj::FiniteSeqListObj(_)) {
+                self.infer_equal_fact_finite_seq_list_from_known_side(
+                    list,
+                    &equal_fact.right,
+                    equal_fact,
+                    &mut infer_result,
+                )?;
+            }
+        }
+
+        if let Obj::FiniteSeqListObj(list) = &equal_fact.right {
+            if !matches!(&equal_fact.left, Obj::FiniteSeqListObj(_)) {
+                self.infer_equal_fact_finite_seq_list_from_known_side(
+                    list,
+                    &equal_fact.left,
+                    equal_fact,
+                    &mut infer_result,
+                )?;
+            }
+        }
+
+        Ok(infer_result)
+    }
+
     /// Infer from equality by syncing known calculated values.
     /// Example: from `a = 1 + 2`, remember `a -> 3`.
     pub fn infer_equal_fact(
@@ -137,6 +218,8 @@ impl Runtime {
             .new_infer_result_inside(self.infer_equal_fact_and_give_value_to_obj(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_cart(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact)?);
+        infer_result
+            .new_infer_result_inside(self.infer_equal_fact_by_finite_seq_list(equal_fact)?);
 
         Ok(infer_result)
     }

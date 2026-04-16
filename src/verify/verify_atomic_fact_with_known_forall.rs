@@ -342,6 +342,9 @@ impl Runtime {
                 Self::match_arg_when_left_is_dim(left.arg.as_ref(), given_arg)
             }
             Obj::Tuple(ref left) => Self::match_arg_when_left_is_tuple(&left.args, given_arg),
+            Obj::FiniteSeqListObj(ref left) => {
+                Self::match_arg_when_left_is_finite_seq_list(&left.objs, given_arg)
+            },
             Obj::Count(ref left) => {
                 Self::match_arg_when_left_is_count(left.set.as_ref(), given_arg)
             }
@@ -1005,6 +1008,18 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Tuple(ref given) => Self::match_arg_vec_then_merge(left_elements, &given.args),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_finite_seq_list(
+        left_elements: &[Box<Obj>],
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::FiniteSeqListObj(ref given) => {
+                Self::match_arg_vec_then_merge(left_elements, &given.objs)
+            }
             _ => Ok(None),
         }
     }

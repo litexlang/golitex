@@ -58,6 +58,7 @@ impl Runtime {
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map),
             Obj::ClosedRange(inner) => self.inst_closed_range(inner, param_to_arg_map),
             Obj::FiniteSeqSet(inner) => self.inst_finite_seq_set(inner, param_to_arg_map),
+            Obj::FiniteSeqListObj(inner) => self.inst_finite_seq_list_obj(inner, param_to_arg_map),
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map),
             Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map),
             Obj::ObjAtIndex(inner) => self.inst_obj_at_index(inner, param_to_arg_map),
@@ -581,6 +582,18 @@ impl Runtime {
             self.inst_obj(&fs.n, param_to_arg_map)?,
         )
         .into())
+    }
+
+    pub fn inst_finite_seq_list_obj(
+        &self,
+        v: &FiniteSeqListObj,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        let mut objs = Vec::with_capacity(v.objs.len());
+        for o in v.objs.iter() {
+            objs.push(self.inst_obj(o, param_to_arg_map)?);
+        }
+        Ok(FiniteSeqListObj::new(objs).into())
     }
 
     pub fn inst_choose(
