@@ -198,16 +198,17 @@ prove:
         $p0(1, 2)
         impossible $q0(1, 2)
 
-# --- Stmt::ByEnumerateStmt — universal claim proved by enumerating a finite index set ---
+# --- Stmt::ByEnumerateStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Preferred: `by enumerate:` then `prove:` with one forall; legacy: param + list set in the header.
 prove:
     let a R:
         a $in {1, 2}
 
     a = 1 or a = 2
 
-    by enumerate a {1, 2, 3}:
+    by enumerate:
         prove:
-            a < 4
+            forall a {1, 2, 3}:
+                a < 4
 
 # --- Stmt::ByInducStmt — induction on a discrete parameter ---
 prove:
