@@ -2,6 +2,7 @@
 use crate::prelude::*;
 
 mod cases_by_stmt;
+mod closed_range_by_stmt;
 mod contra_by_stmt;
 mod enumerate_by_stmt;
 mod extension_by_stmt;
@@ -32,7 +33,7 @@ impl Runtime {
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
-                    "by: expected cases, contra, enumerate, induc, for, extension, fn, fn set, family, finite_seq, seq, matrix, struct, or tuple after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate (or enumerate closed_range), induc, for, extension, fn, fn set, family, finite_seq, seq, matrix, struct, or tuple after `by`, got `{}`",
                     second_keyword
                 ),
                 tb.line_file.clone(),
