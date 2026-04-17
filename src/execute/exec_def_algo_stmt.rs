@@ -235,10 +235,9 @@ impl Runtime {
         algo_case: &AlgoCase,
         fn_call_obj: &Obj,
     ) -> Fact {
-        let mut case_dom_facts: Vec<ExistOrAndChainAtomicFact> =
-            Vec::with_capacity(requirement_dom_facts.len() + 1);
+        let mut case_dom_facts: Vec<Fact> = Vec::with_capacity(requirement_dom_facts.len() + 1);
         for requirement_dom_fact in requirement_dom_facts.iter() {
-            case_dom_facts.push(requirement_dom_fact.clone());
+            case_dom_facts.push(requirement_dom_fact.clone().to_fact());
         }
         case_dom_facts.push(algo_case.condition.clone().into());
 
@@ -316,7 +315,11 @@ impl Runtime {
         let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file.clone());
         let coverage_forall_fact = ForallFact::new(
             algo_param_defs_with_type.clone(),
-            requirement_dom_facts.to_vec(),
+            requirement_dom_facts
+                .iter()
+                .cloned()
+                .map(ExistOrAndChainAtomicFact::to_fact)
+                .collect(),
             vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
             def_algo_stmt.line_file.clone(),
         )

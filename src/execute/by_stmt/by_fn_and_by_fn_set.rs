@@ -249,8 +249,7 @@ impl Runtime {
         let forall_exist = ForallFact::new(
             ParamDefWithType::new(exist_param_defs_with_type),
             {
-                let mut dom_facts: Vec<ExistOrAndChainAtomicFact> =
-                    Vec::with_capacity(fn_set.dom_facts.len());
+                let mut dom_facts: Vec<Fact> = Vec::with_capacity(fn_set.dom_facts.len());
                 for dom_fact in fn_set.dom_facts.iter() {
                     dom_facts.push(
                         self.inst_or_and_chain_atomic_fact(dom_fact, &original_param_to_exist_obj)

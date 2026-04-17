@@ -1,0 +1,14 @@
+abstract_prop p(a, b, c, d)
+abstract_prop q(a, b)
+
+know:
+    forall a, b R:
+        forall c, d R:
+            $p(a, b, c, d)
+        =>:
+            $q(a, b)
+
+    forall c, d R:
+        $p(1, 2, c, d)
+
+$q(1, 2)

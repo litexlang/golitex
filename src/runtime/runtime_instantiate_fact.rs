@@ -612,7 +612,7 @@ impl Runtime {
         let params_def_with_type = ParamDefWithType::new(groups);
         let mut dom_facts = Vec::with_capacity(forall_fact.dom_facts.len());
         for dom_fact in forall_fact.dom_facts.iter() {
-            dom_facts.push(self.inst_exist_or_and_chain_atomic_fact(dom_fact, param_to_arg_map)?);
+            dom_facts.push(self.inst_fact(dom_fact, param_to_arg_map)?);
         }
         let mut then_facts = Vec::with_capacity(forall_fact.then_facts.len());
         for then_fact in forall_fact.then_facts.iter() {

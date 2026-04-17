@@ -316,8 +316,7 @@ impl Runtime {
                     ParamType::Obj(StandardSet::Z.into()),
                 )];
 
-                let mut dom: Vec<ExistOrAndChainAtomicFact> =
-                    stmt.forall_fn_base_dom_exist_or_facts();
+                let mut dom: Vec<Fact> = stmt.forall_fn_base_dom_exist_or_facts();
 
                 let induc_plus_n =
                     induc_obj_plus_offset(&stmt.induc_from, stmt.special_cases_equal_tos.len())
@@ -363,8 +362,7 @@ impl Runtime {
                     )];
                     let eq = nested.equal_to.clone();
 
-                    let mut dom: Vec<ExistOrAndChainAtomicFact> =
-                        stmt.forall_fn_base_dom_exist_or_facts();
+                    let mut dom: Vec<Fact> = stmt.forall_fn_base_dom_exist_or_facts();
 
                     let induc_plus_n =
                         induc_obj_plus_offset(&stmt.induc_from, stmt.special_cases_equal_tos.len())
@@ -379,7 +377,8 @@ impl Runtime {
                         .into(),
                     );
 
-                    dom.push(nested.case_fact.clone().into());
+                    let c: AndChainAtomicFact = nested.case_fact.clone();
+                    dom.push(c.into());
 
                     let forall_fact: Fact = ForallFact::new(
                         ParamDefWithType::new(param_def),
