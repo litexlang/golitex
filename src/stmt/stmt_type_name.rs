@@ -159,6 +159,12 @@ impl ByMatrixSetStmt {
     }
 }
 
+impl ByEnumerateClosedRangeStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByEnumerateClosedRangeStmt".to_string()
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAbstractPropStmt".to_string()
