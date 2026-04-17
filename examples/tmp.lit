@@ -1,7 +1,1 @@
-by enumerate:
-    prove:
-        forall a {1, 2}:
-            a > 1
-            =>:
-                a = 2
-    do_nothing
+log(2, 8) = log(2, 8)

@@ -36,6 +36,7 @@ impl Runtime {
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
             Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
             Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
+            Obj::Log(log) => self.verify_log_well_defined(log, verify_state),
             Obj::Max(max) => self.verify_max_well_defined(max, verify_state),
             Obj::Min(min) => self.verify_min_well_defined(min, verify_state),
             Obj::Union(x) => self.verify_union_well_defined(x, verify_state),
@@ -433,6 +434,10 @@ impl Runtime {
             self.require_obj_in_r(&m.left, verify_state)?;
             return self.require_obj_in_r(&m.right, verify_state);
         }
+        if let Obj::Log(l) = obj {
+            self.require_obj_in_r(&l.base, verify_state)?;
+            return self.require_obj_in_r(&l.arg, verify_state);
+        }
         let r_obj = StandardSet::R.into();
         let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
@@ -573,6 +578,43 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&abs.arg, verify_state)?;
         self.require_obj_in_r(&abs.arg, verify_state)?;
+        Ok(())
+    }
+
+    fn verify_log_well_defined(
+        &mut self,
+        log: &Log,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&log.base, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&log.arg, verify_state)?;
+        self.require_obj_in_r(&log.base, verify_state)?;
+        self.require_obj_in_r(&log.arg, verify_state)?;
+        let zero: Obj = Number::new("0".to_string()).into();
+        let one: Obj = Number::new("1".to_string()).into();
+        let lf = default_line_file();
+        let checks: [(&str, AtomicFact); 3] = [
+            (
+                "log: base must be > 0",
+                GreaterFact::new((*log.base).clone(), zero.clone(), lf.clone()).into(),
+            ),
+            (
+                "log: argument must be > 0",
+                GreaterFact::new((*log.arg).clone(), zero.clone(), lf.clone()).into(),
+            ),
+            (
+                "log: base must be != 1",
+                NotEqualFact::new((*log.base).clone(), one, lf.clone()).into(),
+            ),
+        ];
+        for (msg, atomic) in checks {
+            let result = self.verify_atomic_fact(&atomic, verify_state)?;
+            if result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(None, msg.to_string(), lf.clone(), None, vec![]),
+                )));
+            }
+        }
         Ok(())
     }
 

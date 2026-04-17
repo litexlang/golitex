@@ -540,17 +540,49 @@ by contra:
 
 ### `by enumerate`
 
-**Meaning.** Prove a universal claim over parameters ranging in **finite list sets** `{ … }`.
+**Meaning.** Prove a `forall` whose parameters range over **finite list sets** `{ … }`. The checker forms the Cartesian product of those lists, assigns each combination to the parameters, and for each tuple runs the same **domain → optional proof → then** flow as **`by for`** (which enumerates integers from `range` / `closed_range` instead of list-set members).
 
-**Syntax.** `by enumerate` *param* *list set* [, … ] `:` `prove` `:` *goals* … optional extra steps.
+**Syntax (preferred).** Same layout as `by for`: header is `by enumerate` `:` (colon right after `enumerate`). The first body block is `prove:` containing **exactly one** nested block, parsed as a single **`forall`** fact.
 
-**Example.**
+- Each `forall` parameter’s type must be a **list set** `{ … }` (the value of each parameter is always one element of that list).
+- The `forall` may use **domain** lines before `=>:` and **then** lines under `=>:`; or omit `=>:` so every line under `forall` is a conclusion (no domain), like ordinary `forall` parsing.
+- **Domain checks** match `by for`: if a domain fact is verified **true**, it is assumed; if **unknown**, the checker may **skip** that tuple when the same “skippable negation” as in `by for` is verified **true**; otherwise the step fails. After domains succeed (or the branch is skipped), optional proof blocks run, then each **then** fact must verify.
+- Further body blocks after `prove:` are proof steps, parsed in a local parsing-time name scope (names do not leak to the file).
+
+**Syntax (legacy).** `by enumerate` *param* *list set* [, … ] `:` `prove` `:` *goals* … optional proof blocks — equivalent to a `forall` with those names and list-set types, **empty domain**, and each `prove` line as a **then** fact.
+
+**Example (preferred).**
 
 ```litex
-have x closed_range(0, 10)
-
-by enumerate closed_range(0, 10): x
+by enumerate:
+    prove:
+        forall a {1, 2}:
+            a = 1 or a = 2
+    do_nothing
 ```
+
+**Example (domain and `=>:`).**
+
+```litex
+by enumerate:
+    prove:
+        forall a {1, 2}:
+            a > 1
+            =>:
+                a = 2
+    do_nothing
+```
+
+**Example (legacy header).**
+
+```litex
+by enumerate x {1, 2}:
+    prove:
+        x = 1 or x = 2
+    do_nothing
+```
+
+Integer **closed_range** membership with literal endpoints uses the separate form **`by enumerate closed_range(…)`** (next section), not list-set enumeration.
 
 ---
 
@@ -627,7 +659,7 @@ forall n Z:
 
 ### `by for`
 
-**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions.
+**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions. For **list sets** `{ … }` instead of ranges, use **`by enumerate`** (same `prove:` / `forall` shape; see above).
 
 **Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps.
 
