@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    /// Resolve a family application to the `equal_to` object after substituting type arguments.
+    // Expand a type-level `FamilyObj` to its `equal_to` set object under the given type arguments.
     pub fn instantiate_family_member_set(
         &mut self,
         family_ty: &FamilyObj,
@@ -47,7 +47,7 @@ impl Runtime {
         self.inst_obj(&def.equal_to, &param_to_arg_map)
     }
 
-    /// 参数声明为 `ParamType::Obj(Obj::FamilyObj(...))` 时：存储 `name ∈` 实例化后的 member set，并走 infer。
+    // Param typed as `FamilyObj`: store `name $in` the instantiated member set and run membership infer.
     pub fn infer_membership_in_family_for_param_binding(
         &mut self,
         name: &str,
@@ -59,7 +59,7 @@ impl Runtime {
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
     }
 
-    /// [`InFact`] 右侧为 `FamilyObj` 时：先实例化为具体 member set，再对 `element ∈ member_set` 做 membership infer。
+    // RHS is `FamilyObj`: instantiate to a concrete set, then infer `element $in` that set.
     pub fn infer_membership_in_family_from_in_fact(
         &mut self,
         in_fact: &InFact,
@@ -74,7 +74,7 @@ impl Runtime {
         self.infer_in_fact(&expanded)
     }
 
-    /// [`InFact`] 右侧为函数空间时：登记 `known_objs_in_fn_sets`（与 satisfy/store 路径可共用此副作用）。
+    // RHS is a function space `FnSet`: record the element in `known_objs_in_fn_sets` (atomic identifiers only).
     pub fn infer_membership_in_fn_set_from_in_fact(
         &mut self,
         in_fact: &InFact,
@@ -102,7 +102,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// [`InFact`] 右侧为内涵集时：推出 `element ∈ param_set` 及实例化后的约束事实。
+    // RHS is set-builder `{ x $in S | ... }`: emit `element $in S` and each defining fact with `x := element`.
     pub fn infer_membership_in_set_builder_from_in_fact(
         &mut self,
         in_fact: &InFact,
@@ -148,16 +148,17 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// Infer consequences from membership facts `x in S`.
-    /// Example: `x in {1,2}` infers `x = 1 or x = 2`.
+    // Membership `x $in S`: unfold `S` into stored facts (disjunction, bounds, predicate instances, …).
     pub(in crate::infer) fn infer_in_fact(
         &mut self,
         in_fact: &InFact,
     ) -> Result<InferResult, RuntimeError> {
         match &in_fact.set {
+            // Function space: side table `known_objs_in_fn_sets` for typing/satisfaction later.
             Obj::FnSet(fn_set_with_dom) => {
                 self.infer_membership_in_fn_set_from_in_fact(in_fact, fn_set_with_dom)
             }
+            // Finite enum set: `a $in {1,2}` => fact `(a = 1) or (a = 2)`.
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
                     return Ok(InferResult::new());
@@ -181,9 +182,11 @@ impl Runtime {
                 self.store_fact_without_well_defined_verified_and_infer(or_fact)?;
                 Ok(infer_result)
             }
+            // Set comprehension: membership in parameter domain plus instantiated filter facts.
             Obj::SetBuilder(set_builder) => {
                 self.infer_membership_in_set_builder_from_in_fact(in_fact, set_builder)
             }
+            // Cartesian product: element is an n-tuple with matching dimension; bind tuple/cart metadata.
             Obj::Cart(cart) => {
                 if cart.args.len() < 2 {
                     return Ok(InferResult::new());
@@ -218,16 +221,19 @@ impl Runtime {
 
                 Ok(infer_result)
             }
+            // Half-open integer interval: `i $in range(a,b)` => `i $in Z`, `a <= i`, `i < b`.
             Obj::Range(r) => {
                 let start = (*r.start).clone();
                 let end = (*r.end).clone();
                 self.infer_in_fact_element_in_integer_interval(in_fact, start, end, false)
             }
+            // Closed integer interval: `i $in closed_range(a,b)` => `i $in Z`, `a <= i`, `i <= b`.
             Obj::ClosedRange(c) => {
                 let start = (*c.start).clone();
                 let end = (*c.end).clone();
                 self.infer_in_fact_element_in_integer_interval(in_fact, start, end, true)
             }
+            // Strictly positive number sets: `x $in R_pos` (etc.) => `0 < x`.
             Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::RPos)
             | Obj::StandardSet(StandardSet::NPos) => {
@@ -242,6 +248,7 @@ impl Runtime {
                 )?;
                 Ok(infer_result)
             }
+            // Strictly negative rays: `x $in R_neg` (etc.) => `x < 0`.
             Obj::StandardSet(StandardSet::QNeg)
             | Obj::StandardSet(StandardSet::ZNeg)
             | Obj::StandardSet(StandardSet::RNeg) => {
@@ -256,6 +263,7 @@ impl Runtime {
                 )?;
                 Ok(infer_result)
             }
+            // Nonzero: `x $in R_nz` (etc.) => `x != 0`.
             Obj::StandardSet(StandardSet::QNz)
             | Obj::StandardSet(StandardSet::ZNz)
             | Obj::StandardSet(StandardSet::RNz) => {
@@ -270,6 +278,7 @@ impl Runtime {
                 )?;
                 Ok(infer_result)
             }
+            // Full `N`, `Z`, `Q`, `R`: no extra atomic facts inferred here.
             Obj::StandardSet(StandardSet::N)
             | Obj::StandardSet(StandardSet::Q)
             | Obj::StandardSet(StandardSet::Z)
@@ -277,6 +286,7 @@ impl Runtime {
             Obj::FamilyObj(family_obj) => {
                 self.infer_membership_in_family_from_in_fact(in_fact, family_obj)
             }
+            // Finite sequence space: desugar to `FnSet`, then same as function-space membership.
             Obj::FiniteSeqSet(fs) => {
                 let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
                 let mut infer_result =
@@ -292,6 +302,7 @@ impl Runtime {
                 );
                 Ok(infer_result)
             }
+            // General sequence set: desugar to `FnSet` + store expanded `InFact`.
             Obj::SeqSet(ss) => {
                 let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
                 let mut infer_result =
@@ -307,6 +318,7 @@ impl Runtime {
                 );
                 Ok(infer_result)
             }
+            // Matrix set: desugar to `FnSet` + store expanded `InFact`.
             Obj::MatrixSet(ms) => {
                 let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
                 let mut infer_result =
@@ -322,11 +334,12 @@ impl Runtime {
                 );
                 Ok(infer_result)
             }
+            // Other set forms: no membership unfold on this path.
             _ => Ok(InferResult::new()),
         }
     }
 
-    // range(a,b): a <= i and i < b; closed_range(a,b): a <= i and i <= b; also i in Z.
+    // Shared integer interval body: always `element $in Z`, lower `start <= element`, upper strict or closed.
     fn infer_in_fact_element_in_integer_interval(
         &mut self,
         in_fact: &InFact,

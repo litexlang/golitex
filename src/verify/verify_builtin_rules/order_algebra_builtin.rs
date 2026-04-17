@@ -1,5 +1,9 @@
 // Structural order on R (+, -, *, /) moved from Lit `BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES`.
 // Called from `verify_order_atomic_fact_numeric_builtin_only` before the `0 <=` cone rules.
+//
+// Multiplication monotonicity on R: for fixed k, t |-> k*t preserves non-strict order when 0 <= k
+// (a <= b => k*a <= k*b with k on the same side of both products), reverses when k <= 0 (b <= a =>
+// k*a <= k*b). Strict: 0 < k and a < b => k*a < k*b; k < 0 and b < a => k*a < k*b.
 
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
@@ -35,6 +39,7 @@ impl Runtime {
         Obj::Number(Number::new("1".to_string()))
     }
 
+    // k*u <= k*v from 0 <= k and u <= v; or k*u <= k*v from k <= 0 and v <= u (order reversal).
     fn try_mul_le_shared_left(
         &mut self,
         x: &Obj,
@@ -75,6 +80,7 @@ impl Runtime {
         Ok(None)
     }
 
+    // k*u < k*v from 0 < k and u < v; or k*u < k*v from k < 0 and v < u.
     fn try_mul_lt_shared_left(
         &mut self,
         x: &Obj,
@@ -178,8 +184,8 @@ impl Runtime {
                     mr.right.as_ref(),
                     lf,
                     atomic_fact,
-                    "x * u <= x * v from 0 <= x and u <= v",
-                    "x * u <= x * v from x <= 0 and v <= u",
+                    "k * a <= k * b from 0 <= k and a <= b",
+                    "k * a <= k * b from k <= 0 and b <= a",
                 )? {
                     return Ok(Some(r));
                 }
@@ -191,8 +197,8 @@ impl Runtime {
                     mr.left.as_ref(),
                     lf,
                     atomic_fact,
-                    "u * x <= v * x from 0 <= x and u <= v",
-                    "u * x <= v * x from x <= 0 and v <= u",
+                    "a * k <= b * k from 0 <= k and a <= b",
+                    "a * k <= b * k from k <= 0 and b <= a",
                 )? {
                     return Ok(Some(r));
                 }
@@ -311,6 +317,7 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
+        let one = Self::literal_one_obj();
 
         if let Obj::Add(add) = &f.right {
             let left_s = f.left.to_string();
@@ -336,6 +343,28 @@ impl Runtime {
             }
         }
 
+        if let Obj::Mul(m) = &f.right {
+            if m.right.to_string() == f.left.to_string() {
+                let g0 = LessFact::new(z.clone(), f.left.clone(), lf.clone()).into();
+                let g1 = LessFact::new(one, m.left.as_ref().clone(), lf.clone()).into();
+                let r0 = self.verify_order_subgoal(g0)?;
+                if !r0.is_true() {
+                    return Ok(None);
+                }
+                let r1 = self.verify_order_subgoal(g1)?;
+                if !r1.is_true() {
+                    return Ok(None);
+                }
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a < b * a from 0 < a and 1 < b".to_string(),
+                        vec![r0, r1],
+                    ),
+                )));
+            }
+        }
+
         if let (Obj::Mul(ml), Obj::Mul(mr)) = (&f.left, &f.right) {
             if ml.left.to_string() == mr.left.to_string() {
                 if let Some(r) = self.try_mul_lt_shared_left(
@@ -344,8 +373,8 @@ impl Runtime {
                     mr.right.as_ref(),
                     lf,
                     atomic_fact,
-                    "x * u < x * v from 0 < x and u < v",
-                    "x * u < x * v from x < 0 and v < u",
+                    "k * a < k * b from 0 < k and a < b",
+                    "k * a < k * b from k < 0 and b < a",
                 )? {
                     return Ok(Some(r));
                 }
@@ -357,8 +386,8 @@ impl Runtime {
                     mr.left.as_ref(),
                     lf,
                     atomic_fact,
-                    "u * x < v * x from 0 < x and u < v",
-                    "u * x < v * x from x < 0 and v < u",
+                    "a * k < b * k from 0 < k and a < b",
+                    "a * k < b * k from k < 0 and b < a",
                 )? {
                     return Ok(Some(r));
                 }
