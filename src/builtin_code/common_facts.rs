@@ -54,4 +54,9 @@ know:
 
     forall a R_pos, b R, c R:
         a^(b+c) = a^b * a^c
+    
+    forall a R_pos, b R_pos:
+        a != 1
+        =>:
+            a ^ (log(a, b)) = b
 "#;
