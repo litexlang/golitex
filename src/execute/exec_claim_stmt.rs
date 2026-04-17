@@ -30,12 +30,32 @@ impl Runtime {
                     }
 
                     let mut inside_results = vec![];
-                    for proof_stmt in stmt.proof.iter() {
+                    let proof_len = stmt.proof.len();
+                    for (proof_index, proof_stmt) in stmt.proof.iter().enumerate() {
                         let result = rt.exec_stmt(proof_stmt)?;
+                        if result.is_unknown() {
+                            return Err(
+                                UnknownRuntimeError(RuntimeErrorStruct::new(
+                                    Some(proof_stmt.clone()),
+                                    format!(
+                                        "claim failed: proof step {}/{} is unknown: `{}`\n{}",
+                                        proof_index + 1,
+                                        proof_len,
+                                        proof_stmt,
+                                        result.body_string()
+                                    ),
+                                    proof_stmt.line_file(),
+                                    None,
+                                    vec![],
+                                ))
+                                .into(),
+                            );
+                        }
                         inside_results.push(result);
                     }
 
-                    for then_fact in forall_fact.then_facts.iter() {
+                    let then_count = forall_fact.then_facts.len();
+                    for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
                         let result = rt.verify_exist_or_and_chain_atomic_fact(
                             then_fact,
                             &VerifyState::new(0, false),
@@ -43,13 +63,20 @@ impl Runtime {
                         if result.is_unknown() {
                             return Err(
                                 UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(stmt.fact.clone().into_stmt()),
-                format!("claim failed: cannot prove `{}`", stmt.fact),
-                stmt.line_file.clone(),
-                None,
-                vec![],
-            ))
-            .into(),
+                                    Some(Stmt::Fact(then_fact.clone().to_fact())),
+                                    format!(
+                                        "claim failed: cannot prove goal `{}`; then-clause {}/{} `{}` is unknown\n{}",
+                                        stmt.fact,
+                                        then_index + 1,
+                                        then_count,
+                                        then_fact,
+                                        result.body_string()
+                                    ),
+                                    then_fact.line_file(),
+                                    None,
+                                    vec![],
+                                ))
+                                .into(),
                             );
                         }
 
@@ -70,13 +97,17 @@ impl Runtime {
                 };
                 if non_err_after_body.is_unknown() {
                     return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(stmt.fact.clone().into_stmt()),
-                format!("claim failed: cannot prove `{}`", stmt.fact),
-                stmt.line_file.clone(),
-                None,
-                vec![],
-            ))
-            .into());
+                        Some(stmt.clone().into()),
+                        format!(
+                            "claim failed: cannot prove `{}`\n{}",
+                            stmt.fact,
+                            non_err_after_body.body_string()
+                        ),
+                        stmt.line_file.clone(),
+                        None,
+                        vec![],
+                    ))
+                    .into());
                 }
 
                 let infer_result_after_store =
