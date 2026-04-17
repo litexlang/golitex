@@ -42,7 +42,7 @@ impl ForallFactWithIff {
     pub fn to_two_forall_facts(&self) -> (ForallFact, ForallFact) {
         let f = &self.forall_fact;
         let mut dom_then = f.dom_facts.clone();
-        dom_then.extend(f.then_facts.clone());
+        dom_then.extend(f.then_facts.iter().cloned().map(ExistOrAndChainAtomicFact::to_fact));
         let forall_then_implies_iff = ForallFact::new(
             f.params_def_with_type.clone(),
             dom_then,
@@ -51,7 +51,7 @@ impl ForallFactWithIff {
         );
 
         let mut dom_iff = f.dom_facts.clone();
-        dom_iff.extend(self.iff_facts.clone());
+        dom_iff.extend(self.iff_facts.iter().cloned().map(ExistOrAndChainAtomicFact::to_fact));
         let forall_iff_implies_then = ForallFact::new(
             f.params_def_with_type.clone(),
             dom_iff,

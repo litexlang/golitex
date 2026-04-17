@@ -164,7 +164,7 @@ impl Runtime {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = self
-                .inst_exist_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .inst_fact(dom_fact, &param_to_arg_map)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -177,7 +177,7 @@ impl Runtime {
         }
                 })?;
             let result = self
-                .verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
+                .verify_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(

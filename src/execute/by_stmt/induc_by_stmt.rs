@@ -105,7 +105,7 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )
                 .into(),
-                fact.clone(),
+                fact.clone().to_fact(),
             ],
             vec![next_fact_of_induction_step],
             stmt.line_file.clone(),

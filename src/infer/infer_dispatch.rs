@@ -44,8 +44,15 @@ impl Runtime {
         }
     }
 
-    fn infer_exist_fact(&mut self, _exist_fact: &ExistFact) -> Result<InferResult, RuntimeError> {
-        Ok(InferResult::new())
+    fn infer_exist_fact(&mut self, exist_fact: &ExistFact) -> Result<InferResult, RuntimeError> {
+        if !exist_fact.is_exist_unique || exist_fact.params_def_with_type.number_of_params() == 0 {
+            return Ok(InferResult::new());
+        }
+        let uniq = self.build_exist_unique_uniqueness_forall_fact(exist_fact)?;
+        let inner = self.store_forall_fact_without_well_defined_verified_and_infer(uniq)?;
+        let mut out = InferResult::new();
+        out.new_infer_result_inside(inner);
+        Ok(out)
     }
 
     fn infer_or_fact(&mut self, _or_fact: &OrFact) -> Result<InferResult, RuntimeError> {

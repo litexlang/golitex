@@ -4,7 +4,7 @@ use std::fmt;
 #[derive(Clone)]
 pub struct ForallFact {
     pub params_def_with_type: ParamDefWithType,
-    pub dom_facts: Vec<ExistOrAndChainAtomicFact>,
+    pub dom_facts: Vec<Fact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: LineFile,
 }
@@ -12,7 +12,7 @@ pub struct ForallFact {
 impl ForallFact {
     pub fn new(
         params_def_with_type: ParamDefWithType,
-        dom_facts: Vec<ExistOrAndChainAtomicFact>,
+        dom_facts: Vec<Fact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Self {

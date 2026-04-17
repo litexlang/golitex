@@ -92,7 +92,7 @@ impl Runtime {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
 
-            let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::with_capacity(
+            let mut forall_dom_facts: Vec<Fact> = Vec::with_capacity(
                 have_fn_equal_case_by_case_stmt
                     .fn_set_clause
                     .dom_facts

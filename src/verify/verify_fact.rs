@@ -27,19 +27,23 @@ impl Runtime {
             } else {
                 String::new()
             };
-            return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(fact_owned.clone().into_stmt()),
-                unknown_detail.clone(),
-                line_file.clone(),
-                Some(RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new(
-                    Some(fact_owned.into_stmt()),
-                    String::new(),
-                    line_file,
-                    None,
+            return Err(RuntimeError::from(VerifyRuntimeError(
+                RuntimeErrorStruct::new(
+                    Some(fact_owned.clone().into_stmt()),
+                    unknown_detail.clone(),
+                    line_file.clone(),
+                    Some(RuntimeError::from(UnknownRuntimeError(
+                        RuntimeErrorStruct::new(
+                            Some(fact_owned.into_stmt()),
+                            String::new(),
+                            line_file,
+                            None,
+                            vec![],
+                        ),
+                    ))),
                     vec![],
-                )))),
-                vec![],
-            ))));
+                ),
+            )));
         } else {
             Ok(result)
         }

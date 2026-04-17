@@ -47,13 +47,13 @@ impl Runtime {
     ) -> Result<
         (
             ParamDefWithType,
-            Vec<ExistOrAndChainAtomicFact>,
+            Vec<Fact>,
             Vec<Vec<String>>,
         ),
         RuntimeError,
     > {
         let mut type_groups: Vec<ParamGroupWithParamType> = Vec::new();
-        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        let mut dom_facts: Vec<Fact> = Vec::new();
         let mut layers: Vec<Vec<String>> = Vec::new();
 
         for pg in clause.params_def_with_set.iter() {
@@ -63,7 +63,8 @@ impl Runtime {
             ));
         }
         for d in clause.dom_facts.iter() {
-            dom_facts.push(d.clone().into());
+            let f: OrAndChainAtomicFact = d.clone();
+            dom_facts.push(f.into());
         }
         layers.push(ParamGroupWithSet::collect_param_names(
             &clause.params_def_with_set,
@@ -103,7 +104,8 @@ impl Runtime {
 
             for d in inner.dom_facts.iter() {
                 let inst = self.inst_or_and_chain_atomic_fact(d, &dem_map)?;
-                dom_facts.push(inst.into());
+                let f: OrAndChainAtomicFact = inst;
+                dom_facts.push(f.into());
             }
 
             let layer_names: Vec<String> = inner

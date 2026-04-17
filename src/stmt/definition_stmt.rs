@@ -454,15 +454,13 @@ impl HaveFnByInducStmt {
     }
 
     /// `forall x Z: ...` 里与 `fn` 定义域一致的那一段：标识符用源码 [`Self::param`]，与 [`Self::fn_user_fn_set_clause`] 的 dom 语义相同。
-    pub fn forall_fn_base_dom_exist_or_facts(&self) -> Vec<ExistOrAndChainAtomicFact> {
-        vec![ExistOrAndChainAtomicFact::AtomicFact(
-            GreaterEqualFact::new(
-                self.param.clone().into(),
-                self.induc_from.clone(),
-                self.line_file.clone(),
-            )
-            .into(),
-        )]
+    pub fn forall_fn_base_dom_exist_or_facts(&self) -> Vec<Fact> {
+        vec![GreaterEqualFact::new(
+            self.param.clone().into(),
+            self.induc_from.clone(),
+            self.line_file.clone(),
+        )
+        .into()]
     }
 
     pub fn new(

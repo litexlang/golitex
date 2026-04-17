@@ -63,7 +63,7 @@ impl Runtime {
             ))));
         }
 
-        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        let mut dom_facts: Vec<Fact> = Vec::new();
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         let mut iff_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
@@ -98,7 +98,7 @@ impl Runtime {
         }
 
         for block in tb.body.iter_mut().take(body_len - 2) {
-            dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
+            dom_facts.push(self.parse_fact(block)?);
         }
 
         let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone());
@@ -121,10 +121,10 @@ impl Runtime {
             )))
         })?;
         if last_body.current()? == RIGHT_ARROW {
-            let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
+            let mut dom_facts: Vec<Fact> = vec![];
             let n = tb.body.len();
             for block in tb.body.iter_mut().take(n - 1) {
-                dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
+                dom_facts.push(self.parse_fact(block)?);
             }
             let last = tb.body.last_mut().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(

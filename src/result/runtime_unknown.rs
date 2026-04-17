@@ -3,7 +3,6 @@ use std::fmt;
 
 #[derive(Debug)]
 pub struct StmtUnknown {
-    /// Optional context when unknown is not fully opaque (e.g. failing step of a chain fact).
     pub detail: Option<String>,
 }
 
