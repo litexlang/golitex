@@ -85,9 +85,10 @@ impl Runtime {
             ));
         }
 
-        let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        let mut forall_dom_facts: Vec<Fact> = Vec::new();
         for dom_fact in &restrict_to_ref.dom_facts {
-            forall_dom_facts.push(dom_fact.clone().into());
+            let o: OrAndChainAtomicFact = dom_fact.clone();
+            forall_dom_facts.push(o.into());
         }
 
         let then_facts = Self::build_then_facts_for_original_with_params(
@@ -176,7 +177,7 @@ impl Runtime {
         &mut self,
         restrict_fact: &RestrictFact,
         forall_params: ParamDefWithType,
-        forall_dom_facts: Vec<ExistOrAndChainAtomicFact>,
+        forall_dom_facts: Vec<Fact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         restrict_ret_set: &Obj,
         original_ret_set: &Obj,

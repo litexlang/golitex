@@ -34,7 +34,7 @@ impl ByInducStmt {
             vec![self.param.clone()],
             ParamType::Obj(StandardSet::Z.into()),
         ));
-        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        let mut dom_facts: Vec<Fact> = Vec::new();
 
         dom_facts.push(
             GreaterEqualFact::new(

@@ -63,21 +63,19 @@ impl Runtime {
             let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(
-                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                            "fact `{}` expects {} argument(s), but got {}",
-                            name_string,
-                            expected_len,
-                            actual_args.len()
-                        ),
-                atomic_fact.line_file(),
-                None,
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "fact `{}` expects {} argument(s), but got {}",
+                        name_string,
+                        expected_len,
+                        actual_args.len()
+                    ),
+                    atomic_fact.line_file(),
+                    None,
+                    vec![],
+                ))
+                .into());
             }
         } else {
             let expected_len = if let Some(predicate_definition) =
@@ -89,35 +87,31 @@ impl Runtime {
             {
                 abstract_prop_definition.params.len()
             } else {
-                return Err(
-                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("fact `{}` not defined", name_string),
-                atomic_fact.line_file(),
-                None,
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!("fact `{}` not defined", name_string),
+                    atomic_fact.line_file(),
+                    None,
+                    vec![],
+                ))
+                .into());
             };
 
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(
-                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                            "fact `{}` expects {} argument(s), but got {}",
-                            name_string,
-                            expected_len,
-                            actual_args.len()
-                        ),
-                atomic_fact.line_file(),
-                None,
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "fact `{}` expects {} argument(s), but got {}",
+                        name_string,
+                        expected_len,
+                        actual_args.len()
+                    ),
+                    atomic_fact.line_file(),
+                    None,
+                    vec![],
+                ))
+                .into());
             }
         }
 
@@ -187,16 +181,14 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             if let Err(e) = rt.define_params_with_type(exist_fact.params_def_with_type(), false) {
-                return Err(
-                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "failed to define parameters in exist fact".to_string(),
-                exist_fact.line_file(),
-                Some(e),
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "failed to define parameters in exist fact".to_string(),
+                    exist_fact.line_file(),
+                    Some(e),
+                    vec![],
+                ))
+                .into());
             }
 
             for fact in exist_fact.facts() {
@@ -235,35 +227,29 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         if let Err(e) = self.define_params_with_type(&forall_fact.params_def_with_type, false) {
-            return Err(
-                WellDefinedRuntimeError(RuntimeErrorStruct::new(
+            return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                 None,
                 "failed to define parameters in forall fact".to_string(),
                 forall_fact.line_file.clone(),
                 Some(e),
                 vec![],
             ))
-            .into(),
-            );
+            .into());
         }
 
-        for fact in forall_fact.dom_facts.iter() {
-            if let Err(exec_stmt_error) = self
-                .verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                    fact,
-                    verify_state,
-                )
-            {
-                return Err(
-                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                String::new(),
-                fact.line_file(),
-                Some(exec_stmt_error),
-                vec![],
-            ))
-            .into(),
-                );
+        for dom_fact in forall_fact.dom_facts.iter() {
+            if let Err(exec_stmt_error) = self.verify_fact_well_defined_and_store_and_infer(
+                dom_fact.clone(),
+                verify_state,
+            ) {
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    String::new(),
+                    dom_fact.line_file(),
+                    Some(exec_stmt_error),
+                    vec![],
+                ))
+                .into());
             }
         }
         Ok(())
@@ -282,16 +268,14 @@ impl Runtime {
                     verify_state,
                 )
             {
-                return Err(
-                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                String::new(),
-                fact.line_file(),
-                Some(exec_stmt_error),
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    String::new(),
+                    fact.line_file(),
+                    Some(exec_stmt_error),
+                    vec![],
+                ))
+                .into());
             }
         }
         Ok(())

@@ -14,6 +14,10 @@ impl Runtime {
             return Ok(cached_result);
         }
 
+        if !verify_state.is_round_0() {
+            return Ok(StmtResult::StmtUnknown(StmtUnknown::new()).into());
+        }
+
         self.run_in_local_env(|rt| {
             let mut infer_result = InferResult::new();
             if let Err(e) = rt.define_params_with_type(&forall_fact.params_def_with_type, false) {
@@ -28,12 +32,10 @@ impl Runtime {
             }
 
             for dom_fact in forall_fact.dom_facts.iter() {
-                rt.verify_exist_or_and_chain_atomic_fact_well_defined(dom_fact, verify_state)?;
+                rt.verify_fact_well_defined(dom_fact, verify_state)?;
 
                 let dom_infer_result = rt
-                    .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                        dom_fact.clone(),
-                    )
+                    .store_fact_without_well_defined_verified_and_infer(dom_fact.clone())
                     .map_err(|e| {
                         let message = "failed to assume dom fact in forall".to_string();
                         {
