@@ -235,7 +235,8 @@ impl Runtime {
     // - Chained `+`: `0 <= a + b + …` from `0 <=` on each peeled summand; `0 < a + b + …` from
     //   `(0 < a ∧ 0 <= b) ∨ (0 <= a ∧ 0 < b)` at each binary `+`.
     // - Powers: literal even integer exponent ⇒ `0 <= base^n`; literal integer exponent and `0 <= base`
-    //   (or `0 < base` if exponent < 0) ⇒ `0 <= base^n`; `a * a` with equal factors.
+    //   (or `0 < base` if exponent < 0) ⇒ `0 <= base^n`; `a * a` with equal factors; `0 < base^exp`
+    //   from `0 < base` and `exp in R`.
     // - Products and quotients: `0 <= a * b`, `0 < a * b`, `0 <= a / b` (denominator strictly
     //   positive), `0 < a / b`, each with recursive sub-goals on operands.
     // The Lit environment still records order via differences (`a <= b` iff `0 <= b - a`, etc.) and
@@ -277,6 +278,11 @@ impl Runtime {
         }
         if let Some(result) =
             self.verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
         {
             return Ok(result);
         }
@@ -710,6 +716,57 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 "0 < a^n for even integer n from a != 0".to_string(),
                 vec![neq_result],
+            ),
+        )))
+    }
+
+    // Matches `0 < a^b` / `a^b > 0` when `0 < a` is proved (or known) and `b in R`.
+    fn verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessFact(less_fact) = normalized_fact else {
+            return Ok(None);
+        };
+        if less_fact.left.to_string() != "0" {
+            return Ok(None);
+        }
+        let Obj::Pow(pow_obj) = &less_fact.right else {
+            return Ok(None);
+        };
+        let zero = &less_fact.left;
+        let line_file = &less_fact.line_file;
+        let base = pow_obj.base.as_ref();
+        let base_result = self.verify_zero_order_on_sub_expr(zero, base, false, line_file)?;
+        if !base_result.is_true() {
+            return Ok(None);
+        }
+        let in_r: AtomicFact = InFact::new(
+            (*pow_obj.exponent).clone(),
+            StandardSet::R.into(),
+            line_file.clone(),
+        )
+        .into();
+        let mut in_r_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_r)?;
+        if !in_r_result.is_true() {
+            in_r_result = self.verify_non_equational_atomic_fact(
+                &in_r,
+                &VerifyState::new(0, false),
+                true,
+            )?;
+        }
+        if !in_r_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "0 < a^b from 0 < a and b in R".to_string(),
+                vec![base_result, in_r_result],
             ),
         )))
     }
