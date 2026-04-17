@@ -26,9 +26,7 @@ impl Runtime {
                         })?;
 
                     for dom_fact in forall_fact.dom_facts.iter() {
-                        rt.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                            dom_fact.clone(),
-                        )?;
+                        rt.store_fact_without_well_defined_verified_and_infer(dom_fact.clone())?;
                     }
 
                     let mut inside_results = vec![];
