@@ -131,13 +131,7 @@ know:
             count(closed_range(a, b)) = b - a + 1
 
     forall a, b Z:
-        closed_range(a, b) = {x Z: a <= x <= b}
-
-    forall a, b Z:
         a < b
         =>:
-            count(range(a, b)) = b - a
-    
-    forall a, b Z:
-        range(a, b) = {x Z: a <= x < b}
+            count(range(a, b)) = b - a   
 "#;
