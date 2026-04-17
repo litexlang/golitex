@@ -39,6 +39,43 @@ pub enum Stmt {
     ByFiniteSeqSetStmt(ByFiniteSeqSetStmt),
     BySeqSetStmt(BySeqSetStmt),
     ByMatrixSetStmt(ByMatrixSetStmt),
+    ByEnumerateClosedRangeStmt(ByEnumerateClosedRangeStmt),
+}
+
+#[derive(Clone)]
+pub struct ByEnumerateClosedRangeStmt {
+    pub element: Obj,
+    pub closed_range: ClosedRange,
+    pub line_file: LineFile,
+}
+
+impl fmt::Display for ByEnumerateClosedRangeStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {}{}{}{}, {}{}{}: {}",
+            BY,
+            ENUMERATE,
+            CLOSED_RANGE,
+            LEFT_BRACE,
+            self.closed_range.start,
+            COMMA,
+            self.closed_range.end,
+            RIGHT_BRACE,
+            COLON,
+            self.element
+        )
+    }
+}
+
+impl ByEnumerateClosedRangeStmt {
+    pub fn new(element: Obj, closed_range: ClosedRange, line_file: LineFile) -> Self {
+        ByEnumerateClosedRangeStmt {
+            element,
+            closed_range,
+            line_file,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -149,6 +186,7 @@ impl fmt::Display for Stmt {
             Stmt::ByFiniteSeqSetStmt(x) => write!(f, "{}", x),
             Stmt::BySeqSetStmt(x) => write!(f, "{}", x),
             Stmt::ByMatrixSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByEnumerateClosedRangeStmt(x) => write!(f, "{}", x),
         }
     }
 }
@@ -192,6 +230,7 @@ impl Stmt {
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::BySeqSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByMatrixSetStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -233,6 +272,7 @@ impl Stmt {
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::BySeqSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByMatrixSetStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 }
@@ -450,5 +490,11 @@ impl From<BySeqSetStmt> for Stmt {
 impl From<ByMatrixSetStmt> for Stmt {
     fn from(v: ByMatrixSetStmt) -> Self {
         Stmt::ByMatrixSetStmt(v)
+    }
+}
+
+impl From<ByEnumerateClosedRangeStmt> for Stmt {
+    fn from(v: ByEnumerateClosedRangeStmt) -> Self {
+        Stmt::ByEnumerateClosedRangeStmt(v)
     }
 }
