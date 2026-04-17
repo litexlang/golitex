@@ -61,6 +61,16 @@ exist x R st {x > 0, x < 1}
 
 ---
 
+### Existential with uniqueness (`exist_unique`)
+
+**Meaning.** “There exist values for the parameters such that the brace holds **and** that tuple is unique up to the equalities in the language.” The checker uses a witness `exist` together with a `forall` uniqueness fact already in context (see **`examples/exist_unique.lit`**).
+
+**Syntax.** `exist_unique` *parameter groups* `st` `{` *facts separated by commas* `}` — same header shape as `exist`, with `exist_unique` instead of `exist`.
+
+**Example.** See **`examples/exist_unique.lit`** (needs `exist … st {…}` and a matching uniqueness `forall` in `know`).
+
+---
+
 ### Disjunction (`or`)
 
 **Meaning.** At least one of the disjuncts is true.
@@ -438,6 +448,16 @@ prove:
 
 ---
 
+### `by enumerate closed_range(…)`
+
+**Meaning.** From membership of an object in a **closed interval** with **integer literal** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
+
+**Syntax.** `by enumerate closed_range(` *lo* `,` *hi* `):` *object* — *lo* / *hi* are integer literals (no decimal point); *object* is any expression the parser accepts as an `obj`.
+
+**Example.** **`examples/by_enumerate_closed_range.lit`**.
+
+---
+
 ### `by induc`
 
 **Meaning.** Induction on an integer parameter from a given base. In a local environment, optional proof steps run first; then for each goal the checker verifies the base instance (with *param* := *object*), that *object* lies in `Z`, and that the usual induction-step `forall` (hypothesis *param* ≥ base together with the goal template implies the *param*+1 instance) holds. On success, the corresponding universal fact (`forall` *param* in `Z`, *param* ≥ base ⇒ goals) is stored. You still need a usable induction principle in context (e.g. from `know`).
@@ -509,6 +529,36 @@ by induc param from object:
 **Syntax.** `by family` `:` *object*.
 
 **Example.** **`examples/by_family.lit`**.
+
+---
+
+### `by finite_seq`
+
+**Meaning.** Expand a **`finite_seq(S, n)`** set to the corresponding **`fn`**-space form the checker uses internally (definitional expansion).
+
+**Syntax.** `by finite_seq` `:` *object* — *object* must be literally `finite_seq(...)`.
+
+**Example.** (Use where you have a `finite_seq` value; same pattern as `by seq` / `by matrix`.)
+
+---
+
+### `by seq`
+
+**Meaning.** Expand a **`seq(S)`** set to the corresponding **`fn`**-space form.
+
+**Syntax.** `by seq` `:` *object* — *object* must be literally `seq(...)`.
+
+**Example.** (Use where you have a `seq` value.)
+
+---
+
+### `by matrix`
+
+**Meaning.** Expand a **`matrix(S, r, c)`** set to the corresponding **`fn`**-space form.
+
+**Syntax.** `by matrix` `:` *object* — *object* must be literally `matrix(...)`.
+
+**Example.** (Use where you have a `matrix` value.)
 
 ---
 
@@ -606,7 +656,8 @@ prove:
 | `claim` | Theorem + proof |
 | `prove` | Nested proof block |
 | `witness` | Witness for `exist` or nonempty set |
-| `by` | Proof tactic (`cases`, `contra`, `enumerate`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `struct`, `tuple`) |
+| `exist` / `exist_unique` | Existential facts (latter needs uniqueness in context; see **Existential with uniqueness**) |
+| `by` | Proof tactic (`cases`, `contra`, `enumerate`, `enumerate closed_range(…)`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `finite_seq`, `seq`, `matrix`, `struct`, `tuple`) |
 | `eval` | Run algorithm |
 | `import` | Import module/file |
 | `run_file` | Run a file |
