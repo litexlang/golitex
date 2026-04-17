@@ -8,7 +8,7 @@ pub use atom::{
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
-    FamilyObj, FiniteSeqListObj, FiniteSeqSet, FnObj, FnSet, Intersect, ListSet, MatrixAdd,
+    FamilyObj, FiniteSeqListObj, FiniteSeqSet, FnObj, FnSet, Intersect, ListSet, Log, MatrixAdd,
     MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul,
     Number, Obj,
     ObjAtIndex, Pow, PowerSet, Proj, Range, SeqSet, SetBuilder, SetDiff, SetMinus, StructObj, Sub,

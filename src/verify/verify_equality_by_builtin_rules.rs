@@ -528,6 +528,18 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::Log(l), Obj::Log(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.base, &r.base),
+                    (&l.arg, &r.arg),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::Max(l), Obj::Max(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.left, &r.left),

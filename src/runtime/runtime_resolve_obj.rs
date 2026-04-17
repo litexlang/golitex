@@ -110,6 +110,16 @@ impl Runtime {
                     result
                 }
             }
+            Obj::Log(l) => {
+                let result: Obj =
+                    Log::new(self.resolve_obj(&l.base), self.resolve_obj(&l.arg)).into();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
+                if let Some(calculated_result) = calculated_result {
+                    calculated_result.into()
+                } else {
+                    result
+                }
+            }
             Obj::FiniteSeqSet(fs) => {
                 FiniteSeqSet::new(self.resolve_obj(&fs.set), self.resolve_obj(&fs.n)).into()
             }

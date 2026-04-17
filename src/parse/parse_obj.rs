@@ -625,6 +625,41 @@ impl Runtime {
             })?;
             return Ok(Min::new(left, right).into());
         }
+        if tok == LOG {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "log expects 2 arguments (base, argument)".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let base = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "log expects 2 arguments (base, argument)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            let arg = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "log expects 2 arguments (base, argument)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            return Ok(Log::new(base, arg).into());
+        }
 
         // 多元关键字：吃关键字 + 括号里若干 obj
         if tok == UNION {
