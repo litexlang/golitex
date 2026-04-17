@@ -1,3 +1,6 @@
+use crate::common::count_range_integer::{
+    count_closed_range_integer_endpoints, count_half_open_range_integer_endpoints,
+};
 use crate::prelude::*;
 use crate::rational_expression::evaluate_div::safe_div;
 
@@ -152,6 +155,16 @@ impl Obj {
             },
             Obj::Count(count) => match &*count.set {
                 Obj::ListSet(list_set) => Some(Number::new(list_set.list.len().to_string())),
+                Obj::ClosedRange(cr) => {
+                    let a = cr.start.evaluate_to_normalized_decimal_number()?;
+                    let b = cr.end.evaluate_to_normalized_decimal_number()?;
+                    count_closed_range_integer_endpoints(&a, &b)
+                }
+                Obj::Range(r) => {
+                    let a = r.start.evaluate_to_normalized_decimal_number()?;
+                    let b = r.end.evaluate_to_normalized_decimal_number()?;
+                    count_half_open_range_integer_endpoints(&a, &b)
+                }
                 _ => None,
             },
             _ => None,

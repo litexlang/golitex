@@ -173,6 +173,22 @@ impl Runtime {
                 ))
                 .into(),
             ),
+            Obj::ClosedRange(_) => Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    is_finite_set_fact.clone().into(),
+                    "closed_range_is_finite_set".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            ),
+            Obj::Range(_) => Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    is_finite_set_fact.clone().into(),
+                    "range_is_finite_set".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            ),
             _ => Ok((StmtUnknown::new()).into()),
         }
     }
