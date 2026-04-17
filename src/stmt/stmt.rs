@@ -39,30 +39,38 @@ pub enum Stmt {
     ByFiniteSeqSetStmt(ByFiniteSeqSetStmt),
     BySeqSetStmt(BySeqSetStmt),
     ByMatrixSetStmt(ByMatrixSetStmt),
-    ByClosedRangeStmt(ByClosedRangeStmt),
+    ByEnumerateClosedRangeStmt(ByEnumerateClosedRangeStmt),
 }
 
 #[derive(Clone)]
-pub struct ByClosedRangeStmt {
+pub struct ByEnumerateClosedRangeStmt {
     pub element: Obj,
     pub closed_range: ClosedRange,
     pub line_file: LineFile,
 }
 
-impl fmt::Display for ByClosedRangeStmt {
+impl fmt::Display for ByEnumerateClosedRangeStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let range_obj: Obj = self.closed_range.clone().into();
         write!(
             f,
-            "{} {}{} {} {}{} {}",
-            BY, CLOSED_RANGE, COLON, self.element, FACT_PREFIX, IN, range_obj
+            "{} {} {}{}{}{}, {}{}{}: {}",
+            BY,
+            ENUMERATE,
+            CLOSED_RANGE,
+            LEFT_BRACE,
+            self.closed_range.start,
+            COMMA,
+            self.closed_range.end,
+            RIGHT_BRACE,
+            COLON,
+            self.element
         )
     }
 }
 
-impl ByClosedRangeStmt {
+impl ByEnumerateClosedRangeStmt {
     pub fn new(element: Obj, closed_range: ClosedRange, line_file: LineFile) -> Self {
-        ByClosedRangeStmt {
+        ByEnumerateClosedRangeStmt {
             element,
             closed_range,
             line_file,
@@ -178,7 +186,7 @@ impl fmt::Display for Stmt {
             Stmt::ByFiniteSeqSetStmt(x) => write!(f, "{}", x),
             Stmt::BySeqSetStmt(x) => write!(f, "{}", x),
             Stmt::ByMatrixSetStmt(x) => write!(f, "{}", x),
-            Stmt::ByClosedRangeStmt(x) => write!(f, "{}", x),
+            Stmt::ByEnumerateClosedRangeStmt(x) => write!(f, "{}", x),
         }
     }
 }
@@ -222,7 +230,7 @@ impl Stmt {
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::BySeqSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByMatrixSetStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByClosedRangeStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -264,7 +272,7 @@ impl Stmt {
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::BySeqSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByMatrixSetStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByClosedRangeStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 }
@@ -485,8 +493,8 @@ impl From<ByMatrixSetStmt> for Stmt {
     }
 }
 
-impl From<ByClosedRangeStmt> for Stmt {
-    fn from(v: ByClosedRangeStmt) -> Self {
-        Stmt::ByClosedRangeStmt(v)
+impl From<ByEnumerateClosedRangeStmt> for Stmt {
+    fn from(v: ByEnumerateClosedRangeStmt) -> Self {
+        Stmt::ByEnumerateClosedRangeStmt(v)
     }
 }

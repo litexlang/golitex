@@ -159,9 +159,9 @@ impl ByMatrixSetStmt {
     }
 }
 
-impl ByClosedRangeStmt {
+impl ByEnumerateClosedRangeStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByClosedRangeStmt".to_string()
+        "ByEnumerateClosedRangeStmt".to_string()
     }
 }
 
