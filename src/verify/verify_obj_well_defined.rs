@@ -600,6 +600,10 @@ impl Runtime {
         Ok(())
     }
 
+    // Real pow domain (well-defined check): base>0 and exp in R; or base=0, exp in R and exp>0
+    // (so 0^0 and 0^(non-positive) are out); or exp in Z and base != 0 (integer powers, x^0=1).
+    // Negative base with non-integer real exp stays out. Uses Z + base!=0 instead of exp mod 2 so
+    // rational exponents do not pull Mod(...) into every Or disjunct's WD pass.
     fn verify_pow_well_defined(
         &mut self,
         pow: &Pow,
@@ -609,8 +613,6 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
 
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let two_obj: Obj = Number::new("2".to_string()).into();
-        let exponent_mod_two_obj = Mod::new((*pow.exponent).clone(), two_obj).into();
 
         let positive_base_and_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
@@ -644,7 +646,7 @@ impl Runtime {
             default_line_file(),
         ));
 
-        let even_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
+        let nonzero_base_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
                 InFact::new(
                     (*pow.exponent).clone(),
@@ -652,26 +654,16 @@ impl Runtime {
                     default_line_file(),
                 )
                 .into(),
-                EqualFact::new(exponent_mod_two_obj, zero_obj, default_line_file()).into(),
+                NotEqualFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file()).into(),
             ],
             default_line_file(),
         ));
-
-        let exponent_is_positive_integer = AndChainAtomicFact::AtomicFact(
-            InFact::new(
-                (*pow.exponent).clone(),
-                StandardSet::NPos.into(),
-                default_line_file(),
-            )
-            .into(),
-        );
 
         let pow_domain_or_fact = OrFact::new(
             vec![
                 positive_base_and_real_exponent,
                 zero_base_and_positive_real_exponent,
-                even_integer_exponent,
-                exponent_is_positive_integer,
+                nonzero_base_integer_exponent,
             ],
             default_line_file(),
         );

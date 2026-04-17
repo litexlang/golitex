@@ -74,10 +74,11 @@ impl Obj {
                 let base_number = pow_obj.base.evaluate_to_normalized_decimal_number();
                 let exponent_number = pow_obj.exponent.evaluate_to_normalized_decimal_number();
                 if let (Some(base_number), Some(exponent_number)) = (base_number, exponent_number) {
-                    Some(Number::new(pow_decimal_str_and_normalize(
+                    pow_decimal_str_and_normalize(
                         &base_number.normalized_value,
                         &exponent_number.normalized_value,
-                    )))
+                    )
+                    .map(Number::new)
                 } else {
                     None
                 }
@@ -492,18 +493,18 @@ pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
     normalize_decimal_number_string(&digits_to_string(&current))
 }
 
-/// 仅支持非负整数指数：base^exp，exp 必须为整数（如 "3" 或 "0"），返回字符串
-pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> String {
+// Non-negative integer exponent only; fractional exp => None (no exact decimal fold).
+pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> Option<String> {
     let (exp_int, exp_frac) = parse_decimal_parts(exp);
     if exp_frac.iter().any(|&d| d != 0) {
-        unreachable!("幂运算仅支持整数指数");
+        return None;
     }
     let mut n = 0usize;
     for &d in &exp_int {
         n = n.saturating_mul(10).saturating_add(d as usize);
     }
     if n == 0 {
-        return "1".to_string();
+        return Some("1".to_string());
     }
     let mut acc = "1".to_string();
     let mut b = base.to_string();
@@ -515,7 +516,7 @@ pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> String {
         b = mul_decimal_str_and_normalize(&b, &b);
         e /= 2;
     }
-    normalize_decimal_number_string(&acc)
+    Some(normalize_decimal_number_string(&acc))
 }
 
 fn trim_leading_zeros(d: &[u8]) -> Vec<u8> {

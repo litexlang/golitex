@@ -1,9 +1,12 @@
-forall a R:
-    forall x R:
-        a <= x^2 - 2 * x
-    =>:
-        a <= 1^2 - 2 * 1 = -1
+# Pow (real exponentiation) — intended semantics (reference)
+#
+# - x > 0, y in R: x^y = exp(y * ln(x)) (standard real power).
+# - x != 0, y in Z: algebraic integer power; x^0 = 1 for x != 0.
+# - x = 0, y > 0: often 0^y = 0 (limit-consistent with x -> 0+).
+# - x = 0, y <= 0: undefined in this convention (includes 0^0 — not allowed).
+# - x < 0 with non-integer y: not a single-valued real power in general; use extra
+#   hypotheses (e.g. integer or restricted rational exponents) if needed.
+#
+# Do not treat "y in R_pos and x in R" as a full domain: e.g. (-2)^(1/2) is not real.
 
-know:
-    forall x R:
-        a <= x^2 - 2 * x
+7^(1/2) = 7^(1/2)

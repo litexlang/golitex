@@ -155,7 +155,19 @@ If \(A,B\) are `finite_set` and \(A\subseteq B\), then \(\mathrm{count}(A)\le \m
 
 ---
 
-## 6. How to use this document
+## 6. Exponentiation (`pow`) — well-defined domain (checker)
+
+When the verifier insists an expression is well-defined, `base^exponent` is accepted if **any** of these holds (implemented in `verify_pow_well_defined`):
+
+1. **Positive base, real exponent:** `base > 0` and `exponent ∈ ℝ` (standard \(x^y=\exp(y\ln x)\) on \(\mathbb{R}\)).
+2. **Zero base, strictly positive real exponent:** `base = 0`, `exponent ∈ ℝ`, and `exponent > 0` (so \(0^0\) and non-positive powers of 0 are **not** allowed).
+3. **Integer exponent, nonzero base:** `exponent ∈ ℤ` and `base ≠ 0` (algebraic integer powers, including \(x^0=1\) for \(x\neq 0\)).
+
+This does **not** admit a general real exponent with a negative base (e.g. \((-2)^{1/2}\) in \(\mathbb{R}\)).
+
+---
+
+## 7. How to use this document
 
 - This is a **semantic summary**, not a substitute for the source; if Lit inside the Rust strings disagrees with this file, `src/builtin_code/*.rs` wins.  
 - Section 1.1 and Section 2.5 (difference characterization vs. \(a-b\le 0\)) overlap on purpose so different proof paths in the kernel can reuse the same facts.  
