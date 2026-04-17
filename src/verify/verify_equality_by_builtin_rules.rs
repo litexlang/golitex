@@ -179,6 +179,78 @@ impl Runtime {
         Ok(None)
     }
 
+    fn try_verify_log_identity_equalities(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (log, other) = match (left, right) {
+            (Obj::Log(l), o) => (l, o),
+            (o, Obj::Log(l)) => (l, o),
+            _ => return Ok(None),
+        };
+
+        if let Obj::Pow(p) = log.arg.as_ref() {
+            let base_ok = self.verify_objs_are_equal(
+                p.base.as_ref(),
+                log.base.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?;
+            if base_ok.is_true() {
+                let exp_ok = self.verify_objs_are_equal(
+                    p.exponent.as_ref(),
+                    other,
+                    line_file.clone(),
+                    verify_state,
+                )?;
+                if exp_ok.is_true() {
+                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                        left,
+                        right,
+                        line_file,
+                        "equality: log(a, a^b) = b",
+                    )));
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
+    // log(a, b) = c  iff  a^c = b (when the latter is known or proved by the equality pipeline).
+    fn try_verify_log_equals_by_pow_inverse(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (log, other) = match (left, right) {
+            (Obj::Log(l), o) => (l, o),
+            (o, Obj::Log(l)) => (l, o),
+            _ => return Ok(None),
+        };
+        let pow_obj: Obj = Pow::new((*log.base).clone(), other.clone()).into();
+        let inner = self.verify_objs_are_equal(
+            &pow_obj,
+            log.arg.as_ref(),
+            line_file.clone(),
+            verify_state,
+        )?;
+        if inner.is_true() {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: log(a, b) = c from a^c = b",
+            )));
+        }
+        Ok(None)
+    }
+
     pub fn verify_equality_by_builtin_rules(
         &mut self,
         left: &Obj,
@@ -205,6 +277,24 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_zero_equals_pow_from_base_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_log_identity_equalities(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_log_equals_by_pow_inverse(
             left,
             right,
             line_file.clone(),
