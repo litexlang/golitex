@@ -1,0 +1,9 @@
+forall a R:
+    forall x R:
+        a <= x^2 - 2 * x
+    =>:
+        a <= 1^2 - 2 * 1 = -1
+
+know:
+    forall x R:
+        a <= x^2 - 2 * x

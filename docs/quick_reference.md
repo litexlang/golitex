@@ -47,6 +47,8 @@ prove:
 
 **Meaning.** “There exist values for the parameters such that every fact in the brace holds (∃).”
 
+**Note.** `exist_unique` uses the **same** header and brace shape; the difference is uniqueness (see **Existential with uniqueness**): proving or storing `exist_unique` also involves the matching **`forall`** uniqueness fact.
+
 **Syntax.** `exist` *parameter groups (names and types / sets)* `st` `{` *facts separated by commas* `}`.
 
 **Example.**
@@ -63,7 +65,7 @@ exist x R st {x > 0, x < 1}
 
 ### Existential with uniqueness (`exist_unique`)
 
-**Meaning.** “There exist values for the parameters such that the brace holds **and** that tuple is unique up to the equalities in the language.” The checker uses a witness `exist` together with a `forall` uniqueness fact already in context.
+**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist_unique` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when an `exist_unique` is recorded in the environment, the runtime **also stores** that generated uniqueness **`forall`**.
 
 **Syntax.** `exist_unique` *parameter groups* `st` `{` *facts separated by commas* `}` — same header shape as `exist`, with `exist_unique` instead of `exist`.
 
@@ -465,10 +467,10 @@ exist x, y R st {x > y}
 **Example.**
 
 ```litex
-have s set
+have s finite_set = {1}
 
 witness $is_nonempty_set(s) from 1:
-    know 1 $in s
+    1 $in s
 
 $is_nonempty_set(s)
 ```
@@ -517,11 +519,13 @@ abstract_prop p(a)
 
 have b R, c R
 
+# Assume $p(a + b) implies $p(a) for all a R
 know forall a R:
     $p(a + b)
     =>:
         $p(a)
 
+# Assume $p(c) is false
 know not $p(c)
 
 by contra:
