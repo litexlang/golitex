@@ -119,10 +119,10 @@ impl Runtime {
 
 impl Runtime {
     // Negated domain: one atomic uses `make_reversed`; conjunction uses De Morgan (or of negated atomics).
-    fn negated_domain_fact_for_by_for_skip(dom: &ExistOrAndChainAtomicFact) -> Option<Fact> {
+    fn negated_domain_fact_for_by_for_skip(dom: &Fact) -> Option<Fact> {
         match dom {
-            ExistOrAndChainAtomicFact::AtomicFact(a) => Some(Fact::AtomicFact(a.make_reversed())),
-            ExistOrAndChainAtomicFact::AndFact(and_fact) => {
+            Fact::AtomicFact(a) => Some(Fact::AtomicFact(a.make_reversed())),
+            Fact::AndFact(and_fact) => {
                 if and_fact.facts.is_empty() {
                     return None;
                 }
@@ -131,11 +131,13 @@ impl Runtime {
                     .iter()
                     .map(|f| AndChainAtomicFact::AtomicFact(f.make_reversed()))
                     .collect();
-                Some(OrFact::new(branches, and_fact.line_file.clone()).into())
+                Some(OrFact::new(branches, and_fact.line_file()).into())
             }
-            ExistOrAndChainAtomicFact::ChainFact(_)
-            | ExistOrAndChainAtomicFact::OrFact(_)
-            | ExistOrAndChainAtomicFact::ExistFact(_) => None,
+            Fact::ChainFact(_)
+            | Fact::OrFact(_)
+            | Fact::ExistFact(_)
+            | Fact::ForallFact(_)
+            | Fact::ForallFactWithIff(_) => None,
         }
     }
 
@@ -314,12 +316,9 @@ impl Runtime {
 
         let verify_state = VerifyState::new(0, false);
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
-            let verify_dom_result =
-                self.verify_exist_or_and_chain_atomic_fact(dom_fact, &verify_state)?;
+            let verify_dom_result = self.verify_fact(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
-                self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                    dom_fact.clone(),
-                )?;
+                self.store_fact_without_well_defined_verified_and_infer(dom_fact.clone())?;
             } else if verify_dom_result.is_unknown() {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
                     let verify_negation_result =
