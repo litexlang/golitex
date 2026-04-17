@@ -41,6 +41,7 @@ impl Runtime {
             Stmt::ByFiniteSeqSetStmt(s) => self.exec_by_finite_seq_set_stmt(s),
             Stmt::BySeqSetStmt(s) => self.exec_by_seq_set_stmt(s),
             Stmt::ByMatrixSetStmt(s) => self.exec_by_matrix_set_stmt(s),
+            Stmt::ByClosedRangeStmt(s) => self.exec_by_closed_range_stmt(s),
         }
     }
 

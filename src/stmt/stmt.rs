@@ -39,6 +39,35 @@ pub enum Stmt {
     ByFiniteSeqSetStmt(ByFiniteSeqSetStmt),
     BySeqSetStmt(BySeqSetStmt),
     ByMatrixSetStmt(ByMatrixSetStmt),
+    ByClosedRangeStmt(ByClosedRangeStmt),
+}
+
+#[derive(Clone)]
+pub struct ByClosedRangeStmt {
+    pub element: Obj,
+    pub closed_range: ClosedRange,
+    pub line_file: LineFile,
+}
+
+impl fmt::Display for ByClosedRangeStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let range_obj: Obj = self.closed_range.clone().into();
+        write!(
+            f,
+            "{} {}{} {} {}{} {}",
+            BY, CLOSED_RANGE, COLON, self.element, FACT_PREFIX, IN, range_obj
+        )
+    }
+}
+
+impl ByClosedRangeStmt {
+    pub fn new(element: Obj, closed_range: ClosedRange, line_file: LineFile) -> Self {
+        ByClosedRangeStmt {
+            element,
+            closed_range,
+            line_file,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -149,6 +178,7 @@ impl fmt::Display for Stmt {
             Stmt::ByFiniteSeqSetStmt(x) => write!(f, "{}", x),
             Stmt::BySeqSetStmt(x) => write!(f, "{}", x),
             Stmt::ByMatrixSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByClosedRangeStmt(x) => write!(f, "{}", x),
         }
     }
 }
@@ -192,6 +222,7 @@ impl Stmt {
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::BySeqSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByMatrixSetStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByClosedRangeStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -233,6 +264,7 @@ impl Stmt {
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::BySeqSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByMatrixSetStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByClosedRangeStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 }
@@ -450,5 +482,11 @@ impl From<BySeqSetStmt> for Stmt {
 impl From<ByMatrixSetStmt> for Stmt {
     fn from(v: ByMatrixSetStmt) -> Self {
         Stmt::ByMatrixSetStmt(v)
+    }
+}
+
+impl From<ByClosedRangeStmt> for Stmt {
+    fn from(v: ByClosedRangeStmt) -> Self {
+        Stmt::ByClosedRangeStmt(v)
     }
 }

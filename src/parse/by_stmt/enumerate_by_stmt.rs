@@ -6,14 +6,15 @@ impl Runtime {
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<ListSet> = vec![];
         if tb.current_token_is_equal_to(COLON) {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by enumerate: expects at least one (param, set) pair".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "by enumerate: expects at least one (param, set) pair".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                ),
+            )));
         }
         while tb.current()? != COLON {
             params.push(tb.advance()?);
@@ -24,35 +25,38 @@ impl Runtime {
         }
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by enumerate: expected end of head after params".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "by enumerate: expected end of head after params".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                ),
+            )));
         }
         if tb.body.is_empty() {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by enumerate: expects prove: block and at least one fact to prove".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "by enumerate: expects prove: block and at least one fact to prove".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                ),
+            )));
         }
 
         if tb.body.is_empty() {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by enumerate: expects at least one body block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "by enumerate: expects at least one body block".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                ),
+            )));
         }
 
         tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
