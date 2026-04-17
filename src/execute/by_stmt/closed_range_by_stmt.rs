@@ -24,20 +24,59 @@ impl Runtime {
             ));
         }
 
-        let branches = or_branches_integer_closed_range_equalities(
+        let z_set: Obj = StandardSet::Z.into();
+        let lf = stmt.line_file.clone();
+        for (side, endpoint) in [
+            ("left", stmt.closed_range.start.as_ref().clone()),
+            ("right", stmt.closed_range.end.as_ref().clone()),
+        ] {
+            let in_z: AtomicFact = InFact::new(endpoint, z_set.clone(), lf.clone()).into();
+            let in_z_ok = self.verify_atomic_fact(&in_z, &verify_state)?;
+            if in_z_ok.is_unknown() {
+                return Err(short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by enumerate closed_range: range {} endpoint must be known in Z (`{}`)",
+                        side, in_z
+                    ),
+                    None,
+                    vec![],
+                ));
+            }
+        }
+
+        let branches = match or_branches_integer_closed_range_equalities(
             stmt.element.clone(),
             &stmt.closed_range,
             &stmt.line_file,
-        )
-        .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
-        if branches.is_empty() {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                "by enumerate closed_range: integer range is empty (end < start)".to_string(),
-                None,
-                vec![],
-            ));
-        }
+        ) {
+            Ok(b) => {
+                if b.is_empty() {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        "by enumerate closed_range: integer range is empty (end < start)".to_string(),
+                        None,
+                        vec![],
+                    ));
+                }
+                b
+            }
+            Err(literal_err) => match or_branches_closed_range_start_plus_offset_equalities(
+                stmt.element.clone(),
+                &stmt.closed_range,
+                &stmt.line_file,
+            ) {
+                Ok(b) => b,
+                Err(offset_err) => {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        format!("{} ({})", offset_err, literal_err),
+                        None,
+                        vec![],
+                    ));
+                }
+            },
+        };
         let disjunction = OrFact::new(branches, stmt.line_file.clone());
         let disjunction_fact: Fact = disjunction.into();
         let infer_after_store = self
@@ -90,6 +129,62 @@ fn or_branches_integer_closed_range_equalities(
         );
         branches.push(AndChainAtomicFact::AtomicFact(eq.into()));
         v += 1;
+    }
+    Ok(branches)
+}
+
+/// `closed_range(start, start + N)` with integer literal `N >= 0`; `start` may be any obj.
+fn or_branches_closed_range_start_plus_offset_equalities(
+    element: Obj,
+    closed: &ClosedRange,
+    line_file: &LineFile,
+) -> Result<Vec<AndChainAtomicFact>, String> {
+    let start = closed.start.as_ref();
+    let end = closed.end.as_ref();
+    let Obj::Add(add) = end else {
+        return Err(
+            "by enumerate closed_range: when start is not an integer literal, end must be start + N"
+                .to_string(),
+        );
+    };
+    if add.left.as_ref().to_string() != start.to_string() {
+        return Err(
+            "by enumerate closed_range: end must be start + N (left addend equals range start)"
+                .to_string(),
+        );
+    }
+    let Obj::Number(n) = add.right.as_ref() else {
+        return Err(
+            "by enumerate closed_range: N in start + N must be an integer literal".to_string(),
+        );
+    };
+    let s = n.normalized_value.clone();
+    if !is_number_string_literally_integer_without_dot(s.clone()) {
+        return Err(
+            "by enumerate closed_range: N in start + N must be an integer (no decimal point)"
+                .to_string(),
+        );
+    }
+    let k: i128 = s
+        .parse()
+        .map_err(|_| format!("by enumerate closed_range: invalid integer offset `{}`", s))?;
+    if k < 0 {
+        return Err(
+            "by enumerate closed_range: offset N in start + N must be non-negative".to_string(),
+        );
+    }
+
+    let mut branches: Vec<AndChainAtomicFact> = Vec::new();
+    let mut i = 0_i128;
+    while i <= k {
+        let rhs = if i == 0 {
+            start.clone()
+        } else {
+            Add::new(start.clone(), Number::new(i.to_string()).into()).into()
+        };
+        let eq = EqualFact::new(element.clone(), rhs, line_file.clone());
+        branches.push(AndChainAtomicFact::AtomicFact(eq.into()));
+        i += 1;
     }
     Ok(branches)
 }
