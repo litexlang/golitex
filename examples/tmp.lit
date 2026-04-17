@@ -1,1 +1,7 @@
-# Real power laws for a R_pos and b,c R are in builtin `common_facts.rs` (know block).
+by enumerate:
+    prove:
+        forall a {1, 2}:
+            a > 1
+            =>:
+                a = 2
+    do_nothing
