@@ -2,9 +2,9 @@ use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_closed_range_stmt(
+    pub fn exec_by_enumerate_closed_range_stmt(
         &mut self,
-        stmt: &ByClosedRangeStmt,
+        stmt: &ByEnumerateClosedRangeStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let set_obj: Obj = stmt.closed_range.clone().into();
         let element = stmt.element.clone();
@@ -15,7 +15,10 @@ impl Runtime {
         if membership.is_unknown() {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                format!("by closed_range: membership `{}` is not known", in_fact),
+                format!(
+                    "by enumerate closed_range: membership `{}` is not known",
+                    in_fact
+                ),
                 None,
                 vec![],
             ));
@@ -30,7 +33,7 @@ impl Runtime {
         if branches.is_empty() {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "by closed_range: integer range is empty (end < start)".to_string(),
+                "by enumerate closed_range: integer range is empty (end < start)".to_string(),
                 None,
                 vec![],
             ));
@@ -51,12 +54,13 @@ impl Runtime {
 
 fn closed_range_endpoint_integer_string(obj: &Obj) -> Result<String, String> {
     let Obj::Number(n) = obj else {
-        return Err("by closed_range: range endpoints must be integer literals".to_string());
+        return Err("by enumerate closed_range: range endpoints must be integer literals".to_string());
     };
     let s = n.normalized_value.clone();
     if !is_number_string_literally_integer_without_dot(s.clone()) {
         return Err(
-            "by closed_range: range endpoints must be integers (no decimal point)".to_string(),
+            "by enumerate closed_range: range endpoints must be integers (no decimal point)"
+                .to_string(),
         );
     }
     Ok(s)
@@ -71,10 +75,10 @@ fn or_branches_integer_closed_range_equalities(
     let end_s = closed_range_endpoint_integer_string(closed.end.as_ref())?;
     let start_i: i128 = start_s
         .parse()
-        .map_err(|_| format!("by closed_range: invalid integer `{}`", start_s))?;
+        .map_err(|_| format!("by enumerate closed_range: invalid integer `{}`", start_s))?;
     let end_i: i128 = end_s
         .parse()
-        .map_err(|_| format!("by closed_range: invalid integer `{}`", end_s))?;
+        .map_err(|_| format!("by enumerate closed_range: invalid integer `{}`", end_s))?;
 
     let mut branches: Vec<AndChainAtomicFact> = Vec::new();
     let mut v = start_i;

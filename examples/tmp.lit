@@ -1,3 +1,0 @@
-have x closed_range(0, 10)
-
-by closed_range: x $in closed_range(0, 10)

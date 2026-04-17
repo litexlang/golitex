@@ -1,34 +1,38 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_by_closed_range_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    /// After `by enumerate`; consumes `closed_range(lo, hi): element`.
+    pub fn parse_by_enumerate_closed_range_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CLOSED_RANGE)?;
-        tb.skip_token(COLON)?;
-        let element = self.parse_obj(tb)?;
-        tb.skip_token(FACT_PREFIX)?;
-        tb.skip_token(IN)?;
-        let obj = self.parse_obj(tb)?;
-        let Obj::ClosedRange(closed_range) = obj else {
+        let args = self.parse_braced_objs(tb)?;
+        if args.len() != 2 {
             return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
-                format!(
-                    "by closed_range: expected `closed_range(...)` after `$in`, got `{}`",
-                    obj
-                ),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
-        };
-        if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by closed_range: expected end of line after range".to_string(),
+                "by enumerate closed_range: expected closed_range(lo, hi) with two endpoints"
+                    .to_string(),
                 tb.line_file.clone(),
                 None,
                 vec![],
             ))));
         }
-        Ok(ByClosedRangeStmt::new(element, closed_range, tb.line_file.clone()).into())
+        let mut args = args.into_iter();
+        let left = args.next().unwrap();
+        let right = args.next().unwrap();
+        let closed_range = ClosedRange::new(left, right);
+        tb.skip_token(COLON)?;
+        let element = self.parse_obj(tb)?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "by enumerate closed_range: expected end of line after element".to_string(),
+                tb.line_file.clone(),
+                None,
+                vec![],
+            ))));
+        }
+        Ok(ByEnumerateClosedRangeStmt::new(element, closed_range, tb.line_file.clone()).into())
     }
 }

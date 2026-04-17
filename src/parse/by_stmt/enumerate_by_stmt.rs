@@ -3,6 +3,9 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_enumerate_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(ENUMERATE)?;
+        if tb.current()? == CLOSED_RANGE {
+            return self.parse_by_enumerate_closed_range_stmt(tb);
+        }
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<ListSet> = vec![];
         if tb.current_token_is_equal_to(COLON) {
