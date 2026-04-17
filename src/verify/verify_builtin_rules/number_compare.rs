@@ -245,6 +245,9 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) = self.verify_order_from_known_negated_complement(atomic_fact)? {
+            return Ok(result);
+        }
         if let Some(result) = self.verify_negated_order_from_known_equivalent_order(atomic_fact)? {
             return Ok(result);
         }
@@ -355,6 +358,44 @@ impl Runtime {
         } else {
             Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
         }
+    }
+
+    // `a > b` from known `not (a <= b)`, `a < b` from `not (a >= b)`, etc. (total order duality).
+    fn verify_order_from_known_negated_complement(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let negated: Option<AtomicFact> = match atomic_fact {
+            AtomicFact::GreaterFact(f) => {
+                Some(NotLessEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into())
+            }
+            AtomicFact::LessFact(f) => Some(
+                NotGreaterEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+            ),
+            AtomicFact::GreaterEqualFact(f) => {
+                Some(NotLessFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into())
+            }
+            AtomicFact::LessEqualFact(f) => {
+                Some(NotGreaterFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into())
+            }
+            _ => None,
+        };
+        let Some(neg) = negated else {
+            return Ok(None);
+        };
+        let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&neg)?;
+        if sub.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    atomic_fact.clone().into(),
+                    InferResult::new(),
+                    "order_from_known_negated_complement".to_string(),
+                    vec![sub],
+                )
+                .into(),
+            ));
+        }
+        Ok(None)
     }
 
     // `not (a < b)` etc.: only consult known atomic facts for the equivalent weak/strict order.

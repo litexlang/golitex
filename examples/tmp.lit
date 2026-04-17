@@ -1,26 +1,50 @@
-abstract_prop p(a, b)
-abstract_prop q(a, b)
+# Let a be a real number and suppose that for all real numbers x, a <= x^2 - 2x. Show that a <= -1.
+
+
+forall a R:
+    forall x R:
+        a <= x^2 - 2 * x
+    =>:
+        a <= 1^2 - 2 * 1 = -1
+
+"""
+Let n be a natural number which is a factor of every natural number m. Show that n = 1.
+"""
 
 know:
-    exist a, b, c R st {$p(a, b), $q(b, c)}
-    forall a1, b1, c1 R, a2, b2, c2 R:
-        $p(a1, b1)
-        $q(b1, c1)
-        $p(a2, b2)
-        $q(b2, c2)
+    forall m, n N:
+        0 < m < n
         =>:
-            (a1, b1, c1) = (a2, b2, c2)
+            m % n = m
 
-exist_unique a, b, c R st {$p(a, b), $q(b, c)}
+claim:
+    prove:
+        forall n N:
+            n > 0
+            forall m N:
+                m % n = 0
+            =>:
+                n = 1
+    by contra:
+        prove:
+            n <= 1
+        n > 1
+        1 % n = 0
+        1 % n = 1
+        impossible 0 = 1
 
-abstract_prop t(a)
+    n $in closed_range(0, 1)
+    by for:
+        prove:
+            forall m closed_range(0, 1):
+                m = 0 or m = 1
 
-know:
-    exist a R st {$t(a)}
-    forall a1, a2 R:
-        $t(a1)
-        $t(a2)
-        =>:
-            a1 = a2
-
-exist_unique a R st {$t(a)}
+    n =  0 or n = 1
+    by cases:
+        prove:
+            n = 1
+        case n  = 0:
+            n >  0
+            impossible 0 > 0
+        case n = 1:
+            do_nothing

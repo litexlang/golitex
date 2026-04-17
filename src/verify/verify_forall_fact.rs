@@ -14,6 +14,10 @@ impl Runtime {
             return Ok(cached_result);
         }
 
+        if !verify_state.is_round_0() {
+            return Ok(StmtResult::StmtUnknown(StmtUnknown::new()).into());
+        }
+
         self.run_in_local_env(|rt| {
             let mut infer_result = InferResult::new();
             if let Err(e) = rt.define_params_with_type(&forall_fact.params_def_with_type, false) {
@@ -28,12 +32,10 @@ impl Runtime {
             }
 
             for dom_fact in forall_fact.dom_facts.iter() {
-                rt.verify_exist_or_and_chain_atomic_fact_well_defined(dom_fact, verify_state)?;
+                rt.verify_fact_well_defined(dom_fact, verify_state)?;
 
                 let dom_infer_result = rt
-                    .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                        dom_fact.clone(),
-                    )
+                    .store_fact_without_well_defined_verified_and_infer(dom_fact.clone())
                     .map_err(|e| {
                         let message = "failed to assume dom fact in forall".to_string();
                         {
@@ -135,37 +137,5 @@ impl Runtime {
             ))
             .into())
         })
-    }
-
-    pub fn verify_forall_fact_with_iff(
-        &mut self,
-        forall_iff: &ForallFactWithIff,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&forall_iff.clone().into())
-        {
-            return Ok(cached_result);
-        }
-
-        let (forall_then_implies_iff, forall_iff_implies_then) = forall_iff.to_two_forall_facts();
-        let verification_steps = [&forall_then_implies_iff, &forall_iff_implies_then];
-        for forall_step in verification_steps {
-            let result = self.verify_forall_fact(forall_step, verify_state)?;
-            if result.is_unknown() {
-                return Ok(result);
-            }
-        }
-
-        Ok(
-            (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                forall_iff.clone().into(),
-                "forall iff: then=>iff and iff=>then verified".to_string(),
-                None,
-                Some(default_line_file()),
-                Vec::new(),
-            ))
-            .into(),
-        )
     }
 }
