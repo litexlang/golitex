@@ -129,35 +129,26 @@ impl Runtime {
 
     /// Subscript `[]`, tighter than `^`.
     fn parse_obj_hierarchy4(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        let mut left = self.parse_obj_hierarchy6(tb)?;
+        let mut left = self.parse_obj_hierarchy5(tb)?;
         loop {
-            if tb.exceed_end_of_head() {
-                return self.parse_obj_hierarchy5(tb, left);
-            }
             if tb.current_token_is_equal_to(LEFT_BRACKET) {
                 tb.skip_token(LEFT_BRACKET)?;
                 let obj = self.parse_obj(tb)?;
                 tb.skip_token(RIGHT_BRACKET)?;
                 left = ObjAtIndex::new(left, obj).into();
             } else {
-                break;
+                return Ok(left);
             }
         }
-        self.parse_obj_hierarchy5(tb, left)
     }
 
     /// Range `..` (closed_range); same band as `[]`, applied after subscripts.
-    fn parse_obj_hierarchy5(
-        &mut self,
-        tb: &mut TokenBlock,
-        left: Obj,
-    ) -> Result<Obj, RuntimeError> {
-        if tb.exceed_end_of_head() {
-            return Ok(left);
-        }
+    fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        let left = self.parse_obj_hierarchy6(tb)?;
+
         if tb.current_token_is_equal_to(DOT_DOT) {
             tb.skip_token(DOT_DOT)?;
-            let right = self.parse_obj_hierarchy3(tb)?;
+            let right = self.parse_obj_hierarchy1(tb)?;
             Ok(ClosedRange::new(left, right).into())
         } else {
             Ok(left)
