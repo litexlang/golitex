@@ -110,6 +110,7 @@ pub const WITNESS: &str = "witness";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const ABS: &str = "abs";
+pub const LOG: &str = "log";
 pub const MAX: &str = "max";
 pub const MIN: &str = "min";
 pub const Q_POS: &str = "Q_pos";
@@ -244,6 +245,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE,
         ALGO,
         ABS,
+        LOG,
         MAX,
         MIN,
         Q_POS,

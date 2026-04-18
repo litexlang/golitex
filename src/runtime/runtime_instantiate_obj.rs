@@ -42,6 +42,7 @@ impl Runtime {
             Obj::MatrixScalarMul(inner) => self.inst_matrix_scalar_mul(inner, param_to_arg_map),
             Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map),
+            Obj::Log(inner) => self.inst_log(inner, param_to_arg_map),
             Obj::Max(inner) => self.inst_max(inner, param_to_arg_map),
             Obj::Min(inner) => self.inst_min(inner, param_to_arg_map),
             Obj::Union(inner) => self.inst_union(inner, param_to_arg_map),
@@ -386,6 +387,18 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, RuntimeError> {
         Ok(Abs::new(self.inst_obj(&abs.arg, param_to_arg_map)?).into())
+    }
+
+    pub fn inst_log(
+        &self,
+        log: &Log,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Log::new(
+            self.inst_obj(&log.base, param_to_arg_map)?,
+            self.inst_obj(&log.arg, param_to_arg_map)?,
+        )
+        .into())
     }
 
     pub fn inst_max(

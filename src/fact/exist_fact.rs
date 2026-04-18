@@ -79,6 +79,9 @@ impl From<EqualFact> for OrAndChainAtomicFact {
     }
 }
 
+// `exist` and `exist_unique` share this AST: same parameters and braced facts; `is_exist_unique` selects the keyword.
+// For `exist_unique`, verification must also discharge the companion uniqueness `forall`; storing the existential
+// also stores that generated `forall` (see environment / verify paths).
 #[derive(Clone)]
 pub struct ExistFact {
     pub params_def_with_type: ParamDefWithType,

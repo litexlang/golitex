@@ -367,6 +367,15 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::Log(left_log), Obj::Log(right_log)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_log.base,
+                    &left_log.arg,
+                    &right_log.base,
+                    &right_log.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::MatrixAdd(left_m), Obj::MatrixAdd(right_m)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_m.left,

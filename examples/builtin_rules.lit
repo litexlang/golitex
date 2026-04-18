@@ -1,0 +1,26 @@
+forall a, b R_pos:
+    1 <= a
+    =>:
+        b <= a * b
+
+forall a, b R_pos:
+    1 < a
+    =>:
+        b < a * b
+
+forall a, b, k R:
+    0 <= k
+    a <= b
+    =>:
+        k * a <= k * b
+
+forall a, b, k R:
+    0 < k
+    a < b
+    =>:
+        k * a < k * b
+
+forall a R:
+    0 < a
+    =>:
+        a != 0

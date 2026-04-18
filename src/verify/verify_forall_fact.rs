@@ -60,7 +60,6 @@ impl Runtime {
             }
 
             let mut all_then_facts_are_verified_by_builtin_rules = true;
-            let mut then_facts_builtin_verified_by_messages: Vec<String> = Vec::new();
 
             let then_count = forall_fact.then_facts.len();
             for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
@@ -77,24 +76,19 @@ impl Runtime {
                     .into());
                 }
 
-                // 存then
                 rt.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     then_fact.clone(),
                 )?;
 
                 match &result {
-                    StmtResult::FactualStmtSuccess(factual_verification_result)
-                        if factual_verification_result.is_verified_by_builtin_rules_only() =>
-                    {
-                        then_facts_builtin_verified_by_messages
-                            .push(factual_verification_result.msg.clone());
-                        infer_result
-                            .new_infer_result_inside(factual_verification_result.infers.clone());
-                    }
                     StmtResult::FactualStmtSuccess(factual_verification_result) => {
-                        all_then_facts_are_verified_by_builtin_rules = false;
-                        infer_result
-                            .new_infer_result_inside(factual_verification_result.infers.clone());
+                        // Builtin-only then-facts: omit their infer snapshot from the forall JSON/CLI.
+                        if !factual_verification_result.is_verified_by_builtin_rules_only() {
+                            all_then_facts_are_verified_by_builtin_rules = false;
+                            infer_result.new_infer_result_inside(
+                                factual_verification_result.infers.clone(),
+                            );
+                        }
                     }
                     StmtResult::NonFactualStmtSuccess(non_factual_success) => {
                         all_then_facts_are_verified_by_builtin_rules = false;
@@ -107,20 +101,11 @@ impl Runtime {
             }
 
             if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
-                let combined_verified_by_message =
-                    if then_facts_builtin_verified_by_messages.len() == 1 {
-                        then_facts_builtin_verified_by_messages[0].clone()
-                    } else {
-                        format!(
-                            "forall then-facts: {}",
-                            then_facts_builtin_verified_by_messages.join("; ")
-                        )
-                    };
-                infer_result.new_fact(&forall_fact.clone().into());
+                let forall_infers = InferResult::from_fact(&forall_fact.clone().into());
                 return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
                     forall_fact.clone().into(),
-                    infer_result,
-                    combined_verified_by_message,
+                    forall_infers,
+                    "forall: then-facts by builtin rules".to_string(),
                     Vec::new(),
                 ))
                 .into());

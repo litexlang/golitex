@@ -1,0 +1,8 @@
+by enumerate:
+    prove:
+        forall a {1, 2}, b {3, 4}:
+            a > 1
+            b > 3
+            =>:
+                a = 2
+                b = 4

@@ -47,6 +47,8 @@ prove:
 
 **Meaning.** “There exist values for the parameters such that every fact in the brace holds (∃).”
 
+**Note.** `exist_unique` uses the **same** header and brace shape; the difference is uniqueness (see **Existential with uniqueness**): proving or storing `exist_unique` also involves the matching **`forall`** uniqueness fact.
+
 **Syntax.** `exist` *parameter groups (names and types / sets)* `st` `{` *facts separated by commas* `}`.
 
 **Example.**
@@ -58,6 +60,45 @@ exist x R st {x > 0, x < 1}
 ```
 
 > **Hint — the word “witness” is used for proving exist fact by giving a concrete object for the parameter.** Here 0.5 is a witness for the parameter `x`.
+
+---
+
+### Existential with uniqueness (`exist_unique`)
+
+**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist_unique` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when an `exist_unique` is recorded in the environment, the runtime **also stores** that generated uniqueness **`forall`**.
+
+**Syntax.** `exist_unique` *parameter groups* `st` `{` *facts separated by commas* `}` — same header shape as `exist`, with `exist_unique` instead of `exist`.
+
+**Example.**
+
+```litex
+abstract_prop p(a, b)
+abstract_prop q(a, b)
+
+know:
+    exist a, b, c R st {$p(a, b), $q(b, c)}
+    forall a1, b1, c1 R, a2, b2, c2 R:
+        $p(a1, b1)
+        $q(b1, c1)
+        $p(a2, b2)
+        $q(b2, c2)
+        =>:
+            (a1, b1, c1) = (a2, b2, c2)
+
+exist_unique a, b, c R st {$p(a, b), $q(b, c)}
+
+abstract_prop t(a)
+
+know:
+    exist a R st {$t(a)}
+    forall a1, a2 R:
+        $t(a1)
+        $t(a2)
+        =>:
+            a1 = a2
+
+exist_unique a R st {$t(a)}
+```
 
 ---
 
@@ -304,7 +345,29 @@ prove:
     a + b = b + a
 ```
 
-> **Hint.** Piecewise functions and induction variants are easier to copy from **`examples/have_fn_case_by_case.lit`** and **`examples/have_fn_by_induc.lit`**.
+> **Hint.** Piecewise functions and induction variants:
+
+`have_fn_case_by_case.lit`:
+
+```litex
+have fn self_max(x, y R) R:
+    case x > y: x
+    case x <= y: y
+```
+
+`have_fn_by_induc.lit`:
+
+```litex
+know forall x Z:
+    x % 2 = 0 or x % 2 = 1
+
+have fn by induc from 0: f(x Z: x >= 0) R:
+    case x = 0: 1
+    case x = 1: 1
+    case x >= 2:
+        case x % 2 = 0: f(x - 2) + f(x - 1)
+        case x % 2 = 1: f(x - 2) + f(x - 1) + 100
+```
 
 ---
 
@@ -384,7 +447,14 @@ prove:
 
 **Syntax.** `witness exist` *existential* `from` *objects* … optional `:` and indented proof (see parser rules if you omit `:`).
 
-**Example.** See **`examples/witness_exist.lit`**.
+**Example.**
+
+```litex
+witness exist x, y R st {x > y} from 1, 0:
+    1 > 0
+
+exist x, y R st {x > y}
+```
 
 ---
 
@@ -394,7 +464,16 @@ prove:
 
 **Syntax.** `witness $is_nonempty_set(` *set* `) from` *object* `:` proof block.
 
-**Example.** See **`examples/witness_nonempty.lit`**.
+**Example.**
+
+```litex
+have s finite_set = {1}
+
+witness $is_nonempty_set(s) from 1:
+    1 $in s
+
+$is_nonempty_set(s)
+```
 
 ---
 
@@ -404,7 +483,7 @@ prove:
 
 **Syntax.** `by` *tactic* `:` … (shape depends on tactic; each entry below).
 
-**Example.** See the tactic you need in **`examples/by_*.lit`**.
+**Example.** Each tactic subsection below ends with a full code sketch (same content as the matching `by_*.lit` file in the repo).
 
 ### `by cases`
 
@@ -412,7 +491,18 @@ prove:
 
 **Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof …
 
-**Example.** **`examples/by_cases.lit`**.
+**Example.**
+
+```litex
+by cases:
+    prove:
+        1 + 1 = 2
+    case 1 + 1 = 2:
+        do_nothing
+    case 1 + 1 != 2:
+        1 + 1 = 2
+        impossible 1 + 1 = 2
+```
 
 ---
 
@@ -422,7 +512,27 @@ prove:
 
 **Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*.
 
-**Example.** **`examples/by_contra.lit`**.
+**Example.**
+
+```litex
+abstract_prop p(a)
+
+have b R, c R
+
+# Assume $p(a + b) implies $p(a) for all a R
+know forall a R:
+    $p(a + b)
+    =>:
+        $p(a)
+
+# Assume $p(c) is false
+know not $p(c)
+
+by contra:
+    prove:
+        not $p(c + b)
+    impossible $p(c)
+```
 
 > **Hint.** The fact after `prove:` is what you **conclude**, not the assumption; the assumption is its negation.
 
@@ -430,11 +540,72 @@ prove:
 
 ### `by enumerate`
 
-**Meaning.** Prove a universal claim over parameters ranging in **finite list sets** `{ … }`.
+**Meaning.** Prove a `forall` whose parameters range over **finite list sets** `{ … }`. The checker forms the Cartesian product of those lists, assigns each combination to the parameters, and for each tuple runs the same **domain → optional proof → then** flow as **`by for`** (which enumerates integers from `range` / `closed_range` instead of list-set members).
 
-**Syntax.** `by enumerate` *param* *list set* [, … ] `:` `prove` `:` *goals* … optional extra steps.
+**Syntax (preferred).** Same layout as `by for`: header is `by enumerate` `:` (colon right after `enumerate`). The first body block is `prove:` containing **exactly one** nested block, parsed as a single **`forall`** fact.
 
-**Example.** **`examples/list_set_and_enumerate.lit`**.
+- Each `forall` parameter’s type must be a **list set** `{ … }` (the value of each parameter is always one element of that list).
+- The `forall` may use **domain** lines before `=>:` and **then** lines under `=>:`; or omit `=>:` so every line under `forall` is a conclusion (no domain), like ordinary `forall` parsing.
+- **Domain checks** match `by for`: if a domain fact is verified **true**, it is assumed; if **unknown**, the checker may **skip** that tuple when the same “skippable negation” as in `by for` is verified **true**; otherwise the step fails. After domains succeed (or the branch is skipped), optional proof blocks run, then each **then** fact must verify.
+- Further body blocks after `prove:` are proof steps, parsed in a local parsing-time name scope (names do not leak to the file).
+
+**Syntax (legacy).** `by enumerate` *param* *list set* [, … ] `:` `prove` `:` *goals* … optional proof blocks — equivalent to a `forall` with those names and list-set types, **empty domain**, and each `prove` line as a **then** fact.
+
+**Example (preferred).**
+
+```litex
+by enumerate:
+    prove:
+        forall a {1, 2}:
+            a = 1 or a = 2
+    do_nothing
+```
+
+**Example (domain and `=>:`).**
+
+```litex
+by enumerate:
+    prove:
+        forall a {1, 2}:
+            a > 1
+            =>:
+                a = 2
+    do_nothing
+```
+
+**Example (legacy header).**
+
+```litex
+by enumerate x {1, 2}:
+    prove:
+        x = 1 or x = 2
+    do_nothing
+```
+
+Integer **closed_range** membership with literal endpoints uses the separate form **`by enumerate closed_range(…)`** (next section), not list-set enumeration.
+
+---
+
+### `by enumerate closed_range(…)`
+
+**Meaning.** From membership of an object in a **closed interval** with **integer literal** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
+
+**Syntax.** `by enumerate closed_range(` *lo* `,` *hi* `):` *object* — *lo* / *hi* are integer literals (no decimal point); *object* is any expression the parser accepts as an `obj`.
+
+**Example.**
+
+```litex
+prove:
+    have x closed_range(0, 10)
+
+    by enumerate closed_range(0, 10): x
+
+prove:
+    have a Z
+    have x closed_range(a, a + 10)
+
+    by enumerate closed_range(a, a + 10): x
+```
 
 ---
 
@@ -458,17 +629,53 @@ by induc param from object:
 - Further blocks are optional proof steps (same idea as after `prove:` in `claim` / `by enumerate`). They are parsed under a local parsing-time name scope so names introduced there do not leak to the file.
 - Multiple goals share one proof segment and one local run; each goal is checked in turn after that proof.
 
-**Example.** **`examples/by_induc.lit`**.
+**Example.**
+
+```litex
+# Minimal `by induc` example: first block is `prove:` (one or more goals);
+# optional proof blocks follow (here empty — lemmas come from `know`).
+
+abstract_prop p(a)
+
+know:
+    $p(0)
+    forall n Z:
+        n >= 0
+        $p(n)
+        =>:
+            $p(n + 1)
+
+by induc n from 0:
+    prove:
+        $p(n)
+
+forall n Z:
+    n >= 0
+    =>:
+        $p(n)
+```
 
 ---
 
 ### `by for`
 
-**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions.
+**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions. For **list sets** `{ … }` instead of ranges, use **`by enumerate`** (same `prove:` / `forall` shape; see above).
 
 **Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps.
 
-**Example.** **`examples/for.lit`**, **`examples/diagonal_matrix.lit`**.
+```litex
+by for:
+    prove:
+        forall n range(0, 10):
+            n < 10
+    do_nothing
+
+by for:
+    prove:
+        forall n closed_range(0, 10):
+            n <= 10
+    do_nothing
+```
 
 ---
 
@@ -478,7 +685,21 @@ by induc param from object:
 
 **Syntax.** `by extension` `:` `prove` `:` *set* `=` *set* newline, proof.
 
-**Example.** **`examples/by_extension.lit`**.
+**Example.**
+
+```litex
+by extension:
+    prove:
+        {1, 2} = {2, 1}
+    by enumerate x {1, 2}:
+        prove:
+            x $in {2, 1}
+    by enumerate y {2, 1}:
+        prove:
+            y $in {1, 2}
+
+{1, 2} = {2, 1}
+```
 
 ---
 
@@ -488,7 +709,13 @@ by induc param from object:
 
 **Syntax.** `by fn` `:` *object*.
 
-**Example.** **`examples/by_fn.lit`**.
+**Example.**
+
+```litex
+have f fn(x R)R
+
+by fn : f
+```
 
 ---
 
@@ -498,7 +725,36 @@ by induc param from object:
 
 **Syntax.** `by fn set` `:` *func* `$in fn` *function-set*.
 
-**Example.** **`examples/by_fn_set.lit`**.
+**Example.**
+
+```litex
+let f set
+
+know:
+    forall x1 f:
+        x1 $in cart(cart(R, Q), Z)
+        tuple_dim(x1) = 2
+
+    forall x1 f:
+        exist x2 R, x3 Q, z Z st {x2 > x3, x2 > 2, x1 = ((x2, x3), z)}
+
+    forall x2 R, x3 Q:
+        x2 > x3
+        x2 > 2
+        =>:
+            exist x1 f, z Z st {x1 = ((x2, x3), z)}
+
+    forall x1, x2 f:
+        x1 $in cart(cart(R, Q), Z)
+        x2 $in cart(cart(R, Q), Z)
+        x1[1] = x2[1]
+        =>:
+            x1 = x2
+
+by fn set: f $in fn(x1 R, y1 Q: x1 > y1, x1 > 2) Z
+
+f(100,99) = f(100,99)
+```
 
 ---
 
@@ -508,7 +764,87 @@ by induc param from object:
 
 **Syntax.** `by family` `:` *object*.
 
-**Example.** **`examples/by_family.lit`**.
+**Example.**
+
+```litex
+family self_seq(s set) = fn(x N_pos) s
+
+forall a family self_seq(R):
+    a $in fn(y N_pos)R
+    a(1) = a(1)
+
+family p(a set) = fn(x a) a
+
+by family: family p(R) # 生成 family p(R) = fn(x R) R。即用实参 R 替换形参 a
+```
+
+---
+
+### `by finite_seq`
+
+**Meaning.** Expand a **`finite_seq(S, n)`** set to the corresponding **`fn`**-space form the checker uses internally (definitional expansion).
+
+**Syntax.** `by finite_seq` `:` *object* — *object* must be literally `finite_seq(...)`.
+
+**Example.** From `finite_seq.lit`:
+
+```litex
+family self_finite_seq(s set, n N_pos) = fn(x N_pos: x <= n) s
+
+finite_seq(R, 3) = finite_seq(R, 3)
+
+have a finite_seq(R, 3) = [1, 2, 3]
+
+a $in fn(x N_pos: x <= 3) R
+
+a(1) = 1
+a(2) = 2
+a(3) = 3
+
+by finite_seq: finite_seq(R, 3)
+
+finite_seq(R, 3) = fn(x1 N_pos: x1 <= 3) R
+```
+
+---
+
+### `by seq`
+
+**Meaning.** Expand a **`seq(S)`** set to the corresponding **`fn`**-space form.
+
+**Syntax.** `by seq` `:` *object* — *object* must be literally `seq(...)`.
+
+**Example.**
+
+```litex
+by seq: seq(R)
+```
+
+---
+
+### `by matrix`
+
+**Meaning.** Expand a **`matrix(S, r, c)`** set to the corresponding **`fn`**-space form.
+
+**Syntax.** `by matrix` `:` *object* — *object* must be literally `matrix(...)`.
+
+**Example.** From `matrix.lit` (opening `by matrix` usage):
+
+```litex
+prove:
+    matrix(R, 2, 2) = matrix(R, 2, 2)
+
+    have a matrix(R, 2, 2) = [[1, 2], [3, 4]]
+
+    a $in fn (x1 N_pos, x2 N_pos: x1 <= 2, x2 <= 2) R
+
+    a(1, 1) = 1
+    a(1, 2) = 2
+    a(2, 1) = 3
+    a(2, 2) = 4
+
+    by matrix: matrix(R, 2, 2)
+```
 
 ---
 
@@ -518,7 +854,27 @@ by induc param from object:
 
 **Syntax.** `by struct` `:` *object*.
 
-**Example.** **`examples/by_struct.lit`**.
+**Example.**
+
+```litex
+abstract_prop p(a, b, c)
+
+struct some_struct(a set):
+    field1 a
+    field2 a
+    <=>:
+        $p(a, self.field1, self.field2)
+
+# use by struct to generate set-theoretic definition of struct
+by struct: struct some_struct(R)
+
+(struct some_struct(R)) = {x2 cart(R, R): $p(R, x2[1], x2[2])}
+
+forall x1 struct some_struct(R):
+    x1 $in cart(R, R)
+    x1[1] = x1.field1
+    x1[2] = x1.field2
+```
 
 ---
 
@@ -528,7 +884,11 @@ by induc param from object:
 
 **Syntax.** `by tuple` `:` *object*.
 
-**Example.** **`examples/by_tuple.lit`**.
+**Example.**
+
+```litex
+by tuple: (1, 2)
+```
 
 ---
 
@@ -540,7 +900,33 @@ by induc param from object:
 
 **Syntax.** `eval` *expression* (typically a function application).
 
-**Example.** **`examples/algo_eval.lit`**.
+**Example.**
+
+```litex
+let f set
+know f $in fn(x R, y R) R
+
+know:
+    forall x, y R:
+        x < 0
+        =>:
+            f(x, y) = f(x + 1, y)
+
+    forall x, y R:
+        x = 0
+        =>:
+            f(x, y) = y
+
+    forall x, y R:
+        x > 0
+        =>:
+            f(x, y) = f(x - 1, y)
+
+algo f(x, y):
+    case x < 0: f(x + 1, y)
+    case x = 0: y
+    case x > 0: f(x - 1, y)
+```
 
 ---
 
@@ -564,7 +950,13 @@ import "other.lit"
 
 **Syntax.** `run_file` `"path"`.
 
-**Example.** **`examples/runfile.lit`**.
+**Example.**
+
+```litex
+run_file "./runfile2.lit"
+
+$p(1, 2)
+```
 
 ---
 
@@ -606,11 +998,13 @@ prove:
 | `claim` | Theorem + proof |
 | `prove` | Nested proof block |
 | `witness` | Witness for `exist` or nonempty set |
-| `by` | Proof tactic (`cases`, `contra`, `enumerate`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `struct`, `tuple`) |
+| `exist` / `exist_unique` | Existential facts (latter needs uniqueness in context; see **Existential with uniqueness**) |
+| `by` | Proof tactic (`cases`, `contra`, `enumerate`, `enumerate closed_range(…)`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `finite_seq`, `seq`, `matrix`, `struct`, `tuple`) |
 | `eval` | Run algorithm |
 | `import` | Import module/file |
 | `run_file` | Run a file |
 | `do_nothing` | No-op |
 | *(other)* | Assert a fact to verify |
 
-> **Hint.** Details and edge cases are easiest to see in **`examples/`** next to the checker behavior you care about.
+> **Hint.** Details and edge cases are covered in the **Example** code blocks above; the repository **`examples/`** folder may contain longer variants.
+

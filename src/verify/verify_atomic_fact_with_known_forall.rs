@@ -320,6 +320,7 @@ impl Runtime {
             Obj::Mod(ref a) => Self::match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
             Obj::Pow(ref a) => Self::match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => Self::match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
+            Obj::Log(ref a) => Self::match_arg_when_left_is_log(&a.base, &a.arg, given_arg),
             Obj::Max(ref a) => Self::match_arg_when_left_is_max(&a.left, &a.right, given_arg),
             Obj::Min(ref a) => Self::match_arg_when_left_is_min(&a.left, &a.right, given_arg),
             Obj::Union(ref a) => Self::match_arg_when_left_is_union(&a.left, &a.right, given_arg),
@@ -756,6 +757,19 @@ impl Runtime {
         match given_arg {
             Obj::Abs(ref g) => {
                 Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_arg, &g.arg)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_log(
+        left_base: &Obj,
+        left_arg: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Log(ref g) => {
+                Self::match_arg_binary_then_merge(left_base, left_arg, &g.base, &g.arg)
             }
             _ => Ok(None),
         }

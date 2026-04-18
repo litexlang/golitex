@@ -109,6 +109,10 @@ impl Runtime {
                 Obj::Abs(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Log(a) => match right {
+                Obj::Log(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Max(a) => match right {
                 Obj::Max(b) => a.to_string() == b.to_string(),
                 _ => false,

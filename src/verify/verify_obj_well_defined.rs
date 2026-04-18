@@ -36,6 +36,7 @@ impl Runtime {
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
             Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
             Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
+            Obj::Log(log) => self.verify_log_well_defined(log, verify_state),
             Obj::Max(max) => self.verify_max_well_defined(max, verify_state),
             Obj::Min(min) => self.verify_min_well_defined(min, verify_state),
             Obj::Union(x) => self.verify_union_well_defined(x, verify_state),
@@ -433,6 +434,10 @@ impl Runtime {
             self.require_obj_in_r(&m.left, verify_state)?;
             return self.require_obj_in_r(&m.right, verify_state);
         }
+        if let Obj::Log(l) = obj {
+            self.require_obj_in_r(&l.base, verify_state)?;
+            return self.require_obj_in_r(&l.arg, verify_state);
+        }
         let r_obj = StandardSet::R.into();
         let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
@@ -576,6 +581,43 @@ impl Runtime {
         Ok(())
     }
 
+    fn verify_log_well_defined(
+        &mut self,
+        log: &Log,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&log.base, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&log.arg, verify_state)?;
+        self.require_obj_in_r(&log.base, verify_state)?;
+        self.require_obj_in_r(&log.arg, verify_state)?;
+        let zero: Obj = Number::new("0".to_string()).into();
+        let one: Obj = Number::new("1".to_string()).into();
+        let lf = default_line_file();
+        let checks: [(&str, AtomicFact); 3] = [
+            (
+                "log: base must be > 0",
+                GreaterFact::new((*log.base).clone(), zero.clone(), lf.clone()).into(),
+            ),
+            (
+                "log: argument must be > 0",
+                GreaterFact::new((*log.arg).clone(), zero.clone(), lf.clone()).into(),
+            ),
+            (
+                "log: base must be != 1",
+                NotEqualFact::new((*log.base).clone(), one, lf.clone()).into(),
+            ),
+        ];
+        for (msg, atomic) in checks {
+            let result = self.verify_atomic_fact(&atomic, verify_state)?;
+            if result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(None, msg.to_string(), lf.clone(), None, vec![]),
+                )));
+            }
+        }
+        Ok(())
+    }
+
     fn verify_max_well_defined(
         &mut self,
         max: &Max,
@@ -600,6 +642,10 @@ impl Runtime {
         Ok(())
     }
 
+    // Real pow domain (well-defined check): base>0 and exp in R; or base=0, exp in R and exp>0
+    // (so 0^0 and 0^(non-positive) are out); or exp in Z and base != 0 (integer powers, x^0=1).
+    // Negative base with non-integer real exp stays out. Uses Z + base!=0 instead of exp mod 2 so
+    // rational exponents do not pull Mod(...) into every Or disjunct's WD pass.
     fn verify_pow_well_defined(
         &mut self,
         pow: &Pow,
@@ -609,8 +655,6 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
 
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let two_obj: Obj = Number::new("2".to_string()).into();
-        let exponent_mod_two_obj = Mod::new((*pow.exponent).clone(), two_obj).into();
 
         let positive_base_and_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
@@ -644,7 +688,7 @@ impl Runtime {
             default_line_file(),
         ));
 
-        let even_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
+        let nonzero_base_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
                 InFact::new(
                     (*pow.exponent).clone(),
@@ -652,26 +696,16 @@ impl Runtime {
                     default_line_file(),
                 )
                 .into(),
-                EqualFact::new(exponent_mod_two_obj, zero_obj, default_line_file()).into(),
+                NotEqualFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file()).into(),
             ],
             default_line_file(),
         ));
-
-        let exponent_is_positive_integer = AndChainAtomicFact::AtomicFact(
-            InFact::new(
-                (*pow.exponent).clone(),
-                StandardSet::NPos.into(),
-                default_line_file(),
-            )
-            .into(),
-        );
 
         let pow_domain_or_fact = OrFact::new(
             vec![
                 positive_base_and_real_exponent,
                 zero_base_and_positive_real_exponent,
-                even_integer_exponent,
-                exponent_is_positive_integer,
+                nonzero_base_integer_exponent,
             ],
             default_line_file(),
         );

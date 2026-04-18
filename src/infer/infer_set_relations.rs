@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// Infer `forall x in left: x in right` from `left subset right`.
+    // Subset: `A $subset B` => `forall` fresh `x`: `x $in A` => `x $in B`.
+    // Example: knowing `S $subset T`, any member of `S` is a member of `T`.
     pub fn infer_subset_fact(
         &mut self,
         subset_fact: &SubsetFact,
@@ -43,7 +44,8 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// Infer `forall x in right: x in left` from `left superset right`.
+    // Superset: `A $superset B` => `forall` fresh `x`: `x $in B` => `x $in A`.
+    // Example: knowing `T $superset S`, every `x $in S` satisfies `x $in T`.
     pub fn infer_superset_fact(
         &mut self,
         superset_fact: &SupersetFact,

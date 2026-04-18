@@ -24,4 +24,10 @@ know:
         x < y
         =>:
             exist z Q st {x < z < y}
+
+    forall a, b Z:
+        closed_range(a, b) = {x Z: a <= x <= b}
+
+    forall a, b Z:
+        range(a, b) = {x Z: a <= x < b}
 "#;

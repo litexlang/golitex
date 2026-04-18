@@ -209,8 +209,9 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    /// Infer from equality by syncing known calculated values.
-    /// Example: from `a = 1 + 2`, remember `a -> 3`.
+    // From `u = v`: merge numeric normal forms in the env; if one side is `a-b` and the other `0`, emit `a=b`;
+    // if one side is a literal cart/tuple/finite-seq/matrix list, record shape for the other symbol.
+    // Example: `a = 1+2` binds `a` to normalized `3`; `0 = x-y` yields fact `x = y`.
     pub fn infer_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
@@ -229,6 +230,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    // `0 = u - v` or `u - v = 0` => add `u = v` (non-trivial pair only).
     fn infer_equal_fact_from_subtraction_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
@@ -335,8 +337,8 @@ impl Runtime {
         Ok(InferResult::new())
     }
 
-    /// Infer predicate meaning by instantiating declared iff facts.
-    /// Example: from `isEven(n)`, infer the instantiated definition facts.
+    // Predicate `P(args)`: check args against `P`'s param types, then store each instantiated `iff` body.
+    // Example: if `P` is defined by `iff` clauses, those clauses become facts with `args` substituted.
     pub fn infer_normal_atomic_fact(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,

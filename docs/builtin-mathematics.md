@@ -24,7 +24,7 @@ a < b \iff 0 < b - a.
 
 #### 1.2 Squares: weak nonnegativity and strict positivity when \(a \neq 0\)
 
-Facts of the form \(0 \le a^n\) for literal even integer \(n\), \(0 \le a\cdot a\) with equal factors, and \(0 \le a^n\) for literal integer \(n\) from \(0 \le a\) (with \(0 < a\) when \(n<0\)) are checked by the Rust builtin `verify_order_atomic_fact_numeric_builtin_only` (see `number_compare.rs`), not by a Lit `know` block in `fundamental_comparison.rs`.
+Facts of the form \(0 \le a^n\) for literal even integer \(n\), \(0 \le a\cdot a\) with equal factors, and \(0 \le a^n\) for literal integer \(n\) from \(0 \le a\) (with \(0 < a\) when \(n<0\)) are checked by the Rust builtin `verify_order_atomic_fact_numeric_builtin_only` (see `number_compare.rs`), not by a Lit `know` block in `fundamental_comparison.rs`. The same builtin also accepts **\(0 < a^b\)** (equivalently \(a^b > 0\)) when **\(0 < a\)** is already proved or known and **\(b \in \mathbb{R}\)** is proved or known (real exponent, positive base).
 
 The Lit fragment still asserts, if \(a \neq 0\):
 
@@ -155,7 +155,27 @@ If \(A,B\) are `finite_set` and \(A\subseteq B\), then \(\mathrm{count}(A)\le \m
 
 ---
 
-## 6. How to use this document
+## 6. Exponentiation (`pow`) — well-defined domain (checker)
+
+When the verifier insists an expression is well-defined, `base^exponent` is accepted if **any** of these holds (implemented in `verify_pow_well_defined`):
+
+1. **Positive base, real exponent:** `base > 0` and `exponent ∈ ℝ` (standard \(x^y=\exp(y\ln x)\) on \(\mathbb{R}\)).
+2. **Zero base, strictly positive real exponent:** `base = 0`, `exponent ∈ ℝ`, and `exponent > 0` (so \(0^0\) and non-positive powers of 0 are **not** allowed).
+3. **Integer exponent, nonzero base:** `exponent ∈ ℤ` and `base ≠ 0` (algebraic integer powers, including \(x^0=1\) for \(x\neq 0\)).
+
+This does **not** admit a general real exponent with a negative base (e.g. \((-2)^{1/2}\) in \(\mathbb{R}\)).
+
+The kernel’s `know` block in `common_facts.rs` also records, for all **`a > 0`** and **`b,c ∈ ℝ`** (written `a R_pos`, `b R`, `c R` in Litex):
+
+\[
+(a^b)^c = a^{bc},\qquad a^{b+c} = a^b a^c,
+\]
+
+matching the usual real power laws on the principal branch.
+
+---
+
+## 7. How to use this document
 
 - This is a **semantic summary**, not a substitute for the source; if Lit inside the Rust strings disagrees with this file, `src/builtin_code/*.rs` wins.  
 - Section 1.1 and Section 2.5 (difference characterization vs. \(a-b\le 0\)) overlap on purpose so different proof paths in the kernel can reuse the same facts.  
