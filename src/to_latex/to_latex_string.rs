@@ -232,7 +232,7 @@ impl ByEnumerateClosedRangeStmt {
     }
 }
 
-impl ByEnumerateStmt {
+impl ByEnumerateFiniteSetStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
             r"\text{{Proof by exhaustive enumeration (finite cases).}} & {}",
@@ -1934,7 +1934,7 @@ impl Stmt {
             Stmt::WitnessNonemptySet(x) => x.to_latex_string(),
             Stmt::ByCasesStmt(x) => x.to_latex_string(),
             Stmt::ByContraStmt(x) => x.to_latex_string(),
-            Stmt::ByEnumerateStmt(x) => x.to_latex_string(),
+            Stmt::ByEnumerateFiniteSetStmt(x) => x.to_latex_string(),
             Stmt::ByInducStmt(x) => x.to_latex_string(),
             Stmt::ByForStmt(x) => x.to_latex_string(),
             Stmt::ByExtensionStmt(x) => x.to_latex_string(),
