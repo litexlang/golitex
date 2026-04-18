@@ -198,7 +198,7 @@ prove:
         $p0(1, 2)
         impossible $q0(1, 2)
 
-# --- Stmt::ByEnumerateStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Preferred: `by enumerate:` then `prove:` with one forall; legacy: param + list set in the header.
+# --- Stmt::ByEnumerateStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate:` then `prove:` with one forall; integer intervals use `by enumerate lo..hi:`.
 prove:
     let a R:
         a $in {1, 2}
@@ -207,8 +207,8 @@ prove:
 
     by enumerate:
         prove:
-            forall a {1, 2, 3}:
-                a < 4
+            forall a2 {1, 2, 3}:
+                a2 < 4
 
 # --- Stmt::ByInducStmt — induction on a discrete parameter ---
 prove:
@@ -244,12 +244,14 @@ prove:
     by extension:
         prove:
             {1, 2} = {2, 1}
-        by enumerate x {1, 2}:
+        by enumerate:
             prove:
-                x $in {2, 1}
-        by enumerate y {2, 1}:
+                forall x {1, 2}:
+                    x $in {2, 1}
+        by enumerate:
             prove:
-                y $in {1, 2}
+                forall y {2, 1}:
+                    y $in {1, 2}
 
     {1, 2} = {2, 1}
 
