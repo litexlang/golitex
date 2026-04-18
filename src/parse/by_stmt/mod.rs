@@ -33,7 +33,7 @@ impl Runtime {
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
-                    "by: expected cases, contra, enumerate (or enumerate closed_range), induc, for, extension, fn, fn set, family, finite_seq, seq, matrix, struct, or tuple after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate (finite_set or range), induc, for, extension, fn, fn set, family, finite_seq, seq, matrix, struct, or tuple after `by`, got `{}`",
                     second_keyword
                 ),
                 tb.line_file.clone(),

@@ -3,17 +3,26 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_enumerate_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(ENUMERATE)?;
-
-        if tb.current_token_is_equal_to(COLON) {
+        if tb.current_token_is_equal_to(FINITE_SET) {
+            tb.skip_token(FINITE_SET)?;
             tb.skip_token(COLON)?;
-            return self.parse_by_enumerate_stmt_forall_in_prove(tb);
-        } else {
-            return self.parse_by_enumerate_closed_range_stmt(tb);
+            return self.parse_by_enumerate_finite_set_stmt_forall_in_prove(tb);
         }
+        if tb.current_token_is_equal_to(COLON) {
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "by enumerate: expected `finite_set` before `:` (use `by enumerate finite_set:`)"
+                    .to_string(),
+                tb.line_file.clone(),
+                None,
+                vec![],
+            ))));
+        }
+        self.parse_by_enumerate_closed_range_stmt(tb)
     }
 
-    /// `by enumerate:` then `prove:` with a single `forall` (list-set parameters, optional dom / `=>:`).
-    fn parse_by_enumerate_stmt_forall_in_prove(
+    /// `by enumerate finite_set:` then `prove:` with a single `forall` (list-set parameters, optional dom / `=>:`).
+    fn parse_by_enumerate_finite_set_stmt_forall_in_prove(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
@@ -21,7 +30,7 @@ impl Runtime {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
-                    "by enumerate: expected end of head after `:`".to_string(),
+                    "by enumerate finite_set: expected end of head after `:`".to_string(),
                     tb.line_file.clone(),
                     None,
                     vec![],
@@ -32,7 +41,7 @@ impl Runtime {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
-                    "by enumerate: expects a body".to_string(),
+                    "by enumerate finite_set: expects a body".to_string(),
                     tb.line_file.clone(),
                     None,
                     vec![],
@@ -43,7 +52,7 @@ impl Runtime {
         let prove_block = tb.body.get_mut(0).ok_or_else(|| {
             RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
-                "by enumerate: expected prove block".to_string(),
+                "by enumerate finite_set: expected prove block".to_string(),
                 tb.line_file.clone(),
                 None,
                 vec![],
@@ -53,7 +62,7 @@ impl Runtime {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
-                    "by enumerate: first block must be `prove:`".to_string(),
+                    "by enumerate finite_set: first block must be `prove:`".to_string(),
                     prove_block.line_file.clone(),
                     None,
                     vec![],
@@ -65,7 +74,8 @@ impl Runtime {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
-                    "by enumerate: `prove:` must contain exactly one forall fact".to_string(),
+                    "by enumerate finite_set: `prove:` must contain exactly one forall fact"
+                        .to_string(),
                     prove_block.line_file.clone(),
                     None,
                     vec![],
@@ -76,7 +86,7 @@ impl Runtime {
         let forall_block = prove_block.body.get_mut(0).ok_or_else(|| {
             RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                 None,
-                "by enumerate: missing forall block".to_string(),
+                "by enumerate finite_set: missing forall block".to_string(),
                 tb.line_file.clone(),
                 None,
                 vec![],
@@ -89,7 +99,8 @@ impl Runtime {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new(
                         None,
-                        "by enumerate: forall with `<=>` is not allowed here".to_string(),
+                        "by enumerate finite_set: forall with `<=>` is not allowed here"
+                            .to_string(),
                         forall_block.line_file.clone(),
                         None,
                         vec![],
@@ -100,7 +111,8 @@ impl Runtime {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new(
                         None,
-                        "by enumerate: `prove:` must be a single `forall` fact".to_string(),
+                        "by enumerate finite_set: `prove:` must be a single `forall` fact"
+                            .to_string(),
                         forall_block.line_file.clone(),
                         None,
                         vec![],
@@ -116,7 +128,7 @@ impl Runtime {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new(
                             None,
-                            "by enumerate: each forall parameter type must be a list set `{ ... }`"
+                            "by enumerate finite_set: each forall parameter type must be a list set `{ ... }`"
                                 .to_string(),
                             forall_fact.line_file.clone(),
                             None,
@@ -132,6 +144,6 @@ impl Runtime {
             proof.push(self.parse_stmt(b)?);
         }
 
-        Ok(ByEnumerateStmt::new(forall_fact, proof, tb.line_file.clone()).into())
+        Ok(ByEnumerateFiniteSetStmt::new(forall_fact, proof, tb.line_file.clone()).into())
     }
 }

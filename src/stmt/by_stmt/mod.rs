@@ -11,7 +11,7 @@ mod struct_stmt;
 
 pub use cases::ByCasesStmt;
 pub use contra::ByContraStmt;
-pub use enumerate::ByEnumerateStmt;
+pub use enumerate::ByEnumerateFiniteSetStmt;
 pub use extension::ByExtensionStmt;
 pub use family::ByFamilyStmt;
 pub use fn_cart_tuple::{ByFnSetStmt, ByFnStmt, ByTupleStmt};

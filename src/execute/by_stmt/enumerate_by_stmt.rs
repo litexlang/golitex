@@ -1,9 +1,9 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_enumerate_stmt(
+    pub fn exec_by_enumerate_finite_set_stmt(
         &mut self,
-        stmt: &ByEnumerateStmt,
+        stmt: &ByEnumerateFiniteSetStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let (params, param_sets) = stmt.expanded_list_set_params().map_err(|msg| {
             short_exec_error(stmt.clone().into(), msg, None, vec![])
@@ -21,7 +21,7 @@ impl Runtime {
             short_exec_error(
                 stmt.clone().into(),
                 format!(
-                    "by enumerate: forall parameters or domain is not well-defined (`{}`)",
+                    "by enumerate finite_set: forall parameters or domain is not well-defined (`{}`)",
                     stmt.forall_fact
                 ),
                 Some(well_defined_error),
@@ -40,7 +40,7 @@ impl Runtime {
                     short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by enumerate: failed to store corresponding forall `{}`",
+                            "by enumerate finite_set: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
                         ),
                         Some(store_fact_error),
@@ -83,7 +83,7 @@ impl Runtime {
                 short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by enumerate: failed to store corresponding forall `{}`",
+                        "by enumerate finite_set: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
                     Some(store_fact_error),
@@ -137,7 +137,7 @@ impl Runtime {
 
     fn exec_by_enumerate_stmt_for_one_assignment(
         &mut self,
-        stmt: &ByEnumerateStmt,
+        stmt: &ByEnumerateFiniteSetStmt,
         params: &[String],
         param_sets: &[ListSet],
         parameter_index_assignment: &Vec<usize>,
@@ -154,7 +154,7 @@ impl Runtime {
 
     fn exec_by_enumerate_stmt_for_one_assignment_body(
         &mut self,
-        stmt: &ByEnumerateStmt,
+        stmt: &ByEnumerateFiniteSetStmt,
         params: &[String],
         param_sets: &[ListSet],
         parameter_index_assignment: &Vec<usize>,
@@ -191,7 +191,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by enumerate: domain fact `{}` is not decided (could not verify it or its negation)",
+                        "by enumerate finite_set: domain fact `{}` is not decided (could not verify it or its negation)",
                         dom_fact
                     ),
                     None,
@@ -209,7 +209,7 @@ impl Runtime {
             if verified_result.is_unknown() {
                 return Err(short_exec_error(
                     stmt.clone().into(),
-                    format!("by enumerate: failed to prove `{}`", fact_to_prove),
+                    format!("by enumerate finite_set: failed to prove `{}`", fact_to_prove),
                     None,
                     vec![],
                 ));

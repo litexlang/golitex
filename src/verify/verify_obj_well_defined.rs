@@ -643,7 +643,8 @@ impl Runtime {
     }
 
     // Real pow domain (well-defined check): base>0 and exp in R; or base=0, exp in R and exp>0
-    // (so 0^0 and 0^(non-positive) are out); or exp in Z and base != 0 (integer powers, x^0=1).
+    // (so 0^0 and 0^(non-positive) are out); or exp in Z and base != 0 (integer powers, x^0=1);
+    // or exp in N_pos (positive integer), any base (e.g. 0^3, (h+i)^2 without proving base != 0).
     // Negative base with non-integer real exp stays out. Uses Z + base!=0 instead of exp mod 2 so
     // rational exponents do not pull Mod(...) into every Or disjunct's WD pass.
     fn verify_pow_well_defined(
@@ -701,11 +702,21 @@ impl Runtime {
             default_line_file(),
         ));
 
+        let exponent_in_n_pos = AndChainAtomicFact::AtomicFact(
+            InFact::new(
+                (*pow.exponent).clone(),
+                StandardSet::NPos.into(),
+                default_line_file(),
+            )
+            .into(),
+        );
+
         let pow_domain_or_fact = OrFact::new(
             vec![
                 positive_base_and_real_exponent,
                 zero_base_and_positive_real_exponent,
                 nonzero_base_integer_exponent,
+                exponent_in_n_pos,
             ],
             default_line_file(),
         );

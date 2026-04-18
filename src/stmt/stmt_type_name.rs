@@ -75,9 +75,9 @@ impl WitnessNonemptySet {
     }
 }
 
-impl ByEnumerateStmt {
+impl ByEnumerateFiniteSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByEnumerateStmt".to_string()
+        "ByEnumerateFiniteSetStmt".to_string()
     }
 }
 

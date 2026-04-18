@@ -27,7 +27,7 @@ pub enum Stmt {
     WitnessNonemptySet(WitnessNonemptySet),
     ByCasesStmt(ByCasesStmt),
     ByContraStmt(ByContraStmt),
-    ByEnumerateStmt(ByEnumerateStmt),
+    ByEnumerateFiniteSetStmt(ByEnumerateFiniteSetStmt),
     ByInducStmt(ByInducStmt),
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),
@@ -174,7 +174,7 @@ impl fmt::Display for Stmt {
             Stmt::WitnessNonemptySet(x) => write!(f, "{}", x),
             Stmt::ByCasesStmt(x) => write!(f, "{}", x),
             Stmt::ByContraStmt(x) => write!(f, "{}", x),
-            Stmt::ByEnumerateStmt(x) => write!(f, "{}", x),
+            Stmt::ByEnumerateFiniteSetStmt(x) => write!(f, "{}", x),
             Stmt::ByInducStmt(x) => write!(f, "{}", x),
             Stmt::ByForStmt(x) => write!(f, "{}", x),
             Stmt::ByExtensionStmt(x) => write!(f, "{}", x),
@@ -218,7 +218,7 @@ impl Stmt {
             Stmt::WitnessNonemptySet(stmt) => stmt.line_file.clone(),
             Stmt::ByCasesStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByContraStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByEnumerateStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByEnumerateFiniteSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByInducStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByForStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByExtensionStmt(stmt) => stmt.line_file.clone(),
@@ -260,7 +260,7 @@ impl Stmt {
             Stmt::WitnessNonemptySet(stmt) => stmt.stmt_type_name(),
             Stmt::ByCasesStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByContraStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByEnumerateStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByEnumerateFiniteSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByInducStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByForStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByExtensionStmt(stmt) => stmt.stmt_type_name(),
@@ -421,9 +421,9 @@ impl From<ByContraStmt> for Stmt {
     }
 }
 
-impl From<ByEnumerateStmt> for Stmt {
-    fn from(v: ByEnumerateStmt) -> Self {
-        Stmt::ByEnumerateStmt(v)
+impl From<ByEnumerateFiniteSetStmt> for Stmt {
+    fn from(v: ByEnumerateFiniteSetStmt) -> Self {
+        Stmt::ByEnumerateFiniteSetStmt(v)
     }
 }
 
