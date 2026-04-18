@@ -60,6 +60,6 @@ prove:
             =>:
                 $q(a, b)
 
-    forall c, d R:
-        $p(1, 2, c, d)
+        forall c, d R:
+            $p(1, 2, c, d)
     $q(1, 2)
