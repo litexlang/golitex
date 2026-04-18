@@ -16,4 +16,5 @@ pub mod rational_expression;
 pub mod result;
 pub mod runtime;
 pub mod stmt;
+pub mod to_latex;
 pub mod verify;

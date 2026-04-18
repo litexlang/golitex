@@ -2,7 +2,8 @@ use crate::prelude::*;
 use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 
 impl Runtime {
-    /// From numeric bounds on one side, infer a comparison to `0` on the other side when the constant side is numeric.
+    // Order atom with exactly one side a resolved numeric literal: may store `0 < x` or `x <= 0` for the other side.
+    // Example: `2 < a` (literal left) infers `0 < a` when the constant branch applies; `b < 0` pairs use the `<= 0` path on `b`.
     pub fn infer_numeric_order_sign_from_order_atomic(
         &mut self,
         atomic_fact: &AtomicFact,

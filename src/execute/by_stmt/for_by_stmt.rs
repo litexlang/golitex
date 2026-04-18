@@ -119,7 +119,7 @@ impl Runtime {
 
 impl Runtime {
     // Negated domain: one atomic uses `make_reversed`; conjunction uses De Morgan (or of negated atomics).
-    fn negated_domain_fact_for_by_for_skip(dom: &Fact) -> Option<Fact> {
+    pub(crate) fn negated_domain_fact_for_by_for_skip(dom: &Fact) -> Option<Fact> {
         match dom {
             Fact::AtomicFact(a) => Some(Fact::AtomicFact(a.make_reversed())),
             Fact::AndFact(and_fact) => {

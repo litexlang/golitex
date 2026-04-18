@@ -17,6 +17,7 @@ pub enum Obj {
     Mod(Mod),
     Pow(Pow),
     Abs(Abs),
+    Log(Log),
     Max(Max),
     Min(Min),
     Union(Union),
@@ -264,6 +265,13 @@ pub struct Abs {
     pub arg: Box<Obj>,
 }
 
+/// Real logarithm `log(base, x)` with `base > 0`, `base != 1`, `x > 0`.
+#[derive(Clone)]
+pub struct Log {
+    pub base: Box<Obj>,
+    pub arg: Box<Obj>,
+}
+
 #[derive(Clone)]
 pub struct Max {
     pub left: Box<Obj>,
@@ -417,6 +425,15 @@ impl Pow {
 impl Abs {
     pub fn new(arg: Obj) -> Self {
         Abs { arg: Box::new(arg) }
+    }
+}
+
+impl Log {
+    pub fn new(base: Obj, arg: Obj) -> Self {
+        Log {
+            base: Box::new(base),
+            arg: Box::new(arg),
+        }
     }
 }
 
@@ -731,6 +748,7 @@ fn precedence(o: &Obj) -> u8 {
         | Obj::MatrixScalarMul(_) => 2,
         Obj::Pow(_)
         | Obj::Abs(_)
+        | Obj::Log(_)
         | Obj::MatrixAdd(_)
         | Obj::MatrixSub(_)
         | Obj::MatrixMul(_)
@@ -816,6 +834,13 @@ impl Obj {
             Obj::Abs(a) => {
                 write!(f, "{} {}", ABS, LEFT_BRACE)?;
                 a.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::Log(l) => {
+                write!(f, "{} {}", LOG, LEFT_BRACE)?;
+                l.base.fmt_with_precedence(f, 0)?;
+                write!(f, "{} ", COMMA)?;
+                l.arg.fmt_with_precedence(f, 0)?;
                 write!(f, "{}", RIGHT_BRACE)?;
             }
             Obj::Max(m) => {
@@ -955,6 +980,11 @@ impl Obj {
             )
             .into(),
             Obj::Abs(x) => Abs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Log(x) => Log::new(
+                Obj::replace_bound_identifier(*x.base, from, to),
+                Obj::replace_bound_identifier(*x.arg, from, to),
+            )
+            .into(),
             Obj::Max(x) => Max::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
@@ -1455,6 +1485,16 @@ impl fmt::Display for Abs {
     }
 }
 
+impl fmt::Display for Log {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}{}{}{}",
+            LOG, LEFT_BRACE, self.base, COMMA, self.arg, RIGHT_BRACE
+        )
+    }
+}
+
 impl fmt::Display for Max {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -1720,6 +1760,12 @@ impl From<Pow> for Obj {
 impl From<Abs> for Obj {
     fn from(a: Abs) -> Self {
         Obj::Abs(a)
+    }
+}
+
+impl From<Log> for Obj {
+    fn from(l: Log) -> Self {
+        Obj::Log(l)
     }
 }
 

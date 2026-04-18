@@ -1,0 +1,8 @@
+log(2, 8) = 3
+
+forall a R_pos, b R:
+    a > 1
+    =>:
+        log(a, a^b) = b
+        log(a, a) = 1
+        log(a, 1) = 0
