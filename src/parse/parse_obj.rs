@@ -5,7 +5,7 @@ impl Runtime {
         self.parse_obj_hierarchy0(tb)
     }
 
-    /// 中缀 \ 最松散；往下依次为 +-、*/%、^、[]、主元
+    /// Infix `\` is loosest; then `+-`, `*/%`, `^`, `[]`, `..`, primary.
     fn parse_obj_hierarchy0(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy1(tb)?;
         if tb.exceed_end_of_head() {
@@ -127,24 +127,45 @@ impl Runtime {
         }
     }
 
-    /// [] 下标，优先级高于 ^
+    /// Subscript `[]`, tighter than `^`.
     fn parse_obj_hierarchy4(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        let left = self.parse_obj_hierarchy5(tb)?;
+        let mut left = self.parse_obj_hierarchy6(tb)?;
+        loop {
+            if tb.exceed_end_of_head() {
+                return self.parse_obj_hierarchy5(tb, left);
+            }
+            if tb.current_token_is_equal_to(LEFT_BRACKET) {
+                tb.skip_token(LEFT_BRACKET)?;
+                let obj = self.parse_obj(tb)?;
+                tb.skip_token(RIGHT_BRACKET)?;
+                left = ObjAtIndex::new(left, obj).into();
+            } else {
+                break;
+            }
+        }
+        self.parse_obj_hierarchy5(tb, left)
+    }
+
+    /// Range `..` (closed_range); same band as `[]`, applied after subscripts.
+    fn parse_obj_hierarchy5(
+        &mut self,
+        tb: &mut TokenBlock,
+        left: Obj,
+    ) -> Result<Obj, RuntimeError> {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        if tb.current_token_is_equal_to(LEFT_BRACKET) {
-            tb.skip_token(LEFT_BRACKET)?;
-            let obj = self.parse_obj(tb)?;
-            tb.skip_token(RIGHT_BRACKET)?;
-            Ok(ObjAtIndex::new(left, obj).into())
+        if tb.current_token_is_equal_to(DOT_DOT) {
+            tb.skip_token(DOT_DOT)?;
+            let right = self.parse_obj_hierarchy3(tb)?;
+            Ok(ClosedRange::new(left, right).into())
         } else {
             Ok(left)
         }
     }
 
-    /// 主元：{ }、fn、数字、括号、关键字、atom
-    fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+    /// Primary: `{ }`, `fn`, numbers, `()`, keywords, atoms.
+    fn parse_obj_hierarchy6(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(LEFT_BRACKET) {
