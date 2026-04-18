@@ -1057,15 +1057,22 @@ impl IsTupleFact {
 impl KnowStmt {
     pub fn to_latex_string(&self) -> String {
         if self.facts.len() == 1 {
-            format!("{} {}", KNOW, self.facts[0].to_latex_string())
+            format!(
+                r"\operatorname{{{}}} {}",
+                KNOW,
+                self.facts[0].to_latex_string()
+            )
         } else {
-            let lines = self
+            let rows = self
                 .facts
                 .iter()
-                .map(|fact| format!("    {}", fact.to_latex_string()))
+                .map(|fact| format!("& {}", fact.to_latex_string()))
                 .collect::<Vec<_>>()
-                .join("\n");
-            format!("{}{}\n{}", KNOW, COLON, lines)
+                .join(" \\\\\n");
+            format!(
+                r"\operatorname{{{}}}\colon \begin{{aligned}}{}\end{{aligned}}",
+                KNOW, rows
+            )
         }
     }
 }
