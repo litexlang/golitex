@@ -538,23 +538,21 @@ by contra:
 
 ---
 
-### `by enumerate`
+### `by enumerate finite_set`
 
 **Meaning.** Prove a `forall` whose parameters range over **finite list sets** `{ … }`. The checker forms the Cartesian product of those lists, assigns each combination to the parameters, and for each tuple runs the same **domain → optional proof → then** flow as **`by for`** (which enumerates integers from `range` / `closed_range` instead of list-set members).
 
-**Syntax (preferred).** Same layout as `by for`: header is `by enumerate` `:` (colon right after `enumerate`). The first body block is `prove:` containing **exactly one** nested block, parsed as a single **`forall`** fact.
+**Syntax.** Same layout as `by for`: header is `by enumerate` `finite_set` `:` (keyword `finite_set` before the colon). The first body block is `prove:` containing **exactly one** nested block, parsed as a single **`forall`** fact.
 
 - Each `forall` parameter’s type must be a **list set** `{ … }` (the value of each parameter is always one element of that list).
 - The `forall` may use **domain** lines before `=>:` and **then** lines under `=>:`; or omit `=>:` so every line under `forall` is a conclusion (no domain), like ordinary `forall` parsing.
 - **Domain checks** match `by for`: if a domain fact is verified **true**, it is assumed; if **unknown**, the checker may **skip** that tuple when the same “skippable negation” as in `by for` is verified **true**; otherwise the step fails. After domains succeed (or the branch is skipped), optional proof blocks run, then each **then** fact must verify.
 - Further body blocks after `prove:` are proof steps, parsed in a local parsing-time name scope (names do not leak to the file).
 
-**Syntax (legacy).** `by enumerate` *param* *list set* [, … ] `:` `prove` `:` *goals* … optional proof blocks — equivalent to a `forall` with those names and list-set types, **empty domain**, and each `prove` line as a **then** fact.
-
-**Example (preferred).**
+**Example.**
 
 ```litex
-by enumerate:
+by enumerate finite_set:
     prove:
         forall a {1, 2}:
             a = 1 or a = 2
@@ -564,7 +562,7 @@ by enumerate:
 **Example (domain and `=>:`).**
 
 ```litex
-by enumerate:
+by enumerate finite_set:
     prove:
         forall a {1, 2}:
             a > 1
@@ -573,24 +571,15 @@ by enumerate:
     do_nothing
 ```
 
-**Example (legacy header).**
-
-```litex
-by enumerate x {1, 2}:
-    prove:
-        x = 1 or x = 2
-    do_nothing
-```
-
-Integer **closed_range** membership with literal endpoints uses the separate form **`by enumerate closed_range(…)`** (next section), not list-set enumeration.
+Integer **closed_range** membership with literal endpoints uses **`by enumerate` *lo*`..`*hi* `:`** *object* (next section), not list-set enumeration.
 
 ---
 
-### `by enumerate closed_range(…)`
+### `by enumerate` *range* `:` *object*
 
 **Meaning.** From membership of an object in a **closed interval** with **integer literal** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
 
-**Syntax.** `by enumerate closed_range(` *lo* `,` *hi* `):` *object* — *lo* / *hi* are integer literals (no decimal point); *object* is any expression the parser accepts as an `obj`.
+**Syntax.** `by enumerate` *lo* `..` *hi* `:` *object* — *range* parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`); *object* is any expression the parser accepts as an `obj`.
 
 **Example.**
 
@@ -598,13 +587,13 @@ Integer **closed_range** membership with literal endpoints uses the separate for
 prove:
     have x closed_range(0, 10)
 
-    by enumerate closed_range(0, 10): x
+    by enumerate 0..10: x
 
 prove:
     have a Z
     have x closed_range(a, a + 10)
 
-    by enumerate closed_range(a, a + 10): x
+    by enumerate a..a + 10: x
 ```
 
 ---
@@ -626,7 +615,7 @@ by induc param from object:
 ```
 
 - The first body block must be `prove:`; each nested block under it is one atomic-style goal (`ExistOrAndChainAtomicFact`).
-- Further blocks are optional proof steps (same idea as after `prove:` in `claim` / `by enumerate`). They are parsed under a local parsing-time name scope so names introduced there do not leak to the file.
+- Further blocks are optional proof steps (same idea as after `prove:` in `claim` / `by enumerate finite_set`). They are parsed under a local parsing-time name scope so names introduced there do not leak to the file.
 - Multiple goals share one proof segment and one local run; each goal is checked in turn after that proof.
 
 **Example.**
@@ -659,7 +648,7 @@ forall n Z:
 
 ### `by for`
 
-**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions. For **list sets** `{ … }` instead of ranges, use **`by enumerate`** (same `prove:` / `forall` shape; see above).
+**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions. For **list sets** `{ … }` instead of ranges, use **`by enumerate finite_set`** (same `prove:` / `forall` shape; see above).
 
 **Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps.
 
@@ -691,12 +680,14 @@ by for:
 by extension:
     prove:
         {1, 2} = {2, 1}
-    by enumerate x {1, 2}:
+    by enumerate finite_set:
         prove:
-            x $in {2, 1}
-    by enumerate y {2, 1}:
+            forall x {1, 2}:
+                x $in {2, 1}
+    by enumerate finite_set:
         prove:
-            y $in {1, 2}
+            forall y {2, 1}:
+                y $in {1, 2}
 
 {1, 2} = {2, 1}
 ```
@@ -999,7 +990,7 @@ prove:
 | `prove` | Nested proof block |
 | `witness` | Witness for `exist` or nonempty set |
 | `exist` / `exist_unique` | Existential facts (latter needs uniqueness in context; see **Existential with uniqueness**) |
-| `by` | Proof tactic (`cases`, `contra`, `enumerate`, `enumerate closed_range(…)`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `finite_seq`, `seq`, `matrix`, `struct`, `tuple`) |
+| `by` | Proof tactic (`cases`, `contra`, `enumerate finite_set`, `enumerate` *range* `:`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `finite_seq`, `seq`, `matrix`, `struct`, `tuple`) |
 | `eval` | Run algorithm |
 | `import` | Import module/file |
 | `run_file` | Run a file |

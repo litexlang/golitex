@@ -29,7 +29,7 @@ impl Runtime {
             Stmt::WitnessNonemptySet(s) => self.exec_witness_nonempty_set(s),
             Stmt::ByCasesStmt(s) => self.exec_by_cases_stmt(s),
             Stmt::ByContraStmt(s) => self.exec_by_contra_stmt(s),
-            Stmt::ByEnumerateStmt(s) => self.exec_by_enumerate_stmt(s),
+            Stmt::ByEnumerateFiniteSetStmt(s) => self.exec_by_enumerate_finite_set_stmt(s),
             Stmt::ByInducStmt(s) => self.exec_by_induc_stmt(s),
             Stmt::ByForStmt(s) => self.exec_by_for_stmt(s),
             Stmt::ByExtensionStmt(s) => self.exec_by_extension_stmt(s),

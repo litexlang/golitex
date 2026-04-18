@@ -1,4 +1,4 @@
-by enumerate:
+by enumerate finite_set:
     prove:
         forall a {1, 2}, b {3, 4}:
             a > 1

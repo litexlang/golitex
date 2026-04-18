@@ -1,17 +1,17 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// Prove by finite enumeration over list-set parameters (`by enumerate …`).
+/// List-set enumeration: `by enumerate finite_set:` then `prove:` / one `forall`.
 #[derive(Clone)]
-pub struct ByEnumerateStmt {
+pub struct ByEnumerateFiniteSetStmt {
     pub forall_fact: ForallFact,
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }
 
-impl ByEnumerateStmt {
+impl ByEnumerateFiniteSetStmt {
     pub fn new(forall_fact: ForallFact, proof: Vec<Stmt>, line_file: LineFile) -> Self {
-        ByEnumerateStmt {
+        ByEnumerateFiniteSetStmt {
             forall_fact,
             proof,
             line_file,
@@ -27,7 +27,7 @@ impl ByEnumerateStmt {
                 ParamType::Obj(Obj::ListSet(ls)) => ls.clone(),
                 _ => {
                     return Err(
-                        "by enumerate: each forall parameter type must be a list set `{ ... }`"
+                        "by enumerate finite_set: each forall parameter type must be a list set `{ ... }`"
                             .to_string(),
                     );
                 }
@@ -38,7 +38,9 @@ impl ByEnumerateStmt {
             }
         }
         if params.is_empty() {
-            return Err("by enumerate: forall must declare at least one parameter".to_string());
+            return Err(
+                "by enumerate finite_set: forall must declare at least one parameter".to_string(),
+            );
         }
         Ok((params, param_sets))
     }
@@ -49,13 +51,14 @@ impl ByEnumerateStmt {
     }
 }
 
-impl fmt::Display for ByEnumerateStmt {
+impl fmt::Display for ByEnumerateFiniteSetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}:\n{}{}\n{}",
+            "{} {} {}:\n{}{}\n{}",
             BY,
             ENUMERATE,
+            FINITE_SET,
             add_four_spaces_at_beginning(PROVE.to_string(), 1),
             COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
