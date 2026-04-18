@@ -124,4 +124,14 @@ know:
         a / c <= b
         =>:
             a <= b * c
+
+    forall a, b Z:
+        a <= b
+        =>:
+            count(closed_range(a, b)) = b - a + 1
+
+    forall a, b Z:
+        a < b
+        =>:
+            count(range(a, b)) = b - a   
 "#;

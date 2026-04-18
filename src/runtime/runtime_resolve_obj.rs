@@ -1,3 +1,6 @@
+use crate::common::count_range_integer::{
+    count_closed_range_integer_endpoints, count_half_open_range_integer_endpoints,
+};
 use crate::prelude::*;
 
 impl Runtime {
@@ -100,6 +103,16 @@ impl Runtime {
             Obj::Min(m) => {
                 let result: Obj =
                     Min::new(self.resolve_obj(&m.left), self.resolve_obj(&m.right)).into();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
+                if let Some(calculated_result) = calculated_result {
+                    calculated_result.into()
+                } else {
+                    result
+                }
+            }
+            Obj::Log(l) => {
+                let result: Obj =
+                    Log::new(self.resolve_obj(&l.base), self.resolve_obj(&l.arg)).into();
                 let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
                     calculated_result.into()
@@ -212,6 +225,32 @@ impl Runtime {
             }
             Obj::Count(count) => match &*count.set {
                 Obj::ListSet(list_set) => Number::new(list_set.list.len().to_string()).into(),
+                Obj::ClosedRange(cr) => {
+                    if let (Some(a_num), Some(b_num)) = (
+                        self.resolve_obj_to_number_resolved(cr.start.as_ref()),
+                        self.resolve_obj_to_number_resolved(cr.end.as_ref()),
+                    ) {
+                        if let Some(n) =
+                            count_closed_range_integer_endpoints(&a_num, &b_num)
+                        {
+                            return n.into();
+                        }
+                    }
+                    obj.clone()
+                }
+                Obj::Range(r) => {
+                    if let (Some(a_num), Some(b_num)) = (
+                        self.resolve_obj_to_number_resolved(r.start.as_ref()),
+                        self.resolve_obj_to_number_resolved(r.end.as_ref()),
+                    ) {
+                        if let Some(n) =
+                            count_half_open_range_integer_endpoints(&a_num, &b_num)
+                        {
+                            return n.into();
+                        }
+                    }
+                    obj.clone()
+                }
                 _ => obj.clone(),
             },
             Obj::TupleDim(dim) => match &*dim.arg {
