@@ -1,4 +1,4 @@
-use crate::pipeline::to_latex_from_source_after_builtins;
+use crate::to_latex::to_latex_from_source_after_builtins;
 use crate::prelude::*;
 use std::env;
 use std::fs;
