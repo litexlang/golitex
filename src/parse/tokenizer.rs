@@ -76,8 +76,17 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
         if bytes[i].is_ascii_digit() {
             let start = i;
             i += 1;
-            while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
+            while i < bytes.len() && bytes[i].is_ascii_digit() {
                 i += 1;
+            }
+            if i + 1 < bytes.len()
+                && bytes[i] == b'.'
+                && bytes[i + 1].is_ascii_digit()
+            {
+                i += 1;
+                while i < bytes.len() && bytes[i].is_ascii_digit() {
+                    i += 1;
+                }
             }
             tokens.push(line[start..i].to_string());
             continue;

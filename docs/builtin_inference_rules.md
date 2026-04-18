@@ -4,10 +4,11 @@ When the runtime stores or learns an **atomic** fact, `Runtime::infer_atomic_fac
 
 ## `EqualFact`
 
-- **Numeric binding**: If one side evaluates to a concrete number, the other side’s symbol is recorded with that normalized value (environment map).
-- **Difference zero**: If one side is `0` and the other is `a - b` (or symmetric), emit **`a = b`**.
-- **Cartesian / tuple**: The non-literal side gets **`IsCart` / `IsTuple`**, equality of **dimension** to the literal, and stored cart/tuple structure.
-- **Finite sequence / matrix list literal**: The other symbol is associated with that **list** representation.
+Implemented in `src/infer/infer_equal_and_normal.rs` (`infer_equal_fact`). Steps are merged in order:
+
+1. **Difference zero** — `0 = a - b` (or symmetric) ⇒ store **`a = b`**.
+2. **Numeric binding** — If one side evaluates to a concrete number, bind the other side’s name to that normalized value.
+3. **Cart / tuple / finite-seq list / matrix list** — Structural equalities: `IsTuple`, `tuple_dim`, cart metadata, list shapes, as in the Rust helpers.
 
 *Example:* `a = 1 + 2` binds `a` to the normalized value of `3`; `0 = x - y` adds the fact `x = y`.
 
@@ -17,10 +18,10 @@ Depends on the shape of `S`:
 
 | RHS `S` | What is inferred | Example |
 |--------|------------------|---------|
-| `FnSet` | Element (identifier-like) registered in `known_objs_in_fn_sets` | — |
-| `ListSet` | **OR** of equalities: each list member is one disjunct | `a $in {1,2}` ⇒ `(a = 1) or (a = 2)` |
+| `FnSet` | If `element` is identifier-like (`Identifier`, `IdentifierWithMod`, `FieldAccess`, `FieldAccessWithMod`), register it in `known_objs_in_fn_sets`; also re-store the `InFact` | — |
+| `ListSet` | **Empty list** ⇒ no inference. Otherwise **OR** of equalities: each list member is one disjunct | `a $in {1,2}` ⇒ `(a = 1) or (a = 2)` |
 | `SetBuilder` | `element $in` parameter domain **and** each defining fact with the parameter replaced by `element` | `{ t $in T \| P(t) }` |
-| `Cart` | `IsTuple(element)`, **`tuple_dim(element) = n`**, cart metadata for `n ≥ 2` | `p $in A * B` |
+| `Cart` | **Fewer than two** cart factors ⇒ no inference. If `n ≥ 2`: `IsTuple(element)`, **`tuple_dim(element) = n`**, cart metadata | `p $in cart(A, B)` |
 | `range(a,b)` | `element $in Z`, **`a <= element`**, **`element < b`** | integer half-open interval |
 | `closed_range(a,b)` | `element $in Z`, **`a <= element`**, **`element <= b`** | integer closed interval |
 | `N_pos`, `Q_pos`, `R_pos` | **`0 < element`** | positive ray |
@@ -58,4 +59,15 @@ Handled by `infer_numeric_order_sign_from_order_atomic` **only when exactly one 
 
 ## Other atomic kinds
 
-Negated atoms, `is_set`, restrict, etc.: **`infer_atomic_fact` returns empty** (no automatic inference on this path).
+Everything **not** listed above hits the `_` arm of `infer_atomic_fact`: **no facts are inferred** on this path.
+
+Explicit list (all of these return an empty `InferResult` here):
+
+- `IsSetFact`, `IsNonemptySetFact`, `IsFiniteSetFact`, `IsCartFact`, `IsTupleFact`
+- `RestrictFact`, `NotRestrictFact`
+- `NotNormalAtomicFact`, `NotEqualFact`
+- `NotLessFact`, `NotGreaterFact`, `NotLessEqualFact`, `NotGreaterEqualFact`
+- `NotIsSetFact`, `NotIsNonemptySetFact`, `NotIsFiniteSetFact`, `NotInFact`, `NotIsCartFact`, `NotIsTupleFact`
+- `NotSubsetFact`, `NotSupersetFact`
+
+Non-atomic facts (`And`, `Or`, `forall`, …) are **not** handled here; see `src/infer/infer_dispatch.rs`.
