@@ -27,7 +27,6 @@ litex [OPTION...]
 | `-latex` | LaTeX-related; with no further arguments, interactive LaTeX mode (often a stub message in the Rust kernel). |
 | `-latex -f <file>` | Compile a file to LaTeX (stub message if not implemented). |
 | `-latex -e <code>` | Compile code to LaTeX (same). |
-| `-latex -r <repo>` | Compile the repo (`main.lit`) to LaTeX (same). |
 | `-fmt <code>` | Format code (stub if not implemented). |
 | `-install <module>` | Install a module (stub if not implemented). |
 | `-uninstall <module>` | Uninstall a module (same). |
