@@ -323,7 +323,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add litex.rb
-          git diff --quiet && echo "No changes" || git commit -m "Update litex to ${VERSION}"
+          git diff --cached --quiet && echo "No changes" || git commit -m "Update litex to ${VERSION}"
           git push
 
   # ─────────────────────────────────────────────
