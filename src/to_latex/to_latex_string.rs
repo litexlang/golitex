@@ -1903,6 +1903,11 @@ impl Obj {
             Obj::FamilyObj(x) => x.to_latex_string(),
             Obj::StructObj(x) => x.to_latex_string(),
             Obj::ForallFreeParam(x) => latex_local_ident(&x.name),
+            Obj::ForallFreeParamFieldAccess(x) => {
+                let s = crate::obj::field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
+            Obj::DefFreeParam(x) => latex_local_ident(&x.name),
             Obj::ExistFreeParam(x) => latex_local_ident(&x.name),
             Obj::SetBuilderFreeParam(x) => latex_local_ident(&x.name),
             Obj::FnSetFreeParam(x) => latex_local_ident(&x.name),

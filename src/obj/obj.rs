@@ -1,5 +1,6 @@
 use super::free_param_obj::{
-    ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamObj, SetBuilderFreeParamObj,
+    DefFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamFieldAccess,
+    ForallFreeParamObj, SetBuilderFreeParamObj,
 };
 use super::standard_set::StandardSet;
 use crate::prelude::*;
@@ -50,6 +51,8 @@ pub enum Obj {
     FamilyObj(FamilyObj),
     StructObj(StructObj),
     ForallFreeParam(ForallFreeParamObj),
+    ForallFreeParamFieldAccess(ForallFreeParamFieldAccess),
+    DefFreeParam(DefFreeParamObj),
     ExistFreeParam(ExistFreeParamObj),
     SetBuilderFreeParam(SetBuilderFreeParamObj),
     FnSetFreeParam(FnSetFreeParamObj),
@@ -899,6 +902,8 @@ impl Obj {
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
             Obj::ForallFreeParam(x) => write!(f, "{}", x)?,
+            Obj::ForallFreeParamFieldAccess(x) => write!(f, "{}", x)?,
+            Obj::DefFreeParam(x) => write!(f, "{}", x)?,
             Obj::ExistFreeParam(x) => write!(f, "{}", x)?,
             Obj::SetBuilderFreeParam(x) => write!(f, "{}", x)?,
             Obj::FnSetFreeParam(x) => write!(f, "{}", x)?,
@@ -1199,6 +1204,27 @@ impl Obj {
                     p.name
                 };
                 ForallFreeParamObj::new(name).into()
+            }
+            Obj::ForallFreeParamFieldAccess(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                let field = if p.field == from {
+                    to.to_string()
+                } else {
+                    p.field
+                };
+                ForallFreeParamFieldAccess::new(name, field).into()
+            }
+            Obj::DefFreeParam(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                DefFreeParamObj::new(name).into()
             }
             Obj::ExistFreeParam(p) => {
                 let name = if p.name == from {

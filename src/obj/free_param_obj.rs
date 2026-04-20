@@ -1,9 +1,21 @@
+use super::field_access_to_string;
 use super::Obj;
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ForallFreeParamObj {
     pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DefFreeParamObj {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ForallFreeParamFieldAccess {
+    pub name: String,
+    pub field: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -24,6 +36,18 @@ pub struct FnSetFreeParamObj {
 impl ForallFreeParamObj {
     pub fn new(name: String) -> Self {
         ForallFreeParamObj { name }
+    }
+}
+
+impl ForallFreeParamFieldAccess {
+    pub fn new(name: String, field: String) -> Self {
+        ForallFreeParamFieldAccess { name, field }
+    }
+}
+
+impl DefFreeParamObj {
+    pub fn new(name: String) -> Self {
+        DefFreeParamObj { name }
     }
 }
 
@@ -51,6 +75,18 @@ impl fmt::Display for ForallFreeParamObj {
     }
 }
 
+impl fmt::Display for ForallFreeParamFieldAccess {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", field_access_to_string(&self.name, &self.field))
+    }
+}
+
+impl fmt::Display for DefFreeParamObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
 impl fmt::Display for ExistFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
@@ -72,6 +108,18 @@ impl fmt::Display for FnSetFreeParamObj {
 impl From<ForallFreeParamObj> for Obj {
     fn from(v: ForallFreeParamObj) -> Self {
         Obj::ForallFreeParam(v)
+    }
+}
+
+impl From<ForallFreeParamFieldAccess> for Obj {
+    fn from(v: ForallFreeParamFieldAccess) -> Self {
+        Obj::ForallFreeParamFieldAccess(v)
+    }
+}
+
+impl From<DefFreeParamObj> for Obj {
+    fn from(v: DefFreeParamObj) -> Self {
+        Obj::DefFreeParam(v)
     }
 }
 

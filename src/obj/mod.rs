@@ -8,7 +8,8 @@ pub use atom::{
     IdentifierOrIdentifierWithMod, IdentifierWithMod,
 };
 pub use free_param_obj::{
-    ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamObj, SetBuilderFreeParamObj,
+    DefFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamFieldAccess,
+    ForallFreeParamObj, SetBuilderFreeParamObj,
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,

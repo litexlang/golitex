@@ -93,6 +93,23 @@ impl Runtime {
                 Some(obj) => obj.clone(),
                 None => p.clone().into(),
             }),
+            Obj::ForallFreeParamFieldAccess(p) => {
+                let fa = FieldAccess::new(p.name.clone(), p.field.clone());
+                let dotted = field_access_to_string(&fa.name, &fa.field);
+                if let Some(obj) = param_to_arg_map.get(&dotted) {
+                    return Ok(obj.clone());
+                }
+                match self.inst_field_access(&fa, param_to_arg_map)? {
+                    Obj::FieldAccess(f) if f.name == p.name && f.field == p.field => {
+                        Ok(ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into())
+                    }
+                    other => Ok(other),
+                }
+            }
+            Obj::DefFreeParam(p) => Ok(match param_to_arg_map.get(&p.name) {
+                Some(obj) => obj.clone(),
+                None => p.clone().into(),
+            }),
             Obj::ExistFreeParam(p) => Ok(match param_to_arg_map.get(&p.name) {
                 Some(obj) => obj.clone(),
                 None => p.clone().into(),
