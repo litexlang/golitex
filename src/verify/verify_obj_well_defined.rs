@@ -328,7 +328,7 @@ impl Runtime {
                 self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_as_obj,
-                (FreeParamObjType::FnSet, FreeParamObjType::FnSet),
+                FreeParamObjType::FnSet,
             )
             .map_err(|stmt_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -377,7 +377,7 @@ impl Runtime {
         );
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, (FreeParamObjType::FnSet, FreeParamObjType::FnSet))
+                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, FreeParamObjType::FnSet)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -1883,7 +1883,7 @@ impl Runtime {
                 &def.params_def_with_type,
                 &family_param_type.params,
                 verify_state,
-                (FreeParamObjType::Def, FreeParamObjType::Def),
+                FreeParamObjType::Def,
             )
             .map_err(|runtime_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -1921,7 +1921,7 @@ impl Runtime {
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,
                     &param_to_arg_map,
-                    (FreeParamObjType::Def, FreeParamObjType::Def),
+                    FreeParamObjType::Def,
                 )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -1966,7 +1966,7 @@ impl Runtime {
         }
 
         let instantiated_equal_to =
-            self.inst_obj(&def.equal_to, &param_to_arg_map, (FreeParamObjType::Def, FreeParamObjType::Def))
+            self.inst_obj(&def.equal_to, &param_to_arg_map, FreeParamObjType::Def)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -2032,7 +2032,7 @@ impl Runtime {
                 &def.param_defs,
                 &struct_ty.args,
                 verify_state,
-                (FreeParamObjType::Def, FreeParamObjType::Def),
+                FreeParamObjType::Def,
             )
             .map_err(|runtime_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -2070,7 +2070,7 @@ impl Runtime {
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,
                     &param_to_arg_map,
-                    (FreeParamObjType::Def, FreeParamObjType::Def),
+                    FreeParamObjType::Def,
                 )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(

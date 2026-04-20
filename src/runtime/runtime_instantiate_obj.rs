@@ -15,54 +15,6 @@ fn remove_param_names_from_param_to_arg_map(
     filtered_param_to_arg_map
 }
 
-fn coerce_inst_remainder_obj(
-    name: &str,
-    natural: FreeParamObjType,
-    ctx: InstObjState,
-) -> Option<Obj> {
-    let (active, out_ty) = ctx;
-    if out_ty == natural {
-        return None;
-    }
-    let active_covers = |k: FreeParamObjType| active == k;
-    if !active_covers(natural) {
-        return None;
-    }
-    match (natural, out_ty) {
-        (FreeParamObjType::Forall, FreeParamObjType::Identifier) => {
-            Some(Identifier::new(name.to_string()).into())
-        }
-        (FreeParamObjType::Induc, FreeParamObjType::Forall) => {
-            Some(ForallFreeParamObj::new(name.to_string()).into())
-        }
-        (FreeParamObjType::DefAlgo, FreeParamObjType::Identifier) => {
-            Some(Identifier::new(name.to_string()).into())
-        }
-        _ => None,
-    }
-}
-
-fn coerce_inst_remainder_field_access(
-    name: &str,
-    field: &str,
-    natural: FreeParamObjType,
-    ctx: InstObjState,
-) -> Option<Obj> {
-    let (active, out_ty) = ctx;
-    if out_ty == natural {
-        return None;
-    }
-    let active_covers = |k: FreeParamObjType| active == k;
-    if !active_covers(natural) {
-        return None;
-    }
-    match (natural, out_ty) {
-        (FreeParamObjType::Forall, FreeParamObjType::Identifier) => {
-            Some(Identifier::new(field_access_to_string(name, field)).into())
-        }
-        _ => None,
-    }
-}
 
 impl Runtime {
     pub fn inst_obj(
@@ -141,22 +93,15 @@ impl Runtime {
             }
             Obj::FreeParam(p) => match p {
                 FreeParamObj::Forall(p) => {
-                    let substituted = if ctx.0 == FreeParamObjType::Forall {
-                        param_to_arg_map.get(&p.name).cloned()
-                    } else {
-                        None
-                    };
-                    if let Some(obj) = substituted {
-                        return Ok(obj);
-                    }
-                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::Forall, ctx)
-                    {
-                        return Ok(obj);
+                    if ctx == FreeParamObjType::Forall {
+                        if let Some(obj) = param_to_arg_map.get(&p.name) {
+                            return Ok(obj.clone());
+                        }
                     }
                     Ok(p.clone().into())
                 }
                 FreeParamObj::ForallFieldAccess(p) => {
-                    if ctx.0 != FreeParamObjType::Forall {
+                    if ctx != FreeParamObjType::Forall {
                         return Ok(
                             ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into(),
                         );
@@ -167,111 +112,62 @@ impl Runtime {
                         return Ok(obj.clone());
                     }
                     match self.inst_field_access(&fa, param_to_arg_map)? {
-                        Obj::FieldAccess(f) if f.name == p.name && f.field == p.field => {
-                            if let Some(obj) = coerce_inst_remainder_field_access(
-                                &p.name,
-                                &p.field,
-                                FreeParamObjType::Forall,
-                                ctx,
-                            ) {
-                                return Ok(obj);
-                            }
-                            Ok(ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into())
-                        }
+                        Obj::FieldAccess(f) if f.name == p.name && f.field == p.field => Ok(
+                            ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into(),
+                        ),
                         other => Ok(other),
                     }
                 }
                 FreeParamObj::Def(p) => {
-                    let substituted = if ctx.0 == FreeParamObjType::Def {
-                        param_to_arg_map.get(&p.name).cloned()
-                    } else {
-                        None
-                    };
-                    if let Some(obj) = substituted {
-                        return Ok(obj);
-                    }
-                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::Def, ctx) {
-                        return Ok(obj);
+                    if ctx == FreeParamObjType::Def {
+                        if let Some(obj) = param_to_arg_map.get(&p.name) {
+                            return Ok(obj.clone());
+                        }
                     }
                     Ok(p.clone().into())
                 }
                 FreeParamObj::Exist(p) => {
-                    let substituted = if ctx.0 == FreeParamObjType::Exist {
-                        param_to_arg_map.get(&p.name).cloned()
-                    } else {
-                        None
-                    };
-                    if let Some(obj) = substituted {
-                        return Ok(obj);
-                    }
-                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::Exist, ctx)
-                    {
-                        return Ok(obj);
+                    if ctx == FreeParamObjType::Exist {
+                        if let Some(obj) = param_to_arg_map.get(&p.name) {
+                            return Ok(obj.clone());
+                        }
                     }
                     Ok(p.clone().into())
                 }
                 FreeParamObj::SetBuilder(p) => {
-                    let substituted = if ctx.0 == FreeParamObjType::SetBuilder {
-                        param_to_arg_map.get(&p.name).cloned()
-                    } else {
-                        None
-                    };
-                    if let Some(obj) = substituted {
-                        return Ok(obj);
-                    }
-                    if let Some(obj) =
-                        coerce_inst_remainder_obj(&p.name, FreeParamObjType::SetBuilder, ctx)
-                    {
-                        return Ok(obj);
+                    if ctx == FreeParamObjType::SetBuilder {
+                        if let Some(obj) = param_to_arg_map.get(&p.name) {
+                            return Ok(obj.clone());
+                        }
                     }
                     Ok(p.clone().into())
                 }
                 FreeParamObj::FnSet(p) => {
-                    let substituted = if ctx.0 == FreeParamObjType::FnSet {
-                        param_to_arg_map.get(&p.name).cloned()
-                    } else {
-                        None
-                    };
-                    if let Some(obj) = substituted {
-                        return Ok(obj);
-                    }
-                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::FnSet, ctx) {
-                        return Ok(obj);
+                    if ctx == FreeParamObjType::FnSet {
+                        if let Some(obj) = param_to_arg_map.get(&p.name) {
+                            return Ok(obj.clone());
+                        }
                     }
                     Ok(p.clone().into())
                 }
                 FreeParamObj::Induc(p) => {
-                    let substituted = if ctx.0 == FreeParamObjType::Induc {
-                        param_to_arg_map.get(&p.name).cloned()
-                    } else {
-                        None
-                    };
-                    if let Some(obj) = substituted {
-                        return Ok(obj);
-                    }
-                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::Induc, ctx) {
-                        return Ok(obj);
+                    if ctx == FreeParamObjType::Induc {
+                        if let Some(obj) = param_to_arg_map.get(&p.name) {
+                            return Ok(obj.clone());
+                        }
                     }
                     Ok(p.clone().into())
                 }
                 FreeParamObj::DefAlgo(p) => {
-                    let substituted = if ctx.0 == FreeParamObjType::DefAlgo {
-                        param_to_arg_map.get(&p.name).cloned()
-                    } else {
-                        None
-                    };
-                    if let Some(obj) = substituted {
-                        return Ok(obj);
-                    }
-                    if let Some(obj) =
-                        coerce_inst_remainder_obj(&p.name, FreeParamObjType::DefAlgo, ctx)
-                    {
-                        return Ok(obj);
+                    if ctx == FreeParamObjType::DefAlgo {
+                        if let Some(obj) = param_to_arg_map.get(&p.name) {
+                            return Ok(obj.clone());
+                        }
                     }
                     Ok(p.clone().into())
                 }
                 FreeParamObj::StructSelfField(p) => {
-                    if ctx.0 != FreeParamObjType::StructSelf {
+                    if ctx != FreeParamObjType::StructSelf {
                         return Ok(p.clone().into());
                     }
                     let fa = FieldAccess::new(SELF.to_string(), p.field.clone());

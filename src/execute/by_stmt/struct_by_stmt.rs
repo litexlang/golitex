@@ -22,7 +22,7 @@ impl Runtime {
                     let map = def
                         .params_def_with_type
                         .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
-                    self.inst_obj(&def.equal_to, &map, (FreeParamObjType::Def, FreeParamObjType::Def))
+                    self.inst_obj(&def.equal_to, &map, FreeParamObjType::Def)
                 }
                 _ => Ok(o.clone()),
             },
@@ -94,7 +94,7 @@ impl Runtime {
 
         let mut cart_dims: Vec<Obj> = Vec::with_capacity(def.fields.len());
         for (_, field_ty) in def.fields.iter() {
-            let pt = self.inst_param_type(field_ty, &param_to_arg_map, (FreeParamObjType::Def, FreeParamObjType::Def))?;
+            let pt = self.inst_param_type(field_ty, &param_to_arg_map, FreeParamObjType::Def)?;
             cart_dims.push(self.param_type_to_cart_dimension_obj(&pt)?);
         }
         let cart_obj = Cart::new(cart_dims).into();
@@ -184,11 +184,10 @@ impl Runtime {
 
         let mut inst_body_facts: Vec<OrAndChainAtomicFact> = Vec::with_capacity(def.facts.len());
         for fact in def.facts.iter() {
-            inst_body_facts.push(self.inst_or_and_chain_atomic_fact(fact, &extended_for_sb, (FreeParamObjType::StructSelf, FreeParamObjType::StructSelf))?);
+            inst_body_facts.push(self.inst_or_and_chain_atomic_fact(fact, &extended_for_sb, FreeParamObjType::StructSelf)?);
         }
 
-        let set_builder =
-            SetBuilder::new_with_mangled_name(set_builder_param, cart_obj.clone(), inst_body_facts);
+        let set_builder = SetBuilder::new(set_builder_param, cart_obj.clone(), inst_body_facts);
         let rhs_sb_obj: Obj = set_builder.clone().into();
         self.verify_obj_well_defined_and_store_cache(&rhs_sb_obj, &verify_state)
             .map_err(|e| {

@@ -6,7 +6,6 @@ use std::rc::Rc;
 pub struct Runtime {
     pub module_manager: ModuleManager,
     pub environment_stack: Vec<Box<Environment>>,
-    pub parsing_time_name_scope_stack: Vec<HashMap<String, LineFile>>,
     pub parsing_free_param_collection: FreeParamCollection,
 }
 
@@ -18,7 +17,6 @@ impl Runtime {
         Runtime {
             module_manager,
             environment_stack: vec![new_environment],
-            parsing_time_name_scope_stack: vec![HashMap::new()],
             parsing_free_param_collection: super::FreeParamCollection::new(),
         }
     }
@@ -38,14 +36,10 @@ impl Runtime {
 }
 
 impl Runtime {
-    fn push_parsing_time_name_scope(&mut self) {
-        self.parsing_time_name_scope_stack.push(HashMap::new());
-    }
-
     pub fn validate_name(
         &mut self,
         name: &str,
-        current_line_file: LineFile,
+        _current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
             return Err(ParseRuntimeError(RuntimeErrorStruct::new(
@@ -58,115 +52,15 @@ impl Runtime {
             .into());
         }
 
-        for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
-            if let Some(_) = names_in_scope.get(name) {
-                return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!("name `{}` is already used", name),
-                    current_line_file,
-                    None,
-                    vec![],
-                ))
-                .into());
-            }
-        }
-
-        if self.is_name_used(name) {
-            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("name `{}` is already used", name),
-                current_line_file,
-                None,
-                vec![],
-            ))
-            .into());
-        }
-
         Ok(())
     }
 
-    pub fn validate_name_for_mangled_fn_param(
+    pub fn validate_user_fn_param_names_for_parse(
         &mut self,
-        name: &str,
-        current_line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        if let Err(invalid_name_message) = is_valid_mangled_fn_param_name(name) {
-            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                invalid_name_message,
-                default_line_file(),
-                None,
-                vec![],
-            ))
-            .into());
-        }
-
-        for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
-            if let Some(_) = names_in_scope.get(name) {
-                return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!("name `{}` is already used", name,),
-                    current_line_file,
-                    None,
-                    vec![],
-                ))
-                .into());
-            }
-        }
-
-        if self.is_name_used(name) {
-            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("name `{}` is already used", name),
-                current_line_file,
-                None,
-                vec![],
-            ))
-            .into());
-        }
-
-        Ok(())
-    }
-
-    pub fn validate_name_and_insert_mangled_fn_param(
-        &mut self,
-        name: &str,
-        (line, path): LineFile,
-    ) -> Result<(), RuntimeError> {
-        self.validate_name_for_mangled_fn_param(name, (line, path.clone()))?;
-        if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
-            names_in_top_scope.insert(name.to_string(), (line, path.clone()));
-        }
-        Ok(())
-    }
-
-    pub fn register_collected_mangled_fn_param_names_for_def_parse(
-        &mut self,
-        names: &Vec<String>,
+        names: &[String],
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         for name in names {
-            self.validate_name_and_insert_mangled_fn_param(name, line_file.clone())
-                .map_err(|e| {
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        String::new(),
-                        line_file.clone(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
-        }
-        Ok(())
-    }
-
-    pub fn register_mangled_fn_param_binding(
-        &mut self,
-        user_written_names: &[String],
-        line_file: LineFile,
-    ) -> Result<(Vec<String>, HashMap<String, Obj>), RuntimeError> {
-        // 虽然本质上存的是 __param，但param本身也要符合litex命名规则，比如你不能让 param 是 1
-        for name in user_written_names {
             if let Err(e) = is_valid_litex_name(name) {
                 return Err(ParseRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -178,15 +72,7 @@ impl Runtime {
                 .into());
             }
         }
-
-        let (mangled, map) =
-            mangled_fn_param_binding(user_written_names, DEFAULT_MANGLED_FN_PARAM_PREFIX);
-        self.register_collected_mangled_fn_param_names_for_def_parse(&mangled, line_file)?;
-        Ok((mangled, map))
-    }
-
-    fn pop_parsing_time_name_scope(&mut self) {
-        self.parsing_time_name_scope_stack.pop();
+        Ok(())
     }
 
     pub fn validate_names_and_insert_into_top_parsing_time_name_scope(
@@ -206,22 +92,9 @@ impl Runtime {
     pub fn validate_name_and_insert_into_top_parsing_time_name_scope(
         &mut self,
         name: &str,
-        (line, path): LineFile,
+        line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        self.validate_name(name, (line, path.clone()))?;
-        self.register_name_into_name_scope(name, (line, path.clone()))?;
-        Ok(())
-    }
-
-    pub fn register_name_into_name_scope(
-        &mut self,
-        name: &str,
-        (line, path): LineFile,
-    ) -> Result<(), RuntimeError> {
-        if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
-            names_in_top_scope.insert(name.to_string(), (line, path.clone()));
-        }
-        Ok(())
+        self.validate_name(name, line_file)
     }
 }
 
@@ -232,7 +105,6 @@ impl Runtime {
         self.module_manager.current_file_index += 1;
         self.module_manager.display_entry_rc = Some(path_rc);
         self.module_manager.entry_path = path.to_string();
-        self.push_parsing_time_name_scope();
         self.push_env();
     }
 
@@ -250,12 +122,6 @@ impl Runtime {
         }
         self.module_manager.display_entry_rc = Some(path_rc);
         self.module_manager.entry_path = path.to_string();
-    }
-
-    pub fn is_name_used(&self, name: &str) -> bool {
-        self.parsing_time_name_scope_stack
-            .iter()
-            .any(|scope| scope.contains_key(name))
     }
 }
 
@@ -288,17 +154,12 @@ impl Runtime {
         }
     }
 
-    /// Replace the top environment with an empty one and clear the top parse-time name map.
+    /// Replace the top environment with an empty one and clear parse-time free-param scopes.
     /// If there is only one environment layer (builtin), does nothing so builtins stay intact.
     pub fn clear_current_env_and_parse_name_scope(&mut self) {
         if self.environment_stack.len() > 1 {
             if let Some(top) = self.environment_stack.last_mut() {
                 *top = Box::new(Environment::new_empty_env());
-            }
-        }
-        if self.parsing_time_name_scope_stack.len() > 1 {
-            if let Some(top) = self.parsing_time_name_scope_stack.last_mut() {
-                top.clear();
             }
         }
         self.parsing_free_param_collection.clear();
@@ -316,15 +177,12 @@ impl Runtime {
         result
     }
 
-    /// Same contract as `run_in_local_env`, but for `parsing_time_name_scope_stack`.
+    /// Reserved for parse blocks that used to push a parse-time name scope; now a no-op until name binding is redesigned.
     pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
     {
-        self.push_parsing_time_name_scope();
-        let result = f(self);
-        self.pop_parsing_time_name_scope();
-        result
+        f(self)
     }
 
     /// `begin_scope` → `f` → `end_scope`; runs `end_scope` on both `Ok` and `Err` (not on `begin_scope` failure).
@@ -471,8 +329,8 @@ impl Runtime {
 
     pub fn matrix_set_to_fn_set(&self, ms: &MatrixSet, line_file: LineFile) -> FnSet {
         let pair = self.generate_random_unused_names(2);
-        let p1 = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, pair[0]);
-        let p2 = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, pair[1]);
+        let p1 = pair[0].clone();
+        let p2 = pair[1].clone();
         FnSet::new(
             vec![
                 ParamGroupWithSet::new(vec![p1.clone()], StandardSet::NPos.into()),
@@ -497,11 +355,7 @@ impl Runtime {
     }
 
     pub fn finite_seq_set_to_fn_set(&self, fs: &FiniteSeqSet, line_file: LineFile) -> FnSet {
-        let param = format!(
-            "{}{}",
-            DEFAULT_MANGLED_FN_PARAM_PREFIX,
-            self.generate_random_unused_name()
-        );
+        let param = self.generate_random_unused_name();
         FnSet::new(
             vec![ParamGroupWithSet::new(
                 vec![param.clone()],
@@ -516,11 +370,7 @@ impl Runtime {
     }
 
     pub fn seq_set_to_fn_set(&self, ss: &SeqSet, _line_file: LineFile) -> FnSet {
-        let param = format!(
-            "{}{}",
-            DEFAULT_MANGLED_FN_PARAM_PREFIX,
-            self.generate_random_unused_name()
-        );
+        let param = self.generate_random_unused_name();
         FnSet::new(
             vec![ParamGroupWithSet::new(
                 vec![param.clone()],
@@ -531,7 +381,6 @@ impl Runtime {
         )
     }
 
-    /// Same mangling as `parse_fn_set`: surface `x` becomes stored `__x`, etc.
     pub fn finite_seq_set_to_fn_set_from_surface_dom_param(
         &self,
         fs: &FiniteSeqSet,
@@ -550,7 +399,7 @@ impl Runtime {
             )
             .into(),
         )];
-        self.new_fn_set_and_add_mangled_prefix(params, dom_facts, (*fs.set).clone())
+        self.new_fn_set(params, dom_facts, (*fs.set).clone())
     }
 
     pub fn store_well_defined_obj_cache(&mut self, obj: &Obj) {
@@ -561,43 +410,27 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn new_fn_set_and_add_mangled_prefix(
+    pub fn new_fn_set(
         &self,
         params_and_their_sets: Vec<ParamGroupWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Result<FnSet, RuntimeError> {
-        let names = ParamGroupWithSet::collect_param_names(&params_and_their_sets);
-        let (new_param_names, param_arg_map) =
-            mangled_fn_param_binding(&names, DEFAULT_MANGLED_FN_PARAM_PREFIX);
-        let mut flat_stored_idx: usize = 0;
-        let mut new_def_with_set: Vec<ParamGroupWithSet> = Vec::new();
-        for param_group in &params_and_their_sets {
-            let mut new_params: Vec<String> = Vec::new();
-            for _ in 0..param_group.params.len() {
-                new_params.push(new_param_names[flat_stored_idx].clone());
-                flat_stored_idx += 1;
-            }
-            new_def_with_set.push(ParamGroupWithSet::new(new_params, param_group.set.clone()));
-        }
+        let empty: HashMap<String, Obj> = HashMap::new();
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
             dom_stored.push(self.inst_or_and_chain_atomic_fact(
                 d,
-                &param_arg_map,
-                (FreeParamObjType::FnSet, FreeParamObjType::FnSet),
+                &empty,
+                FreeParamObjType::FnSet,
             )?);
         }
-        let ret_stored = self.inst_obj(&ret_set, &param_arg_map, (FreeParamObjType::FnSet, FreeParamObjType::FnSet))?;
-        Ok(FnSet::new(new_def_with_set, dom_stored, ret_stored))
+        let ret_stored = self.inst_obj(&ret_set, &empty, FreeParamObjType::FnSet)?;
+        Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored))
     }
 
-    pub fn add_mangled_prefix_to_fn_set_clause(
-        &self,
-        clause: &FnSetClause,
-        _line_file: LineFile,
-    ) -> Result<FnSet, RuntimeError> {
-        self.new_fn_set_and_add_mangled_prefix(
+    pub fn fn_set_from_fn_set_clause(&self, clause: &FnSetClause) -> Result<FnSet, RuntimeError> {
+        self.new_fn_set(
             clause.params_def_with_set.clone(),
             clause.dom_facts.clone(),
             clause.ret_set.clone(),
@@ -706,7 +539,7 @@ impl Runtime {
             out.push(self.inst_or_and_chain_atomic_fact(
                 fact,
                 &base_map,
-                (FreeParamObjType::Def, FreeParamObjType::Def),
+                FreeParamObjType::Def,
             )?);
         }
         let mut map_with_self = base_map.clone();
@@ -715,7 +548,7 @@ impl Runtime {
             out.push(self.inst_or_and_chain_atomic_fact(
                 fact,
                 &map_with_self,
-                (FreeParamObjType::StructSelf, FreeParamObjType::StructSelf),
+                FreeParamObjType::StructSelf,
             )?);
         }
         Ok(out)

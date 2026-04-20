@@ -79,7 +79,7 @@ impl Runtime {
                 .params_def_with_type
                 .param_defs_and_args_to_param_to_arg_map(stmt.equal_tos.as_slice());
             let instantiated_exist_fact =
-                rt.inst_exist_fact(&stmt.exist_fact_in_witness, &param_to_obj_map, (FreeParamObjType::Exist, FreeParamObjType::Exist))?;
+                rt.inst_exist_fact(&stmt.exist_fact_in_witness, &param_to_obj_map, FreeParamObjType::Exist)?;
 
             let verify_state_for_proof_check = VerifyState::new(0, false);
             for internal_fact_template in instantiated_exist_fact.facts.iter() {

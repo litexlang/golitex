@@ -44,7 +44,7 @@ impl Runtime {
         let param_to_arg_map = def
             .params_def_with_type
             .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
-        self.inst_obj(&def.equal_to, &param_to_arg_map, (FreeParamObjType::Def, FreeParamObjType::Def))
+        self.inst_obj(&def.equal_to, &param_to_arg_map, FreeParamObjType::Def)
     }
 
     // Param typed as `FamilyObj`: store `name $in` the instantiated member set and run membership infer.
@@ -124,7 +124,7 @@ impl Runtime {
 
         for fact_in_set_builder in set_builder.facts.iter() {
             let instantiated_fact_in_set_builder: OrAndChainAtomicFact = self
-                .inst_or_and_chain_atomic_fact(fact_in_set_builder, &param_to_arg_map, (FreeParamObjType::SetBuilder, FreeParamObjType::SetBuilder))
+                .inst_or_and_chain_atomic_fact(fact_in_set_builder, &param_to_arg_map, FreeParamObjType::SetBuilder)
                 .map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,

@@ -218,7 +218,6 @@ pub use crate::common::helper::vec_to_string_add_four_spaces_at_beginning_of_eac
 pub use crate::common::helper::vec_to_string_join_by_comma;
 pub use crate::common::helper::vec_to_string_with_sep;
 pub use crate::common::is_valid_litex_name::is_valid_litex_name;
-pub use crate::common::is_valid_litex_name::is_valid_mangled_fn_param_name;
 pub use crate::common::keywords::is_builtin_identifier_name;
 pub use crate::common::keywords::is_builtin_predicate;
 pub use crate::common::keywords::is_comparison_str;
@@ -345,6 +344,3 @@ pub use crate::common::keywords::WITNESS;
 pub use crate::common::keywords::Z;
 pub use crate::common::keywords::Z_NEG;
 pub use crate::common::keywords::Z_NZ;
-pub use crate::common::mangled_fn_param::fn_param_substitution_map;
-pub use crate::common::mangled_fn_param::mangled_fn_param_binding;
-pub use crate::common::mangled_fn_param::mangled_fn_param_names;

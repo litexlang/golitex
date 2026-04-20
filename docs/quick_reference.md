@@ -276,7 +276,7 @@ abstract_prop P(a R, b R)
 
 **Meaning.** A record-like type: field declarations, optionally an iff-block (`<=>:`) tying instances to a predicate on `self`.
 
-Inside `<=>:`, only `self.<field>` is allowed for `self` (each `<field>` must be a declared field name); bare `self` is rejected.
+Only `self.<field>` is allowed (each `<field>` must be a declared field name in that struct’s `<=>:` scope); bare `self` is rejected.
 
 **Syntax.** `struct` *name* `(` *parameters* `)` `:` field lines, optional `<=>:` block.
 

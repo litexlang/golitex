@@ -154,7 +154,7 @@ impl Runtime {
                 &known_forall.params_def,
                 &args_for_params,
                 verify_state,
-                (FreeParamObjType::Forall, FreeParamObjType::Forall),
+                FreeParamObjType::Forall,
             )
             .map_err(|e| {
                 {
@@ -184,7 +184,7 @@ impl Runtime {
                 .inst_fact(
                     dom_fact,
                     &param_to_arg_map,
-                    (FreeParamObjType::Forall, FreeParamObjType::Identifier),
+                    FreeParamObjType::Forall,
                 )
                 .map_err(|e| {
                     {

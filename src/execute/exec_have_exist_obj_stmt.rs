@@ -55,7 +55,7 @@ impl Runtime {
                 &exist_fact_in_have_obj_stmt.params_def_with_type,
                 &new_obj_names_as_identifier_objs,
                 have_exist_obj_stmt.line_file.clone(),
-                (FreeParamObjType::Exist, FreeParamObjType::Exist),
+                FreeParamObjType::Exist,
             )
             .map_err(|e| {
                 short_exec_error(have_exist_obj_stmt.clone().into(), "", Some(e), vec![])
@@ -67,7 +67,7 @@ impl Runtime {
 
         for fact in exist_fact_in_have_obj_stmt.facts.iter() {
             let instantiated_fact = self
-                .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map, (FreeParamObjType::Exist, FreeParamObjType::Exist))
+                .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map, FreeParamObjType::Exist)
                 .map_err(|runtime_error| {
                     short_exec_error(
                         have_exist_obj_stmt.clone().into(),
