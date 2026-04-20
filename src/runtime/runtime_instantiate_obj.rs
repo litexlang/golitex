@@ -89,6 +89,22 @@ impl Runtime {
                 }
                 Ok(StructObj::new(s.name.clone(), args).into())
             }
+            Obj::ForallFreeParam(p) => Ok(match param_to_arg_map.get(&p.name) {
+                Some(obj) => obj.clone(),
+                None => p.clone().into(),
+            }),
+            Obj::ExistFreeParam(p) => Ok(match param_to_arg_map.get(&p.name) {
+                Some(obj) => obj.clone(),
+                None => p.clone().into(),
+            }),
+            Obj::SetBuilderFreeParam(p) => Ok(match param_to_arg_map.get(&p.name) {
+                Some(obj) => obj.clone(),
+                None => p.clone().into(),
+            }),
+            Obj::FnSetFreeParam(p) => Ok(match param_to_arg_map.get(&p.name) {
+                Some(obj) => obj.clone(),
+                None => p.clone().into(),
+            }),
         }
     }
 
