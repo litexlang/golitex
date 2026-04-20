@@ -23,7 +23,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let verify_state = VerifyState::new(0, false);
 
-        self.define_params_with_type(&stmt.param_defs, false)
+        self.define_params_with_type(&stmt.param_defs, false, FreeParamObjType::Def)
             .map_err(|define_params_error| {
                 short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
             })?;
@@ -61,9 +61,10 @@ impl Runtime {
                 })?;
         }
 
-        self.store_identifier_obj(SELF).map_err(|store_error| {
-            short_exec_error(stmt.clone().into(), "", Some(store_error), vec![])
-        })?;
+        self.store_identifier_obj(SELF, FreeParamObjType::StructSelf)
+            .map_err(|store_error| {
+                short_exec_error(stmt.clone().into(), "", Some(store_error), vec![])
+            })?;
 
         let mut struct_params = vec![];
         for param_def in stmt.param_defs.groups.iter() {

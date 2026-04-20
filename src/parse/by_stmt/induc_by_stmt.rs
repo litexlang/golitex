@@ -61,13 +61,19 @@ impl Runtime {
             },
         )?;
 
-        let proof: Vec<Stmt> = self.run_in_local_parsing_time_name_scope(|this| {
-            tb.body
-                .iter_mut()
-                .skip(1)
-                .map(|b| this.parse_stmt(b))
-                .collect::<Result<_, _>>()
-        })?;
+        let proof_line = tb.line_file.clone();
+        let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+            FreeParamObjType::Induc,
+            &induc_param,
+            proof_line,
+            |this| {
+                tb.body
+                    .iter_mut()
+                    .skip(1)
+                    .map(|b| this.parse_stmt(b))
+                    .collect::<Result<_, _>>()
+            },
+        )?;
 
         Ok(ByInducStmt::new(to_prove, param, induc_from, proof, tb.line_file.clone()).into())
     }

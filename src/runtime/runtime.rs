@@ -202,6 +202,24 @@ impl Runtime {
         self.parsing_free_param_collection.end_scope(kind, names);
         result
     }
+
+    /// If `names` is empty, runs `parse_body` with no extra scope; otherwise wraps it in `parse_in_local_free_param_scope`.
+    pub fn parse_stmts_with_optional_free_param_scope<F>(
+        &mut self,
+        kind: FreeParamObjType,
+        names: &[String],
+        line_file: LineFile,
+        parse_body: F,
+    ) -> Result<Vec<Stmt>, RuntimeError>
+    where
+        F: FnOnce(&mut Self) -> Result<Vec<Stmt>, RuntimeError>,
+    {
+        if names.is_empty() {
+            parse_body(self)
+        } else {
+            self.parse_in_local_free_param_scope(kind, names, line_file, parse_body)
+        }
+    }
 }
 
 impl Runtime {
