@@ -23,6 +23,7 @@ impl Runtime {
             Stmt::ProveStmt(s) => self.exec_prove_stmt(s),
             Stmt::ImportStmt(s) => self.exec_import_stmt(s),
             Stmt::DoNothingStmt(s) => self.exec_do_nothing_stmt(s),
+            Stmt::ClearStmt(s) => self.exec_clear_stmt(s),
             Stmt::RunFileStmt(s) => self.exec_run_file_stmt(s),
             Stmt::EvalStmt(s) => self.exec_eval_stmt(s),
             Stmt::WitnessExistFact(s) => self.exec_witness_exist_fact(s),

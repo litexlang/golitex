@@ -128,3 +128,20 @@ impl fmt::Display for DoNothingStmt {
         write!(f, "{}", DO_NOTHING)
     }
 }
+
+#[derive(Clone)]
+pub struct ClearStmt {
+    pub line_file: LineFile,
+}
+
+impl ClearStmt {
+    pub fn new(line_file: LineFile) -> Self {
+        ClearStmt { line_file }
+    }
+}
+
+impl fmt::Display for ClearStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", CLEAR)
+    }
+}
