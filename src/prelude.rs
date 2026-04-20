@@ -130,6 +130,7 @@ pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::StmtResult;
 pub use crate::result::StmtUnknown;
 pub use crate::builtin_code::builtin_code;
+pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::Runtime;
 pub use crate::stmt::ByEnumerateClosedRangeStmt;
 pub use crate::stmt::by_stmt::ByCasesStmt;

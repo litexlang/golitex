@@ -7,6 +7,7 @@ pub struct Runtime {
     pub module_manager: ModuleManager,
     pub environment_stack: Vec<Box<Environment>>,
     pub parsing_time_name_scope_stack: Vec<HashMap<String, LineFile>>,
+    pub parsing_free_param_collection: FreeParamCollection,
 }
 
 impl Runtime {
@@ -18,6 +19,7 @@ impl Runtime {
             module_manager,
             environment_stack: vec![new_environment],
             parsing_time_name_scope_stack: vec![HashMap::new()],
+            parsing_free_param_collection: super::FreeParamCollection::new(),
         }
     }
 
@@ -302,6 +304,7 @@ impl Runtime {
                 top.clear();
             }
         }
+        self.parsing_free_param_collection.clear();
     }
 
     /// 在临时子环境中执行闭包：`push_env` → `f` → `pop_env`；`Ok`/`Err` 都会弹出。

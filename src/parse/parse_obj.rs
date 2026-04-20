@@ -1368,52 +1368,66 @@ impl Runtime {
         Ok(ListSet::new(objs))
     }
 
-    pub fn parse_atom(&self, tb: &mut TokenBlock) -> Result<Atom, RuntimeError> {
+    // Unqualified name-shaped atom: `name` or `name.field` (one `.` max). No `::`.
+    pub fn parse_identifier_or_field_access(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Atom, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
-        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+        if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
             tb.skip()?;
-            let right = parse_synthetically_correct_identifier_string(tb)?;
+            let field = parse_synthetically_correct_identifier_string(tb)?;
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                tb.skip()?;
-                let field = parse_synthetically_correct_identifier_string(tb)?;
-                if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "chained field access `a.b.c` is not supported; use at most one `.`"
-                                .to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-
-                Ok(FieldAccessWithMod::new(left, right, field).into())
-            } else {
-                Ok(IdentifierWithMod::new(left, right).into())
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "chained field access `a.b.c` is not supported; use at most one `.`"
+                            .to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
             }
+            Ok(FieldAccess::new(left, field).into())
         } else {
-            // 如果后面有 .，则解析为 FieldAccess
+            Ok(Identifier::new(left).into())
+        }
+    }
+
+    fn parse_mod_qualified_atom(&mut self, tb: &mut TokenBlock) -> Result<Atom, RuntimeError> {
+        let left = parse_synthetically_correct_identifier_string(tb)?;
+        tb.skip_token(MOD_SIGN)?;
+        let right = parse_synthetically_correct_identifier_string(tb)?;
+        if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
+            tb.skip()?;
+            let field = parse_synthetically_correct_identifier_string(tb)?;
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                tb.skip()?;
-                let field = parse_synthetically_correct_identifier_string(tb)?;
-                if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "chained field access `a.b.c` is not supported; use at most one `.`"
-                                .to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-                Ok(FieldAccess::new(left, field).into())
-            } else {
-                Ok(Identifier::new(left).into())
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "chained field access `a.b.c` is not supported; use at most one `.`"
+                            .to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
             }
+
+            Ok(FieldAccessWithMod::new(left, right, field).into())
+        } else {
+            Ok(IdentifierWithMod::new(left, right).into())
+        }
+    }
+
+    // Atom entry for obj-expression position; add branches here for other atom kinds.
+    pub fn parse_atom(&mut self, tb: &mut TokenBlock) -> Result<Atom, RuntimeError> {
+        let next_is_mod = tb.token_at_add_index(1) == MOD_SIGN;
+        if next_is_mod {
+            self.parse_mod_qualified_atom(tb)
+        } else {
+            self.parse_identifier_or_field_access(tb)
         }
     }
 
