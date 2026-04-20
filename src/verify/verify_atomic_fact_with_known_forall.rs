@@ -412,6 +412,22 @@ impl Runtime {
             Obj::StandardSet(StandardSet::RNz) => Self::match_arg_when_left_is_r_nz(given_arg),
             Obj::FamilyObj(_) => Self::match_arg_type_not_implemented("FamilyObj"),
             Obj::StructObj(_) => Self::match_arg_type_not_implemented("StructObj"),
+            Obj::ForallFreeParam(ref p) => {
+                let id = Identifier::new(p.name.clone());
+                Self::match_arg_when_left_is_identifier(&id, given_arg)
+            }
+            Obj::ExistFreeParam(ref p) => {
+                let id = Identifier::new(p.name.clone());
+                Self::match_arg_when_left_is_identifier(&id, given_arg)
+            }
+            Obj::SetBuilderFreeParam(ref p) => {
+                let id = Identifier::new(p.name.clone());
+                Self::match_arg_when_left_is_identifier(&id, given_arg)
+            }
+            Obj::FnSetFreeParam(ref p) => {
+                let id = Identifier::new(p.name.clone());
+                Self::match_arg_when_left_is_identifier(&id, given_arg)
+            }
         }
     }
 
