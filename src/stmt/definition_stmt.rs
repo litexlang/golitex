@@ -66,8 +66,7 @@ pub struct DefFamilyStmt {
     pub line_file: LineFile,
 }
 
-/// `have fn` 里 `{ … }` 一段的源码形态：形参名为用户符，dom/ret 中标识符亦为源码名；**不含** `__` mangling。
-/// 需要存入 `Obj::FnSet` 时由 [`Runtime::fn_set_for_storage_from_have_fn_clause`] 生成存储用 [`FnSet`]。
+/// `have fn` `{ … }` piece: parameter names match binders in dom/ret; build stored `Obj::FnSet` with [`Runtime::fn_set_from_fn_set_clause`].
 #[derive(Clone)]
 pub struct FnSetClause {
     pub params_def_with_set: Vec<ParamGroupWithSet>,
@@ -434,7 +433,7 @@ fn merge_two_and_chain_clauses(
 }
 
 impl HaveFnByInducStmt {
-    /// 与源码一致的 `fn` 空间（用户形参名 + dom + ret），不含 `__`；存 `Obj::FnSet` 时用 [`Runtime::fn_set_for_storage_from_have_fn_clause`]。
+    /// Source-shaped `fn` block (param names + dom + ret); build stored [`FnSet`] via [`Runtime::fn_set_from_fn_set_clause`].
     pub fn fn_user_fn_set_clause(&self) -> FnSetClause {
         FnSetClause {
             params_def_with_set: vec![ParamGroupWithSet::new(
@@ -538,7 +537,7 @@ impl HaveFnByInducStmt {
 }
 
 impl fmt::Display for HaveFnByInducStmt {
-    /// 与源码一致：形参用用户名字，不出现 `__`；存 `FnSet` 时再 mangling。
+    /// Display uses the same parameter names as in source.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let n = self.special_cases_equal_tos.len();
         write!(

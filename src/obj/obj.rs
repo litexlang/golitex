@@ -525,21 +525,6 @@ impl SetBuilder {
             facts,
         }
     }
-
-    // Same storage shape as parsing `{user cart(...): ...}`: bound name is `__` + user (facts rewritten).
-    pub fn new_with_mangled_name(
-        user_param: String,
-        param_set: Obj,
-        facts: Vec<OrAndChainAtomicFact>,
-    ) -> Self {
-        let mangled = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, user_param);
-        let param_set = Obj::replace_bound_identifier(param_set, &user_param, &mangled);
-        let facts = facts
-            .into_iter()
-            .map(|f| f.replace_bound_identifier(&user_param, &mangled))
-            .collect();
-        Self::new(mangled, param_set, facts)
-    }
 }
 
 impl FnSet {
@@ -1617,8 +1602,6 @@ impl fmt::Display for SetBuilder {
 }
 
 impl fmt::Display for FnSet {
-    /// 与 AST 一致：形参表、dom 均使用**存储名**（`fn` 形参为 `__` + 用户符面）。  
-    /// 区别于单独 [`ParamGroupWithSet`] 的 `Display`（会隐去 `__` 以便其它上下文）。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let params_with_sets_display: Vec<String> = self
             .params_def_with_set

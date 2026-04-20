@@ -14,38 +14,31 @@ pub enum FreeParamObjType {
     Identifier,
 }
 
-/// `(substitution context, remainder Obj shape when a binding is not replaced from the map)`.
-pub type InstObjState = (FreeParamObjType, FreeParamObjType);
+/// Which free-parameter kind is being instantiated; map values carry concrete `Obj` types.
+pub type InstObjState = FreeParamObjType;
 
 #[derive(Clone, Debug)]
-pub struct FreeParamBinding {
+pub struct FreeParamTypeAndLineFile {
     pub kind: FreeParamObjType,
     pub line_file: LineFile,
 }
 
 pub struct FreeParamCollection {
-    pub params: HashMap<String, Vec<FreeParamBinding>>,
-    struct_self_depth: usize,
+    pub params: HashMap<String, Vec<FreeParamTypeAndLineFile>>,
 }
 
 impl FreeParamCollection {
     pub fn new() -> Self {
         FreeParamCollection {
             params: HashMap::new(),
-            struct_self_depth: 0,
         }
     }
 
     pub fn clear(&mut self) {
         self.params.clear();
-        self.struct_self_depth = 0;
     }
 
-    pub fn in_struct_self_scope(&self) -> bool {
-        self.struct_self_depth > 0
-    }
-
-    fn push_binding(
+    fn push_param(
         &mut self,
         name: String,
         kind: FreeParamObjType,
@@ -66,7 +59,7 @@ impl FreeParamCollection {
                 ),
             )));
         }
-        stack.push(FreeParamBinding { kind, line_file });
+        stack.push(FreeParamTypeAndLineFile { kind, line_file });
         Ok(())
     }
 
@@ -88,10 +81,7 @@ impl FreeParamCollection {
             )));
         }
         for n in names {
-            self.push_binding(n.clone(), kind, line_file.clone())?;
-        }
-        if kind == FreeParamObjType::StructSelf {
-            self.struct_self_depth += 1;
+            self.push_param(n.clone(), kind, line_file.clone())?;
         }
         Ok(())
     }
@@ -108,9 +98,6 @@ impl FreeParamCollection {
             if stack.is_empty() {
                 self.params.remove(n);
             }
-        }
-        if kind == FreeParamObjType::StructSelf {
-            self.struct_self_depth = self.struct_self_depth.saturating_sub(1);
         }
     }
 
@@ -160,12 +147,10 @@ impl FreeParamCollection {
                     }
                 }
             }
-            let msg = if self.in_struct_self_scope() {
-                format!("unknown struct field `{}` in `self.{}`", field, field)
-            } else {
-                "`self.<field>` is only allowed in struct `<=>:` facts (and `<field>` must be a field name)"
-                    .to_string()
-            };
+            let msg = format!(
+                "`self.{0}`: `{0}` is not a struct field name bound in the current struct `<=>:` scope",
+                field
+            );
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(None, msg, default_line_file(), None, vec![]),
             )));

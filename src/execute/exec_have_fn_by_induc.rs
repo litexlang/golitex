@@ -33,13 +33,7 @@ impl Runtime {
         RuntimeError::ExecStmtError({
             let st: Stmt = stmt.clone().into();
             let lf = st.line_file();
-            RuntimeErrorStruct::new(
-                Some(st),
-                String::new(),
-                lf,
-                Some(cause),
-                vec![],
-            )
+            RuntimeErrorStruct::new(Some(st), String::new(), lf, Some(cause), vec![])
         })
     }
 
@@ -72,7 +66,7 @@ impl Runtime {
             .into(),
         ];
 
-        let fn_set = self.new_fn_set_and_add_mangled_prefix(
+        let fn_set = self.new_fn_set(
             vec![ParamGroupWithSet::new(
                 vec![random_param.clone()],
                 StandardSet::Z.into(),
@@ -114,14 +108,14 @@ impl Runtime {
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
             return Err(short_exec_error(
- stmt.clone().into(),
-                    format!(
+                stmt.clone().into(),
+                format!(
                     "have_fn_by_induc: {} is not in return set {}",
                     equal_to, stmt.ret_set
                 ),
-                    None,
-                    vec![],
-                ));
+                None,
+                vec![],
+            ));
         }
         Ok(())
     }
@@ -191,12 +185,12 @@ impl Runtime {
                 self.verify_fact_return_err_if_not_true(&coverage, &verify_state)
                     .map_err(|e| {
                         short_exec_error(
- stmt.clone().into(),
-                    "have_fn_by_induc: nested last cases do not cover all situations"
-                                    .to_string(),
-                    Some(e),
-                    vec![],
-                )
+                            stmt.clone().into(),
+                            "have_fn_by_induc: nested last cases do not cover all situations"
+                                .to_string(),
+                            Some(e),
+                            vec![],
+                        )
                     })?;
 
                 for nested in last_pairs.iter() {
@@ -215,7 +209,7 @@ impl Runtime {
             }
             HaveFnByInducLastCase::NestedCases(_) => {
                 return Err(short_exec_error(
- stmt.clone().into(),
+                    stmt.clone().into(),
                     "have_fn_by_induc: nested last case list must not be empty".to_string(),
                     None,
                     vec![],
@@ -255,18 +249,15 @@ impl Runtime {
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
             return Err(short_exec_error(
- stmt.clone().into(),
-                    "have_fn_by_induc: induc_from is not in Z".to_string(),
-                    None,
-                    vec![],
-                ));
+                stmt.clone().into(),
+                "have_fn_by_induc: induc_from is not in Z".to_string(),
+                None,
+                vec![],
+            ));
         }
 
         let mut infer_result = InferResult::new();
-        let fs = self.add_mangled_prefix_to_fn_set_clause(
-            &stmt.fn_user_fn_set_clause(),
-            stmt.line_file.clone(),
-        )?;
+        let fs = self.fn_set_from_fn_set_clause(&stmt.fn_user_fn_set_clause())?;
 
         let bind_infer = self.define_parameter_by_binding_param_type(
             &stmt.name,

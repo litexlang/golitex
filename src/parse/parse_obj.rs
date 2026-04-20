@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
@@ -239,11 +240,6 @@ impl Runtime {
 
                 let set = this.parse_obj(tb)?;
 
-                for p in current_params.clone().iter() {
-                    let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
-                    this.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
-                }
-
                 params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
 
                 if tb.current_token_is_equal_to(COMMA) {
@@ -287,11 +283,7 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            let built = this.new_fn_set_and_add_mangled_prefix(
-                params_def_with_set,
-                dom_facts,
-                ret_set_parsed,
-            );
+            let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
             this.parsing_free_param_collection
                 .end_scope(FreeParamObjType::FnSet, &all_fn_names);
             Ok(FnSetOrFnSetClause::FnSet(built?))
@@ -324,14 +316,6 @@ impl Runtime {
                 }
 
                 let set = this.parse_obj(tb)?;
-
-                for p in current_params.clone().iter() {
-                    // Register plain names so later parsing can resolve them.
-                    this.register_name_into_name_scope(p, tb.line_file.clone())?;
-
-                    let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
-                    this.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
-                }
 
                 params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
 
@@ -1263,12 +1247,11 @@ impl Runtime {
     fn reclassify_parsed_primary_as_free_param(&self, obj: Obj) -> Result<Obj, RuntimeError> {
         match obj {
             Obj::Identifier(ref id) => {
-                if id.name == SELF && self.parsing_free_param_collection.in_struct_self_scope() {
+                if id.name == SELF {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new(
                             None,
-                            "bare `self` is not allowed in struct `<=>:` facts; use `self.<field>`"
-                                .to_string(),
+                            "`self` must be written as `self.<field>`".to_string(),
                             default_line_file(),
                             None,
                             vec![],
@@ -1363,12 +1346,10 @@ impl Runtime {
                 if tb.current()? == COLON {
                     tb.skip_token(COLON)?;
 
-                    // 先登记形参 mangling，再解析域与条件（与 fn 集一致：先绑定再读体）
                     let user_names = vec![a.name.clone()];
-                    let (mangled_names, param_arg_map) =
-                        this.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
-                    let stored = mangled_names[0].clone();
-                    let second_inst = this.inst_obj(&second, &param_arg_map, (FreeParamObjType::SetBuilder, FreeParamObjType::SetBuilder))?;
+                    this.validate_user_fn_param_names_for_parse(&user_names, tb.line_file.clone())?;
+                    let empty: HashMap<String, Obj> = HashMap::new();
+                    let second_inst = this.inst_obj(&second, &empty, FreeParamObjType::SetBuilder)?;
 
                     let mut facts_inst = Vec::new();
                     while tb.current()? != RIGHT_CURLY_BRACE {
@@ -1376,14 +1357,14 @@ impl Runtime {
                         facts_inst.push(
                             this.inst_or_and_chain_atomic_fact(
                                 &f,
-                                &param_arg_map,
-                                (FreeParamObjType::SetBuilder, FreeParamObjType::SetBuilder),
+                                &empty,
+                                FreeParamObjType::SetBuilder,
                             )?,
                         );
                     }
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-                    Ok(SetBuilder::new(stored, second_inst, facts_inst).into())
+                    Ok(SetBuilder::new(a.name.clone(), second_inst, facts_inst).into())
                 } else {
                     Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new(

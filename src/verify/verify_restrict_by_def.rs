@@ -152,7 +152,7 @@ impl Runtime {
                 runtime.inst_obj(
                     &param_def_with_set.set,
                     original_to_restrict_param_map,
-                    (FreeParamObjType::FnSet, FreeParamObjType::FnSet),
+                    FreeParamObjType::FnSet,
                 )?;
             for _param_name in param_def_with_set.params.iter() {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
@@ -173,7 +173,7 @@ impl Runtime {
                 runtime.inst_or_and_chain_atomic_fact(
                     dom_fact,
                     original_to_restrict_param_map,
-                    (FreeParamObjType::FnSet, FreeParamObjType::FnSet),
+                    FreeParamObjType::FnSet,
                 )?;
             then_facts.push(instantiated_dom_fact.into());
         }

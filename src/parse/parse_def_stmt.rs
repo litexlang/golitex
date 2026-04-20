@@ -260,8 +260,7 @@ impl Runtime {
         param: String,
         induc_from: Obj,
     ) -> Result<Stmt, RuntimeError> {
-        let (_, _) =
-            self.register_mangled_fn_param_binding(&[param.clone()], tb.line_file.clone())?;
+        self.validate_user_fn_param_names_for_parse(&[param.clone()], tb.line_file.clone())?;
         let dom_and_chain = self.parse_and_chain_atomic_fact(tb)?;
         Self::verify_have_fn_by_induc_dom_matches_induc_from(
             &dom_and_chain,
@@ -1038,15 +1037,12 @@ impl Runtime {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file.clone())
             .map_err(|e| {
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                format!(
-                        "name `{}` is already used, cannot be used again for other definitions",
-                        name
-                    ),
-                line_file,
-                Some(e),
-                vec![],
-            )))
+                    None,
+                    String::new(),
+                    line_file,
+                    Some(e),
+                    vec![],
+                )))
             })
     }
 
