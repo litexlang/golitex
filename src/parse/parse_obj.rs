@@ -1237,7 +1237,41 @@ impl Runtime {
 
         // 普通 atom（标识符）
         let atom = self.parse_atom(tb)?;
-        return Ok(atom.into());
+        return Ok(self.reclassify_parsed_primary_as_free_param(atom.into()));
+    }
+
+    fn reclassify_parsed_primary_as_free_param(&self, obj: Obj) -> Obj {
+        match obj {
+            Obj::Identifier(ref id) => {
+                if self
+                    .parsing_free_param_collection
+                    .forall_free_params
+                    .contains_key(&id.name)
+                {
+                    ForallFreeParamObj::new(id.name.clone()).into()
+                } else if self
+                    .parsing_free_param_collection
+                    .def_free_params
+                    .contains_key(&id.name)
+                {
+                    DefFreeParamObj::new(id.name.clone()).into()
+                } else {
+                    obj
+                }
+            }
+            Obj::FieldAccess(ref fa) => {
+                if self
+                    .parsing_free_param_collection
+                    .forall_free_params
+                    .contains_key(&fa.name)
+                {
+                    ForallFreeParamFieldAccess::new(fa.name.clone(), fa.field.clone()).into()
+                } else {
+                    obj
+                }
+            }
+            _ => obj,
+        }
     }
 
     pub fn parse_braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
