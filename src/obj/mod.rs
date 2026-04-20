@@ -8,7 +8,7 @@ pub use atom::{
     IdentifierOrIdentifierWithMod, IdentifierWithMod,
 };
 pub use free_param_obj::{
-    ByInducFreeParamObj, DefFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj,
+    ByInducFreeParamObj, DefAlgoFreeParamObj, DefFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj,
     ForallFreeParamFieldAccess, ForallFreeParamObj, FreeParamObj, SetBuilderFreeParamObj,
     StructSelfFieldFreeParamObj,
 };

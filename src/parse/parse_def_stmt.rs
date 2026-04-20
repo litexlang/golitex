@@ -907,7 +907,7 @@ impl Runtime {
             this.register_collected_param_names_for_def_parse(&params, tb.line_file.clone())?;
             tb.skip_token(COLON)?;
             this.parsing_free_param_collection.begin_scope(
-                FreeParamObjType::Def,
+                FreeParamObjType::DefAlgo,
                 &params,
                 tb.line_file.clone(),
             )?;
@@ -937,7 +937,7 @@ impl Runtime {
                 ))
             })();
             this.parsing_free_param_collection
-                .end_scope(FreeParamObjType::Def, &params_for_end);
+                .end_scope(FreeParamObjType::DefAlgo, &params_for_end);
             Ok(algo_result?.into())
         })
     }

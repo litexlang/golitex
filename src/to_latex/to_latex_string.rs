@@ -1938,6 +1938,7 @@ impl Obj {
                 crate::obj::FreeParamObj::SetBuilder(x) => latex_local_ident(&x.name),
                 crate::obj::FreeParamObj::FnSet(x) => latex_local_ident(&x.name),
                 crate::obj::FreeParamObj::Induc(x) => latex_local_ident(&x.name),
+                crate::obj::FreeParamObj::DefAlgo(x) => latex_local_ident(&x.name),
                 crate::obj::FreeParamObj::StructSelfField(x) => {
                     let s = crate::obj::field_access_to_string(SELF, &x.field);
                     format!(r"\text{{{}}}", latex_texttt_escape(&s))

@@ -585,10 +585,10 @@ impl Runtime {
             dom_stored.push(self.inst_or_and_chain_atomic_fact(
                 d,
                 &param_arg_map,
-                FreeParamObjType::FnSet,
+                (FreeParamObjType::FnSet, FreeParamObjType::FnSet),
             )?);
         }
-        let ret_stored = self.inst_obj(&ret_set, &param_arg_map, FreeParamObjType::FnSet)?;
+        let ret_stored = self.inst_obj(&ret_set, &param_arg_map, (FreeParamObjType::FnSet, FreeParamObjType::FnSet))?;
         Ok(FnSet::new(new_def_with_set, dom_stored, ret_stored))
     }
 
@@ -706,7 +706,7 @@ impl Runtime {
             out.push(self.inst_or_and_chain_atomic_fact(
                 fact,
                 &base_map,
-                FreeParamObjType::Full,
+                (FreeParamObjType::Def, FreeParamObjType::Def),
             )?);
         }
         let mut map_with_self = base_map.clone();
@@ -715,7 +715,7 @@ impl Runtime {
             out.push(self.inst_or_and_chain_atomic_fact(
                 fact,
                 &map_with_self,
-                FreeParamObjType::StructSelf,
+                (FreeParamObjType::StructSelf, FreeParamObjType::StructSelf),
             )?);
         }
         Ok(out)
