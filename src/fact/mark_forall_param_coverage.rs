@@ -283,6 +283,7 @@ fn mark_forall_param_coverage_in_obj(
         Obj::FnSetFreeParam(p) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
+        Obj::StructSelfFieldFreeParam(_) => {}
     }
 }
 

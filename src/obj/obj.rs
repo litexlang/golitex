@@ -1,6 +1,6 @@
 use super::free_param_obj::{
     DefFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamFieldAccess,
-    ForallFreeParamObj, SetBuilderFreeParamObj,
+    ForallFreeParamObj, SetBuilderFreeParamObj, StructSelfFieldFreeParamObj,
 };
 use super::standard_set::StandardSet;
 use crate::prelude::*;
@@ -56,6 +56,7 @@ pub enum Obj {
     ExistFreeParam(ExistFreeParamObj),
     SetBuilderFreeParam(SetBuilderFreeParamObj),
     FnSetFreeParam(FnSetFreeParamObj),
+    StructSelfFieldFreeParam(StructSelfFieldFreeParamObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
     MatrixAdd(MatrixAdd),
@@ -666,9 +667,7 @@ impl FiniteSeqSet {
 
 impl SeqSet {
     pub fn new(set: Obj) -> Self {
-        SeqSet {
-            set: Box::new(set),
-        }
+        SeqSet { set: Box::new(set) }
     }
 }
 
@@ -907,6 +906,7 @@ impl Obj {
             Obj::ExistFreeParam(x) => write!(f, "{}", x)?,
             Obj::SetBuilderFreeParam(x) => write!(f, "{}", x)?,
             Obj::FnSetFreeParam(x) => write!(f, "{}", x)?,
+            Obj::StructSelfFieldFreeParam(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1121,9 +1121,7 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.n, from, to),
             )
             .into(),
-            Obj::SeqSet(x) => {
-                SeqSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
-            }
+            Obj::SeqSet(x) => SeqSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::FiniteSeqListObj(x) => FiniteSeqListObj::new(
                 x.objs
                     .into_iter()
@@ -1249,6 +1247,14 @@ impl Obj {
                     p.name
                 };
                 FnSetFreeParamObj::new(name).into()
+            }
+            Obj::StructSelfFieldFreeParam(p) => {
+                let field = if p.field == from {
+                    to.to_string()
+                } else {
+                    p.field
+                };
+                StructSelfFieldFreeParamObj::new(field).into()
             }
         }
     }

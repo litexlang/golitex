@@ -8,6 +8,7 @@ pub enum FreeParamObjType {
     Exist,
     SetBuilder,
     FnSet,
+    StructSelf,
 }
 
 #[derive(Clone, Debug)]
@@ -22,6 +23,7 @@ pub struct FreeParamCollection {
     pub exist_free_params: HashMap<String, LineFile>,
     pub set_builder_free_params: HashMap<String, LineFile>,
     pub fn_set_free_params: HashMap<String, LineFile>,
+    pub struct_self_field_free_params: HashMap<String, LineFile>,
     pub free_param_scope_stack: Vec<FreeParamScopeFrame>,
 }
 
@@ -33,6 +35,7 @@ impl FreeParamCollection {
             exist_free_params: HashMap::new(),
             set_builder_free_params: HashMap::new(),
             fn_set_free_params: HashMap::new(),
+            struct_self_field_free_params: HashMap::new(),
             free_param_scope_stack: Vec::new(),
         }
     }
@@ -43,7 +46,14 @@ impl FreeParamCollection {
         self.exist_free_params.clear();
         self.set_builder_free_params.clear();
         self.fn_set_free_params.clear();
+        self.struct_self_field_free_params.clear();
         self.free_param_scope_stack.clear();
+    }
+
+    pub fn in_struct_self_scope(&self) -> bool {
+        self.free_param_scope_stack
+            .iter()
+            .any(|f| f.kind == FreeParamObjType::StructSelf)
     }
 
     pub fn begin_scope(
@@ -66,6 +76,9 @@ impl FreeParamCollection {
                 }
                 FreeParamObjType::FnSet => {
                     self.put_fn_set_free_param(n.clone(), line_file.clone())?
+                }
+                FreeParamObjType::StructSelf => {
+                    self.put_struct_self_field_free_param(n.clone(), line_file.clone())?
                 }
             }
         }
@@ -97,6 +110,9 @@ impl FreeParamCollection {
                 FreeParamObjType::FnSet => {
                     self.fn_set_free_params.remove(n);
                 }
+                FreeParamObjType::StructSelf => {
+                    self.struct_self_field_free_params.remove(n);
+                }
             }
         }
     }
@@ -120,6 +136,7 @@ impl FreeParamCollection {
                 FreeParamObjType::Exist => self.exist_free_params.contains_key(name),
                 FreeParamObjType::SetBuilder => self.set_builder_free_params.contains_key(name),
                 FreeParamObjType::FnSet => self.fn_set_free_params.contains_key(name),
+                FreeParamObjType::StructSelf => false,
             };
             if in_map {
                 return match frame.kind {
@@ -130,6 +147,9 @@ impl FreeParamCollection {
                         SetBuilderFreeParamObj::new(name.to_string()).into()
                     }
                     FreeParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
+                    FreeParamObjType::StructSelf => {
+                        panic!("StructSelf scope does not bind identifier-shaped free parameters")
+                    }
                 };
             }
         }
@@ -144,6 +164,20 @@ impl FreeParamCollection {
         name: &str,
         field: &str,
     ) -> Result<Obj, RuntimeError> {
+        if name == SELF {
+            if self.struct_self_field_free_params.contains_key(field) {
+                return Ok(StructSelfFieldFreeParamObj::new(field.to_string()).into());
+            }
+            let msg = if self.in_struct_self_scope() {
+                format!("unknown struct field `{}` in `self.{}`", field, field)
+            } else {
+                "`self.<field>` is only allowed in struct `<=>:` facts (and `<field>` must be a field name)"
+                    .to_string()
+            };
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(None, msg, default_line_file(), None, vec![]),
+            )));
+        }
         if !self.name_is_in_any_free_param_map(name) {
             return Ok(FieldAccess::new(name.to_string(), field.to_string()).into());
         }
@@ -154,6 +188,7 @@ impl FreeParamCollection {
                 FreeParamObjType::Exist => self.exist_free_params.contains_key(name),
                 FreeParamObjType::SetBuilder => self.set_builder_free_params.contains_key(name),
                 FreeParamObjType::FnSet => self.fn_set_free_params.contains_key(name),
+                FreeParamObjType::StructSelf => false,
             };
             if in_map {
                 return match frame.kind {
@@ -177,6 +212,9 @@ impl FreeParamCollection {
                             vec![],
                         ),
                     ))),
+                    FreeParamObjType::StructSelf => {
+                        panic!("StructSelf scope does not use identifier-shaped field-access free params")
+                    }
                 };
             }
         }
@@ -298,6 +336,29 @@ impl FreeParamCollection {
             )));
         }
         self.fn_set_free_params.insert(name, line_file);
+        Ok(())
+    }
+
+    pub fn put_struct_self_field_free_param(
+        &mut self,
+        name: String,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        if self.struct_self_field_free_params.contains_key(&name) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "struct self field name `{}` is already registered in this scope",
+                        name
+                    ),
+                    line_file,
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        self.struct_self_field_free_params.insert(name, line_file);
         Ok(())
     }
 }

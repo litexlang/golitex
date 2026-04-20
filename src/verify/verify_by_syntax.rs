@@ -305,6 +305,10 @@ impl Runtime {
                 Obj::FnSetFreeParam(b) => a.name == b.name,
                 _ => false,
             },
+            Obj::StructSelfFieldFreeParam(a) => match right {
+                Obj::StructSelfFieldFreeParam(b) => a.field == b.field,
+                _ => false,
+            },
         }
     }
 }

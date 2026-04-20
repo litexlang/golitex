@@ -63,7 +63,11 @@ fn fn_set_clause_latex(clause: &FnSetClause) -> String {
         .join(r", ");
     let ret = clause.ret_set.to_latex_string();
     if dom.is_empty() {
-        format!(r"\mathrm{{fn}}\left({}\right)\to {}", slots.join(r", "), ret)
+        format!(
+            r"\mathrm{{fn}}\left({}\right)\to {}",
+            slots.join(r", "),
+            ret
+        )
     } else {
         format!(
             r"\mathrm{{fn}}\left({} \,\middle|\, {}\right)\to {}",
@@ -157,10 +161,7 @@ impl ByCasesStmt {
             .collect::<Vec<_>>()
             .join(r" \land ");
         let mut rows: Vec<String> = Vec::new();
-        rows.push(format!(
-            r"\text{{Proof by cases. Goal:}} & {}",
-            goal
-        ));
+        rows.push(format!(r"\text{{Proof by cases. Goal:}} & {}", goal));
         for (i, ((case, proof), imposs)) in self
             .cases
             .iter()
@@ -418,7 +419,10 @@ impl CartDim {
 impl ClaimStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![
-            format!(r"\text{{\textbf{{claim}}:}} & {}", self.fact.to_latex_string()),
+            format!(
+                r"\text{{\textbf{{claim}}:}} & {}",
+                self.fact.to_latex_string()
+            ),
             r"\text{\textbf{prove}:} &".to_string(),
         ];
         for st in &self.proof {
@@ -497,8 +501,12 @@ impl DefAlgoStmt {
             .map(|p| latex_local_ident(p))
             .collect::<Vec<_>>()
             .join(", ");
-        let mut rows =
-            vec![format!(r"\operatorname{{{}}}\, {}\left( {}\right) \texttt{{:}}", ALGO, latex_local_ident(&self.name), ps)];
+        let mut rows = vec![format!(
+            r"\operatorname{{{}}}\, {}\left( {}\right) \texttt{{:}}",
+            ALGO,
+            latex_local_ident(&self.name),
+            ps
+        )];
         for c in &self.cases {
             rows.push(format!(
                 r"& \quad \mathrm{{case}}\ {} \texttt{{:}}\ {}",
@@ -541,7 +549,11 @@ impl DefFamilyStmt {
 impl DefLetStmt {
     pub fn to_latex_string(&self) -> String {
         match self.facts.len() {
-            0 => format!(r"\operatorname{{{}}}\, {}", LET, self.param_def.to_latex_string()),
+            0 => format!(
+                r"\operatorname{{{}}}\, {}",
+                LET,
+                self.param_def.to_latex_string()
+            ),
             _ => {
                 let mut rows = vec![format!(
                     r"\operatorname{{{}}}\, {}",
@@ -699,7 +711,10 @@ impl FamilyObj {
             .map(|o| o.to_latex_string())
             .collect::<Vec<_>>()
             .join(", ");
-        format!(r"\operatorname{{{}}}\, {}\left( {}\right)", FAMILY, head, args)
+        format!(
+            r"\operatorname{{{}}}\, {}\left( {}\right)",
+            FAMILY, head, args
+        )
     }
 }
 
@@ -712,11 +727,8 @@ impl FieldAccess {
 
 impl FieldAccessWithMod {
     pub fn to_latex_string(&self) -> String {
-        let s = crate::obj::field_access_with_mod_to_string(
-            &self.mod_name,
-            &self.name,
-            &self.field,
-        );
+        let s =
+            crate::obj::field_access_with_mod_to_string(&self.mod_name, &self.name, &self.field);
         format!(r"\text{{{}}}", latex_texttt_escape(&s))
     }
 }
@@ -782,7 +794,11 @@ impl FnSet {
             .join(r", ");
         let ret = self.ret_set.to_latex_string();
         if dom.is_empty() {
-            format!(r"\mathrm{{fn}}\left({}\right)\to {}", slots.join(r", "), ret)
+            format!(
+                r"\mathrm{{fn}}\left({}\right)\to {}",
+                slots.join(r", "),
+                ret
+            )
         } else {
             format!(
                 r"\mathrm{{fn}}\left({} \,\middle|\, {}\right)\to {}",
@@ -1611,7 +1627,10 @@ impl StructObj {
             .map(|o| o.to_latex_string())
             .collect::<Vec<_>>()
             .join(", ");
-        format!(r"\operatorname{{{}}}\, {}\left( {}\right)", STRUCT, head, args)
+        format!(
+            r"\operatorname{{{}}}\, {}\left( {}\right)",
+            STRUCT, head, args
+        )
     }
 }
 
@@ -1761,7 +1780,9 @@ impl ImportRelativePathStmt {
         match &self.as_mod_name {
             Some(m) => format!(
                 r"\operatorname{{{}}}\ \texttt{{{}}}\ \mathrm{{as}}\ {}",
-                IMPORT, path, latex_local_ident(m)
+                IMPORT,
+                path,
+                latex_local_ident(m)
             ),
             None => format!(r"\operatorname{{{}}}\ \texttt{{{}}}", IMPORT, path),
         }
@@ -1911,6 +1932,10 @@ impl Obj {
             Obj::ExistFreeParam(x) => latex_local_ident(&x.name),
             Obj::SetBuilderFreeParam(x) => latex_local_ident(&x.name),
             Obj::FnSetFreeParam(x) => latex_local_ident(&x.name),
+            Obj::StructSelfFieldFreeParam(x) => {
+                let s = crate::obj::field_access_to_string(SELF, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),
