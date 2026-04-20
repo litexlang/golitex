@@ -105,10 +105,20 @@ impl Runtime {
             }
         }
 
-        let mut proof: Vec<Stmt> = Vec::new();
-        for b in tb.body.iter_mut().skip(1) {
-            proof.push(self.parse_stmt(b)?);
-        }
+        let names = forall_fact.params_def_with_type.collect_param_names();
+        let lf = tb.line_file.clone();
+        let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+            FreeParamObjType::Forall,
+            &names,
+            lf,
+            |this| {
+                tb.body
+                    .iter_mut()
+                    .skip(1)
+                    .map(|b| this.parse_stmt(b))
+                    .collect::<Result<_, _>>()
+            },
+        )?;
 
         Ok(ByForStmt::new(forall_fact, proof, tb.line_file.clone()).into())
     }

@@ -162,13 +162,16 @@ impl Runtime {
         self.top_level_env()
             .cache_well_defined_obj
             .insert(key.clone(), ());
-        self.top_level_env().defined_identifiers.insert(key, ());
+        self.top_level_env()
+            .defined_identifiers
+            .insert(key, FreeParamObjType::StructSelf);
     }
 
     pub fn define_params_with_type(
         &mut self,
         param_defs: &ParamDefWithType,
         check_type_nonempty: bool,
+        binding_kind: FreeParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for param_def in param_defs.groups.iter() {
@@ -203,7 +206,7 @@ impl Runtime {
                 })?;
 
             for name in param_def.params.iter() {
-                self.store_identifier_obj(name).map_err(|runtime_error| {
+                self.store_identifier_obj(name, binding_kind).map_err(|runtime_error| {
                     RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
                         None,
                         format!(

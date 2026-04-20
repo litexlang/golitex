@@ -28,10 +28,14 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_identifier_obj(&mut self, name: &str) -> Result<(), RuntimeError> {
+    pub fn store_identifier_obj(
+        &mut self,
+        name: &str,
+        kind: FreeParamObjType,
+    ) -> Result<(), RuntimeError> {
         self.top_level_env()
             .defined_identifiers
-            .insert(name.to_string(), ());
+            .insert(name.to_string(), kind);
         Ok(())
     }
 

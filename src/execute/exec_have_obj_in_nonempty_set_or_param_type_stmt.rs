@@ -6,7 +6,7 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self
-            .define_params_with_type(&stmt.param_def, true)
+            .define_params_with_type(&stmt.param_def, true, FreeParamObjType::Def)
             .map_err(|define_params_error| {
                 short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
             })?;
