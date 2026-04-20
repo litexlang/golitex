@@ -45,6 +45,11 @@ pub struct ByInducFreeParamObj {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DefAlgoFreeParamObj {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FreeParamObj {
     Forall(ForallFreeParamObj),
     ForallFieldAccess(ForallFreeParamFieldAccess),
@@ -54,6 +59,7 @@ pub enum FreeParamObj {
     FnSet(FnSetFreeParamObj),
     StructSelfField(StructSelfFieldFreeParamObj),
     Induc(ByInducFreeParamObj),
+    DefAlgo(DefAlgoFreeParamObj),
 }
 
 impl FreeParamObj {
@@ -131,6 +137,14 @@ impl FreeParamObj {
                 };
                 FreeParamObj::Induc(ByInducFreeParamObj::new(name))
             }
+            FreeParamObj::DefAlgo(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                FreeParamObj::DefAlgo(DefAlgoFreeParamObj::new(name))
+            }
         }
     }
 }
@@ -183,6 +197,12 @@ impl ByInducFreeParamObj {
     }
 }
 
+impl DefAlgoFreeParamObj {
+    pub fn new(name: String) -> Self {
+        DefAlgoFreeParamObj { name }
+    }
+}
+
 impl fmt::Display for ForallFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
@@ -231,6 +251,12 @@ impl fmt::Display for ByInducFreeParamObj {
     }
 }
 
+impl fmt::Display for DefAlgoFreeParamObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
 impl fmt::Display for FreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -242,6 +268,7 @@ impl fmt::Display for FreeParamObj {
             FreeParamObj::FnSet(x) => write!(f, "{}", x),
             FreeParamObj::StructSelfField(x) => write!(f, "{}", x),
             FreeParamObj::Induc(x) => write!(f, "{}", x),
+            FreeParamObj::DefAlgo(x) => write!(f, "{}", x),
         }
     }
 }
@@ -291,6 +318,12 @@ impl From<StructSelfFieldFreeParamObj> for FreeParamObj {
 impl From<ByInducFreeParamObj> for FreeParamObj {
     fn from(v: ByInducFreeParamObj) -> Self {
         FreeParamObj::Induc(v)
+    }
+}
+
+impl From<DefAlgoFreeParamObj> for FreeParamObj {
+    fn from(v: DefAlgoFreeParamObj) -> Self {
+        FreeParamObj::DefAlgo(v)
     }
 }
 
@@ -344,6 +377,12 @@ impl From<StructSelfFieldFreeParamObj> for Obj {
 
 impl From<ByInducFreeParamObj> for Obj {
     fn from(v: ByInducFreeParamObj) -> Self {
+        FreeParamObj::from(v).into()
+    }
+}
+
+impl From<DefAlgoFreeParamObj> for Obj {
+    fn from(v: DefAlgoFreeParamObj) -> Self {
         FreeParamObj::from(v).into()
     }
 }

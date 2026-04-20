@@ -288,6 +288,9 @@ fn mark_forall_param_coverage_in_obj(
             crate::obj::FreeParamObj::Induc(p) => {
                 mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
             }
+            crate::obj::FreeParamObj::DefAlgo(p) => {
+                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+            }
             crate::obj::FreeParamObj::StructSelfField(_) => {}
         },
     }

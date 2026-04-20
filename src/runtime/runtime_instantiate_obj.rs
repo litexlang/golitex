@@ -15,12 +15,61 @@ fn remove_param_names_from_param_to_arg_map(
     filtered_param_to_arg_map
 }
 
+fn coerce_inst_remainder_obj(
+    name: &str,
+    natural: FreeParamObjType,
+    ctx: InstObjState,
+) -> Option<Obj> {
+    let (active, out_ty) = ctx;
+    if out_ty == natural {
+        return None;
+    }
+    let active_covers = |k: FreeParamObjType| active == k;
+    if !active_covers(natural) {
+        return None;
+    }
+    match (natural, out_ty) {
+        (FreeParamObjType::Forall, FreeParamObjType::Identifier) => {
+            Some(Identifier::new(name.to_string()).into())
+        }
+        (FreeParamObjType::Induc, FreeParamObjType::Forall) => {
+            Some(ForallFreeParamObj::new(name.to_string()).into())
+        }
+        (FreeParamObjType::DefAlgo, FreeParamObjType::Identifier) => {
+            Some(Identifier::new(name.to_string()).into())
+        }
+        _ => None,
+    }
+}
+
+fn coerce_inst_remainder_field_access(
+    name: &str,
+    field: &str,
+    natural: FreeParamObjType,
+    ctx: InstObjState,
+) -> Option<Obj> {
+    let (active, out_ty) = ctx;
+    if out_ty == natural {
+        return None;
+    }
+    let active_covers = |k: FreeParamObjType| active == k;
+    if !active_covers(natural) {
+        return None;
+    }
+    match (natural, out_ty) {
+        (FreeParamObjType::Forall, FreeParamObjType::Identifier) => {
+            Some(Identifier::new(field_access_to_string(name, field)).into())
+        }
+        _ => None,
+    }
+}
+
 impl Runtime {
     pub fn inst_obj(
         &self,
         obj: &Obj,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         match obj {
             Obj::Identifier(inner) => self.inst_identifier(inner, param_to_arg_map),
@@ -91,16 +140,23 @@ impl Runtime {
                 Ok(StructObj::new(s.name.clone(), args).into())
             }
             Obj::FreeParam(p) => match p {
-                FreeParamObj::Forall(p) => Ok(if ctx.subst_forall_free_param() {
-                    match param_to_arg_map.get(&p.name) {
-                        Some(obj) => obj.clone(),
-                        None => p.clone().into(),
+                FreeParamObj::Forall(p) => {
+                    let substituted = if ctx.0 == FreeParamObjType::Forall {
+                        param_to_arg_map.get(&p.name).cloned()
+                    } else {
+                        None
+                    };
+                    if let Some(obj) = substituted {
+                        return Ok(obj);
                     }
-                } else {
-                    p.clone().into()
-                }),
+                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::Forall, ctx)
+                    {
+                        return Ok(obj);
+                    }
+                    Ok(p.clone().into())
+                }
                 FreeParamObj::ForallFieldAccess(p) => {
-                    if !ctx.subst_forall_free_param() {
+                    if ctx.0 != FreeParamObjType::Forall {
                         return Ok(
                             ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into(),
                         );
@@ -111,54 +167,111 @@ impl Runtime {
                         return Ok(obj.clone());
                     }
                     match self.inst_field_access(&fa, param_to_arg_map)? {
-                        Obj::FieldAccess(f) if f.name == p.name && f.field == p.field => Ok(
-                            ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into(),
-                        ),
+                        Obj::FieldAccess(f) if f.name == p.name && f.field == p.field => {
+                            if let Some(obj) = coerce_inst_remainder_field_access(
+                                &p.name,
+                                &p.field,
+                                FreeParamObjType::Forall,
+                                ctx,
+                            ) {
+                                return Ok(obj);
+                            }
+                            Ok(ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into())
+                        }
                         other => Ok(other),
                     }
                 }
-                FreeParamObj::Def(p) => Ok(if ctx.subst_def_free_param() {
-                    match param_to_arg_map.get(&p.name) {
-                        Some(obj) => obj.clone(),
-                        None => p.clone().into(),
+                FreeParamObj::Def(p) => {
+                    let substituted = if ctx.0 == FreeParamObjType::Def {
+                        param_to_arg_map.get(&p.name).cloned()
+                    } else {
+                        None
+                    };
+                    if let Some(obj) = substituted {
+                        return Ok(obj);
                     }
-                } else {
-                    p.clone().into()
-                }),
-                FreeParamObj::Exist(p) => Ok(if ctx.subst_exist_free_param() {
-                    match param_to_arg_map.get(&p.name) {
-                        Some(obj) => obj.clone(),
-                        None => p.clone().into(),
+                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::Def, ctx) {
+                        return Ok(obj);
                     }
-                } else {
-                    p.clone().into()
-                }),
-                FreeParamObj::SetBuilder(p) => Ok(if ctx.subst_set_builder_free_param() {
-                    match param_to_arg_map.get(&p.name) {
-                        Some(obj) => obj.clone(),
-                        None => p.clone().into(),
+                    Ok(p.clone().into())
+                }
+                FreeParamObj::Exist(p) => {
+                    let substituted = if ctx.0 == FreeParamObjType::Exist {
+                        param_to_arg_map.get(&p.name).cloned()
+                    } else {
+                        None
+                    };
+                    if let Some(obj) = substituted {
+                        return Ok(obj);
                     }
-                } else {
-                    p.clone().into()
-                }),
-                FreeParamObj::FnSet(p) => Ok(if ctx.subst_fn_set_free_param() {
-                    match param_to_arg_map.get(&p.name) {
-                        Some(obj) => obj.clone(),
-                        None => p.clone().into(),
+                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::Exist, ctx)
+                    {
+                        return Ok(obj);
                     }
-                } else {
-                    p.clone().into()
-                }),
-                FreeParamObj::Induc(p) => Ok(if ctx.subst_induc_free_param() {
-                    match param_to_arg_map.get(&p.name) {
-                        Some(obj) => obj.clone(),
-                        None => p.clone().into(),
+                    Ok(p.clone().into())
+                }
+                FreeParamObj::SetBuilder(p) => {
+                    let substituted = if ctx.0 == FreeParamObjType::SetBuilder {
+                        param_to_arg_map.get(&p.name).cloned()
+                    } else {
+                        None
+                    };
+                    if let Some(obj) = substituted {
+                        return Ok(obj);
                     }
-                } else {
-                    p.clone().into()
-                }),
+                    if let Some(obj) =
+                        coerce_inst_remainder_obj(&p.name, FreeParamObjType::SetBuilder, ctx)
+                    {
+                        return Ok(obj);
+                    }
+                    Ok(p.clone().into())
+                }
+                FreeParamObj::FnSet(p) => {
+                    let substituted = if ctx.0 == FreeParamObjType::FnSet {
+                        param_to_arg_map.get(&p.name).cloned()
+                    } else {
+                        None
+                    };
+                    if let Some(obj) = substituted {
+                        return Ok(obj);
+                    }
+                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::FnSet, ctx) {
+                        return Ok(obj);
+                    }
+                    Ok(p.clone().into())
+                }
+                FreeParamObj::Induc(p) => {
+                    let substituted = if ctx.0 == FreeParamObjType::Induc {
+                        param_to_arg_map.get(&p.name).cloned()
+                    } else {
+                        None
+                    };
+                    if let Some(obj) = substituted {
+                        return Ok(obj);
+                    }
+                    if let Some(obj) = coerce_inst_remainder_obj(&p.name, FreeParamObjType::Induc, ctx) {
+                        return Ok(obj);
+                    }
+                    Ok(p.clone().into())
+                }
+                FreeParamObj::DefAlgo(p) => {
+                    let substituted = if ctx.0 == FreeParamObjType::DefAlgo {
+                        param_to_arg_map.get(&p.name).cloned()
+                    } else {
+                        None
+                    };
+                    if let Some(obj) = substituted {
+                        return Ok(obj);
+                    }
+                    if let Some(obj) =
+                        coerce_inst_remainder_obj(&p.name, FreeParamObjType::DefAlgo, ctx)
+                    {
+                        return Ok(obj);
+                    }
+                    Ok(p.clone().into())
+                }
                 FreeParamObj::StructSelfField(p) => {
-                    if !ctx.subst_struct_self_field_free_param() {
+                    if ctx.0 != FreeParamObjType::StructSelf {
                         return Ok(p.clone().into());
                     }
                     let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
@@ -299,7 +412,7 @@ impl Runtime {
         &self,
         fn_obj: &FnObj,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let mut merged_body = Vec::with_capacity(fn_obj.body.len());
         for obj_vec in fn_obj.body.iter() {
@@ -342,7 +455,7 @@ impl Runtime {
         &self,
         number: &Number,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         _ = param_to_arg_map;
         _ = ctx;
@@ -353,7 +466,7 @@ impl Runtime {
         &self,
         add: &Add,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map, ctx)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map, ctx)?;
@@ -364,7 +477,7 @@ impl Runtime {
         &self,
         ma: &MatrixAdd,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&ma.left, param_to_arg_map, ctx)?;
         let instantiated_right_obj = self.inst_obj(&ma.right, param_to_arg_map, ctx)?;
@@ -375,7 +488,7 @@ impl Runtime {
         &self,
         ms: &MatrixSub,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let l = self.inst_obj(&ms.left, param_to_arg_map, ctx)?;
         let r = self.inst_obj(&ms.right, param_to_arg_map, ctx)?;
@@ -386,7 +499,7 @@ impl Runtime {
         &self,
         mm: &MatrixMul,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let l = self.inst_obj(&mm.left, param_to_arg_map, ctx)?;
         let r = self.inst_obj(&mm.right, param_to_arg_map, ctx)?;
@@ -397,7 +510,7 @@ impl Runtime {
         &self,
         m: &MatrixScalarMul,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let s = self.inst_obj(&m.scalar, param_to_arg_map, ctx)?;
         let mat = self.inst_obj(&m.matrix, param_to_arg_map, ctx)?;
@@ -408,7 +521,7 @@ impl Runtime {
         &self,
         m: &MatrixPow,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let b = self.inst_obj(&m.base, param_to_arg_map, ctx)?;
         let e = self.inst_obj(&m.exponent, param_to_arg_map, ctx)?;
@@ -419,7 +532,7 @@ impl Runtime {
         &self,
         sub: &Sub,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&sub.left, param_to_arg_map, ctx)?;
         let instantiated_right_obj = self.inst_obj(&sub.right, param_to_arg_map, ctx)?;
@@ -430,7 +543,7 @@ impl Runtime {
         &self,
         mul: &Mul,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mul.left, param_to_arg_map, ctx)?;
         let instantiated_right_obj = self.inst_obj(&mul.right, param_to_arg_map, ctx)?;
@@ -441,7 +554,7 @@ impl Runtime {
         &self,
         div: &Div,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Div::new(
             self.inst_obj(&div.left, param_to_arg_map, ctx)?,
@@ -454,7 +567,7 @@ impl Runtime {
         &self,
         mod_obj: &Mod,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mod_obj.left, param_to_arg_map, ctx)?;
         let instantiated_right_obj = self.inst_obj(&mod_obj.right, param_to_arg_map, ctx)?;
@@ -465,7 +578,7 @@ impl Runtime {
         &self,
         pow: &Pow,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_base_obj = self.inst_obj(&pow.base, param_to_arg_map, ctx)?;
         let instantiated_exponent_obj = self.inst_obj(&pow.exponent, param_to_arg_map, ctx)?;
@@ -476,7 +589,7 @@ impl Runtime {
         &self,
         abs: &Abs,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Abs::new(self.inst_obj(&abs.arg, param_to_arg_map, ctx)?).into())
     }
@@ -485,7 +598,7 @@ impl Runtime {
         &self,
         log: &Log,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Log::new(
             self.inst_obj(&log.base, param_to_arg_map, ctx)?,
@@ -498,7 +611,7 @@ impl Runtime {
         &self,
         max: &Max,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Max::new(
             self.inst_obj(&max.left, param_to_arg_map, ctx)?,
@@ -511,7 +624,7 @@ impl Runtime {
         &self,
         min: &Min,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Min::new(
             self.inst_obj(&min.left, param_to_arg_map, ctx)?,
@@ -524,7 +637,7 @@ impl Runtime {
         &self,
         union: &Union,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Union::new(
             self.inst_obj(&union.left, param_to_arg_map, ctx)?,
@@ -537,7 +650,7 @@ impl Runtime {
         &self,
         intersect: &Intersect,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Intersect::new(
             self.inst_obj(&intersect.left, param_to_arg_map, ctx)?,
@@ -550,7 +663,7 @@ impl Runtime {
         &self,
         set_minus: &SetMinus,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(SetMinus::new(
             self.inst_obj(&set_minus.left, param_to_arg_map, ctx)?,
@@ -563,7 +676,7 @@ impl Runtime {
         &self,
         set_diff: &SetDiff,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(SetDiff::new(
             self.inst_obj(&set_diff.left, param_to_arg_map, ctx)?,
@@ -576,7 +689,7 @@ impl Runtime {
         &self,
         cup: &Cup,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Cup::new(self.inst_obj(&cup.left, param_to_arg_map, ctx)?).into())
     }
@@ -585,7 +698,7 @@ impl Runtime {
         &self,
         cap: &Cap,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Cap::new(self.inst_obj(&cap.left, param_to_arg_map, ctx)?).into())
     }
@@ -594,7 +707,7 @@ impl Runtime {
         &self,
         power_set: &PowerSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(PowerSet::new(self.inst_obj(&power_set.set, param_to_arg_map, ctx)?).into())
     }
@@ -603,7 +716,7 @@ impl Runtime {
         &self,
         list_set: &ListSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let mut list = Vec::with_capacity(list_set.list.len());
         for obj in list_set.list.iter() {
@@ -616,7 +729,7 @@ impl Runtime {
         &self,
         set_builder: &SetBuilder,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let param_names = vec![set_builder.param.clone()];
         let filtered_param_to_arg_map =
@@ -637,7 +750,7 @@ impl Runtime {
         &self,
         fn_set_with_params: &FnSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let param_names =
             ParamGroupWithSet::collect_param_names(&fn_set_with_params.params_def_with_set);
@@ -668,7 +781,7 @@ impl Runtime {
         &self,
         cart: &Cart,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let mut args = Vec::with_capacity(cart.args.len());
         for arg in cart.args.iter() {
@@ -681,7 +794,7 @@ impl Runtime {
         &self,
         cart_dim: &CartDim,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(CartDim::new(self.inst_obj(&cart_dim.set, param_to_arg_map, ctx)?).into())
     }
@@ -690,7 +803,7 @@ impl Runtime {
         &self,
         proj: &Proj,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Proj::new(
             self.inst_obj(&proj.set, param_to_arg_map, ctx)?,
@@ -703,7 +816,7 @@ impl Runtime {
         &self,
         tuple_dim: &TupleDim,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(TupleDim::new(self.inst_obj(&tuple_dim.arg, param_to_arg_map, ctx)?).into())
     }
@@ -712,7 +825,7 @@ impl Runtime {
         &self,
         tuple: &Tuple,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let mut elements = Vec::with_capacity(tuple.args.len());
         for element in tuple.args.iter() {
@@ -725,7 +838,7 @@ impl Runtime {
         &self,
         count: &Count,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Count::new(self.inst_obj(&count.set, param_to_arg_map, ctx)?).into())
     }
@@ -734,7 +847,7 @@ impl Runtime {
         &self,
         range: &Range,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Range::new(
             self.inst_obj(&range.start, param_to_arg_map, ctx)?,
@@ -747,7 +860,7 @@ impl Runtime {
         &self,
         closed_range: &ClosedRange,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(ClosedRange::new(
             self.inst_obj(&closed_range.start, param_to_arg_map, ctx)?,
@@ -760,7 +873,7 @@ impl Runtime {
         &self,
         fs: &FiniteSeqSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(FiniteSeqSet::new(
             self.inst_obj(&fs.set, param_to_arg_map, ctx)?,
@@ -773,7 +886,7 @@ impl Runtime {
         &self,
         ss: &SeqSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(SeqSet::new(self.inst_obj(&ss.set, param_to_arg_map, ctx)?).into())
     }
@@ -782,7 +895,7 @@ impl Runtime {
         &self,
         v: &FiniteSeqListObj,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let mut objs = Vec::with_capacity(v.objs.len());
         for o in v.objs.iter() {
@@ -795,7 +908,7 @@ impl Runtime {
         &self,
         ms: &MatrixSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(MatrixSet::new(
             self.inst_obj(&ms.set, param_to_arg_map, ctx)?,
@@ -809,7 +922,7 @@ impl Runtime {
         &self,
         m: &MatrixListObj,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         let mut rows: Vec<Vec<Obj>> = Vec::with_capacity(m.rows.len());
         for row in m.rows.iter() {
@@ -826,7 +939,7 @@ impl Runtime {
         &self,
         choose: &Choose,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Choose::new(self.inst_obj(&choose.set, param_to_arg_map, ctx)?).into())
     }
@@ -835,7 +948,7 @@ impl Runtime {
         &self,
         obj_at_index: &ObjAtIndex,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(ObjAtIndex::new(
             self.inst_obj(&obj_at_index.obj, param_to_arg_map, ctx)?,
@@ -852,7 +965,7 @@ impl Runtime {
         &self,
         param_type: &ParamType,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<ParamType, RuntimeError> {
         match param_type {
             ParamType::Set(_) => Ok(param_type.clone()),
@@ -876,6 +989,7 @@ impl Runtime {
         &self,
         param_defs: &Vec<ParamGroupWithSet>,
         args: &Vec<Obj>,
+        inst_state: InstObjState,
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
         if total_param_count != args.len() {
@@ -898,11 +1012,7 @@ impl Runtime {
         let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
             let instantiated_param_set = if arg_index != 0 {
-                self.inst_obj(
-                    &param_def.set,
-                    &param_to_arg_map,
-                    FreeParamObjType::Full,
-                )?
+                self.inst_obj(&param_def.set, &param_to_arg_map, inst_state)?
             } else {
                 param_def.set.clone()
             };
@@ -921,6 +1031,7 @@ impl Runtime {
         &self,
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
+        inst_state: InstObjState,
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
@@ -943,11 +1054,7 @@ impl Runtime {
         let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.groups.len());
         for param_def in param_defs.groups.iter() {
             let new_type = if arg_index != 0 {
-                self.inst_param_type(
-                    &param_def.param_type,
-                    &param_arg_map,
-                    FreeParamObjType::Full,
-                )?
+                self.inst_param_type(&param_def.param_type, &param_arg_map, inst_state)?
             } else {
                 param_def.param_type.clone()
             };
