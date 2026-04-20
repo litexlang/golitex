@@ -1041,16 +1041,16 @@ impl Runtime {
         let a_dom: Vec<OrAndChainAtomicFact> = a
             .dom_facts
             .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map, FreeParamObjType::FnSet))
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map, ParamObjType::FnSet))
             .collect::<Result<Vec<_>, _>>()?;
         let b_dom: Vec<OrAndChainAtomicFact> = b
             .dom_facts
             .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map, FreeParamObjType::FnSet))
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map, ParamObjType::FnSet))
             .collect::<Result<Vec<_>, _>>()?;
 
-        let a_ret = self.inst_obj(a.ret_set.as_ref(), &pa_map, FreeParamObjType::FnSet)?;
-        let b_ret = self.inst_obj(b.ret_set.as_ref(), &pb_map, FreeParamObjType::FnSet)?;
+        let a_ret = self.inst_obj(a.ret_set.as_ref(), &pa_map, ParamObjType::FnSet)?;
+        let b_ret = self.inst_obj(b.ret_set.as_ref(), &pb_map, ParamObjType::FnSet)?;
 
         let a_instantiated = self.new_fn_set(a_params, a_dom, a_ret)?;
         let b_instantiated = self.new_fn_set(b_params, b_dom, b_ret)?;

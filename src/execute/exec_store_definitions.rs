@@ -31,7 +31,7 @@ impl Runtime {
     pub fn store_identifier_obj(
         &mut self,
         name: &str,
-        kind: FreeParamObjType,
+        kind: ParamObjType,
     ) -> Result<(), RuntimeError> {
         self.top_level_env()
             .defined_identifiers

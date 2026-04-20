@@ -43,7 +43,7 @@ impl Runtime {
                 last_body.current()? == EQUIVALENT_SIGN
             };
             this.parse_in_local_free_param_scope(
-                FreeParamObjType::Forall,
+                ParamObjType::Forall,
                 &forall_param_names,
                 tb.line_file.clone(),
                 |this| {
@@ -227,7 +227,7 @@ impl Runtime {
                     tb.line_file.clone(),
                 )?;
                 inner.parse_in_local_free_param_scope(
-                    FreeParamObjType::Exist,
+                    ParamObjType::Exist,
                     &exist_param_names,
                     tb.line_file.clone(),
                     |inner| {

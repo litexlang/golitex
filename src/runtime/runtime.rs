@@ -1,4 +1,3 @@
-use crate::obj::field_access_to_string;
 use crate::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -188,7 +187,7 @@ impl Runtime {
     /// `begin_scope` → `f` → `end_scope`; runs `end_scope` on both `Ok` and `Err` (not on `begin_scope` failure).
     pub fn parse_in_local_free_param_scope<T, F>(
         &mut self,
-        kind: FreeParamObjType,
+        kind: ParamObjType,
         names: &[String],
         line_file: LineFile,
         f: F,
@@ -206,7 +205,7 @@ impl Runtime {
     /// If `names` is empty, runs `f` with no extra scope; otherwise wraps it in `parse_in_local_free_param_scope`.
     pub fn with_optional_free_param_scope<T, F>(
         &mut self,
-        kind: FreeParamObjType,
+        kind: ParamObjType,
         names: &[String],
         line_file: LineFile,
         f: F,
@@ -223,7 +222,7 @@ impl Runtime {
 
     pub fn parse_stmts_with_optional_free_param_scope<F>(
         &mut self,
-        kind: FreeParamObjType,
+        kind: ParamObjType,
         names: &[String],
         line_file: LineFile,
         parse_body: F,
@@ -453,10 +452,10 @@ impl Runtime {
             dom_stored.push(self.inst_or_and_chain_atomic_fact(
                 d,
                 &empty,
-                FreeParamObjType::FnSet,
+                ParamObjType::FnSet,
             )?);
         }
-        let ret_stored = self.inst_obj(&ret_set, &empty, FreeParamObjType::FnSet)?;
+        let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
         Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored))
     }
 
@@ -570,7 +569,7 @@ impl Runtime {
             out.push(self.inst_or_and_chain_atomic_fact(
                 fact,
                 &base_map,
-                FreeParamObjType::Def,
+                ParamObjType::Def,
             )?);
         }
         let mut map_with_self = base_map.clone();
@@ -579,7 +578,7 @@ impl Runtime {
             out.push(self.inst_or_and_chain_atomic_fact(
                 fact,
                 &map_with_self,
-                FreeParamObjType::StructSelf,
+                ParamObjType::StructSelf,
             )?);
         }
         Ok(out)

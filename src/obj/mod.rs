@@ -9,8 +9,7 @@ pub use atom::{
 };
 pub use free_param_obj::{
     ByInducFreeParamObj, DefAlgoFreeParamObj, DefFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj,
-    ForallFreeParamFieldAccess, ForallFreeParamObj, FreeParamObj, SetBuilderFreeParamObj,
-    StructSelfFieldFreeParamObj,
+    ForallFieldAccessObj, ForallFreeParamObj, SetBuilderFreeParamObj, StructSelfFieldFreeParamObj,
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,

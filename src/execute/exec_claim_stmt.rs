@@ -19,7 +19,7 @@ impl Runtime {
                     rt.define_params_with_type(
                         &forall_fact.params_def_with_type,
                         false,
-                        FreeParamObjType::Forall,
+                        ParamObjType::Forall,
                     )
                         .map_err(|define_params_error| {
                             RuntimeError::ExecStmtError({

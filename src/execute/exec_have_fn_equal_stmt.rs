@@ -98,7 +98,7 @@ impl Runtime {
         have_fn_equal_stmt: &HaveFnEqualStmt,
         fn_set_stored: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_identifier_obj(&have_fn_equal_stmt.name, FreeParamObjType::Identifier)?;
+        self.store_identifier_obj(&have_fn_equal_stmt.name, ParamObjType::Identifier)?;
 
         let function_identifier_obj = have_fn_equal_stmt.name.clone().into();
         let function_set_obj = fn_set_stored.clone().into();

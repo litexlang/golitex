@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FreeParamObjType {
+pub enum ParamObjType {
     Forall,
     Def,
     Exist,
@@ -15,11 +15,11 @@ pub enum FreeParamObjType {
 }
 
 /// Which free-parameter kind is being instantiated; map values carry concrete `Obj` types.
-pub type InstObjState = FreeParamObjType;
+pub type InstObjState = ParamObjType;
 
 #[derive(Clone, Debug)]
 pub struct FreeParamTypeAndLineFile {
-    pub kind: FreeParamObjType,
+    pub kind: ParamObjType,
     pub line_file: LineFile,
 }
 
@@ -41,7 +41,7 @@ impl FreeParamCollection {
     fn push_param(
         &mut self,
         name: String,
-        kind: FreeParamObjType,
+        kind: ParamObjType,
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         let stack = self.params.entry(name.clone()).or_default();
@@ -65,11 +65,11 @@ impl FreeParamCollection {
 
     pub fn begin_scope(
         &mut self,
-        kind: FreeParamObjType,
+        kind: ParamObjType,
         names: &[String],
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        if kind == FreeParamObjType::Identifier {
+        if kind == ParamObjType::Identifier {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
@@ -86,7 +86,7 @@ impl FreeParamCollection {
         Ok(())
     }
 
-    pub fn end_scope(&mut self, kind: FreeParamObjType, names: &[String]) {
+    pub fn end_scope(&mut self, kind: ParamObjType, names: &[String]) {
         for n in names {
             let Some(stack) = self.params.get_mut(n) else {
                 panic!("free param stack missing for `{}` on end_scope", n);
@@ -103,7 +103,7 @@ impl FreeParamCollection {
 
     pub fn name_is_in_any_free_param_map(&self, name: &str) -> bool {
         self.params.get(name).map_or(false, |stack| {
-            stack.iter().any(|b| b.kind != FreeParamObjType::StructSelf)
+            stack.iter().any(|b| b.kind != ParamObjType::StructSelf)
         })
     }
 
@@ -118,17 +118,17 @@ impl FreeParamCollection {
             return Identifier::new(name.to_string()).into();
         };
         match top.kind {
-            FreeParamObjType::Forall => ForallFreeParamObj::new(name.to_string()).into(),
-            FreeParamObjType::Def => DefFreeParamObj::new(name.to_string()).into(),
-            FreeParamObjType::Exist => ExistFreeParamObj::new(name.to_string()).into(),
-            FreeParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name.to_string()).into(),
-            FreeParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
-            FreeParamObjType::StructSelf => {
+            ParamObjType::Forall => ForallFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::Def => DefFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::Exist => ExistFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::StructSelf => {
                 panic!("StructSelf scope does not bind identifier-shaped free parameters")
             }
-            FreeParamObjType::Induc => ByInducFreeParamObj::new(name.to_string()).into(),
-            FreeParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name.to_string()).into(),
-            FreeParamObjType::Identifier => {
+            ParamObjType::Induc => ByInducFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::Identifier => {
                 panic!("Identifier must not appear on the parsing free-param scope stack")
             }
         }
@@ -142,7 +142,7 @@ impl FreeParamCollection {
         if name == SELF {
             if let Some(stack) = self.params.get(field) {
                 if let Some(top) = stack.last() {
-                    if top.kind == FreeParamObjType::StructSelf {
+                    if top.kind == ParamObjType::StructSelf {
                         return Ok(StructSelfFieldFreeParamObj::new(field.to_string()).into());
                     }
                 }
@@ -165,15 +165,15 @@ impl FreeParamCollection {
             return Ok(FieldAccess::new(name.to_string(), field.to_string()).into());
         };
         match top.kind {
-            FreeParamObjType::Forall => {
-                Ok(ForallFreeParamFieldAccess::new(name.to_string(), field.to_string()).into())
+            ParamObjType::Forall => {
+                Ok(ForallFieldAccessObj::new(name.to_string(), field.to_string()).into())
             }
-            FreeParamObjType::Def
-            | FreeParamObjType::DefAlgo
-            | FreeParamObjType::Exist
-            | FreeParamObjType::SetBuilder
-            | FreeParamObjType::FnSet
-            | FreeParamObjType::Induc => Err(RuntimeError::from(ParseRuntimeError(
+            ParamObjType::Def
+            | ParamObjType::DefAlgo
+            | ParamObjType::Exist
+            | ParamObjType::SetBuilder
+            | ParamObjType::FnSet
+            | ParamObjType::Induc => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
                     format!(
@@ -185,10 +185,10 @@ impl FreeParamCollection {
                     vec![],
                 ),
             ))),
-            FreeParamObjType::StructSelf => {
+            ParamObjType::StructSelf => {
                 panic!("StructSelf scope does not use identifier-shaped field-access free params")
             }
-            FreeParamObjType::Identifier => {
+            ParamObjType::Identifier => {
                 panic!("Identifier must not appear on the parsing free-param scope stack")
             }
         }
