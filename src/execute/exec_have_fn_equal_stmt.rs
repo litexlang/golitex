@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 
 use super::exec_have_fn_equal_shared::build_curried_function_obj_from_layers;
 
@@ -9,10 +8,7 @@ impl Runtime {
         have_fn_equal_stmt: &HaveFnEqualStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_stored = self
-            .add_mangled_prefix_to_fn_set_clause(
-                &have_fn_equal_stmt.fn_set_clause,
-                have_fn_equal_stmt.line_file.clone(),
-            )
+            .fn_set_from_fn_set_clause(&have_fn_equal_stmt.fn_set_clause)
             .map_err(|e| {
                 short_exec_error(
                     have_fn_equal_stmt.clone().into(),
@@ -72,52 +68,22 @@ impl Runtime {
 
         let mut ret_set = clause.ret_set.clone();
         while let Obj::FnSet(inner) = ret_set {
-            let mut dem_map: HashMap<String, Obj> = HashMap::new();
             for pg in inner.params_def_with_set.iter() {
-                for p in pg.params.iter() {
-                    if let Some(user_param) =
-                        p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
-                    {
-                        if !user_param.is_empty() {
-                            dem_map.insert(p.clone(), user_param.to_string().into());
-                        }
-                    }
-                }
-            }
-
-            for pg in inner.params_def_with_set.iter() {
-                let user_params: Vec<String> = pg
-                    .params
-                    .iter()
-                    .map(|p| {
-                        p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
-                            .filter(|s| !s.is_empty())
-                            .map(String::from)
-                            .unwrap_or_else(|| p.clone())
-                    })
-                    .collect();
                 type_groups.push(ParamGroupWithParamType::new(
-                    user_params,
+                    pg.params.clone(),
                     ParamType::Obj(pg.set.clone()),
                 ));
             }
 
             for d in inner.dom_facts.iter() {
-                let inst = self.inst_or_and_chain_atomic_fact(d, &dem_map, (FreeParamObjType::FnSet, FreeParamObjType::FnSet))?;
-                let f: OrAndChainAtomicFact = inst;
-                dom_facts.push(f.into());
+                dom_facts.push(d.clone().into());
             }
 
             let layer_names: Vec<String> = inner
                 .params_def_with_set
                 .iter()
                 .flat_map(|pg| pg.params.iter())
-                .map(|p| {
-                    p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
-                        .filter(|s| !s.is_empty())
-                        .map(String::from)
-                        .unwrap_or_else(|| p.clone())
-                })
+                .cloned()
                 .collect();
             layers.push(layer_names);
 
@@ -246,7 +212,7 @@ impl Runtime {
         }
 
         let mut ret_set = have_fn_equal_stmt.fn_set_clause.ret_set.clone();
-        let mut equal_to_for_in_fact = have_fn_equal_stmt.equal_to.clone();
+        let equal_to_for_in_fact = have_fn_equal_stmt.equal_to.clone();
         while let Obj::FnSet(inner) = ret_set {
             for param_def_with_set in inner.params_def_with_set.iter() {
                 self.define_params_with_set(param_def_with_set)
@@ -258,30 +224,6 @@ impl Runtime {
                             vec![],
                         )
                     })?;
-                // Nested `fn` in ret_set uses mangled stored names (`__x`); RHS of `=` still has `x`.
-                let mut user_to_mangled: HashMap<String, Obj> = HashMap::new();
-                for stored_param in param_def_with_set.params.iter() {
-                    if let Some(user_param) =
-                        stored_param.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
-                    {
-                        if user_param.is_empty() {
-                            continue;
-                        }
-                        user_to_mangled.insert(user_param.to_string(), stored_param.clone().into());
-                    }
-                }
-                if !user_to_mangled.is_empty() {
-                    equal_to_for_in_fact = self
-                        .inst_obj(&equal_to_for_in_fact, &user_to_mangled, (FreeParamObjType::FnSet, FreeParamObjType::FnSet))
-                        .map_err(|e| {
-                            short_exec_error(
-                                have_fn_equal_stmt.clone().into(),
-                                "",
-                                Some(e),
-                                vec![],
-                            )
-                        })?;
-                }
             }
             for dom_fact in inner.dom_facts.iter() {
                 let _ = self

@@ -170,7 +170,7 @@ impl Runtime {
             .enumerate()
         {
             let instantiated_field_type = self
-                .inst_param_type(field_type, &param_arg_map, (FreeParamObjType::Def, FreeParamObjType::Def))
+                .inst_param_type(field_type, &param_arg_map, FreeParamObjType::Def)
                 .map_err(|e| {
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                 None,
@@ -201,7 +201,7 @@ impl Runtime {
 
         for iff_fact in struct_def.facts.iter() {
             let instantiated = self
-                .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map, (FreeParamObjType::StructSelf, FreeParamObjType::StructSelf))
+                .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map, FreeParamObjType::StructSelf)
                 .map_err(|e| {
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                 None,

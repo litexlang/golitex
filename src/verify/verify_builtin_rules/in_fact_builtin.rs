@@ -6,12 +6,12 @@ use crate::verify::{
 };
 use std::collections::{HashMap, HashSet};
 
-// Rename param groups to mangled storage names using `flat_original` and `mangled_by_index`
+// Rename param groups to placeholder names using `flat_original` and `renamed_by_index`
 // (same flatten order as `FnSet::get_params`).
-fn param_def_with_set_rename_to_mangled(
+fn param_def_with_set_rename_params(
     groups: &[ParamGroupWithSet],
     flat_original: &[String],
-    mangled_by_index: &[String],
+    renamed_by_index: &[String],
 ) -> Vec<ParamGroupWithSet> {
     let mut name_to_i: HashMap<String, usize> = HashMap::new();
     for (i, n) in flat_original.iter().enumerate() {
@@ -24,7 +24,7 @@ fn param_def_with_set_rename_to_mangled(
             .iter()
             .map(|n| {
                 let i = name_to_i[n];
-                mangled_by_index[i].clone()
+                renamed_by_index[i].clone()
             })
             .collect();
         out.push(ParamGroupWithSet::new(new_names, g.set.clone()));
@@ -993,8 +993,8 @@ impl Runtime {
         }
     }
 
-    // `fn(x N_pos) R` vs `fn(y N_pos) R`: pick fresh base names per dimension with `__` prefix, substitute
-    // the same storage names on both sides, then compare `Display` of params / dom / ret.
+    // `fn(x N_pos) R` vs `fn(y N_pos) R`: pick fresh names per dimension, substitute the same
+    // placeholders on both sides, then compare `Display` of params / dom / ret.
     fn fn_set_with_params_equal_modulo_param_rename(
         &self,
         a: &FnSet,
@@ -1012,48 +1012,48 @@ impl Runtime {
             reserved.insert(s.clone());
         }
 
-        let mut mangled_placeholders: Vec<String> = Vec::with_capacity(n);
+        let mut placeholders: Vec<String> = Vec::with_capacity(n);
         for _ in 0..n {
             let base = self.generate_one_unused_name_with_reserved(&reserved);
             reserved.insert(base.clone());
-            mangled_placeholders.push(format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, base));
+            placeholders.push(base);
         }
 
         let mut pa_map = HashMap::new();
         let mut pb_map = HashMap::new();
         for i in 0..n {
-            let ph = mangled_placeholders[i].clone();
+            let ph = placeholders[i].clone();
             pa_map.insert(pa[i].clone(), ph.clone().into());
             pb_map.insert(pb[i].clone(), ph.into());
         }
 
-        let a_params = param_def_with_set_rename_to_mangled(
+        let a_params = param_def_with_set_rename_params(
             &a.params_def_with_set,
             &pa,
-            &mangled_placeholders,
+            &placeholders,
         );
-        let b_params = param_def_with_set_rename_to_mangled(
+        let b_params = param_def_with_set_rename_params(
             &b.params_def_with_set,
             &pb,
-            &mangled_placeholders,
+            &placeholders,
         );
 
         let a_dom: Vec<OrAndChainAtomicFact> = a
             .dom_facts
             .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map, (FreeParamObjType::FnSet, FreeParamObjType::FnSet)))
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map, FreeParamObjType::FnSet))
             .collect::<Result<Vec<_>, _>>()?;
         let b_dom: Vec<OrAndChainAtomicFact> = b
             .dom_facts
             .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map, (FreeParamObjType::FnSet, FreeParamObjType::FnSet)))
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map, FreeParamObjType::FnSet))
             .collect::<Result<Vec<_>, _>>()?;
 
-        let a_ret = a.ret_set.as_ref().clone();
-        let b_ret = b.ret_set.as_ref().clone();
+        let a_ret = self.inst_obj(a.ret_set.as_ref(), &pa_map, FreeParamObjType::FnSet)?;
+        let b_ret = self.inst_obj(b.ret_set.as_ref(), &pb_map, FreeParamObjType::FnSet)?;
 
-        let a_instantiated = self.new_fn_set_and_add_mangled_prefix(a_params, a_dom, a_ret)?;
-        let b_instantiated = self.new_fn_set_and_add_mangled_prefix(b_params, b_dom, b_ret)?;
+        let a_instantiated = self.new_fn_set(a_params, a_dom, a_ret)?;
+        let b_instantiated = self.new_fn_set(b_params, b_dom, b_ret)?;
 
         Ok(a_instantiated.to_string() == b_instantiated.to_string())
     }

@@ -10,10 +10,7 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_stored = self
-            .add_mangled_prefix_to_fn_set_clause(
-                &have_fn_equal_case_by_case_stmt.fn_set_clause,
-                have_fn_equal_case_by_case_stmt.line_file.clone(),
-            )
+            .fn_set_from_fn_set_clause(&have_fn_equal_case_by_case_stmt.fn_set_clause)
             .map_err(|e| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
