@@ -515,7 +515,7 @@ $is_nonempty_set(s)
 
 **Meaning.** Prove a goal under each case of a cover (disjunction of case assumptions).
 
-**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof …
+**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof … Each `prove:` fact must not be `forall` (use atomic, exist, or/and combinations, or chains).
 
 **Example.**
 
