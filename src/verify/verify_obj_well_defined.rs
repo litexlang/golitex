@@ -94,13 +94,7 @@ impl Runtime {
             Obj::StructObj(struct_ty) => {
                 self.verify_param_type_struct_well_defined(struct_ty, verify_state)
             }
-            Obj::ForallFreeParam(_)
-            | Obj::ForallFreeParamFieldAccess(_)
-            | Obj::DefFreeParam(_)
-            | Obj::ExistFreeParam(_)
-            | Obj::SetBuilderFreeParam(_)
-            | Obj::FnSetFreeParam(_)
-            | Obj::StructSelfFieldFreeParam(_) => Ok(()),
+            Obj::FreeParam(_) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -382,7 +376,7 @@ impl Runtime {
         );
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, FreeParamObjType::FnSet)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -1922,7 +1916,11 @@ impl Runtime {
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    &param_to_arg_map,
+                    FreeParamObjType::Full,
+                )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -1966,7 +1964,7 @@ impl Runtime {
         }
 
         let instantiated_equal_to =
-            self.inst_obj(&def.equal_to, &param_to_arg_map)
+            self.inst_obj(&def.equal_to, &param_to_arg_map, FreeParamObjType::Full)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -2066,7 +2064,11 @@ impl Runtime {
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    &param_to_arg_map,
+                    FreeParamObjType::Full,
+                )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,

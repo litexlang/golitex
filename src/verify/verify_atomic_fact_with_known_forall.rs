@@ -180,7 +180,7 @@ impl Runtime {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map)
+                .inst_fact(dom_fact, &param_to_arg_map, FreeParamObjType::Forall)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -412,34 +412,40 @@ impl Runtime {
             Obj::StandardSet(StandardSet::RNz) => Self::match_arg_when_left_is_r_nz(given_arg),
             Obj::FamilyObj(_) => Self::match_arg_type_not_implemented("FamilyObj"),
             Obj::StructObj(_) => Self::match_arg_type_not_implemented("StructObj"),
-            Obj::ForallFreeParam(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
-            }
-            Obj::ForallFreeParamFieldAccess(ref p) => {
-                let fa = FieldAccess::new(p.name.clone(), p.field.clone());
-                Self::match_arg_when_left_is_field_access(&fa, given_arg)
-            }
-            Obj::DefFreeParam(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
-            }
-            Obj::ExistFreeParam(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
-            }
-            Obj::SetBuilderFreeParam(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
-            }
-            Obj::FnSetFreeParam(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
-            }
-            Obj::StructSelfFieldFreeParam(ref p) => {
-                let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
-                Self::match_arg_when_left_is_field_access(&fa, given_arg)
-            }
+            Obj::FreeParam(ref fp) => match fp {
+                FreeParamObj::Forall(p) => {
+                    let id = Identifier::new(p.name.clone());
+                    Self::match_arg_when_left_is_identifier(&id, given_arg)
+                }
+                FreeParamObj::ForallFieldAccess(p) => {
+                    let fa = FieldAccess::new(p.name.clone(), p.field.clone());
+                    Self::match_arg_when_left_is_field_access(&fa, given_arg)
+                }
+                FreeParamObj::Def(p) => {
+                    let id = Identifier::new(p.name.clone());
+                    Self::match_arg_when_left_is_identifier(&id, given_arg)
+                }
+                FreeParamObj::Exist(p) => {
+                    let id = Identifier::new(p.name.clone());
+                    Self::match_arg_when_left_is_identifier(&id, given_arg)
+                }
+                FreeParamObj::SetBuilder(p) => {
+                    let id = Identifier::new(p.name.clone());
+                    Self::match_arg_when_left_is_identifier(&id, given_arg)
+                }
+                FreeParamObj::FnSet(p) => {
+                    let id = Identifier::new(p.name.clone());
+                    Self::match_arg_when_left_is_identifier(&id, given_arg)
+                }
+                FreeParamObj::Induc(p) => {
+                    let id = Identifier::new(p.name.clone());
+                    Self::match_arg_when_left_is_identifier(&id, given_arg)
+                }
+                FreeParamObj::StructSelfField(p) => {
+                    let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
+                    Self::match_arg_when_left_is_field_access(&fa, given_arg)
+                }
+            },
         }
     }
 

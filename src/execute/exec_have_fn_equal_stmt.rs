@@ -103,7 +103,7 @@ impl Runtime {
             }
 
             for d in inner.dom_facts.iter() {
-                let inst = self.inst_or_and_chain_atomic_fact(d, &dem_map)?;
+                let inst = self.inst_or_and_chain_atomic_fact(d, &dem_map, FreeParamObjType::FnSet)?;
                 let f: OrAndChainAtomicFact = inst;
                 dom_facts.push(f.into());
             }
@@ -272,7 +272,7 @@ impl Runtime {
                 }
                 if !user_to_mangled.is_empty() {
                     equal_to_for_in_fact = self
-                        .inst_obj(&equal_to_for_in_fact, &user_to_mangled)
+                        .inst_obj(&equal_to_for_in_fact, &user_to_mangled, FreeParamObjType::FnSet)
                         .map_err(|e| {
                             short_exec_error(
                                 have_fn_equal_stmt.clone().into(),

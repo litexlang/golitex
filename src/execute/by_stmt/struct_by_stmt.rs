@@ -22,7 +22,7 @@ impl Runtime {
                     let map = def
                         .params_def_with_type
                         .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
-                    self.inst_obj(&def.equal_to, &map)
+                    self.inst_obj(&def.equal_to, &map, FreeParamObjType::Full)
                 }
                 _ => Ok(o.clone()),
             },
@@ -94,7 +94,7 @@ impl Runtime {
 
         let mut cart_dims: Vec<Obj> = Vec::with_capacity(def.fields.len());
         for (_, field_ty) in def.fields.iter() {
-            let pt = self.inst_param_type(field_ty, &param_to_arg_map)?;
+            let pt = self.inst_param_type(field_ty, &param_to_arg_map, FreeParamObjType::Full)?;
             cart_dims.push(self.param_type_to_cart_dimension_obj(&pt)?);
         }
         let cart_obj = Cart::new(cart_dims).into();
@@ -184,7 +184,7 @@ impl Runtime {
 
         let mut inst_body_facts: Vec<OrAndChainAtomicFact> = Vec::with_capacity(def.facts.len());
         for fact in def.facts.iter() {
-            inst_body_facts.push(self.inst_or_and_chain_atomic_fact(fact, &extended_for_sb)?);
+            inst_body_facts.push(self.inst_or_and_chain_atomic_fact(fact, &extended_for_sb, FreeParamObjType::StructSelf)?);
         }
 
         let set_builder =

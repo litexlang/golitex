@@ -153,7 +153,7 @@ impl Runtime {
                 }
             }
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.set, &fn_set_param_name_to_algo_arg_obj)
+                .inst_obj(&param_def_with_set.set, &fn_set_param_name_to_algo_arg_obj, FreeParamObjType::FnSet)
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                         def_algo_stmt,
@@ -172,7 +172,7 @@ impl Runtime {
         }
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &fn_set_param_name_to_algo_arg_obj)
+                .inst_or_and_chain_atomic_fact(dom_fact, &fn_set_param_name_to_algo_arg_obj, FreeParamObjType::FnSet)
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                         def_algo_stmt,
