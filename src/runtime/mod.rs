@@ -11,4 +11,6 @@ mod runtime_store_arg_satisfy_param_type_when_not_defining_new_identifiers;
 mod runtime_store_fact;
 
 pub use runtime::Runtime;
-pub use runtime_parsing_free_param_collection::FreeParamCollection;
+pub use runtime_parsing_free_param_collection::{
+    FreeParamCollection, FreeParamObjType, FreeParamScopeFrame,
+};

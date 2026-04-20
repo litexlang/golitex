@@ -266,6 +266,13 @@ impl Runtime {
                 }
             }
 
+            let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
+            this.parsing_free_param_collection.begin_scope(
+                FreeParamObjType::FnSet,
+                &all_fn_names,
+                tb.line_file.clone(),
+            )?;
+
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
@@ -280,13 +287,13 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            Ok(FnSetOrFnSetClause::FnSet(
-                this.new_fn_set_and_add_mangled_prefix(
-                    params_def_with_set,
-                    dom_facts,
-                    ret_set_parsed,
-                )?,
-            ))
+            let built = this.new_fn_set_and_add_mangled_prefix(
+                params_def_with_set,
+                dom_facts,
+                ret_set_parsed,
+            );
+            this.parsing_free_param_collection.end_scope();
+            Ok(FnSetOrFnSetClause::FnSet(built?))
         });
         match fn_set {
             Ok(fn_set) => match fn_set {
@@ -347,6 +354,13 @@ impl Runtime {
                 }
             }
 
+            let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
+            this.parsing_free_param_collection.begin_scope(
+                FreeParamObjType::FnSet,
+                &all_fn_names,
+                tb.line_file.clone(),
+            )?;
+
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
@@ -361,11 +375,13 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            Ok(FnSetOrFnSetClause::FnSetClause(FnSetClause {
+            let clause_ok = FnSetClause {
                 params_def_with_set,
                 dom_facts,
                 ret_set: ret_set_parsed,
-            }))
+            };
+            this.parsing_free_param_collection.end_scope();
+            Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
         match clause {
             Ok(clause) => match clause {
@@ -1237,40 +1253,19 @@ impl Runtime {
 
         // 普通 atom（标识符）
         let atom = self.parse_atom(tb)?;
-        return Ok(self.reclassify_parsed_primary_as_free_param(atom.into()));
+        return self.reclassify_parsed_primary_as_free_param(atom.into());
     }
 
-    fn reclassify_parsed_primary_as_free_param(&self, obj: Obj) -> Obj {
+    fn reclassify_parsed_primary_as_free_param(&self, obj: Obj) -> Result<Obj, RuntimeError> {
         match obj {
-            Obj::Identifier(ref id) => {
-                if self
-                    .parsing_free_param_collection
-                    .forall_free_params
-                    .contains_key(&id.name)
-                {
-                    ForallFreeParamObj::new(id.name.clone()).into()
-                } else if self
-                    .parsing_free_param_collection
-                    .def_free_params
-                    .contains_key(&id.name)
-                {
-                    DefFreeParamObj::new(id.name.clone()).into()
-                } else {
-                    obj
-                }
-            }
-            Obj::FieldAccess(ref fa) => {
-                if self
-                    .parsing_free_param_collection
-                    .forall_free_params
-                    .contains_key(&fa.name)
-                {
-                    ForallFreeParamFieldAccess::new(fa.name.clone(), fa.field.clone()).into()
-                } else {
-                    obj
-                }
-            }
-            _ => obj,
+            Obj::Identifier(ref id) => Ok(self
+                .parsing_free_param_collection
+                .resolve_identifier_to_free_param_obj(&id.name)),
+            Obj::FieldAccess(ref fa) => self
+                .parsing_free_param_collection
+                .resolve_field_access_to_free_param_obj(&fa.name, &fa.field)
+                .map_err(|e| e.into()),
+            _ => Ok(obj),
         }
     }
 
@@ -1339,36 +1334,46 @@ impl Runtime {
         a: Identifier,
     ) -> Result<Obj, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
-            let second = this.parse_obj(tb)?;
-            if tb.current()? == COLON {
-                tb.skip_token(COLON)?;
+            let set_builder_param = [a.name.clone()];
+            this.parsing_free_param_collection.begin_scope(
+                FreeParamObjType::SetBuilder,
+                &set_builder_param,
+                tb.line_file.clone(),
+            )?;
+            let parsed = (|| -> Result<Obj, RuntimeError> {
+                let second = this.parse_obj(tb)?;
+                if tb.current()? == COLON {
+                    tb.skip_token(COLON)?;
 
-                // 先登记形参 mangling，再解析域与条件（与 fn 集一致：先绑定再读体）
-                let user_names = vec![a.name.clone()];
-                let (mangled_names, param_arg_map) =
-                    this.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
-                let stored = mangled_names[0].clone();
-                let second_inst = this.inst_obj(&second, &param_arg_map)?;
+                    // 先登记形参 mangling，再解析域与条件（与 fn 集一致：先绑定再读体）
+                    let user_names = vec![a.name.clone()];
+                    let (mangled_names, param_arg_map) =
+                        this.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
+                    let stored = mangled_names[0].clone();
+                    let second_inst = this.inst_obj(&second, &param_arg_map)?;
 
-                let mut facts_inst = Vec::new();
-                while tb.current()? != RIGHT_CURLY_BRACE {
-                    let f = this.parse_or_and_chain_atomic_fact(tb)?;
-                    facts_inst.push(this.inst_or_and_chain_atomic_fact(&f, &param_arg_map)?);
+                    let mut facts_inst = Vec::new();
+                    while tb.current()? != RIGHT_CURLY_BRACE {
+                        let f = this.parse_or_and_chain_atomic_fact(tb)?;
+                        facts_inst.push(this.inst_or_and_chain_atomic_fact(&f, &param_arg_map)?);
+                    }
+                    tb.skip_token(RIGHT_CURLY_BRACE)?;
+
+                    Ok(SetBuilder::new(stored, second_inst, facts_inst).into())
+                } else {
+                    Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            "expected colon after first argument".to_string(),
+                            tb.line_file.clone(),
+                            None,
+                            vec![],
+                        ),
+                    )))
                 }
-                tb.skip_token(RIGHT_CURLY_BRACE)?;
-
-                Ok(SetBuilder::new(stored, second_inst, facts_inst).into())
-            } else {
-                Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "expected colon after first argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
-                )))
-            }
+            })();
+            this.parsing_free_param_collection.end_scope();
+            parsed
         })
     }
 
