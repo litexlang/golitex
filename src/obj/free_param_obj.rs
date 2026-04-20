@@ -1,5 +1,6 @@
 use super::field_access_to_string;
 use super::Obj;
+use crate::common::keywords::SELF;
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -31,6 +32,11 @@ pub struct SetBuilderFreeParamObj {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnSetFreeParamObj {
     pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StructSelfFieldFreeParamObj {
+    pub field: String,
 }
 
 impl ForallFreeParamObj {
@@ -66,6 +72,12 @@ impl SetBuilderFreeParamObj {
 impl FnSetFreeParamObj {
     pub fn new(name: String) -> Self {
         FnSetFreeParamObj { name }
+    }
+}
+
+impl StructSelfFieldFreeParamObj {
+    pub fn new(field: String) -> Self {
+        StructSelfFieldFreeParamObj { field }
     }
 }
 
@@ -105,6 +117,12 @@ impl fmt::Display for FnSetFreeParamObj {
     }
 }
 
+impl fmt::Display for StructSelfFieldFreeParamObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", field_access_to_string(SELF, &self.field))
+    }
+}
+
 impl From<ForallFreeParamObj> for Obj {
     fn from(v: ForallFreeParamObj) -> Self {
         Obj::ForallFreeParam(v)
@@ -138,5 +156,11 @@ impl From<SetBuilderFreeParamObj> for Obj {
 impl From<FnSetFreeParamObj> for Obj {
     fn from(v: FnSetFreeParamObj) -> Self {
         Obj::FnSetFreeParam(v)
+    }
+}
+
+impl From<StructSelfFieldFreeParamObj> for Obj {
+    fn from(v: StructSelfFieldFreeParamObj) -> Self {
+        Obj::StructSelfFieldFreeParam(v)
     }
 }

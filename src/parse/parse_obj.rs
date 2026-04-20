@@ -1254,23 +1254,35 @@ impl Runtime {
         // 普通 atom（标识符）
         let atom = self.parse_atom(tb)?;
 
-        return Ok(atom.into());
-
-        // return self.reclassify_parsed_primary_as_free_param(atom.into());
+        return self.reclassify_parsed_primary_as_free_param(atom.into());
     }
 
-    // fn reclassify_parsed_primary_as_free_param(&self, obj: Obj) -> Result<Obj, RuntimeError> {
-    //     match obj {
-    //         Obj::Identifier(ref id) => Ok(self
-    //             .parsing_free_param_collection
-    //             .resolve_identifier_to_free_param_obj(&id.name)),
-    //         Obj::FieldAccess(ref fa) => self
-    //             .parsing_free_param_collection
-    //             .resolve_field_access_to_free_param_obj(&fa.name, &fa.field)
-    //             .map_err(|e| e.into()),
-    //         _ => Ok(obj),
-    //     }
-    // }
+    fn reclassify_parsed_primary_as_free_param(&self, obj: Obj) -> Result<Obj, RuntimeError> {
+        match obj {
+            Obj::Identifier(ref id) => {
+                if id.name == SELF && self.parsing_free_param_collection.in_struct_self_scope() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            "bare `self` is not allowed in struct `<=>:` facts; use `self.<field>`"
+                                .to_string(),
+                            default_line_file(),
+                            None,
+                            vec![],
+                        ),
+                    )));
+                }
+                Ok(self
+                    .parsing_free_param_collection
+                    .resolve_identifier_to_free_param_obj(&id.name))
+            }
+            Obj::FieldAccess(ref fa) => self
+                .parsing_free_param_collection
+                .resolve_field_access_to_free_param_obj(&fa.name, &fa.field)
+                .map_err(|e| e.into()),
+            _ => Ok(obj),
+        }
+    }
 
     pub fn parse_braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;

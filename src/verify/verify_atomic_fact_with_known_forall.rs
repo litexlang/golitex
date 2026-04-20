@@ -436,6 +436,10 @@ impl Runtime {
                 let id = Identifier::new(p.name.clone());
                 Self::match_arg_when_left_is_identifier(&id, given_arg)
             }
+            Obj::StructSelfFieldFreeParam(ref p) => {
+                let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
+                Self::match_arg_when_left_is_field_access(&fa, given_arg)
+            }
         }
     }
 

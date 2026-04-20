@@ -99,7 +99,8 @@ impl Runtime {
             | Obj::DefFreeParam(_)
             | Obj::ExistFreeParam(_)
             | Obj::SetBuilderFreeParam(_)
-            | Obj::FnSetFreeParam(_) => Ok(()),
+            | Obj::FnSetFreeParam(_)
+            | Obj::StructSelfFieldFreeParam(_) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);

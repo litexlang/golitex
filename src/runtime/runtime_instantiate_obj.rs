@@ -122,6 +122,10 @@ impl Runtime {
                 Some(obj) => obj.clone(),
                 None => p.clone().into(),
             }),
+            Obj::StructSelfFieldFreeParam(p) => {
+                let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
+                self.inst_field_access(&fa, param_to_arg_map)
+            }
         }
     }
 
