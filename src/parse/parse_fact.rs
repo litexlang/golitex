@@ -39,11 +39,18 @@ impl Runtime {
                 vec![],
             )))
             })?;
-            if last_body.current()? == EQUIVALENT_SIGN {
+            this.parsing_free_param_collection.begin_scope(
+                FreeParamObjType::Forall,
+                &forall_param_names,
+                tb.line_file.clone(),
+            )?;
+            let out = if last_body.current()? == EQUIVALENT_SIGN {
                 this.parse_forall_with_iff(tb, param_def)
             } else {
                 this.parse_forall(tb, param_def)
-            }
+            };
+            this.parsing_free_param_collection.end_scope();
+            out
         })
     }
 
@@ -215,23 +222,32 @@ impl Runtime {
                     &exist_param_names,
                     tb.line_file.clone(),
                 )?;
-                tb.skip_token(ST)?;
+                inner.parsing_free_param_collection.begin_scope(
+                    FreeParamObjType::Exist,
+                    &exist_param_names,
+                    tb.line_file.clone(),
+                )?;
+                let parsed = (|| -> Result<ExistFact, RuntimeError> {
+                    tb.skip_token(ST)?;
 
-                tb.skip_token(LEFT_CURLY_BRACE)?;
+                    tb.skip_token(LEFT_CURLY_BRACE)?;
 
-                let mut facts: Vec<OrAndChainAtomicFact> = vec![];
-                loop {
-                    facts.push(inner.parse_or_and_chain_atomic_fact(tb)?);
-                    if tb.current()? != RIGHT_CURLY_BRACE {
-                        tb.skip_token(COMMA)?;
-                    } else {
-                        break;
+                    let mut facts: Vec<OrAndChainAtomicFact> = vec![];
+                    loop {
+                        facts.push(inner.parse_or_and_chain_atomic_fact(tb)?);
+                        if tb.current()? != RIGHT_CURLY_BRACE {
+                            tb.skip_token(COMMA)?;
+                        } else {
+                            break;
+                        }
                     }
-                }
-                tb.skip_token(RIGHT_CURLY_BRACE)?;
+                    tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-                let line_file = tb.line_file.clone();
-                Ok(ExistFact::new(param_def, facts, is_exist_unique, line_file))
+                    let line_file = tb.line_file.clone();
+                    Ok(ExistFact::new(param_def, facts, is_exist_unique, line_file))
+                })();
+                inner.parsing_free_param_collection.end_scope();
+                parsed
             })
         })
     }

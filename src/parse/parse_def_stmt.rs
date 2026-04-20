@@ -8,6 +8,7 @@ impl Runtime {
             tb.skip_token(PROP)?;
             let name = this.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
             let param_defs = this.parse_def_braced_param_groups_with_param_type(tb)?;
+            let def_param_names = param_defs.collect_param_names();
 
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
@@ -31,7 +32,14 @@ impl Runtime {
                 }
             }
 
-            let facts = this.parse_facts_in_body(tb)?;
+            this.parsing_free_param_collection.begin_scope(
+                FreeParamObjType::Def,
+                &def_param_names,
+                tb.line_file.clone(),
+            )?;
+            let facts_result = this.parse_facts_in_body(tb);
+            this.parsing_free_param_collection.end_scope();
+            let facts = facts_result?;
             Ok(DefPropStmt::new(
                 name,
                 param_defs,
