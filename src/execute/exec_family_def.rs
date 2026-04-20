@@ -35,7 +35,7 @@ impl Runtime {
             .define_params_with_type(
                 &def_family_stmt.params_def_with_type,
                 false,
-                FreeParamObjType::Def,
+                ParamObjType::Def,
             )
             .map_err(|define_params_error| {
                 short_exec_error(

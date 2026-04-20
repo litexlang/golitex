@@ -292,7 +292,7 @@ impl Runtime {
             let assigned_integer_string = param_value_strings_of_each_param[parameter_position]
                 [parameter_index_assignment[parameter_position]]
                 .clone();
-            self.store_identifier_obj(parameter_name, FreeParamObjType::Def)?;
+            self.store_identifier_obj(parameter_name, ParamObjType::Def)?;
 
             let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
                 parameter_name.to_string().into(),

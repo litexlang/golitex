@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<StmtResult, RuntimeError> {
         let mut infer_result = self
-            .define_params_with_type(&def_let_stmt.param_def, false, FreeParamObjType::Def)
+            .define_params_with_type(&def_let_stmt.param_def, false, ParamObjType::Def)
             .map_err(|e| short_exec_error(def_let_stmt.clone().into(), "", Some(e), vec![]))?;
         for fact in def_let_stmt.facts.iter() {
             let fact_infer_result = self

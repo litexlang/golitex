@@ -52,7 +52,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         self.store_identifier_obj(
             &have_fn_equal_case_by_case_stmt.name,
-            FreeParamObjType::Identifier,
+            ParamObjType::Identifier,
         )?;
 
         let function_identifier_obj = have_fn_equal_case_by_case_stmt.name.clone().into();

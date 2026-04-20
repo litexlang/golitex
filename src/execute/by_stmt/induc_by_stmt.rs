@@ -48,7 +48,7 @@ impl Runtime {
             .inst_exist_or_and_chain_atomic_fact(
                 fact,
                 &base_case_param_to_arg_map,
-                FreeParamObjType::Induc,
+                ParamObjType::Induc,
             )?
             .to_fact();
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
@@ -97,7 +97,7 @@ impl Runtime {
         let next_fact_of_induction_step = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &induction_step_param_to_obj_map,
-            FreeParamObjType::Induc,
+            ParamObjType::Induc,
         )?;
 
         let corresponding_forall_fact = ForallFact::new(

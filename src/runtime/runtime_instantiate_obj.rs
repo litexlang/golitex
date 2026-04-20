@@ -1,4 +1,3 @@
-use crate::obj::field_access_to_string;
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -91,89 +90,85 @@ impl Runtime {
                 }
                 Ok(StructObj::new(s.name.clone(), args).into())
             }
-            Obj::FreeParam(p) => match p {
-                FreeParamObj::Forall(p) => {
-                    if ctx == FreeParamObjType::Forall {
-                        if let Some(obj) = param_to_arg_map.get(&p.name) {
-                            return Ok(obj.clone());
-                        }
-                    }
-                    Ok(p.clone().into())
-                }
-                FreeParamObj::ForallFieldAccess(p) => {
-                    if ctx != FreeParamObjType::Forall {
-                        return Ok(
-                            ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into(),
-                        );
-                    }
-                    let fa = FieldAccess::new(p.name.clone(), p.field.clone());
-                    let dotted = field_access_to_string(&fa.name, &fa.field);
-                    if let Some(obj) = param_to_arg_map.get(&dotted) {
+            Obj::ForallFreeParamObj(p) => {
+                if ctx == ParamObjType::Forall {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
-                    match self.inst_field_access(&fa, param_to_arg_map)? {
-                        Obj::FieldAccess(f) if f.name == p.name && f.field == p.field => Ok(
-                            ForallFreeParamFieldAccess::new(p.name.clone(), p.field.clone()).into(),
-                        ),
-                        other => Ok(other),
+                }
+                Ok(p.clone().into())
+            }
+            Obj::ForallFieldAccessObj(p) => {
+                if ctx != ParamObjType::Forall {
+                    return Ok(ForallFieldAccessObj::new(p.name.clone(), p.field.clone()).into());
+                }
+                let fa = FieldAccess::new(p.name.clone(), p.field.clone());
+                let dotted = field_access_to_string(&fa.name, &fa.field);
+                if let Some(obj) = param_to_arg_map.get(&dotted) {
+                    return Ok(obj.clone());
+                }
+                match self.inst_field_access(&fa, param_to_arg_map)? {
+                    Obj::FieldAccess(f) if f.name == p.name && f.field == p.field => {
+                        Ok(ForallFieldAccessObj::new(p.name.clone(), p.field.clone()).into())
+                    }
+                    other => Ok(other),
+                }
+            }
+            Obj::DefFreeParamObj(p) => {
+                if ctx == ParamObjType::Def {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
                     }
                 }
-                FreeParamObj::Def(p) => {
-                    if ctx == FreeParamObjType::Def {
-                        if let Some(obj) = param_to_arg_map.get(&p.name) {
-                            return Ok(obj.clone());
-                        }
+                Ok(p.clone().into())
+            }
+            Obj::ExistFreeParamObj(p) => {
+                if ctx == ParamObjType::Exist {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
                     }
-                    Ok(p.clone().into())
                 }
-                FreeParamObj::Exist(p) => {
-                    if ctx == FreeParamObjType::Exist {
-                        if let Some(obj) = param_to_arg_map.get(&p.name) {
-                            return Ok(obj.clone());
-                        }
+                Ok(p.clone().into())
+            }
+            Obj::SetBuilderFreeParamObj(p) => {
+                if ctx == ParamObjType::SetBuilder {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
                     }
-                    Ok(p.clone().into())
                 }
-                FreeParamObj::SetBuilder(p) => {
-                    if ctx == FreeParamObjType::SetBuilder {
-                        if let Some(obj) = param_to_arg_map.get(&p.name) {
-                            return Ok(obj.clone());
-                        }
+                Ok(p.clone().into())
+            }
+            Obj::FnSetFreeParamObj(p) => {
+                if ctx == ParamObjType::FnSet {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
                     }
-                    Ok(p.clone().into())
                 }
-                FreeParamObj::FnSet(p) => {
-                    if ctx == FreeParamObjType::FnSet {
-                        if let Some(obj) = param_to_arg_map.get(&p.name) {
-                            return Ok(obj.clone());
-                        }
+                Ok(p.clone().into())
+            }
+            Obj::ByInducFreeParamObj(p) => {
+                if ctx == ParamObjType::Induc {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
                     }
-                    Ok(p.clone().into())
                 }
-                FreeParamObj::Induc(p) => {
-                    if ctx == FreeParamObjType::Induc {
-                        if let Some(obj) = param_to_arg_map.get(&p.name) {
-                            return Ok(obj.clone());
-                        }
+                Ok(p.clone().into())
+            }
+            Obj::DefAlgoFreeParamObj(p) => {
+                if ctx == ParamObjType::DefAlgo {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
                     }
-                    Ok(p.clone().into())
                 }
-                FreeParamObj::DefAlgo(p) => {
-                    if ctx == FreeParamObjType::DefAlgo {
-                        if let Some(obj) = param_to_arg_map.get(&p.name) {
-                            return Ok(obj.clone());
-                        }
-                    }
-                    Ok(p.clone().into())
+                Ok(p.clone().into())
+            }
+            Obj::StructSelfFieldFreeParamObj(p) => {
+                if ctx != ParamObjType::StructSelf {
+                    return Ok(p.clone().into());
                 }
-                FreeParamObj::StructSelfField(p) => {
-                    if ctx != FreeParamObjType::StructSelf {
-                        return Ok(p.clone().into());
-                    }
-                    let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
-                    self.inst_field_access(&fa, param_to_arg_map)
-                }
-            },
+                let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
+                self.inst_field_access(&fa, param_to_arg_map)
+            }
         }
     }
 
@@ -326,7 +321,7 @@ impl Runtime {
             Obj::IdentifierWithMod(x) => x.clone().into(),
             Obj::FieldAccess(x) => x.clone().into(),
             Obj::FieldAccessWithMod(x) => x.clone().into(),
-            Obj::FreeParam(FreeParamObj::StructSelfField(p)) => p.clone().into(),
+            Obj::StructSelfFieldFreeParamObj(p) => p.clone().into(),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
                 merged_body = vec![];

@@ -142,7 +142,7 @@ impl Runtime {
         let names = forall_fact.params_def_with_type.collect_param_names();
         let lf = tb.line_file.clone();
         let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
-            FreeParamObjType::Forall,
+            ParamObjType::Forall,
             &names,
             lf,
             |this| {

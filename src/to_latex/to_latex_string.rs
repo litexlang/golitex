@@ -720,7 +720,7 @@ impl FamilyObj {
 
 impl FieldAccess {
     pub fn to_latex_string(&self) -> String {
-        let s = crate::obj::field_access_to_string(&self.name, &self.field);
+        let s = field_access_to_string(&self.name, &self.field);
         format!(r"\text{{{}}}", latex_texttt_escape(&s))
     }
 }
@@ -764,7 +764,7 @@ impl FnObj {
             Atom::FieldAccess(x) => x.to_latex_string(),
             Atom::FieldAccessWithMod(x) => x.to_latex_string(),
             Atom::StructSelfFieldFreeParam(x) => {
-                let s = crate::obj::field_access_to_string(SELF, &x.field);
+                let s = field_access_to_string(SELF, &x.field);
                 format!(r"\text{{{}}}", latex_texttt_escape(&s))
             }
         };
@@ -1927,23 +1927,21 @@ impl Obj {
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
             Obj::StructObj(x) => x.to_latex_string(),
-            Obj::FreeParam(x) => match x {
-                crate::obj::FreeParamObj::Forall(x) => latex_local_ident(&x.name),
-                crate::obj::FreeParamObj::ForallFieldAccess(x) => {
-                    let s = crate::obj::field_access_to_string(&x.name, &x.field);
-                    format!(r"\text{{{}}}", latex_texttt_escape(&s))
-                }
-                crate::obj::FreeParamObj::Def(x) => latex_local_ident(&x.name),
-                crate::obj::FreeParamObj::Exist(x) => latex_local_ident(&x.name),
-                crate::obj::FreeParamObj::SetBuilder(x) => latex_local_ident(&x.name),
-                crate::obj::FreeParamObj::FnSet(x) => latex_local_ident(&x.name),
-                crate::obj::FreeParamObj::Induc(x) => latex_local_ident(&x.name),
-                crate::obj::FreeParamObj::DefAlgo(x) => latex_local_ident(&x.name),
-                crate::obj::FreeParamObj::StructSelfField(x) => {
-                    let s = crate::obj::field_access_to_string(SELF, &x.field);
-                    format!(r"\text{{{}}}", latex_texttt_escape(&s))
-                }
-            },
+            Obj::ForallFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::ForallFieldAccessObj(x) => {
+                let s = field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
+            Obj::DefFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::ExistFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::SetBuilderFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::FnSetFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::ByInducFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::DefAlgoFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::StructSelfFieldFreeParamObj(x) => {
+                let s = field_access_to_string(SELF, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),
