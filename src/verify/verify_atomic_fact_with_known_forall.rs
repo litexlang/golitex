@@ -416,6 +416,14 @@ impl Runtime {
                 let id = Identifier::new(p.name.clone());
                 Self::match_arg_when_left_is_identifier(&id, given_arg)
             }
+            Obj::ForallFreeParamFieldAccess(ref p) => {
+                let fa = FieldAccess::new(p.name.clone(), p.field.clone());
+                Self::match_arg_when_left_is_field_access(&fa, given_arg)
+            }
+            Obj::DefFreeParam(ref p) => {
+                let id = Identifier::new(p.name.clone());
+                Self::match_arg_when_left_is_identifier(&id, given_arg)
+            }
             Obj::ExistFreeParam(ref p) => {
                 let id = Identifier::new(p.name.clone());
                 Self::match_arg_when_left_is_identifier(&id, given_arg)

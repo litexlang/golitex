@@ -285,6 +285,14 @@ impl Runtime {
                 Obj::ForallFreeParam(b) => a.name == b.name,
                 _ => false,
             },
+            Obj::ForallFreeParamFieldAccess(a) => match right {
+                Obj::ForallFreeParamFieldAccess(b) => a.name == b.name && a.field == b.field,
+                _ => false,
+            },
+            Obj::DefFreeParam(a) => match right {
+                Obj::DefFreeParam(b) => a.name == b.name,
+                _ => false,
+            },
             Obj::ExistFreeParam(a) => match right {
                 Obj::ExistFreeParam(b) => a.name == b.name,
                 _ => false,

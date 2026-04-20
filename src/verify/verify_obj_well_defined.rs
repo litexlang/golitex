@@ -95,6 +95,8 @@ impl Runtime {
                 self.verify_param_type_struct_well_defined(struct_ty, verify_state)
             }
             Obj::ForallFreeParam(_)
+            | Obj::ForallFreeParamFieldAccess(_)
+            | Obj::DefFreeParam(_)
             | Obj::ExistFreeParam(_)
             | Obj::SetBuilderFreeParam(_)
             | Obj::FnSetFreeParam(_) => Ok(()),
