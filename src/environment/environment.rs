@@ -4,7 +4,7 @@ use std::fmt;
 use std::rc::Rc;
 
 pub struct Environment {
-    pub defined_identifiers: HashMap<IdentifierName, FreeParamObjType>,
+    pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub defined_structs: HashMap<StructName, DefStructStmt>,
@@ -48,7 +48,7 @@ pub struct Environment {
 
 impl Environment {
     pub fn new(
-        objs: HashMap<IdentifierName, FreeParamObjType>,
+        objs: HashMap<IdentifierName, ParamObjType>,
         def_props: HashMap<PropName, DefPropStmt>,
         struct_defs: HashMap<StructName, DefStructStmt>,
         families: HashMap<FamilyName, DefFamilyStmt>,

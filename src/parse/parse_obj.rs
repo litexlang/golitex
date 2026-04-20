@@ -264,7 +264,7 @@ impl Runtime {
 
             let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
             this.parsing_free_param_collection.begin_scope(
-                FreeParamObjType::FnSet,
+                ParamObjType::FnSet,
                 &all_fn_names,
                 tb.line_file.clone(),
             )?;
@@ -285,7 +285,7 @@ impl Runtime {
             let ret_set_parsed = this.parse_obj(tb)?;
             let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
             this.parsing_free_param_collection
-                .end_scope(FreeParamObjType::FnSet, &all_fn_names);
+                .end_scope(ParamObjType::FnSet, &all_fn_names);
             Ok(FnSetOrFnSetClause::FnSet(built?))
         });
         match fn_set {
@@ -341,7 +341,7 @@ impl Runtime {
 
             let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
             this.parsing_free_param_collection.begin_scope(
-                FreeParamObjType::FnSet,
+                ParamObjType::FnSet,
                 &all_fn_names,
                 tb.line_file.clone(),
             )?;
@@ -366,7 +366,7 @@ impl Runtime {
                 ret_set: ret_set_parsed,
             };
             this.parsing_free_param_collection
-                .end_scope(FreeParamObjType::FnSet, &all_fn_names);
+                .end_scope(ParamObjType::FnSet, &all_fn_names);
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
         match clause {
@@ -482,7 +482,7 @@ impl Runtime {
             Obj::FieldAccessWithMod(field_access_with_mod) => {
                 (field_access_with_mod.clone().into(), vec![])
             }
-            Obj::FreeParam(FreeParamObj::StructSelfField(p)) => (p.clone().into(), vec![]),
+            Obj::StructSelfFieldFreeParamObj(p) => (p.clone().into(), vec![]),
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -1337,7 +1337,7 @@ impl Runtime {
         self.run_in_local_parsing_time_name_scope(|this| {
             let set_builder_param = [a.name.clone()];
             this.parsing_free_param_collection.begin_scope(
-                FreeParamObjType::SetBuilder,
+                ParamObjType::SetBuilder,
                 &set_builder_param,
                 tb.line_file.clone(),
             )?;
@@ -1349,7 +1349,7 @@ impl Runtime {
                     let user_names = vec![a.name.clone()];
                     this.validate_user_fn_param_names_for_parse(&user_names, tb.line_file.clone())?;
                     let empty: HashMap<String, Obj> = HashMap::new();
-                    let second_inst = this.inst_obj(&second, &empty, FreeParamObjType::SetBuilder)?;
+                    let second_inst = this.inst_obj(&second, &empty, ParamObjType::SetBuilder)?;
 
                     let mut facts_inst = Vec::new();
                     while tb.current()? != RIGHT_CURLY_BRACE {
@@ -1358,7 +1358,7 @@ impl Runtime {
                             this.inst_or_and_chain_atomic_fact(
                                 &f,
                                 &empty,
-                                FreeParamObjType::SetBuilder,
+                                ParamObjType::SetBuilder,
                             )?,
                         );
                     }
@@ -1378,7 +1378,7 @@ impl Runtime {
                 }
             })();
             this.parsing_free_param_collection
-                .end_scope(FreeParamObjType::SetBuilder, &set_builder_param);
+                .end_scope(ParamObjType::SetBuilder, &set_builder_param);
             parsed
         })
     }
@@ -1438,7 +1438,7 @@ impl Runtime {
                 let obj = self
                     .parsing_free_param_collection
                     .resolve_field_access_to_free_param_obj(SELF, &field)?;
-                let Obj::FreeParam(FreeParamObj::StructSelfField(p)) = obj else {
+                let Obj::StructSelfFieldFreeParamObj(p) = obj else {
                     return Ok(FieldAccess::new(left, field).into());
                 };
                 return Ok(Atom::StructSelfFieldFreeParam(p));

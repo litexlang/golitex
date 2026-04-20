@@ -33,13 +33,13 @@ impl Runtime {
             }
 
             this.parsing_free_param_collection.begin_scope(
-                FreeParamObjType::Def,
+                ParamObjType::Def,
                 &def_param_names,
                 tb.line_file.clone(),
             )?;
             let facts_result = this.parse_facts_in_body(tb);
             this.parsing_free_param_collection
-                .end_scope(FreeParamObjType::Def, &def_param_names);
+                .end_scope(ParamObjType::Def, &def_param_names);
             let facts = facts_result?;
             Ok(DefPropStmt::new(
                 name,
@@ -118,13 +118,13 @@ impl Runtime {
             ))));
             }
             self.parsing_free_param_collection.begin_scope(
-                FreeParamObjType::Def,
+                ParamObjType::Def,
                 &all_param_names,
                 tb.line_file.clone(),
             )?;
             let facts_result = self.parse_facts_in_body(tb);
             self.parsing_free_param_collection
-                .end_scope(FreeParamObjType::Def, &all_param_names);
+                .end_scope(ParamObjType::Def, &all_param_names);
             facts_result?
         } else {
             vec![]
@@ -163,7 +163,7 @@ impl Runtime {
         } else {
             tb.skip_token(EQUAL)?;
             self.parsing_free_param_collection.begin_scope(
-                FreeParamObjType::Def,
+                ParamObjType::Def,
                 &have_param_names,
                 tb.line_file.clone(),
             )?;
@@ -176,7 +176,7 @@ impl Runtime {
                 Ok(objs_equal_to)
             })();
             self.parsing_free_param_collection
-                .end_scope(FreeParamObjType::Def, &have_param_names);
+                .end_scope(ParamObjType::Def, &have_param_names);
             let objs_equal_to = objs_result?;
             Ok(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file.clone()).into())
         }
@@ -203,7 +203,7 @@ impl Runtime {
                     block.skip_token(CASE)?;
                     let case_lf = block.line_file.clone();
                     cases.push(self.with_optional_free_param_scope(
-                        FreeParamObjType::FnSet,
+                        ParamObjType::FnSet,
                         &fn_param_names,
                         case_lf,
                         |this| this.parse_and_chain_atomic_fact(block),
@@ -211,7 +211,7 @@ impl Runtime {
                     block.skip_token(COLON)?;
                     let rhs_lf = block.line_file.clone();
                     equal_tos.push(self.with_optional_free_param_scope(
-                        FreeParamObjType::FnSet,
+                        ParamObjType::FnSet,
                         &fn_param_names,
                         rhs_lf,
                         |this| this.parse_obj(block),
@@ -232,7 +232,7 @@ impl Runtime {
 
                 let lf = tb.line_file.clone();
                 let equal_to = self.with_optional_free_param_scope(
-                    FreeParamObjType::FnSet,
+                    ParamObjType::FnSet,
                     &fn_param_names,
                     lf,
                     |this| this.parse_obj(tb),
@@ -414,7 +414,7 @@ impl Runtime {
         let induc_names_last = [param.clone()];
         let last_case_line = tb.body[num_blocks - 1].line_file.clone();
         let last_case = self.parse_in_local_free_param_scope(
-            FreeParamObjType::Induc,
+            ParamObjType::Induc,
             &induc_names_last,
             last_case_line,
             |this| {
@@ -670,7 +670,7 @@ impl Runtime {
             self.parse_def_param_type_groups_until_colon_or_right_brace(tb)?;
         let scope_names = params_def_with_type.collect_param_names();
         self.parsing_free_param_collection.begin_scope(
-            FreeParamObjType::Def,
+            ParamObjType::Def,
             &scope_names,
             tb.line_file.clone(),
         )?;
@@ -685,7 +685,7 @@ impl Runtime {
                     Ok(f) => facts.push(f),
                     Err(e) => {
                         self.parsing_free_param_collection
-                            .end_scope(FreeParamObjType::Def, &scope_names);
+                            .end_scope(ParamObjType::Def, &scope_names);
                         break Err(e);
                     }
                 }
@@ -699,7 +699,7 @@ impl Runtime {
         };
         if let Err(e) = tb.skip_token(RIGHT_BRACE) {
             self.parsing_free_param_collection
-                .end_scope(FreeParamObjType::Def, &scope_names);
+                .end_scope(ParamObjType::Def, &scope_names);
             return Err(e);
         }
         Ok((params_def_with_type, dom_facts))
@@ -716,7 +716,7 @@ impl Runtime {
             self.parse_def_struct_header_param_groups_until_colon_or_right_brace(tb)?;
         let scope_names = param_defs.collect_param_names();
         self.parsing_free_param_collection.begin_scope(
-            FreeParamObjType::Def,
+            ParamObjType::Def,
             &scope_names,
             tb.line_file.clone(),
         )?;
@@ -731,7 +731,7 @@ impl Runtime {
                     Ok(f) => facts.push(f),
                     Err(e) => {
                         self.parsing_free_param_collection
-                            .end_scope(FreeParamObjType::Def, &scope_names);
+                            .end_scope(ParamObjType::Def, &scope_names);
                         break Err(e);
                     }
                 }
@@ -745,7 +745,7 @@ impl Runtime {
         };
         if let Err(e) = tb.skip_token(RIGHT_BRACE) {
             self.parsing_free_param_collection
-                .end_scope(FreeParamObjType::Def, &scope_names);
+                .end_scope(ParamObjType::Def, &scope_names);
             return Err(e);
         }
         Ok((param_defs, dom_facts))
@@ -782,7 +782,7 @@ impl Runtime {
                 .into())
             })();
             this.parsing_free_param_collection
-                .end_scope(FreeParamObjType::Def, &family_def_scope_names);
+                .end_scope(ParamObjType::Def, &family_def_scope_names);
             stmt_result
         })
     }
@@ -894,7 +894,7 @@ impl Runtime {
                     let field_names: Vec<String> =
                         fields.iter().map(|(n, _)| n.clone()).collect();
                     this.parsing_free_param_collection.begin_scope(
-                        FreeParamObjType::StructSelf,
+                        ParamObjType::StructSelf,
                         &field_names,
                         tb.line_file.clone(),
                     )?;
@@ -902,7 +902,7 @@ impl Runtime {
                         facts.push(this.parse_or_and_chain_atomic_fact(block)?);
                     }
                     this.parsing_free_param_collection
-                        .end_scope(FreeParamObjType::StructSelf, &field_names);
+                        .end_scope(ParamObjType::StructSelf, &field_names);
                 }
 
                 Ok(DefStructStmt::new(
@@ -916,7 +916,7 @@ impl Runtime {
                 .into())
             })();
             this.parsing_free_param_collection
-                .end_scope(FreeParamObjType::Def, &struct_def_scope_names);
+                .end_scope(ParamObjType::Def, &struct_def_scope_names);
             stmt_result
         })
     }
@@ -937,7 +937,7 @@ impl Runtime {
             this.register_collected_param_names_for_def_parse(&params, tb.line_file.clone())?;
             tb.skip_token(COLON)?;
             this.parsing_free_param_collection.begin_scope(
-                FreeParamObjType::DefAlgo,
+                ParamObjType::DefAlgo,
                 &params,
                 tb.line_file.clone(),
             )?;
@@ -967,7 +967,7 @@ impl Runtime {
                 ))
             })();
             this.parsing_free_param_collection
-                .end_scope(FreeParamObjType::DefAlgo, &params_for_end);
+                .end_scope(ParamObjType::DefAlgo, &params_for_end);
             Ok(algo_result?.into())
         })
     }

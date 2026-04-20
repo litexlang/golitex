@@ -50,7 +50,7 @@ impl Runtime {
         let induc_param = [param.clone()];
         let mut to_prove: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         self.parse_in_local_free_param_scope(
-            FreeParamObjType::Induc,
+            ParamObjType::Induc,
             &induc_param,
             prove_line,
             |this| {
@@ -63,7 +63,7 @@ impl Runtime {
 
         let proof_line = tb.line_file.clone();
         let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
-            FreeParamObjType::Induc,
+            ParamObjType::Induc,
             &induc_param,
             proof_line,
             |this| {

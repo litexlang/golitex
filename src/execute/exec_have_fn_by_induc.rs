@@ -44,7 +44,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         param_name: &str,
     ) -> Result<(), RuntimeError> {
-        self.store_identifier_obj(&stmt.name, FreeParamObjType::Identifier)?;
+        self.store_identifier_obj(&stmt.name, ParamObjType::Identifier)?;
 
         let random_param = self.generate_random_unused_name();
 
@@ -138,7 +138,7 @@ impl Runtime {
 
         let left_id: Obj = param_name_str.as_str().into();
 
-        self.store_identifier_obj(&param_name_str, FreeParamObjType::Induc)?;
+        self.store_identifier_obj(&param_name_str, ParamObjType::Induc)?;
 
         self.define_parameter_by_binding_param_type(
             &param_name_str,

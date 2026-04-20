@@ -55,7 +55,7 @@ impl Runtime {
                 .collect_param_names();
             let lf = tb.line_file.clone();
             self.parse_stmts_with_optional_free_param_scope(
-                FreeParamObjType::Exist,
+                ParamObjType::Exist,
                 &names,
                 lf,
                 |this| {

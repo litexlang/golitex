@@ -266,33 +266,31 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
             }
         }
-        Obj::FreeParam(fp) => match fp {
-            crate::obj::FreeParamObj::Forall(p) => {
-                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-            }
-            crate::obj::FreeParamObj::ForallFieldAccess(p) => {
-                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-            }
-            crate::obj::FreeParamObj::Def(p) => {
-                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-            }
-            crate::obj::FreeParamObj::Exist(p) => {
-                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-            }
-            crate::obj::FreeParamObj::SetBuilder(p) => {
-                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-            }
-            crate::obj::FreeParamObj::FnSet(p) => {
-                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-            }
-            crate::obj::FreeParamObj::Induc(p) => {
-                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-            }
-            crate::obj::FreeParamObj::DefAlgo(p) => {
-                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-            }
-            crate::obj::FreeParamObj::StructSelfField(_) => {}
-        },
+        Obj::ForallFreeParamObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::ForallFieldAccessObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::DefFreeParamObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::ExistFreeParamObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::SetBuilderFreeParamObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::FnSetFreeParamObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::ByInducFreeParamObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::DefAlgoFreeParamObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::StructSelfFieldFreeParamObj(_) => {}
     }
 }
 

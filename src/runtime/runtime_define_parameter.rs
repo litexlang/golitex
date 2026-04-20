@@ -137,7 +137,7 @@ impl Runtime {
         let lf = default_line_file();
         for (field_name, field_ty) in def.fields.iter() {
             let arg = FieldAccess::new(name.to_string(), field_name.clone()).into();
-            let param_type = self.inst_param_type(field_ty, &base_map, FreeParamObjType::Def)?;
+            let param_type = self.inst_param_type(field_ty, &base_map, ParamObjType::Def)?;
             let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
             infer_result.new_infer_result_inside(
                 self.store_fact_without_well_defined_verified_and_infer(f)?,
@@ -164,14 +164,14 @@ impl Runtime {
             .insert(key.clone(), ());
         self.top_level_env()
             .defined_identifiers
-            .insert(key, FreeParamObjType::StructSelf);
+            .insert(key, ParamObjType::StructSelf);
     }
 
     pub fn define_params_with_type(
         &mut self,
         param_defs: &ParamDefWithType,
         check_type_nonempty: bool,
-        binding_kind: FreeParamObjType,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for param_def in param_defs.groups.iter() {

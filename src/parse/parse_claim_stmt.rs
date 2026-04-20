@@ -64,7 +64,7 @@ impl Runtime {
         let names = collect_forall_param_names_from_facts(std::slice::from_ref(&fact));
         let lf = tb.line_file.clone();
         let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
-            FreeParamObjType::Forall,
+            ParamObjType::Forall,
             &names,
             lf,
             |this| {

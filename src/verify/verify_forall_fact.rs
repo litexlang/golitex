@@ -23,7 +23,7 @@ impl Runtime {
             if let Err(e) = rt.define_params_with_type(
                 &forall_fact.params_def_with_type,
                 false,
-                FreeParamObjType::Forall,
+                ParamObjType::Forall,
             ) {
                 return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,

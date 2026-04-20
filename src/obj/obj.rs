@@ -1,5 +1,3 @@
-use super::free_param_obj::FreeParamObj;
-use super::standard_set::StandardSet;
 use crate::prelude::*;
 use std::fmt;
 
@@ -47,7 +45,15 @@ pub enum Obj {
     StandardSet(StandardSet),
     FamilyObj(FamilyObj),
     StructObj(StructObj),
-    FreeParam(FreeParamObj),
+    ForallFreeParamObj(ForallFreeParamObj),
+    ForallFieldAccessObj(ForallFieldAccessObj),
+    DefFreeParamObj(DefFreeParamObj),
+    ExistFreeParamObj(ExistFreeParamObj),
+    SetBuilderFreeParamObj(SetBuilderFreeParamObj),
+    FnSetFreeParamObj(FnSetFreeParamObj),
+    StructSelfFieldFreeParamObj(StructSelfFieldFreeParamObj),
+    ByInducFreeParamObj(ByInducFreeParamObj),
+    DefAlgoFreeParamObj(DefAlgoFreeParamObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
     MatrixAdd(MatrixAdd),
@@ -876,7 +882,15 @@ impl Obj {
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
-            Obj::FreeParam(x) => write!(f, "{}", x)?,
+            Obj::ForallFreeParamObj(x) => write!(f, "{}", x)?,
+            Obj::ForallFieldAccessObj(x) => write!(f, "{}", x)?,
+            Obj::DefFreeParamObj(x) => write!(f, "{}", x)?,
+            Obj::ExistFreeParamObj(x) => write!(f, "{}", x)?,
+            Obj::SetBuilderFreeParamObj(x) => write!(f, "{}", x)?,
+            Obj::FnSetFreeParamObj(x) => write!(f, "{}", x)?,
+            Obj::StructSelfFieldFreeParamObj(x) => write!(f, "{}", x)?,
+            Obj::ByInducFreeParamObj(x) => write!(f, "{}", x)?,
+            Obj::DefAlgoFreeParamObj(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1165,7 +1179,83 @@ impl Obj {
                     .collect(),
             )
             .into(),
-            Obj::FreeParam(p) => Obj::FreeParam(p.replace_bound_identifier(from, to)),
+            Obj::ForallFreeParamObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                ForallFreeParamObj::new(name).into()
+            }
+            Obj::ForallFieldAccessObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                let field = if p.field == from {
+                    to.to_string()
+                } else {
+                    p.field
+                };
+                ForallFieldAccessObj::new(name, field).into()
+            }
+            Obj::DefFreeParamObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                DefFreeParamObj::new(name).into()
+            }
+            Obj::ExistFreeParamObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                ExistFreeParamObj::new(name).into()
+            }
+            Obj::SetBuilderFreeParamObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                SetBuilderFreeParamObj::new(name).into()
+            }
+            Obj::FnSetFreeParamObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                FnSetFreeParamObj::new(name).into()
+            }
+            Obj::StructSelfFieldFreeParamObj(p) => {
+                let field = if p.field == from {
+                    to.to_string()
+                } else {
+                    p.field
+                };
+                StructSelfFieldFreeParamObj::new(field).into()
+            }
+            Obj::ByInducFreeParamObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                ByInducFreeParamObj::new(name).into()
+            }
+            Obj::DefAlgoFreeParamObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                DefAlgoFreeParamObj::new(name).into()
+            }
         }
     }
 }
