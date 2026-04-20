@@ -80,6 +80,7 @@ pub use crate::obj::FiniteSeqSet;
 pub use crate::obj::ForallFreeParamFieldAccess;
 pub use crate::obj::ForallFreeParamObj;
 pub use crate::obj::FnSetFreeParamObj;
+pub use crate::obj::StructSelfFieldFreeParamObj;
 pub use crate::obj::SeqSet;
 pub use crate::obj::MatrixAdd;
 pub use crate::obj::MatrixListObj;

@@ -815,22 +815,6 @@ impl Runtime {
                     fields.push((field_name, pt));
                 }
 
-                if last_is_equiv {
-                    let last = tb.body.get_mut(last_index).ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "Expected <=>: block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
-                    })?;
-                    last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
-                    for block in last.body.iter_mut() {
-                        facts.push(this.parse_or_and_chain_atomic_fact(block)?);
-                    }
-                }
-
                 let mut seen = HashSet::new();
                 for (field_name, _) in fields.iter() {
                     if !seen.insert(field_name.clone()) {
@@ -854,6 +838,30 @@ impl Runtime {
                 None,
                 vec![],
             ))));
+                }
+
+                if last_is_equiv {
+                    let last = tb.body.get_mut(last_index).ok_or_else(|| {
+                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+ None,
+                "Expected <=>: block".to_string(),
+                tb.line_file.clone(),
+                None,
+                vec![],
+            )))
+                    })?;
+                    last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
+                    let field_names: Vec<String> =
+                        fields.iter().map(|(n, _)| n.clone()).collect();
+                    this.parsing_free_param_collection.begin_scope(
+                        FreeParamObjType::StructSelf,
+                        &field_names,
+                        tb.line_file.clone(),
+                    )?;
+                    for block in last.body.iter_mut() {
+                        facts.push(this.parse_or_and_chain_atomic_fact(block)?);
+                    }
+                    this.parsing_free_param_collection.end_scope();
                 }
 
                 Ok(DefStructStmt::new(
