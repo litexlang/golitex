@@ -169,6 +169,7 @@ pub use crate::stmt::parameter_def::ParamGroupWithSet;
 pub use crate::stmt::parameter_def::ParamType;
 pub use crate::stmt::parameter_def::Set;
 pub use crate::stmt::prove_stmt::ProveStmt;
+pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::DoNothingStmt;
 pub use crate::stmt::tooling_stmt::ImportGlobalModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportRelativePathStmt;
