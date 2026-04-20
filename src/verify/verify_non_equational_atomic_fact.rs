@@ -593,7 +593,7 @@ impl Runtime {
 
         for iff_fact in definition.iff_facts.iter() {
             let instantiated_iff_fact = self
-                .inst_fact(iff_fact, &param_to_arg_map)
+                .inst_fact(iff_fact, &param_to_arg_map, FreeParamObjType::Full)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(

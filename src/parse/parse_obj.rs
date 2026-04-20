@@ -292,7 +292,8 @@ impl Runtime {
                 dom_facts,
                 ret_set_parsed,
             );
-            this.parsing_free_param_collection.end_scope();
+            this.parsing_free_param_collection
+                .end_scope(FreeParamObjType::FnSet, &all_fn_names);
             Ok(FnSetOrFnSetClause::FnSet(built?))
         });
         match fn_set {
@@ -380,7 +381,8 @@ impl Runtime {
                 dom_facts,
                 ret_set: ret_set_parsed,
             };
-            this.parsing_free_param_collection.end_scope();
+            this.parsing_free_param_collection
+                .end_scope(FreeParamObjType::FnSet, &all_fn_names);
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
         match clause {
@@ -496,6 +498,7 @@ impl Runtime {
             Obj::FieldAccessWithMod(field_access_with_mod) => {
                 (field_access_with_mod.clone().into(), vec![])
             }
+            Obj::FreeParam(FreeParamObj::StructSelfField(p)) => (p.clone().into(), vec![]),
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -1365,12 +1368,18 @@ impl Runtime {
                     let (mangled_names, param_arg_map) =
                         this.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
                     let stored = mangled_names[0].clone();
-                    let second_inst = this.inst_obj(&second, &param_arg_map)?;
+                    let second_inst = this.inst_obj(&second, &param_arg_map, FreeParamObjType::SetBuilder)?;
 
                     let mut facts_inst = Vec::new();
                     while tb.current()? != RIGHT_CURLY_BRACE {
                         let f = this.parse_or_and_chain_atomic_fact(tb)?;
-                        facts_inst.push(this.inst_or_and_chain_atomic_fact(&f, &param_arg_map)?);
+                        facts_inst.push(
+                            this.inst_or_and_chain_atomic_fact(
+                                &f,
+                                &param_arg_map,
+                                FreeParamObjType::SetBuilder,
+                            )?,
+                        );
                     }
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
@@ -1387,7 +1396,8 @@ impl Runtime {
                     )))
                 }
             })();
-            this.parsing_free_param_collection.end_scope();
+            this.parsing_free_param_collection
+                .end_scope(FreeParamObjType::SetBuilder, &set_builder_param);
             parsed
         })
     }
@@ -1442,6 +1452,15 @@ impl Runtime {
                         vec![],
                     ),
                 )));
+            }
+            if left.as_str() == SELF {
+                let obj = self
+                    .parsing_free_param_collection
+                    .resolve_field_access_to_free_param_obj(SELF, &field)?;
+                let Obj::FreeParam(FreeParamObj::StructSelfField(p)) = obj else {
+                    return Ok(FieldAccess::new(left, field).into());
+                };
+                return Ok(Atom::StructSelfFieldFreeParam(p));
             }
             Ok(FieldAccess::new(left, field).into())
         } else {

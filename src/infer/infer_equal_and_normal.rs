@@ -377,7 +377,7 @@ impl Runtime {
 
         for iff_fact in predicate_definition.iff_facts.iter() {
             let instantiated_iff_fact =
-                self.inst_fact(iff_fact, &param_to_arg_map).map_err(|e| {
+                self.inst_fact(iff_fact, &param_to_arg_map, FreeParamObjType::Full).map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                         None,
                         format!(

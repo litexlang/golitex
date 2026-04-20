@@ -46,6 +46,7 @@ fn mark_forall_param_coverage_in_atom(
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.name);
         }
         Atom::FieldAccessWithMod(_) => {}
+        Atom::StructSelfFieldFreeParam(_) => {}
     }
 }
 
@@ -265,25 +266,30 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
             }
         }
-        Obj::ForallFreeParam(p) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-        }
-        Obj::ForallFreeParamFieldAccess(p) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-        }
-        Obj::DefFreeParam(p) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-        }
-        Obj::ExistFreeParam(p) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-        }
-        Obj::SetBuilderFreeParam(p) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-        }
-        Obj::FnSetFreeParam(p) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-        }
-        Obj::StructSelfFieldFreeParam(_) => {}
+        Obj::FreeParam(fp) => match fp {
+            crate::obj::FreeParamObj::Forall(p) => {
+                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+            }
+            crate::obj::FreeParamObj::ForallFieldAccess(p) => {
+                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+            }
+            crate::obj::FreeParamObj::Def(p) => {
+                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+            }
+            crate::obj::FreeParamObj::Exist(p) => {
+                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+            }
+            crate::obj::FreeParamObj::SetBuilder(p) => {
+                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+            }
+            crate::obj::FreeParamObj::FnSet(p) => {
+                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+            }
+            crate::obj::FreeParamObj::Induc(p) => {
+                mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+            }
+            crate::obj::FreeParamObj::StructSelfField(_) => {}
+        },
     }
 }
 

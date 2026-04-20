@@ -12,5 +12,5 @@ mod runtime_store_fact;
 
 pub use runtime::Runtime;
 pub use runtime_parsing_free_param_collection::{
-    FreeParamCollection, FreeParamObjType, FreeParamScopeFrame,
+    FreeParamBinding, FreeParamCollection, FreeParamObjType,
 };
