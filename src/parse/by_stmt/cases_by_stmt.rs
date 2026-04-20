@@ -1,4 +1,3 @@
-use crate::parse::parse_helpers::collect_forall_param_names_from_facts;
 use crate::prelude::*;
 
 impl Runtime {
@@ -6,13 +5,15 @@ impl Runtime {
         tb.skip_token(CASES)?;
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "cases: expects at least one body block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "cases: expects at least one body block".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                ),
+            )));
         }
         let then_facts: Vec<Fact> = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
@@ -31,7 +32,35 @@ impl Runtime {
                 .map(|b| self.parse_fact(b))
                 .collect::<Result<_, _>>()?
         };
-        let forall_names_for_proofs = collect_forall_param_names_from_facts(&then_facts);
+        for f in &then_facts {
+            match f {
+                Fact::ForallFact(ff) => {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            "by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
+                                .to_string(),
+                            ff.line_file.clone(),
+                            None,
+                            vec![],
+                        ),
+                    )));
+                }
+                Fact::ForallFactWithIff(fi) => {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            "by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
+                                .to_string(),
+                            fi.line_file.clone(),
+                            None,
+                            vec![],
+                        ),
+                    )));
+                }
+                _ => {}
+            }
+        }
         let case_block_count = tb.body.len().saturating_sub(1);
         let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
         let mut proofs: Vec<Vec<Stmt>> = Vec::with_capacity(case_block_count);
@@ -41,13 +70,15 @@ impl Runtime {
             let case = self.parse_and_chain_atomic_fact(block)?;
             block.skip_token(COLON)?;
             if !block.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "case: expected end of head after condition".to_string(),
-                    block.line_file.clone(),
-                    None,
-                    vec![],
-                ))));
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "case: expected end of head after condition".to_string(),
+                        block.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
             }
             cases.push(case);
             let n = block.body.len();
@@ -58,44 +89,28 @@ impl Runtime {
             }
             let (proof_stmts, impossible) =
                 if block.body[n - 1].header.get(0).map(|s| s.as_str()) == Some(IMPOSSIBLE) {
-                    let lf = block.line_file.clone();
-                    let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
-                        FreeParamObjType::Forall,
-                        &forall_names_for_proofs,
-                        lf,
-                        |this| {
-                            block.body[0..n - 1]
-                                .iter_mut()
-                                .map(|b| this.parse_stmt(b))
-                                .collect::<Result<_, _>>()
-                        },
-                    )?;
+                    let proof: Vec<Stmt> = block.body[0..n - 1]
+                        .iter_mut()
+                        .map(|b| self.parse_stmt(b))
+                        .collect::<Result<_, _>>()?;
                     let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
                         RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "Expected body".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
+                            None,
+                            "Expected body".to_string(),
+                            tb.line_file.clone(),
+                            None,
+                            vec![],
+                        )))
                     })?;
                     last_block.skip_token(IMPOSSIBLE)?;
                     let imp = self.parse_atomic_fact(last_block, true)?;
                     (proof, Some(imp))
                 } else {
-                    let lf = block.line_file.clone();
-                    let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
-                        FreeParamObjType::Forall,
-                        &forall_names_for_proofs,
-                        lf,
-                        |this| {
-                            block
-                                .body
-                                .iter_mut()
-                                .map(|b| this.parse_stmt(b))
-                                .collect::<Result<_, _>>()
-                        },
-                    )?;
+                    let proof: Vec<Stmt> = block
+                        .body
+                        .iter_mut()
+                        .map(|b| self.parse_stmt(b))
+                        .collect::<Result<_, _>>()?;
                     (proof, None)
                 };
             proofs.push(proof_stmts);
