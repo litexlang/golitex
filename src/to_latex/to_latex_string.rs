@@ -631,6 +631,12 @@ impl DoNothingStmt {
     }
 }
 
+impl ClearStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\mathrm{{{}}}", CLEAR)
+    }
+}
+
 impl EqualFact {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1928,6 +1934,7 @@ impl Stmt {
             Stmt::ProveStmt(x) => x.to_latex_string(),
             Stmt::ImportStmt(x) => x.to_latex_string(),
             Stmt::DoNothingStmt(x) => x.to_latex_string(),
+            Stmt::ClearStmt(x) => x.to_latex_string(),
             Stmt::RunFileStmt(x) => x.to_latex_string(),
             Stmt::EvalStmt(x) => x.to_latex_string(),
             Stmt::WitnessExistFact(x) => x.to_latex_string(),

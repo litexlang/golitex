@@ -4,7 +4,8 @@ mod lit_file_runner_tests {
     use std::path::PathBuf;
     use std::time::Instant;
 
-    use crate::pipeline::run_source_code_in_file_with_ok;
+    use crate::pipeline::{render_run_source_code_output, run_source_code};
+    use crate::prelude::*;
 
     #[test]
     fn run_tmp() {
@@ -32,13 +33,20 @@ mod lit_file_runner_tests {
             None => panic!("{:?} must be valid UTF-8", tmp_lit_path),
         };
 
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path_str);
+        let normalized_source = remove_windows_carriage_return(tmp_lit_content.as_str());
+
         let start_time = Instant::now();
-        let (run_succeeded, run_output) = run_source_code_in_file_with_ok(path_str);
+        let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
         let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error);
 
         let status_label = if run_succeeded { "OK" } else { "FAILED" };
         println!(
-            "{}\n=== [{}] {:?} ({:.2} ms) ===\n",
+            "{}\n=== [{}] {:?} ({:.2} ms user file only) ===\n",
             run_output, path_str, status_label, duration_ms
         );
     }
@@ -75,10 +83,25 @@ mod lit_file_runner_tests {
         }
         lit_file_paths.sort();
 
+        if lit_file_paths.is_empty() {
+            println!("--- examples folder: no .lit files ---");
+            return;
+        }
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+
+        let first_lit_path_str = match lit_file_paths[0].to_str() {
+            Some(path_string) => path_string,
+            None => panic!("{:?} must be valid UTF-8", lit_file_paths[0]),
+        };
+        runtime.new_file_path_new_env_new_name_scope(first_lit_path_str);
+
         let mut file_name_and_duration_ms_list: Vec<(String, f64)> = Vec::new();
         let mut every_file_run_ok = true;
 
-        for lit_file_path in lit_file_paths.iter() {
+        for (file_index, lit_file_path) in lit_file_paths.iter().enumerate() {
             let lit_file_path_str = match lit_file_path.to_str() {
                 Some(path_string) => path_string,
                 None => panic!("{:?} must be valid UTF-8", lit_file_path),
@@ -92,10 +115,24 @@ mod lit_file_runner_tests {
                 None => format!("{:?}", lit_file_path),
             };
 
+            if file_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(lit_file_path_str);
+            }
+
+            let source_code = match fs::read_to_string(lit_file_path) {
+                Ok(content) => content,
+                Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
+            };
+            let normalized_source = remove_windows_carriage_return(&source_code);
+
             let start_time_for_one_file = Instant::now();
-            let (run_succeeded, run_output) = run_source_code_in_file_with_ok(lit_file_path_str);
-            let duration_for_one_file = start_time_for_one_file.elapsed();
-            let duration_ms_for_one_file = duration_for_one_file.as_secs_f64() * 1000.0;
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms_for_one_file = start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error);
 
             if !run_succeeded {
                 every_file_run_ok = false;
@@ -119,13 +156,17 @@ mod lit_file_runner_tests {
             "--- examples folder: {} .lit files, all OK, timing ---",
             number_of_lit_files
         );
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
         let mut sum_of_per_file_duration_ms: f64 = 0.0;
         for (file_name, duration_ms) in file_name_and_duration_ms_list.iter() {
-            println!("  {}  {:.2} ms", file_name, duration_ms);
+            println!(
+                "  {}  {:.2} ms (user file only, no builtin)",
+                file_name, duration_ms
+            );
             sum_of_per_file_duration_ms += duration_ms;
         }
         println!(
-            "  sum of per-file runs: {:.2} ms",
+            "  sum of user-file runs: {:.2} ms",
             sum_of_per_file_duration_ms
         );
     }

@@ -439,6 +439,30 @@ prove:
 
 ---
 
+### `clear`
+
+**Meaning.** Clear only the **current** (top) environment and the **current** (top) parse-time name map: the top env is replaced by an empty one, and the top name map is emptied. The single builtin layer is left unchanged when it is the only layer. Use a **top-level** statement if you need the same source name again—inside one `prove:` block the body is parsed in one pass, so a second `let` with the same identifier is still rejected at parse time.
+
+**Syntax.** `clear`.
+
+**Example.**
+
+```litex
+prove:
+    let a R:
+        a = 1
+    a = 1
+
+clear
+
+prove:
+    let a R:
+        a = 2
+    a = 2
+```
+
+---
+
 ## Witnesses
 
 ### `witness exist … from …`
@@ -995,6 +1019,7 @@ prove:
 | `import` | Import module/file |
 | `run_file` | Run a file |
 | `do_nothing` | No-op |
+| `clear` | Clear top env + top parse-time name map |
 | *(other)* | Assert a fact to verify |
 
 > **Hint.** Details and edge cases are covered in the **Example** code blocks above; the repository **`examples/`** folder may contain longer variants.

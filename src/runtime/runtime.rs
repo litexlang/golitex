@@ -20,6 +20,22 @@ impl Runtime {
             parsing_time_name_scope_stack: vec![HashMap::new()],
         }
     }
+
+    // Same empty runtime as `new`, then runs builtin definitions; panics if that fails.
+    pub fn new_with_builtin_code() -> Self {
+        let mut runtime = Self::new();
+        let (stmt_results, runtime_error) =
+            crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
+        let (ok, msg) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+        );
+        if !ok {
+            panic!("builtin code execution failed: {}", msg);
+        }
+        runtime
+    }
 }
 
 impl Runtime {
@@ -221,6 +237,22 @@ impl Runtime {
         self.push_env();
     }
 
+    /// After `new_file_path_new_env_new_name_scope`, point the current user entry slot at another
+    /// path without pushing more layers (pair with `clear_current_env_and_parse_name_scope`).
+    pub fn set_current_user_lit_file_path(&mut self, path: &str) {
+        let path_rc: Rc<str> = Rc::from(path);
+        let idx = self.module_manager.current_file_index;
+        debug_assert!(
+            idx > FILE_INDEX_FOR_BUILTIN,
+            "set_current_user_lit_file_path requires a prior new_file_path_new_env_new_name_scope"
+        );
+        if let Some(slot) = self.module_manager.run_file_paths.get_mut(idx) {
+            *slot = path_rc.clone();
+        }
+        self.module_manager.display_entry_rc = Some(path_rc);
+        self.module_manager.entry_path = path.to_string();
+    }
+
     pub fn is_name_used(&self, name: &str) -> bool {
         self.parsing_time_name_scope_stack
             .iter()
@@ -253,6 +285,21 @@ impl Runtime {
             }
             Some(_) => {
                 self.environment_stack.pop();
+            }
+        }
+    }
+
+    /// Replace the top environment with an empty one and clear the top parse-time name map.
+    /// If there is only one environment layer (builtin), does nothing so builtins stay intact.
+    pub fn clear_current_env_and_parse_name_scope(&mut self) {
+        if self.environment_stack.len() > 1 {
+            if let Some(top) = self.environment_stack.last_mut() {
+                *top = Box::new(Environment::new_empty_env());
+            }
+        }
+        if self.parsing_time_name_scope_stack.len() > 1 {
+            if let Some(top) = self.parsing_time_name_scope_stack.last_mut() {
+                top.clear();
             }
         }
     }
