@@ -1,3 +1,4 @@
+use crate::parse::parse_helpers::collect_forall_param_names_from_facts;
 use crate::prelude::*;
 
 impl Runtime {
@@ -30,6 +31,7 @@ impl Runtime {
                 .map(|b| self.parse_fact(b))
                 .collect::<Result<_, _>>()?
         };
+        let forall_names_for_proofs = collect_forall_param_names_from_facts(&then_facts);
         let case_block_count = tb.body.len().saturating_sub(1);
         let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
         let mut proofs: Vec<Vec<Stmt>> = Vec::with_capacity(case_block_count);
@@ -56,10 +58,18 @@ impl Runtime {
             }
             let (proof_stmts, impossible) =
                 if block.body[n - 1].header.get(0).map(|s| s.as_str()) == Some(IMPOSSIBLE) {
-                    let proof: Vec<Stmt> = block.body[0..n - 1]
-                        .iter_mut()
-                        .map(|b| self.parse_stmt(b))
-                        .collect::<Result<_, _>>()?;
+                    let lf = block.line_file.clone();
+                    let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+                        FreeParamObjType::Forall,
+                        &forall_names_for_proofs,
+                        lf,
+                        |this| {
+                            block.body[0..n - 1]
+                                .iter_mut()
+                                .map(|b| this.parse_stmt(b))
+                                .collect::<Result<_, _>>()
+                        },
+                    )?;
                     let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
                         RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
  None,
@@ -73,11 +83,19 @@ impl Runtime {
                     let imp = self.parse_atomic_fact(last_block, true)?;
                     (proof, Some(imp))
                 } else {
-                    let proof: Vec<Stmt> = block
-                        .body
-                        .iter_mut()
-                        .map(|b| self.parse_stmt(b))
-                        .collect::<Result<_, _>>()?;
+                    let lf = block.line_file.clone();
+                    let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+                        FreeParamObjType::Forall,
+                        &forall_names_for_proofs,
+                        lf,
+                        |this| {
+                            block
+                                .body
+                                .iter_mut()
+                                .map(|b| this.parse_stmt(b))
+                                .collect::<Result<_, _>>()
+                        },
+                    )?;
                     (proof, None)
                 };
             proofs.push(proof_stmts);

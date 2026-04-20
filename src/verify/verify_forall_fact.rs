@@ -20,7 +20,11 @@ impl Runtime {
 
         self.run_in_local_env(|rt| {
             let mut infer_result = InferResult::new();
-            if let Err(e) = rt.define_params_with_type(&forall_fact.params_def_with_type, false) {
+            if let Err(e) = rt.define_params_with_type(
+                &forall_fact.params_def_with_type,
+                false,
+                FreeParamObjType::Forall,
+            ) {
                 return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,
                     "failed to define parameters in forall fact".to_string(),

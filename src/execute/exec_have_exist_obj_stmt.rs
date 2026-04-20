@@ -41,7 +41,7 @@ impl Runtime {
         }
 
         for obj in have_exist_obj_stmt.equal_tos.iter() {
-            self.store_identifier_obj(obj)?;
+            self.store_identifier_obj(obj, FreeParamObjType::Exist)?;
         }
 
         let new_obj_names_as_identifier_objs = have_exist_obj_stmt
