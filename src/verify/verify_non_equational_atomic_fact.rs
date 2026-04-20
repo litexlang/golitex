@@ -559,6 +559,7 @@ impl Runtime {
             &definition.params_def_with_type,
             &normal_atomic_fact.body,
             verify_state_for_definition_clauses,
+            (FreeParamObjType::Def, FreeParamObjType::Def),
         ) {
             Ok(x) => x,
             Err(_) => {
@@ -593,7 +594,7 @@ impl Runtime {
 
         for iff_fact in definition.iff_facts.iter() {
             let instantiated_iff_fact = self
-                .inst_fact(iff_fact, &param_to_arg_map, FreeParamObjType::Full)
+                .inst_fact(iff_fact, &param_to_arg_map, (FreeParamObjType::Def, FreeParamObjType::Def))
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(

@@ -1368,7 +1368,7 @@ impl Runtime {
                     let (mangled_names, param_arg_map) =
                         this.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
                     let stored = mangled_names[0].clone();
-                    let second_inst = this.inst_obj(&second, &param_arg_map, FreeParamObjType::SetBuilder)?;
+                    let second_inst = this.inst_obj(&second, &param_arg_map, (FreeParamObjType::SetBuilder, FreeParamObjType::SetBuilder))?;
 
                     let mut facts_inst = Vec::new();
                     while tb.current()? != RIGHT_CURLY_BRACE {
@@ -1377,7 +1377,7 @@ impl Runtime {
                             this.inst_or_and_chain_atomic_fact(
                                 &f,
                                 &param_arg_map,
-                                FreeParamObjType::SetBuilder,
+                                (FreeParamObjType::SetBuilder, FreeParamObjType::SetBuilder),
                             )?,
                         );
                     }

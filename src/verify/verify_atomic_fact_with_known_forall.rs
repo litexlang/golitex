@@ -154,6 +154,7 @@ impl Runtime {
                 &known_forall.params_def,
                 &args_for_params,
                 verify_state,
+                (FreeParamObjType::Forall, FreeParamObjType::Forall),
             )
             .map_err(|e| {
                 {
@@ -180,7 +181,11 @@ impl Runtime {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map, FreeParamObjType::Forall)
+                .inst_fact(
+                    dom_fact,
+                    &param_to_arg_map,
+                    (FreeParamObjType::Forall, FreeParamObjType::Identifier),
+                )
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -438,6 +443,10 @@ impl Runtime {
                     Self::match_arg_when_left_is_identifier(&id, given_arg)
                 }
                 FreeParamObj::Induc(p) => {
+                    let id = Identifier::new(p.name.clone());
+                    Self::match_arg_when_left_is_identifier(&id, given_arg)
+                }
+                FreeParamObj::DefAlgo(p) => {
                     let id = Identifier::new(p.name.clone());
                     Self::match_arg_when_left_is_identifier(&id, given_arg)
                 }

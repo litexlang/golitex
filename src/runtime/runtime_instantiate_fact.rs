@@ -6,7 +6,7 @@ impl Runtime {
         &self,
         fact: &Fact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<Fact, RuntimeError> {
         Ok(match fact {
             Fact::AtomicFact(atomic_fact) => {
@@ -35,7 +35,7 @@ impl Runtime {
         &self,
         fact: &ExistOrAndChainAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
         Ok(match fact {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
@@ -66,7 +66,7 @@ impl Runtime {
         &self,
         fact: &OrAndChainAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<OrAndChainAtomicFact, RuntimeError> {
         Ok(match fact {
             OrAndChainAtomicFact::AtomicFact(atomic_fact) => OrAndChainAtomicFact::AtomicFact(
@@ -88,7 +88,7 @@ impl Runtime {
         &self,
         fact: &AndChainAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<AndChainAtomicFact, RuntimeError> {
         Ok(match fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => AndChainAtomicFact::AtomicFact(
@@ -107,7 +107,7 @@ impl Runtime {
         &self,
         atomic_fact: &AtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<AtomicFact, RuntimeError> {
         Ok(match atomic_fact {
             AtomicFact::NormalAtomicFact(fact) => {
@@ -207,7 +207,7 @@ impl Runtime {
         &self,
         normal_atomic_fact: &NormalAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NormalAtomicFact, RuntimeError> {
         let mut body = Vec::with_capacity(normal_atomic_fact.body.len());
         for obj in normal_atomic_fact.body.iter() {
@@ -224,7 +224,7 @@ impl Runtime {
         &self,
         equal_fact: &EqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<EqualFact, RuntimeError> {
         Ok(EqualFact::new(
             self.inst_obj(&equal_fact.left, param_to_arg_map, ctx)?,
@@ -237,7 +237,7 @@ impl Runtime {
         &self,
         less_fact: &LessFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<LessFact, RuntimeError> {
         Ok(LessFact::new(
             self.inst_obj(&less_fact.left, param_to_arg_map, ctx)?,
@@ -250,7 +250,7 @@ impl Runtime {
         &self,
         greater_fact: &GreaterFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<GreaterFact, RuntimeError> {
         Ok(GreaterFact::new(
             self.inst_obj(&greater_fact.left, param_to_arg_map, ctx)?,
@@ -263,7 +263,7 @@ impl Runtime {
         &self,
         less_equal_fact: &LessEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<LessEqualFact, RuntimeError> {
         Ok(LessEqualFact::new(
             self.inst_obj(&less_equal_fact.left, param_to_arg_map, ctx)?,
@@ -276,7 +276,7 @@ impl Runtime {
         &self,
         greater_equal_fact: &GreaterEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<GreaterEqualFact, RuntimeError> {
         Ok(GreaterEqualFact::new(
             self.inst_obj(&greater_equal_fact.left, param_to_arg_map, ctx)?,
@@ -289,7 +289,7 @@ impl Runtime {
         &self,
         is_set_fact: &IsSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<IsSetFact, RuntimeError> {
         Ok(IsSetFact::new(
             self.inst_obj(&is_set_fact.set, param_to_arg_map, ctx)?,
@@ -301,7 +301,7 @@ impl Runtime {
         &self,
         is_nonempty_set_fact: &IsNonemptySetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<IsNonemptySetFact, RuntimeError> {
         Ok(IsNonemptySetFact::new(
             self.inst_obj(&is_nonempty_set_fact.set, param_to_arg_map, ctx)?,
@@ -313,7 +313,7 @@ impl Runtime {
         &self,
         is_finite_set_fact: &IsFiniteSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<IsFiniteSetFact, RuntimeError> {
         Ok(IsFiniteSetFact::new(
             self.inst_obj(&is_finite_set_fact.set, param_to_arg_map, ctx)?,
@@ -325,7 +325,7 @@ impl Runtime {
         &self,
         in_fact: &InFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<InFact, RuntimeError> {
         Ok(InFact::new(
             self.inst_obj(&in_fact.element, param_to_arg_map, ctx)?,
@@ -338,7 +338,7 @@ impl Runtime {
         &self,
         is_cart_fact: &IsCartFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<IsCartFact, RuntimeError> {
         Ok(IsCartFact::new(
             self.inst_obj(&is_cart_fact.set, param_to_arg_map, ctx)?,
@@ -350,7 +350,7 @@ impl Runtime {
         &self,
         is_tuple_fact: &IsTupleFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<IsTupleFact, RuntimeError> {
         Ok(IsTupleFact::new(
             self.inst_obj(&is_tuple_fact.set, param_to_arg_map, ctx)?,
@@ -362,7 +362,7 @@ impl Runtime {
         &self,
         subset_fact: &SubsetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<SubsetFact, RuntimeError> {
         Ok(SubsetFact::new(
             self.inst_obj(&subset_fact.left, param_to_arg_map, ctx)?,
@@ -375,7 +375,7 @@ impl Runtime {
         &self,
         superset_fact: &SupersetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<SupersetFact, RuntimeError> {
         Ok(SupersetFact::new(
             self.inst_obj(&superset_fact.left, param_to_arg_map, ctx)?,
@@ -388,7 +388,7 @@ impl Runtime {
         &self,
         not_normal_atomic_fact: &NotNormalAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotNormalAtomicFact, RuntimeError> {
         let mut body = Vec::with_capacity(not_normal_atomic_fact.body.len());
         for obj in not_normal_atomic_fact.body.iter() {
@@ -405,7 +405,7 @@ impl Runtime {
         &self,
         not_equal_fact: &NotEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotEqualFact, RuntimeError> {
         Ok(NotEqualFact::new(
             self.inst_obj(&not_equal_fact.left, param_to_arg_map, ctx)?,
@@ -418,7 +418,7 @@ impl Runtime {
         &self,
         not_less_fact: &NotLessFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotLessFact, RuntimeError> {
         Ok(NotLessFact::new(
             self.inst_obj(&not_less_fact.left, param_to_arg_map, ctx)?,
@@ -431,7 +431,7 @@ impl Runtime {
         &self,
         not_greater_fact: &NotGreaterFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotGreaterFact, RuntimeError> {
         Ok(NotGreaterFact::new(
             self.inst_obj(&not_greater_fact.left, param_to_arg_map, ctx)?,
@@ -444,7 +444,7 @@ impl Runtime {
         &self,
         not_less_equal_fact: &NotLessEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotLessEqualFact, RuntimeError> {
         Ok(NotLessEqualFact::new(
             self.inst_obj(&not_less_equal_fact.left, param_to_arg_map, ctx)?,
@@ -457,7 +457,7 @@ impl Runtime {
         &self,
         not_greater_equal_fact: &NotGreaterEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotGreaterEqualFact, RuntimeError> {
         Ok(NotGreaterEqualFact::new(
             self.inst_obj(&not_greater_equal_fact.left, param_to_arg_map, ctx)?,
@@ -470,7 +470,7 @@ impl Runtime {
         &self,
         not_is_set_fact: &NotIsSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotIsSetFact, RuntimeError> {
         Ok(NotIsSetFact::new(
             self.inst_obj(&not_is_set_fact.set, param_to_arg_map, ctx)?,
@@ -482,7 +482,7 @@ impl Runtime {
         &self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotIsNonemptySetFact, RuntimeError> {
         Ok(NotIsNonemptySetFact::new(
             self.inst_obj(&not_is_nonempty_set_fact.set, param_to_arg_map, ctx)?,
@@ -494,7 +494,7 @@ impl Runtime {
         &self,
         not_is_finite_set_fact: &NotIsFiniteSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotIsFiniteSetFact, RuntimeError> {
         Ok(NotIsFiniteSetFact::new(
             self.inst_obj(&not_is_finite_set_fact.set, param_to_arg_map, ctx)?,
@@ -506,7 +506,7 @@ impl Runtime {
         &self,
         not_in_fact: &NotInFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotInFact, RuntimeError> {
         Ok(NotInFact::new(
             self.inst_obj(&not_in_fact.element, param_to_arg_map, ctx)?,
@@ -519,7 +519,7 @@ impl Runtime {
         &self,
         not_is_cart_fact: &NotIsCartFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotIsCartFact, RuntimeError> {
         Ok(NotIsCartFact::new(
             self.inst_obj(&not_is_cart_fact.set, param_to_arg_map, ctx)?,
@@ -531,7 +531,7 @@ impl Runtime {
         &self,
         not_is_tuple_fact: &NotIsTupleFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotIsTupleFact, RuntimeError> {
         Ok(NotIsTupleFact::new(
             self.inst_obj(&not_is_tuple_fact.set, param_to_arg_map, ctx)?,
@@ -543,7 +543,7 @@ impl Runtime {
         &self,
         not_subset_fact: &NotSubsetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotSubsetFact, RuntimeError> {
         Ok(NotSubsetFact::new(
             self.inst_obj(&not_subset_fact.left, param_to_arg_map, ctx)?,
@@ -556,7 +556,7 @@ impl Runtime {
         &self,
         not_superset_fact: &NotSupersetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotSupersetFact, RuntimeError> {
         Ok(NotSupersetFact::new(
             self.inst_obj(&not_superset_fact.left, param_to_arg_map, ctx)?,
@@ -569,7 +569,7 @@ impl Runtime {
         &self,
         exist_fact: &ExistFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<ExistFact, RuntimeError> {
         let mut groups = Vec::with_capacity(exist_fact.params_def_with_type.groups.len());
         for param_def_with_type in exist_fact.params_def_with_type.groups.iter() {
@@ -595,7 +595,7 @@ impl Runtime {
         &self,
         or_fact: &OrFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<OrFact, RuntimeError> {
         let mut facts = Vec::with_capacity(or_fact.facts.len());
         for fact in or_fact.facts.iter() {
@@ -608,7 +608,7 @@ impl Runtime {
         &self,
         and_fact: &AndFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<AndFact, RuntimeError> {
         let mut facts = Vec::with_capacity(and_fact.facts.len());
         for fact in and_fact.facts.iter() {
@@ -621,7 +621,7 @@ impl Runtime {
         &self,
         chain_fact: &ChainFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<ChainFact, RuntimeError> {
         let mut objs = Vec::with_capacity(chain_fact.objs.len());
         for obj in chain_fact.objs.iter() {
@@ -638,7 +638,7 @@ impl Runtime {
         &self,
         forall_fact: &ForallFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<ForallFact, RuntimeError> {
         let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
         for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
@@ -668,7 +668,7 @@ impl Runtime {
         &self,
         forall_fact_with_iff: &ForallFactWithIff,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<ForallFactWithIff, RuntimeError> {
         let forall_fact =
             self.inst_forall_fact(&forall_fact_with_iff.forall_fact, param_to_arg_map, ctx)?;
@@ -687,7 +687,7 @@ impl Runtime {
         &self,
         restrict_fact: &RestrictFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<RestrictFact, RuntimeError> {
         Ok(RestrictFact::new(
             self.inst_obj(&restrict_fact.obj, param_to_arg_map, ctx)?,
@@ -700,7 +700,7 @@ impl Runtime {
         &self,
         not_restrict_fact: &NotRestrictFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        ctx: FreeParamObjType,
+        ctx: InstObjState,
     ) -> Result<NotRestrictFact, RuntimeError> {
         Ok(NotRestrictFact::new(
             self.inst_obj(&not_restrict_fact.obj, param_to_arg_map, ctx)?,

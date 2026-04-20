@@ -74,7 +74,7 @@ impl Runtime {
             for (orig, nm) in group.params.iter().zip(chunk_a.iter()) {
                 map_running_a.insert(orig.clone(), nm.clone().into());
             }
-            let pt_a = self.inst_param_type(&group.param_type, &map_running_a, FreeParamObjType::Exist)?;
+            let pt_a = self.inst_param_type(&group.param_type, &map_running_a, (FreeParamObjType::Exist, FreeParamObjType::Exist))?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
             idx += len;
         }
@@ -85,7 +85,7 @@ impl Runtime {
             for (orig, nm) in group.params.iter().zip(chunk_b.iter()) {
                 map_running_b.insert(orig.clone(), nm.clone().into());
             }
-            let pt_b = self.inst_param_type(&group.param_type, &map_running_b, FreeParamObjType::Exist)?;
+            let pt_b = self.inst_param_type(&group.param_type, &map_running_b, (FreeParamObjType::Exist, FreeParamObjType::Exist))?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_b, pt_b));
             idx += len;
         }
@@ -103,12 +103,12 @@ impl Runtime {
 
         let mut dom_facts: Vec<Fact> = Vec::new();
         for inner in exist_fact.facts.iter() {
-            let f_a = self.inst_or_and_chain_atomic_fact(inner, &map_a, FreeParamObjType::Exist)?;
+            let f_a = self.inst_or_and_chain_atomic_fact(inner, &map_a, (FreeParamObjType::Exist, FreeParamObjType::Exist))?;
             let o: OrAndChainAtomicFact = f_a;
             dom_facts.push(o.into());
         }
         for inner in exist_fact.facts.iter() {
-            let f_b = self.inst_or_and_chain_atomic_fact(inner, &map_b, FreeParamObjType::Exist)?;
+            let f_b = self.inst_or_and_chain_atomic_fact(inner, &map_b, (FreeParamObjType::Exist, FreeParamObjType::Exist))?;
             let o: OrAndChainAtomicFact = f_b;
             dom_facts.push(o.into());
         }
@@ -286,14 +286,14 @@ impl Runtime {
             }
 
             let instantiated_param_type =
-                runtime.inst_param_type(&param_def_with_type.param_type, &param_to_arg_map, FreeParamObjType::Exist)?;
+                runtime.inst_param_type(&param_def_with_type.param_type, &param_to_arg_map, (FreeParamObjType::Exist, FreeParamObjType::Exist))?;
             normalized_params.push(ParamGroupWithParamType::new(
                 new_param_names,
                 instantiated_param_type,
             ));
         }
 
-        let instantiated_exist_fact = runtime.inst_exist_fact(exist_fact, &param_to_arg_map, FreeParamObjType::Exist)?;
+        let instantiated_exist_fact = runtime.inst_exist_fact(exist_fact, &param_to_arg_map, (FreeParamObjType::Exist, FreeParamObjType::Exist))?;
 
         let mut fact_strings: Vec<String> = Vec::new();
         for fact in instantiated_exist_fact.facts().iter() {
