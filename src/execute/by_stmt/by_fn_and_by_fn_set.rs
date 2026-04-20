@@ -36,7 +36,7 @@ impl Runtime {
             let generated_names_for_current_group =
                 generated_forall_param_names[flat_index..next_flat_index].to_vec();
             let instantiated_set = self
-                .inst_obj(&param_def_with_set.set, &original_param_to_forall_obj)
+                .inst_obj(&param_def_with_set.set, &original_param_to_forall_obj, FreeParamObjType::FnSet)
                 .map_err(|inst_error| {
                     short_exec_error(
                         stmt_exec.clone(),
@@ -60,7 +60,7 @@ impl Runtime {
             flat_index = next_flat_index;
         }
         let forall_ret_set = self
-            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_forall_obj)
+            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_forall_obj, FreeParamObjType::FnSet)
             .map_err(|inst_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -147,6 +147,7 @@ impl Runtime {
                             self.inst_or_and_chain_atomic_fact(
                                 dom_fact,
                                 &original_param_to_forall_obj,
+                                FreeParamObjType::FnSet,
                             )
                             .map_err(|inst_error| {
                                 short_exec_error(
@@ -190,7 +191,7 @@ impl Runtime {
             let generated_names_for_current_group =
                 generated_exist_param_names[exist_flat_index..next_flat_index].to_vec();
             let instantiated_set = self
-                .inst_obj(&param_def_with_set.set, &original_param_to_exist_obj)
+                .inst_obj(&param_def_with_set.set, &original_param_to_exist_obj, FreeParamObjType::FnSet)
                 .map_err(|inst_error| {
                     short_exec_error(
                         stmt_exec.clone(),
@@ -214,7 +215,7 @@ impl Runtime {
             exist_flat_index = next_flat_index;
         }
         let exist_ret_set = self
-            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_exist_obj)
+            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_exist_obj, FreeParamObjType::FnSet)
             .map_err(|inst_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -252,7 +253,7 @@ impl Runtime {
                 let mut dom_facts: Vec<Fact> = Vec::with_capacity(fn_set.dom_facts.len());
                 for dom_fact in fn_set.dom_facts.iter() {
                     dom_facts.push(
-                        self.inst_or_and_chain_atomic_fact(dom_fact, &original_param_to_exist_obj)
+                        self.inst_or_and_chain_atomic_fact(dom_fact, &original_param_to_exist_obj, FreeParamObjType::FnSet)
                             .map_err(|inst_error| {
                                 short_exec_error(
                                     stmt_exec.clone(),

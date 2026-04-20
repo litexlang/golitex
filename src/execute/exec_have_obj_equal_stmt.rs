@@ -22,7 +22,7 @@ impl Runtime {
         let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         for param_def in have_obj_equal_stmt.param_def.groups.iter() {
             let current_type_holder = self
-                .inst_param_type(&param_def.param_type, &param_to_obj_map)
+                .inst_param_type(&param_def.param_type, &param_to_obj_map, FreeParamObjType::Full)
                 .map_err(|runtime_error| {
                     short_exec_error(
                         have_obj_equal_stmt.clone().into(),

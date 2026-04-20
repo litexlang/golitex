@@ -281,32 +281,8 @@ impl Runtime {
                 Obj::StructObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::ForallFreeParam(a) => match right {
-                Obj::ForallFreeParam(b) => a.name == b.name,
-                _ => false,
-            },
-            Obj::ForallFreeParamFieldAccess(a) => match right {
-                Obj::ForallFreeParamFieldAccess(b) => a.name == b.name && a.field == b.field,
-                _ => false,
-            },
-            Obj::DefFreeParam(a) => match right {
-                Obj::DefFreeParam(b) => a.name == b.name,
-                _ => false,
-            },
-            Obj::ExistFreeParam(a) => match right {
-                Obj::ExistFreeParam(b) => a.name == b.name,
-                _ => false,
-            },
-            Obj::SetBuilderFreeParam(a) => match right {
-                Obj::SetBuilderFreeParam(b) => a.name == b.name,
-                _ => false,
-            },
-            Obj::FnSetFreeParam(a) => match right {
-                Obj::FnSetFreeParam(b) => a.name == b.name,
-                _ => false,
-            },
-            Obj::StructSelfFieldFreeParam(a) => match right {
-                Obj::StructSelfFieldFreeParam(b) => a.field == b.field,
+            Obj::FreeParam(a) => match right {
+                Obj::FreeParam(b) => a == b,
                 _ => false,
             },
         }

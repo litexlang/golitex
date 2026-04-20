@@ -1041,12 +1041,12 @@ impl Runtime {
         let a_dom: Vec<OrAndChainAtomicFact> = a
             .dom_facts
             .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map))
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map, FreeParamObjType::FnSet))
             .collect::<Result<Vec<_>, _>>()?;
         let b_dom: Vec<OrAndChainAtomicFact> = b
             .dom_facts
             .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map))
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map, FreeParamObjType::FnSet))
             .collect::<Result<Vec<_>, _>>()?;
 
         let a_ret = a.ret_set.as_ref().clone();

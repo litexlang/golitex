@@ -1,7 +1,4 @@
-use super::free_param_obj::{
-    DefFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamFieldAccess,
-    ForallFreeParamObj, SetBuilderFreeParamObj, StructSelfFieldFreeParamObj,
-};
+use super::free_param_obj::FreeParamObj;
 use super::standard_set::StandardSet;
 use crate::prelude::*;
 use std::fmt;
@@ -50,13 +47,7 @@ pub enum Obj {
     StandardSet(StandardSet),
     FamilyObj(FamilyObj),
     StructObj(StructObj),
-    ForallFreeParam(ForallFreeParamObj),
-    ForallFreeParamFieldAccess(ForallFreeParamFieldAccess),
-    DefFreeParam(DefFreeParamObj),
-    ExistFreeParam(ExistFreeParamObj),
-    SetBuilderFreeParam(SetBuilderFreeParamObj),
-    FnSetFreeParam(FnSetFreeParamObj),
-    StructSelfFieldFreeParam(StructSelfFieldFreeParamObj),
+    FreeParam(FreeParamObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
     MatrixAdd(MatrixAdd),
@@ -900,13 +891,7 @@ impl Obj {
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
-            Obj::ForallFreeParam(x) => write!(f, "{}", x)?,
-            Obj::ForallFreeParamFieldAccess(x) => write!(f, "{}", x)?,
-            Obj::DefFreeParam(x) => write!(f, "{}", x)?,
-            Obj::ExistFreeParam(x) => write!(f, "{}", x)?,
-            Obj::SetBuilderFreeParam(x) => write!(f, "{}", x)?,
-            Obj::FnSetFreeParam(x) => write!(f, "{}", x)?,
-            Obj::StructSelfFieldFreeParam(x) => write!(f, "{}", x)?,
+            Obj::FreeParam(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1195,67 +1180,7 @@ impl Obj {
                     .collect(),
             )
             .into(),
-            Obj::ForallFreeParam(p) => {
-                let name = if p.name == from {
-                    to.to_string()
-                } else {
-                    p.name
-                };
-                ForallFreeParamObj::new(name).into()
-            }
-            Obj::ForallFreeParamFieldAccess(p) => {
-                let name = if p.name == from {
-                    to.to_string()
-                } else {
-                    p.name
-                };
-                let field = if p.field == from {
-                    to.to_string()
-                } else {
-                    p.field
-                };
-                ForallFreeParamFieldAccess::new(name, field).into()
-            }
-            Obj::DefFreeParam(p) => {
-                let name = if p.name == from {
-                    to.to_string()
-                } else {
-                    p.name
-                };
-                DefFreeParamObj::new(name).into()
-            }
-            Obj::ExistFreeParam(p) => {
-                let name = if p.name == from {
-                    to.to_string()
-                } else {
-                    p.name
-                };
-                ExistFreeParamObj::new(name).into()
-            }
-            Obj::SetBuilderFreeParam(p) => {
-                let name = if p.name == from {
-                    to.to_string()
-                } else {
-                    p.name
-                };
-                SetBuilderFreeParamObj::new(name).into()
-            }
-            Obj::FnSetFreeParam(p) => {
-                let name = if p.name == from {
-                    to.to_string()
-                } else {
-                    p.name
-                };
-                FnSetFreeParamObj::new(name).into()
-            }
-            Obj::StructSelfFieldFreeParam(p) => {
-                let field = if p.field == from {
-                    to.to_string()
-                } else {
-                    p.field
-                };
-                StructSelfFieldFreeParamObj::new(field).into()
-            }
+            Obj::FreeParam(p) => Obj::FreeParam(p.replace_bound_identifier(from, to)),
         }
     }
 }
@@ -1295,6 +1220,14 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
                 f.name
             };
             FieldAccessWithMod::new(f.mod_name, name, f.field).into()
+        }
+        Atom::StructSelfFieldFreeParam(p) => {
+            let field = if p.field == from {
+                to.to_string()
+            } else {
+                p.field
+            };
+            StructSelfFieldFreeParamObj::new(field).into()
         }
     }
 }
@@ -1726,6 +1659,7 @@ impl From<Atom> for Obj {
             Atom::IdentifierWithMod(a) => a.into(),
             Atom::FieldAccess(a) => a.into(),
             Atom::FieldAccessWithMod(a) => a.into(),
+            Atom::StructSelfFieldFreeParam(p) => p.into(),
         }
     }
 }

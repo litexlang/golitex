@@ -38,7 +38,8 @@ impl Runtime {
                 tb.line_file.clone(),
             )?;
             let facts_result = this.parse_facts_in_body(tb);
-            this.parsing_free_param_collection.end_scope();
+            this.parsing_free_param_collection
+                .end_scope(FreeParamObjType::Def, &def_param_names);
             let facts = facts_result?;
             Ok(DefPropStmt::new(
                 name,
@@ -122,7 +123,8 @@ impl Runtime {
                 tb.line_file.clone(),
             )?;
             let facts_result = self.parse_facts_in_body(tb);
-            self.parsing_free_param_collection.end_scope();
+            self.parsing_free_param_collection
+                .end_scope(FreeParamObjType::Def, &all_param_names);
             facts_result?
         } else {
             vec![]
@@ -173,7 +175,8 @@ impl Runtime {
                 }
                 Ok(objs_equal_to)
             })();
-            self.parsing_free_param_collection.end_scope();
+            self.parsing_free_param_collection
+                .end_scope(FreeParamObjType::Def, &have_param_names);
             let objs_equal_to = objs_result?;
             Ok(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file.clone()).into())
         }
@@ -651,7 +654,8 @@ impl Runtime {
                 match self.parse_or_and_chain_atomic_fact(tb) {
                     Ok(f) => facts.push(f),
                     Err(e) => {
-                        self.parsing_free_param_collection.end_scope();
+                        self.parsing_free_param_collection
+                            .end_scope(FreeParamObjType::Def, &scope_names);
                         break Err(e);
                     }
                 }
@@ -664,7 +668,8 @@ impl Runtime {
             vec![]
         };
         if let Err(e) = tb.skip_token(RIGHT_BRACE) {
-            self.parsing_free_param_collection.end_scope();
+            self.parsing_free_param_collection
+                .end_scope(FreeParamObjType::Def, &scope_names);
             return Err(e);
         }
         Ok((params_def_with_type, dom_facts))
@@ -695,7 +700,8 @@ impl Runtime {
                 match self.parse_or_and_chain_atomic_fact(tb) {
                     Ok(f) => facts.push(f),
                     Err(e) => {
-                        self.parsing_free_param_collection.end_scope();
+                        self.parsing_free_param_collection
+                            .end_scope(FreeParamObjType::Def, &scope_names);
                         break Err(e);
                     }
                 }
@@ -708,7 +714,8 @@ impl Runtime {
             vec![]
         };
         if let Err(e) = tb.skip_token(RIGHT_BRACE) {
-            self.parsing_free_param_collection.end_scope();
+            self.parsing_free_param_collection
+                .end_scope(FreeParamObjType::Def, &scope_names);
             return Err(e);
         }
         Ok((param_defs, dom_facts))
@@ -721,6 +728,7 @@ impl Runtime {
         self.run_in_local_parsing_time_name_scope(move |this| {
             let (params_def_with_type, dom_facts) =
                 this.parse_braced_params_and_optional_dom_facts(tb)?;
+            let family_def_scope_names = params_def_with_type.collect_param_names();
             let stmt_result = (|| -> Result<Stmt, RuntimeError> {
                 if !tb.current_token_is_equal_to(EQUAL) {
                     return Err(
@@ -743,7 +751,8 @@ impl Runtime {
                 )
                 .into())
             })();
-            this.parsing_free_param_collection.end_scope();
+            this.parsing_free_param_collection
+                .end_scope(FreeParamObjType::Def, &family_def_scope_names);
             stmt_result
         })
     }
@@ -755,6 +764,7 @@ impl Runtime {
         self.run_in_local_parsing_time_name_scope(move |this| {
             let (param_defs, dom_facts) =
                 this.parse_braced_struct_field_params_and_optional_dom_facts(tb)?;
+            let struct_def_scope_names = param_defs.collect_param_names();
             let stmt_result = (|| -> Result<Stmt, RuntimeError> {
                 if tb.current_token_is_equal_to(EQUAL) {
                     return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
@@ -861,7 +871,8 @@ impl Runtime {
                     for block in last.body.iter_mut() {
                         facts.push(this.parse_or_and_chain_atomic_fact(block)?);
                     }
-                    this.parsing_free_param_collection.end_scope();
+                    this.parsing_free_param_collection
+                        .end_scope(FreeParamObjType::StructSelf, &field_names);
                 }
 
                 Ok(DefStructStmt::new(
@@ -874,7 +885,8 @@ impl Runtime {
                 )
                 .into())
             })();
-            this.parsing_free_param_collection.end_scope();
+            this.parsing_free_param_collection
+                .end_scope(FreeParamObjType::Def, &struct_def_scope_names);
             stmt_result
         })
     }
@@ -899,6 +911,7 @@ impl Runtime {
                 &params,
                 tb.line_file.clone(),
             )?;
+            let params_for_end = params.clone();
             let algo_result = (|| -> Result<DefAlgoStmt, RuntimeError> {
                 let mut algo_cases: Vec<AlgoCase> = vec![];
                 let mut default_return: Option<AlgoReturn> = None;
@@ -923,7 +936,8 @@ impl Runtime {
                     tb.line_file.clone(),
                 ))
             })();
-            this.parsing_free_param_collection.end_scope();
+            this.parsing_free_param_collection
+                .end_scope(FreeParamObjType::Def, &params_for_end);
             Ok(algo_result?.into())
         })
     }

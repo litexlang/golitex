@@ -28,11 +28,8 @@ impl Runtime {
         let mut runtime = Self::new();
         let (stmt_results, runtime_error) =
             crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
-        let (ok, msg) = crate::pipeline::render_run_source_code_output(
-            &runtime,
-            &stmt_results,
-            &runtime_error,
-        );
+        let (ok, msg) =
+            crate::pipeline::render_run_source_code_output(&runtime, &stmt_results, &runtime_error);
         if !ok {
             panic!("builtin code execution failed: {}", msg);
         }
@@ -329,6 +326,24 @@ impl Runtime {
         self.pop_parsing_time_name_scope();
         result
     }
+
+    /// `begin_scope` → `f` → `end_scope`; runs `end_scope` on both `Ok` and `Err` (not on `begin_scope` failure).
+    pub fn parse_in_local_free_param_scope<T, F>(
+        &mut self,
+        kind: FreeParamObjType,
+        names: &[String],
+        line_file: LineFile,
+        f: F,
+    ) -> Result<T, RuntimeError>
+    where
+        F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
+    {
+        self.parsing_free_param_collection
+            .begin_scope(kind, names, line_file)?;
+        let result = f(self);
+        self.parsing_free_param_collection.end_scope(kind, names);
+        result
+    }
 }
 
 impl Runtime {
@@ -434,10 +449,7 @@ impl Runtime {
             (None, Some((_, Some(old_s), _))) => Some(old_s.clone()),
             (None, _) => None,
         };
-        map.insert(
-            name.to_string(),
-            (list, merged_member, line_file),
-        );
+        map.insert(name.to_string(), (list, merged_member, line_file));
     }
 
     pub fn store_known_matrix_list_obj(
@@ -454,10 +466,7 @@ impl Runtime {
             (None, Some((_, Some(old_s), _))) => Some(old_s.clone()),
             (None, _) => None,
         };
-        map.insert(
-            name.to_string(),
-            (matrix, merged_member, line_file),
-        );
+        map.insert(name.to_string(), (matrix, merged_member, line_file));
     }
 
     pub fn matrix_set_to_fn_set(&self, ms: &MatrixSet, line_file: LineFile) -> FnSet {
@@ -573,9 +582,13 @@ impl Runtime {
         }
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
-            dom_stored.push(self.inst_or_and_chain_atomic_fact(d, &param_arg_map)?);
+            dom_stored.push(self.inst_or_and_chain_atomic_fact(
+                d,
+                &param_arg_map,
+                FreeParamObjType::FnSet,
+            )?);
         }
-        let ret_stored = self.inst_obj(&ret_set, &param_arg_map)?;
+        let ret_stored = self.inst_obj(&ret_set, &param_arg_map, FreeParamObjType::FnSet)?;
         Ok(FnSet::new(new_def_with_set, dom_stored, ret_stored))
     }
 
@@ -690,12 +703,20 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
         let mut out = Vec::new();
         for fact in def.dom_facts.iter() {
-            out.push(self.inst_or_and_chain_atomic_fact(fact, &base_map)?);
+            out.push(self.inst_or_and_chain_atomic_fact(
+                fact,
+                &base_map,
+                FreeParamObjType::Full,
+            )?);
         }
         let mut map_with_self = base_map.clone();
         map_with_self.insert(SELF.to_string(), param_name.to_string().into());
         for fact in def.facts.iter() {
-            out.push(self.inst_or_and_chain_atomic_fact(fact, &map_with_self)?);
+            out.push(self.inst_or_and_chain_atomic_fact(
+                fact,
+                &map_with_self,
+                FreeParamObjType::StructSelf,
+            )?);
         }
         Ok(out)
     }

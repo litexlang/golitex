@@ -66,7 +66,7 @@ impl Runtime {
 
         for fact in exist_fact_in_have_obj_stmt.facts.iter() {
             let instantiated_fact = self
-                .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map)
+                .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map, FreeParamObjType::Exist)
                 .map_err(|runtime_error| {
                     short_exec_error(
                         have_exist_obj_stmt.clone().into(),
