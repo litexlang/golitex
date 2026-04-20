@@ -94,6 +94,10 @@ impl Runtime {
             Obj::StructObj(struct_ty) => {
                 self.verify_param_type_struct_well_defined(struct_ty, verify_state)
             }
+            Obj::ForallFreeParam(_)
+            | Obj::ExistFreeParam(_)
+            | Obj::SetBuilderFreeParam(_)
+            | Obj::FnSetFreeParam(_) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);

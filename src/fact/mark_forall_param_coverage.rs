@@ -265,6 +265,18 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
             }
         }
+        Obj::ForallFreeParam(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::ExistFreeParam(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::SetBuilderFreeParam(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::FnSetFreeParam(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
     }
 }
 

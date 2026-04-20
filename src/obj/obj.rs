@@ -1,3 +1,6 @@
+use super::free_param_obj::{
+    ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamObj, SetBuilderFreeParamObj,
+};
 use super::standard_set::StandardSet;
 use crate::prelude::*;
 use std::fmt;
@@ -46,6 +49,10 @@ pub enum Obj {
     StandardSet(StandardSet),
     FamilyObj(FamilyObj),
     StructObj(StructObj),
+    ForallFreeParam(ForallFreeParamObj),
+    ExistFreeParam(ExistFreeParamObj),
+    SetBuilderFreeParam(SetBuilderFreeParamObj),
+    FnSetFreeParam(FnSetFreeParamObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
     MatrixAdd(MatrixAdd),
@@ -891,6 +898,10 @@ impl Obj {
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
+            Obj::ForallFreeParam(x) => write!(f, "{}", x)?,
+            Obj::ExistFreeParam(x) => write!(f, "{}", x)?,
+            Obj::SetBuilderFreeParam(x) => write!(f, "{}", x)?,
+            Obj::FnSetFreeParam(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1181,6 +1192,38 @@ impl Obj {
                     .collect(),
             )
             .into(),
+            Obj::ForallFreeParam(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                ForallFreeParamObj::new(name).into()
+            }
+            Obj::ExistFreeParam(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                ExistFreeParamObj::new(name).into()
+            }
+            Obj::SetBuilderFreeParam(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                SetBuilderFreeParamObj::new(name).into()
+            }
+            Obj::FnSetFreeParam(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                FnSetFreeParamObj::new(name).into()
+            }
         }
     }
 }
