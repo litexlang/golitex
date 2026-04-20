@@ -24,7 +24,7 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is a simple and intuitive open-source computer language for mathematical proofs. It encodes a philosophy of everyday mathematical thinking—the non-expert’s angle—where the problem leads and notation follows.
+Litex is a simple and intuitive open-source computer language for mathematical proofs. It encodes a philosophy of everyday mathematical thinking — the non-expert’s angle — where the problem leads and notation follows.
 
 In the best case, what you write is organized around the problem — not bent to satisfy the formal language you happen to be using. Litex is an attempt to move practice closer to that ideal. Here is an example of how Litex code looks like:
 
