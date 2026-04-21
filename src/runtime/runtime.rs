@@ -25,8 +25,12 @@ impl Runtime {
         let mut runtime = Self::new();
         let (stmt_results, runtime_error) =
             crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
-        let (ok, msg) =
-            crate::pipeline::render_run_source_code_output(&runtime, &stmt_results, &runtime_error);
+        let (ok, msg) = crate::pipeline::render_run_source_code_output(
+            &runtime,
+            &stmt_results,
+            &runtime_error,
+            true,
+        );
         if !ok {
             panic!("builtin code execution failed: {}", msg);
         }
@@ -393,14 +397,12 @@ impl Runtime {
                 vec![param.clone()],
                 StandardSet::NPos.into(),
             )],
-            vec![
-                AtomicFact::from(LessEqualFact::new(
-                    obj_for_bound_param_in_scope(param, ParamObjType::FnSet),
-                    (*fs.n).clone(),
-                    line_file,
-                ))
-                    .into(),
-            ],
+            vec![AtomicFact::from(LessEqualFact::new(
+                obj_for_bound_param_in_scope(param, ParamObjType::FnSet),
+                (*fs.n).clone(),
+                line_file,
+            ))
+            .into()],
             (*fs.set).clone(),
         )
     }
