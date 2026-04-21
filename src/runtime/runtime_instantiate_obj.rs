@@ -169,8 +169,10 @@ impl Runtime {
                 if ctx != ParamObjType::StructSelf {
                     return Ok(p.clone().into());
                 }
-                let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
-                self.inst_field_access(&fa, param_to_arg_map)
+                if let Some(obj) = param_to_arg_map.get(&p.field) {
+                    return Ok(obj.clone());
+                }
+                Ok(p.clone().into())
             }
         }
     }
