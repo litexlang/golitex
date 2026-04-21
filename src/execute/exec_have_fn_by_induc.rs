@@ -1,6 +1,8 @@
 use crate::prelude::*;
 use crate::stmt::definition_stmt::induc_obj_plus_offset;
 
+use super::exec_have_fn_equal_shared::inst_have_fn_forall_fact_for_store;
+
 impl Runtime {
     pub fn exec_have_fn_by_induc(
         &mut self,
@@ -332,7 +334,7 @@ impl Runtime {
                     .into(),
                 );
 
-                let forall_fact: Fact = ForallFact::new(
+                let forall_fact_raw = ForallFact::new(
                     ParamDefWithType::new(param_def),
                     dom,
                     vec![EqualFact::new(
@@ -349,8 +351,10 @@ impl Runtime {
                     )
                     .into()],
                     stmt.line_file.clone(),
-                )
-                .into();
+                );
+
+                let forall_fact = inst_have_fn_forall_fact_for_store(self, forall_fact_raw)
+                    .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
                 let result = self
                     .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())
@@ -384,7 +388,7 @@ impl Runtime {
                     let c: AndChainAtomicFact = nested.case_fact.clone();
                     dom.push(c.into());
 
-                    let forall_fact: Fact = ForallFact::new(
+                    let forall_fact_raw = ForallFact::new(
                         ParamDefWithType::new(param_def),
                         dom,
                         vec![EqualFact::new(
@@ -401,8 +405,10 @@ impl Runtime {
                         )
                         .into()],
                         stmt.line_file.clone(),
-                    )
-                    .into();
+                    );
+
+                    let forall_fact = inst_have_fn_forall_fact_for_store(self, forall_fact_raw)
+                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
                     let result = self
                         .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())

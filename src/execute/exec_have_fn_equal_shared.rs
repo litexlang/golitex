@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 pub(crate) fn build_function_obj_with_param_names(
     function_name: &str,
@@ -37,4 +38,20 @@ pub(crate) fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> 
         ));
     }
     ParamDefWithType::new(groups)
+}
+
+/// For `have fn` forall facts: bind each quantified name to [`ForallFreeParamObj`] and instantiate
+/// with [`ParamObjType::FnSet`] so parsed [`FnSetFreeParamObj`] in the body match forall binders.
+pub(crate) fn inst_have_fn_forall_fact_for_store(
+    rt: &Runtime,
+    forall_fact: ForallFact,
+) -> Result<Fact, RuntimeError> {
+    let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+    for group in forall_fact.params_def_with_type.groups.iter() {
+        for name in group.params.iter() {
+            param_to_arg_map.insert(name.clone(), ForallFreeParamObj::new(name.clone()).into());
+        }
+    }
+    let fact: Fact = forall_fact.into();
+    rt.inst_fact(&fact, &param_to_arg_map, ParamObjType::FnSet)
 }
