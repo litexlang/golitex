@@ -597,7 +597,7 @@ by enumerate finite_set:
     do_nothing
 ```
 
-Integer **closed_range** membership with literal endpoints uses **`by enumerate` *lo*`..`*hi* `:`** *object* (next section), not list-set enumeration.
+Integer **closed_range** membership with literal endpoints uses **`by enumerate` *lo*`...`*hi* `:`** *object* (next section), not list-set enumeration.
 
 ---
 
@@ -605,7 +605,7 @@ Integer **closed_range** membership with literal endpoints uses **`by enumerate`
 
 **Meaning.** From membership of an object in a **closed interval** with **integer literal** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
 
-**Syntax.** `by enumerate` *lo* `..` *hi* `:` *object* — *range* parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`); *object* is any expression the parser accepts as an `obj`.
+**Syntax.** `by enumerate` *lo* `...` *hi* `:` *object* — *range* parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`); *object* is any expression the parser accepts as an `obj`.
 
 **Example.**
 
@@ -613,13 +613,13 @@ Integer **closed_range** membership with literal endpoints uses **`by enumerate`
 prove:
     have x closed_range(0, 10)
 
-    by enumerate 0..10: x
+    by enumerate 0...10: x
 
 prove:
     have a Z
     have x closed_range(a, a + 10)
 
-    by enumerate a..a + 10: x
+    by enumerate a...a + 10: x
 ```
 
 ---

@@ -6,7 +6,7 @@ impl Runtime {
         self.parse_obj_hierarchy0(tb)
     }
 
-    /// Infix `\` is loosest; then `+-`, `*/%`, `^`, `[]`, `..`, primary.
+    /// Infix `\` is loosest; then `+-`, `*/%`, `^`, `[]`, `...`, primary.
     fn parse_obj_hierarchy0(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy1(tb)?;
         if tb.exceed_end_of_head() {
@@ -143,12 +143,12 @@ impl Runtime {
         }
     }
 
-    /// Range `..` (closed_range); same band as `[]`, applied after subscripts.
+    /// Infix closed interval `...` (`closed_range`); same band as `[]`, applied after subscripts.
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy6(tb)?;
 
-        if tb.current_token_is_equal_to(DOT_DOT) {
-            tb.skip_token(DOT_DOT)?;
+        if tb.current_token_is_equal_to(DOT_DOT_DOT) {
+            tb.skip_token(DOT_DOT_DOT)?;
             let right = self.parse_obj_hierarchy1(tb)?;
             Ok(ClosedRange::new(left, right).into())
         } else {
