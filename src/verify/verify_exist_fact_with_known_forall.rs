@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
+// Same ∀-instantiation strategy as `verify_atomic_fact_with_known_forall`, plus exist-internal params.
+
 impl Runtime {
     pub fn verify_exist_fact_with_known_forall(
         &mut self,
@@ -135,7 +137,7 @@ impl Runtime {
         {
             let obj = match arg_map.get(known_param_name) {
                 Some(v) => {
-                    if v.to_string() != given_param_name.to_string() {
+                    if v.to_string() != *given_param_name {
                         return Ok(None);
                     }
                     v
@@ -147,7 +149,8 @@ impl Runtime {
 
         // given exist param can only match known exist param, it can not match other params
         for (key, obj) in arg_map.iter() {
-            if given_exist_param_names.contains(&obj.to_string()) {
+            let obj_key = obj.to_string();
+            if given_exist_param_names.iter().any(|n| n == &obj_key) {
                 if !known_exist_param_names.contains(key) {
                     return Ok(None);
                 }
@@ -173,16 +176,6 @@ impl Runtime {
             };
 
             args_for_params.push(obj.clone());
-        }
-
-        for (key, obj) in arg_map.iter() {
-            if param_names.contains(key) || known_exist_param_names.contains(key) {
-                continue;
-            } else {
-                if key != &obj.to_string() {
-                    return Ok(None);
-                }
-            }
         }
 
         let args_param_types = self
@@ -217,11 +210,7 @@ impl Runtime {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = self
-                .inst_fact(
-                    dom_fact,
-                    &param_to_arg_map,
-                    ParamObjType::Forall,
-                )
+                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
