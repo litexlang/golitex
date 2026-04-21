@@ -10,7 +10,7 @@ impl Runtime {
             Obj::IdentifierWithMod(a) => match right {
                 Obj::IdentifierWithMod(b) => {
                     if a.mod_name == b.mod_name {
-                        a.name == b.name
+                        a.to_string() == b.to_string()
                     } else {
                         match (
                             self.module_manager
@@ -34,7 +34,7 @@ impl Runtime {
             Obj::FieldAccessWithMod(a) => match right {
                 Obj::FieldAccessWithMod(b) => {
                     if a.mod_name == b.mod_name {
-                        a.name == b.name && a.field == b.field
+                        a.to_string() == b.to_string()
                     } else {
                         match (
                             self.module_manager
@@ -281,21 +281,37 @@ impl Runtime {
                 Obj::StructObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::ForallFreeParamObj(a) => matches!(right, Obj::ForallFreeParamObj(b) if a == b),
+            // Parsing-time free params: compare [`fmt::Display`] (`~tag` + spine), not only `.name`.
+            Obj::ForallFreeParamObj(a) => {
+                matches!(right, Obj::ForallFreeParamObj(b) if a.to_string() == b.to_string())
+            }
             Obj::ForallFieldAccessObj(a) => {
-                matches!(right, Obj::ForallFieldAccessObj(b) if a == b)
+                matches!(right, Obj::ForallFieldAccessObj(b) if a.to_string() == b.to_string())
             }
-            Obj::DefFreeParamObj(a) => matches!(right, Obj::DefFreeParamObj(b) if a == b),
-            Obj::ExistFreeParamObj(a) => matches!(right, Obj::ExistFreeParamObj(b) if a == b),
+            Obj::DefFreeParamObj(a) => {
+                matches!(right, Obj::DefFreeParamObj(b) if a.to_string() == b.to_string())
+            }
+            Obj::ExistFreeParamObj(a) => {
+                matches!(right, Obj::ExistFreeParamObj(b) if a.to_string() == b.to_string())
+            }
             Obj::SetBuilderFreeParamObj(a) => {
-                matches!(right, Obj::SetBuilderFreeParamObj(b) if a == b)
+                matches!(right, Obj::SetBuilderFreeParamObj(b) if a.to_string() == b.to_string())
             }
-            Obj::FnSetFreeParamObj(a) => matches!(right, Obj::FnSetFreeParamObj(b) if a == b),
+            Obj::FnSetFreeParamObj(a) => {
+                matches!(right, Obj::FnSetFreeParamObj(b) if a.to_string() == b.to_string())
+            }
             Obj::StructSelfFieldFreeParamObj(a) => {
-                matches!(right, Obj::StructSelfFieldFreeParamObj(b) if a == b)
+                matches!(
+                    right,
+                    Obj::StructSelfFieldFreeParamObj(b) if a.to_string() == b.to_string()
+                )
             }
-            Obj::ByInducFreeParamObj(a) => matches!(right, Obj::ByInducFreeParamObj(b) if a == b),
-            Obj::DefAlgoFreeParamObj(a) => matches!(right, Obj::DefAlgoFreeParamObj(b) if a == b),
+            Obj::ByInducFreeParamObj(a) => {
+                matches!(right, Obj::ByInducFreeParamObj(b) if a.to_string() == b.to_string())
+            }
+            Obj::DefAlgoFreeParamObj(a) => {
+                matches!(right, Obj::DefAlgoFreeParamObj(b) if a.to_string() == b.to_string())
+            }
         }
     }
 }
