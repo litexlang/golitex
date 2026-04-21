@@ -135,15 +135,15 @@ impl ChainFact {
         for i in 0..n {
             members.entry(uf.find(i)).or_default().push(i);
         }
-        for mut idxs in members.into_values() {
-            if idxs.len() < 2 {
+        for mut indexes in members.into_values() {
+            if indexes.len() < 2 {
                 continue;
             }
-            idxs.sort_unstable();
-            for ii in 0..idxs.len() {
-                for jj in ii + 1..idxs.len() {
-                    let i = idxs[ii];
-                    let j = idxs[jj];
+            indexes.sort_unstable();
+            for ii in 0..indexes.len() {
+                for jj in ii + 1..indexes.len() {
+                    let i = indexes[ii];
+                    let j = indexes[jj];
                     extra.push(
                         EqualFact::new(self.objs[i].clone(), self.objs[j].clone(), lf.clone())
                             .into(),
