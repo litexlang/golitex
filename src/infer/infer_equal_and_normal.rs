@@ -355,7 +355,7 @@ impl Runtime {
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 normal_atomic_fact.line_file.clone(),
-                ParamObjType::DefProp,
+                ParamObjType::DefHeader,
             )
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -378,7 +378,7 @@ impl Runtime {
 
         for iff_fact in predicate_definition.iff_facts.iter() {
             let instantiated_iff_fact =
-                self.inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefProp).map_err(|e| {
+                self.inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader).map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                         None,
                         format!(

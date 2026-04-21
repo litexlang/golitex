@@ -32,19 +32,32 @@ impl Runtime {
         ),
         RuntimeError,
     > {
-        let lookup_key = given_exist_fact.key();
+        let key1 = given_exist_fact.alpha_normalized_key();
+        let key2 = given_exist_fact.key();
+        let lookup_keys: Vec<String> = if key1 == key2 {
+            vec![key1]
+        } else {
+            vec![key1, key2]
+        };
 
         let envs_count = self.environment_stack.len();
         for i in iterate_from_env_index..envs_count {
             let env = &self.environment_stack[envs_count - 1 - i];
-            if let Some(known_forall_facts_in_env) = env
-                .known_exist_facts_in_forall_facts
-                .get(lookup_key.as_str())
-            {
-                let known_forall_facts_count = known_forall_facts_in_env.len();
+            let mut merged_bucket: Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)> = Vec::new();
+            for lk in lookup_keys.iter() {
+                if let Some(known_forall_facts_in_env) =
+                    env.known_exist_facts_in_forall_facts.get(lk.as_str())
+                {
+                    merged_bucket.extend(known_forall_facts_in_env.iter().cloned());
+                }
+            }
+            merged_bucket.sort_by(|a, b| a.0.to_string().cmp(&b.0.to_string()));
+            merged_bucket.dedup_by(|a, b| a.0.to_string() == b.0.to_string());
+            if !merged_bucket.is_empty() {
+                let known_forall_facts_count = merged_bucket.len();
                 for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
                     let current_known_forall =
-                        &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
+                        &merged_bucket[known_forall_facts_count - 1 - j];
                     let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact();
                     let given_fact_args = given_exist_fact.get_args_from_fact();
                     let match_result =
@@ -137,7 +150,7 @@ impl Runtime {
         {
             let obj = match arg_map.get(known_param_name) {
                 Some(v) => {
-                    if v.to_string() != *given_param_name {
+                    if !Self::obj_matches_exist_forall_binding_name(v, given_param_name) {
                         return Ok(None);
                     }
                     v
@@ -149,10 +162,11 @@ impl Runtime {
 
         // given exist param can only match known exist param, it can not match other params
         for (key, obj) in arg_map.iter() {
-            let obj_key = obj.to_string();
-            if given_exist_param_names.iter().any(|n| n == &obj_key) {
-                if !known_exist_param_names.contains(key) {
-                    return Ok(None);
+            if let Some(spine) = Self::obj_binding_spine_name_for_arg_map(obj) {
+                if given_exist_param_names.iter().any(|n| n == spine) {
+                    if !known_exist_param_names.contains(key) {
+                        return Ok(None);
+                    }
                 }
             }
         }
@@ -255,5 +269,31 @@ impl Runtime {
                 Vec::new(),
             );
         Ok(Some(fact_verified))
+    }
+
+    fn obj_binding_spine_name_for_arg_map(obj: &Obj) -> Option<&str> {
+        match obj {
+            Obj::ExistFreeParamObj(p) => Some(p.name.as_str()),
+            Obj::ForallFreeParamObj(p) => Some(p.name.as_str()),
+            Obj::FnSetFreeParamObj(p) => Some(p.name.as_str()),
+            Obj::DefFreeParamObj(p) => Some(p.name.as_str()),
+            Obj::SetBuilderFreeParamObj(p) => Some(p.name.as_str()),
+            Obj::ByInducFreeParamObj(p) => Some(p.name.as_str()),
+            Obj::DefAlgoFreeParamObj(p) => Some(p.name.as_str()),
+            _ => None,
+        }
+    }
+
+    fn obj_matches_exist_forall_binding_name(obj: &Obj, name: &str) -> bool {
+        match obj {
+            Obj::ExistFreeParamObj(p) => p.name == name,
+            Obj::ForallFreeParamObj(p) => p.name == name,
+            Obj::FnSetFreeParamObj(p) => p.name == name,
+            Obj::DefFreeParamObj(p) => p.name == name,
+            Obj::SetBuilderFreeParamObj(p) => p.name == name,
+            Obj::ByInducFreeParamObj(p) => p.name == name,
+            Obj::DefAlgoFreeParamObj(p) => p.name == name,
+            _ => obj.to_string() == name,
+        }
     }
 }

@@ -47,7 +47,7 @@ pub enum Obj {
     StructObj(StructObj),
     ForallFreeParamObj(ForallFreeParamObj),
     ForallFieldAccessObj(ForallFieldAccessObj),
-    DefFreeParamObj(DefPropFreeParamObj),
+    DefFreeParamObj(DefHeaderFreeParamObj),
     ExistFreeParamObj(ExistFreeParamObj),
     SetBuilderFreeParamObj(SetBuilderFreeParamObj),
     FnSetFreeParamObj(FnSetFreeParamObj),
@@ -1206,7 +1206,7 @@ impl Obj {
                 } else {
                     p.name
                 };
-                DefPropFreeParamObj::new(name).into()
+                DefHeaderFreeParamObj::new(name).into()
             }
             Obj::ExistFreeParamObj(p) => {
                 let name = if p.name == from {

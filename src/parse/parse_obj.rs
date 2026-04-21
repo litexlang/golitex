@@ -483,6 +483,16 @@ impl Runtime {
                 (field_access_with_mod.clone().into(), vec![])
             }
             Obj::StructSelfFieldFreeParamObj(p) => (p.clone().into(), vec![]),
+            Obj::ForallFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
+            Obj::ForallFieldAccessObj(p) => {
+                (FieldAccess::new(p.name.clone(), p.field.clone()).into(), vec![])
+            }
+            Obj::ExistFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
+            Obj::DefFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
+            Obj::SetBuilderFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
+            Obj::FnSetFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
+            Obj::ByInducFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
+            Obj::DefAlgoFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {

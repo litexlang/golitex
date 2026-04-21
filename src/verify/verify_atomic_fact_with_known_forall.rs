@@ -435,10 +435,19 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::ExistFreeParamObj(ref p) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
+                match given_arg {
+                    Obj::ExistFreeParamObj(_) => {
+                        let mut m = HashMap::new();
+                        m.insert(p.name.clone(), given_arg.clone());
+                        Ok(Some(m))
+                    }
+                    _ => {
+                        if p.to_string() != given_arg.to_string() {
+                            return Ok(None);
+                        }
+                        Ok(Some(HashMap::new()))
+                    }
                 }
-                Ok(Some(HashMap::new()))
             }
             Obj::SetBuilderFreeParamObj(ref p) => {
                 if p.to_string() != given_arg.to_string() {

@@ -5,7 +5,7 @@ use std::fmt;
 pub enum ParamObjType {
     Identifier,
     Forall,
-    DefProp,
+    DefHeader,
     Exist,
     SetBuilder,
     FnSet,
@@ -19,7 +19,7 @@ impl ParamObjType {
         match self {
             ParamObjType::Identifier => 0,
             ParamObjType::Forall => 1,
-            ParamObjType::DefProp => 2,
+            ParamObjType::DefHeader => 2,
             ParamObjType::Exist => 3,
             ParamObjType::SetBuilder => 4,
             ParamObjType::FnSet => 5,
@@ -89,7 +89,7 @@ pub struct ForallFreeParamObj {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DefPropFreeParamObj {
+pub struct DefHeaderFreeParamObj {
     pub name: String,
 }
 
@@ -141,9 +141,9 @@ impl ForallFieldAccessObj {
     }
 }
 
-impl DefPropFreeParamObj {
+impl DefHeaderFreeParamObj {
     pub fn new(name: String) -> Self {
-        DefPropFreeParamObj { name }
+        DefHeaderFreeParamObj { name }
     }
 }
 
@@ -196,9 +196,9 @@ impl fmt::Display for ForallFieldAccessObj {
     }
 }
 
-impl fmt::Display for DefPropFreeParamObj {
+impl fmt::Display for DefHeaderFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write_parsing_free_param_tagged_spine(f, ParamObjType::DefProp, &self.name)
+        write_parsing_free_param_tagged_spine(f, ParamObjType::DefHeader, &self.name)
     }
 }
 
@@ -251,8 +251,8 @@ impl From<ForallFieldAccessObj> for Obj {
     }
 }
 
-impl From<DefPropFreeParamObj> for Obj {
-    fn from(v: DefPropFreeParamObj) -> Self {
+impl From<DefHeaderFreeParamObj> for Obj {
+    fn from(v: DefHeaderFreeParamObj) -> Self {
         Obj::DefFreeParamObj(v)
     }
 }
@@ -298,7 +298,7 @@ pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
     match scope {
         ParamObjType::Forall => ForallFreeParamObj::new(name).into(),
         ParamObjType::Exist => ExistFreeParamObj::new(name).into(),
-        ParamObjType::DefProp => DefPropFreeParamObj::new(name).into(),
+        ParamObjType::DefHeader => DefHeaderFreeParamObj::new(name).into(),
         ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name).into(),
         ParamObjType::FnSet => FnSetFreeParamObj::new(name).into(),
         ParamObjType::Induc => ByInducFreeParamObj::new(name).into(),
@@ -318,7 +318,7 @@ pub fn param_binding_element_obj_for_store(name: String, binding_kind: ParamObjT
         ParamObjType::StructSelf | ParamObjType::Identifier => Identifier::new(name).into(),
         ParamObjType::Forall
         | ParamObjType::Exist
-        | ParamObjType::DefProp
+        | ParamObjType::DefHeader
         | ParamObjType::SetBuilder
         | ParamObjType::FnSet
         | ParamObjType::Induc
@@ -332,10 +332,7 @@ mod strip_numeric_tags_tests {
 
     #[test]
     fn tilde_digits_removed_suffix_kept() {
-        assert_eq!(
-            strip_free_param_numeric_tags_in_display("~2aaa"),
-            "aaa"
-        );
+        assert_eq!(strip_free_param_numeric_tags_in_display("~2aaa"), "aaa");
         assert_eq!(
             strip_free_param_numeric_tags_in_display(r#""x": "~2foo""#),
             r#""x": "foo""#

@@ -1,3 +1,4 @@
+use crate::infer::obj_eligible_for_known_objs_in_fn_sets;
 use crate::prelude::*;
 use crate::verify::{
     number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
@@ -473,12 +474,15 @@ impl Runtime {
                 list_set,
                 verify_state,
             ),
-            (Obj::Identifier(identifier), Obj::FnSet(expected_fn_set)) => self
-                .verify_in_fact_identifier_in_fn_set_by_stored_definition(
-                    identifier,
+            (element, Obj::FnSet(expected_fn_set))
+                if obj_eligible_for_known_objs_in_fn_sets(element) =>
+            {
+                self.verify_in_fact_element_in_fn_set_by_stored_definition(
+                    element,
                     expected_fn_set,
                     in_fact,
-                ),
+                )
+            }
             (_, Obj::FamilyObj(family_ty)) => {
                 self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
             }
@@ -1064,15 +1068,14 @@ impl Runtime {
         Ok(a_instantiated.to_string() == b_instantiated.to_string())
     }
 
-    // If the env already has `identifier $in fn_def` (from `known_obj_in_fn_set`), α-compare to the RHS `fn ...`.
-    fn verify_in_fact_identifier_in_fn_set_by_stored_definition(
+    // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), α-compare to the RHS `fn ...`.
+    fn verify_in_fact_element_in_fn_set_by_stored_definition(
         &mut self,
-        identifier: &Identifier,
+        element: &Obj,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let element_obj = Identifier::new(identifier.name.clone()).into();
-        let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(&element_obj) else {
+        let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(element) else {
             return Ok((StmtUnknown::new()).into());
         };
         if self

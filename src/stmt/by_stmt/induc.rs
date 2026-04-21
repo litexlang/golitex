@@ -27,36 +27,6 @@ impl ByInducStmt {
             line_file,
         }
     }
-
-    pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
-        let mut params_def_with_type: Vec<ParamGroupWithParamType> = Vec::new();
-        params_def_with_type.push(ParamGroupWithParamType::new(
-            vec![self.param.clone()],
-            ParamType::Obj(StandardSet::Z.into()),
-        ));
-        let mut dom_facts: Vec<Fact> = Vec::new();
-
-        dom_facts.push(
-            GreaterEqualFact::new(
-                obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::Forall),
-                self.induc_from.clone(),
-                self.line_file.clone(),
-            )
-            .into(),
-        );
-
-        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
-        for fact in self.to_prove.iter() {
-            then_facts.push(fact.clone());
-        }
-        let forall_fact = ForallFact::new(
-            ParamDefWithType::new(params_def_with_type),
-            dom_facts,
-            then_facts,
-            self.line_file.clone(),
-        );
-        Ok(forall_fact.into())
-    }
 }
 
 impl fmt::Display for ByInducStmt {
