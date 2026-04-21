@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
+// Same ∀-instantiation strategy as `verify_atomic_fact_with_known_forall` (σ from template to given).
+
 impl Runtime {
     pub fn verify_or_fact_with_known_forall(
         &mut self,
@@ -121,16 +123,6 @@ impl Runtime {
             };
 
             args_for_params.push(obj.clone());
-        }
-
-        for (key, obj) in arg_map.iter() {
-            if param_names.contains(key) {
-                continue;
-            } else {
-                if key != &obj.to_string() {
-                    return Ok(None);
-                }
-            }
         }
 
         let args_param_types = self
