@@ -110,6 +110,7 @@ pub use crate::obj::Number;
 pub use crate::obj::Obj;
 pub use crate::obj::ObjAtIndex;
 pub use crate::obj::ParamObjType;
+pub use crate::obj::strip_parsing_free_param_tags_for_user_display;
 pub use crate::obj::Pow;
 pub use crate::obj::PowerSet;
 pub use crate::obj::Proj;

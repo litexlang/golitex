@@ -21,6 +21,10 @@ const JSON_KEY_INSIDE_RESULTS: &str = "inside_results";
 const JSON_KEY_PREVIOUS_ERROR: &str = "previous_error";
 const JSON_VALUE_ERROR: &str = "error";
 
+fn user_visible_stmt_or_msg_text(raw: &str) -> String {
+    strip_parsing_free_param_tags_for_user_display(raw)
+}
+
 pub fn display_stmt_exec_result_json(runtime: &Runtime, r: &StmtResult) -> String {
     render_json_value(&stmt_exec_result_json_value(runtime, r), 0)
 }
@@ -94,7 +98,7 @@ fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
 
 fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
-    let stmt_display_string = x.stmt.to_string();
+    let stmt_display_string = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let stmt_text = match &x.stmt {
         Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
         _ => stmt_display_string,
@@ -104,7 +108,7 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
         .infers
         .infer_lines_unique_in_order()
         .iter()
-        .map(|s| JsonValue::JsonString(s.clone()))
+        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
         .collect();
 
     let inside_items: Vec<JsonValue> = x
@@ -154,7 +158,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
         .infers
         .infer_lines_unique_in_order()
         .iter()
-        .map(|s| JsonValue::JsonString(s.clone()))
+        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
         .collect();
 
     let inside_items: Vec<JsonValue> = x
@@ -178,7 +182,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
         ),
         (
             "stmt".to_string(),
-            JsonValue::JsonString(x.stmt.to_string()),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&x.stmt.to_string())),
         ),
         (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (
@@ -197,20 +201,22 @@ fn factual_known_fact_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> Json
         .as_ref()
         .map(|f| f.to_string())
         .unwrap_or_else(|| x.msg.clone());
+    let cited_fact_text = user_visible_stmt_or_msg_text(&cited_fact_text);
+    let msg_for_display = user_visible_stmt_or_msg_text(x.msg.as_str());
     let cited_fact_json = JsonValue::JsonString(cited_fact_text.clone());
     let verified_by = verified_by_known_fact_object(
         runtime,
         &known_fact_line_file,
         cited_fact_json,
         cited_fact_text.as_str(),
-        x.msg.as_str(),
+        msg_for_display.as_str(),
     );
 
     let infer_items: Vec<JsonValue> = x
         .infers
         .infer_lines_unique_in_order()
         .iter()
-        .map(|s| JsonValue::JsonString(s.clone()))
+        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
         .collect();
 
     let inside_items: Vec<JsonValue> = x
@@ -234,7 +240,7 @@ fn factual_known_fact_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> Json
         ),
         (
             "stmt".to_string(),
-            JsonValue::JsonString(x.stmt.to_string()),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&x.stmt.to_string())),
         ),
         (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (
@@ -258,7 +264,7 @@ fn json_array_field_line(indent_inner: &str, json_key: &str, json_elements: &[St
 }
 
 fn stmt_json_field_lines(indent_inner: &str, stmt: &Stmt) -> Vec<String> {
-    let stmt_display_string = stmt.to_string();
+    let stmt_display_string = user_visible_stmt_or_msg_text(&stmt.to_string());
     let wrapped_stmt_display_string = match stmt {
         Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
         _ => stmt_display_string,
@@ -338,7 +344,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
         }
         RuntimeError::NameAlreadyUsedError(e) => {
@@ -346,7 +352,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
         }
         RuntimeError::ArithmeticError(e) => {
@@ -354,7 +360,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
                 &mut field_lines,
@@ -367,7 +373,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
                 &mut field_lines,
@@ -380,7 +386,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
                 &mut field_lines,
@@ -393,7 +399,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
         }
         RuntimeError::ExecStmtError(e) => {
@@ -401,7 +407,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             if let Some(stmt) = &e.statement {
                 let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), stmt);
@@ -425,7 +431,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
         }
         RuntimeError::VerifyError(e) => {
@@ -433,7 +439,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
         }
         RuntimeError::UnknownError(e) => {
@@ -441,7 +447,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
                 &mut field_lines,
@@ -454,7 +460,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
         }
         RuntimeError::InstantiateError(e) => {
@@ -462,7 +468,7 @@ fn build_display_error_json_object(
                 "{}\"{}\": {}",
                 indent_inner,
                 JSON_KEY_MESSAGE,
-                json_string_literal(&e.msg)
+                json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
                 &mut field_lines,
