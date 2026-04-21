@@ -191,7 +191,7 @@ impl Runtime {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
 
             let fs = self.parse_fn_set_clause(tb)?;
-            let fn_param_names = ParamGroupWithSet::collect_param_names(&fs.params_def_with_set);
+            let fn_param_names = fs.collect_all_param_names_including_nested_ret_fn_sets();
 
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;

@@ -74,6 +74,22 @@ pub struct FnSetClause {
     pub ret_set: Obj,
 }
 
+impl FnSetClause {
+    /// Outer `{...}` binders first, then each nested function return `fn` layer, in order.
+    /// Used when parsing `have fn ... = rhs` so RHS identifiers match nested return fn-set params.
+    pub fn collect_all_param_names_including_nested_ret_fn_sets(&self) -> Vec<String> {
+        let mut names = ParamGroupWithSet::collect_param_names(&self.params_def_with_set);
+        let mut ret_set = self.ret_set.clone();
+        while let Obj::FnSet(inner) = ret_set {
+            names.extend(ParamGroupWithSet::collect_param_names(
+                &inner.params_def_with_set,
+            ));
+            ret_set = (*inner.ret_set).clone();
+        }
+        names
+    }
+}
+
 #[derive(Clone)]
 pub struct HaveFnEqualCaseByCaseStmt {
     pub name: String,
