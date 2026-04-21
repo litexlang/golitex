@@ -488,6 +488,9 @@ impl Runtime {
             Obj::ForallFieldAccessObj(p) => (FnObjHead::ForallFieldAccess(p.clone()), vec![]),
             Obj::ExistFreeParamObj(p) => (FnObjHead::Exist(p.clone()), vec![]),
             Obj::DefFreeParamObj(p) => (FnObjHead::DefHeader(p.clone()), vec![]),
+            Obj::DefFreeFieldAccessObj(p) => {
+                (FnObjHead::DefHeaderFieldAccess(p.clone()), vec![])
+            },
             Obj::SetBuilderFreeParamObj(p) => (FnObjHead::SetBuilder(p.clone()), vec![]),
             Obj::FnSetFreeParamObj(p) => (FnObjHead::FnSet(p.clone()), vec![]),
             Obj::ByInducFreeParamObj(p) => (FnObjHead::Induc(p.clone()), vec![]),

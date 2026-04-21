@@ -568,6 +568,7 @@ impl Runtime {
         struct_ty: &StructObj,
         def: &DefStructStmt,
         param_name: &str,
+        binding_kind: ParamObjType,
     ) -> Result<Vec<OrAndChainAtomicFact>, RuntimeError> {
         let base_map = def
             .param_defs
@@ -586,7 +587,11 @@ impl Runtime {
         for field_name in def.fields.iter() {
             self_param_map.insert(
                 field_name.0.clone(),
-                ForallFieldAccessObj::new(param_name.to_string(), field_name.0.clone()).into(),
+                struct_instance_field_access_obj_for_binding(
+                    param_name.to_string(),
+                    field_name.0.clone(),
+                    binding_kind,
+                ),
             );
         }
 

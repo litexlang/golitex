@@ -769,6 +769,10 @@ impl FnObj {
                 format!(r"\text{{{}}}", latex_texttt_escape(&s))
             }
             FnObjHead::DefHeader(p) => latex_local_ident(&p.name),
+            FnObjHead::DefHeaderFieldAccess(x) => {
+                let s = field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
             FnObjHead::Exist(p) => latex_local_ident(&p.name),
             FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
@@ -1944,6 +1948,10 @@ impl Obj {
                 format!(r"\text{{{}}}", latex_texttt_escape(&s))
             }
             Obj::DefFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::DefFreeFieldAccessObj(x) => {
+                let s = field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
             Obj::ExistFreeParamObj(x) => latex_local_ident(&x.name),
             Obj::SetBuilderFreeParamObj(x) => latex_local_ident(&x.name),
             Obj::FnSetFreeParamObj(x) => latex_local_ident(&x.name),
