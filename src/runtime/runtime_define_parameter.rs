@@ -182,9 +182,9 @@ impl Runtime {
 
         let iff_facts = self.instantiated_struct_iff_fact(struct_ty, &def, name)?;
         for ocf in iff_facts {
-            infer_result.new_infer_result_inside(
-                self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)?,
-            );
+            let result =
+                self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)?;
+            infer_result.new_infer_result_inside(result);
         }
 
         Ok(infer_result)
