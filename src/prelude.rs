@@ -253,7 +253,7 @@ pub use crate::common::keywords::COUNT;
 pub use crate::common::keywords::CUP;
 pub use crate::common::keywords::DIV;
 pub use crate::common::keywords::DOT_AKA_FIELD_ACCESS_SIGN;
-pub use crate::common::keywords::DOT_DOT;
+pub use crate::common::keywords::DOT_DOT_DOT;
 pub use crate::common::keywords::DOUBLE_QUOTE;
 pub use crate::common::keywords::DO_NOTHING;
 pub use crate::common::keywords::ENUMERATE;
