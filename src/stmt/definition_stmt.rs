@@ -158,28 +158,19 @@ impl fmt::Display for DefAbstractPropStmt {
 
 impl fmt::Display for DefStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
-        // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
-        let implicit_prefix_len = self.param_defs.number_of_params();
+        // Format: struct name(params): \n  fields... \n  <=>: \n  facts...
+        // `fields` and `facts` are exactly what the parser stored (no per-type-param prefix rows).
         let fields_str: String = self
             .fields
             .iter()
-            .skip(implicit_prefix_len)
             .map(|(name, or_val)| format!("{} {}", name, or_val))
             .collect::<Vec<_>>()
             .join("\n");
         let fields_indented =
             to_string_and_add_four_spaces_at_beginning_of_each_line(&fields_str, 1);
         let equiv_line = add_four_spaces_at_beginning(format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
-        let facts_indented = vec_to_string_add_four_spaces_at_beginning_of_each_line(
-            &self
-                .facts
-                .iter()
-                .skip(implicit_prefix_len)
-                .cloned()
-                .collect(),
-            1,
-        );
+        let facts_indented =
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1);
         write!(
             f,
             "{} {}{}{}{} {}\n{}\n{}\n{}",

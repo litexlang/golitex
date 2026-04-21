@@ -563,7 +563,7 @@ impl Runtime {
 
     /// [`DefStructStmt::dom_facts`] under type arguments, then [`DefStructStmt::facts`] (`<=>:`) with
     /// [`SELF`] replaced by `param_name`, in source order.
-    pub fn instantiated_struct_def_or_and_facts_for_def(
+    pub fn instantiated_struct_iff_fact(
         &self,
         struct_ty: &StructObj,
         def: &DefStructStmt,
@@ -572,6 +572,7 @@ impl Runtime {
         let base_map = def
             .param_defs
             .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
+
         let mut out = Vec::new();
         for fact in def.dom_facts.iter() {
             out.push(self.inst_or_and_chain_atomic_fact(
@@ -580,6 +581,7 @@ impl Runtime {
                 ParamObjType::DefHeader,
             )?);
         }
+
         let mut map_with_self = base_map.clone();
         map_with_self.insert(
             SELF.to_string(),
@@ -592,6 +594,7 @@ impl Runtime {
                 ParamObjType::StructSelf,
             )?);
         }
+
         Ok(out)
     }
 }
