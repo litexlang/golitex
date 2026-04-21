@@ -8,6 +8,7 @@ pub enum FnObjHead {
     Forall(ForallFreeParamObj),
     ForallFieldAccess(ForallFieldAccessObj),
     DefHeader(DefHeaderFreeParamObj),
+    DefHeaderFieldAccess(DefHeaderFreeFieldAccessObj),
     Exist(ExistFreeParamObj),
     SetBuilder(SetBuilderFreeParamObj),
     FnSet(FnSetFreeParamObj),
@@ -23,6 +24,7 @@ impl fmt::Display for FnObjHead {
             FnObjHead::Forall(p) => write!(f, "{}", p),
             FnObjHead::ForallFieldAccess(p) => write!(f, "{}", p),
             FnObjHead::DefHeader(p) => write!(f, "{}", p),
+            FnObjHead::DefHeaderFieldAccess(p) => write!(f, "{}", p),
             FnObjHead::Exist(p) => write!(f, "{}", p),
             FnObjHead::SetBuilder(p) => write!(f, "{}", p),
             FnObjHead::FnSet(p) => write!(f, "{}", p),
@@ -54,6 +56,12 @@ impl From<ForallFieldAccessObj> for FnObjHead {
 impl From<DefHeaderFreeParamObj> for FnObjHead {
     fn from(p: DefHeaderFreeParamObj) -> Self {
         FnObjHead::DefHeader(p)
+    }
+}
+
+impl From<DefHeaderFreeFieldAccessObj> for FnObjHead {
+    fn from(p: DefHeaderFreeFieldAccessObj) -> Self {
+        FnObjHead::DefHeaderFieldAccess(p)
     }
 }
 
@@ -100,6 +108,7 @@ impl From<FnObjHead> for Obj {
             FnObjHead::Forall(p) => p.into(),
             FnObjHead::ForallFieldAccess(p) => p.into(),
             FnObjHead::DefHeader(p) => p.into(),
+            FnObjHead::DefHeaderFieldAccess(p) => p.into(),
             FnObjHead::Exist(p) => p.into(),
             FnObjHead::SetBuilder(p) => p.into(),
             FnObjHead::FnSet(p) => p.into(),

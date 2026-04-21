@@ -99,6 +99,14 @@ pub struct ForallFieldAccessObj {
     pub field: String,
 }
 
+/// `base.field` in a [`ParamObjType::DefHeader`] scope (e.g. prop header, struct field ops).
+/// Same spine shape as [`ForallFieldAccessObj`], but display tag is `DefHeader` (`~2`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DefHeaderFreeFieldAccessObj {
+    pub name: String,
+    pub field: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExistFreeParamObj {
     pub name: String,
@@ -138,6 +146,12 @@ impl ForallFreeParamObj {
 impl ForallFieldAccessObj {
     pub fn new(name: String, field: String) -> Self {
         ForallFieldAccessObj { name, field }
+    }
+}
+
+impl DefHeaderFreeFieldAccessObj {
+    pub fn new(name: String, field: String) -> Self {
+        DefHeaderFreeFieldAccessObj { name, field }
     }
 }
 
@@ -196,6 +210,13 @@ impl fmt::Display for ForallFieldAccessObj {
     }
 }
 
+impl fmt::Display for DefHeaderFreeFieldAccessObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let spine = field_access_to_string(&self.name, &self.field);
+        write_parsing_free_param_tagged_spine(f, ParamObjType::DefHeader, &spine)
+    }
+}
+
 impl fmt::Display for DefHeaderFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_parsing_free_param_tagged_spine(f, ParamObjType::DefHeader, &self.name)
@@ -251,6 +272,12 @@ impl From<ForallFieldAccessObj> for Obj {
     }
 }
 
+impl From<DefHeaderFreeFieldAccessObj> for Obj {
+    fn from(v: DefHeaderFreeFieldAccessObj) -> Self {
+        Obj::DefFreeFieldAccessObj(v)
+    }
+}
+
 impl From<DefHeaderFreeParamObj> for Obj {
     fn from(v: DefHeaderFreeParamObj) -> Self {
         Obj::DefFreeParamObj(v)
@@ -290,6 +317,20 @@ impl From<ByInducFreeParamObj> for Obj {
 impl From<DefAlgoFreeParamObj> for Obj {
     fn from(v: DefAlgoFreeParamObj) -> Self {
         Obj::DefAlgoFreeParamObj(v)
+    }
+}
+
+/// Field access `base.field` for a struct instance parameter, using the same `~tag` as
+/// [`param_binding_element_obj_for_store`] for `base` (e.g. `~1g` under [`ParamObjType::Forall`],
+/// `~2g` under [`ParamObjType::DefHeader`]).
+pub fn struct_instance_field_access_obj_for_binding(
+    base_name: String,
+    field: String,
+    binding_kind: ParamObjType,
+) -> Obj {
+    match binding_kind {
+        ParamObjType::DefHeader => DefHeaderFreeFieldAccessObj::new(base_name, field).into(),
+        _ => ForallFieldAccessObj::new(base_name, field).into(),
     }
 }
 

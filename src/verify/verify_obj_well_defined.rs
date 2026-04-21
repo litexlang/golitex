@@ -97,6 +97,7 @@ impl Runtime {
             Obj::ForallFreeParamObj(_) => Ok(()),
             Obj::ForallFieldAccessObj(_) => Ok(()),
             Obj::DefFreeParamObj(_) => Ok(()),
+            Obj::DefFreeFieldAccessObj(_) => Ok(()),
             Obj::ExistFreeParamObj(_) => Ok(()),
             Obj::SetBuilderFreeParamObj(_) => Ok(()),
             Obj::FnSetFreeParamObj(_) => Ok(()),

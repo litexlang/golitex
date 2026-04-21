@@ -140,8 +140,10 @@ impl FreeParamCollection {
             ParamObjType::Forall => {
                 Ok(ForallFieldAccessObj::new(name.to_string(), field.to_string()).into())
             }
-            ParamObjType::DefHeader
-            | ParamObjType::DefAlgo
+            ParamObjType::DefHeader => Ok(
+                DefHeaderFreeFieldAccessObj::new(name.to_string(), field.to_string()).into(),
+            ),
+            ParamObjType::DefAlgo
             | ParamObjType::Exist
             | ParamObjType::SetBuilder
             | ParamObjType::FnSet

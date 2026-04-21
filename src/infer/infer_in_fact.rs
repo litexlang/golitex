@@ -11,6 +11,7 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
             | Obj::FieldAccessWithMod(_)
             | Obj::ForallFreeParamObj(_)
             | Obj::ForallFieldAccessObj(_)
+            | Obj::DefFreeFieldAccessObj(_)
             | Obj::ExistFreeParamObj(_)
             | Obj::DefFreeParamObj(_)
             | Obj::SetBuilderFreeParamObj(_)
@@ -32,6 +33,7 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
         Obj::ByInducFreeParamObj(p) => vec![p.name.clone()],
         Obj::DefAlgoFreeParamObj(p) => vec![p.name.clone()],
         Obj::ForallFieldAccessObj(p) => vec![field_access_to_string(&p.name, &p.field)],
+        Obj::DefFreeFieldAccessObj(p) => vec![field_access_to_string(&p.name, &p.field)],
         _ => vec![],
     }
 }

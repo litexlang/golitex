@@ -10,8 +10,10 @@ pub use atom::{
 };
 pub use free_param_obj::{
     obj_for_bound_param_in_scope, param_binding_element_obj_for_store,
+    struct_instance_field_access_obj_for_binding,
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
-    ByInducFreeParamObj, DefAlgoFreeParamObj, DefHeaderFreeParamObj, ExistFreeParamObj,
+    ByInducFreeParamObj, DefAlgoFreeParamObj, DefHeaderFreeFieldAccessObj,
+    DefHeaderFreeParamObj, ExistFreeParamObj,
     FnSetFreeParamObj, ForallFieldAccessObj, ForallFreeParamObj, InstObjState, ParamObjType,
     SetBuilderFreeParamObj, StructSelfFieldFreeParamObj,
 };
