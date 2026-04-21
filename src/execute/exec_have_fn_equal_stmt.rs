@@ -1,7 +1,8 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 
-use super::exec_have_fn_equal_shared::build_curried_function_obj_from_layers;
+use super::exec_have_fn_equal_shared::{
+    build_curried_function_obj_from_layers, inst_have_fn_forall_fact_for_store,
+};
 
 impl Runtime {
     pub fn exec_have_fn_equal_stmt(
@@ -105,6 +106,7 @@ impl Runtime {
             have_fn_equal_stmt.line_file.clone(),
         )
         .into();
+
         let infer_result = self
             .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
             .map_err(|store_fact_error| {
@@ -131,24 +133,14 @@ impl Runtime {
         )
         .into();
 
-        let cloned_param_defs_with_type = param_defs_with_type.clone();
-
         let forall_fact = ForallFact::new(
             param_defs_with_type,
             forall_dom_facts,
             vec![function_equals_equal_to_fact.into()],
             have_fn_equal_stmt.line_file.clone(),
         );
-        let forall_as_fact: Fact = forall_fact.clone().into();
 
-        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        for group in cloned_param_defs_with_type.groups.iter() {
-            for name in group.params.iter() {
-                param_to_arg_map.insert(name.clone(), ForallFreeParamObj::new(name.clone()).into());
-            }
-        }
-
-        let to_store = self.inst_fact(&forall_as_fact, &param_to_arg_map, ParamObjType::FnSet)?;
+        let to_store = inst_have_fn_forall_fact_for_store(self, forall_fact)?;
 
         let _ = self
             .store_fact_without_well_defined_verified_and_infer(to_store)
