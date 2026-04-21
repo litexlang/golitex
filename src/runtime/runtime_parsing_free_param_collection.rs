@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct FreeParamCollection {
     pub params: HashMap<String, Vec<FreeParamTypeAndLineFile>>,
 }
@@ -92,7 +93,7 @@ impl FreeParamCollection {
         };
         match top.kind {
             ParamObjType::Forall => ForallFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::DefProp => DefPropFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::DefHeader => DefHeaderFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Exist => ExistFreeParamObj::new(name.to_string()).into(),
             ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name.to_string()).into(),
             ParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
@@ -139,7 +140,7 @@ impl FreeParamCollection {
             ParamObjType::Forall => {
                 Ok(ForallFieldAccessObj::new(name.to_string(), field.to_string()).into())
             }
-            ParamObjType::DefProp
+            ParamObjType::DefHeader
             | ParamObjType::DefAlgo
             | ParamObjType::Exist
             | ParamObjType::SetBuilder

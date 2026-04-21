@@ -23,7 +23,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let verify_state = VerifyState::new(0, false);
 
-        self.define_params_with_type(&stmt.param_defs, false, ParamObjType::DefProp)
+        self.define_params_with_type(&stmt.param_defs, false, ParamObjType::DefHeader)
             .map_err(|define_params_error| {
                 short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
             })?;

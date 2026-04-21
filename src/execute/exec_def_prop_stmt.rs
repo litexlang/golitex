@@ -23,7 +23,7 @@ impl Runtime {
         self.define_params_with_type(
             &def_prop_stmt.params_def_with_type,
             false,
-            ParamObjType::DefProp,
+            ParamObjType::DefHeader,
         )
             .map_err(|e| {
                 short_exec_error(def_prop_stmt.clone().into(), "", Some(e), vec![])

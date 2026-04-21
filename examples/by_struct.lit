@@ -1,3 +1,4 @@
+"""
 abstract_prop p(a, b, c)
 
 struct some_struct(a set):
@@ -15,3 +16,4 @@ forall x1 struct some_struct(R):
     x1 $in cart(R, R)
     x1[1] = x1.field1
     x1[2] = x1.field2
+"""
