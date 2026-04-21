@@ -3,21 +3,11 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
-/// Key string for forall template matching: bare name / field path for parsing-time free params (no `#tag` from [`Obj`]'s [`fmt::Display`]).
-fn forall_non_param_atom_key_string(obj: &Obj) -> String {
-    match obj {
-        Obj::ForallFreeParamObj(p) => p.name.clone(),
-        Obj::ForallFieldAccessObj(p) => field_access_to_string(&p.name, &p.field),
-        Obj::DefFreeParamObj(p) => p.name.clone(),
-        Obj::ExistFreeParamObj(p) => p.name.clone(),
-        Obj::SetBuilderFreeParamObj(p) => p.name.clone(),
-        Obj::FnSetFreeParamObj(p) => p.name.clone(),
-        Obj::StructSelfFieldFreeParamObj(p) => field_access_to_string(SELF, &p.field),
-        Obj::ByInducFreeParamObj(p) => p.name.clone(),
-        Obj::DefAlgoFreeParamObj(p) => p.name.clone(),
-        _ => obj.to_string(),
-    }
-}
+// Forall instantiation: known environments store atomic facts under forall templates (parsing-time
+// free params at quantified positions). To prove a candidate atomic fact, we bucket by predicate
+// name, align template args with given args, and build a substitution map from each forall
+// parameter name (and fixed template holes) to the given Objs. Every listed forall parameter must
+// be assigned; then dom facts are instantiated and verified under that substitution.
 
 impl Runtime {
     pub fn verify_atomic_fact_with_known_forall(
@@ -154,17 +144,6 @@ impl Runtime {
             args_for_params.push(obj.clone());
         }
 
-        // the same atom in atomic fact in known forall fact which is not a parameter matches the same atom in given atomic fact
-        for (key, obj) in arg_map.iter() {
-            if param_names.contains(key) {
-                continue;
-            } else {
-                if key != &forall_non_param_atom_key_string(obj) {
-                    return Ok(None);
-                }
-            }
-        }
-
         let args_param_types = self
             .verify_args_satisfy_param_def_flat_types(
                 &known_forall.params_def,
@@ -282,9 +261,7 @@ impl Runtime {
                 if let Some(existing_obj) =
                     atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map.get(&k)
                 {
-                    if forall_non_param_atom_key_string(existing_obj)
-                        != forall_non_param_atom_key_string(&v)
-                    {
+                    if existing_obj.to_string() != v.to_string() {
                         return Ok(None);
                     }
                 }
@@ -554,9 +531,7 @@ impl Runtime {
                         };
                         for (k, v) in sub_map {
                             if let Some(existing_obj) = head_map.get(&k) {
-                                if forall_non_param_atom_key_string(existing_obj)
-                                    != forall_non_param_atom_key_string(&v)
-                                {
+                                if existing_obj.to_string() != v.to_string() {
                                     return Ok(None);
                                 }
                             }
@@ -985,9 +960,7 @@ impl Runtime {
         let mut merged = HashMap::new();
         for (k, v) in map2 {
             if let Some(existing_obj) = map1.get(&k) {
-                if forall_non_param_atom_key_string(existing_obj)
-                    != forall_non_param_atom_key_string(&v)
-                {
+                if existing_obj.to_string() != v.to_string() {
                     return None;
                 }
             }
@@ -1017,9 +990,7 @@ impl Runtime {
             };
             for (k, v) in sub_map {
                 if let Some(existing_obj) = merged.get(&k) {
-                    if forall_non_param_atom_key_string(existing_obj)
-                        != forall_non_param_atom_key_string(&v)
-                    {
+                    if existing_obj.to_string() != v.to_string() {
                         return Ok(None);
                     }
                 }
@@ -1045,9 +1016,7 @@ impl Runtime {
             };
             for (k, v) in sub_map {
                 if let Some(existing_obj) = merged.get(&k) {
-                    if forall_non_param_atom_key_string(existing_obj)
-                        != forall_non_param_atom_key_string(&v)
-                    {
+                    if existing_obj.to_string() != v.to_string() {
                         return Ok(None);
                     }
                 }
