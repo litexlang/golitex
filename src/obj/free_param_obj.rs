@@ -1,13 +1,45 @@
 use crate::prelude::*;
 use std::fmt;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ParamObjType {
+    Identifier,
+    Forall,
+    DefProp,
+    Exist,
+    SetBuilder,
+    FnSet,
+    StructSelf,
+    Induc,
+    DefAlgo,
+}
+
+impl ParamObjType {
+    /// Decimal digit prepended after `#` in parsing-time free-parameter `Display` (`#tag` + spine).
+    pub fn free_param_display_tag(self) -> u8 {
+        match self {
+            ParamObjType::Identifier => 0,
+            ParamObjType::Forall => 1,
+            ParamObjType::DefProp => 2,
+            ParamObjType::Exist => 3,
+            ParamObjType::SetBuilder => 4,
+            ParamObjType::FnSet => 5,
+            ParamObjType::StructSelf => 6,
+            ParamObjType::Induc => 7,
+            ParamObjType::DefAlgo => 8,
+        }
+    }
+}
+
+pub type InstObjState = ParamObjType;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ForallFreeParamObj {
     pub name: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DefFreeParamObj {
+pub struct DefPropFreeParamObj {
     pub name: String,
 }
 
@@ -59,9 +91,9 @@ impl ForallFieldAccessObj {
     }
 }
 
-impl DefFreeParamObj {
+impl DefPropFreeParamObj {
     pub fn new(name: String) -> Self {
-        DefFreeParamObj { name }
+        DefPropFreeParamObj { name }
     }
 }
 
@@ -103,55 +135,100 @@ impl DefAlgoFreeParamObj {
 
 impl fmt::Display for ForallFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::Forall.free_param_display_tag(),
+            self.name
+        )
     }
 }
 
 impl fmt::Display for ForallFieldAccessObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", field_access_to_string(&self.name, &self.field))
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::Forall.free_param_display_tag(),
+            field_access_to_string(&self.name, &self.field)
+        )
     }
 }
 
-impl fmt::Display for DefFreeParamObj {
+impl fmt::Display for DefPropFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::DefProp.free_param_display_tag(),
+            self.name
+        )
     }
 }
 
 impl fmt::Display for ExistFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::Exist.free_param_display_tag(),
+            self.name
+        )
     }
 }
 
 impl fmt::Display for SetBuilderFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::SetBuilder.free_param_display_tag(),
+            self.name
+        )
     }
 }
 
 impl fmt::Display for FnSetFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::FnSet.free_param_display_tag(),
+            self.name
+        )
     }
 }
 
 impl fmt::Display for StructSelfFieldFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", field_access_to_string(SELF, &self.field))
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::StructSelf.free_param_display_tag(),
+            field_access_to_string(SELF, &self.field)
+        )
     }
 }
 
 impl fmt::Display for ByInducFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::Induc.free_param_display_tag(),
+            self.name
+        )
     }
 }
 
 impl fmt::Display for DefAlgoFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        write!(
+            f,
+            "#{}{}",
+            ParamObjType::DefAlgo.free_param_display_tag(),
+            self.name
+        )
     }
 }
 
@@ -167,8 +244,8 @@ impl From<ForallFieldAccessObj> for Obj {
     }
 }
 
-impl From<DefFreeParamObj> for Obj {
-    fn from(v: DefFreeParamObj) -> Self {
+impl From<DefPropFreeParamObj> for Obj {
+    fn from(v: DefPropFreeParamObj) -> Self {
         Obj::DefFreeParamObj(v)
     }
 }
