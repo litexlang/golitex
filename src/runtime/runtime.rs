@@ -573,28 +573,38 @@ impl Runtime {
             .param_defs
             .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
 
-        let mut out = Vec::new();
-        for fact in def.dom_facts.iter() {
-            out.push(self.inst_or_and_chain_atomic_fact(
+        for (key, value) in base_map.iter() {
+            println!("key: {:?}, value: {:?}", key, value.to_string());
+        }
+
+        let mut iff_facts0 = Vec::new();
+        for fact in def.facts.iter() {
+            iff_facts0.push(self.inst_or_and_chain_atomic_fact(
                 fact,
                 &base_map,
                 ParamObjType::DefHeader,
             )?);
         }
 
-        let mut map_with_self = base_map.clone();
-        map_with_self.insert(
-            SELF.to_string(),
-            Identifier::new(param_name.to_string()).into(),
-        );
-        for fact in def.facts.iter() {
-            out.push(self.inst_or_and_chain_atomic_fact(
-                fact,
-                &map_with_self,
-                ParamObjType::StructSelf,
-            )?);
+        let mut self_param_map: HashMap<String, Obj> = HashMap::new();
+        for field_name in def.fields.iter() {
+            self_param_map.insert(
+                field_name.0.clone(),
+                ForallFieldAccessObj::new(param_name.to_string(), field_name.0.clone()).into(),
+            );
         }
 
-        Ok(out)
+        let mut iff_facts1 = Vec::new();
+        for fact in def.facts.iter() {
+            let new_fact = self.inst_or_and_chain_atomic_fact(
+                fact,
+                &self_param_map,
+                ParamObjType::StructSelf,
+            )?;
+            println!("new_fact: {:?}", new_fact.to_string());
+            iff_facts1.push(new_fact);
+        }
+
+        Ok(iff_facts1)
     }
 }
