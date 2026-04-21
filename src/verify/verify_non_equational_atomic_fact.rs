@@ -448,7 +448,7 @@ impl Runtime {
             )]),
             vec![],
             vec![InFact::new(
-                bound_param_name.into(),
+                obj_for_bound_param_in_scope(bound_param_name.clone(), ParamObjType::Forall),
                 subset_fact.right.clone(),
                 subset_fact.line_file.clone(),
             )
@@ -483,7 +483,7 @@ impl Runtime {
             )]),
             vec![],
             vec![InFact::new(
-                bound_param_name.into(),
+                obj_for_bound_param_in_scope(bound_param_name.clone(), ParamObjType::Forall),
                 superset_fact.left.clone(),
                 superset_fact.line_file.clone(),
             )

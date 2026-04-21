@@ -88,6 +88,7 @@ impl Runtime {
         Ok(())
     }
 
+    /// Validates identifier syntax only; does not record bindings (see `run_in_local_parsing_time_name_scope`).
     pub fn validate_name_and_insert_into_top_parsing_time_name_scope(
         &mut self,
         name: &str,
@@ -176,7 +177,8 @@ impl Runtime {
         result
     }
 
-    /// Reserved for parse blocks that used to push a parse-time name scope; now a no-op until name binding is redesigned.
+    /// Parse-time name stack for generic `insert` is still a no-op; duplicate bindings are rejected
+    /// via `FreeParamCollection::begin_scope(Identifier, …)` on file-level `have` / `let` and `store_identifier_obj` at exec.
     pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
@@ -368,13 +370,13 @@ impl Runtime {
             ],
             vec![
                 AtomicFact::from(LessEqualFact::new(
-                    p1.into(),
+                    obj_for_bound_param_in_scope(p1, ParamObjType::FnSet),
                     (*ms.row_len).clone(),
                     line_file.clone(),
                 ))
                 .into(),
                 AtomicFact::from(LessEqualFact::new(
-                    p2.into(),
+                    obj_for_bound_param_in_scope(p2, ParamObjType::FnSet),
                     (*ms.col_len).clone(),
                     line_file.clone(),
                 ))
@@ -392,7 +394,11 @@ impl Runtime {
                 StandardSet::NPos.into(),
             )],
             vec![
-                AtomicFact::from(LessEqualFact::new(param.into(), (*fs.n).clone(), line_file))
+                AtomicFact::from(LessEqualFact::new(
+                    obj_for_bound_param_in_scope(param, ParamObjType::FnSet),
+                    (*fs.n).clone(),
+                    line_file,
+                ))
                     .into(),
             ],
             (*fs.set).clone(),
@@ -565,7 +571,10 @@ impl Runtime {
             out.push(self.inst_or_and_chain_atomic_fact(fact, &base_map, ParamObjType::DefProp)?);
         }
         let mut map_with_self = base_map.clone();
-        map_with_self.insert(SELF.to_string(), param_name.to_string().into());
+        map_with_self.insert(
+            SELF.to_string(),
+            Identifier::new(param_name.to_string()).into(),
+        );
         for fact in def.facts.iter() {
             out.push(self.inst_or_and_chain_atomic_fact(
                 fact,

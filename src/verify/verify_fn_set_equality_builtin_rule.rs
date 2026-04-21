@@ -181,8 +181,10 @@ impl Runtime {
         for (param_name, generated_param_name) in
             flat_param_names.iter().zip(generated_param_names.iter())
         {
-            param_to_generated_arg_map
-                .insert(param_name.clone(), generated_param_name.clone().into());
+            param_to_generated_arg_map.insert(
+                param_name.clone(),
+                obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::FnSet),
+            );
         }
         param_to_generated_arg_map
     }
@@ -236,7 +238,7 @@ impl Runtime {
             {
                 source_param_to_generated_arg_map.insert(
                     source_param_name.clone(),
-                    generated_param_name.clone().into(),
+                    obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::FnSet),
                 );
             }
             flat_index = next_flat_index;

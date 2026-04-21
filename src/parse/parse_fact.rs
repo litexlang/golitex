@@ -275,6 +275,17 @@ impl Runtime {
                 tb.skip_token(NOT)?;
                 Ok(self.parse_atomic_fact(tb, false).map(|a| a.into())?)
             }
+            FORALL => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "Expected exist or and chain atomic fact".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
             _ => Ok(self.parse_or_and_chain_atomic_fact(tb)?.into()),
         }
     }

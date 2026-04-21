@@ -118,15 +118,30 @@ impl Runtime {
             ))));
             }
             self.parsing_free_param_collection.begin_scope(
-                ParamObjType::DefProp,
+                ParamObjType::Identifier,
                 &all_param_names,
                 tb.line_file.clone(),
             )?;
             let facts_result = self.parse_facts_in_body(tb);
             self.parsing_free_param_collection
-                .end_scope(ParamObjType::DefProp, &all_param_names);
-            facts_result?
+                .end_scope(ParamObjType::Identifier, &all_param_names);
+            let facts = facts_result?;
+            if !all_param_names.is_empty() {
+                self.parsing_free_param_collection.begin_scope(
+                    ParamObjType::Identifier,
+                    &all_param_names,
+                    tb.line_file.clone(),
+                )?;
+            }
+            facts
         } else {
+            if !all_param_names.is_empty() {
+                self.parsing_free_param_collection.begin_scope(
+                    ParamObjType::Identifier,
+                    &all_param_names,
+                    tb.line_file.clone(),
+                )?;
+            }
             vec![]
         };
         Ok(DefLetStmt::new(param_def, facts, tb.line_file.clone()).into())
@@ -159,11 +174,16 @@ impl Runtime {
         self.register_collected_param_names_for_def_parse(&have_param_names, tb.line_file.clone())?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
+            self.parsing_free_param_collection.begin_scope(
+                ParamObjType::Identifier,
+                &have_param_names,
+                tb.line_file.clone(),
+            )?;
             Ok(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file.clone()).into())
         } else {
             tb.skip_token(EQUAL)?;
             self.parsing_free_param_collection.begin_scope(
-                ParamObjType::DefProp,
+                ParamObjType::Identifier,
                 &have_param_names,
                 tb.line_file.clone(),
             )?;
@@ -176,8 +196,15 @@ impl Runtime {
                 Ok(objs_equal_to)
             })();
             self.parsing_free_param_collection
-                .end_scope(ParamObjType::DefProp, &have_param_names);
+                .end_scope(ParamObjType::Identifier, &have_param_names);
             let objs_equal_to = objs_result?;
+            if !have_param_names.is_empty() {
+                self.parsing_free_param_collection.begin_scope(
+                    ParamObjType::Identifier,
+                    &have_param_names,
+                    tb.line_file.clone(),
+                )?;
+            }
             Ok(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file.clone()).into())
         }
     }

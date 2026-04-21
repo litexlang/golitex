@@ -54,8 +54,10 @@ impl Runtime {
                 .iter()
                 .zip(generated_names_for_current_group.iter())
             {
-                original_param_to_forall_obj
-                    .insert(original_name.clone(), generated_name.clone().into());
+                original_param_to_forall_obj.insert(
+                    original_name.clone(),
+                    obj_for_bound_param_in_scope(generated_name.clone(), ParamObjType::FnSet),
+                );
             }
             flat_index = next_flat_index;
         }
@@ -78,7 +80,8 @@ impl Runtime {
                     .clone()
             })
             .collect();
-        let forall_element_obj: Obj = forall_element_name.clone().into();
+        let forall_element_obj: Obj =
+            obj_for_bound_param_in_scope(forall_element_name.clone(), ParamObjType::Forall);
         let arg_domain_factors: Vec<Obj> = forall_param_defs_with_type
             .iter()
             .map(
@@ -118,7 +121,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let forall_z_obj = forall_z_name.clone().into();
+        let forall_z_obj =
+            obj_for_bound_param_in_scope(forall_z_name.clone(), ParamObjType::Exist);
         let pair_in_fn = if param_names.len() == 1 {
             Tuple::new(vec![forall_args[0].clone(), forall_z_obj]).into()
         } else {
@@ -209,8 +213,10 @@ impl Runtime {
                 .iter()
                 .zip(generated_names_for_current_group.iter())
             {
-                original_param_to_exist_obj
-                    .insert(original_name.clone(), generated_name.clone().into());
+                original_param_to_exist_obj.insert(
+                    original_name.clone(),
+                    obj_for_bound_param_in_scope(generated_name.clone(), ParamObjType::FnSet),
+                );
             }
             exist_flat_index = next_flat_index;
         }
@@ -228,8 +234,9 @@ impl Runtime {
             .iter()
             .map(|param_name| original_param_to_exist_obj.get(param_name).unwrap().clone())
             .collect();
-        let exist_element_obj = exist_element_name.clone().into();
-        let exist_z_obj = exist_z_name.clone().into();
+        let exist_element_obj =
+            obj_for_bound_param_in_scope(exist_element_name.clone(), ParamObjType::Exist);
+        let exist_z_obj = obj_for_bound_param_in_scope(exist_z_name.clone(), ParamObjType::Exist);
         let exist_pair = if param_names.len() == 1 {
             Tuple::new(vec![exist_args[0].clone(), exist_z_obj]).into()
         } else {
@@ -278,8 +285,10 @@ impl Runtime {
         let unique_names = self.generate_random_unused_names(2);
         let unique_x1_name = unique_names[0].clone();
         let unique_x2_name = unique_names[1].clone();
-        let unique_x1_obj: Obj = unique_x1_name.clone().into();
-        let unique_x2_obj: Obj = unique_x2_name.clone().into();
+        let unique_x1_obj: Obj =
+            obj_for_bound_param_in_scope(unique_x1_name.clone(), ParamObjType::Forall);
+        let unique_x2_obj: Obj =
+            obj_for_bound_param_in_scope(unique_x2_name.clone(), ParamObjType::Forall);
         let unique_param_group_sets: Vec<Obj> = fn_set
             .params_def_with_set
             .iter()

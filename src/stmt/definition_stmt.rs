@@ -442,7 +442,7 @@ impl HaveFnByInducStmt {
             )],
             dom_facts: vec![OrAndChainAtomicFact::AtomicFact(
                 GreaterEqualFact::new(
-                    self.param.clone().into(),
+                    obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::FnSet),
                     self.induc_from.clone(),
                     self.line_file.clone(),
                 )
@@ -455,7 +455,7 @@ impl HaveFnByInducStmt {
     /// `forall x Z: ...` 里与 `fn` 定义域一致的那一段：标识符用源码 [`Self::param`]，与 [`Self::fn_user_fn_set_clause`] 的 dom 语义相同。
     pub fn forall_fn_base_dom_exist_or_facts(&self) -> Vec<Fact> {
         vec![GreaterEqualFact::new(
-            self.param.clone().into(),
+            obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::Forall),
             self.induc_from.clone(),
             self.line_file.clone(),
         )
@@ -485,7 +485,8 @@ impl HaveFnByInducStmt {
     /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（源码最后一条为 `case >= n:`（n 为特例个数），此处仍展开为 `param = from + n` 与可选子条件的合取）。
     pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
-        let left_id: Obj = self.param.clone().into();
+        let left_id: Obj =
+            obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::Induc);
         let n = self.special_cases_equal_tos.len();
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
         let mut equal_tos: Vec<Obj> = Vec::new();

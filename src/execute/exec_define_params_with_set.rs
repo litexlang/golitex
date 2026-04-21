@@ -23,7 +23,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         let facts = param_def.facts();
         for (name, fact) in param_def.params.iter().zip(facts.iter()) {
-            self.store_identifier_obj(name, ParamObjType::FnSet)
+            self.store_free_param_or_identifier_name(name, ParamObjType::FnSet)
                 .map_err(|runtime_error| {
                     RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
                         None,

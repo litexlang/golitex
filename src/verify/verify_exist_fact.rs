@@ -72,7 +72,10 @@ impl Runtime {
             let len = group.params.len();
             let chunk_a = flat_a[idx..idx + len].to_vec();
             for (orig, nm) in group.params.iter().zip(chunk_a.iter()) {
-                map_running_a.insert(orig.clone(), nm.clone().into());
+                map_running_a.insert(
+                    orig.clone(),
+                    obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Exist),
+                );
             }
             let pt_a = self.inst_param_type(&group.param_type, &map_running_a, ParamObjType::Exist)?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
@@ -83,7 +86,10 @@ impl Runtime {
             let len = group.params.len();
             let chunk_b = flat_b[idx..idx + len].to_vec();
             for (orig, nm) in group.params.iter().zip(chunk_b.iter()) {
-                map_running_b.insert(orig.clone(), nm.clone().into());
+                map_running_b.insert(
+                    orig.clone(),
+                    obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Exist),
+                );
             }
             let pt_b = self.inst_param_type(&group.param_type, &map_running_b, ParamObjType::Exist)?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_b, pt_b));
@@ -93,12 +99,22 @@ impl Runtime {
         let map_a: HashMap<String, Obj> = flat_orig
             .iter()
             .cloned()
-            .zip(flat_a.iter().cloned().map(|s| s.into()))
+            .zip(
+                flat_a
+                    .iter()
+                    .cloned()
+                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Exist)),
+            )
             .collect();
         let map_b: HashMap<String, Obj> = flat_orig
             .iter()
             .cloned()
-            .zip(flat_b.iter().cloned().map(|s| s.into()))
+            .zip(
+                flat_b
+                    .iter()
+                    .cloned()
+                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Exist)),
+            )
             .collect();
 
         let mut dom_facts: Vec<Fact> = Vec::new();
@@ -116,8 +132,8 @@ impl Runtime {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         if n == 1 {
             let eq = EqualFact::new(
-                flat_a[0].clone().into(),
-                flat_b[0].clone().into(),
+                obj_for_bound_param_in_scope(flat_a[0].clone(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(flat_b[0].clone(), ParamObjType::Forall),
                 lf.clone(),
             );
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
@@ -126,7 +142,7 @@ impl Runtime {
                 flat_a
                     .iter()
                     .cloned()
-                    .map(|s| s.into())
+                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Forall))
                     .collect::<Vec<Obj>>(),
             )
             .into();
@@ -134,7 +150,7 @@ impl Runtime {
                 flat_b
                     .iter()
                     .cloned()
-                    .map(|s| s.into())
+                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Forall))
                     .collect::<Vec<Obj>>(),
             )
             .into();
@@ -281,7 +297,10 @@ impl Runtime {
                 let normalized_name = format!("#{}", param_index);
                 param_index += 1;
 
-                param_to_arg_map.insert(original_name.clone(), normalized_name.clone().into());
+                param_to_arg_map.insert(
+                    original_name.clone(),
+                    obj_for_bound_param_in_scope(normalized_name.clone(), ParamObjType::Exist),
+                );
                 new_param_names.push(normalized_name);
             }
 

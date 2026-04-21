@@ -83,7 +83,11 @@ impl Runtime {
 
                 Ok(
                     (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        InFact::new(obj.clone(), String::from("_").into(), default_line_file())
+                        InFact::new(
+                            obj.clone(),
+                            Identifier::new("_".to_string()).into(),
+                            default_line_file(),
+                        )
                             .into(),
                         "".to_string(),
                         None,
