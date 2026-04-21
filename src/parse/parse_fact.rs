@@ -20,7 +20,9 @@ impl Runtime {
             tb.skip_token(FORALL)?;
             let mut groups: Vec<ParamGroupWithParamType> = vec![];
             while tb.current()? != COLON {
-                groups.push(this.parse_param_def_with_param_type_and_skip_comma(tb)?);
+                groups.push(
+                    this.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Forall)?,
+                );
             }
             let param_def = ParamDefWithType::new(groups);
             let forall_param_names = param_def.collect_param_names();
@@ -42,18 +44,14 @@ impl Runtime {
                 })?;
                 last_body.current()? == EQUIVALENT_SIGN
             };
-            this.parse_in_local_free_param_scope(
-                ParamObjType::Forall,
-                &forall_param_names,
-                tb.line_file.clone(),
-                |this| {
-                    if last_is_equiv {
-                        this.parse_forall_with_iff(tb, param_def)
-                    } else {
-                        this.parse_forall(tb, param_def)
-                    }
-                },
-            )
+            let fact_result = if last_is_equiv {
+                this.parse_forall_with_iff(tb, param_def)
+            } else {
+                this.parse_forall(tb, param_def)
+            };
+            this.parsing_free_param_collection
+                .end_scope(ParamObjType::Forall, &forall_param_names);
+            fact_result
         })
     }
 
@@ -217,7 +215,9 @@ impl Runtime {
             };
             let mut groups: Vec<ParamGroupWithParamType> = vec![];
             while tb.current()? != ST {
-                groups.push(this.parse_param_def_with_param_type_and_skip_comma(tb)?);
+                groups.push(
+                    this.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Exist)?,
+                );
             }
             let param_def = ParamDefWithType::new(groups);
             let exist_param_names = param_def.collect_param_names();
@@ -226,30 +226,29 @@ impl Runtime {
                     &exist_param_names,
                     tb.line_file.clone(),
                 )?;
-                inner.parse_in_local_free_param_scope(
-                    ParamObjType::Exist,
-                    &exist_param_names,
-                    tb.line_file.clone(),
-                    |inner| {
-                        tb.skip_token(ST)?;
+                let fact_result = (|| {
+                    tb.skip_token(ST)?;
 
-                        tb.skip_token(LEFT_CURLY_BRACE)?;
+                    tb.skip_token(LEFT_CURLY_BRACE)?;
 
-                        let mut facts: Vec<OrAndChainAtomicFact> = vec![];
-                        loop {
-                            facts.push(inner.parse_or_and_chain_atomic_fact(tb)?);
-                            if tb.current()? != RIGHT_CURLY_BRACE {
-                                tb.skip_token(COMMA)?;
-                            } else {
-                                break;
-                            }
+                    let mut facts: Vec<OrAndChainAtomicFact> = vec![];
+                    loop {
+                        facts.push(inner.parse_or_and_chain_atomic_fact(tb)?);
+                        if tb.current()? != RIGHT_CURLY_BRACE {
+                            tb.skip_token(COMMA)?;
+                        } else {
+                            break;
                         }
-                        tb.skip_token(RIGHT_CURLY_BRACE)?;
+                    }
+                    tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-                        let line_file = tb.line_file.clone();
-                        Ok(ExistFact::new(param_def, facts, is_exist_unique, line_file))
-                    },
-                )
+                    let line_file = tb.line_file.clone();
+                    Ok(ExistFact::new(param_def, facts, is_exist_unique, line_file))
+                })();
+                inner
+                    .parsing_free_param_collection
+                    .end_scope(ParamObjType::Exist, &exist_param_names);
+                fact_result
             })
         })
     }

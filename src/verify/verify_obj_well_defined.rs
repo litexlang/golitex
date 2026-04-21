@@ -1907,11 +1907,6 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        println!(
-            "family_param_type.params: {:?}",
-            vec_to_string_join_by_comma(&family_param_type.params)
-        );
-
         let args_param_types = self
             .verify_args_satisfy_param_def_flat_types(
                 &def.params_def_with_type,

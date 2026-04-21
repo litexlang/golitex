@@ -58,42 +58,37 @@ impl Runtime {
         exist_fact: &ExistFact,
     ) -> Result<ForallFact, RuntimeError> {
         let lf = exist_fact.line_file();
-        let n = exist_fact.params_def_with_type.number_of_params();
         let flat_orig = exist_fact.params_def_with_type.collect_param_names();
-        let flat_all = self.generate_random_unused_names(2 * n);
-        let flat_a: Vec<String> = flat_all[..n].to_vec();
-        let flat_b: Vec<String> = flat_all[n..2 * n].to_vec();
+        let n = flat_orig.len();
+        let flat_a: Vec<String> = flat_orig.iter().map(|name| format!("{}1", name)).collect();
+        let flat_b: Vec<String> = flat_orig.iter().map(|name| format!("{}2", name)).collect();
 
         let mut map_running_a: HashMap<String, Obj> = HashMap::new();
         let mut map_running_b: HashMap<String, Obj> = HashMap::new();
         let mut forall_groups: Vec<ParamGroupWithParamType> = Vec::new();
-        let mut idx: usize = 0;
         for group in exist_fact.params_def_with_type.groups.iter() {
-            let len = group.params.len();
-            let chunk_a = flat_a[idx..idx + len].to_vec();
+            let chunk_a: Vec<String> = group.params.iter().map(|name| format!("{}1", name)).collect();
             for (orig, nm) in group.params.iter().zip(chunk_a.iter()) {
                 map_running_a.insert(
                     orig.clone(),
-                    obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Exist),
+                    obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Forall),
                 );
             }
-            let pt_a = self.inst_param_type(&group.param_type, &map_running_a, ParamObjType::Exist)?;
+            let pt_a =
+                self.inst_param_type(&group.param_type, &map_running_a, ParamObjType::Forall)?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
-            idx += len;
         }
-        idx = 0;
         for group in exist_fact.params_def_with_type.groups.iter() {
-            let len = group.params.len();
-            let chunk_b = flat_b[idx..idx + len].to_vec();
+            let chunk_b: Vec<String> = group.params.iter().map(|name| format!("{}2", name)).collect();
             for (orig, nm) in group.params.iter().zip(chunk_b.iter()) {
                 map_running_b.insert(
                     orig.clone(),
-                    obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Exist),
+                    obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Forall),
                 );
             }
-            let pt_b = self.inst_param_type(&group.param_type, &map_running_b, ParamObjType::Exist)?;
+            let pt_b =
+                self.inst_param_type(&group.param_type, &map_running_b, ParamObjType::Forall)?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_b, pt_b));
-            idx += len;
         }
 
         let map_a: HashMap<String, Obj> = flat_orig
@@ -103,7 +98,7 @@ impl Runtime {
                 flat_a
                     .iter()
                     .cloned()
-                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Exist)),
+                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Forall)),
             )
             .collect();
         let map_b: HashMap<String, Obj> = flat_orig
@@ -113,18 +108,18 @@ impl Runtime {
                 flat_b
                     .iter()
                     .cloned()
-                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Exist)),
+                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Forall)),
             )
             .collect();
 
         let mut dom_facts: Vec<Fact> = Vec::new();
         for inner in exist_fact.facts.iter() {
-            let f_a = self.inst_or_and_chain_atomic_fact(inner, &map_a, ParamObjType::Exist)?;
+            let f_a = self.inst_or_and_chain_atomic_fact(inner, &map_a, ParamObjType::Forall)?;
             let o: OrAndChainAtomicFact = f_a;
             dom_facts.push(o.into());
         }
         for inner in exist_fact.facts.iter() {
-            let f_b = self.inst_or_and_chain_atomic_fact(inner, &map_b, ParamObjType::Exist)?;
+            let f_b = self.inst_or_and_chain_atomic_fact(inner, &map_b, ParamObjType::Forall)?;
             let o: OrAndChainAtomicFact = f_b;
             dom_facts.push(o.into());
         }
