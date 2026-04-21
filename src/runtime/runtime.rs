@@ -573,10 +573,6 @@ impl Runtime {
             .param_defs
             .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
 
-        for (key, value) in base_map.iter() {
-            println!("key: {:?}, value: {:?}", key, value.to_string());
-        }
-
         let mut iff_facts0 = Vec::new();
         for fact in def.facts.iter() {
             iff_facts0.push(self.inst_or_and_chain_atomic_fact(
@@ -595,13 +591,12 @@ impl Runtime {
         }
 
         let mut iff_facts1 = Vec::new();
-        for fact in def.facts.iter() {
+        for fact in iff_facts0.iter() {
             let new_fact = self.inst_or_and_chain_atomic_fact(
                 fact,
                 &self_param_map,
                 ParamObjType::StructSelf,
             )?;
-            println!("new_fact: {:?}", new_fact.to_string());
             iff_facts1.push(new_fact);
         }
 
