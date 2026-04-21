@@ -14,7 +14,6 @@ fn remove_param_names_from_param_to_arg_map(
     filtered_param_to_arg_map
 }
 
-
 impl Runtime {
     pub fn inst_obj(
         &self,
@@ -40,7 +39,9 @@ impl Runtime {
             Obj::MatrixAdd(inner) => self.inst_matrix_add(inner, param_to_arg_map, ctx),
             Obj::MatrixSub(inner) => self.inst_matrix_sub(inner, param_to_arg_map, ctx),
             Obj::MatrixMul(inner) => self.inst_matrix_mul(inner, param_to_arg_map, ctx),
-            Obj::MatrixScalarMul(inner) => self.inst_matrix_scalar_mul(inner, param_to_arg_map, ctx),
+            Obj::MatrixScalarMul(inner) => {
+                self.inst_matrix_scalar_mul(inner, param_to_arg_map, ctx)
+            }
             Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map, ctx),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map, ctx),
             Obj::Log(inner) => self.inst_log(inner, param_to_arg_map, ctx),
@@ -66,7 +67,9 @@ impl Runtime {
             Obj::ClosedRange(inner) => self.inst_closed_range(inner, param_to_arg_map, ctx),
             Obj::FiniteSeqSet(inner) => self.inst_finite_seq_set(inner, param_to_arg_map, ctx),
             Obj::SeqSet(inner) => self.inst_seq_set(inner, param_to_arg_map, ctx),
-            Obj::FiniteSeqListObj(inner) => self.inst_finite_seq_list_obj(inner, param_to_arg_map, ctx),
+            Obj::FiniteSeqListObj(inner) => {
+                self.inst_finite_seq_list_obj(inner, param_to_arg_map, ctx)
+            }
             Obj::MatrixSet(inner) => self.inst_matrix_set(inner, param_to_arg_map, ctx),
             Obj::MatrixListObj(inner) => self.inst_matrix_list_obj(inner, param_to_arg_map, ctx),
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map, ctx),
@@ -635,7 +638,11 @@ impl Runtime {
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
         let mut facts = Vec::with_capacity(set_builder.facts.len());
         for fact in set_builder.facts.iter() {
-            facts.push(self.inst_or_and_chain_atomic_fact(fact, &filtered_param_to_arg_map, ctx)?);
+            facts.push(self.inst_or_and_chain_atomic_fact(
+                fact,
+                &filtered_param_to_arg_map,
+                ctx,
+            )?);
         }
         Ok(SetBuilder::new(
             set_builder.param.clone(),
@@ -665,8 +672,11 @@ impl Runtime {
         }
         let mut dom_facts = Vec::with_capacity(fn_set_with_params.dom_facts.len());
         for dom_fact in fn_set_with_params.dom_facts.iter() {
-            dom_facts
-                .push(self.inst_or_and_chain_atomic_fact(dom_fact, &filtered_param_to_arg_map, ctx)?);
+            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &filtered_param_to_arg_map,
+                ctx,
+            )?);
         }
         Ok(FnSet::new(
             params_def_with_set,
