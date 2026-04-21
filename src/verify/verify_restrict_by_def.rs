@@ -130,7 +130,10 @@ impl Runtime {
         while mapping_index < original_flat_param_names.len() {
             original_to_restrict_param_map.insert(
                 original_flat_param_names[mapping_index].clone(),
-                restrict_flat_param_names[mapping_index].clone().into(),
+                obj_for_bound_param_in_scope(
+                    restrict_flat_param_names[mapping_index].clone(),
+                    ParamObjType::FnSet,
+                ),
             );
             mapping_index += 1;
         }
@@ -158,7 +161,7 @@ impl Runtime {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
                 then_facts.push(
                     InFact::new(
-                        restrict_param_name.into(),
+                        obj_for_bound_param_in_scope(restrict_param_name, ParamObjType::Forall),
                         instantiated_original_set.clone(),
                         line_file.clone(),
                     )

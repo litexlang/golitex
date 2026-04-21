@@ -41,13 +41,13 @@ impl Runtime {
         }
 
         for obj in have_exist_obj_stmt.equal_tos.iter() {
-            self.store_identifier_obj(obj, ParamObjType::Exist)?;
+            self.store_free_param_or_identifier_name(obj, ParamObjType::Exist)?;
         }
 
         let new_obj_names_as_identifier_objs = have_exist_obj_stmt
             .equal_tos
             .iter()
-            .map(|s| s.clone().into())
+            .map(|s| Identifier::new(s.clone()).into())
             .collect();
 
         let mut infer_result = self

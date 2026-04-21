@@ -62,6 +62,27 @@ pub fn strip_parsing_free_param_tags_for_user_display(text: &str) -> String {
     out
 }
 
+/// Removes `~` plus following ASCII digits everywhere (e.g. `~2aaa` → `aaa`). Used on full
+/// display JSON so every field is normalized; keeps `~` when not followed by digits (e.g. `~/`).
+pub fn strip_free_param_numeric_tags_in_display(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut it = text.chars().peekable();
+    while let Some(c) = it.next() {
+        if c == FREE_PARAM_DISPLAY_TAG_PREFIX {
+            if it.peek().map(|x| x.is_ascii_digit()).unwrap_or(false) {
+                while it.peek().map(|x| x.is_ascii_digit()).unwrap_or(false) {
+                    it.next();
+                }
+            } else {
+                out.push(c);
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ForallFreeParamObj {
     pub name: String,
@@ -269,5 +290,64 @@ impl From<ByInducFreeParamObj> for Obj {
 impl From<DefAlgoFreeParamObj> for Obj {
     fn from(v: DefAlgoFreeParamObj) -> Self {
         Obj::DefAlgoFreeParamObj(v)
+    }
+}
+
+/// Bound-parameter [`Obj`] for runtime-synthesized facts (`by` stmts, coverage, etc.), matching parse-time `~kind` tagging and [`Runtime::inst_obj`] substitution rules.
+pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
+    match scope {
+        ParamObjType::Forall => ForallFreeParamObj::new(name).into(),
+        ParamObjType::Exist => ExistFreeParamObj::new(name).into(),
+        ParamObjType::DefProp => DefPropFreeParamObj::new(name).into(),
+        ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name).into(),
+        ParamObjType::FnSet => FnSetFreeParamObj::new(name).into(),
+        ParamObjType::Induc => ByInducFreeParamObj::new(name).into(),
+        ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name).into(),
+        ParamObjType::StructSelf | ParamObjType::Identifier => {
+            unreachable!(
+                "obj_for_bound_param_in_scope: {:?} is not a bare-name binding scope",
+                scope
+            );
+        }
+    }
+}
+
+/// Element [`Obj`] for stored typing / membership facts so keys match parsed bound names (`~tag` spine).
+pub fn param_binding_element_obj_for_store(name: String, binding_kind: ParamObjType) -> Obj {
+    match binding_kind {
+        ParamObjType::StructSelf | ParamObjType::Identifier => Identifier::new(name).into(),
+        ParamObjType::Forall
+        | ParamObjType::Exist
+        | ParamObjType::DefProp
+        | ParamObjType::SetBuilder
+        | ParamObjType::FnSet
+        | ParamObjType::Induc
+        | ParamObjType::DefAlgo => obj_for_bound_param_in_scope(name, binding_kind),
+    }
+}
+
+#[cfg(test)]
+mod strip_numeric_tags_tests {
+    use super::strip_free_param_numeric_tags_in_display;
+
+    #[test]
+    fn tilde_digits_removed_suffix_kept() {
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display("~2aaa"),
+            "aaa"
+        );
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display(r#""x": "~2foo""#),
+            r#""x": "foo""#
+        );
+    }
+
+    #[test]
+    fn tilde_not_followed_by_digit_kept() {
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display("~/tmp.lit"),
+            "~/tmp.lit"
+        );
+        assert_eq!(strip_free_param_numeric_tags_in_display("~"), "~");
     }
 }

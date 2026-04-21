@@ -18,7 +18,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let function_name_obj: Obj = def_algo_stmt.name.clone().into();
+        let function_name_obj: Obj = Identifier::new(def_algo_stmt.name.clone()).into();
         let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
             Some(fn_set) => fn_set,
             None => {
@@ -89,7 +89,10 @@ impl Runtime {
     ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
-            args_for_algo_params.push(param_name.clone().into());
+            args_for_algo_params.push(obj_for_bound_param_in_scope(
+                param_name.clone(),
+                ParamObjType::FnSet,
+            ));
         }
 
         let param_satisfy_fn_param_set_facts_atomic =
@@ -126,8 +129,10 @@ impl Runtime {
         for (fn_set_param_name, algo_param_name) in
             fn_set_param_names.iter().zip(def_algo_stmt.params.iter())
         {
-            fn_set_param_name_to_algo_arg_obj
-                .insert(fn_set_param_name.clone(), algo_param_name.clone().into());
+            fn_set_param_name_to_algo_arg_obj.insert(
+                fn_set_param_name.clone(),
+                obj_for_bound_param_in_scope(algo_param_name.clone(), ParamObjType::FnSet),
+            );
         }
 
         let mut requirement_facts: Vec<Fact> = Vec::new();
@@ -141,6 +146,9 @@ impl Runtime {
                 match fn_set_param_name_to_algo_arg_obj.get(fn_set_param_name) {
                     Some(Obj::Identifier(identifier)) => {
                         mapped_param_names.push(identifier.name.clone());
+                    }
+                    Some(Obj::FnSetFreeParamObj(p)) => {
+                        mapped_param_names.push(p.name.clone());
                     }
                     _ => {
                         return Err(
@@ -193,7 +201,10 @@ impl Runtime {
     fn build_algo_verification_fn_call_obj(def_algo_stmt: &DefAlgoStmt) -> Obj {
         let mut fn_call_arg_boxes: Vec<Box<Obj>> = Vec::with_capacity(def_algo_stmt.params.len());
         for algo_param_name in def_algo_stmt.params.iter() {
-            fn_call_arg_boxes.push(Box::new(algo_param_name.clone().into()));
+            fn_call_arg_boxes.push(Box::new(obj_for_bound_param_in_scope(
+                algo_param_name.clone(),
+                ParamObjType::Forall,
+            )));
         }
         FnObj::new(
             Identifier::new(def_algo_stmt.name.clone()).into(),

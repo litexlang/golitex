@@ -44,23 +44,26 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         param_name: &str,
     ) -> Result<(), RuntimeError> {
-        self.store_identifier_obj(&stmt.name, ParamObjType::Identifier)?;
+        self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)?;
 
         let random_param = self.generate_random_unused_name();
 
-        let param_minus_n: Obj =
-            Sub::new(param_name.into(), stmt.special_cases_equal_tos.len().into()).into();
+        let param_minus_n: Obj = Sub::new(
+            Identifier::new(param_name.to_string()).into(),
+            stmt.special_cases_equal_tos.len().into(),
+        )
+        .into();
 
         let dom_facts: Vec<OrAndChainAtomicFact> = vec![
             GreaterEqualFact::new(
-                random_param.clone().into(),
+                obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::FnSet),
                 param_minus_n,
                 stmt.line_file.clone(),
             )
             .into(),
             LessFact::new(
-                random_param.clone().into(),
-                param_name.into(),
+                obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::FnSet),
+                Identifier::new(param_name.to_string()).into(),
                 stmt.line_file.clone(),
             )
             .into(),
@@ -76,7 +79,7 @@ impl Runtime {
         )?;
 
         let function_in_function_set_fact: Fact = InFact::new(
-            stmt.name.clone().into(),
+            Identifier::new(stmt.name.clone()).into(),
             fn_set.into(),
             stmt.line_file.clone(),
         )
@@ -136,13 +139,15 @@ impl Runtime {
 
         let param_name_str = stmt.param.clone();
 
-        let left_id: Obj = param_name_str.as_str().into();
+        let left_id: Obj =
+            obj_for_bound_param_in_scope(param_name_str.clone(), ParamObjType::Induc);
 
-        self.store_identifier_obj(&param_name_str, ParamObjType::Induc)?;
+        self.store_free_param_or_identifier_name(&param_name_str, ParamObjType::Induc)?;
 
         self.define_parameter_by_binding_param_type(
             &param_name_str,
             &ParamType::Obj(StandardSet::Z.into()),
+            ParamObjType::Induc,
         )?;
 
         let param_larger_than_induc_plus_offset: AndChainAtomicFact = GreaterEqualFact::new(
@@ -159,7 +164,11 @@ impl Runtime {
 
         // Induction step needs f(x-1)..f(x-n); cache alone skips fn membership, so store FnObj and in ret_set.
         for i in 1..=n {
-            let arg: Obj = Sub::new(param_name_str.as_str().into(), i.into()).into();
+            let arg: Obj = Sub::new(
+                obj_for_bound_param_in_scope(param_name_str.clone(), ParamObjType::Induc),
+                i.into(),
+            )
+            .into();
             let fn_obj: Obj = FnObj::new(
                 Identifier::new(stmt.name.clone()).into(),
                 vec![vec![Box::new(arg.clone())]],
@@ -262,9 +271,10 @@ impl Runtime {
         let bind_infer = self.define_parameter_by_binding_param_type(
             &stmt.name,
             &ParamType::Obj(fs.clone().into()),
+            ParamObjType::Identifier,
         )?;
         let bind_fact: Fact = InFact::new(
-            stmt.name.clone().into(),
+            Identifier::new(stmt.name.clone()).into(),
             fs.clone().into(),
             stmt.line_file.clone(),
         )
@@ -315,7 +325,7 @@ impl Runtime {
                         .0;
                 dom.push(
                     GreaterEqualFact::new(
-                        param_name.clone().into(),
+                        obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
                         induc_plus_n,
                         stmt.line_file.clone(),
                     )
@@ -328,7 +338,10 @@ impl Runtime {
                     vec![EqualFact::new(
                         FnObj::new(
                             Identifier::new(stmt.name.clone()).into(),
-                            vec![vec![Box::new(param_name.clone().into())]],
+                            vec![vec![Box::new(obj_for_bound_param_in_scope(
+                                param_name.clone(),
+                                ParamObjType::Forall,
+                            ))]],
                         )
                         .into(),
                         eq.clone(),
@@ -361,7 +374,7 @@ impl Runtime {
                             .0;
                     dom.push(
                         GreaterEqualFact::new(
-                            param_name.clone().into(),
+                            obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
                             induc_plus_n,
                             stmt.line_file.clone(),
                         )
@@ -377,7 +390,10 @@ impl Runtime {
                         vec![EqualFact::new(
                             FnObj::new(
                                 Identifier::new(stmt.name.clone()).into(),
-                                vec![vec![Box::new(param_name.clone().into())]],
+                                vec![vec![Box::new(obj_for_bound_param_in_scope(
+                                    param_name.clone(),
+                                    ParamObjType::Forall,
+                                ))]],
                             )
                             .into(),
                             eq.clone(),

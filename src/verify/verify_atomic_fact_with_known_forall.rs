@@ -505,7 +505,10 @@ impl Runtime {
         }
 
         let mut map = HashMap::new();
-        map.insert(known_arg.name.clone(), given.name.clone().into());
+        map.insert(
+            known_arg.name.clone(),
+            Identifier::new(given.name.clone()).into(),
+        );
 
         Ok(Some(map))
     }

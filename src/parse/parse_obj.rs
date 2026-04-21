@@ -1238,15 +1238,15 @@ impl Runtime {
             return Ok(CartDim::new(args).into());
         }
 
-        // 普通 atom（标识符）
+        // Ordinary atom (identifier): resolve free-param scope without building `Obj::Identifier` first.
         let atom = self.parse_atom(tb)?;
 
-        return self.reclassify_parsed_primary_as_free_param(atom.into());
+        self.reclassify_atom_as_free_param_obj(atom)
     }
 
-    fn reclassify_parsed_primary_as_free_param(&self, obj: Obj) -> Result<Obj, RuntimeError> {
-        match obj {
-            Obj::Identifier(ref id) => {
+    fn reclassify_atom_as_free_param_obj(&self, atom: Atom) -> Result<Obj, RuntimeError> {
+        match atom {
+            Atom::Identifier(id) => {
                 if id.name == SELF {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new(
@@ -1262,11 +1262,13 @@ impl Runtime {
                     .parsing_free_param_collection
                     .resolve_identifier_to_free_param_obj(&id.name))
             }
-            Obj::FieldAccess(ref fa) => self
+            Atom::FieldAccess(fa) => self
                 .parsing_free_param_collection
                 .resolve_field_access_to_free_param_obj(&fa.name, &fa.field)
                 .map_err(|e| e.into()),
-            _ => Ok(obj),
+            Atom::IdentifierWithMod(m) => Ok(m.into()),
+            Atom::FieldAccessWithMod(f) => Ok(f.into()),
+            Atom::StructSelfFieldFreeParam(p) => Ok(p.into()),
         }
     }
 

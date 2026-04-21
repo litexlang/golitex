@@ -44,6 +44,7 @@ know:
             a!=0 and b!=0
 
     forall a R_pos, b R_nz:
+        0 < a ^ b
         a = (a^b)^(1/b)
 
     forall a R_pos, b R_nz:
