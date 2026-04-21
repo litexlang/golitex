@@ -223,7 +223,7 @@ pub struct Proj {
 
 #[derive(Clone)]
 pub struct FnObj {
-    pub head: Box<Atom>,
+    pub head: Box<FnObjHead>,
     pub body: Vec<Vec<Box<Obj>>>,
 }
 
@@ -360,7 +360,7 @@ impl ObjAtIndex {
 }
 
 impl FnObj {
-    pub fn new(head: Atom, body: Vec<Vec<Box<Obj>>>) -> Self {
+    pub fn new(head: FnObjHead, body: Vec<Vec<Box<Obj>>>) -> Self {
         FnObj {
             head: Box::new(head),
             body,
@@ -935,7 +935,7 @@ impl Obj {
                 FieldAccessWithMod::new(f.mod_name, name, f.field).into()
             }
             Obj::FnObj(inner) => {
-                let head = replace_bound_identifier_in_atom(*inner.head, from, to);
+                let head = replace_bound_identifier_in_fn_obj_head(*inner.head, from, to);
                 let body = inner
                     .body
                     .into_iter()
@@ -1296,7 +1296,85 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
             };
             FieldAccessWithMod::new(f.mod_name, name, f.field).into()
         }
-        Atom::StructSelfFieldFreeParam(p) => {
+    }
+}
+
+fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str) -> FnObjHead {
+    if from == to {
+        return head;
+    }
+    match head {
+        FnObjHead::Atom(a) => replace_bound_identifier_in_atom(a, from, to).into(),
+        FnObjHead::Forall(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            ForallFreeParamObj::new(name).into()
+        }
+        FnObjHead::ForallFieldAccess(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            let field = if p.field == from {
+                to.to_string()
+            } else {
+                p.field
+            };
+            ForallFieldAccessObj::new(name, field).into()
+        }
+        FnObjHead::DefHeader(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            DefHeaderFreeParamObj::new(name).into()
+        }
+        FnObjHead::Exist(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            ExistFreeParamObj::new(name).into()
+        }
+        FnObjHead::SetBuilder(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            SetBuilderFreeParamObj::new(name).into()
+        }
+        FnObjHead::FnSet(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            FnSetFreeParamObj::new(name).into()
+        }
+        FnObjHead::Induc(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            ByInducFreeParamObj::new(name).into()
+        }
+        FnObjHead::DefAlgo(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            DefAlgoFreeParamObj::new(name).into()
+        }
+        FnObjHead::StructSelfField(p) => {
             let field = if p.field == from {
                 to.to_string()
             } else {
@@ -1482,7 +1560,7 @@ impl fmt::Display for FnObj {
     }
 }
 
-pub fn fn_obj_to_string(head: &Atom, body: &Vec<Vec<Box<Obj>>>) -> String {
+pub fn fn_obj_to_string(head: &FnObjHead, body: &Vec<Vec<Box<Obj>>>) -> String {
     let mut fn_obj_string = head.to_string();
     for group in body.iter() {
         fn_obj_string = format!("{}{}", fn_obj_string, braced_vec_to_string(group));
@@ -1732,7 +1810,6 @@ impl From<Atom> for Obj {
             Atom::IdentifierWithMod(a) => a.into(),
             Atom::FieldAccess(a) => a.into(),
             Atom::FieldAccessWithMod(a) => a.into(),
-            Atom::StructSelfFieldFreeParam(p) => p.into(),
         }
     }
 }

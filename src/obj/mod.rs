@@ -1,4 +1,5 @@
 mod atom;
+mod fn_obj_head;
 mod free_param_obj;
 mod obj;
 mod standard_set;
@@ -14,6 +15,7 @@ pub use free_param_obj::{
     FnSetFreeParamObj, ForallFieldAccessObj, ForallFreeParamObj, InstObjState, ParamObjType,
     SetBuilderFreeParamObj, StructSelfFieldFreeParamObj,
 };
+pub use fn_obj_head::FnObjHead;
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
     FamilyObj, FiniteSeqListObj, FiniteSeqSet, FnObj, FnSet, Intersect, ListSet, Log, MatrixAdd,
