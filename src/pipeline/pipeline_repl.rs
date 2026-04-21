@@ -70,7 +70,7 @@ where
         ) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
-                let error_string = display_runtime_error_json(&runtime, &parse_block_error);
+                let error_string = display_runtime_error_json(&runtime, &parse_block_error, true);
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
                 writeln!(stdout_writer)?;
@@ -83,7 +83,7 @@ where
             let stmt: Stmt = match runtime.parse_stmt(&mut block) {
                 Ok(statement) => statement,
                 Err(parse_stmt_error) => {
-                    let message = display_runtime_error_json(&runtime, &parse_stmt_error);
+                    let message = display_runtime_error_json(&runtime, &parse_stmt_error, true);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
@@ -92,14 +92,16 @@ where
             let exec_result = match run_stmt_at_global_env(&stmt, &mut runtime) {
                 Ok(result) => result,
                 Err(exec_error) => {
-                    let message = display_runtime_error_json(&runtime, &exec_error);
+                    let message = display_runtime_error_json(&runtime, &exec_error, true);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
             };
 
             output_chunk.push('\n');
-            output_chunk.push_str(display_stmt_exec_result_json(&runtime, &exec_result).as_str());
+            output_chunk.push_str(
+                display_stmt_exec_result_json(&runtime, &exec_result, true).as_str(),
+            );
             output_chunk.push('\n');
         }
 

@@ -38,11 +38,12 @@ mod lit_file_runner_tests {
         let normalized_source = remove_windows_carriage_return(tmp_lit_content.as_str());
 
         let start_time = Instant::now();
-        let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
+        let (stmt_results, runtime_error) =
+            run_source_code(normalized_source.as_str(), &mut runtime);
         let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
 
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error);
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         let status_label = if run_succeeded { "OK" } else { "FAILED" };
         println!(
@@ -132,7 +133,7 @@ mod lit_file_runner_tests {
             let duration_ms_for_one_file = start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
 
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error);
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
             if !run_succeeded {
                 every_file_run_ok = false;
