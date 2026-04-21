@@ -24,7 +24,7 @@ pub(crate) fn build_curried_function_obj_from_layers(
         }
         body_vectors.push(group);
     }
-    FnObj::new(fn_head_atom, body_vectors).into()
+    FnObj::new(FnObjHead::Atom(fn_head_atom), body_vectors).into()
 }
 
 pub(crate) fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> ParamDefWithType {

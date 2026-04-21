@@ -23,6 +23,8 @@ impl Runtime {
                 vec![],
             ))));
                 } else {
+                    this.parsing_free_param_collection
+                        .end_scope(ParamObjType::DefHeader, &def_param_names);
                     return Ok(DefPropStmt::new(
                         name,
                         param_defs,
@@ -32,11 +34,6 @@ impl Runtime {
                 }
             }
 
-            this.parsing_free_param_collection.begin_scope(
-                ParamObjType::DefHeader,
-                &def_param_names,
-                tb.line_file.clone(),
-            )?;
             let facts_result = this.parse_facts_in_body(tb);
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::DefHeader, &def_param_names);
@@ -1046,7 +1043,9 @@ impl Runtime {
         tb.skip_token(LEFT_BRACE)?;
         let mut groups = Vec::new();
         while tb.current()? != RIGHT_BRACE {
-            groups.push(self.parse_param_def_with_param_type_and_skip_comma(tb)?);
+            groups.push(
+                self.parse_param_def_with_param_type_and_skip_comma_impl(tb, true)?,
+            );
         }
         tb.skip_token(RIGHT_BRACE)?;
         let param_defs = ParamDefWithType::new(groups);

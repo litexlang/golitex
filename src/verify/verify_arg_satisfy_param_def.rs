@@ -44,6 +44,12 @@ impl Runtime {
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
         let mut infer_result = InferResult::new();
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
+            println!(
+                "arg: {:?}, param_type: {:?}",
+                arg.to_string(),
+                param_type.to_string()
+            );
+
             let verify_result =
                 self.verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)?;
             if verify_result.is_unknown() {

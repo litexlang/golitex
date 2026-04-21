@@ -316,22 +316,30 @@ impl Runtime {
 
         let inst_head = self.inst_obj(&(*fn_obj.head.clone()).into(), param_to_arg_map, ctx)?;
 
-        let final_head: Atom = match inst_head {
-            Obj::Identifier(x) => x.clone().into(),
-            Obj::IdentifierWithMod(x) => x.clone().into(),
-            Obj::FieldAccess(x) => x.clone().into(),
-            Obj::FieldAccessWithMod(x) => x.clone().into(),
+        let final_head: FnObjHead = match inst_head {
+            Obj::Identifier(x) => Atom::Identifier(x.clone()).into(),
+            Obj::IdentifierWithMod(x) => Atom::IdentifierWithMod(x.clone()).into(),
+            Obj::FieldAccess(x) => Atom::FieldAccess(x.clone()).into(),
+            Obj::FieldAccessWithMod(x) => Atom::FieldAccessWithMod(x.clone()).into(),
             Obj::StructSelfFieldFreeParamObj(p) => p.clone().into(),
+            Obj::ForallFreeParamObj(p) => p.clone().into(),
+            Obj::ForallFieldAccessObj(p) => FnObjHead::ForallFieldAccess(p.clone()),
+            Obj::DefFreeParamObj(p) => p.clone().into(),
+            Obj::ExistFreeParamObj(p) => p.clone().into(),
+            Obj::SetBuilderFreeParamObj(p) => p.clone().into(),
+            Obj::FnSetFreeParamObj(p) => p.clone().into(),
+            Obj::ByInducFreeParamObj(p) => p.clone().into(),
+            Obj::DefAlgoFreeParamObj(p) => p.clone().into(),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
                 merged_body = vec![];
                 merged_body.extend(x.body);
                 merged_body.extend(merged_body_original);
-                (*x.head.clone()).into()
+                *x.head.clone()
             }
             _ => return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
                 None,
-                format!("instantiate fn object: after substitution, head must be an atom or curried fn, got {}", inst_head),
+                format!("instantiate fn object: after substitution, head must be an atom, curried fn, or free-param binder, got {}", inst_head),
                 default_line_file(),
                 None,
                 vec![],
