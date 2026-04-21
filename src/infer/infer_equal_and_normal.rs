@@ -130,12 +130,7 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> Result<(), RuntimeError> {
         let lf = equal_fact.line_file.clone();
-        self.store_known_finite_seq_list_obj(
-            &target_obj.to_string(),
-            known_list.clone(),
-            None,
-            lf,
-        );
+        self.store_known_finite_seq_list_obj(&target_obj.to_string(), known_list.clone(), None, lf);
         Ok(())
     }
 
@@ -146,12 +141,7 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> Result<(), RuntimeError> {
         let lf = equal_fact.line_file.clone();
-        self.store_known_matrix_list_obj(
-            &target_obj.to_string(),
-            known_matrix.clone(),
-            None,
-            lf,
-        );
+        self.store_known_matrix_list_obj(&target_obj.to_string(), known_matrix.clone(), None, lf);
         Ok(())
     }
 
@@ -377,8 +367,9 @@ impl Runtime {
         )?;
 
         for iff_fact in predicate_definition.iff_facts.iter() {
-            let instantiated_iff_fact =
-                self.inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader).map_err(|e| {
+            let instantiated_iff_fact = self
+                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader)
+                .map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                         None,
                         format!(
@@ -392,6 +383,7 @@ impl Runtime {
                 })?;
             let fact_to_store =
                 instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file.clone());
+            println!("fact_to_store: {:?}", fact_to_store.to_string());
             infer_result.new_fact(&fact_to_store);
             self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
                 .map_err(|previous_error| {

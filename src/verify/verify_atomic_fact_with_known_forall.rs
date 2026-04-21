@@ -426,7 +426,7 @@ impl Runtime {
                 Self::match_arg_when_left_is_forall_param(p, given_arg)
             }
             Obj::ForallFieldAccessObj(ref p) => {
-                Self::match_arg_when_left_is_field_access(p, given_arg)
+                Self::match_arg_when_left_is_forall_field_access(p, given_arg)
             }
             Obj::DefFreeParamObj(ref p) => {
                 if p.to_string() != given_arg.to_string() {
@@ -434,21 +434,19 @@ impl Runtime {
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::ExistFreeParamObj(ref p) => {
-                match given_arg {
-                    Obj::ExistFreeParamObj(_) => {
-                        let mut m = HashMap::new();
-                        m.insert(p.name.clone(), given_arg.clone());
-                        Ok(Some(m))
-                    }
-                    _ => {
-                        if p.to_string() != given_arg.to_string() {
-                            return Ok(None);
-                        }
-                        Ok(Some(HashMap::new()))
-                    }
+            Obj::ExistFreeParamObj(ref p) => match given_arg {
+                Obj::ExistFreeParamObj(_) => {
+                    let mut m = HashMap::new();
+                    m.insert(p.name.clone(), given_arg.clone());
+                    Ok(Some(m))
                 }
-            }
+                _ => {
+                    if p.to_string() != given_arg.to_string() {
+                        return Ok(None);
+                    }
+                    Ok(Some(HashMap::new()))
+                }
+            },
             Obj::SetBuilderFreeParamObj(ref p) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
@@ -500,24 +498,12 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_field_access(
+    fn match_arg_when_left_is_forall_field_access(
         known_arg: &ForallFieldAccessObj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let given = match given_arg {
-            Obj::FieldAccess(ref f) => f,
-            _ => return Ok(None),
-        };
-
-        if known_arg.field != given.field {
-            return Ok(None);
-        }
-
         let mut map = HashMap::new();
-        map.insert(
-            known_arg.name.clone(),
-            Identifier::new(given.name.clone()).into(),
-        );
+        map.insert(known_arg.clone().to_string(), given_arg.clone());
 
         Ok(Some(map))
     }
@@ -544,10 +530,16 @@ impl Runtime {
                     return Ok(None);
                 }
 
+                let left_head: Obj = left.head.as_ref().clone().into();
+                let right_head: Obj = right_fn.head.as_ref().clone().into();
+
+                println!("left_head: {:?}", left_head.to_string());
+                println!("right_head: {:?}", right_head.to_string());
+
                 // heads must match
                 let head_match = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    &left.head.as_ref().clone().into(),
-                    &right_fn.head.as_ref().clone().into(),
+                    &left_head,
+                    &right_head,
                 )?;
                 let mut head_map = match head_match {
                     Some(m) => m,

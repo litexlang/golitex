@@ -103,18 +103,33 @@ impl Runtime {
             }
             Obj::ForallFieldAccessObj(p) => {
                 if ctx != ParamObjType::Forall {
-                    return Ok(ForallFieldAccessObj::new(p.name.clone(), p.field.clone()).into());
+                    return Ok(p.clone().into());
                 }
-                let fa = FieldAccess::new(p.name.clone(), p.field.clone());
-                let dotted = field_access_to_string(&fa.name, &fa.field);
-                if let Some(obj) = param_to_arg_map.get(&dotted) {
-                    return Ok(obj.clone());
-                }
-                match self.inst_field_access(&fa, param_to_arg_map)? {
-                    Obj::FieldAccess(f) if f.name == p.name && f.field == p.field => {
-                        Ok(ForallFieldAccessObj::new(p.name.clone(), p.field.clone()).into())
+
+                let forall_field_access_head = p.name.clone();
+
+                if let Some(head_should_inst_to) = param_to_arg_map.get(&forall_field_access_head) {
+                    match head_should_inst_to {
+                        Obj::Identifier(identifier) => {
+                            return Ok(Obj::FieldAccess(FieldAccess::new(
+                                identifier.name.clone(),
+                                p.field.clone(),
+                            ))
+                            .into());
+                        }
+                        Obj::ForallFreeParamObj(forall_free_param_obj) => {
+                            return Ok(ForallFieldAccessObj::new(
+                                forall_free_param_obj.name.clone(),
+                                p.field.clone(),
+                            )
+                            .into());
+                        }
+                        _ => {
+                            return Ok(p.clone().into());
+                        }
                     }
-                    other => Ok(other),
+                } else {
+                    return Ok(p.clone().into());
                 }
             }
             Obj::DefFreeParamObj(p) => {
