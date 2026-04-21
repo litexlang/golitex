@@ -3,12 +3,6 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
-// Forall instantiation: known environments store atomic facts under forall templates (parsing-time
-// free params at quantified positions). To prove a candidate atomic fact, we bucket by predicate
-// name, align template args with given args, and build a substitution map from each forall
-// parameter name (and fixed template holes) to the given Objs. Every listed forall parameter must
-// be assigned; then dom facts are instantiated and verified under that substitution.
-
 impl Runtime {
     pub fn verify_atomic_fact_with_known_forall(
         &mut self,
@@ -257,16 +251,11 @@ impl Runtime {
                 Some(m) => m,
                 None => return Ok(None),
             };
-            for (k, v) in sub_map {
-                if let Some(existing_obj) =
-                    atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map.get(&k)
-                {
-                    if existing_obj.to_string() != v.to_string() {
-                        return Ok(None);
-                    }
-                }
-
-                atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map.insert(k, v);
+            if !Self::merge_arg_match_map_into(
+                &mut atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map,
+                sub_map,
+            ) {
+                return Ok(None);
             }
         }
 
@@ -275,19 +264,28 @@ impl Runtime {
         ))
     }
 
+    // Return None if the given arg does not match the known arg.
+    // Return Some(HashMap::new()) if the given arg matches the known arg.
     fn match_arg_in_atomic_fact_in_known_forall_with_given_arg(
         known_arg: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match known_arg {
+            // Only `*FreeParamObj` / `ForallFieldAccessObj` bind; plain identifiers are fixed names.
             Obj::Identifier(ref id_known) => {
-                Self::match_arg_when_left_is_identifier(id_known, given_arg)
+                if id_known.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
             Obj::IdentifierWithMod(_) => {
                 Self::match_arg_when_left_is_identifier_with_mod(given_arg)
             }
             Obj::FieldAccess(ref known_arg) => {
-                Self::match_arg_when_left_is_field_access(known_arg, given_arg)
+                if known_arg.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
             Obj::FieldAccessWithMod(_) => {
                 Self::match_arg_when_left_is_field_access_with_mod(given_arg)
@@ -406,49 +404,77 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNz) => Self::match_arg_when_left_is_q_nz(given_arg),
             Obj::StandardSet(StandardSet::ZNz) => Self::match_arg_when_left_is_z_nz(given_arg),
             Obj::StandardSet(StandardSet::RNz) => Self::match_arg_when_left_is_r_nz(given_arg),
-            Obj::FamilyObj(_) => Self::match_arg_type_not_implemented("FamilyObj"),
-            Obj::StructObj(_) => Self::match_arg_type_not_implemented("StructObj"),
+            Obj::FamilyObj(known) => match given_arg {
+                Obj::FamilyObj(given) => {
+                    if known.name.to_string() != given.name.to_string() {
+                        return Ok(None);
+                    }
+                    Self::match_arg_vec_then_merge(&known.params, &given.params)
+                }
+                _ => Ok(None),
+            },
+            Obj::StructObj(known) => match given_arg {
+                Obj::StructObj(given) => {
+                    if known.name.to_string() != given.name.to_string() {
+                        return Ok(None);
+                    }
+                    Self::match_arg_vec_then_merge(&known.args, &given.args)
+                }
+                _ => Ok(None),
+            },
             Obj::ForallFreeParamObj(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
+                Self::match_arg_when_left_is_forall_param(p, given_arg)
             }
             Obj::ForallFieldAccessObj(ref p) => {
-                let fa = FieldAccess::new(p.name.clone(), p.field.clone());
-                Self::match_arg_when_left_is_field_access(&fa, given_arg)
+                Self::match_arg_when_left_is_field_access(p, given_arg)
             }
             Obj::DefFreeParamObj(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
             Obj::ExistFreeParamObj(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
             Obj::SetBuilderFreeParamObj(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
             Obj::FnSetFreeParamObj(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
             Obj::ByInducFreeParamObj(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
             Obj::DefAlgoFreeParamObj(ref p) => {
-                let id = Identifier::new(p.name.clone());
-                Self::match_arg_when_left_is_identifier(&id, given_arg)
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
             Obj::StructSelfFieldFreeParamObj(ref p) => {
-                let fa = FieldAccess::new(SELF.to_string(), p.field.clone());
-                Self::match_arg_when_left_is_field_access(&fa, given_arg)
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
             }
         }
     }
 
-    fn match_arg_when_left_is_identifier(
-        id_known: &Identifier,
+    fn match_arg_when_left_is_forall_param(
+        id_known: &ForallFreeParamObj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let mut map = HashMap::new();
@@ -466,7 +492,7 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_field_access(
-        known_arg: &FieldAccess,
+        known_arg: &ForallFieldAccessObj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let given = match given_arg {
@@ -521,21 +547,16 @@ impl Runtime {
                         return Ok(None);
                     }
                     for (left_arg, right_arg) in left_row.iter().zip(right_row.iter()) {
-                        let sub = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                            left_arg.as_ref(),
-                            right_arg.as_ref(),
-                        )?;
-                        let sub_map = match sub {
-                            Some(m) => m,
-                            None => return Ok(None),
-                        };
-                        for (k, v) in sub_map {
-                            if let Some(existing_obj) = head_map.get(&k) {
-                                if existing_obj.to_string() != v.to_string() {
-                                    return Ok(None);
-                                }
-                            }
-                            head_map.insert(k, v);
+                        let sub_map =
+                            match Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                                left_arg.as_ref(),
+                                right_arg.as_ref(),
+                            )? {
+                                Some(m) => m,
+                                None => return Ok(None),
+                            };
+                        if !Self::merge_arg_match_map_into(&mut head_map, sub_map) {
+                            return Ok(None);
                         }
                     }
                 }
@@ -953,51 +974,74 @@ impl Runtime {
         Ok(Self::merge_arg_match_maps(map12, map3))
     }
 
-    fn merge_arg_match_maps(
-        map1: HashMap<String, Obj>,
-        map2: HashMap<String, Obj>,
-    ) -> Option<HashMap<String, Obj>> {
-        let mut merged = HashMap::new();
-        for (k, v) in map2 {
-            if let Some(existing_obj) = map1.get(&k) {
-                if existing_obj.to_string() != v.to_string() {
-                    return None;
+    /// Merge `from` into `into`. Returns `false` when a key is already bound to a different object (`Display`).
+    fn merge_arg_match_map_into(
+        into: &mut HashMap<String, Obj>,
+        from: HashMap<String, Obj>,
+    ) -> bool {
+        for (k, v) in from {
+            if let Some(existing) = into.get(&k) {
+                if existing.to_string() != v.to_string() {
+                    return false;
                 }
             }
-            merged.insert(k, v);
+            into.insert(k, v);
         }
-        for (k, v) in map1 {
-            merged.insert(k, v);
-        }
-        Some(merged)
+        true
     }
 
-    fn match_arg_vec_then_merge(
+    fn merge_arg_match_maps(
+        mut map1: HashMap<String, Obj>,
+        map2: HashMap<String, Obj>,
+    ) -> Option<HashMap<String, Obj>> {
+        if !Self::merge_arg_match_map_into(&mut map1, map2) {
+            return None;
+        }
+        Some(map1)
+    }
+
+    /// Zip known/given argument pairs of equal length; merge substitution maps from each recursive match.
+    fn match_arg_pairs_then_merge<'a>(
+        pairs: impl Iterator<Item = (&'a Obj, &'a Obj)>,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let mut merged: HashMap<String, Obj> = HashMap::new();
+        for (left_elem, given_elem) in pairs {
+            let sub_map = match Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                left_elem, given_elem,
+            )? {
+                Some(m) => m,
+                None => return Ok(None),
+            };
+            if !Self::merge_arg_match_map_into(&mut merged, sub_map) {
+                return Ok(None);
+            }
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_boxed_arg_vec_then_merge(
         left_elements: &[Box<Obj>],
         given_elements: &[Box<Obj>],
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if left_elements.len() != given_elements.len() {
             return Ok(None);
         }
-        let mut merged: HashMap<String, Obj> = HashMap::new();
-        for (left_elem, given_elem) in left_elements.iter().zip(given_elements.iter()) {
-            let sub_map = match Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left_elem.as_ref(),
-                given_elem.as_ref(),
-            )? {
-                Some(m) => m,
-                None => return Ok(None),
-            };
-            for (k, v) in sub_map {
-                if let Some(existing_obj) = merged.get(&k) {
-                    if existing_obj.to_string() != v.to_string() {
-                        return Ok(None);
-                    }
-                }
-                merged.insert(k, v);
-            }
+        Self::match_arg_pairs_then_merge(
+            left_elements
+                .iter()
+                .zip(given_elements.iter())
+                .map(|(l, g)| (l.as_ref(), g.as_ref())),
+        )
+    }
+
+    fn match_arg_vec_then_merge(
+        left: &[Obj],
+        given: &[Obj],
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if left.len() != given.len() {
+            return Ok(None);
         }
-        Ok(Some(merged))
+        Self::match_arg_pairs_then_merge(left.iter().zip(given.iter()).map(|(l, g)| (l, g)))
     }
 
     fn match_arg_matrix_rows_then_merge(
@@ -1009,18 +1053,12 @@ impl Runtime {
         }
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (lr, gr) in left_rows.iter().zip(given_rows.iter()) {
-            let sub = Self::match_arg_vec_then_merge(lr, gr)?;
-            let sub_map = match sub {
+            let sub_map = match Self::match_boxed_arg_vec_then_merge(lr, gr)? {
                 Some(m) => m,
                 None => return Ok(None),
             };
-            for (k, v) in sub_map {
-                if let Some(existing_obj) = merged.get(&k) {
-                    if existing_obj.to_string() != v.to_string() {
-                        return Ok(None);
-                    }
-                }
-                merged.insert(k, v);
+            if !Self::merge_arg_match_map_into(&mut merged, sub_map) {
+                return Ok(None);
             }
         }
         Ok(Some(merged))
@@ -1031,7 +1069,7 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::ListSet(ref given) => Self::match_arg_vec_then_merge(left_list, &given.list),
+            Obj::ListSet(ref given) => Self::match_boxed_arg_vec_then_merge(left_list, &given.list),
             _ => Ok(None),
         }
     }
@@ -1066,7 +1104,7 @@ impl Runtime {
                 }
                 let left_flat = Self::flatten_fn_set_with_params_param_sets_for_match(left);
                 let given_flat = Self::flatten_fn_set_with_params_param_sets_for_match(given);
-                let param_maps = Self::match_arg_vec_then_merge(&left_flat, &given_flat)?;
+                let param_maps = Self::match_boxed_arg_vec_then_merge(&left_flat, &given_flat)?;
                 let param_map = match param_maps {
                     Some(m) => m,
                     None => return Ok(None),
@@ -1136,7 +1174,7 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Cart(ref given) => Self::match_arg_vec_then_merge(left_args, &given.args),
+            Obj::Cart(ref given) => Self::match_boxed_arg_vec_then_merge(left_args, &given.args),
             _ => Ok(None),
         }
     }
@@ -1192,7 +1230,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Tuple(ref given) => Self::match_arg_vec_then_merge(left_elements, &given.args),
+            Obj::Tuple(ref given) => {
+                Self::match_boxed_arg_vec_then_merge(left_elements, &given.args)
+            }
             _ => Ok(None),
         }
     }
@@ -1203,7 +1243,7 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::FiniteSeqListObj(ref given) => {
-                Self::match_arg_vec_then_merge(left_elements, &given.objs)
+                Self::match_boxed_arg_vec_then_merge(left_elements, &given.objs)
             }
             _ => Ok(None),
         }
