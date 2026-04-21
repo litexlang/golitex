@@ -181,13 +181,17 @@ impl Runtime {
         result
     }
 
-    /// Parse-time name stack for generic `insert` is still a no-op; duplicate bindings are rejected
-    /// via `FreeParamCollection::begin_scope(Identifier, …)` on file-level `have` / `let` and `store_identifier_obj` at exec.
+    /// Restores [`Runtime::parsing_free_param_collection`] after `f` so parse-time bindings (e.g.
+    /// `have x …` without `=`) do not leak across sibling `prove:` blocks or out of nested parses
+    /// that use this wrapper (`forall`, `exist`, `prove`, `prop` bodies, etc.).
     pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
     {
-        f(self)
+        let saved_free_params = self.parsing_free_param_collection.clone();
+        let result = f(self);
+        self.parsing_free_param_collection = saved_free_params;
+        result
     }
 
     /// `begin_scope` → `f` → `end_scope`; runs `end_scope` on both `Ok` and `Err` (not on `begin_scope` failure).
@@ -570,7 +574,11 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
         let mut out = Vec::new();
         for fact in def.dom_facts.iter() {
-            out.push(self.inst_or_and_chain_atomic_fact(fact, &base_map, ParamObjType::DefProp)?);
+            out.push(self.inst_or_and_chain_atomic_fact(
+                fact,
+                &base_map,
+                ParamObjType::DefHeader,
+            )?);
         }
         let mut map_with_self = base_map.clone();
         map_with_self.insert(

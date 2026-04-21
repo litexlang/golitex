@@ -75,7 +75,7 @@ pub use crate::obj::ClosedRange;
 pub use crate::obj::Count;
 pub use crate::obj::Cup;
 pub use crate::obj::DefAlgoFreeParamObj;
-pub use crate::obj::DefPropFreeParamObj;
+pub use crate::obj::DefHeaderFreeParamObj;
 pub use crate::obj::Div;
 pub use crate::obj::ExistFreeParamObj;
 pub use crate::obj::FamilyObj;

@@ -344,12 +344,22 @@ impl Environment {
         exist_fact: &ExistFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeError> {
+        let pair = || (exist_fact.clone(), forall_params_and_dom.clone());
         let key: ExistFactKey = exist_fact.key();
         if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&key) {
-            vec_ref.push((exist_fact.clone(), forall_params_and_dom));
+            vec_ref.push(pair());
         } else {
             self.known_exist_facts_in_forall_facts
-                .insert(key, vec![(exist_fact.clone(), forall_params_and_dom)]);
+                .insert(key, vec![pair()]);
+        }
+        let alpha_key = exist_fact.alpha_normalized_key();
+        if alpha_key != exist_fact.key() {
+            if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&alpha_key) {
+                vec_ref.push(pair());
+            } else {
+                self.known_exist_facts_in_forall_facts
+                    .insert(alpha_key, vec![pair()]);
+            }
         }
         Ok(())
     }

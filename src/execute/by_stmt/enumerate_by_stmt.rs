@@ -163,9 +163,9 @@ impl Runtime {
             let assigned_obj = (*param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
                 .clone();
-            self.store_free_param_or_identifier_name(parameter_name, ParamObjType::DefProp)?;
+            self.store_free_param_or_identifier_name(parameter_name, ParamObjType::Forall)?;
             let parameter_equal_to_assigned_obj_atomic_fact = EqualFact::new(
-                obj_for_bound_param_in_scope(parameter_name.to_string(), ParamObjType::DefProp),
+                obj_for_bound_param_in_scope(parameter_name.to_string(), ParamObjType::Forall),
                 assigned_obj,
                 stmt.line_file.clone(),
             )

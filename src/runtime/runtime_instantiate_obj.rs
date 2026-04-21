@@ -115,7 +115,7 @@ impl Runtime {
                 }
             }
             Obj::DefFreeParamObj(p) => {
-                if ctx == ParamObjType::DefProp {
+                if ctx == ParamObjType::DefHeader {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -147,7 +147,7 @@ impl Runtime {
                 Ok(p.clone().into())
             }
             Obj::ByInducFreeParamObj(p) => {
-                if ctx == ParamObjType::Induc {
+                if ctx == ParamObjType::Induc || ctx == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -155,7 +155,7 @@ impl Runtime {
                 Ok(p.clone().into())
             }
             Obj::DefAlgoFreeParamObj(p) => {
-                if ctx == ParamObjType::DefAlgo {
+                if ctx == ParamObjType::DefAlgo || ctx == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }

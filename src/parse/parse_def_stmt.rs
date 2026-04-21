@@ -33,13 +33,13 @@ impl Runtime {
             }
 
             this.parsing_free_param_collection.begin_scope(
-                ParamObjType::DefProp,
+                ParamObjType::DefHeader,
                 &def_param_names,
                 tb.line_file.clone(),
             )?;
             let facts_result = this.parse_facts_in_body(tb);
             this.parsing_free_param_collection
-                .end_scope(ParamObjType::DefProp, &def_param_names);
+                .end_scope(ParamObjType::DefHeader, &def_param_names);
             let facts = facts_result?;
             Ok(DefPropStmt::new(
                 name,
@@ -697,7 +697,7 @@ impl Runtime {
             self.parse_def_param_type_groups_until_colon_or_right_brace(tb)?;
         let scope_names = params_def_with_type.collect_param_names();
         self.parsing_free_param_collection.begin_scope(
-            ParamObjType::DefProp,
+            ParamObjType::DefHeader,
             &scope_names,
             tb.line_file.clone(),
         )?;
@@ -712,7 +712,7 @@ impl Runtime {
                     Ok(f) => facts.push(f),
                     Err(e) => {
                         self.parsing_free_param_collection
-                            .end_scope(ParamObjType::DefProp, &scope_names);
+                            .end_scope(ParamObjType::DefHeader, &scope_names);
                         break Err(e);
                     }
                 }
@@ -726,7 +726,7 @@ impl Runtime {
         };
         if let Err(e) = tb.skip_token(RIGHT_BRACE) {
             self.parsing_free_param_collection
-                .end_scope(ParamObjType::DefProp, &scope_names);
+                .end_scope(ParamObjType::DefHeader, &scope_names);
             return Err(e);
         }
         Ok((params_def_with_type, dom_facts))
@@ -743,7 +743,7 @@ impl Runtime {
             self.parse_def_struct_header_param_groups_until_colon_or_right_brace(tb)?;
         let scope_names = param_defs.collect_param_names();
         self.parsing_free_param_collection.begin_scope(
-            ParamObjType::DefProp,
+            ParamObjType::DefHeader,
             &scope_names,
             tb.line_file.clone(),
         )?;
@@ -758,7 +758,7 @@ impl Runtime {
                     Ok(f) => facts.push(f),
                     Err(e) => {
                         self.parsing_free_param_collection
-                            .end_scope(ParamObjType::DefProp, &scope_names);
+                            .end_scope(ParamObjType::DefHeader, &scope_names);
                         break Err(e);
                     }
                 }
@@ -772,7 +772,7 @@ impl Runtime {
         };
         if let Err(e) = tb.skip_token(RIGHT_BRACE) {
             self.parsing_free_param_collection
-                .end_scope(ParamObjType::DefProp, &scope_names);
+                .end_scope(ParamObjType::DefHeader, &scope_names);
             return Err(e);
         }
         Ok((param_defs, dom_facts))
@@ -809,7 +809,7 @@ impl Runtime {
                 .into())
             })();
             this.parsing_free_param_collection
-                .end_scope(ParamObjType::DefProp, &family_def_scope_names);
+                .end_scope(ParamObjType::DefHeader, &family_def_scope_names);
             stmt_result
         })
     }
@@ -943,7 +943,7 @@ impl Runtime {
                 .into())
             })();
             this.parsing_free_param_collection
-                .end_scope(ParamObjType::DefProp, &struct_def_scope_names);
+                .end_scope(ParamObjType::DefHeader, &struct_def_scope_names);
             stmt_result
         })
     }
