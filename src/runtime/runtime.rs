@@ -16,7 +16,7 @@ impl Runtime {
         Runtime {
             module_manager,
             environment_stack: vec![new_environment],
-            parsing_free_param_collection: super::FreeParamCollection::new(),
+            parsing_free_param_collection: FreeParamCollection::new(),
         }
     }
 
@@ -449,11 +449,7 @@ impl Runtime {
         let empty: HashMap<String, Obj> = HashMap::new();
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
-            dom_stored.push(self.inst_or_and_chain_atomic_fact(
-                d,
-                &empty,
-                ParamObjType::FnSet,
-            )?);
+            dom_stored.push(self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::FnSet)?);
         }
         let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
         Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored))
@@ -566,11 +562,7 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
         let mut out = Vec::new();
         for fact in def.dom_facts.iter() {
-            out.push(self.inst_or_and_chain_atomic_fact(
-                fact,
-                &base_map,
-                ParamObjType::Def,
-            )?);
+            out.push(self.inst_or_and_chain_atomic_fact(fact, &base_map, ParamObjType::DefProp)?);
         }
         let mut map_with_self = base_map.clone();
         map_with_self.insert(SELF.to_string(), param_name.to_string().into());

@@ -1,22 +1,6 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ParamObjType {
-    Forall,
-    Def,
-    Exist,
-    SetBuilder,
-    FnSet,
-    StructSelf,
-    Induc,
-    DefAlgo,
-    Identifier,
-}
-
-/// Which free-parameter kind is being instantiated; map values carry concrete `Obj` types.
-pub type InstObjState = ParamObjType;
-
 #[derive(Clone, Debug)]
 pub struct FreeParamTypeAndLineFile {
     pub kind: ParamObjType,
@@ -119,7 +103,7 @@ impl FreeParamCollection {
         };
         match top.kind {
             ParamObjType::Forall => ForallFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::Def => DefFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::DefProp => DefPropFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Exist => ExistFreeParamObj::new(name.to_string()).into(),
             ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name.to_string()).into(),
             ParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
@@ -168,7 +152,7 @@ impl FreeParamCollection {
             ParamObjType::Forall => {
                 Ok(ForallFieldAccessObj::new(name.to_string(), field.to_string()).into())
             }
-            ParamObjType::Def
+            ParamObjType::DefProp
             | ParamObjType::DefAlgo
             | ParamObjType::Exist
             | ParamObjType::SetBuilder
