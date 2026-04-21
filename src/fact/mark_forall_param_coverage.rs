@@ -62,6 +62,7 @@ fn mark_forall_param_coverage_in_fn_obj_head(
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         FnObjHead::DefHeader(_)
+        | FnObjHead::DefHeaderFieldAccess(_)
         | FnObjHead::Exist(_)
         | FnObjHead::SetBuilder(_)
         | FnObjHead::FnSet(_)
@@ -294,6 +295,9 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::DefFreeParamObj(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::DefFreeFieldAccessObj(p) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::ExistFreeParamObj(p) => {

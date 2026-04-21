@@ -48,6 +48,7 @@ pub enum Obj {
     ForallFreeParamObj(ForallFreeParamObj),
     ForallFieldAccessObj(ForallFieldAccessObj),
     DefFreeParamObj(DefHeaderFreeParamObj),
+    DefFreeFieldAccessObj(DefHeaderFreeFieldAccessObj),
     ExistFreeParamObj(ExistFreeParamObj),
     SetBuilderFreeParamObj(SetBuilderFreeParamObj),
     FnSetFreeParamObj(FnSetFreeParamObj),
@@ -885,6 +886,7 @@ impl Obj {
             Obj::ForallFreeParamObj(x) => write!(f, "{}", x)?,
             Obj::ForallFieldAccessObj(x) => write!(f, "{}", x)?,
             Obj::DefFreeParamObj(x) => write!(f, "{}", x)?,
+            Obj::DefFreeFieldAccessObj(x) => write!(f, "{}", x)?,
             Obj::ExistFreeParamObj(x) => write!(f, "{}", x)?,
             Obj::SetBuilderFreeParamObj(x) => write!(f, "{}", x)?,
             Obj::FnSetFreeParamObj(x) => write!(f, "{}", x)?,
@@ -1208,6 +1210,19 @@ impl Obj {
                 };
                 DefHeaderFreeParamObj::new(name).into()
             }
+            Obj::DefFreeFieldAccessObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                let field = if p.field == from {
+                    to.to_string()
+                } else {
+                    p.field
+                };
+                DefHeaderFreeFieldAccessObj::new(name, field).into()
+            }
             Obj::ExistFreeParamObj(p) => {
                 let name = if p.name == from {
                     to.to_string()
@@ -1333,6 +1348,19 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
                 p.name
             };
             DefHeaderFreeParamObj::new(name).into()
+        }
+        FnObjHead::DefHeaderFieldAccess(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            let field = if p.field == from {
+                to.to_string()
+            } else {
+                p.field
+            };
+            DefHeaderFreeFieldAccessObj::new(name, field).into()
         }
         FnObjHead::Exist(p) => {
             let name = if p.name == from {

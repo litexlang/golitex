@@ -428,6 +428,9 @@ impl Runtime {
             Obj::ForallFieldAccessObj(ref p) => {
                 Self::match_arg_when_left_is_forall_field_access(p, given_arg)
             }
+            Obj::DefFreeFieldAccessObj(ref p) => {
+                Self::match_arg_when_left_is_def_header_field_access(p, given_arg)
+            }
             Obj::DefFreeParamObj(ref p) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
@@ -508,6 +511,16 @@ impl Runtime {
         Ok(Some(map))
     }
 
+    fn match_arg_when_left_is_def_header_field_access(
+        known_arg: &DefHeaderFreeFieldAccessObj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let mut map = HashMap::new();
+        map.insert(known_arg.clone().to_string(), given_arg.clone());
+
+        Ok(Some(map))
+    }
+
     fn match_arg_when_left_is_field_access_with_mod(
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
@@ -532,9 +545,6 @@ impl Runtime {
 
                 let left_head: Obj = left.head.as_ref().clone().into();
                 let right_head: Obj = right_fn.head.as_ref().clone().into();
-
-                println!("left_head: {:?}", left_head.to_string());
-                println!("right_head: {:?}", right_head.to_string());
 
                 // heads must match
                 let head_match = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(

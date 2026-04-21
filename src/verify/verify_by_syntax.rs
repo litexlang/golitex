@@ -291,6 +291,12 @@ impl Runtime {
             Obj::DefFreeParamObj(a) => {
                 matches!(right, Obj::DefFreeParamObj(b) if a.to_string() == b.to_string())
             }
+            Obj::DefFreeFieldAccessObj(a) => {
+                matches!(
+                    right,
+                    Obj::DefFreeFieldAccessObj(b) if a.to_string() == b.to_string()
+                )
+            }
             Obj::ExistFreeParamObj(a) => {
                 matches!(right, Obj::ExistFreeParamObj(b) if a.to_string() == b.to_string())
             }

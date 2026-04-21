@@ -168,19 +168,21 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
         let lf = default_line_file();
         for (field_name, field_ty) in def.fields.iter() {
-            // let arg = FieldAccess::new(name.to_string(), field_name.clone()).into();
-            let arg = ForallFieldAccessObj::new(name.to_string(), field_name.clone()).into();
+            let arg = struct_instance_field_access_obj_for_binding(
+                name.to_string(),
+                field_name.clone(),
+                binding_kind,
+            );
             let param_type = self.inst_param_type(field_ty, &base_map, ParamObjType::DefHeader)?;
             let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
-
-            println!("f: {:?}", f.to_string());
 
             infer_result.new_infer_result_inside(
                 self.store_fact_without_well_defined_verified_and_infer(f)?,
             );
         }
 
-        let iff_facts = self.instantiated_struct_iff_fact(struct_ty, &def, name)?;
+        let iff_facts =
+            self.instantiated_struct_iff_fact(struct_ty, &def, name, binding_kind)?;
         for ocf in iff_facts {
             let result =
                 self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)?;

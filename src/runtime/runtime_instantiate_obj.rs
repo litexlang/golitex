@@ -124,6 +124,13 @@ impl Runtime {
                             )
                             .into());
                         }
+                        Obj::DefFreeParamObj(def_h) => {
+                            return Ok(DefHeaderFreeFieldAccessObj::new(
+                                def_h.name.clone(),
+                                p.field.clone(),
+                            )
+                            .into());
+                        }
                         _ => {
                             return Ok(p.clone().into());
                         }
@@ -139,6 +146,44 @@ impl Runtime {
                     }
                 }
                 Ok(p.clone().into())
+            }
+            Obj::DefFreeFieldAccessObj(p) => {
+                if ctx != ParamObjType::DefHeader {
+                    return Ok(p.clone().into());
+                }
+
+                let base = p.name.clone();
+
+                if let Some(head_should_inst_to) = param_to_arg_map.get(&base) {
+                    match head_should_inst_to {
+                        Obj::Identifier(identifier) => {
+                            return Ok(Obj::FieldAccess(FieldAccess::new(
+                                identifier.name.clone(),
+                                p.field.clone(),
+                            ))
+                            .into());
+                        }
+                        Obj::DefFreeParamObj(def_h) => {
+                            return Ok(DefHeaderFreeFieldAccessObj::new(
+                                def_h.name.clone(),
+                                p.field.clone(),
+                            )
+                            .into());
+                        }
+                        Obj::ForallFreeParamObj(forall_p) => {
+                            return Ok(ForallFieldAccessObj::new(
+                                forall_p.name.clone(),
+                                p.field.clone(),
+                            )
+                            .into());
+                        }
+                        _ => {
+                            return Ok(p.clone().into());
+                        }
+                    }
+                } else {
+                    return Ok(p.clone().into());
+                }
             }
             Obj::ExistFreeParamObj(p) => {
                 if ctx == ParamObjType::Exist {
@@ -345,6 +390,7 @@ impl Runtime {
             Obj::ForallFreeParamObj(p) => p.clone().into(),
             Obj::ForallFieldAccessObj(p) => FnObjHead::ForallFieldAccess(p.clone()),
             Obj::DefFreeParamObj(p) => p.clone().into(),
+            Obj::DefFreeFieldAccessObj(p) => FnObjHead::DefHeaderFieldAccess(p.clone()),
             Obj::ExistFreeParamObj(p) => p.clone().into(),
             Obj::SetBuilderFreeParamObj(p) => p.clone().into(),
             Obj::FnSetFreeParamObj(p) => p.clone().into(),
