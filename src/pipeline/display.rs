@@ -21,17 +21,39 @@ const JSON_KEY_INSIDE_RESULTS: &str = "inside_results";
 const JSON_KEY_PREVIOUS_ERROR: &str = "previous_error";
 const JSON_VALUE_ERROR: &str = "error";
 
-// Raw text in JSON (keeps `~` tags). To strip tags for user-facing output, use
-// strip_parsing_free_param_tags_for_user_display here and/or strip_free_param_numeric_tags_in_display on the final string.
 fn user_visible_stmt_or_msg_text(raw: &str) -> String {
     raw.to_string()
 }
-pub fn display_stmt_exec_result_json(runtime: &Runtime, r: &StmtResult) -> String {
-    render_json_value(&stmt_exec_result_json_value(runtime, r), 0)
+
+/// Apply [`strip_free_param_numeric_tags_in_display`] once on a finished JSON blob (CLI/REPL/file run).
+/// Nested JSON is built with `strip_free_param_tags == false` so a single final strip covers the whole tree.
+fn finalize_display_text_with_optional_strip(
+    text: String,
+    strip_free_param_tags: bool,
+) -> String {
+    if strip_free_param_tags {
+        strip_free_param_numeric_tags_in_display(&text)
+    } else {
+        text
+    }
 }
 
-pub fn display_runtime_error_json(runtime: &Runtime, error: &RuntimeError) -> String {
-    build_display_error_json_object(runtime, error, 0, true)
+pub fn display_stmt_exec_result_json(
+    runtime: &Runtime,
+    r: &StmtResult,
+    strip_free_param_tags: bool,
+) -> String {
+    let raw = render_json_value(&stmt_exec_result_json_value(runtime, r), 0);
+    finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
+}
+
+pub fn display_runtime_error_json(
+    runtime: &Runtime,
+    error: &RuntimeError,
+    strip_free_param_tags: bool,
+) -> String {
+    let raw = build_display_error_json_object(runtime, error, 0, true);
+    finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
 }
 
 // Citation is in the same logical entry as this run (real path, "repl", "-e", etc.).
@@ -419,7 +441,8 @@ fn build_display_error_json_object(
 
             let mut inside_result_elements: Vec<String> = Vec::new();
             for inside_result in e.inside_results.iter() {
-                inside_result_elements.push(display_stmt_exec_result_json(runtime, inside_result));
+                inside_result_elements
+                    .push(display_stmt_exec_result_json(runtime, inside_result, false));
             }
             field_lines.push(json_array_field_line(
                 indent_inner.as_str(),
