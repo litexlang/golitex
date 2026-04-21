@@ -84,6 +84,7 @@ pub use crate::obj::FieldAccessWithMod;
 pub use crate::obj::FiniteSeqListObj;
 pub use crate::obj::FiniteSeqSet;
 pub use crate::obj::FnObj;
+pub use crate::obj::FnObjHead;
 pub use crate::obj::FnSet;
 pub use crate::obj::FnSetFreeParamObj;
 pub use crate::obj::ForallFieldAccessObj;

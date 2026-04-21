@@ -170,7 +170,7 @@ impl Runtime {
             )
             .into();
             let fn_obj: Obj = FnObj::new(
-                Identifier::new(stmt.name.clone()).into(),
+                FnObjHead::Atom(Atom::Identifier(Identifier::new(stmt.name.clone()))),
                 vec![vec![Box::new(arg.clone())]],
             )
             .into();
@@ -294,7 +294,7 @@ impl Runtime {
             let equal_to = &stmt.special_cases_equal_tos[i];
 
             let fn_obj: Obj = FnObj::new(
-                Identifier::new(stmt.name.clone()).into(),
+                FnObjHead::Atom(Atom::Identifier(Identifier::new(stmt.name.clone()))),
                 vec![vec![Box::new(arg.clone())]],
             )
             .into();
@@ -337,7 +337,7 @@ impl Runtime {
                     dom,
                     vec![EqualFact::new(
                         FnObj::new(
-                            Identifier::new(stmt.name.clone()).into(),
+                            FnObjHead::Atom(Atom::Identifier(Identifier::new(stmt.name.clone()))),
                             vec![vec![Box::new(obj_for_bound_param_in_scope(
                                 param_name.clone(),
                                 ParamObjType::Forall,
@@ -389,7 +389,7 @@ impl Runtime {
                         dom,
                         vec![EqualFact::new(
                             FnObj::new(
-                                Identifier::new(stmt.name.clone()).into(),
+                                FnObjHead::Atom(Atom::Identifier(Identifier::new(stmt.name.clone()))),
                                 vec![vec![Box::new(obj_for_bound_param_in_scope(
                                     param_name.clone(),
                                     ParamObjType::Forall,

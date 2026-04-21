@@ -759,11 +759,22 @@ impl FiniteSeqSet {
 impl FnObj {
     pub fn to_latex_string(&self) -> String {
         let head = match self.head.as_ref() {
-            Atom::Identifier(i) => i.to_latex_string(),
-            Atom::IdentifierWithMod(i) => i.to_latex_string(),
-            Atom::FieldAccess(x) => x.to_latex_string(),
-            Atom::FieldAccessWithMod(x) => x.to_latex_string(),
-            Atom::StructSelfFieldFreeParam(x) => {
+            FnObjHead::Atom(Atom::Identifier(i)) => i.to_latex_string(),
+            FnObjHead::Atom(Atom::IdentifierWithMod(i)) => i.to_latex_string(),
+            FnObjHead::Atom(Atom::FieldAccess(x)) => x.to_latex_string(),
+            FnObjHead::Atom(Atom::FieldAccessWithMod(x)) => x.to_latex_string(),
+            FnObjHead::Forall(p) => latex_local_ident(&p.name),
+            FnObjHead::ForallFieldAccess(x) => {
+                let s = field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
+            FnObjHead::DefHeader(p) => latex_local_ident(&p.name),
+            FnObjHead::Exist(p) => latex_local_ident(&p.name),
+            FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
+            FnObjHead::FnSet(p) => latex_local_ident(&p.name),
+            FnObjHead::Induc(p) => latex_local_ident(&p.name),
+            FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
+            FnObjHead::StructSelfField(x) => {
                 let s = field_access_to_string(SELF, &x.field);
                 format!(r"\text{{{}}}", latex_texttt_escape(&s))
             }

@@ -40,7 +40,7 @@ impl Runtime {
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
-            Ok(FnObj::new(fn_name, body).into())
+            Ok(FnObj::new(FnObjHead::Atom(fn_name), body).into())
         } else {
             Ok(left)
         }
@@ -475,24 +475,23 @@ impl Runtime {
         let mut result = self.parse_primary_obj(tb)?;
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
-        let (head_atom, mut body_vectors) = match &result {
-            Obj::Identifier(i) => (i.clone().into(), vec![]),
-            Obj::IdentifierWithMod(m) => (m.clone().into(), vec![]),
-            Obj::FieldAccess(field_access) => (field_access.clone().into(), vec![]),
-            Obj::FieldAccessWithMod(field_access_with_mod) => {
-                (field_access_with_mod.clone().into(), vec![])
-            }
-            Obj::StructSelfFieldFreeParamObj(p) => (p.clone().into(), vec![]),
-            Obj::ForallFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
-            Obj::ForallFieldAccessObj(p) => {
-                (FieldAccess::new(p.name.clone(), p.field.clone()).into(), vec![])
-            }
-            Obj::ExistFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
-            Obj::DefFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
-            Obj::SetBuilderFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
-            Obj::FnSetFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
-            Obj::ByInducFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
-            Obj::DefAlgoFreeParamObj(p) => (Identifier::new(p.name.clone()).into(), vec![]),
+        let (head, mut body_vectors) = match &result {
+            Obj::Identifier(i) => (FnObjHead::Atom(i.clone().into()), vec![]),
+            Obj::IdentifierWithMod(m) => (FnObjHead::Atom(m.clone().into()), vec![]),
+            Obj::FieldAccess(field_access) => (FnObjHead::Atom(field_access.clone().into()), vec![]),
+            Obj::FieldAccessWithMod(field_access_with_mod) => (
+                FnObjHead::Atom(field_access_with_mod.clone().into()),
+                vec![],
+            ),
+            Obj::StructSelfFieldFreeParamObj(p) => (FnObjHead::StructSelfField(p.clone()), vec![]),
+            Obj::ForallFreeParamObj(p) => (FnObjHead::Forall(p.clone()), vec![]),
+            Obj::ForallFieldAccessObj(p) => (FnObjHead::ForallFieldAccess(p.clone()), vec![]),
+            Obj::ExistFreeParamObj(p) => (FnObjHead::Exist(p.clone()), vec![]),
+            Obj::DefFreeParamObj(p) => (FnObjHead::DefHeader(p.clone()), vec![]),
+            Obj::SetBuilderFreeParamObj(p) => (FnObjHead::SetBuilder(p.clone()), vec![]),
+            Obj::FnSetFreeParamObj(p) => (FnObjHead::FnSet(p.clone()), vec![]),
+            Obj::ByInducFreeParamObj(p) => (FnObjHead::Induc(p.clone()), vec![]),
+            Obj::DefAlgoFreeParamObj(p) => (FnObjHead::DefAlgo(p.clone()), vec![]),
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -501,7 +500,7 @@ impl Runtime {
             body_vectors.push(group);
         }
         if !body_vectors.is_empty() {
-            result = FnObj::new(head_atom, body_vectors).into();
+            result = FnObj::new(head, body_vectors).into();
         }
         Ok(result)
     }
@@ -1278,7 +1277,6 @@ impl Runtime {
                 .map_err(|e| e.into()),
             Atom::IdentifierWithMod(m) => Ok(m.into()),
             Atom::FieldAccessWithMod(f) => Ok(f.into()),
-            Atom::StructSelfFieldFreeParam(p) => Ok(p.into()),
         }
     }
 
@@ -1445,15 +1443,6 @@ impl Runtime {
                         vec![],
                     ),
                 )));
-            }
-            if left.as_str() == SELF {
-                let obj = self
-                    .parsing_free_param_collection
-                    .resolve_field_access_to_free_param_obj(SELF, &field)?;
-                let Obj::StructSelfFieldFreeParamObj(p) = obj else {
-                    return Ok(FieldAccess::new(left, field).into());
-                };
-                return Ok(Atom::StructSelfFieldFreeParam(p));
             }
             Ok(FieldAccess::new(left, field).into())
         } else {

@@ -1,7 +1,29 @@
-have a R
+family self_matrix(s set, m, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
 
-forall a R:
-    forall a R:
-        a $in R
-    =>:
-        a $in R
+prop is_diagonal_matrix(n N_pos,m family self_matrix(R, n, n)):
+    forall i closed_range(1, n), j closed_range(1, n):
+        i != j
+        =>:
+            m(i, j) = 0
+
+claim:
+    prove:
+        forall M family self_matrix(R, 3, 3):
+            M(1, 1) = 1
+            M(1, 2) = 0
+            M(1, 3) = 0
+            M(2, 1) = 0
+            M(2, 2) = 1
+            M(2, 3) = 0
+            M(3, 1) = 0
+            M(3, 2) = 0
+            M(3, 3) = 1
+            =>:
+                $is_diagonal_matrix(3, M)
+    
+    by for:
+        prove:
+            forall i closed_range(1, 3), j closed_range(1, 3):
+                i != j
+                =>:
+                    M(i, j) = 0

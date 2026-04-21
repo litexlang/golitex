@@ -7,7 +7,6 @@ pub enum Atom {
     IdentifierWithMod(IdentifierWithMod),
     FieldAccess(FieldAccess),
     FieldAccessWithMod(FieldAccessWithMod),
-    StructSelfFieldFreeParam(StructSelfFieldFreeParamObj),
 }
 
 #[derive(Clone)]
@@ -70,7 +69,6 @@ impl fmt::Display for Atom {
             Atom::IdentifierWithMod(atom) => write!(f, "{}", atom),
             Atom::FieldAccess(atom) => write!(f, "{}", atom),
             Atom::FieldAccessWithMod(atom) => write!(f, "{}", atom),
-            Atom::StructSelfFieldFreeParam(atom) => write!(f, "{}", atom),
         }
     }
 }
@@ -102,12 +100,6 @@ impl From<FieldAccess> for Atom {
 impl From<FieldAccessWithMod> for Atom {
     fn from(f: FieldAccessWithMod) -> Self {
         Atom::FieldAccessWithMod(f)
-    }
-}
-
-impl From<StructSelfFieldFreeParamObj> for Atom {
-    fn from(p: StructSelfFieldFreeParamObj) -> Self {
-        Atom::StructSelfFieldFreeParam(p)
     }
 }
 
