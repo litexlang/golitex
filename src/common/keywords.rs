@@ -3,7 +3,8 @@ use std::sync::OnceLock;
 
 pub const FACT_PREFIX: &str = "$";
 pub const DOT_AKA_FIELD_ACCESS_SIGN: &str = ".";
-pub const DOT_DOT: &str = "..";
+/// Infix closed integer interval: `lo ... hi` (same AST as `closed_range(lo, hi)`).
+pub const DOT_DOT_DOT: &str = "...";
 pub const MOD_SIGN: &str = "::";
 pub const ADD: &str = "+";
 pub const SUB: &str = "-";
@@ -152,7 +153,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         MATRIX_SCALAR_MUL,
         MATRIX_ADD,
         MATRIX_SUB,
-        DOT_DOT,
+        DOT_DOT_DOT,
         LEFT_BRACE,
         RIGHT_BRACE,
         COMMA,

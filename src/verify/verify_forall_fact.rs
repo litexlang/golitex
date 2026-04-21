@@ -86,13 +86,11 @@ impl Runtime {
 
                 match &result {
                     StmtResult::FactualStmtSuccess(factual_verification_result) => {
-                        // Builtin-only then-facts: omit their infer snapshot from the forall JSON/CLI.
                         if !factual_verification_result.is_verified_by_builtin_rules_only() {
                             all_then_facts_are_verified_by_builtin_rules = false;
-                            infer_result.new_infer_result_inside(
-                                factual_verification_result.infers.clone(),
-                            );
                         }
+                        // Do not merge then-fact verification `infers` (e.g. instantiated `min(a,b) <= a`
+                        // from a known forall): JSON/CLI should show the enclosing `forall` only.
                     }
                     StmtResult::NonFactualStmtSuccess(non_factual_success) => {
                         all_then_facts_are_verified_by_builtin_rules = false;

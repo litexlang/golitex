@@ -12,7 +12,7 @@ impl Runtime {
             _ => {
                 return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                     None,
-                    "by enumerate closed_range: expected closed_range(lo, hi) or lo..hi before `:`"
+                    "by enumerate closed_range: expected closed_range(lo, hi) or lo ... hi before `:`"
                         .to_string(),
                     tb.line_file.clone(),
                     None,

@@ -1,10 +1,10 @@
 prove:
     have x closed_range(0, 10)
 
-    by enumerate 0..10: x
+    by enumerate 0...10: x
 
 prove:
     have a Z
     have x closed_range(a, a + 10)
 
-    by enumerate a..a + 10: x
+    by enumerate a...a + 10: x
