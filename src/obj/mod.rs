@@ -8,16 +8,15 @@ pub use atom::{
     IdentifierOrIdentifierWithMod, IdentifierWithMod,
 };
 pub use free_param_obj::{
-    ByInducFreeParamObj, DefAlgoFreeParamObj, DefFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj,
-    ForallFieldAccessObj, ForallFreeParamObj, SetBuilderFreeParamObj, StructSelfFieldFreeParamObj,
+    ByInducFreeParamObj, DefAlgoFreeParamObj, DefPropFreeParamObj, ExistFreeParamObj,
+    FnSetFreeParamObj, ForallFieldAccessObj, ForallFreeParamObj, InstObjState, ParamObjType,
+    SetBuilderFreeParamObj, StructSelfFieldFreeParamObj,
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
     FamilyObj, FiniteSeqListObj, FiniteSeqSet, FnObj, FnSet, Intersect, ListSet, Log, MatrixAdd,
     MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul,
-    Number, Obj,
-    ObjAtIndex, Pow, PowerSet, Proj, Range, SeqSet, SetBuilder, SetDiff, SetMinus, StructObj, Sub,
-    Tuple,
-    TupleDim, Union,
+    Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, Range, SeqSet, SetBuilder, SetDiff, SetMinus,
+    StructObj, Sub, Tuple, TupleDim, Union,
 };
 pub use standard_set::StandardSet;

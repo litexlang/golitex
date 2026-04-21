@@ -115,7 +115,7 @@ impl Runtime {
                 }
             }
             Obj::DefFreeParamObj(p) => {
-                if ctx == ParamObjType::Def {
+                if ctx == ParamObjType::DefProp {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }

@@ -137,7 +137,7 @@ impl Runtime {
         let lf = default_line_file();
         for (field_name, field_ty) in def.fields.iter() {
             let arg = FieldAccess::new(name.to_string(), field_name.clone()).into();
-            let param_type = self.inst_param_type(field_ty, &base_map, ParamObjType::Def)?;
+            let param_type = self.inst_param_type(field_ty, &base_map, ParamObjType::DefProp)?;
             let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
             infer_result.new_infer_result_inside(
                 self.store_fact_without_well_defined_verified_and_infer(f)?,

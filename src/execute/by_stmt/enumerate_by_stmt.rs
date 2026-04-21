@@ -163,7 +163,7 @@ impl Runtime {
             let assigned_obj = (*param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
                 .clone();
-            self.store_identifier_obj(parameter_name, ParamObjType::Def)?;
+            self.store_identifier_obj(parameter_name, ParamObjType::DefProp)?;
             let parameter_equal_to_assigned_obj_atomic_fact = EqualFact::new(
                 parameter_name.to_string().into(),
                 assigned_obj,

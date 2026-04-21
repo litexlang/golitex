@@ -44,7 +44,7 @@ impl Runtime {
         let param_to_arg_map = def
             .params_def_with_type
             .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
-        self.inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::Def)
+        self.inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::DefProp)
     }
 
     // Param typed as `FamilyObj`: store `name $in` the instantiated member set and run membership infer.
