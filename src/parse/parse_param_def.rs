@@ -21,28 +21,22 @@ impl Runtime {
         Ok(())
     }
 
+    /// Each parameter name is pushed to [`Runtime::parsing_free_param_collection`] with `free_param_kind`
+    /// before its shared type is parsed, so later parameter types in the same group (or later groups)
+    /// can resolve earlier parameters. Use [`ParamObjType::DefHeader`] for `prop { ... }` and family/struct
+    /// headers, [`ParamObjType::Forall`] for `forall`, [`ParamObjType::Exist`] for `exist`, [`ParamObjType::Identifier`] for `let` / `have`, etc.
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ParamGroupWithParamType, RuntimeError> {
-        self.parse_param_def_with_param_type_and_skip_comma_impl(tb, false)
-    }
-
-    /// When `register_each_name_as_def_header_free_param` is true (prop `{ ... }` header), each name is pushed to [`Runtime::parsing_free_param_collection`] before its type is parsed so later types can resolve earlier parameters.
-    pub(crate) fn parse_param_def_with_param_type_and_skip_comma_impl(
-        &mut self,
-        tb: &mut TokenBlock,
-        register_each_name_as_def_header_free_param: bool,
+        free_param_kind: ParamObjType,
     ) -> Result<ParamGroupWithParamType, RuntimeError> {
         let param = tb.advance()?;
-        if register_each_name_as_def_header_free_param {
-            let owned = param.clone();
-            self.parsing_free_param_collection.begin_scope(
-                ParamObjType::DefHeader,
-                std::slice::from_ref(&owned),
-                tb.line_file.clone(),
-            )?;
-        }
+        let owned = param.clone();
+        self.parsing_free_param_collection.begin_scope(
+            free_param_kind,
+            std::slice::from_ref(&owned),
+            tb.line_file.clone(),
+        )?;
         let param_def_with_param_type = if tb.current()? != COMMA {
             ParamGroupWithParamType::new(vec![param], self.parse_param_type(tb)?)
         } else {
@@ -51,14 +45,12 @@ impl Runtime {
             while tb.current_token_is_equal_to(COMMA) {
                 tb.skip()?;
                 let p = tb.advance()?;
-                if register_each_name_as_def_header_free_param {
-                    let owned = p.clone();
-                    self.parsing_free_param_collection.begin_scope(
-                        ParamObjType::DefHeader,
-                        std::slice::from_ref(&owned),
-                        tb.line_file.clone(),
-                    )?;
-                }
+                let owned = p.clone();
+                self.parsing_free_param_collection.begin_scope(
+                    free_param_kind,
+                    std::slice::from_ref(&owned),
+                    tb.line_file.clone(),
+                )?;
                 vec_of_params.push(p);
             }
             let param_type = self.parse_param_type(tb)?;
