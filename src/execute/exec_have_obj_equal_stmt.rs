@@ -25,7 +25,7 @@ impl Runtime {
                 .inst_param_type(
                     &param_def.param_type,
                     &param_to_obj_map,
-                    ParamObjType::DefProp,
+                    ParamObjType::Identifier,
                 )
                 .map_err(|runtime_error| {
                     short_exec_error(
@@ -74,7 +74,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
 
         let param_infer_result = self
-            .define_params_with_type(&have_obj_equal_stmt.param_def, true, ParamObjType::DefProp)
+            .define_params_with_type(&have_obj_equal_stmt.param_def, true, ParamObjType::Identifier)
             .map_err(|define_params_error| {
                 short_exec_error(
                     have_obj_equal_stmt.clone().into(),
@@ -92,7 +92,7 @@ impl Runtime {
             .zip(have_obj_equal_stmt.objs_equal_to.iter())
         {
             let equal_to_fact = EqualFact::new(
-                name.clone().into(),
+                Identifier::new(name.clone()).into(),
                 obj.clone(),
                 have_obj_equal_stmt.line_file.clone(),
             )

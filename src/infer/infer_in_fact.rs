@@ -52,10 +52,15 @@ impl Runtime {
         &mut self,
         name: &str,
         family_ty: &FamilyObj,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let member_set = self.instantiate_family_member_set(family_ty)?;
-        let type_fact =
-            InFact::new(name.to_string().into(), member_set, default_line_file()).into();
+        let type_fact = InFact::new(
+            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            member_set,
+            default_line_file(),
+        )
+        .into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
     }
 

@@ -40,14 +40,7 @@ impl Runtime {
     fn have_fn_equal_stmt_forall_binders_dom_and_curried_layers(
         &self,
         clause: &FnSetClause,
-    ) -> Result<
-        (
-            ParamDefWithType,
-            Vec<Fact>,
-            Vec<Vec<String>>,
-        ),
-        RuntimeError,
-    > {
+    ) -> Result<(ParamDefWithType, Vec<Fact>, Vec<Vec<String>>), RuntimeError> {
         let mut type_groups: Vec<ParamGroupWithParamType> = Vec::new();
         let mut dom_facts: Vec<Fact> = Vec::new();
         let mut layers: Vec<Vec<String>> = Vec::new();
@@ -98,9 +91,12 @@ impl Runtime {
         have_fn_equal_stmt: &HaveFnEqualStmt,
         fn_set_stored: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_identifier_obj(&have_fn_equal_stmt.name, ParamObjType::Identifier)?;
+        self.store_free_param_or_identifier_name(
+            &have_fn_equal_stmt.name,
+            ParamObjType::Identifier,
+        )?;
 
-        let function_identifier_obj = have_fn_equal_stmt.name.clone().into();
+        let function_identifier_obj = Identifier::new(have_fn_equal_stmt.name.clone()).into();
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj,

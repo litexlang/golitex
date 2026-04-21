@@ -50,12 +50,13 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_identifier_obj(
+        self.store_free_param_or_identifier_name(
             &have_fn_equal_case_by_case_stmt.name,
             ParamObjType::Identifier,
         )?;
 
-        let function_identifier_obj = have_fn_equal_case_by_case_stmt.name.clone().into();
+        let function_identifier_obj =
+            Identifier::new(have_fn_equal_case_by_case_stmt.name.clone()).into();
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj,

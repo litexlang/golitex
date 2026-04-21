@@ -38,7 +38,7 @@ impl ByInducStmt {
 
         dom_facts.push(
             GreaterEqualFact::new(
-                self.param.clone().into(),
+                obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::Forall),
                 self.induc_from.clone(),
                 self.line_file.clone(),
             )

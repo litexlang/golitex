@@ -1,14 +1,14 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+pub struct FreeParamCollection {
+    pub params: HashMap<String, Vec<FreeParamTypeAndLineFile>>,
+}
+
 #[derive(Clone, Debug)]
 pub struct FreeParamTypeAndLineFile {
     pub kind: ParamObjType,
     pub line_file: LineFile,
-}
-
-pub struct FreeParamCollection {
-    pub params: HashMap<String, Vec<FreeParamTypeAndLineFile>>,
 }
 
 impl FreeParamCollection {
@@ -53,17 +53,6 @@ impl FreeParamCollection {
         names: &[String],
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        if kind == ParamObjType::Identifier {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "`Identifier` is not a parsing scope kind for `begin_scope`".to_string(),
-                    line_file,
-                    None,
-                    vec![],
-                ),
-            )));
-        }
         for n in names {
             self.push_param(n.clone(), kind, line_file.clone())?;
         }
@@ -112,9 +101,7 @@ impl FreeParamCollection {
             }
             ParamObjType::Induc => ByInducFreeParamObj::new(name.to_string()).into(),
             ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::Identifier => {
-                panic!("Identifier must not appear on the parsing free-param scope stack")
-            }
+            ParamObjType::Identifier => Identifier::new(name.to_string()).into(),
         }
     }
 
@@ -173,7 +160,7 @@ impl FreeParamCollection {
                 panic!("StructSelf scope does not use identifier-shaped field-access free params")
             }
             ParamObjType::Identifier => {
-                panic!("Identifier must not appear on the parsing free-param scope stack")
+                Ok(FieldAccess::new(name.to_string(), field.to_string()).into())
             }
         }
     }

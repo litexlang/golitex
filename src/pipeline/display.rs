@@ -21,10 +21,11 @@ const JSON_KEY_INSIDE_RESULTS: &str = "inside_results";
 const JSON_KEY_PREVIOUS_ERROR: &str = "previous_error";
 const JSON_VALUE_ERROR: &str = "error";
 
+// Raw text in JSON (keeps `~` tags). To strip tags for user-facing output, use
+// strip_parsing_free_param_tags_for_user_display here and/or strip_free_param_numeric_tags_in_display on the final string.
 fn user_visible_stmt_or_msg_text(raw: &str) -> String {
-    strip_parsing_free_param_tags_for_user_display(raw)
+    raw.to_string()
 }
-
 pub fn display_stmt_exec_result_json(runtime: &Runtime, r: &StmtResult) -> String {
     render_json_value(&stmt_exec_result_json_value(runtime, r), 0)
 }

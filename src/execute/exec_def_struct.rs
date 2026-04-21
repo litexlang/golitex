@@ -61,7 +61,7 @@ impl Runtime {
                 })?;
         }
 
-        self.store_identifier_obj(SELF, ParamObjType::StructSelf)
+        self.store_free_param_or_identifier_name(SELF, ParamObjType::StructSelf)
             .map_err(|store_error| {
                 short_exec_error(stmt.clone().into(), "", Some(store_error), vec![])
             })?;
@@ -69,7 +69,7 @@ impl Runtime {
         let mut struct_params = vec![];
         for param_def in stmt.param_defs.groups.iter() {
             for field in param_def.params.iter() {
-                struct_params.push(field.clone().into());
+                struct_params.push(Identifier::new(field.clone()).into());
             }
         }
 

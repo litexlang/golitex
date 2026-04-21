@@ -1023,8 +1023,14 @@ impl Runtime {
         let mut pb_map = HashMap::new();
         for i in 0..n {
             let ph = placeholders[i].clone();
-            pa_map.insert(pa[i].clone(), ph.clone().into());
-            pb_map.insert(pb[i].clone(), ph.into());
+            pa_map.insert(
+                pa[i].clone(),
+                obj_for_bound_param_in_scope(ph.clone(), ParamObjType::FnSet),
+            );
+            pb_map.insert(
+                pb[i].clone(),
+                obj_for_bound_param_in_scope(ph, ParamObjType::FnSet),
+            );
         }
 
         let a_params = param_def_with_set_rename_params(
@@ -1065,7 +1071,7 @@ impl Runtime {
         expected_fn_set: &FnSet,
         in_fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let element_obj = identifier.name.clone().into();
+        let element_obj = Identifier::new(identifier.name.clone()).into();
         let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(&element_obj) else {
             return Ok((StmtUnknown::new()).into());
         };

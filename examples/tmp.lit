@@ -1,0 +1,7 @@
+have a R
+
+forall a R:
+    forall a R:
+        a $in R
+    =>:
+        a $in R

@@ -17,7 +17,10 @@ pub(crate) fn build_curried_function_obj_from_layers(
     for layer in layer_param_names {
         let mut group: Vec<Box<Obj>> = Vec::with_capacity(layer.len());
         for name in layer {
-            group.push(Box::new(name.clone().into()));
+            group.push(Box::new(obj_for_bound_param_in_scope(
+                name.clone(),
+                ParamObjType::FnSet,
+            )));
         }
         body_vectors.push(group);
     }

@@ -905,7 +905,7 @@ impl Obj {
         match self {
             Obj::Identifier(i) => {
                 if i.name == from {
-                    to.to_string().into()
+                    Identifier::new(to.to_string()).into()
                 } else {
                     i.into()
                 }
@@ -1740,18 +1740,6 @@ impl From<Atom> for Obj {
 impl From<Identifier> for Obj {
     fn from(id: Identifier) -> Self {
         Obj::Identifier(id)
-    }
-}
-
-impl From<String> for Obj {
-    fn from(name: String) -> Self {
-        Identifier::new(name).into()
-    }
-}
-
-impl From<&str> for Obj {
-    fn from(name: &str) -> Self {
-        Identifier::new(name.to_string()).into()
     }
 }
 

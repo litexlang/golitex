@@ -235,8 +235,12 @@ impl ParamGroupWithSet {
     pub fn facts(&self) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
         for name in self.params.iter() {
-            let fact =
-                InFact::new(name.clone().into(), self.set.clone(), default_line_file()).into();
+            let fact = InFact::new(
+                obj_for_bound_param_in_scope(name.clone(), ParamObjType::FnSet),
+                self.set.clone(),
+                default_line_file(),
+            )
+            .into();
             facts.push(fact);
         }
         facts

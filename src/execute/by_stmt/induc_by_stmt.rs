@@ -86,9 +86,10 @@ impl Runtime {
             ));
         }
 
-        let param_as_identifier: Obj = stmt.param.clone().into();
+        let forall_bound_param =
+            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Forall);
         let param_plus_one_obj = Add::new(
-            param_as_identifier.clone(),
+            Identifier::new(stmt.param.clone()).into(),
             Number::new("1".to_string()).into(),
         )
         .into();
@@ -107,7 +108,7 @@ impl Runtime {
             )]),
             vec![
                 GreaterEqualFact::new(
-                    param_as_identifier,
+                    forall_bound_param,
                     stmt.induc_from.clone(),
                     stmt.line_file.clone(),
                 )

@@ -126,7 +126,8 @@ impl Runtime {
         let forall_param = random_names[0].clone();
         let set_builder_param = random_names[1].clone();
 
-        let forall_param_obj: Obj = forall_param.clone().into();
+        let forall_param_obj: Obj =
+            obj_for_bound_param_in_scope(forall_param.clone(), ParamObjType::Forall);
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         then_facts.push(
@@ -162,7 +163,8 @@ impl Runtime {
         // `<=>:` 里 `self.field` 在定义验证时按「tuple 模型」展开。set-builder 的域变量 `x` 在 cart 上，
         // 故令 `self` 为 `(R, x[1], x[2], …)`：与 `def.fields` + `number_of_params` 的 tuple 下标一致，
         // `inst_field_access` 会把 `self.b` 等变成 `x[1]` 而非非法的 `x.b`。
-        let x_obj: Obj = set_builder_param.clone().into();
+        let x_obj: Obj =
+            obj_for_bound_param_in_scope(set_builder_param.clone(), ParamObjType::SetBuilder);
         let mut tuple_components: Vec<Obj> =
             Vec::with_capacity(def.number_of_params() + def.fields.len());
         for a in struct_ty.args.iter() {
