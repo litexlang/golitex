@@ -383,7 +383,6 @@ impl Runtime {
                 })?;
             let fact_to_store =
                 instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file.clone());
-            println!("fact_to_store: {:?}", fact_to_store.to_string());
             infer_result.new_fact(&fact_to_store);
             self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
                 .map_err(|previous_error| {
