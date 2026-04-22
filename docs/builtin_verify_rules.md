@@ -143,7 +143,7 @@ know 1 + 1 < 3
 
 Runs **before** known equalities and before generic same-shape recursion (`verify_equality.rs`). Each line: **pattern** → **action**.
 
-**Finite sum / product rules (5–9, 10–13):** corresponding bounds, bodies, peeled **`tail`** vs **`inst_obj`**, and **`end+1`** vs the next segment’s **`start`** are aligned with **`objs_equal_by_display_string`** (same object **`Display`** text), not **`verify_objs_are_equal`**.
+**Finite sum rules (5–9):** corresponding bounds, bodies, peeled **`tail`** vs **`inst_obj`**, and **`end+1`** vs the next segment’s **`start`** are aligned with **`objs_equal_by_display_string`** (same object **`Display`** text), not **`verify_objs_are_equal`**. There are **no** dedicated finite **`product(...)`** equality builtins in this pipeline (use generic equality / calculation / rational simplification, or prove otherwise).
 
 1. **Family expansion** — One or both sides `family …(…)` with known `equal_to`: substitute parameters, **`verify_objs_are_equal`** on expanded sets; success strings like `equality: expand family definition…`.
 2. **`0 = x - y`** — If one side is literal `0` and the other is `x - y`, requires **`x = y`** via full `verify_objs_are_equal`.
@@ -154,13 +154,9 @@ Runs **before** known equalities and before generic same-shape recursion (`verif
 7. **Finite sum (single index)** — If **`start`** and **`end`** match by **`objs_equal_by_display_string`**, then **`sum(i, a, b, F) = inst_obj(F, { i ↦ a }, Sum)`** (RHS must match the instantiated body the same way). Reason: `equality: sum with start = end is single instantiated summand`.
 8. **Finite sum (split into two adjacent segments)** — **`sum(i, a, b, F) = sum(i, a, k, F) + sum(i, k+1, b, F)`** (order of the two sums around **`+`** either way). Same **`i`**, **`a`**, **`b`**, **`F`**; **`first_end + 1`** vs **`second_start`** by **`objs_equal_by_display_string`**. Reason: `equality: sum splits into adjacent segments (end+1 = next start)`.
 9. **Finite sum (factor scalar)** — **`sum(i, a, b, k*F) = k * sum(i, a, b, F)`** (either **`*`** order in the sum body and on the other side). Same **`i`**, **`a`**, **`b`**, **`F`**, **`k`** by **`objs_equal_by_display_string`**; **`k`** must be well-defined and not use the outer sum index (lexical binding check). Reason: `equality: sum(k * summand) = k * sum(summand) with k well-defined and independent of sum index`.
-10. **Finite product (peel last index)** — Matches a **single** binary **`*`** on the other side: **`product(i, a, e+1, F) = product(i, a, e, F) * tail`** (either factor order). Same **`i`**, **`a`**, **`F`**; **`outer_end`** vs **`inner_end + 1`**; **`tail`** is **`inst_obj(F, { i ↦ outer_end }, Product)`**. Reason: `equality: product upper +1 = inner product * factor at new index`.
-11. **Finite product (multiplicativity, same bounds)** — **`product(i, a, b, F*G) = product(i, a, b, F) * product(i, a, b, G)`** (one **`*`** on the other side; the two inner products may be swapped). Reason: `equality: product(factor * factor) = product * product same bounds`.
-12. **Finite product (single index)** — Same as sum single index: **`start`** / **`end`** and RHS vs **`inst_obj`** use **`objs_equal_by_display_string`**. Reason: `equality: product with start = end is single instantiated factor`.
-13. **Finite product (split into two adjacent segments)** — **`product(i, a, b, F) = product(i, a, k, F) * product(i, k+1, b, F)`** (order of the two products around **`*`** either way). Same **`objs_equal_by_display_string`** checks as the sum split. Reason: `equality: product splits into adjacent segments (end+1 = next start)`.
-14. **Same + calculation** — `verify_equality_by_they_are_the_same_and_calculation` (identity and partial evaluation).
-15. **Rational simplification** — If still plausible, **`objs_equal_by_rational_expression_evaluation`** on evaluated pair; reason `calculation and rational expression simplification`.
-16. **Two `fn` set values** — `verify_fn_set_with_params_equality_by_builtin_rules` (structural compare).
+10. **Same + calculation** — `verify_equality_by_they_are_the_same_and_calculation` (identity and partial evaluation).
+11. **Rational simplification** — If still plausible, **`objs_equal_by_rational_expression_evaluation`** on evaluated pair; reason `calculation and rational expression simplification`.
+12. **Two `fn` set values** — `verify_fn_set_with_params_equality_by_builtin_rules` (structural compare).
 
 ```lit
 fact 1 + 1 = 2
@@ -170,10 +166,6 @@ fact sum(i, start, end, body) = sum(i, start, middle, body) + sum(i, middle + 1,
 fact sum(i, 1, 3, i + i) = sum(i, 1, 3, i) + sum(i, 1, 3, i)
 fact sum(i, 1, 3, 2 * i) = 2 * sum(i, 1, 3, i)
 fact sum(i, 1, 1, i) = 1
-fact product(i, 1, 3, i) = product(i, 1, 2, i) * 3
-fact product(i, start, end, body) = product(i, start, middle, body) * product(i, middle + 1, end, body)
-fact product(i, 1, 3, i * i) = product(i, 1, 3, i) * product(i, 1, 3, i)
-fact product(i, 1, 1, i) = 1
 ```
 
 ---
