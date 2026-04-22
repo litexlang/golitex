@@ -3,6 +3,7 @@ use crate::verify::verify_builtin_rules::{
     compare_normalized_number_str_to_zero, NumberCompareResult,
 };
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
@@ -415,6 +416,163 @@ impl Runtime {
         Ok(None)
     }
 
+    // sum(i,a,e+1,F) = sum(i,a,e,F) + F with i bound to (e+1) (same i,a,F on both sums; `+` either way).
+    // Sub-goals: same start and body, outer upper end equals inner end + 1, tail equals inst_obj(F, {i -> outer end}).
+    fn try_verify_sum_peel_last_term_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let one: Obj = Number::new("1".to_string()).into();
+        if let Obj::Sum(lsum) = left {
+            if let Obj::Add(add) = right {
+                for (sum_side, tail_side) in [
+                    (add.left.as_ref(), add.right.as_ref()),
+                    (add.right.as_ref(), add.left.as_ref()),
+                ] {
+                    if let Obj::Sum(rsum) = sum_side {
+                        if lsum.param != rsum.param {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lsum.start.as_ref(),
+                                rsum.start.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lsum.body.as_ref(),
+                                rsum.body.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        let end_plus_one: Obj =
+                            Add::new((*rsum.end).clone(), one.clone()).into();
+                        if !self
+                            .verify_objs_are_equal(
+                                lsum.end.as_ref(),
+                                &end_plus_one,
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        let mut m = HashMap::new();
+                        m.insert(lsum.param.clone(), (*lsum.end).clone());
+                        let Ok(expected_tail) =
+                            self.inst_obj(lsum.body.as_ref(), &m, ParamObjType::Sum)
+                        else {
+                            continue;
+                        };
+                        if self
+                            .verify_objs_are_equal(
+                                tail_side,
+                                &expected_tail,
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            return Ok(Some(factual_equal_success_by_builtin_reason(
+                                left,
+                                right,
+                                line_file,
+                                "equality: sum upper +1 = inner sum + term at new index",
+                            )));
+                        }
+                    }
+                }
+            }
+        }
+        if let Obj::Sum(rsum) = right {
+            if let Obj::Add(add) = left {
+                for (sum_side, tail_side) in [
+                    (add.left.as_ref(), add.right.as_ref()),
+                    (add.right.as_ref(), add.left.as_ref()),
+                ] {
+                    if let Obj::Sum(lsum) = sum_side {
+                        if lsum.param != rsum.param {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lsum.start.as_ref(),
+                                rsum.start.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lsum.body.as_ref(),
+                                rsum.body.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        let end_plus_one: Obj =
+                            Add::new((*lsum.end).clone(), one.clone()).into();
+                        if !self
+                            .verify_objs_are_equal(
+                                rsum.end.as_ref(),
+                                &end_plus_one,
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        let mut m = HashMap::new();
+                        m.insert(rsum.param.clone(), (*rsum.end).clone());
+                        let Ok(expected_tail) =
+                            self.inst_obj(rsum.body.as_ref(), &m, ParamObjType::Sum)
+                        else {
+                            continue;
+                        };
+                        if self
+                            .verify_objs_are_equal(
+                                tail_side,
+                                &expected_tail,
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            return Ok(Some(factual_equal_success_by_builtin_reason(
+                                left,
+                                right,
+                                line_file,
+                                "equality: sum upper +1 = inner sum + term at new index",
+                            )));
+                        }
+                    }
+                }
+            }
+        }
+        Ok(None)
+    }
+
     pub fn verify_equality_by_builtin_rules(
         &mut self,
         left: &Obj,
@@ -468,6 +626,15 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_log_equals_by_pow_inverse(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_sum_peel_last_term_equality(
             left,
             right,
             line_file.clone(),
