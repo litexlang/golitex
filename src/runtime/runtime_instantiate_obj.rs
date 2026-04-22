@@ -308,7 +308,7 @@ impl Runtime {
         tuple: &Tuple,
     ) -> Result<Obj, RuntimeError> {
         let Some(def) = self.get_definition_of_struct_where_object_satisfies(
-            &IdentifierOrIdentifierWithMod::Identifier(Identifier::new(field_access.name.clone())),
+            &AtomicName::WithoutMod(field_access.name.clone()),
         ) else {
             return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
                 None,

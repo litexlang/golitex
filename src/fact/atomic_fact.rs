@@ -117,14 +117,14 @@ pub struct NotInFact {
 
 #[derive(Clone)]
 pub struct NormalAtomicFact {
-    pub predicate: PredicateType,
+    pub predicate: AtomicName,
     pub body: Vec<Obj>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct NotNormalAtomicFact {
-    pub predicate: PredicateType,
+    pub predicate: AtomicName,
     pub body: Vec<Obj>,
     pub line_file: LineFile,
 }
@@ -256,7 +256,7 @@ impl NotSubsetFact {
 }
 
 impl NormalAtomicFact {
-    pub fn new(predicate: PredicateType, body: Vec<Obj>, line_file: LineFile) -> Self {
+    pub fn new(predicate: AtomicName, body: Vec<Obj>, line_file: LineFile) -> Self {
         NormalAtomicFact {
             predicate,
             body,
@@ -266,7 +266,7 @@ impl NormalAtomicFact {
 }
 
 impl NotNormalAtomicFact {
-    pub fn new(predicate: PredicateType, body: Vec<Obj>, line_file: LineFile) -> Self {
+    pub fn new(predicate: AtomicName, body: Vec<Obj>, line_file: LineFile) -> Self {
         NotNormalAtomicFact {
             predicate,
             body,
@@ -980,7 +980,7 @@ impl AtomicFact {
 
 impl AtomicFact {
     pub fn to_atomic_fact(
-        prop_name: PredicateType,
+        prop_name: AtomicName,
         is_true: bool,
         args: Vec<Obj>,
         line_file: LineFile,

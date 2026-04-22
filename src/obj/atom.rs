@@ -10,27 +10,6 @@ pub enum Atom {
 }
 
 #[derive(Clone)]
-pub enum IdentifierOrIdentifierWithMod {
-    Identifier(Identifier),
-    IdentifierWithMod(IdentifierWithMod),
-}
-
-impl fmt::Display for IdentifierOrIdentifierWithMod {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            IdentifierOrIdentifierWithMod::Identifier(i) => write!(f, "{}", i),
-            IdentifierOrIdentifierWithMod::IdentifierWithMod(m) => write!(f, "{}", m),
-        }
-    }
-}
-
-impl IdentifierOrIdentifierWithMod {
-    pub fn literally_the_same_as(&self, other: &IdentifierOrIdentifierWithMod) -> bool {
-        return self.to_string() == other.to_string();
-    }
-}
-
-#[derive(Clone)]
 pub struct Identifier {
     pub name: String,
 }

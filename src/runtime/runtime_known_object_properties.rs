@@ -7,7 +7,7 @@ impl Runtime {
 
     pub fn get_object_satisfy_struct(
         &self,
-        obj: &IdentifierOrIdentifierWithMod,
+        obj: &AtomicName,
     ) -> Option<&StructObj> {
         let key = obj.to_string();
         for env in self.iter_environments_from_top() {

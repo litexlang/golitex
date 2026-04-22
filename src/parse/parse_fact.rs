@@ -337,7 +337,7 @@ impl Runtime {
         let tok = tb.current()?.to_string();
         let prop = if is_comparison_str(&tok) {
             tb.advance()?;
-            PredicateType::WithoutMod(tok.clone())
+            AtomicName::WithoutMod(tok.clone())
         } else if tok == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
             self.parse_predicate(tb)?
@@ -425,12 +425,12 @@ impl Runtime {
         }
         let first_obj = self.parse_obj(tb)?;
         let mut objs: Vec<Obj> = vec![first_obj];
-        let mut prop_names: Vec<PredicateType> = vec![];
+        let mut prop_names: Vec<AtomicName> = vec![];
         while !tb.exceed_end_of_head() {
             let tok = tb.current()?.to_string();
             let prop = if is_comparison_str(&tok) {
                 tb.advance()?;
-                PredicateType::WithoutMod(tok.clone())
+                AtomicName::WithoutMod(tok.clone())
             } else if tok == FACT_PREFIX {
                 tb.skip_token(FACT_PREFIX)?;
                 self.parse_predicate(tb)?
