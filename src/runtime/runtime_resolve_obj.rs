@@ -15,38 +15,36 @@ impl Runtime {
         self.resolve_obj_to_number(&self.resolve_obj(obj))
     }
 
+    // After resolving children, fold literals; if still not a number, use
+    // `known_objs_equal_to_normalized_decimal_number` so e.g. `a - b` becomes `100` when that
+    // binding exists, then outer `(... - 10)` can evaluate (used by equality `calculation`).
+    fn resolve_obj_try_fold_arithmetic(&self, result: Obj) -> Obj {
+        if let Some(calculated) = result.evaluate_to_normalized_decimal_number() {
+            return calculated.into();
+        }
+        if let Some(n) = self.resolve_obj_to_number(&result) {
+            return n.into();
+        }
+        result
+    }
+
     pub fn resolve_obj(&self, obj: &Obj) -> Obj {
         match obj {
             Obj::Number(number) => number.clone().into(),
             Obj::Add(add) => {
                 let result: Obj =
                     Add::new(self.resolve_obj(&add.left), self.resolve_obj(&add.right)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Sub(sub) => {
                 let result: Obj =
                     Sub::new(self.resolve_obj(&sub.left), self.resolve_obj(&sub.right)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Mul(mul) => {
                 let result: Obj =
                     Mul::new(self.resolve_obj(&mul.left), self.resolve_obj(&mul.right)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Mod(mod_obj) => {
                 let result: Obj = Mod::new(
@@ -54,71 +52,36 @@ impl Runtime {
                     self.resolve_obj(&mod_obj.right),
                 )
                 .into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Pow(pow) => {
                 let result: Obj =
                     Pow::new(self.resolve_obj(&pow.base), self.resolve_obj(&pow.exponent)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Div(div) => {
                 let result: Obj =
                     Div::new(self.resolve_obj(&div.left), self.resolve_obj(&div.right)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Abs(a) => {
                 let result: Obj = Abs::new(self.resolve_obj(&a.arg)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Max(m) => {
                 let result: Obj =
                     Max::new(self.resolve_obj(&m.left), self.resolve_obj(&m.right)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Min(m) => {
                 let result: Obj =
                     Min::new(self.resolve_obj(&m.left), self.resolve_obj(&m.right)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Log(l) => {
                 let result: Obj =
                     Log::new(self.resolve_obj(&l.base), self.resolve_obj(&l.arg)).into();
-                let calculated_result = result.evaluate_to_normalized_decimal_number();
-                if let Some(calculated_result) = calculated_result {
-                    calculated_result.into()
-                } else {
-                    result
-                }
+                self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::FiniteSeqSet(fs) => {
                 FiniteSeqSet::new(self.resolve_obj(&fs.set), self.resolve_obj(&fs.n)).into()
