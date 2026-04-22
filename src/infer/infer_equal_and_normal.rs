@@ -324,6 +324,16 @@ impl Runtime {
                 .insert(equal_fact.right.to_string(), left_calculated_value);
         }
 
+        if let Some(derived) =
+            crate::environment::equality_linear_derive::maybe_derived_linear_equal_fact(equal_fact)
+        {
+            if let Some(n) = self.resolve_obj_to_number(&derived.right) {
+                self.top_level_env()
+                    .known_objs_equal_to_normalized_decimal_number
+                    .insert(derived.left.to_string(), n);
+            }
+        }
+
         Ok(InferResult::new())
     }
 

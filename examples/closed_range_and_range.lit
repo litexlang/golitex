@@ -1,0 +1,23 @@
+forall i Z:
+    1 < i < 5
+    =>:
+        i $in range(2, 5)
+        i $in 2...4
+
+forall i Z:
+    1 <= i < 5
+    =>:
+        i $in range(1, 5)
+        i $in 1...4
+
+forall i Z:
+    1 <= i <= 5
+    =>:
+        i $in range(1, 6)
+        i $in 1...5
+
+forall i Z:
+    1 < i <= 5
+    =>:
+        i $in range(2, 6)
+        i $in 2...5

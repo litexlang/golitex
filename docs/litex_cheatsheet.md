@@ -41,6 +41,8 @@ prove:
     not $is_nonempty_set({})
 ```
 
+> **Hint — storing a linear equality.** When an equality is recorded, if one side evaluates to a numeric literal and the other is a single “layer” around one non-constant leaf (`+`, `-`, `*`, `/` with the other operand a literal), the checker also records the solved equality for that leaf (e.g. `t - 1 = 6` also stores `t = 7`). For `*`, division is used only when the coefficient literal is **not** zero (never divide by `0`).
+
 ---
 
 ### Existential fact
