@@ -759,10 +759,10 @@ impl FiniteSeqSet {
 impl FnObj {
     pub fn to_latex_string(&self) -> String {
         let head = match self.head.as_ref() {
-            FnObjHead::Atom(Atom::Identifier(i)) => i.to_latex_string(),
-            FnObjHead::Atom(Atom::IdentifierWithMod(i)) => i.to_latex_string(),
-            FnObjHead::Atom(Atom::FieldAccess(x)) => x.to_latex_string(),
-            FnObjHead::Atom(Atom::FieldAccessWithMod(x)) => x.to_latex_string(),
+            FnObjHead::Identifier(i) => i.to_latex_string(),
+            FnObjHead::IdentifierWithMod(i) => i.to_latex_string(),
+            FnObjHead::FieldAccess(x) => x.to_latex_string(),
+            FnObjHead::FieldAccessWithMod(x) => x.to_latex_string(),
             FnObjHead::Forall(p) => latex_local_ident(&p.name),
             FnObjHead::ForallFieldAccess(x) => {
                 let s = field_access_to_string(&x.name, &x.field);

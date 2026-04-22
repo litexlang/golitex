@@ -1,10 +1,13 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// Function-application head: plain [`Atom`] pieces or tagged free-parameter binders (not wrapped in [`Atom`]).
+/// Function-application head: plain identifier/field pieces or tagged free-parameter binders.
 #[derive(Clone)]
 pub enum FnObjHead {
-    Atom(Atom),
+    Identifier(Identifier),
+    IdentifierWithMod(IdentifierWithMod),
+    FieldAccess(FieldAccess),
+    FieldAccessWithMod(FieldAccessWithMod),
     Forall(ForallFreeParamObj),
     ForallFieldAccess(ForallFieldAccessObj),
     DefHeader(DefHeaderFreeParamObj),
@@ -20,7 +23,10 @@ pub enum FnObjHead {
 impl fmt::Display for FnObjHead {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            FnObjHead::Atom(a) => write!(f, "{}", a),
+            FnObjHead::Identifier(x) => write!(f, "{}", x),
+            FnObjHead::IdentifierWithMod(x) => write!(f, "{}", x),
+            FnObjHead::FieldAccess(x) => write!(f, "{}", x),
+            FnObjHead::FieldAccessWithMod(x) => write!(f, "{}", x),
             FnObjHead::Forall(p) => write!(f, "{}", p),
             FnObjHead::ForallFieldAccess(p) => write!(f, "{}", p),
             FnObjHead::DefHeader(p) => write!(f, "{}", p),
@@ -35,9 +41,16 @@ impl fmt::Display for FnObjHead {
     }
 }
 
-impl From<Atom> for FnObjHead {
-    fn from(a: Atom) -> Self {
-        FnObjHead::Atom(a)
+impl FnObjHead {
+    /// If `obj` is a plain name/field shape, returns the corresponding function head; otherwise `None`.
+    pub fn from_name_obj(obj: Obj) -> Option<FnObjHead> {
+        match obj {
+            Obj::Identifier(x) => Some(FnObjHead::Identifier(x)),
+            Obj::IdentifierWithMod(x) => Some(FnObjHead::IdentifierWithMod(x)),
+            Obj::FieldAccess(x) => Some(FnObjHead::FieldAccess(x)),
+            Obj::FieldAccessWithMod(x) => Some(FnObjHead::FieldAccessWithMod(x)),
+            _ => None,
+        }
     }
 }
 
@@ -104,7 +117,10 @@ impl From<StructSelfFieldFreeParamObj> for FnObjHead {
 impl From<FnObjHead> for Obj {
     fn from(h: FnObjHead) -> Self {
         match h {
-            FnObjHead::Atom(a) => a.into(),
+            FnObjHead::Identifier(x) => x.into(),
+            FnObjHead::IdentifierWithMod(x) => x.into(),
+            FnObjHead::FieldAccess(x) => x.into(),
+            FnObjHead::FieldAccessWithMod(x) => x.into(),
             FnObjHead::Forall(p) => p.into(),
             FnObjHead::ForallFieldAccess(p) => p.into(),
             FnObjHead::DefHeader(p) => p.into(),
