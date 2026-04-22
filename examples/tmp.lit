@@ -1,11 +1,4 @@
-claim:
-    prove:
-        forall t R:
-            t < 3
-            t - 1 = 6
-            =>:
-                t = 13
-    by contra:
-        prove:
-            t = 13
-        impossible t < 3
+forall a, b R:
+    a - b = 100
+    =>:
+        (a - b) - 10 = 90
