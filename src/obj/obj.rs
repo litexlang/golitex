@@ -108,19 +108,19 @@ pub struct MatrixListObj {
 
 #[derive(Clone)]
 pub struct FamilyObj {
-    pub name: IdentifierOrIdentifierWithMod,
+    pub name: AtomicName,
     pub params: Vec<Obj>,
 }
 
 /// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
 #[derive(Clone)]
 pub struct StructObj {
-    pub name: IdentifierOrIdentifierWithMod,
+    pub name: AtomicName,
     pub args: Vec<Obj>,
 }
 
 impl StructObj {
-    pub fn new(name: IdentifierOrIdentifierWithMod, args: Vec<Obj>) -> Self {
+    pub fn new(name: AtomicName, args: Vec<Obj>) -> Self {
         StructObj { name, args }
     }
 }

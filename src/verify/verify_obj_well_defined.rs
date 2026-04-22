@@ -137,7 +137,7 @@ impl Runtime {
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), RuntimeError> {
         let Some(def) = self.get_definition_of_struct_where_object_satisfies(
-            &IdentifierOrIdentifierWithMod::Identifier(Identifier::new(x.name.to_string())),
+            &AtomicName::WithoutMod(x.name.to_string()),
         ) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new(
