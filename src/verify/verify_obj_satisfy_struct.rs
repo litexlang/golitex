@@ -48,9 +48,9 @@ impl Runtime {
             }),
             Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
                 let id_key = match &obj {
-                    Obj::Identifier(i) => IdentifierOrIdentifierWithMod::Identifier(i.clone()),
+                    Obj::Identifier(i) => AtomicName::WithoutMod(i.name.clone()),
                     Obj::IdentifierWithMod(m) => {
-                        IdentifierOrIdentifierWithMod::IdentifierWithMod(m.clone())
+                        AtomicName::WithMod(m.mod_name.clone(), m.name.clone())
                     }
                     _ => {
                         return Ok((StmtUnknown::new()).into());

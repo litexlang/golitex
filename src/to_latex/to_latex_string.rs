@@ -1025,11 +1025,11 @@ impl IdentifierWithMod {
     }
 }
 
-impl PredicateType {
+impl AtomicName {
     pub fn to_latex_string(&self) -> String {
         match self {
-            PredicateType::WithoutMod(s) => latex_local_ident(s),
-            PredicateType::WithMod(m, n) => format!(
+            AtomicName::WithoutMod(s) => latex_local_ident(s),
+            AtomicName::WithMod(m, n) => format!(
                 r"{}\mathbin{{\mathrm{{::}}}}{}",
                 latex_local_ident(m),
                 latex_local_ident(n)
@@ -1826,15 +1826,6 @@ impl ImportStmt {
         match self {
             ImportStmt::ImportRelativePath(s) => s.to_latex_string(),
             ImportStmt::ImportGlobalModule(s) => s.to_latex_string(),
-        }
-    }
-}
-
-impl IdentifierOrIdentifierWithMod {
-    pub fn to_latex_string(&self) -> String {
-        match self {
-            IdentifierOrIdentifierWithMod::Identifier(x) => x.to_latex_string(),
-            IdentifierOrIdentifierWithMod::IdentifierWithMod(x) => x.to_latex_string(),
         }
     }
 }

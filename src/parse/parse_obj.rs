@@ -478,7 +478,9 @@ impl Runtime {
         let (head, mut body_vectors) = match &result {
             Obj::Identifier(i) => (FnObjHead::Atom(i.clone().into()), vec![]),
             Obj::IdentifierWithMod(m) => (FnObjHead::Atom(m.clone().into()), vec![]),
-            Obj::FieldAccess(field_access) => (FnObjHead::Atom(field_access.clone().into()), vec![]),
+            Obj::FieldAccess(field_access) => {
+                (FnObjHead::Atom(field_access.clone().into()), vec![])
+            }
             Obj::FieldAccessWithMod(field_access_with_mod) => (
                 FnObjHead::Atom(field_access_with_mod.clone().into()),
                 vec![],
@@ -488,9 +490,7 @@ impl Runtime {
             Obj::ForallFieldAccessObj(p) => (FnObjHead::ForallFieldAccess(p.clone()), vec![]),
             Obj::ExistFreeParamObj(p) => (FnObjHead::Exist(p.clone()), vec![]),
             Obj::DefFreeParamObj(p) => (FnObjHead::DefHeader(p.clone()), vec![]),
-            Obj::DefFreeFieldAccessObj(p) => {
-                (FnObjHead::DefHeaderFieldAccess(p.clone()), vec![])
-            },
+            Obj::DefFreeFieldAccessObj(p) => (FnObjHead::DefHeaderFieldAccess(p.clone()), vec![]),
             Obj::SetBuilderFreeParamObj(p) => (FnObjHead::SetBuilder(p.clone()), vec![]),
             Obj::FnSetFreeParamObj(p) => (FnObjHead::FnSet(p.clone()), vec![]),
             Obj::ByInducFreeParamObj(p) => (FnObjHead::Induc(p.clone()), vec![]),
@@ -1367,13 +1367,11 @@ impl Runtime {
                     let mut facts_inst = Vec::new();
                     while tb.current()? != RIGHT_CURLY_BRACE {
                         let f = this.parse_or_and_chain_atomic_fact(tb)?;
-                        facts_inst.push(
-                            this.inst_or_and_chain_atomic_fact(
-                                &f,
-                                &empty,
-                                ParamObjType::SetBuilder,
-                            )?,
-                        );
+                        facts_inst.push(this.inst_or_and_chain_atomic_fact(
+                            &f,
+                            &empty,
+                            ParamObjType::SetBuilder,
+                        )?);
                     }
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
@@ -1489,47 +1487,34 @@ impl Runtime {
         }
     }
 
-    pub fn parse_predicate(&self, tb: &mut TokenBlock) -> Result<PredicateType, RuntimeError> {
-        let left = tb.advance()?;
-        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip()?;
-            let right = tb.advance()?;
-            Ok(PredicateType::WithMod(left, right))
-        } else {
-            Ok(PredicateType::WithoutMod(left))
-        }
-    }
-
-    pub fn parse_identifier_or_identifier_with_mod(
-        &self,
-        tb: &mut TokenBlock,
-    ) -> Result<IdentifierOrIdentifierWithMod, RuntimeError> {
-        let left = parse_synthetically_correct_identifier_string(tb)?;
-        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip()?;
-            let right = parse_synthetically_correct_identifier_string(tb)?;
-            Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(
-                IdentifierWithMod::new(left, right),
-            ))
-        } else {
-            Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
-                left,
-            )))
-        }
+    pub fn parse_predicate(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
+        self.parse_atomic_name(tb)
     }
 
     pub fn parse_family_obj(&mut self, tb: &mut TokenBlock) -> Result<FamilyObj, RuntimeError> {
         tb.skip_token(FAMILY)?;
-        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let name = self.parse_atomic_name(tb)?;
         let params = self.parse_braced_objs(tb)?;
         Ok(FamilyObj { name, params })
     }
 
     pub fn parse_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<StructObj, RuntimeError> {
         tb.skip_token(STRUCT)?;
-        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let name = self.parse_atomic_name(tb)?;
         let params = self.parse_braced_objs(tb)?;
         Ok(StructObj { name, args: params })
+    }
+
+    /// `ident` or `mod::ident` as a predicate/atomic name in parse position.
+    pub fn parse_atomic_name(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
+        let left = parse_synthetically_correct_identifier_string(tb)?;
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+            tb.skip()?;
+            let right = parse_synthetically_correct_identifier_string(tb)?;
+            Ok(AtomicName::WithMod(left, right))
+        } else {
+            Ok(AtomicName::WithoutMod(left))
+        }
     }
 }
 
