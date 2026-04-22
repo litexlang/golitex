@@ -320,6 +320,18 @@ impl Runtime {
                     obj.clone()
                 }
             },
+            Obj::FamilyObj(f) => {
+                let params: Vec<Obj> = f.params.iter().map(|p| self.resolve_obj(p)).collect();
+                FamilyObj {
+                    name: f.name.clone(),
+                    params,
+                }
+                .into()
+            }
+            Obj::StructObj(s) => {
+                let args: Vec<Obj> = s.args.iter().map(|a| self.resolve_obj(a)).collect();
+                StructObj::new(s.name.clone(), args).into()
+            }
             _ => obj.clone(),
         }
     }
