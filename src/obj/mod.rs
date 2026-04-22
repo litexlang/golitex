@@ -2,6 +2,7 @@ mod atom;
 mod fn_obj_head;
 mod free_param_obj;
 mod obj;
+mod predicate;
 mod standard_set;
 pub use atom::{
     field_access_to_string, field_access_with_mod_to_string, identifier_to_string,
@@ -18,6 +19,7 @@ pub use free_param_obj::{
     SetBuilderFreeParamObj, StructSelfFieldFreeParamObj,
 };
 pub use fn_obj_head::FnObjHead;
+pub use predicate::PredicateType;
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
     FamilyObj, FiniteSeqListObj, FiniteSeqSet, FnObj, FnSet, Intersect, ListSet, Log, MatrixAdd,
