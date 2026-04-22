@@ -125,7 +125,7 @@ Short map (details live in the named modules):
 | Fact kind | First builtin entry |
 |-----------|---------------------|
 | `NotEqualFact` | `not_equal_builtin.rs` |
-| `InFact` / `NotInFact` | `in_fact_builtin.rs` |
+| `InFact` / `NotInFact` | `in_fact_builtin.rs` (for **`$in R`**, finite **`sum(...)`** is accepted like `+` / `*` arithmetic: no extra sub-goals; same reason as other real-closed surface forms) |
 | `SubsetFact` / `SupersetFact` / negated | `set_relation_duality.rs` (and related) |
 | All order atoms (`<`, `<=`, `>`, `>=`, `not …`) | **This order pipeline** |
 | `IsSetFact` | Unconditional: `"Every object is a set."` |
@@ -146,13 +146,15 @@ Runs **before** known equalities and before generic same-shape recursion (`verif
 2. **`0 = x - y`** — If one side is literal `0` and the other is `x - y`, requires **`x = y`** via full `verify_objs_are_equal`.
 3. **`0 = a^n`** — Literal integer **`n > 0`**, requires **`a = 0`** (again full equality).
 4. **Log** — `log(base, base^exp) = exp`; plus product/quotient/power algebra on `log`; **`log(a,b)=c`** from **`a^c = b`** (pow inverse).
-5. **Same + calculation** — `verify_equality_by_they_are_the_same_and_calculation` (identity and partial evaluation).
-6. **Rational simplification** — If still plausible, **`objs_equal_by_rational_expression_evaluation`** on evaluated pair; reason `calculation and rational expression simplification`.
-7. **Two `fn` set values** — `verify_fn_set_with_params_equality_by_builtin_rules` (structural compare).
+5. **Finite sum (peel last index)** — Matches **`sum(i, a, e+1, F) = sum(i, a, e, F) + …`** (either side of **`+`** may be the inner sum). Requires the same **`i`**, **`a`**, and **`F`** on both sums, **`verify_objs_are_equal`** on **`outer_end`** vs **`inner_end + 1`**, and the remaining addend equals **`inst_obj(F, { i ↦ outer_end }, Sum)`**. Reason: `equality: sum upper +1 = inner sum + term at new index`.
+6. **Same + calculation** — `verify_equality_by_they_are_the_same_and_calculation` (identity and partial evaluation).
+7. **Rational simplification** — If still plausible, **`objs_equal_by_rational_expression_evaluation`** on evaluated pair; reason `calculation and rational expression simplification`.
+8. **Two `fn` set values** — `verify_fn_set_with_params_equality_by_builtin_rules` (structural compare).
 
 ```lit
 fact 1 + 1 = 2
 fact 0 = t - t
+fact sum(i, 1, 3, i) = sum(i, 1, 2, i) + 3
 ```
 
 ---

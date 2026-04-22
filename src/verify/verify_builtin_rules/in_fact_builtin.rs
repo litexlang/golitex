@@ -427,6 +427,7 @@ impl Runtime {
                 verify_state,
                 StandardSet::ZNeg,
             ),
+            // R: treat finite `sum(i, lo, hi, body)` like other closed-form real expressions (no recursive $in R$ on parts; well-definedness is separate).
             (
                 Obj::Add(_)
                 | Obj::Sub(_)
@@ -437,7 +438,8 @@ impl Runtime {
                 | Obj::Max(_)
                 | Obj::Min(_)
                 | Obj::Abs(_)
-                | Obj::Log(_),
+                | Obj::Log(_)
+                | Obj::Sum(_),
                 Obj::StandardSet(StandardSet::R),
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
