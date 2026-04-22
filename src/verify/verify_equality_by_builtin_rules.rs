@@ -471,12 +471,7 @@ impl Runtime {
             return Ok(None);
         };
         if !self
-            .verify_objs_are_equal(
-                actual_tail,
-                &expected_tail,
-                line_file.clone(),
-                verify_state,
-            )?
+            .verify_objs_are_equal(actual_tail, &expected_tail, line_file.clone(), verify_state)?
             .is_true()
         {
             return Ok(None);
@@ -538,6 +533,209 @@ impl Runtime {
                         }
                     }
                 }
+            }
+        }
+        Ok(None)
+    }
+
+    // sum(i,a,b,F+G) = sum(i,a,b,F) + sum(i,a,b,G); other side is one binary + with two sums (order either way).
+    fn try_match_sum_additivity_one_direction(
+        &mut self,
+        outer: &SumObj,
+        other: &Obj,
+        display_left: &Obj,
+        display_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Add(body_add) = outer.body.as_ref() else {
+            return Ok(None);
+        };
+        let Obj::Add(outer_add) = other else {
+            return Ok(None);
+        };
+        for (x_side, y_side) in [
+            (outer_add.left.as_ref(), outer_add.right.as_ref()),
+            (outer_add.right.as_ref(), outer_add.left.as_ref()),
+        ] {
+            if let (Obj::Sum(sx), Obj::Sum(sy)) = (x_side, y_side) {
+                if outer.param != sx.param || outer.param != sy.param {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        outer.start.as_ref(),
+                        sx.start.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        outer.start.as_ref(),
+                        sy.start.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        outer.end.as_ref(),
+                        sx.end.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        outer.end.as_ref(),
+                        sy.end.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                let fl = body_add.left.as_ref();
+                let fr = body_add.right.as_ref();
+                let match_fg = self
+                    .verify_objs_are_equal(fl, sx.body.as_ref(), line_file.clone(), verify_state)?
+                    .is_true()
+                    && self
+                        .verify_objs_are_equal(fr, sy.body.as_ref(), line_file.clone(), verify_state)?
+                        .is_true();
+                let match_gf = self
+                    .verify_objs_are_equal(fl, sy.body.as_ref(), line_file.clone(), verify_state)?
+                    .is_true()
+                    && self
+                        .verify_objs_are_equal(fr, sx.body.as_ref(), line_file.clone(), verify_state)?
+                        .is_true();
+                if match_fg || match_gf {
+                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                        display_left,
+                        display_right,
+                        line_file,
+                        "equality: sum(summand + summand) = sum + sum same bounds",
+                    )));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_sum_additivity_same_bounds_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Obj::Sum(lsum) = left {
+            if let Some(done) = self.try_match_sum_additivity_one_direction(
+                lsum,
+                right,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        if let Obj::Sum(rsum) = right {
+            if let Some(done) = self.try_match_sum_additivity_one_direction(
+                rsum,
+                left,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        Ok(None)
+    }
+
+    // sum(i,a,a,F) = inst(F, { i ↦ a }) when start and end are equal.
+    fn try_match_sum_single_index_interval_one_direction(
+        &mut self,
+        s: &SumObj,
+        other: &Obj,
+        display_left: &Obj,
+        display_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !self
+            .verify_objs_are_equal(
+                s.start.as_ref(),
+                s.end.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let mut m = HashMap::new();
+        m.insert(s.param.clone(), (*s.start).clone());
+        let Ok(inst_body) = self.inst_obj(s.body.as_ref(), &m, ParamObjType::Sum) else {
+            return Ok(None);
+        };
+        if !self
+            .verify_objs_are_equal(&inst_body, other, line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            display_left,
+            display_right,
+            line_file,
+            "equality: sum with start = end is single instantiated summand",
+        )))
+    }
+
+    fn try_verify_sum_single_index_interval_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Obj::Sum(lsum) = left {
+            if let Some(done) = self.try_match_sum_single_index_interval_one_direction(
+                lsum,
+                right,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        if let Obj::Sum(rsum) = right {
+            if let Some(done) = self.try_match_sum_single_index_interval_one_direction(
+                rsum,
+                left,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
             }
         }
         Ok(None)
@@ -743,34 +941,43 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_log_identity_equalities(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_log_identity_equalities(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_log_algebra_identities(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_log_algebra_identities(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_log_equals_by_pow_inverse(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_log_equals_by_pow_inverse(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_sum_peel_last_term_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_sum_additivity_same_bounds_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_sum_single_index_interval_equality(
             left,
             right,
             line_file.clone(),
@@ -1104,10 +1311,9 @@ impl Runtime {
                 }
             }
             (Obj::Log(l), Obj::Log(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.base, &r.base),
-                    (&l.arg, &r.arg),
-                ]) {
+                if self
+                    .arg_pairs_share_known_equality_class(&[(&l.base, &r.base), (&l.arg, &r.arg)])
+                {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,
                     ))
