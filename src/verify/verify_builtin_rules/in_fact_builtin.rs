@@ -439,7 +439,8 @@ impl Runtime {
                 | Obj::Min(_)
                 | Obj::Abs(_)
                 | Obj::Log(_)
-                | Obj::Sum(_),
+                | Obj::Sum(_)
+                | Obj::Product(_),
                 Obj::StandardSet(StandardSet::R),
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,

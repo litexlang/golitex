@@ -647,6 +647,74 @@ impl Runtime {
         }
     }
 
+    /// Finite `product(i, lo, hi, body)` with integer bounds: substitute `i` for each value in `lo..=hi`,
+    /// resolve and evaluate each factor, then multiply (empty range yields `1`).
+    fn eval_product_expanded_for_eval_stmt(
+        &mut self,
+        product: &ProductObj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<Obj, RuntimeError> {
+        let start_eval = self.evaluate_symbol_obj_iterative(
+            self.resolve_obj(product.start.as_ref()).clone(),
+            eval_stmt,
+        )?;
+        let end_eval = self.evaluate_symbol_obj_iterative(
+            self.resolve_obj(product.end.as_ref()).clone(),
+            eval_stmt,
+        )?;
+        let Some(start_n) = start_eval.evaluate_to_normalized_decimal_number() else {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: product lower bound must evaluate to a number".to_string(),
+                None,
+                vec![],
+            ));
+        };
+        let Some(end_n) = end_eval.evaluate_to_normalized_decimal_number() else {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: product upper bound must evaluate to a number".to_string(),
+                None,
+                vec![],
+            ));
+        };
+        let start_i = match start_n.normalized_value.parse::<i64>() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    "eval: product lower bound must be an integer".to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+        };
+        let end_i = match end_n.normalized_value.parse::<i64>() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    "eval: product upper bound must be an integer".to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+        };
+        if start_i > end_i {
+            return Ok(Number::new("1".to_string()).into());
+        }
+        let mut acc = Number::new("1".to_string()).into();
+        for k in start_i..=end_i {
+            let mut m = HashMap::new();
+            m.insert(product.param.clone(), Number::new(k.to_string()).into());
+            let body_inst = self.inst_obj(product.body.as_ref(), &m, ParamObjType::Product)?;
+            let body_resolved = self.resolve_obj(&body_inst);
+            let term = self.evaluate_symbol_obj_iterative(body_resolved, eval_stmt)?;
+            acc = self.evaluate_symbol_obj_iterative(Mul::new(acc, term).into(), eval_stmt)?;
+        }
+        Ok(acc)
+    }
+
     /// Finite `sum(i, lo, hi, body)` with integer bounds: substitute `i` for each value in `lo..=hi`,
     /// resolve and evaluate each term, then add (empty range yields `0`).
     fn eval_sum_expanded_for_eval_stmt(
@@ -725,11 +793,13 @@ impl Runtime {
         let eval_result = self.run_in_local_env(|rt| {
             if let Obj::Sum(ref sum) = resolved_obj {
                 rt.eval_sum_expanded_for_eval_stmt(sum, stmt)
+            } else if let Obj::Product(ref product) = resolved_obj {
+                rt.eval_product_expanded_for_eval_stmt(product, stmt)
             } else {
                 if !Self::object_supported_by_eval_stmt(&resolved_obj) {
                     return Err(short_exec_error(
                         stmt.clone().into(),
-                        "eval: need a function call, numeric expression (+ - * / ^), finite sum(...), or matrix ++ -- ** *. ^^ / matrix literal"
+                        "eval: need a function call, numeric expression (+ - * / ^), finite sum(...) / product(...), or matrix ++ -- ** *. ^^ / matrix literal"
                             .to_string(),
                         None,
                         vec![],

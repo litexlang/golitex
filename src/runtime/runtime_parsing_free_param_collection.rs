@@ -98,6 +98,7 @@ impl FreeParamCollection {
             ParamObjType::Sum => SumFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Induc => ByInducFreeParamObj::new(name.to_string()).into(),
             ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::Product => ProductFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Identifier => Identifier::new(name.to_string()).into(),
         }
     }
