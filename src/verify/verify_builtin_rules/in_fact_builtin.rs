@@ -3,7 +3,7 @@ use crate::prelude::*;
 use crate::verify::{
     number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
     number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
-    number_is_in_z_nz, VerifyState,
+    number_is_in_z_nz, verify_number_in_standard_set::is_integer_after_simplification, VerifyState,
 };
 use std::collections::{HashMap, HashSet};
 
@@ -621,14 +621,20 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
-        let a_le_i =
-            LessEqualFact::new((*closed_range.start).clone(), elem.clone(), lf.clone()).into();
-        let i_le_b =
-            LessEqualFact::new(elem.clone(), (*closed_range.end).clone(), lf.clone()).into();
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&a_le_i, verify_state)? {
+        if !self.order_lower_bound_from_literals(
+            elem,
+            closed_range.start.as_ref(),
+            &lf,
+            verify_state,
+        )? {
             return Ok((StmtUnknown::new()).into());
         }
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&i_le_b, verify_state)? {
+        if !self.order_upper_bound_closed_from_literals(
+            elem,
+            closed_range.end.as_ref(),
+            &lf,
+            verify_state,
+        )? {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(number_in_set_verified_by_builtin_rules_result(
@@ -645,18 +651,120 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
-        let a_le_i = LessEqualFact::new((*range.start).clone(), elem.clone(), lf.clone()).into();
-        let i_lt_b = LessFact::new(elem.clone(), (*range.end).clone(), lf.clone()).into();
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&a_le_i, verify_state)? {
+        if !self.order_lower_bound_from_literals(elem, range.start.as_ref(), &lf, verify_state)? {
             return Ok((StmtUnknown::new()).into());
         }
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&i_lt_b, verify_state)? {
+        if !self.order_upper_bound_open_from_literals(elem, range.end.as_ref(), &lf, verify_state)? {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(number_in_set_verified_by_builtin_rules_result(
             in_fact,
             "in range: a <= i and i < b",
         ))
+    }
+
+    // When `x $in Z` and endpoints are integer literals: `lo <= x` iff `lo - 1 < x` (discrete lower).
+    // Example: dom `1 < i` with `i $in Z` proves the lower side of `i $in range(2, 6)` / `closed_range(2, 5)`.
+    fn order_lower_bound_from_literals(
+        &mut self,
+        elem: &Obj,
+        lower: &Obj,
+        lf: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let weak: AtomicFact = LessEqualFact::new(lower.clone(), elem.clone(), lf.clone()).into();
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&weak, verify_state)? {
+            return Ok(true);
+        }
+        let in_z: AtomicFact =
+            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
+            return Ok(false);
+        }
+        let Some(lower_num) = self.resolve_obj_to_number_resolved(lower) else {
+            return Ok(false);
+        };
+        if !is_integer_after_simplification(&lower_num) {
+            return Ok(false);
+        }
+        let pred = Obj::Sub(Sub::new(
+            lower.clone(),
+            Number::new("1".to_string()).into(),
+        ));
+        let Some(pred_n) = pred.evaluate_to_normalized_decimal_number() else {
+            return Ok(false);
+        };
+        let strict: AtomicFact = LessFact::new(pred_n.into(), elem.clone(), lf.clone()).into();
+        self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&strict, verify_state)
+    }
+
+    // When `x $in Z` and `hi` is an integer literal: `x < hi` iff `x <= hi - 1`.
+    // Example: `i <= 5` and `i $in Z` gives the upper side of `i $in range(2, 6)`.
+    fn order_upper_bound_open_from_literals(
+        &mut self,
+        elem: &Obj,
+        upper: &Obj,
+        lf: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let strict: AtomicFact = LessFact::new(elem.clone(), upper.clone(), lf.clone()).into();
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&strict, verify_state)? {
+            return Ok(true);
+        }
+        let in_z: AtomicFact =
+            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
+            return Ok(false);
+        }
+        let Some(upper_num) = self.resolve_obj_to_number_resolved(upper) else {
+            return Ok(false);
+        };
+        if !is_integer_after_simplification(&upper_num) {
+            return Ok(false);
+        }
+        let upper_minus_one = Obj::Sub(Sub::new(
+            upper.clone(),
+            Number::new("1".to_string()).into(),
+        ));
+        let Some(um) = upper_minus_one.evaluate_to_normalized_decimal_number() else {
+            return Ok(false);
+        };
+        let weak: AtomicFact = LessEqualFact::new(elem.clone(), um.into(), lf.clone()).into();
+        self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&weak, verify_state)
+    }
+
+    // When `x $in Z` and `hi` is an integer literal: `x <= hi` iff `x < hi + 1`.
+    fn order_upper_bound_closed_from_literals(
+        &mut self,
+        elem: &Obj,
+        upper: &Obj,
+        lf: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let weak: AtomicFact = LessEqualFact::new(elem.clone(), upper.clone(), lf.clone()).into();
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&weak, verify_state)? {
+            return Ok(true);
+        }
+        let in_z: AtomicFact =
+            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
+            return Ok(false);
+        }
+        let Some(upper_num) = self.resolve_obj_to_number_resolved(upper) else {
+            return Ok(false);
+        };
+        if !is_integer_after_simplification(&upper_num) {
+            return Ok(false);
+        }
+        let hi_plus_one = Obj::Add(Add::new(
+            upper.clone(),
+            Number::new("1".to_string()).into(),
+        ));
+        let Some(hp) = hi_plus_one.evaluate_to_normalized_decimal_number() else {
+            return Ok(false);
+        };
+        let strict: AtomicFact = LessFact::new(elem.clone(), hp.into(), lf.clone()).into();
+        self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&strict, verify_state)
     }
 
     // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and `^` when direct operands are in `Z`
