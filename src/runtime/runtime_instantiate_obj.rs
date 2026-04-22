@@ -70,6 +70,7 @@ impl Runtime {
             Obj::MatrixListObj(inner) => self.inst_matrix_list_obj(inner, param_to_arg_map, ctx),
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map, ctx),
             Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map, ctx),
+            Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, ctx),
             Obj::ObjAtIndex(inner) => self.inst_obj_at_index(inner, param_to_arg_map, ctx),
             Obj::FamilyObj(family) => {
                 let mut params = Vec::with_capacity(family.params.len());
@@ -116,6 +117,14 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::FnSet(p)) => {
                 if ctx == ParamObjType::FnSet {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
+                    }
+                }
+                Ok(p.clone().into())
+            }
+            Obj::Atom(AtomObj::Sum(p)) => {
+                if ctx == ParamObjType::Sum {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -186,6 +195,7 @@ impl Runtime {
             Obj::Atom(AtomObj::Exist(p)) => p.clone().into(),
             Obj::Atom(AtomObj::SetBuilder(p)) => p.clone().into(),
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::Sum(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
             Obj::FnObj(x) => {
@@ -706,6 +716,21 @@ impl Runtime {
         ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         Ok(Choose::new(self.inst_obj(&choose.set, param_to_arg_map, ctx)?).into())
+    }
+
+    pub fn inst_sum(
+        &self,
+        sum: &SumObj,
+        param_to_arg_map: &HashMap<String, Obj>,
+        ctx: InstObjState,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(SumObj::new(
+            sum.param.clone(),
+            self.inst_obj(sum.start.as_ref(), param_to_arg_map, ctx)?,
+            self.inst_obj(sum.end.as_ref(), param_to_arg_map, ctx)?,
+            self.inst_obj(sum.body.as_ref(), param_to_arg_map, ctx)?,
+        )
+        .into())
     }
 
     pub fn inst_obj_at_index(

@@ -211,6 +211,10 @@ impl Runtime {
                 Obj::Choose(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Sum(a) => match right {
+                Obj::Sum(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::ObjAtIndex(a) => match right {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -272,6 +276,9 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::DefAlgo(a)) => {
                 matches!(right, Obj::Atom(AtomObj::DefAlgo(b)) if a.to_string() == b.to_string())
+            }
+            Obj::Atom(AtomObj::Sum(a)) => {
+                matches!(right, Obj::Atom(AtomObj::Sum(b)) if a.to_string() == b.to_string())
             }
         }
     }

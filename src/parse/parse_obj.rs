@@ -495,6 +495,7 @@ impl Runtime {
             Obj::Atom(AtomObj::Def(p)) => (FnObjHead::DefHeader(p.clone()), vec![]),
             Obj::Atom(AtomObj::SetBuilder(p)) => (FnObjHead::SetBuilder(p.clone()), vec![]),
             Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Sum(p)) => (FnObjHead::Sum(p.clone()), vec![]),
             Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
             Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
             _ => return Ok(result),
@@ -903,6 +904,9 @@ impl Runtime {
                 )))
             })?;
             return Ok(Choose::new(value).into());
+        }
+        if tok == SUM {
+            return self.parse_sum_obj(tb);
         }
         if tok == PROJ {
             tb.skip()?;
@@ -1320,6 +1324,27 @@ impl Runtime {
             objs.push(self.parse_obj(tb)?);
         }
         Ok(objs)
+    }
+
+    /// `sum(index, start, end, body)` — `index` is bound as [`ParamObjType::Sum`] only while parsing `body`.
+    fn parse_sum_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        tb.skip_token(SUM)?;
+        tb.skip_token(LEFT_BRACE)?;
+        let param_name = parse_synthetically_correct_identifier_string(tb)?;
+        self.validate_user_fn_param_names_for_parse(&[param_name.clone()], tb.line_file.clone())?;
+        tb.skip_token(COMMA)?;
+        let start = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+        let end = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+        let body = self.parse_in_local_free_param_scope(
+            ParamObjType::Sum,
+            &[param_name.clone()],
+            tb.line_file.clone(),
+            |this| this.parse_obj(tb),
+        )?;
+        tb.skip_token(RIGHT_BRACE)?;
+        Ok(SumObj::new(param_name, start, end, body).into())
     }
 
     fn parse_set_builder_or_set_list(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {

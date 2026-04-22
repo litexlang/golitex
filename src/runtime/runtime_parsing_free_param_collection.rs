@@ -95,6 +95,7 @@ impl FreeParamCollection {
             ParamObjType::Exist => ExistFreeParamObj::new(name.to_string()).into(),
             ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name.to_string()).into(),
             ParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::Sum => SumFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Induc => ByInducFreeParamObj::new(name.to_string()).into(),
             ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Identifier => Identifier::new(name.to_string()).into(),

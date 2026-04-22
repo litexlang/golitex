@@ -1,4 +1,5 @@
 use super::atom_obj::AtomObj;
+use super::sum_obj::SumObj;
 use crate::prelude::*;
 use std::fmt;
 
@@ -49,6 +50,7 @@ pub enum Obj {
     MatrixMul(MatrixMul),
     MatrixScalarMul(MatrixScalarMul),
     MatrixPow(MatrixPow),
+    Sum(SumObj),
 }
 
 #[derive(Clone)]
@@ -841,6 +843,7 @@ impl Obj {
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
+            Obj::Sum(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1091,6 +1094,13 @@ impl Obj {
                     .collect(),
             }
             .into(),
+            Obj::Sum(x) => SumObj::new(
+                x.param.clone(),
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+                Obj::replace_bound_identifier(*x.body, from, to),
+            )
+            .into(),
         }
     }
 }
@@ -1174,6 +1184,14 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
                 p.name
             };
             FnSetFreeParamObj::new(name).into()
+        }
+        FnObjHead::Sum(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            SumFreeParamObj::new(name).into()
         }
         FnObjHead::Induc(p) => {
             let name = if p.name == from {
@@ -1885,6 +1903,12 @@ impl From<IdentifierWithMod> for Obj {
 impl From<FamilyObj> for Obj {
     fn from(f: FamilyObj) -> Self {
         Obj::FamilyObj(f)
+    }
+}
+
+impl From<SumObj> for Obj {
+    fn from(s: SumObj) -> Self {
+        Obj::Sum(s)
     }
 }
 

@@ -5,13 +5,13 @@ impl Runtime {
         &mut self,
         stmt: &ByEnumerateFiniteSetStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let (params, param_sets) = stmt.expanded_list_set_params().map_err(|msg| {
-            short_exec_error(stmt.clone().into(), msg, None, vec![])
-        })?;
+        let (params, param_sets) = stmt
+            .expanded_list_set_params()
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
 
-        let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            short_exec_error(stmt.clone().into(), msg, None, vec![])
-        })?;
+        let corresponding_forall_fact = stmt
+            .to_corresponding_forall_fact()
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
 
         self.verify_forall_fact_params_and_dom_well_defined(
             &stmt.forall_fact,
@@ -209,7 +209,10 @@ impl Runtime {
             if verified_result.is_unknown() {
                 return Err(short_exec_error(
                     stmt.clone().into(),
-                    format!("by enumerate finite_set: failed to prove `{}`", fact_to_prove),
+                    format!(
+                        "by enumerate finite_set: failed to prove `{}`",
+                        fact_to_prove
+                    ),
                     None,
                     vec![],
                 ));
