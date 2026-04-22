@@ -48,16 +48,6 @@ impl DefAbstractPropStmt {
 }
 
 #[derive(Clone)]
-pub struct DefStructStmt {
-    pub name: String,
-    pub param_defs: ParamDefWithType,
-    pub dom_facts: Vec<OrAndChainAtomicFact>,
-    pub fields: Vec<(String, ParamType)>,
-    pub facts: Vec<OrAndChainAtomicFact>,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
 pub struct DefFamilyStmt {
     pub name: String,
     pub params_def_with_type: ParamDefWithType,
@@ -153,37 +143,6 @@ impl fmt::Display for DefAbstractPropStmt {
             LEFT_BRACE,
             vec_to_string_join_by_comma(&self.params),
             RIGHT_BRACE
-        )
-    }
-}
-
-impl fmt::Display for DefStructStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Format: struct name(params): \n  fields... \n  <=>: \n  facts...
-        // `fields` and `facts` are exactly what the parser stored (no per-type-param prefix rows).
-        let fields_str: String = self
-            .fields
-            .iter()
-            .map(|(name, or_val)| format!("{} {}", name, or_val))
-            .collect::<Vec<_>>()
-            .join("\n");
-        let fields_indented =
-            to_string_and_add_four_spaces_at_beginning_of_each_line(&fields_str, 1);
-        let equiv_line = add_four_spaces_at_beginning(format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
-        let facts_indented =
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1);
-        write!(
-            f,
-            "{} {}{}{}{} {}\n{}\n{}\n{}",
-            STRUCT,
-            self.name,
-            LEFT_BRACE,
-            self.param_defs.to_string(),
-            RIGHT_BRACE,
-            COLON,
-            fields_indented,
-            equiv_line,
-            facts_indented
         )
     }
 }
@@ -627,35 +586,3 @@ impl fmt::Display for DefFamilyStmt {
     }
 }
 
-impl DefStructStmt {
-    pub fn new(
-        name: String,
-        param_defs: ParamDefWithType,
-        dom_facts: Vec<OrAndChainAtomicFact>,
-        fields: Vec<(String, ParamType)>,
-        facts: Vec<OrAndChainAtomicFact>,
-        line_file: LineFile,
-    ) -> Self {
-        if fields.len() <= 1 {
-            unreachable!();
-        }
-
-        DefStructStmt {
-            name,
-            param_defs,
-            dom_facts,
-            fields,
-            facts,
-            line_file,
-        }
-    }
-
-    pub fn number_of_params(&self) -> usize {
-        self.param_defs.number_of_params()
-    }
-
-    /// 按定义顺序展开所有类型形参名（与 `struct T(...)` 中参数顺序一致）。
-    pub fn get_params(&self) -> Vec<String> {
-        self.param_defs.collect_param_names()
-    }
-}

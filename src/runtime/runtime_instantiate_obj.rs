@@ -24,10 +24,6 @@ impl Runtime {
         match obj {
             Obj::Atom(AtomObj::Identifier(inner)) => self.inst_identifier(inner, param_to_arg_map),
             Obj::Atom(AtomObj::IdentifierWithMod(inner)) => self.inst_identifier_with_mod(inner, param_to_arg_map),
-            Obj::FieldAccess(inner) => self.inst_field_access(inner, param_to_arg_map),
-            Obj::FieldAccessWithMod(inner) => {
-                self.inst_field_access_with_mod(inner, param_to_arg_map)
-            }
             Obj::FnObj(inner) => self.inst_fn_obj(inner, param_to_arg_map, ctx),
             Obj::Number(inner) => self.inst_number(inner, param_to_arg_map, ctx),
             Obj::Add(inner) => self.inst_add(inner, param_to_arg_map, ctx),
@@ -86,13 +82,6 @@ impl Runtime {
                 }
                 .into())
             }
-            Obj::StructObj(s) => {
-                let mut args = Vec::with_capacity(s.args.len());
-                for a in s.args.iter() {
-                    args.push(self.inst_obj(a, param_to_arg_map, ctx)?);
-                }
-                Ok(StructObj::new(s.name.clone(), args).into())
-            }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if ctx == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
@@ -101,44 +90,6 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
-            Obj::ForallFieldAccessObj(p) => {
-                if ctx != ParamObjType::Forall {
-                    return Ok(p.clone().into());
-                }
-
-                let forall_field_access_head = p.name.clone();
-
-                if let Some(head_should_inst_to) = param_to_arg_map.get(&forall_field_access_head) {
-                    match head_should_inst_to {
-                        Obj::Atom(AtomObj::Identifier(identifier)) => {
-                            return Ok(Obj::FieldAccess(FieldAccess::new(
-                                identifier.name.clone(),
-                                p.field.clone(),
-                            ))
-                            .into());
-                        }
-                        Obj::Atom(AtomObj::Forall(forall_free_param_obj)) => {
-                            return Ok(ForallFieldAccessObj::new(
-                                forall_free_param_obj.name.clone(),
-                                p.field.clone(),
-                            )
-                            .into());
-                        }
-                        Obj::Atom(AtomObj::Def(def_h)) => {
-                            return Ok(DefHeaderFreeFieldAccessObj::new(
-                                def_h.name.clone(),
-                                p.field.clone(),
-                            )
-                            .into());
-                        }
-                        _ => {
-                            return Ok(p.clone().into());
-                        }
-                    }
-                } else {
-                    return Ok(p.clone().into());
-                }
-            }
             Obj::Atom(AtomObj::Def(p)) => {
                 if ctx == ParamObjType::DefHeader {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
@@ -146,44 +97,6 @@ impl Runtime {
                     }
                 }
                 Ok(p.clone().into())
-            }
-            Obj::DefFreeFieldAccessObj(p) => {
-                if ctx != ParamObjType::DefHeader {
-                    return Ok(p.clone().into());
-                }
-
-                let base = p.name.clone();
-
-                if let Some(head_should_inst_to) = param_to_arg_map.get(&base) {
-                    match head_should_inst_to {
-                        Obj::Atom(AtomObj::Identifier(identifier)) => {
-                            return Ok(Obj::FieldAccess(FieldAccess::new(
-                                identifier.name.clone(),
-                                p.field.clone(),
-                            ))
-                            .into());
-                        }
-                        Obj::Atom(AtomObj::Def(def_h)) => {
-                            return Ok(DefHeaderFreeFieldAccessObj::new(
-                                def_h.name.clone(),
-                                p.field.clone(),
-                            )
-                            .into());
-                        }
-                        Obj::Atom(AtomObj::Forall(forall_p)) => {
-                            return Ok(ForallFieldAccessObj::new(
-                                forall_p.name.clone(),
-                                p.field.clone(),
-                            )
-                            .into());
-                        }
-                        _ => {
-                            return Ok(p.clone().into());
-                        }
-                    }
-                } else {
-                    return Ok(p.clone().into());
-                }
             }
             Obj::Atom(AtomObj::Exist(p)) => {
                 if ctx == ParamObjType::Exist {
@@ -225,15 +138,6 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
-            Obj::Atom(AtomObj::StructSelfField(p)) => {
-                if ctx != ParamObjType::StructSelf {
-                    return Ok(p.clone().into());
-                }
-                if let Some(obj) = param_to_arg_map.get(&p.field) {
-                    return Ok(obj.clone());
-                }
-                Ok(p.clone().into())
-            }
         }
     }
 
@@ -257,113 +161,6 @@ impl Runtime {
         Ok(identifier_with_mod.clone().into())
     }
 
-    pub fn inst_field_access(
-        &self,
-        field_access: &FieldAccess,
-        param_to_arg_map: &HashMap<String, Obj>,
-    ) -> Result<Obj, RuntimeError> {
-        let dotted = field_access_to_string(&field_access.name, &field_access.field);
-        if let Some(obj) = param_to_arg_map.get(&dotted) {
-            return Ok(obj.clone());
-        }
-        match param_to_arg_map.get(&field_access.name) {
-            Some(Obj::Atom(AtomObj::Identifier(identifier))) => {
-                Ok(FieldAccess::new(identifier.name.clone(), field_access.field.clone()).into())
-            }
-            Some(Obj::Atom(AtomObj::IdentifierWithMod(identifier_with_mod))) => Ok(FieldAccessWithMod::new(
-                identifier_with_mod.mod_name.clone(),
-                identifier_with_mod.name.clone(),
-                field_access.field.clone(),
-            )
-            .into()),
-            Some(obj) => {
-                let tuple_opt = match obj {
-                    Obj::Tuple(t) => Some(t.clone()),
-                    _ => self.get_obj_equal_to_tuple(&obj.to_string()),
-                };
-                match tuple_opt {
-                    Some(t) => self.inst_field_access_on_struct_tuple(field_access, &t),
-                    None => {
-                        return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                            None,
-                            format!(
-                                "field `{}` of struct `{}` is not a tuple",
-                                field_access.field, field_access.name
-                            ),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ))
-                        .into())
-                    }
-                }
-            }
-            None => Ok(field_access.clone().into()),
-        }
-    }
-
-    fn inst_field_access_on_struct_tuple(
-        &self,
-        field_access: &FieldAccess,
-        tuple: &Tuple,
-    ) -> Result<Obj, RuntimeError> {
-        let Some(def) = self.get_definition_of_struct_where_object_satisfies(
-            &AtomicName::WithoutMod(field_access.name.clone()),
-        ) else {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("struct `{}` is not defined", field_access.name),
-                default_line_file(),
-                None,
-                vec![],
-            ))
-            .into());
-        };
-
-        let Some(field_index) = def
-            .fields
-            .iter()
-            .position(|(fname, _)| fname == &field_access.field)
-        else {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "field `{}` of struct `{}` is not defined",
-                    field_access.field, field_access.name
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
-            .into());
-        };
-
-        let tuple_index = field_index + def.number_of_params();
-        let Some(component) = tuple.args.get(tuple_index) else {
-            return Err(
-                InstantiateRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!("field `{}` of struct `{}` is at index {}, but tuple for `{}` has only {} component(s)", field_access.field, field_access.name, tuple_index, field_access.name, tuple.args.len()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ))
-                .into(),
-            );
-        };
-
-        Ok((**component).clone())
-    }
-
-    pub fn inst_field_access_with_mod(
-        &self,
-        field_access_with_mod: &FieldAccessWithMod,
-        param_to_arg_map: &HashMap<String, Obj>,
-    ) -> Result<Obj, RuntimeError> {
-        _ = param_to_arg_map;
-        Ok(field_access_with_mod.clone().into())
-    }
-
     pub fn inst_fn_obj(
         &self,
         fn_obj: &FnObj,
@@ -384,13 +181,8 @@ impl Runtime {
         let final_head: FnObjHead = match inst_head {
             Obj::Atom(AtomObj::Identifier(x)) => FnObjHead::Identifier(x.clone()),
             Obj::Atom(AtomObj::IdentifierWithMod(x)) => FnObjHead::IdentifierWithMod(x.clone()),
-            Obj::FieldAccess(x) => FnObjHead::FieldAccess(x.clone()),
-            Obj::FieldAccessWithMod(x) => FnObjHead::FieldAccessWithMod(x.clone()),
-            Obj::Atom(AtomObj::StructSelfField(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Forall(p)) => p.clone().into(),
-            Obj::ForallFieldAccessObj(p) => FnObjHead::ForallFieldAccess(p.clone()),
             Obj::Atom(AtomObj::Def(p)) => p.clone().into(),
-            Obj::DefFreeFieldAccessObj(p) => FnObjHead::DefHeaderFieldAccess(p.clone()),
             Obj::Atom(AtomObj::Exist(p)) => p.clone().into(),
             Obj::Atom(AtomObj::SetBuilder(p)) => p.clone().into(),
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
@@ -944,16 +736,6 @@ impl Runtime {
             ParamType::FiniteSet(_) => Ok(param_type.clone()),
             ParamType::NonemptySet(_) => Ok(param_type.clone()),
             ParamType::Obj(obj) => Ok(ParamType::Obj(self.inst_obj(obj, param_to_arg_map, ctx)?)),
-            ParamType::Struct(struct_ty) => {
-                let mut params = Vec::with_capacity(struct_ty.args.len());
-                for param in struct_ty.args.iter() {
-                    params.push(self.inst_obj(param, param_to_arg_map, ctx)?);
-                }
-                Ok(ParamType::Struct(StructObj::new(
-                    struct_ty.name.clone(),
-                    params,
-                )))
-            }
         }
     }
 

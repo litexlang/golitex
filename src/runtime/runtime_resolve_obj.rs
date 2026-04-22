@@ -176,10 +176,7 @@ impl Runtime {
                     obj.clone()
                 }
             }
-            Obj::Atom(AtomObj::Identifier(_))
-            | Obj::Atom(AtomObj::IdentifierWithMod(_))
-            | Obj::FieldAccess(_)
-            | Obj::FieldAccessWithMod(_) => {
+            Obj::Atom(AtomObj::Identifier(_)) | Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
                 if let Some(number) = self.resolve_obj_to_number(obj) {
                     number.into()
                 } else {
@@ -327,10 +324,6 @@ impl Runtime {
                     params,
                 }
                 .into()
-            }
-            Obj::StructObj(s) => {
-                let args: Vec<Obj> = s.args.iter().map(|a| self.resolve_obj(a)).collect();
-                StructObj::new(s.name.clone(), args).into()
             }
             _ => obj.clone(),
         }

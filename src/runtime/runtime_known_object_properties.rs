@@ -5,19 +5,6 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn get_object_satisfy_struct(
-        &self,
-        obj: &AtomicName,
-    ) -> Option<&StructObj> {
-        let key = obj.to_string();
-        for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_identifier_satisfy_struct.get(&key) {
-                return Some(definition);
-            }
-        }
-        None
-    }
-
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<&FnSet> {
         let key = obj.to_string();
 
