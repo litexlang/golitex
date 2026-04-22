@@ -4,6 +4,7 @@ use std::collections::HashMap;
 impl Runtime {
     pub fn exec_by_induc_stmt(&mut self, stmt: &ByInducStmt) -> Result<StmtResult, RuntimeError> {
         let body_exec_result: Result<StmtResult, RuntimeError> = self.run_in_local_env(|rt| {
+            rt.exec_by_induc_stmt_assume_proof_context(stmt)?;
             let mut infer_result = InferResult::new();
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
@@ -42,6 +43,64 @@ impl Runtime {
 }
 
 impl Runtime {
+    /// `x $in Z`, `x >= induc_from`, and each `to_prove` instantiated at `x` (induction hypothesis)
+    /// for the step — same assumptions the checker uses when verifying the generated step `forall`.
+    fn exec_by_induc_stmt_assume_proof_context(
+        &mut self,
+        stmt: &ByInducStmt,
+    ) -> Result<(), RuntimeError> {
+        let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            vec![stmt.param.clone()],
+            ParamType::Obj(StandardSet::Z.into()),
+        )]);
+        self.define_params_with_type(&params_def, false, ParamObjType::Induc)
+            .map_err(|e| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "by induc: failed to declare induction parameter in proof".to_string(),
+                    Some(e),
+                    vec![],
+                )
+            })?;
+
+        let dom_ge: Fact = GreaterEqualFact::new(
+            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc),
+            stmt.induc_from.clone(),
+            stmt.line_file.clone(),
+        )
+        .into();
+        self.store_fact_without_well_defined_verified_and_infer(dom_ge)
+            .map_err(|e| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "by induc: failed to assume domain (param >= induction start) in proof"
+                        .to_string(),
+                    Some(e),
+                    vec![],
+                )
+            })?;
+
+        let induc_param_obj =
+            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
+        let induc_map: HashMap<String, Obj> =
+            HashMap::from([(stmt.param.clone(), induc_param_obj)]);
+        for fact in stmt.to_prove.iter() {
+            let inst = self
+                .inst_exist_or_and_chain_atomic_fact(fact, &induc_map, ParamObjType::Induc)?
+                .to_fact();
+            self.store_fact_without_well_defined_verified_and_infer(inst)
+                .map_err(|e| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        "by induc: failed to assume induction hypothesis in proof".to_string(),
+                        Some(e),
+                        vec![],
+                    )
+                })?;
+        }
+        Ok(())
+    }
+
     fn induc_stmt_forall_param_map(param: &str) -> HashMap<String, Obj> {
         let mut m = HashMap::with_capacity(1);
         m.insert(
