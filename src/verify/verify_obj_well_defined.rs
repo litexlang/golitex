@@ -23,8 +23,8 @@ impl Runtime {
         }
 
         match obj {
-            Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
-            Obj::IdentifierWithMod(x) => self.verify_identifier_with_mod_well_defined(x),
+            Obj::Atom(AtomObj::Identifier(identifier)) => self.verify_identifier_well_defined(identifier),
+            Obj::Atom(AtomObj::IdentifierWithMod(x)) => self.verify_identifier_with_mod_well_defined(x),
             Obj::FieldAccess(x) => self.verify_field_access_well_defined(x),
             Obj::FieldAccessWithMod(x) => self.verify_field_access_with_mod_well_defined(x),
             Obj::FnObj(fn_obj) => self.verify_fn_obj_well_defined(fn_obj, verify_state),
@@ -94,16 +94,16 @@ impl Runtime {
             Obj::StructObj(struct_ty) => {
                 self.verify_param_type_struct_well_defined(struct_ty, verify_state)
             }
-            Obj::ForallFreeParamObj(_) => Ok(()),
+            Obj::Atom(AtomObj::Forall(_)) => Ok(()),
             Obj::ForallFieldAccessObj(_) => Ok(()),
-            Obj::DefFreeParamObj(_) => Ok(()),
+            Obj::Atom(AtomObj::Def(_)) => Ok(()),
             Obj::DefFreeFieldAccessObj(_) => Ok(()),
-            Obj::ExistFreeParamObj(_) => Ok(()),
-            Obj::SetBuilderFreeParamObj(_) => Ok(()),
-            Obj::FnSetFreeParamObj(_) => Ok(()),
-            Obj::StructSelfFieldFreeParamObj(_) => Ok(()),
-            Obj::ByInducFreeParamObj(_) => Ok(()),
-            Obj::DefAlgoFreeParamObj(_) => Ok(()),
+            Obj::Atom(AtomObj::Exist(_)) => Ok(()),
+            Obj::Atom(AtomObj::SetBuilder(_)) => Ok(()),
+            Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
+            Obj::Atom(AtomObj::StructSelfField(_)) => Ok(()),
+            Obj::Atom(AtomObj::Induc(_)) => Ok(()),
+            Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -1510,7 +1510,7 @@ impl Runtime {
     fn matrix_value_shape(rt: &Runtime, obj: &Obj) -> Result<(usize, usize), RuntimeError> {
         match obj {
             Obj::MatrixListObj(m) => Self::rectangular_shape_of_matrix_list_obj(m),
-            Obj::Identifier(id) => {
+            Obj::Atom(AtomObj::Identifier(id)) => {
                 Self::matrix_list_shape_for_name_known_as_matrix_list(rt, &id.name)
             }
             Obj::MatrixAdd(inner) => Self::matrix_value_shape(rt, &inner.left),

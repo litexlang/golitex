@@ -262,7 +262,7 @@ impl fmt::Display for DefAlgoFreeParamObj {
 
 impl From<ForallFreeParamObj> for Obj {
     fn from(v: ForallFreeParamObj) -> Self {
-        Obj::ForallFreeParamObj(v)
+        Obj::Atom(AtomObj::Forall(v))
     }
 }
 
@@ -280,43 +280,43 @@ impl From<DefHeaderFreeFieldAccessObj> for Obj {
 
 impl From<DefHeaderFreeParamObj> for Obj {
     fn from(v: DefHeaderFreeParamObj) -> Self {
-        Obj::DefFreeParamObj(v)
+        Obj::Atom(AtomObj::Def(v))
     }
 }
 
 impl From<ExistFreeParamObj> for Obj {
     fn from(v: ExistFreeParamObj) -> Self {
-        Obj::ExistFreeParamObj(v)
+        Obj::Atom(AtomObj::Exist(v))
     }
 }
 
 impl From<SetBuilderFreeParamObj> for Obj {
     fn from(v: SetBuilderFreeParamObj) -> Self {
-        Obj::SetBuilderFreeParamObj(v)
+        Obj::Atom(AtomObj::SetBuilder(v))
     }
 }
 
 impl From<FnSetFreeParamObj> for Obj {
     fn from(v: FnSetFreeParamObj) -> Self {
-        Obj::FnSetFreeParamObj(v)
+        Obj::Atom(AtomObj::FnSet(v))
     }
 }
 
 impl From<StructSelfFieldFreeParamObj> for Obj {
     fn from(v: StructSelfFieldFreeParamObj) -> Self {
-        Obj::StructSelfFieldFreeParamObj(v)
+        Obj::Atom(AtomObj::StructSelfField(v))
     }
 }
 
 impl From<ByInducFreeParamObj> for Obj {
     fn from(v: ByInducFreeParamObj) -> Self {
-        Obj::ByInducFreeParamObj(v)
+        Obj::Atom(AtomObj::Induc(v))
     }
 }
 
 impl From<DefAlgoFreeParamObj> for Obj {
     fn from(v: DefAlgoFreeParamObj) -> Self {
-        Obj::DefAlgoFreeParamObj(v)
+        Obj::Atom(AtomObj::DefAlgo(v))
     }
 }
 

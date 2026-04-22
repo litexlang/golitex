@@ -45,10 +45,22 @@ impl FnObjHead {
     /// If `obj` is a plain name/field shape, returns the corresponding function head; otherwise `None`.
     pub fn from_name_obj(obj: Obj) -> Option<FnObjHead> {
         match obj {
-            Obj::Identifier(x) => Some(FnObjHead::Identifier(x)),
-            Obj::IdentifierWithMod(x) => Some(FnObjHead::IdentifierWithMod(x)),
             Obj::FieldAccess(x) => Some(FnObjHead::FieldAccess(x)),
             Obj::FieldAccessWithMod(x) => Some(FnObjHead::FieldAccessWithMod(x)),
+            Obj::ForallFieldAccessObj(p) => Some(FnObjHead::ForallFieldAccess(p)),
+            Obj::DefFreeFieldAccessObj(p) => Some(FnObjHead::DefHeaderFieldAccess(p)),
+            Obj::Atom(a) => match a {
+                AtomObj::Identifier(x) => Some(FnObjHead::Identifier(x)),
+                AtomObj::IdentifierWithMod(x) => Some(FnObjHead::IdentifierWithMod(x)),
+                AtomObj::Forall(p) => Some(FnObjHead::Forall(p)),
+                AtomObj::Def(p) => Some(FnObjHead::DefHeader(p)),
+                AtomObj::Exist(p) => Some(FnObjHead::Exist(p)),
+                AtomObj::SetBuilder(p) => Some(FnObjHead::SetBuilder(p)),
+                AtomObj::FnSet(p) => Some(FnObjHead::FnSet(p)),
+                AtomObj::Induc(p) => Some(FnObjHead::Induc(p)),
+                AtomObj::DefAlgo(p) => Some(FnObjHead::DefAlgo(p)),
+                AtomObj::StructSelfField(p) => Some(FnObjHead::StructSelfField(p)),
+            },
             _ => None,
         }
     }
