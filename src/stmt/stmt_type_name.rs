@@ -135,12 +135,6 @@ impl ByFamilyStmt {
     }
 }
 
-impl ByStructStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByStructStmt".to_string()
-    }
-}
-
 impl ByTupleStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByTupleStmt".to_string()
@@ -231,8 +225,3 @@ impl DefFamilyStmt {
     }
 }
 
-impl DefStructStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "DefStructStmt".to_string()
-    }
-}

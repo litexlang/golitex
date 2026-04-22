@@ -277,10 +277,10 @@ impl Runtime {
             Obj::Atom(AtomObj::Forall(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::Def(p)) => Some(p.name.as_str()),
-            Obj::DefFreeFieldAccessObj(p) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::Induc(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Sum(p)) => Some(p.name.as_str()),
             _ => None,
         }
     }
@@ -291,10 +291,10 @@ impl Runtime {
             Obj::Atom(AtomObj::Forall(p)) => p.name == name,
             Obj::Atom(AtomObj::FnSet(p)) => p.name == name,
             Obj::Atom(AtomObj::Def(p)) => p.name == name,
-            Obj::DefFreeFieldAccessObj(p) => p.name == name,
             Obj::Atom(AtomObj::SetBuilder(p)) => p.name == name,
             Obj::Atom(AtomObj::Induc(p)) => p.name == name,
             Obj::Atom(AtomObj::DefAlgo(p)) => p.name == name,
+            Obj::Atom(AtomObj::Sum(p)) => p.name == name,
             _ => obj.to_string() == name,
         }
     }

@@ -427,6 +427,7 @@ impl Runtime {
                 verify_state,
                 StandardSet::ZNeg,
             ),
+            // R: treat finite `sum(i, lo, hi, body)` like other closed-form real expressions (no recursive $in R$ on parts; well-definedness is separate).
             (
                 Obj::Add(_)
                 | Obj::Sub(_)
@@ -437,7 +438,8 @@ impl Runtime {
                 | Obj::Max(_)
                 | Obj::Min(_)
                 | Obj::Abs(_)
-                | Obj::Log(_),
+                | Obj::Log(_)
+                | Obj::Sum(_),
                 Obj::StandardSet(StandardSet::R),
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
@@ -567,11 +569,6 @@ impl Runtime {
                 );
                 self.verify_atomic_fact(&expanded.into(), verify_state)
             }
-            (_, Obj::StructObj(struct_ty)) => self.verify_obj_satisfies_struct_param_type(
-                in_fact.element.clone(),
-                struct_ty,
-                verify_state,
-            ),
             (_, target_set_obj) => {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }

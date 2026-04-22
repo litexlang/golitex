@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// 仅「名字/绑定子」的 [`Obj`] 载荷：标识符、带 `::` 的名字、与解析期自由参标记（不含 `FieldAccess` / 复合表达式）。
+/// 仅「名字/绑定子」的 [`Obj`] 载荷：标识符、带 `::` 的名字、与解析期自由参标记。
 #[derive(Clone)]
 pub enum AtomObj {
     Identifier(Identifier),
@@ -11,7 +11,7 @@ pub enum AtomObj {
     Exist(ExistFreeParamObj),
     SetBuilder(SetBuilderFreeParamObj),
     FnSet(FnSetFreeParamObj),
-    StructSelfField(StructSelfFieldFreeParamObj),
+    Sum(SumFreeParamObj),
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
 }
@@ -26,7 +26,7 @@ impl fmt::Display for AtomObj {
             AtomObj::Exist(x) => write!(f, "{}", x),
             AtomObj::SetBuilder(x) => write!(f, "{}", x),
             AtomObj::FnSet(x) => write!(f, "{}", x),
-            AtomObj::StructSelfField(x) => write!(f, "{}", x),
+            AtomObj::Sum(x) => write!(f, "{}", x),
             AtomObj::Induc(x) => write!(f, "{}", x),
             AtomObj::DefAlgo(x) => write!(f, "{}", x),
         }
@@ -94,13 +94,13 @@ impl AtomObj {
                 };
                 AtomObj::FnSet(FnSetFreeParamObj::new(name))
             }
-            AtomObj::StructSelfField(p) => {
-                let field = if p.field == from {
+            AtomObj::Sum(p) => {
+                let name = if p.name == from {
                     to.to_string()
                 } else {
-                    p.field
+                    p.name
                 };
-                AtomObj::StructSelfField(StructSelfFieldFreeParamObj::new(field))
+                AtomObj::Sum(SumFreeParamObj::new(name))
             }
             AtomObj::Induc(p) => {
                 let name = if p.name == from {

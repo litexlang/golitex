@@ -490,19 +490,12 @@ impl Runtime {
         let (head, mut body_vectors) = match &result {
             Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => (FnObjHead::IdentifierWithMod(m.clone()), vec![]),
-            Obj::FieldAccess(field_access) => (FnObjHead::FieldAccess(field_access.clone()), vec![]),
-            Obj::FieldAccessWithMod(field_access_with_mod) => (
-                FnObjHead::FieldAccessWithMod(field_access_with_mod.clone()),
-                vec![],
-            ),
-            Obj::Atom(AtomObj::StructSelfField(p)) => (FnObjHead::StructSelfField(p.clone()), vec![]),
             Obj::Atom(AtomObj::Forall(p)) => (FnObjHead::Forall(p.clone()), vec![]),
-            Obj::ForallFieldAccessObj(p) => (FnObjHead::ForallFieldAccess(p.clone()), vec![]),
             Obj::Atom(AtomObj::Exist(p)) => (FnObjHead::Exist(p.clone()), vec![]),
             Obj::Atom(AtomObj::Def(p)) => (FnObjHead::DefHeader(p.clone()), vec![]),
-            Obj::DefFreeFieldAccessObj(p) => (FnObjHead::DefHeaderFieldAccess(p.clone()), vec![]),
             Obj::Atom(AtomObj::SetBuilder(p)) => (FnObjHead::SetBuilder(p.clone()), vec![]),
             Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Sum(p)) => (FnObjHead::Sum(p.clone()), vec![]),
             Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
             Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
             _ => return Ok(result),
@@ -580,11 +573,6 @@ impl Runtime {
             let family = self.parse_family_obj(tb)?;
             return Ok(Obj::FamilyObj(family));
         }
-        if tok == STRUCT {
-            let struct_obj = self.parse_struct_obj(tb)?;
-            return Ok(Obj::StructObj(struct_obj.into()));
-        }
-
         if tok == ABS {
             tb.skip()?;
             tb.skip_token(LEFT_BRACE)?;
@@ -916,6 +904,9 @@ impl Runtime {
                 )))
             })?;
             return Ok(Choose::new(value).into());
+        }
+        if tok == SUM {
+            return self.parse_sum_obj(tb);
         }
         if tok == PROJ {
             tb.skip()?;
@@ -1273,7 +1264,7 @@ impl Runtime {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new(
                             None,
-                            "`self` must be written as `self.<field>`".to_string(),
+                            "`self` is not supported in this version".to_string(),
                             default_line_file(),
                             None,
                             vec![],
@@ -1284,16 +1275,11 @@ impl Runtime {
                     .parsing_free_param_collection
                     .resolve_identifier_to_free_param_obj(&id.name))
             }
-            Obj::FieldAccess(fa) => self
-                .parsing_free_param_collection
-                .resolve_field_access_to_free_param_obj(&fa.name, &fa.field)
-                .map_err(|e| e.into()),
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => Ok(Obj::Atom(AtomObj::IdentifierWithMod(m))),
-            Obj::FieldAccessWithMod(f) => Ok(Obj::FieldAccessWithMod(f)),
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
-                    "internal: atom position was not a name/field form".to_string(),
+                    "internal: atom position was not a name form".to_string(),
                     default_line_file(),
                     None,
                     vec![],
@@ -1338,6 +1324,27 @@ impl Runtime {
             objs.push(self.parse_obj(tb)?);
         }
         Ok(objs)
+    }
+
+    /// `sum(index, start, end, body)` — `index` is bound as [`ParamObjType::Sum`] only while parsing `body`.
+    fn parse_sum_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        tb.skip_token(SUM)?;
+        tb.skip_token(LEFT_BRACE)?;
+        let param_name = parse_synthetically_correct_identifier_string(tb)?;
+        self.validate_user_fn_param_names_for_parse(&[param_name.clone()], tb.line_file.clone())?;
+        tb.skip_token(COMMA)?;
+        let start = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+        let end = self.parse_obj(tb)?;
+        tb.skip_token(COMMA)?;
+        let body = self.parse_in_local_free_param_scope(
+            ParamObjType::Sum,
+            &[param_name.clone()],
+            tb.line_file.clone(),
+            |this| this.parse_obj(tb),
+        )?;
+        tb.skip_token(RIGHT_BRACE)?;
+        Ok(SumObj::new(param_name, start, end, body).into())
     }
 
     fn parse_set_builder_or_set_list(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
@@ -1443,31 +1450,22 @@ impl Runtime {
         Ok(ListSet::new(objs))
     }
 
-    // Unqualified name-shaped atom: `name` or `name.field` (one `.` max). No `::`.
+    /// Unqualified name-shaped atom. Field access (`name.field`) is not supported.
     pub fn parse_identifier_or_field_access(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Obj, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            tb.skip()?;
-            let field = parse_synthetically_correct_identifier_string(tb)?;
-            if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "chained field access `a.b.c` is not supported; use at most one `.`"
-                            .to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
-                )));
-            }
-            Ok(FieldAccess::new(left, field).into())
-        } else {
-            Ok(Identifier::new(left).into())
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "field access (`name.field`) is not supported in this version".to_string(),
+                tb.line_file.clone(),
+                None,
+                vec![],
+            ))));
         }
+        Ok(Identifier::new(left).into())
     }
 
     fn parse_mod_qualified_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
@@ -1475,25 +1473,16 @@ impl Runtime {
         tb.skip_token(MOD_SIGN)?;
         let right = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            tb.skip()?;
-            let field = parse_synthetically_correct_identifier_string(tb)?;
-            if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "chained field access `a.b.c` is not supported; use at most one `.`"
-                            .to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
-                )));
-            }
-
-            Ok(FieldAccessWithMod::new(left, right, field).into())
-        } else {
-            Ok(IdentifierWithMod::new(left, right).into())
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "field access on module-qualified names is not supported in this version"
+                    .to_string(),
+                tb.line_file.clone(),
+                None,
+                vec![],
+            ))));
         }
+        Ok(IdentifierWithMod::new(left, right).into())
     }
 
     /// Unqualified or `::`-qualified name / field name; returns a name-shaped [`Obj`].
@@ -1515,13 +1504,6 @@ impl Runtime {
         let name = self.parse_atomic_name(tb)?;
         let params = self.parse_braced_objs(tb)?;
         Ok(FamilyObj { name, params })
-    }
-
-    pub fn parse_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<StructObj, RuntimeError> {
-        tb.skip_token(STRUCT)?;
-        let name = self.parse_atomic_name(tb)?;
-        let params = self.parse_braced_objs(tb)?;
-        Ok(StructObj { name, args: params })
     }
 
     /// `ident` or `mod::ident` as a predicate/atomic name in parse position.

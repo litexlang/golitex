@@ -9,7 +9,8 @@ pub enum ParamObjType {
     Exist,
     SetBuilder,
     FnSet,
-    StructSelf,
+    /// Summation index in `sum(i, lo, hi, body)` — bound only in `body`.
+    Sum,
     Induc,
     DefAlgo,
 }
@@ -23,7 +24,7 @@ impl ParamObjType {
             ParamObjType::Exist => 3,
             ParamObjType::SetBuilder => 4,
             ParamObjType::FnSet => 5,
-            ParamObjType::StructSelf => 6,
+            ParamObjType::Sum => 6,
             ParamObjType::Induc => 7,
             ParamObjType::DefAlgo => 8,
         }
@@ -94,20 +95,6 @@ pub struct DefHeaderFreeParamObj {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ForallFieldAccessObj {
-    pub name: String,
-    pub field: String,
-}
-
-/// `base.field` in a [`ParamObjType::DefHeader`] scope (e.g. prop header, struct field ops).
-/// Same spine shape as [`ForallFieldAccessObj`], but display tag is `DefHeader` (`~2`).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DefHeaderFreeFieldAccessObj {
-    pub name: String,
-    pub field: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExistFreeParamObj {
     pub name: String,
 }
@@ -123,8 +110,8 @@ pub struct FnSetFreeParamObj {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct StructSelfFieldFreeParamObj {
-    pub field: String,
+pub struct SumFreeParamObj {
+    pub name: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -140,18 +127,6 @@ pub struct DefAlgoFreeParamObj {
 impl ForallFreeParamObj {
     pub fn new(name: String) -> Self {
         ForallFreeParamObj { name }
-    }
-}
-
-impl ForallFieldAccessObj {
-    pub fn new(name: String, field: String) -> Self {
-        ForallFieldAccessObj { name, field }
-    }
-}
-
-impl DefHeaderFreeFieldAccessObj {
-    pub fn new(name: String, field: String) -> Self {
-        DefHeaderFreeFieldAccessObj { name, field }
     }
 }
 
@@ -179,9 +154,9 @@ impl FnSetFreeParamObj {
     }
 }
 
-impl StructSelfFieldFreeParamObj {
-    pub fn new(field: String) -> Self {
-        StructSelfFieldFreeParamObj { field }
+impl SumFreeParamObj {
+    pub fn new(name: String) -> Self {
+        SumFreeParamObj { name }
     }
 }
 
@@ -200,20 +175,6 @@ impl DefAlgoFreeParamObj {
 impl fmt::Display for ForallFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_parsing_free_param_tagged_spine(f, ParamObjType::Forall, &self.name)
-    }
-}
-
-impl fmt::Display for ForallFieldAccessObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let spine = field_access_to_string(&self.name, &self.field);
-        write_parsing_free_param_tagged_spine(f, ParamObjType::Forall, &spine)
-    }
-}
-
-impl fmt::Display for DefHeaderFreeFieldAccessObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let spine = field_access_to_string(&self.name, &self.field);
-        write_parsing_free_param_tagged_spine(f, ParamObjType::DefHeader, &spine)
     }
 }
 
@@ -241,10 +202,9 @@ impl fmt::Display for FnSetFreeParamObj {
     }
 }
 
-impl fmt::Display for StructSelfFieldFreeParamObj {
+impl fmt::Display for SumFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let spine = field_access_to_string(SELF, &self.field);
-        write_parsing_free_param_tagged_spine(f, ParamObjType::StructSelf, &spine)
+        write_parsing_free_param_tagged_spine(f, ParamObjType::Sum, &self.name)
     }
 }
 
@@ -263,18 +223,6 @@ impl fmt::Display for DefAlgoFreeParamObj {
 impl From<ForallFreeParamObj> for Obj {
     fn from(v: ForallFreeParamObj) -> Self {
         Obj::Atom(AtomObj::Forall(v))
-    }
-}
-
-impl From<ForallFieldAccessObj> for Obj {
-    fn from(v: ForallFieldAccessObj) -> Self {
-        Obj::ForallFieldAccessObj(v)
-    }
-}
-
-impl From<DefHeaderFreeFieldAccessObj> for Obj {
-    fn from(v: DefHeaderFreeFieldAccessObj) -> Self {
-        Obj::DefFreeFieldAccessObj(v)
     }
 }
 
@@ -302,9 +250,9 @@ impl From<FnSetFreeParamObj> for Obj {
     }
 }
 
-impl From<StructSelfFieldFreeParamObj> for Obj {
-    fn from(v: StructSelfFieldFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::StructSelfField(v))
+impl From<SumFreeParamObj> for Obj {
+    fn from(v: SumFreeParamObj) -> Self {
+        Obj::Atom(AtomObj::Sum(v))
     }
 }
 
@@ -320,20 +268,6 @@ impl From<DefAlgoFreeParamObj> for Obj {
     }
 }
 
-/// Field access `base.field` for a struct instance parameter, using the same `~tag` as
-/// [`param_binding_element_obj_for_store`] for `base` (e.g. `~1g` under [`ParamObjType::Forall`],
-/// `~2g` under [`ParamObjType::DefHeader`]).
-pub fn struct_instance_field_access_obj_for_binding(
-    base_name: String,
-    field: String,
-    binding_kind: ParamObjType,
-) -> Obj {
-    match binding_kind {
-        ParamObjType::DefHeader => DefHeaderFreeFieldAccessObj::new(base_name, field).into(),
-        _ => ForallFieldAccessObj::new(base_name, field).into(),
-    }
-}
-
 /// Bound-parameter [`Obj`] for runtime-synthesized facts (`by` stmts, coverage, etc.), matching parse-time `~kind` tagging and [`Runtime::inst_obj`] substitution rules.
 pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
     match scope {
@@ -342,9 +276,10 @@ pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
         ParamObjType::DefHeader => DefHeaderFreeParamObj::new(name).into(),
         ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name).into(),
         ParamObjType::FnSet => FnSetFreeParamObj::new(name).into(),
+        ParamObjType::Sum => SumFreeParamObj::new(name).into(),
         ParamObjType::Induc => ByInducFreeParamObj::new(name).into(),
         ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name).into(),
-        ParamObjType::StructSelf | ParamObjType::Identifier => {
+        ParamObjType::Identifier => {
             unreachable!(
                 "obj_for_bound_param_in_scope: {:?} is not a bare-name binding scope",
                 scope
@@ -356,12 +291,13 @@ pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
 /// Element [`Obj`] for stored typing / membership facts so keys match parsed bound names (`~tag` spine).
 pub fn param_binding_element_obj_for_store(name: String, binding_kind: ParamObjType) -> Obj {
     match binding_kind {
-        ParamObjType::StructSelf | ParamObjType::Identifier => Identifier::new(name).into(),
+        ParamObjType::Identifier => Identifier::new(name).into(),
         ParamObjType::Forall
         | ParamObjType::Exist
         | ParamObjType::DefHeader
         | ParamObjType::SetBuilder
         | ParamObjType::FnSet
+        | ParamObjType::Sum
         | ParamObjType::Induc
         | ParamObjType::DefAlgo => obj_for_bound_param_in_scope(name, binding_kind),
     }

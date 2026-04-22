@@ -7,21 +7,18 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
         obj,
         Obj::Atom(AtomObj::Identifier(_))
             | Obj::Atom(AtomObj::IdentifierWithMod(_))
-            | Obj::FieldAccess(_)
-            | Obj::FieldAccessWithMod(_)
             | Obj::Atom(AtomObj::Forall(_))
-            | Obj::ForallFieldAccessObj(_)
-            | Obj::DefFreeFieldAccessObj(_)
             | Obj::Atom(AtomObj::Exist(_))
             | Obj::Atom(AtomObj::Def(_))
             | Obj::Atom(AtomObj::SetBuilder(_))
             | Obj::Atom(AtomObj::FnSet(_))
+            | Obj::Atom(AtomObj::Sum(_))
             | Obj::Atom(AtomObj::Induc(_))
             | Obj::Atom(AtomObj::DefAlgo(_))
     )
 }
 
-/// Extra map keys so `FnObj` well-defined lookup (`Identifier` / `FieldAccess` head) finds entries
+/// Extra map keys so `FnObj` well-defined lookup (`Identifier` head) finds entries
 /// registered under tagged free-param display (e.g. `~1a` vs `a`).
 fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
     match element {
@@ -30,10 +27,9 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
         Obj::Atom(AtomObj::Def(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::SetBuilder(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::FnSet(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::Sum(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::Induc(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name.clone()],
-        Obj::ForallFieldAccessObj(p) => vec![field_access_to_string(&p.name, &p.field)],
-        Obj::DefFreeFieldAccessObj(p) => vec![field_access_to_string(&p.name, &p.field)],
         _ => vec![],
     }
 }
