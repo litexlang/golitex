@@ -6,7 +6,7 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         _line_file: LineFile,
-        inst_state: InstObjState,
+        inst_state: ToInstWhatKindOfParam,
     ) -> Result<InferResult, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, inst_state)?;
