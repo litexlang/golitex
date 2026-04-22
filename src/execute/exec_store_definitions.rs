@@ -51,18 +51,6 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_struct_def(
-        &mut self,
-        def_struct_stmt: &DefStructStmt,
-    ) -> Result<(), RuntimeError> {
-        let name = def_struct_stmt.name.clone();
-
-        self.top_level_env()
-            .defined_structs
-            .insert(name, def_struct_stmt.clone());
-        Ok(())
-    }
-
     pub fn store_def_family(
         &mut self,
         def_family_stmt: &DefFamilyStmt,

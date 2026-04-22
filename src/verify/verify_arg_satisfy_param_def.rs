@@ -8,11 +8,6 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match param_type {
-            ParamType::Struct(struct_ty) => {
-                let fact =
-                    InFact::new(obj, Obj::StructObj(struct_ty.clone()), default_line_file()).into();
-                self.verify_atomic_fact(&fact, verify_state)
-            }
             ParamType::Obj(set_obj) => {
                 let fact = InFact::new(obj, set_obj.clone(), default_line_file()).into();
                 self.verify_atomic_fact(&fact, verify_state)
