@@ -115,6 +115,7 @@ pub use crate::obj::obj_for_bound_param_in_scope;
 pub use crate::obj::param_binding_element_obj_for_store;
 pub use crate::obj::struct_instance_field_access_obj_for_binding;
 pub use crate::obj::ParamObjType;
+pub use crate::obj::PredicateType;
 pub use crate::obj::{
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
 };

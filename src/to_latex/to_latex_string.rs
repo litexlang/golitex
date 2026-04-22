@@ -1025,6 +1025,19 @@ impl IdentifierWithMod {
     }
 }
 
+impl PredicateType {
+    pub fn to_latex_string(&self) -> String {
+        match self {
+            PredicateType::WithoutMod(s) => latex_local_ident(s),
+            PredicateType::WithMod(m, n) => format!(
+                r"{}\mathbin{{\mathrm{{::}}}}{}",
+                latex_local_ident(m),
+                latex_local_ident(n)
+            ),
+        }
+    }
+}
+
 impl InFact {
     pub fn to_latex_string(&self) -> String {
         format!(
