@@ -210,7 +210,7 @@ impl Runtime {
             )));
         }
         FnObj::new(
-            FnObjHead::Atom(Atom::Identifier(Identifier::new(def_algo_stmt.name.clone()))),
+            FnObjHead::Identifier(Identifier::new(def_algo_stmt.name.clone())),
             vec![fn_call_arg_boxes],
         )
         .into()

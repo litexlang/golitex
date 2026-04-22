@@ -1,6 +1,7 @@
 use crate::common::keywords::MOD_SIGN;
 use std::fmt;
 
+// 用于 prop 的 predicate， struct 和 family 的名字
 #[derive(Clone, PartialEq, Eq)]
 pub enum AtomicName {
     WithoutMod(String),

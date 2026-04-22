@@ -382,10 +382,10 @@ impl Runtime {
         let inst_head = self.inst_obj(&(*fn_obj.head.clone()).into(), param_to_arg_map, ctx)?;
 
         let final_head: FnObjHead = match inst_head {
-            Obj::Identifier(x) => Atom::Identifier(x.clone()).into(),
-            Obj::IdentifierWithMod(x) => Atom::IdentifierWithMod(x.clone()).into(),
-            Obj::FieldAccess(x) => Atom::FieldAccess(x.clone()).into(),
-            Obj::FieldAccessWithMod(x) => Atom::FieldAccessWithMod(x.clone()).into(),
+            Obj::Identifier(x) => FnObjHead::Identifier(x.clone()),
+            Obj::IdentifierWithMod(x) => FnObjHead::IdentifierWithMod(x.clone()),
+            Obj::FieldAccess(x) => FnObjHead::FieldAccess(x.clone()),
+            Obj::FieldAccessWithMod(x) => FnObjHead::FieldAccessWithMod(x.clone()),
             Obj::StructSelfFieldFreeParamObj(p) => p.clone().into(),
             Obj::ForallFreeParamObj(p) => p.clone().into(),
             Obj::ForallFieldAccessObj(p) => FnObjHead::ForallFieldAccess(p.clone()),

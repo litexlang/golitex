@@ -1275,19 +1275,20 @@ impl Obj {
     }
 }
 
-fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
+/// Replace in identifier / `mod::name` / `x.f` / `M::x.f` name-shaped [`Obj`] values only.
+fn replace_bound_identifier_in_name_obj(obj: Obj, from: &str, to: &str) -> Obj {
     if from == to {
-        return atom;
+        return obj;
     }
-    match atom {
-        Atom::Identifier(i) => {
+    match obj {
+        Obj::Identifier(i) => {
             if i.name == from {
                 Identifier::new(to.to_string()).into()
             } else {
-                i.into()
+                Obj::Identifier(i)
             }
         }
-        Atom::IdentifierWithMod(m) => {
+        Obj::IdentifierWithMod(m) => {
             let name = if m.name == from {
                 to.to_string()
             } else {
@@ -1295,7 +1296,7 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
             };
             IdentifierWithMod::new(m.mod_name, name).into()
         }
-        Atom::FieldAccess(f) => {
+        Obj::FieldAccess(f) => {
             let name = if f.name == from {
                 to.to_string()
             } else {
@@ -1303,7 +1304,7 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
             };
             FieldAccess::new(name, f.field).into()
         }
-        Atom::FieldAccessWithMod(f) => {
+        Obj::FieldAccessWithMod(f) => {
             let name = if f.name == from {
                 to.to_string()
             } else {
@@ -1311,6 +1312,7 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
             };
             FieldAccessWithMod::new(f.mod_name, name, f.field).into()
         }
+        _ => obj,
     }
 }
 
@@ -1319,7 +1321,34 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
         return head;
     }
     match head {
-        FnObjHead::Atom(a) => replace_bound_identifier_in_atom(a, from, to).into(),
+        FnObjHead::Identifier(i) => FnObjHead::from_name_obj(replace_bound_identifier_in_name_obj(
+            Obj::Identifier(i.clone()),
+            from,
+            to,
+        ))
+        .expect("name replace preserves fn head shape"),
+        FnObjHead::IdentifierWithMod(m) => {
+            FnObjHead::from_name_obj(replace_bound_identifier_in_name_obj(
+                Obj::IdentifierWithMod(m.clone()),
+                from,
+                to,
+            ))
+            .expect("name replace preserves fn head shape")
+        }
+        FnObjHead::FieldAccess(f) => FnObjHead::from_name_obj(replace_bound_identifier_in_name_obj(
+            Obj::FieldAccess(f.clone()),
+            from,
+            to,
+        ))
+        .expect("name replace preserves fn head shape"),
+        FnObjHead::FieldAccessWithMod(f) => {
+            FnObjHead::from_name_obj(replace_bound_identifier_in_name_obj(
+                Obj::FieldAccessWithMod(f.clone()),
+                from,
+                to,
+            ))
+            .expect("name replace preserves fn head shape")
+        }
         FnObjHead::Forall(p) => {
             let name = if p.name == from {
                 to.to_string()
@@ -1828,17 +1857,6 @@ impl fmt::Display for PowerSet {
             POWER_SET,
             braced_vec_to_string(&vec![self.set.as_ref()])
         )
-    }
-}
-
-impl From<Atom> for Obj {
-    fn from(atom: Atom) -> Self {
-        match atom {
-            Atom::Identifier(a) => a.into(),
-            Atom::IdentifierWithMod(a) => a.into(),
-            Atom::FieldAccess(a) => a.into(),
-            Atom::FieldAccessWithMod(a) => a.into(),
-        }
     }
 }
 
