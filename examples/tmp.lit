@@ -1,23 +1,11 @@
-forall i Z:
-    1 < i < 5
-    =>:
-        i $in range(2, 5)
-        i $in 2...4
-
-forall i Z:
-    1 <= i < 5
-    =>:
-        i $in range(1, 5)
-        i $in 1...4
-
-forall i Z:
-    1 <= i <= 5
-    =>:
-        i $in range(1, 6)
-        i $in 1...5
-
-forall i Z:
-    1 < i <= 5
-    =>:
-        i $in range(2, 6)
-        i $in 2...5
+claim:
+    prove:
+        forall t R:
+            t < 3
+            t - 1 = 6
+            =>:
+                t = 13
+    by contra:
+        prove:
+            t = 13
+        impossible t < 3

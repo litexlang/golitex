@@ -625,6 +625,13 @@ impl Environment {
                     .insert(right_as_string, (right_direct_proof_map, new_equiv_rc));
             }
         }
+
+        if let Some(derived) = super::equality_linear_derive::maybe_derived_linear_equal_fact(equality)
+        {
+            if derived.left.to_string() != derived.right.to_string() {
+                self.store_equality(&derived)?;
+            }
+        }
         Ok(())
     }
 }
