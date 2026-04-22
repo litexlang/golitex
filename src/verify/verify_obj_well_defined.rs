@@ -77,6 +77,7 @@ impl Runtime {
             Obj::MatrixPow(x) => self.verify_matrix_pow_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
+            Obj::Sum(x) => self.verify_sum_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::QPos) => self.verify_q_pos_well_defined(),
             Obj::StandardSet(StandardSet::RPos) => self.verify_r_pos_well_defined(),
@@ -96,6 +97,7 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
+            Obj::Atom(AtomObj::Sum(_)) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -427,6 +429,66 @@ impl Runtime {
             )));
         }
         Ok(())
+    }
+
+    /// Require `left <= right` to be verifiable; does not store the fact.
+    fn require_less_equal_verified(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        verify_state: &VerifyState,
+        err_detail: String,
+    ) -> Result<(), RuntimeError> {
+        let f: AtomicFact =
+            LessEqualFact::new(left.clone(), right.clone(), default_line_file()).into();
+        let r = self.verify_atomic_fact(&f, verify_state)?;
+        if r.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    err_detail,
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    /// Verify `left <= right`, then store it (e.g. summation index domain in `sum`).
+    fn verify_and_store_less_equal(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        verify_state: &VerifyState,
+        err_detail: String,
+    ) -> Result<(), RuntimeError> {
+        let f: AtomicFact = LessEqualFact::new(left, right, default_line_file()).into();
+        let r = self.verify_atomic_fact(&f, verify_state)?;
+        if r.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    err_detail,
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        self.store_atomic_fact_without_well_defined_verified_and_infer(f)?;
+        Ok(())
+    }
+
+    /// When both endpoints normalize to numbers, require a verifiable order (concrete intervals).
+    /// Skip for purely symbolic bounds (e.g. `closed_range(a, b)` under `forall a, b Z` in axioms).
+    fn range_endpoints_are_numeric_for_interval_order_check(
+        &self,
+        start: &Obj,
+        end: &Obj,
+    ) -> bool {
+        self.resolve_obj_to_number(start).is_some() && self.resolve_obj_to_number(end).is_some()
     }
 
     fn verify_add_well_defined(
@@ -861,6 +923,50 @@ impl Runtime {
         Ok(())
     }
 
+    fn verify_sum_well_defined(
+        &mut self,
+        x: &SumObj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(x.start.as_ref(), verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(x.end.as_ref(), verify_state)?;
+        self.require_obj_in_z(x.start.as_ref(), verify_state)?;
+        self.require_obj_in_z(x.end.as_ref(), verify_state)?;
+        self.require_less_equal_verified(
+            x.start.as_ref(),
+            x.end.as_ref(),
+            verify_state,
+            format!(
+                "sum: cannot verify {} <= {} (summation bounds must be ordered)",
+                x.start, x.end
+            ),
+        )?;
+        self.run_in_local_env(|rt| {
+            rt.store_free_param_or_identifier_name(&x.param, ParamObjType::Sum)?;
+            let param_obj = obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::Sum);
+            rt.require_obj_in_z(&param_obj, verify_state)?;
+            rt.verify_and_store_less_equal(
+                (*x.start).clone(),
+                param_obj.clone(),
+                verify_state,
+                format!(
+                    "sum: cannot verify summation index lower bound ({} <= {})",
+                    x.start, x.param
+                ),
+            )?;
+            rt.verify_and_store_less_equal(
+                param_obj,
+                (*x.end).clone(),
+                verify_state,
+                format!(
+                    "sum: cannot verify summation index upper bound ({} <= {})",
+                    x.param, x.end
+                ),
+            )?;
+            rt.verify_obj_well_defined_and_store_cache(x.body.as_ref(), verify_state)
+        })
+    }
+
     fn verify_fn_set_well_defined(
         &mut self,
         x: &FnSet,
@@ -1131,6 +1237,17 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
+        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
+            self.require_less_equal_verified(
+                &x.start,
+                &x.end,
+                verify_state,
+                format!(
+                    "range: cannot verify {} <= {} (numeric half-open interval needs lower <= upper)",
+                    x.start, x.end
+                ),
+            )?;
+        }
         Ok(())
     }
 
@@ -1143,6 +1260,17 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
+        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
+            self.require_less_equal_verified(
+                &x.start,
+                &x.end,
+                verify_state,
+                format!(
+                    "closed_range: cannot verify {} <= {} (numeric closed interval needs lower <= upper)",
+                    x.start, x.end
+                ),
+            )?;
+        }
         Ok(())
     }
 

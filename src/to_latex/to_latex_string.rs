@@ -467,6 +467,18 @@ impl Choose {
     }
 }
 
+impl SumObj {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\sum_{{{}={}}}^{{{}}} \left( {}\right)",
+            latex_local_ident(&self.param),
+            self.start.to_latex_string(),
+            self.end.to_latex_string(),
+            self.body.to_latex_string(),
+        )
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn to_latex_string(&self) -> String {
         let ps = self
@@ -715,6 +727,7 @@ impl FnObj {
             FnObjHead::Exist(p) => latex_local_ident(&p.name),
             FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
+            FnObjHead::Sum(p) => latex_local_ident(&p.name),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
         };
@@ -1858,6 +1871,7 @@ impl Obj {
             Obj::SeqSet(x) => x.to_latex_string(),
             Obj::FiniteSeqListObj(x) => x.to_latex_string(),
             Obj::Choose(x) => x.to_latex_string(),
+            Obj::Sum(x) => x.to_latex_string(),
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
@@ -1868,6 +1882,7 @@ impl Obj {
             Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::Sum(x)) => latex_local_ident(&x.name),
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),

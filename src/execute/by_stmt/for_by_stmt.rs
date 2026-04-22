@@ -2,49 +2,32 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_for_stmt(&mut self, stmt: &ByForStmt) -> Result<StmtResult, RuntimeError> {
-        let (params, param_sets) = stmt.expanded_range_params().map_err(|msg| {
-            short_exec_error(
- stmt.clone().into(),
-                    msg,
-                    None,
-                    vec![],
-                )
-        })?;
+        let (params, param_sets) = stmt
+            .expanded_range_params()
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
 
-        let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            short_exec_error(
- stmt.clone().into(),
-                    msg,
-                    None,
-                    vec![],
-                )
-        })?;
+        let corresponding_forall_fact = stmt
+            .to_corresponding_forall_fact()
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
         self.verify_forall_fact_params_and_dom_well_defined(
             &stmt.forall_fact,
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
             short_exec_error(
- stmt.clone().into(),
-                    format!(
+                stmt.clone().into(),
+                format!(
                     "by for: forall parameters or domain is not well-defined (`{}`)",
                     stmt.forall_fact
                 ),
-                    Some(well_defined_error),
-                    vec![],
-                )
+                Some(well_defined_error),
+                vec![],
+            )
         })?;
 
         let param_value_strings_of_each_param = self
             .by_for_param_value_strings_of_each_param(stmt, &param_sets)
-            .map_err(|msg| {
-                short_exec_error(
- stmt.clone().into(),
-                    msg,
-                    None,
-                    vec![],
-                )
-            })?;
+            .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
         let for_cartesian_product_is_empty = param_value_strings_of_each_param
             .iter()
             .any(|one_param_value_strings| one_param_value_strings.is_empty());
@@ -55,14 +38,14 @@ impl Runtime {
                 )
                 .map_err(|store_fact_error| {
                     short_exec_error(
- stmt.clone().into(),
-                    format!(
+                        stmt.clone().into(),
+                        format!(
                             "by for: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
                         ),
-                    Some(store_fact_error),
-                    vec![],
-                )
+                        Some(store_fact_error),
+                        vec![],
+                    )
                 })?;
             return Ok((NonFactualStmtSuccess::new(
                 stmt.clone().into(),
@@ -98,7 +81,7 @@ impl Runtime {
             .store_fact_without_well_defined_verified_and_infer(corresponding_forall_fact.clone())
             .map_err(|store_fact_error| {
                 short_exec_error(
- stmt.clone().into(),
+                    stmt.clone().into(),
                     format!(
                         "by for: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
@@ -153,34 +136,32 @@ impl Runtime {
                 Some(number) => number.normalized_value,
                 _ => {
                     return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+                        None,
+                        format!(
                             "by for: range boundary `{}` must be a calculable number expression",
                             number_like_obj
                         ),
-                line_file,
-                None,
-                vec![],
-            ))
-            .into());
+                        line_file,
+                        None,
+                        vec![],
+                    ))
+                    .into());
                 }
             }
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(
-                UnknownRuntimeError(RuntimeErrorStruct::new(
+            return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
-                        "by for: range boundary `{}` is not an integer number",
-                        number_like_obj
-                    ),
+                    "by for: range boundary `{}` is not an integer number",
+                    number_like_obj
+                ),
                 line_file,
                 None,
                 vec![],
             ))
-            .into(),
-            );
+            .into());
         }
         Ok(calculated_string)
     }
@@ -347,7 +328,7 @@ impl Runtime {
                 self.verify_exist_or_and_chain_atomic_fact(fact_to_prove, &verify_state)?;
             if verified_result.is_unknown() {
                 return Err(short_exec_error(
- stmt.clone().into(),
+                    stmt.clone().into(),
                     format!("by for: failed to prove `{}`", fact_to_prove),
                     None,
                     vec![],
