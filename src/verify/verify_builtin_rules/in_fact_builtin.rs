@@ -1089,6 +1089,29 @@ impl Runtime {
                 .into(),
             );
         }
+        let flat_stored =
+            ParamGroupWithSet::collect_param_names(&stored_fn_set.params_def_with_set);
+        let flat_expected =
+            ParamGroupWithSet::collect_param_names(&expected_fn_set.params_def_with_set);
+        if flat_stored.len() != flat_expected.len() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let shared_names = self.generate_random_unused_names(flat_stored.len());
+        let stored_norm =
+            self.fn_set_alpha_renamed_for_display_compare(&stored_fn_set, &shared_names)?;
+        let expected_norm =
+            self.fn_set_alpha_renamed_for_display_compare(expected_fn_set, &shared_names)?;
+        if stored_norm.to_string() == expected_norm.to_string() {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "fn membership: stored fn signature matches RHS (alpha-renamed parameters)"
+                        .to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
         Ok((StmtUnknown::new()).into())
     }
 
