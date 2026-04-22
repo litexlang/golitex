@@ -286,13 +286,13 @@ fn mark_forall_param_coverage_in_obj(
             );
         }
         Obj::FamilyObj(family) => {
-            for param_obj in family.params.iter() {
-                mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
+            for o in family.params.iter() {
+                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
             }
         }
         Obj::StructObj(struct_ty) => {
-            for param_obj in struct_ty.args.iter() {
-                mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
+            for o in struct_ty.args.iter() {
+                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
             }
         }
         Obj::Atom(AtomObj::Forall(p)) => {
