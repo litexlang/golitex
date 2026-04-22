@@ -189,6 +189,46 @@ impl Runtime {
         param_to_generated_arg_map
     }
 
+    /// Rename `fn_set` parameters in flat order to `generated_flat_names` (headers, param sets,
+    /// `dom_facts`, `ret_set`). For comparing two alpha-equivalent signatures, call with the **same**
+    /// list from one `generate_random_unused_names` (or similar) on both `FnSet`s.
+    pub(crate) fn fn_set_alpha_renamed_for_display_compare(
+        &self,
+        fn_set: &FnSet,
+        generated_flat_names: &[String],
+    ) -> Result<Obj, RuntimeError> {
+        let flat = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
+        if flat.len() != generated_flat_names.len() {
+            return Err(
+                VerifyRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "internal: fn_set alpha rename requires generated_flat_names len == flat param count"
+                        .to_string(),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ))
+                .into(),
+            );
+        }
+        let map = Self::build_param_to_generated_arg_map(&flat, generated_flat_names);
+        let mut new_params = Vec::with_capacity(fn_set.params_def_with_set.len());
+        let mut c_idx: usize = 0;
+        for g in fn_set.params_def_with_set.iter() {
+            let n = g.params.len();
+            let names = generated_flat_names[c_idx..c_idx + n].to_vec();
+            c_idx += n;
+            let new_set = self.inst_obj(&g.set, &map, ParamObjType::FnSet)?;
+            new_params.push(ParamGroupWithSet::new(names, new_set));
+        }
+        let mut new_dom = Vec::with_capacity(fn_set.dom_facts.len());
+        for d in fn_set.dom_facts.iter() {
+            new_dom.push(self.inst_or_and_chain_atomic_fact(d, &map, ParamObjType::FnSet)?);
+        }
+        let new_ret = self.inst_obj(fn_set.ret_set.as_ref(), &map, ParamObjType::FnSet)?;
+        Ok(FnSet::new(new_params, new_dom, new_ret).into())
+    }
+
     fn define_directional_source_fn_set_params_in_local_env(
         &mut self,
         source: &FnSet,
