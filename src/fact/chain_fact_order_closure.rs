@@ -43,7 +43,7 @@ impl UnionFind {
     }
 }
 
-fn order_edge_from_prop(p: &IdentifierOrIdentifierWithMod) -> Option<OrderEdge> {
+fn order_edge_from_prop(p: &PredicateType) -> Option<OrderEdge> {
     match p.to_string().as_str() {
         EQUAL => Some(OrderEdge::Eq),
         LESS_EQUAL => Some(OrderEdge::Le),

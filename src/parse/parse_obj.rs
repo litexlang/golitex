@@ -1489,21 +1489,14 @@ impl Runtime {
         }
     }
 
-    pub fn parse_predicate(
-        &self,
-        tb: &mut TokenBlock,
-    ) -> Result<IdentifierOrIdentifierWithMod, RuntimeError> {
+    pub fn parse_predicate(&self, tb: &mut TokenBlock) -> Result<PredicateType, RuntimeError> {
         let left = tb.advance()?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             tb.skip()?;
             let right = tb.advance()?;
-            Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(
-                IdentifierWithMod::new(left, right),
-            ))
+            Ok(PredicateType::WithMod(left, right))
         } else {
-            Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
-                left,
-            )))
+            Ok(PredicateType::WithoutMod(left))
         }
     }
 
