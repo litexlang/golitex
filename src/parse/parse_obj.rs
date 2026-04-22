@@ -40,7 +40,19 @@ impl Runtime {
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
-            Ok(FnObj::new(FnObjHead::Atom(fn_name), body).into())
+            let head = FnObjHead::from_name_obj(fn_name).ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "infix `\\` expects an identifier or single field-access name for the function"
+                            .to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                ))
+            })?;
+            Ok(FnObj::new(head, body).into())
         } else {
             Ok(left)
         }
@@ -476,13 +488,11 @@ impl Runtime {
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
         let (head, mut body_vectors) = match &result {
-            Obj::Identifier(i) => (FnObjHead::Atom(i.clone().into()), vec![]),
-            Obj::IdentifierWithMod(m) => (FnObjHead::Atom(m.clone().into()), vec![]),
-            Obj::FieldAccess(field_access) => {
-                (FnObjHead::Atom(field_access.clone().into()), vec![])
-            }
+            Obj::Identifier(i) => (FnObjHead::Identifier(i.clone()), vec![]),
+            Obj::IdentifierWithMod(m) => (FnObjHead::IdentifierWithMod(m.clone()), vec![]),
+            Obj::FieldAccess(field_access) => (FnObjHead::FieldAccess(field_access.clone()), vec![]),
             Obj::FieldAccessWithMod(field_access_with_mod) => (
-                FnObjHead::Atom(field_access_with_mod.clone().into()),
+                FnObjHead::FieldAccessWithMod(field_access_with_mod.clone()),
                 vec![],
             ),
             Obj::StructSelfFieldFreeParamObj(p) => (FnObjHead::StructSelfField(p.clone()), vec![]),
@@ -1256,9 +1266,9 @@ impl Runtime {
         self.reclassify_atom_as_free_param_obj(atom)
     }
 
-    fn reclassify_atom_as_free_param_obj(&self, atom: Atom) -> Result<Obj, RuntimeError> {
-        match atom {
-            Atom::Identifier(id) => {
+    fn reclassify_atom_as_free_param_obj(&self, obj: Obj) -> Result<Obj, RuntimeError> {
+        match obj {
+            Obj::Identifier(id) => {
                 if id.name == SELF {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new(
@@ -1274,12 +1284,21 @@ impl Runtime {
                     .parsing_free_param_collection
                     .resolve_identifier_to_free_param_obj(&id.name))
             }
-            Atom::FieldAccess(fa) => self
+            Obj::FieldAccess(fa) => self
                 .parsing_free_param_collection
                 .resolve_field_access_to_free_param_obj(&fa.name, &fa.field)
                 .map_err(|e| e.into()),
-            Atom::IdentifierWithMod(m) => Ok(m.into()),
-            Atom::FieldAccessWithMod(f) => Ok(f.into()),
+            Obj::IdentifierWithMod(m) => Ok(Obj::IdentifierWithMod(m)),
+            Obj::FieldAccessWithMod(f) => Ok(Obj::FieldAccessWithMod(f)),
+            _ => Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "internal: atom position was not a name/field form".to_string(),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            ))),
         }
     }
 
@@ -1428,7 +1447,7 @@ impl Runtime {
     pub fn parse_identifier_or_field_access(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Atom, RuntimeError> {
+    ) -> Result<Obj, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
             tb.skip()?;
@@ -1451,7 +1470,7 @@ impl Runtime {
         }
     }
 
-    fn parse_mod_qualified_atom(&mut self, tb: &mut TokenBlock) -> Result<Atom, RuntimeError> {
+    fn parse_mod_qualified_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
         tb.skip_token(MOD_SIGN)?;
         let right = parse_synthetically_correct_identifier_string(tb)?;
@@ -1477,8 +1496,8 @@ impl Runtime {
         }
     }
 
-    // Atom entry for obj-expression position; add branches here for other atom kinds.
-    pub fn parse_atom(&mut self, tb: &mut TokenBlock) -> Result<Atom, RuntimeError> {
+    /// Unqualified or `::`-qualified name / field name; returns a name-shaped [`Obj`].
+    pub fn parse_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let next_is_mod = tb.token_at_add_index(1) == MOD_SIGN;
         if next_is_mod {
             self.parse_mod_qualified_atom(tb)

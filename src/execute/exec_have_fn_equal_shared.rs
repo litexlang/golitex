@@ -13,7 +13,6 @@ pub(crate) fn build_curried_function_obj_from_layers(
     function_name: &str,
     layer_param_names: &[Vec<String>],
 ) -> Obj {
-    let fn_head_atom: Atom = Identifier::new(function_name.to_string()).into();
     let mut body_vectors: Vec<Vec<Box<Obj>>> = Vec::with_capacity(layer_param_names.len());
     for layer in layer_param_names {
         let mut group: Vec<Box<Obj>> = Vec::with_capacity(layer.len());
@@ -25,7 +24,11 @@ pub(crate) fn build_curried_function_obj_from_layers(
         }
         body_vectors.push(group);
     }
-    FnObj::new(FnObjHead::Atom(fn_head_atom), body_vectors).into()
+    FnObj::new(
+        FnObjHead::Identifier(Identifier::new(function_name.to_string())),
+        body_vectors,
+    )
+    .into()
 }
 
 pub(crate) fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> ParamDefWithType {

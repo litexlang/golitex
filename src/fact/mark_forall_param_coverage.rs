@@ -33,28 +33,35 @@ fn mark_forall_param_coverage_in_param_type(
     }
 }
 
-fn mark_forall_param_coverage_in_atom(
-    atom: &Atom,
-    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
-) {
-    match atom {
-        Atom::Identifier(identifier) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &identifier.name);
-        }
-        Atom::IdentifierWithMod(_) => {}
-        Atom::FieldAccess(field_access) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.name);
-        }
-        Atom::FieldAccessWithMod(_) => {}
-    }
-}
-
 fn mark_forall_param_coverage_in_fn_obj_head(
     head: &FnObjHead,
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
 ) {
     match head {
-        FnObjHead::Atom(a) => mark_forall_param_coverage_in_atom(a, coverage_by_forall_param),
+        FnObjHead::Identifier(i) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::Identifier(i.clone()),
+                coverage_by_forall_param,
+            );
+        }
+        FnObjHead::IdentifierWithMod(m) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::IdentifierWithMod(m.clone()),
+                coverage_by_forall_param,
+            );
+        }
+        FnObjHead::FieldAccess(f) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::FieldAccess(f.clone()),
+                coverage_by_forall_param,
+            );
+        }
+        FnObjHead::FieldAccessWithMod(f) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::FieldAccessWithMod(f.clone()),
+                coverage_by_forall_param,
+            );
+        }
         FnObjHead::Forall(p) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
