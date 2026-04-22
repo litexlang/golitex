@@ -24,12 +24,6 @@ impl Runtime {
                 ParamType::Obj(obj) => {
                     InFact::new(arg.clone(), obj.clone(), _line_file.clone()).into()
                 }
-                ParamType::Struct(struct_ty) => InFact::new(
-                    arg.clone(),
-                    Obj::StructObj(struct_ty.clone()),
-                    _line_file.clone(),
-                )
-                .into(),
             };
             infer_result.new_infer_result_inside(
                 self.store_fact_without_well_defined_verified_and_infer(new_fact)?,

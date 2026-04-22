@@ -1,29 +1,9 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// Struct type parameters and field types must not use nested `struct T(...)` (no `ParamType::Struct`).
-    pub fn reject_nested_struct_param_type(
-        &self,
-        pt: &ParamType,
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        if matches!(pt, ParamType::Struct(_)) {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "nested `struct` types are not allowed in struct parameter and field types"
-                        .to_string(),
-                line_file,
-                None,
-                vec![],
-            ))));
-        }
-        Ok(())
-    }
-
     /// Each parameter name is pushed to [`Runtime::parsing_free_param_collection`] with `free_param_kind`
     /// before its shared type is parsed, so later parameter types in the same group (or later groups)
-    /// can resolve earlier parameters. Use [`ParamObjType::DefHeader`] for `prop { ... }` and family/struct
+    /// can resolve earlier parameters. Use [`ParamObjType::DefHeader`] for `prop { ... }` and family
     /// headers, [`ParamObjType::Forall`] for `forall`, [`ParamObjType::Exist`] for `exist`, [`ParamObjType::Identifier`] for `let` / `have`, etc.
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
@@ -71,9 +51,6 @@ impl Runtime {
             FAMILY => self
                 .parse_family_obj(tb)
                 .map(|f| ParamType::Obj(Obj::FamilyObj(f))),
-            STRUCT => self
-                .parse_struct_obj(tb)
-                .map(|s| ParamType::Struct(s.into())),
             _ => self.parse_param_type_obj(tb),
         }
     }

@@ -271,10 +271,6 @@ impl Runtime {
         return self.get_abstract_prop_definition_by_name(name).is_some();
     }
 
-    pub fn is_name_used_for_struct(&self, name: &str) -> bool {
-        return self.get_definition_of_struct_by_name(name).is_some();
-    }
-
     pub fn is_name_used_for_family(&self, name: &str) -> bool {
         return self.get_family_definition_by_name(name).is_some();
     }
@@ -477,13 +473,8 @@ impl Runtime {
 }
 
 impl Runtime {
-    /// Like [`ParamDefWithType::param_defs_and_args_to_param_to_arg_map`], but when a
-    /// parameter has [`ParamType::Struct`] and the argument is a [`Obj::Tuple`], loads the struct
-    /// definition and inserts `param.field_name -> tuple[number_of_params + i]` for each field in
-    /// definition order (same layout as [`Runtime::inst_field_access_on_struct_tuple`]), and
-    /// registers the struct instance for field access on the tuple root.
     pub fn params_to_arg_map(
-        &mut self,
+        &self,
         param_defs: &ParamDefWithType,
         args: &[Obj],
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
@@ -503,108 +494,10 @@ impl Runtime {
             .into());
         }
 
-        let mut flat_types: Vec<ParamType> = Vec::with_capacity(param_names.len());
-        for param_def in param_defs.groups.iter() {
-            for _ in param_def.params.iter() {
-                flat_types.push(param_def.param_type.clone());
-            }
-        }
-
         let mut result: HashMap<String, Obj> = HashMap::new();
-        for ((param_name, param_type), arg) in
-            param_names.iter().zip(flat_types.iter()).zip(args.iter())
-        {
-            match param_type {
-                ParamType::Struct(struct_ty) => {
-                    let struct_name = struct_ty.name.to_string();
-                    let Some(def) = self.get_cloned_definition_of_struct(&struct_name) else {
-                        result.insert(param_name.clone(), arg.clone());
-                        continue;
-                    };
-                    if let Obj::Tuple(t) = arg {
-                        let expected_len = def.number_of_params() + def.fields.len();
-                        if t.args.len() != expected_len {
-                            return Err(
-                                InstantiateRuntimeError(RuntimeErrorStruct::new(
-                                    None,
-                                    format!(
-                                        "params_to_arg_map: tuple for `{}` has {} component(s), struct `{}` expects {}",
-                                        param_name,
-                                        t.args.len(),
-                                        struct_name,
-                                        expected_len
-                                    ),
-                                    default_line_file(),
-                                    None,
-                                    vec![],
-                                ))
-                                .into(),
-                            );
-                        }
-                        self.register_param_as_struct_instance(param_name, struct_ty.clone());
-                        result.insert(param_name.clone(), arg.clone());
-                        for (fi, (field_name, _)) in def.fields.iter().enumerate() {
-                            let ti = def.number_of_params() + fi;
-                            let component = (*t.args[ti]).clone();
-                            result
-                                .insert(field_access_to_string(param_name, field_name), component);
-                        }
-                    } else {
-                        result.insert(param_name.clone(), arg.clone());
-                    }
-                }
-                _ => {
-                    result.insert(param_name.clone(), arg.clone());
-                }
-            }
+        for (param_name, arg) in param_names.iter().zip(args.iter()) {
+            result.insert(param_name.clone(), arg.clone());
         }
         Ok(result)
-    }
-
-    /// [`DefStructStmt::dom_facts`] under type arguments, then [`DefStructStmt::facts`] (`<=>:`) with
-    /// [`SELF`] replaced by `param_name`, in source order.
-    pub fn instantiated_struct_iff_fact(
-        &self,
-        struct_ty: &StructObj,
-        def: &DefStructStmt,
-        param_name: &str,
-        binding_kind: ParamObjType,
-    ) -> Result<Vec<OrAndChainAtomicFact>, RuntimeError> {
-        let base_map = def
-            .param_defs
-            .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
-
-        let mut iff_facts0 = Vec::new();
-        for fact in def.facts.iter() {
-            iff_facts0.push(self.inst_or_and_chain_atomic_fact(
-                fact,
-                &base_map,
-                ParamObjType::DefHeader,
-            )?);
-        }
-
-        let mut self_param_map: HashMap<String, Obj> = HashMap::new();
-        for field_name in def.fields.iter() {
-            self_param_map.insert(
-                field_name.0.clone(),
-                struct_instance_field_access_obj_for_binding(
-                    param_name.to_string(),
-                    field_name.0.clone(),
-                    binding_kind,
-                ),
-            );
-        }
-
-        let mut iff_facts1 = Vec::new();
-        for fact in iff_facts0.iter() {
-            let new_fact = self.inst_or_and_chain_atomic_fact(
-                fact,
-                &self_param_map,
-                ParamObjType::StructSelf,
-            )?;
-            iff_facts1.push(new_fact);
-        }
-
-        Ok(iff_facts1)
     }
 }

@@ -271,7 +271,7 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match known_arg {
-            // Only `*FreeParamObj` / `ForallFieldAccessObj` bind; plain identifiers are fixed names.
+            // Only `*FreeParamObj` bind; plain identifiers are fixed names.
             Obj::Atom(AtomObj::Identifier(ref id_known)) => {
                 if id_known.to_string() != given_arg.to_string() {
                     return Ok(None);
@@ -280,15 +280,6 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
                 Self::match_arg_when_left_is_identifier_with_mod(given_arg)
-            }
-            Obj::FieldAccess(ref known_arg) => {
-                if known_arg.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::FieldAccessWithMod(_) => {
-                Self::match_arg_when_left_is_field_access_with_mod(given_arg)
             }
             Obj::FnObj(ref f) => Self::match_arg_when_left_is_fn_obj(f, given_arg),
             Obj::Number(ref left) => Self::match_arg_when_left_is_number(left, given_arg),
@@ -391,6 +382,12 @@ impl Runtime {
             Obj::Choose(ref left) => {
                 Self::match_arg_when_left_is_choose(left.set.as_ref(), given_arg)
             }
+            Obj::Sum(ref left) => {
+                if left.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
+            }
             Obj::ObjAtIndex(ref left) => Self::match_arg_when_left_is_obj_at_index(
                 left.obj.as_ref(),
                 left.index.as_ref(),
@@ -413,23 +410,8 @@ impl Runtime {
                 }
                 _ => Ok(None),
             },
-            Obj::StructObj(known) => match given_arg {
-                Obj::StructObj(given) => {
-                    if known.name.to_string() != given.name.to_string() {
-                        return Ok(None);
-                    }
-                    Self::match_arg_vec_then_merge(&known.args, &given.args)
-                }
-                _ => Ok(None),
-            },
             Obj::Atom(AtomObj::Forall(ref p)) => {
                 Self::match_arg_when_left_is_forall_param(p, given_arg)
-            }
-            Obj::ForallFieldAccessObj(ref p) => {
-                Self::match_arg_when_left_is_forall_field_access(p, given_arg)
-            }
-            Obj::DefFreeFieldAccessObj(ref p) => {
-                Self::match_arg_when_left_is_def_header_field_access(p, given_arg)
             }
             Obj::Atom(AtomObj::Def(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
@@ -474,7 +456,7 @@ impl Runtime {
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::Atom(AtomObj::StructSelfField(ref p)) => {
+            Obj::Atom(AtomObj::Sum(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
@@ -497,37 +479,6 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Atom(AtomObj::IdentifierWithMod(_)) => Self::match_arg_type_not_implemented("IdentifierWithMod"),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_forall_field_access(
-        known_arg: &ForallFieldAccessObj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let mut map = HashMap::new();
-        map.insert(known_arg.clone().to_string(), given_arg.clone());
-
-        Ok(Some(map))
-    }
-
-    fn match_arg_when_left_is_def_header_field_access(
-        known_arg: &DefHeaderFreeFieldAccessObj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let mut map = HashMap::new();
-        map.insert(known_arg.clone().to_string(), given_arg.clone());
-
-        Ok(Some(map))
-    }
-
-    fn match_arg_when_left_is_field_access_with_mod(
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::FieldAccessWithMod(_) => {
-                Self::match_arg_type_not_implemented("FieldAccessWithMod")
-            }
             _ => Ok(None),
         }
     }
