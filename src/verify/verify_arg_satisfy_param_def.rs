@@ -32,7 +32,7 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         verify_state: &VerifyState,
-        inst_state: InstObjState,
+        inst_state: ToInstWhatKindOfParam,
     ) -> Result<StmtResult, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, inst_state)?;
