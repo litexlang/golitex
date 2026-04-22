@@ -176,8 +176,8 @@ impl Runtime {
                     obj.clone()
                 }
             }
-            Obj::Identifier(_)
-            | Obj::IdentifierWithMod(_)
+            Obj::Atom(AtomObj::Identifier(_))
+            | Obj::Atom(AtomObj::IdentifierWithMod(_))
             | Obj::FieldAccess(_)
             | Obj::FieldAccessWithMod(_) => {
                 if let Some(number) = self.resolve_obj_to_number(obj) {

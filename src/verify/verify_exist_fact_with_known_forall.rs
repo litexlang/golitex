@@ -273,28 +273,28 @@ impl Runtime {
 
     fn obj_binding_spine_name_for_arg_map(obj: &Obj) -> Option<&str> {
         match obj {
-            Obj::ExistFreeParamObj(p) => Some(p.name.as_str()),
-            Obj::ForallFreeParamObj(p) => Some(p.name.as_str()),
-            Obj::FnSetFreeParamObj(p) => Some(p.name.as_str()),
-            Obj::DefFreeParamObj(p) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Exist(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Forall(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Def(p)) => Some(p.name.as_str()),
             Obj::DefFreeFieldAccessObj(p) => Some(p.name.as_str()),
-            Obj::SetBuilderFreeParamObj(p) => Some(p.name.as_str()),
-            Obj::ByInducFreeParamObj(p) => Some(p.name.as_str()),
-            Obj::DefAlgoFreeParamObj(p) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Induc(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.as_str()),
             _ => None,
         }
     }
 
     fn obj_matches_exist_forall_binding_name(obj: &Obj, name: &str) -> bool {
         match obj {
-            Obj::ExistFreeParamObj(p) => p.name == name,
-            Obj::ForallFreeParamObj(p) => p.name == name,
-            Obj::FnSetFreeParamObj(p) => p.name == name,
-            Obj::DefFreeParamObj(p) => p.name == name,
+            Obj::Atom(AtomObj::Exist(p)) => p.name == name,
+            Obj::Atom(AtomObj::Forall(p)) => p.name == name,
+            Obj::Atom(AtomObj::FnSet(p)) => p.name == name,
+            Obj::Atom(AtomObj::Def(p)) => p.name == name,
             Obj::DefFreeFieldAccessObj(p) => p.name == name,
-            Obj::SetBuilderFreeParamObj(p) => p.name == name,
-            Obj::ByInducFreeParamObj(p) => p.name == name,
-            Obj::DefAlgoFreeParamObj(p) => p.name == name,
+            Obj::Atom(AtomObj::SetBuilder(p)) => p.name == name,
+            Obj::Atom(AtomObj::Induc(p)) => p.name == name,
+            Obj::Atom(AtomObj::DefAlgo(p)) => p.name == name,
             _ => obj.to_string() == name,
         }
     }

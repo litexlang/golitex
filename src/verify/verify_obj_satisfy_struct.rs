@@ -46,10 +46,10 @@ impl Runtime {
             Obj::Tuple(tuple) => self.run_in_local_env(|rt| {
                 rt.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state)
             }),
-            Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
+            Obj::Atom(AtomObj::Identifier(_)) | Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
                 let id_key = match &obj {
-                    Obj::Identifier(i) => AtomicName::WithoutMod(i.name.clone()),
-                    Obj::IdentifierWithMod(m) => {
+                    Obj::Atom(AtomObj::Identifier(i)) => AtomicName::WithoutMod(i.name.clone()),
+                    Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
                         AtomicName::WithMod(m.mod_name.clone(), m.name.clone())
                     }
                     _ => {

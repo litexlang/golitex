@@ -575,7 +575,7 @@ impl Runtime {
             }
         };
         match &ge.left {
-            Obj::Identifier(id) if id.name == param_name => {}
+            Obj::Atom(AtomObj::Identifier(id)) if id.name == param_name => {}
             _ => {
                 return Err(
                     RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(

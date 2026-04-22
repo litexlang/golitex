@@ -40,13 +40,13 @@ fn mark_forall_param_coverage_in_fn_obj_head(
     match head {
         FnObjHead::Identifier(i) => {
             mark_forall_param_coverage_in_obj(
-                &Obj::Identifier(i.clone()),
+                &Obj::Atom(AtomObj::Identifier(i.clone())),
                 coverage_by_forall_param,
             );
         }
         FnObjHead::IdentifierWithMod(m) => {
             mark_forall_param_coverage_in_obj(
-                &Obj::IdentifierWithMod(m.clone()),
+                &Obj::Atom(AtomObj::IdentifierWithMod(m.clone())),
                 coverage_by_forall_param,
             );
         }
@@ -84,10 +84,10 @@ fn mark_forall_param_coverage_in_obj(
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
 ) {
     match obj {
-        Obj::Identifier(identifier) => {
+        Obj::Atom(AtomObj::Identifier(identifier)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &identifier.name);
         }
-        Obj::IdentifierWithMod(_) => {}
+        Obj::Atom(AtomObj::IdentifierWithMod(_)) => {}
         Obj::FieldAccess(field_access) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.name);
         }
@@ -295,34 +295,34 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(param_obj, coverage_by_forall_param);
             }
         }
-        Obj::ForallFreeParamObj(p) => {
+        Obj::Atom(AtomObj::Forall(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::ForallFieldAccessObj(p) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
-        Obj::DefFreeParamObj(p) => {
+        Obj::Atom(AtomObj::Def(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::DefFreeFieldAccessObj(p) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
-        Obj::ExistFreeParamObj(p) => {
+        Obj::Atom(AtomObj::Exist(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
-        Obj::SetBuilderFreeParamObj(p) => {
+        Obj::Atom(AtomObj::SetBuilder(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
-        Obj::FnSetFreeParamObj(p) => {
+        Obj::Atom(AtomObj::FnSet(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
-        Obj::ByInducFreeParamObj(p) => {
+        Obj::Atom(AtomObj::Induc(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
-        Obj::DefAlgoFreeParamObj(p) => {
+        Obj::Atom(AtomObj::DefAlgo(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
-        Obj::StructSelfFieldFreeParamObj(_) => {}
+        Obj::Atom(AtomObj::StructSelfField(_)) => {}
     }
 }
 

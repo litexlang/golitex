@@ -65,6 +65,7 @@ pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
 pub use crate::obj::field_access_to_string;
 pub use crate::obj::Abs;
 pub use crate::obj::Add;
+pub use crate::obj::AtomObj;
 pub use crate::obj::ByInducFreeParamObj;
 pub use crate::obj::Cap;
 pub use crate::obj::Cart;

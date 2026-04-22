@@ -1904,8 +1904,8 @@ impl AtomicFact {
 impl Obj {
     pub fn to_latex_string(&self) -> String {
         match self {
-            Obj::Identifier(x) => x.to_latex_string(),
-            Obj::IdentifierWithMod(x) => x.to_latex_string(),
+            Obj::Atom(AtomObj::Identifier(x)) => x.to_latex_string(),
+            Obj::Atom(AtomObj::IdentifierWithMod(x)) => x.to_latex_string(),
             Obj::FieldAccess(x) => x.to_latex_string(),
             Obj::FieldAccessWithMod(x) => x.to_latex_string(),
             Obj::FnObj(x) => x.to_latex_string(),
@@ -1946,22 +1946,22 @@ impl Obj {
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
             Obj::StructObj(x) => x.to_latex_string(),
-            Obj::ForallFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
             Obj::ForallFieldAccessObj(x) => {
                 let s = field_access_to_string(&x.name, &x.field);
                 format!(r"\text{{{}}}", latex_texttt_escape(&s))
             }
-            Obj::DefFreeParamObj(x) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
             Obj::DefFreeFieldAccessObj(x) => {
                 let s = field_access_to_string(&x.name, &x.field);
                 format!(r"\text{{{}}}", latex_texttt_escape(&s))
             }
-            Obj::ExistFreeParamObj(x) => latex_local_ident(&x.name),
-            Obj::SetBuilderFreeParamObj(x) => latex_local_ident(&x.name),
-            Obj::FnSetFreeParamObj(x) => latex_local_ident(&x.name),
-            Obj::ByInducFreeParamObj(x) => latex_local_ident(&x.name),
-            Obj::DefAlgoFreeParamObj(x) => latex_local_ident(&x.name),
-            Obj::StructSelfFieldFreeParamObj(x) => {
+            Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::SetBuilder(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::StructSelfField(x)) => {
                 let s = field_access_to_string(SELF, &x.field);
                 format!(r"\text{{{}}}", latex_texttt_escape(&s))
             }

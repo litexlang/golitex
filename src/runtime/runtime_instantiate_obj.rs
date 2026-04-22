@@ -22,8 +22,8 @@ impl Runtime {
         ctx: InstObjState,
     ) -> Result<Obj, RuntimeError> {
         match obj {
-            Obj::Identifier(inner) => self.inst_identifier(inner, param_to_arg_map),
-            Obj::IdentifierWithMod(inner) => self.inst_identifier_with_mod(inner, param_to_arg_map),
+            Obj::Atom(AtomObj::Identifier(inner)) => self.inst_identifier(inner, param_to_arg_map),
+            Obj::Atom(AtomObj::IdentifierWithMod(inner)) => self.inst_identifier_with_mod(inner, param_to_arg_map),
             Obj::FieldAccess(inner) => self.inst_field_access(inner, param_to_arg_map),
             Obj::FieldAccessWithMod(inner) => {
                 self.inst_field_access_with_mod(inner, param_to_arg_map)
@@ -93,7 +93,7 @@ impl Runtime {
                 }
                 Ok(StructObj::new(s.name.clone(), args).into())
             }
-            Obj::ForallFreeParamObj(p) => {
+            Obj::Atom(AtomObj::Forall(p)) => {
                 if ctx == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
@@ -110,21 +110,21 @@ impl Runtime {
 
                 if let Some(head_should_inst_to) = param_to_arg_map.get(&forall_field_access_head) {
                     match head_should_inst_to {
-                        Obj::Identifier(identifier) => {
+                        Obj::Atom(AtomObj::Identifier(identifier)) => {
                             return Ok(Obj::FieldAccess(FieldAccess::new(
                                 identifier.name.clone(),
                                 p.field.clone(),
                             ))
                             .into());
                         }
-                        Obj::ForallFreeParamObj(forall_free_param_obj) => {
+                        Obj::Atom(AtomObj::Forall(forall_free_param_obj)) => {
                             return Ok(ForallFieldAccessObj::new(
                                 forall_free_param_obj.name.clone(),
                                 p.field.clone(),
                             )
                             .into());
                         }
-                        Obj::DefFreeParamObj(def_h) => {
+                        Obj::Atom(AtomObj::Def(def_h)) => {
                             return Ok(DefHeaderFreeFieldAccessObj::new(
                                 def_h.name.clone(),
                                 p.field.clone(),
@@ -139,7 +139,7 @@ impl Runtime {
                     return Ok(p.clone().into());
                 }
             }
-            Obj::DefFreeParamObj(p) => {
+            Obj::Atom(AtomObj::Def(p)) => {
                 if ctx == ParamObjType::DefHeader {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
@@ -156,21 +156,21 @@ impl Runtime {
 
                 if let Some(head_should_inst_to) = param_to_arg_map.get(&base) {
                     match head_should_inst_to {
-                        Obj::Identifier(identifier) => {
+                        Obj::Atom(AtomObj::Identifier(identifier)) => {
                             return Ok(Obj::FieldAccess(FieldAccess::new(
                                 identifier.name.clone(),
                                 p.field.clone(),
                             ))
                             .into());
                         }
-                        Obj::DefFreeParamObj(def_h) => {
+                        Obj::Atom(AtomObj::Def(def_h)) => {
                             return Ok(DefHeaderFreeFieldAccessObj::new(
                                 def_h.name.clone(),
                                 p.field.clone(),
                             )
                             .into());
                         }
-                        Obj::ForallFreeParamObj(forall_p) => {
+                        Obj::Atom(AtomObj::Forall(forall_p)) => {
                             return Ok(ForallFieldAccessObj::new(
                                 forall_p.name.clone(),
                                 p.field.clone(),
@@ -185,7 +185,7 @@ impl Runtime {
                     return Ok(p.clone().into());
                 }
             }
-            Obj::ExistFreeParamObj(p) => {
+            Obj::Atom(AtomObj::Exist(p)) => {
                 if ctx == ParamObjType::Exist {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
@@ -193,7 +193,7 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
-            Obj::SetBuilderFreeParamObj(p) => {
+            Obj::Atom(AtomObj::SetBuilder(p)) => {
                 if ctx == ParamObjType::SetBuilder {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
@@ -201,7 +201,7 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
-            Obj::FnSetFreeParamObj(p) => {
+            Obj::Atom(AtomObj::FnSet(p)) => {
                 if ctx == ParamObjType::FnSet {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
@@ -209,7 +209,7 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
-            Obj::ByInducFreeParamObj(p) => {
+            Obj::Atom(AtomObj::Induc(p)) => {
                 if ctx == ParamObjType::Induc || ctx == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
@@ -217,7 +217,7 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
-            Obj::DefAlgoFreeParamObj(p) => {
+            Obj::Atom(AtomObj::DefAlgo(p)) => {
                 if ctx == ParamObjType::DefAlgo || ctx == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
@@ -225,7 +225,7 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
-            Obj::StructSelfFieldFreeParamObj(p) => {
+            Obj::Atom(AtomObj::StructSelfField(p)) => {
                 if ctx != ParamObjType::StructSelf {
                     return Ok(p.clone().into());
                 }
@@ -267,10 +267,10 @@ impl Runtime {
             return Ok(obj.clone());
         }
         match param_to_arg_map.get(&field_access.name) {
-            Some(Obj::Identifier(identifier)) => {
+            Some(Obj::Atom(AtomObj::Identifier(identifier))) => {
                 Ok(FieldAccess::new(identifier.name.clone(), field_access.field.clone()).into())
             }
-            Some(Obj::IdentifierWithMod(identifier_with_mod)) => Ok(FieldAccessWithMod::new(
+            Some(Obj::Atom(AtomObj::IdentifierWithMod(identifier_with_mod))) => Ok(FieldAccessWithMod::new(
                 identifier_with_mod.mod_name.clone(),
                 identifier_with_mod.name.clone(),
                 field_access.field.clone(),
@@ -382,20 +382,20 @@ impl Runtime {
         let inst_head = self.inst_obj(&(*fn_obj.head.clone()).into(), param_to_arg_map, ctx)?;
 
         let final_head: FnObjHead = match inst_head {
-            Obj::Identifier(x) => FnObjHead::Identifier(x.clone()),
-            Obj::IdentifierWithMod(x) => FnObjHead::IdentifierWithMod(x.clone()),
+            Obj::Atom(AtomObj::Identifier(x)) => FnObjHead::Identifier(x.clone()),
+            Obj::Atom(AtomObj::IdentifierWithMod(x)) => FnObjHead::IdentifierWithMod(x.clone()),
             Obj::FieldAccess(x) => FnObjHead::FieldAccess(x.clone()),
             Obj::FieldAccessWithMod(x) => FnObjHead::FieldAccessWithMod(x.clone()),
-            Obj::StructSelfFieldFreeParamObj(p) => p.clone().into(),
-            Obj::ForallFreeParamObj(p) => p.clone().into(),
+            Obj::Atom(AtomObj::StructSelfField(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::Forall(p)) => p.clone().into(),
             Obj::ForallFieldAccessObj(p) => FnObjHead::ForallFieldAccess(p.clone()),
-            Obj::DefFreeParamObj(p) => p.clone().into(),
+            Obj::Atom(AtomObj::Def(p)) => p.clone().into(),
             Obj::DefFreeFieldAccessObj(p) => FnObjHead::DefHeaderFieldAccess(p.clone()),
-            Obj::ExistFreeParamObj(p) => p.clone().into(),
-            Obj::SetBuilderFreeParamObj(p) => p.clone().into(),
-            Obj::FnSetFreeParamObj(p) => p.clone().into(),
-            Obj::ByInducFreeParamObj(p) => p.clone().into(),
-            Obj::DefAlgoFreeParamObj(p) => p.clone().into(),
+            Obj::Atom(AtomObj::Exist(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::SetBuilder(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
                 merged_body = vec![];

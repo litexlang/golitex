@@ -488,23 +488,23 @@ impl Runtime {
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
         let (head, mut body_vectors) = match &result {
-            Obj::Identifier(i) => (FnObjHead::Identifier(i.clone()), vec![]),
-            Obj::IdentifierWithMod(m) => (FnObjHead::IdentifierWithMod(m.clone()), vec![]),
+            Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => (FnObjHead::IdentifierWithMod(m.clone()), vec![]),
             Obj::FieldAccess(field_access) => (FnObjHead::FieldAccess(field_access.clone()), vec![]),
             Obj::FieldAccessWithMod(field_access_with_mod) => (
                 FnObjHead::FieldAccessWithMod(field_access_with_mod.clone()),
                 vec![],
             ),
-            Obj::StructSelfFieldFreeParamObj(p) => (FnObjHead::StructSelfField(p.clone()), vec![]),
-            Obj::ForallFreeParamObj(p) => (FnObjHead::Forall(p.clone()), vec![]),
+            Obj::Atom(AtomObj::StructSelfField(p)) => (FnObjHead::StructSelfField(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Forall(p)) => (FnObjHead::Forall(p.clone()), vec![]),
             Obj::ForallFieldAccessObj(p) => (FnObjHead::ForallFieldAccess(p.clone()), vec![]),
-            Obj::ExistFreeParamObj(p) => (FnObjHead::Exist(p.clone()), vec![]),
-            Obj::DefFreeParamObj(p) => (FnObjHead::DefHeader(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Exist(p)) => (FnObjHead::Exist(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Def(p)) => (FnObjHead::DefHeader(p.clone()), vec![]),
             Obj::DefFreeFieldAccessObj(p) => (FnObjHead::DefHeaderFieldAccess(p.clone()), vec![]),
-            Obj::SetBuilderFreeParamObj(p) => (FnObjHead::SetBuilder(p.clone()), vec![]),
-            Obj::FnSetFreeParamObj(p) => (FnObjHead::FnSet(p.clone()), vec![]),
-            Obj::ByInducFreeParamObj(p) => (FnObjHead::Induc(p.clone()), vec![]),
-            Obj::DefAlgoFreeParamObj(p) => (FnObjHead::DefAlgo(p.clone()), vec![]),
+            Obj::Atom(AtomObj::SetBuilder(p)) => (FnObjHead::SetBuilder(p.clone()), vec![]),
+            Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
+            Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -1268,7 +1268,7 @@ impl Runtime {
 
     fn reclassify_atom_as_free_param_obj(&self, obj: Obj) -> Result<Obj, RuntimeError> {
         match obj {
-            Obj::Identifier(id) => {
+            Obj::Atom(AtomObj::Identifier(id)) => {
                 if id.name == SELF {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new(
@@ -1288,7 +1288,7 @@ impl Runtime {
                 .parsing_free_param_collection
                 .resolve_field_access_to_free_param_obj(&fa.name, &fa.field)
                 .map_err(|e| e.into()),
-            Obj::IdentifierWithMod(m) => Ok(Obj::IdentifierWithMod(m)),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => Ok(Obj::Atom(AtomObj::IdentifierWithMod(m))),
             Obj::FieldAccessWithMod(f) => Ok(Obj::FieldAccessWithMod(f)),
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
@@ -1349,7 +1349,7 @@ impl Runtime {
 
         let left = self.parse_obj(tb)?;
         match left {
-            Obj::Identifier(a) => {
+            Obj::Atom(AtomObj::Identifier(a)) => {
                 if tb.current_token_is_equal_to(COMMA) || tb.current()? == RIGHT_CURLY_BRACE {
                     self.parse_list_set_obj_with_leftmost_obj(tb, a.into())
                 } else {

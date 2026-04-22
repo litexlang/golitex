@@ -272,13 +272,13 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match known_arg {
             // Only `*FreeParamObj` / `ForallFieldAccessObj` bind; plain identifiers are fixed names.
-            Obj::Identifier(ref id_known) => {
+            Obj::Atom(AtomObj::Identifier(ref id_known)) => {
                 if id_known.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::IdentifierWithMod(_) => {
+            Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
                 Self::match_arg_when_left_is_identifier_with_mod(given_arg)
             }
             Obj::FieldAccess(ref known_arg) => {
@@ -422,7 +422,7 @@ impl Runtime {
                 }
                 _ => Ok(None),
             },
-            Obj::ForallFreeParamObj(ref p) => {
+            Obj::Atom(AtomObj::Forall(ref p)) => {
                 Self::match_arg_when_left_is_forall_param(p, given_arg)
             }
             Obj::ForallFieldAccessObj(ref p) => {
@@ -431,14 +431,14 @@ impl Runtime {
             Obj::DefFreeFieldAccessObj(ref p) => {
                 Self::match_arg_when_left_is_def_header_field_access(p, given_arg)
             }
-            Obj::DefFreeParamObj(ref p) => {
+            Obj::Atom(AtomObj::Def(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::ExistFreeParamObj(ref p) => match given_arg {
-                Obj::ExistFreeParamObj(_) => {
+            Obj::Atom(AtomObj::Exist(ref p)) => match given_arg {
+                Obj::Atom(AtomObj::Exist(_)) => {
                     let mut m = HashMap::new();
                     m.insert(p.name.clone(), given_arg.clone());
                     Ok(Some(m))
@@ -450,31 +450,31 @@ impl Runtime {
                     Ok(Some(HashMap::new()))
                 }
             },
-            Obj::SetBuilderFreeParamObj(ref p) => {
+            Obj::Atom(AtomObj::SetBuilder(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::FnSetFreeParamObj(ref p) => {
+            Obj::Atom(AtomObj::FnSet(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::ByInducFreeParamObj(ref p) => {
+            Obj::Atom(AtomObj::Induc(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::DefAlgoFreeParamObj(ref p) => {
+            Obj::Atom(AtomObj::DefAlgo(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::StructSelfFieldFreeParamObj(ref p) => {
+            Obj::Atom(AtomObj::StructSelfField(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
@@ -496,7 +496,7 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::IdentifierWithMod(_) => Self::match_arg_type_not_implemented("IdentifierWithMod"),
+            Obj::Atom(AtomObj::IdentifierWithMod(_)) => Self::match_arg_type_not_implemented("IdentifierWithMod"),
             _ => Ok(None),
         }
     }
