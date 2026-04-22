@@ -1,5 +1,5 @@
 forall start, middle, last Z:
     start <= middle <= middle + 1<= last
     =>:
-        sum(i, start, last + 1, i) = sum(i, start, last, i) + last + 1
+        sum(i, start, last + 1, i) = sum(i, start, last, i) + (last + 1)
         sum(i, start, middle, i) + sum(i, middle + 1, last, i) = sum(i, start, last, i)
