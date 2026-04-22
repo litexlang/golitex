@@ -526,11 +526,18 @@ by cases:
     prove:
         1 + 1 = 2
     case 1 + 1 = 2:
-        do_nothing
+        1 + 1 = 2
     case 1 + 1 != 2:
         1 + 1 = 2
         impossible 1 + 1 = 2
 ```
+
+Execution:
+
+1. verify case1 or case2 or ... or caseN
+2. verify case by case: assume the case assumption, verify the case body, then conclude the case assumption. 
+    2.1 If the case assumption is impossible, write `impossible <fact>` at end of the case body. Verify that the fact itself and its negation are both true in this proof scope. Then contradiction is derived. So this case is impossible we no longer need to consider it.
+    2.2 If the case assumption is not impossible, run the case body and the goal must be proved in this case.
 
 ---
 
@@ -561,6 +568,12 @@ by contra:
         not $p(c + b)
     impossible $p(c)
 ```
+
+Execution:
+
+1. assume the negation of the goal
+2. verify the goal body
+3. At end of proof body, write `impossible <fact>`. Verify that the fact itself and its negation are both true in this proof scope. Then contradiction is derived.
 
 > **Hint.** The fact after `prove:` is what you **conclude**, not the assumption; the assumption is its negation.
 
@@ -613,7 +626,7 @@ Integer **closed_range** membership with literal endpoints uses **`by enumerate`
 
 ```litex
 prove:
-    have x closed_range(0, 10)
+    have x closed_range(0, 10) # equivalent to have x 0...10
 
     by enumerate 0...10: x
 
@@ -665,7 +678,14 @@ know:
 by induc n from 0:
     prove:
         $p(n)
+    $p(0)
+    forall n Z:
+        n >= 0
+        $p(n)
+        =>:
+            $p(n + 1)
 
+# Derived from the above by induction
 forall n Z:
     n >= 0
     =>:
