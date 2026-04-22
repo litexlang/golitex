@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_function_obj_with_param_names, param_defs_with_type_from_have_fn_clause,
+    build_function_obj_with_param_names, inst_have_fn_forall_fact_for_store,
+    param_defs_with_type_from_have_fn_clause,
 };
 
 impl Runtime {
@@ -10,10 +11,7 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_stored = self
-            .add_mangled_prefix_to_fn_set_clause(
-                &have_fn_equal_case_by_case_stmt.fn_set_clause,
-                have_fn_equal_case_by_case_stmt.line_file.clone(),
-            )
+            .fn_set_from_fn_set_clause(&have_fn_equal_case_by_case_stmt.fn_set_clause)
             .map_err(|e| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
@@ -53,9 +51,13 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_identifier_obj(&have_fn_equal_case_by_case_stmt.name)?;
+        self.store_free_param_or_identifier_name(
+            &have_fn_equal_case_by_case_stmt.name,
+            ParamObjType::Identifier,
+        )?;
 
-        let function_identifier_obj = have_fn_equal_case_by_case_stmt.name.clone().into();
+        let function_identifier_obj =
+            Identifier::new(have_fn_equal_case_by_case_stmt.name.clone()).into();
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj,
@@ -120,9 +122,17 @@ impl Runtime {
                 vec![function_equals_equal_to_fact.into()],
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
             );
-            let forall_as_fact: Fact = forall_fact.into();
+            let forall_as_fact = inst_have_fn_forall_fact_for_store(self, forall_fact).map_err(
+                |store_inst_error| {
+                    short_exec_error(
+                        have_fn_equal_case_by_case_stmt.clone().into(),
+                        "have_fn_equal_case_by_case_stmt: inst forall for store failed".to_string(),
+                        Some(store_inst_error),
+                        vec![],
+                    )
+                },
+            )?;
 
-            infer_result.new_fact(&forall_as_fact);
             let forall_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
                 .map_err(|store_fact_error| {

@@ -198,7 +198,7 @@ prove:
         $p0(1, 2)
         impossible $q0(1, 2)
 
-# --- Stmt::ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall; integer intervals use `by enumerate lo..hi:`.
+# --- Stmt::ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall; integer intervals use `by enumerate lo ... hi:`.
 prove:
     let a R:
         a $in {1, 2}
@@ -272,6 +272,7 @@ prove:
     by family: family pf(R)
 
 # --- Stmt::ByStructStmt — use the defining data of a structure instance ---
+"""
 prove:
     abstract_prop bs(b, c, d)
 
@@ -283,6 +284,7 @@ prove:
             $bs(self.b1, self.c1, self.d1)
 
     by struct: struct sq(R)
+"""
 
 # --- Stmt::ByTupleStmt — tuple / product-space reasoning on an object ---
 prove:

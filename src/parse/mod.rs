@@ -10,6 +10,7 @@ mod parse_claim_stmt;
 mod parse_def_stmt;
 mod parse_eval_stmt;
 mod parse_fact;
+mod parse_helpers;
 mod parse_know_stmt;
 mod parse_obj;
 mod parse_param_def;

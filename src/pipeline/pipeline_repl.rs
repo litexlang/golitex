@@ -1,6 +1,4 @@
 use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
-use crate::pipeline::render_run_source_code_output;
-use crate::pipeline::run_source_code;
 use crate::pipeline::run_stmt_at_global_env;
 use crate::prelude::*;
 use std::io::{self, BufRead, Write};
@@ -36,18 +34,7 @@ where
     writeln!(stdout_writer, "website: https://litexlang.com")?;
     writeln!(stdout_writer, "Ctrl+D to exit.")?;
 
-    let mut runtime = Runtime::new();
-
-    let (builtin_stmt_results, builtin_error) =
-        run_source_code(builtin_code().as_str(), &mut runtime);
-    let (ok, msg) = render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
-    if !ok {
-        eprintln!("builtin code execution failed: {}", msg);
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            "builtin code execution failed",
-        ));
-    }
+    let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope("repl");
 
     let mut line_buffer = String::new();
@@ -83,7 +70,7 @@ where
         ) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
-                let error_string = display_runtime_error_json(&runtime, &parse_block_error);
+                let error_string = display_runtime_error_json(&runtime, &parse_block_error, true);
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
                 writeln!(stdout_writer)?;
@@ -96,7 +83,7 @@ where
             let stmt: Stmt = match runtime.parse_stmt(&mut block) {
                 Ok(statement) => statement,
                 Err(parse_stmt_error) => {
-                    let message = display_runtime_error_json(&runtime, &parse_stmt_error);
+                    let message = display_runtime_error_json(&runtime, &parse_stmt_error, true);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
@@ -105,14 +92,16 @@ where
             let exec_result = match run_stmt_at_global_env(&stmt, &mut runtime) {
                 Ok(result) => result,
                 Err(exec_error) => {
-                    let message = display_runtime_error_json(&runtime, &exec_error);
+                    let message = display_runtime_error_json(&runtime, &exec_error, true);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
             };
 
             output_chunk.push('\n');
-            output_chunk.push_str(display_stmt_exec_result_json(&runtime, &exec_result).as_str());
+            output_chunk.push_str(
+                display_stmt_exec_result_json(&runtime, &exec_result, true).as_str(),
+            );
             output_chunk.push('\n');
         }
 

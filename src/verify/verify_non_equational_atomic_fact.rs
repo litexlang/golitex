@@ -448,7 +448,7 @@ impl Runtime {
             )]),
             vec![],
             vec![InFact::new(
-                bound_param_name.into(),
+                obj_for_bound_param_in_scope(bound_param_name.clone(), ParamObjType::Forall),
                 subset_fact.right.clone(),
                 subset_fact.line_file.clone(),
             )
@@ -483,7 +483,7 @@ impl Runtime {
             )]),
             vec![],
             vec![InFact::new(
-                bound_param_name.into(),
+                obj_for_bound_param_in_scope(bound_param_name.clone(), ParamObjType::Forall),
                 superset_fact.left.clone(),
                 superset_fact.line_file.clone(),
             )
@@ -559,6 +559,7 @@ impl Runtime {
             &definition.params_def_with_type,
             &normal_atomic_fact.body,
             verify_state_for_definition_clauses,
+            ParamObjType::DefHeader,
         ) {
             Ok(x) => x,
             Err(_) => {
@@ -593,7 +594,7 @@ impl Runtime {
 
         for iff_fact in definition.iff_facts.iter() {
             let instantiated_iff_fact = self
-                .inst_fact(iff_fact, &param_to_arg_map)
+                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(

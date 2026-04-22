@@ -4,7 +4,7 @@ use std::fmt;
 use std::rc::Rc;
 
 pub struct Environment {
-    pub defined_identifiers: HashMap<IdentifierName, ()>,
+    pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub defined_structs: HashMap<StructName, DefStructStmt>,
@@ -48,7 +48,7 @@ pub struct Environment {
 
 impl Environment {
     pub fn new(
-        objs: HashMap<IdentifierName, ()>,
+        objs: HashMap<IdentifierName, ParamObjType>,
         def_props: HashMap<PropName, DefPropStmt>,
         struct_defs: HashMap<StructName, DefStructStmt>,
         families: HashMap<FamilyName, DefFamilyStmt>,
@@ -344,12 +344,22 @@ impl Environment {
         exist_fact: &ExistFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeError> {
+        let pair = || (exist_fact.clone(), forall_params_and_dom.clone());
         let key: ExistFactKey = exist_fact.key();
         if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&key) {
-            vec_ref.push((exist_fact.clone(), forall_params_and_dom));
+            vec_ref.push(pair());
         } else {
             self.known_exist_facts_in_forall_facts
-                .insert(key, vec![(exist_fact.clone(), forall_params_and_dom)]);
+                .insert(key, vec![pair()]);
+        }
+        let alpha_key = exist_fact.alpha_normalized_key();
+        if alpha_key != exist_fact.key() {
+            if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&alpha_key) {
+                vec_ref.push(pair());
+            } else {
+                self.known_exist_facts_in_forall_facts
+                    .insert(alpha_key, vec![pair()]);
+            }
         }
         Ok(())
     }
@@ -615,6 +625,13 @@ impl Environment {
                     .insert(right_as_string, (right_direct_proof_map, new_equiv_rc));
             }
         }
+
+        if let Some(derived) = super::equality_linear_derive::maybe_derived_linear_equal_fact(equality)
+        {
+            if derived.left.to_string() != derived.right.to_string() {
+                self.store_equality(&derived)?;
+            }
+        }
         Ok(())
     }
 }
@@ -668,11 +685,7 @@ pub struct KnownForallFactParamsAndDom {
 }
 
 impl KnownForallFactParamsAndDom {
-    pub fn new(
-        params: ParamDefWithType,
-        dom: Vec<Fact>,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(params: ParamDefWithType, dom: Vec<Fact>, line_file: LineFile) -> Self {
         KnownForallFactParamsAndDom {
             params_def: params,
             dom,

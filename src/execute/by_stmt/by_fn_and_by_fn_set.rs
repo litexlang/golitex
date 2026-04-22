@@ -36,7 +36,7 @@ impl Runtime {
             let generated_names_for_current_group =
                 generated_forall_param_names[flat_index..next_flat_index].to_vec();
             let instantiated_set = self
-                .inst_obj(&param_def_with_set.set, &original_param_to_forall_obj)
+                .inst_obj(&param_def_with_set.set, &original_param_to_forall_obj, ParamObjType::FnSet)
                 .map_err(|inst_error| {
                     short_exec_error(
                         stmt_exec.clone(),
@@ -54,13 +54,29 @@ impl Runtime {
                 .iter()
                 .zip(generated_names_for_current_group.iter())
             {
-                original_param_to_forall_obj
-                    .insert(original_name.clone(), generated_name.clone().into());
+                original_param_to_forall_obj.insert(
+                    original_name.clone(),
+                    obj_for_bound_param_in_scope(generated_name.clone(), ParamObjType::FnSet),
+                );
             }
             flat_index = next_flat_index;
         }
+        // Exist body binds the same generated names as `Exist` params (~3), not FnSet (~5).
+        let original_param_to_exist_inner: HashMap<String, Obj> = original_param_to_forall_obj
+            .iter()
+            .filter_map(|(orig, obj)| {
+                if let Obj::Atom(AtomObj::FnSet(p)) = obj {
+                    Some((
+                        orig.clone(),
+                        obj_for_bound_param_in_scope(p.name.clone(), ParamObjType::Exist),
+                    ))
+                } else {
+                    None
+                }
+            })
+            .collect();
         let forall_ret_set = self
-            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_forall_obj)
+            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_forall_obj, ParamObjType::FnSet)
             .map_err(|inst_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -69,16 +85,17 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        let forall_args: Vec<Obj> = param_names
+        let forall_args_exist: Vec<Obj> = param_names
             .iter()
             .map(|param_name| {
-                original_param_to_forall_obj
+                original_param_to_exist_inner
                     .get(param_name)
                     .unwrap()
                     .clone()
             })
             .collect();
-        let forall_element_obj: Obj = forall_element_name.clone().into();
+        let forall_element_obj: Obj =
+            obj_for_bound_param_in_scope(forall_element_name.clone(), ParamObjType::Forall);
         let arg_domain_factors: Vec<Obj> = forall_param_defs_with_type
             .iter()
             .map(
@@ -118,11 +135,12 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let forall_z_obj = forall_z_name.clone().into();
+        let forall_z_obj =
+            obj_for_bound_param_in_scope(forall_z_name.clone(), ParamObjType::Exist);
         let pair_in_fn = if param_names.len() == 1 {
-            Tuple::new(vec![forall_args[0].clone(), forall_z_obj]).into()
+            Tuple::new(vec![forall_args_exist[0].clone(), forall_z_obj]).into()
         } else {
-            Tuple::new(vec![Tuple::new(forall_args).into(), forall_z_obj]).into()
+            Tuple::new(vec![Tuple::new(forall_args_exist).into(), forall_z_obj]).into()
         };
         let forall_in = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -146,7 +164,8 @@ impl Runtime {
                         facts.push(
                             self.inst_or_and_chain_atomic_fact(
                                 dom_fact,
-                                &original_param_to_forall_obj,
+                                &original_param_to_exist_inner,
+                                ParamObjType::FnSet,
                             )
                             .map_err(|inst_error| {
                                 short_exec_error(
@@ -190,7 +209,7 @@ impl Runtime {
             let generated_names_for_current_group =
                 generated_exist_param_names[exist_flat_index..next_flat_index].to_vec();
             let instantiated_set = self
-                .inst_obj(&param_def_with_set.set, &original_param_to_exist_obj)
+                .inst_obj(&param_def_with_set.set, &original_param_to_exist_obj, ParamObjType::FnSet)
                 .map_err(|inst_error| {
                     short_exec_error(
                         stmt_exec.clone(),
@@ -208,13 +227,29 @@ impl Runtime {
                 .iter()
                 .zip(generated_names_for_current_group.iter())
             {
-                original_param_to_exist_obj
-                    .insert(original_name.clone(), generated_name.clone().into());
+                original_param_to_exist_obj.insert(
+                    original_name.clone(),
+                    obj_for_bound_param_in_scope(generated_name.clone(), ParamObjType::FnSet),
+                );
             }
             exist_flat_index = next_flat_index;
         }
+        // Outer `forall_exist` quantifies fn parameters as Forall (~1), not FnSet (~5).
+        let original_param_to_forall_witness: HashMap<String, Obj> = original_param_to_exist_obj
+            .iter()
+            .filter_map(|(orig, obj)| {
+                if let Obj::Atom(AtomObj::FnSet(p)) = obj {
+                    Some((
+                        orig.clone(),
+                        obj_for_bound_param_in_scope(p.name.clone(), ParamObjType::Forall),
+                    ))
+                } else {
+                    None
+                }
+            })
+            .collect();
         let exist_ret_set = self
-            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_exist_obj)
+            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_exist_obj, ParamObjType::FnSet)
             .map_err(|inst_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -223,16 +258,22 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        let exist_args: Vec<Obj> = param_names
+        let exist_args_for_pair: Vec<Obj> = param_names
             .iter()
-            .map(|param_name| original_param_to_exist_obj.get(param_name).unwrap().clone())
+            .map(|param_name| {
+                original_param_to_forall_witness
+                    .get(param_name)
+                    .unwrap()
+                    .clone()
+            })
             .collect();
-        let exist_element_obj = exist_element_name.clone().into();
-        let exist_z_obj = exist_z_name.clone().into();
+        let exist_element_obj =
+            obj_for_bound_param_in_scope(exist_element_name.clone(), ParamObjType::Exist);
+        let exist_z_obj = obj_for_bound_param_in_scope(exist_z_name.clone(), ParamObjType::Exist);
         let exist_pair = if param_names.len() == 1 {
-            Tuple::new(vec![exist_args[0].clone(), exist_z_obj]).into()
+            Tuple::new(vec![exist_args_for_pair[0].clone(), exist_z_obj]).into()
         } else {
-            Tuple::new(vec![Tuple::new(exist_args).into(), exist_z_obj]).into()
+            Tuple::new(vec![Tuple::new(exist_args_for_pair).into(), exist_z_obj]).into()
         };
         let exist_fact = ExistFact::new(
             ParamDefWithType::new(vec![
@@ -252,7 +293,11 @@ impl Runtime {
                 let mut dom_facts: Vec<Fact> = Vec::with_capacity(fn_set.dom_facts.len());
                 for dom_fact in fn_set.dom_facts.iter() {
                     dom_facts.push(
-                        self.inst_or_and_chain_atomic_fact(dom_fact, &original_param_to_exist_obj)
+                        self.inst_or_and_chain_atomic_fact(
+                            dom_fact,
+                            &original_param_to_forall_witness,
+                            ParamObjType::FnSet,
+                        )
                             .map_err(|inst_error| {
                                 short_exec_error(
                                     stmt_exec.clone(),
@@ -277,8 +322,10 @@ impl Runtime {
         let unique_names = self.generate_random_unused_names(2);
         let unique_x1_name = unique_names[0].clone();
         let unique_x2_name = unique_names[1].clone();
-        let unique_x1_obj: Obj = unique_x1_name.clone().into();
-        let unique_x2_obj: Obj = unique_x2_name.clone().into();
+        let unique_x1_obj: Obj =
+            obj_for_bound_param_in_scope(unique_x1_name.clone(), ParamObjType::Forall);
+        let unique_x2_obj: Obj =
+            obj_for_bound_param_in_scope(unique_x2_name.clone(), ParamObjType::Forall);
         let unique_param_group_sets: Vec<Obj> = fn_set
             .params_def_with_set
             .iter()

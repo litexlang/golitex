@@ -1,11 +1,10 @@
-use super::standard_set::StandardSet;
+use super::atom_obj::AtomObj;
 use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
 pub enum Obj {
-    Identifier(Identifier),
-    IdentifierWithMod(IdentifierWithMod),
+    Atom(AtomObj),
     FieldAccess(FieldAccess),
     FieldAccessWithMod(FieldAccessWithMod),
     FnObj(FnObj),
@@ -46,6 +45,8 @@ pub enum Obj {
     StandardSet(StandardSet),
     FamilyObj(FamilyObj),
     StructObj(StructObj),
+    ForallFieldAccessObj(ForallFieldAccessObj),
+    DefFreeFieldAccessObj(DefHeaderFreeFieldAccessObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
     MatrixAdd(MatrixAdd),
@@ -99,19 +100,19 @@ pub struct MatrixListObj {
 
 #[derive(Clone)]
 pub struct FamilyObj {
-    pub name: IdentifierOrIdentifierWithMod,
+    pub name: AtomicName,
     pub params: Vec<Obj>,
 }
 
 /// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
 #[derive(Clone)]
 pub struct StructObj {
-    pub name: IdentifierOrIdentifierWithMod,
+    pub name: AtomicName,
     pub args: Vec<Obj>,
 }
 
 impl StructObj {
-    pub fn new(name: IdentifierOrIdentifierWithMod, args: Vec<Obj>) -> Self {
+    pub fn new(name: AtomicName, args: Vec<Obj>) -> Self {
         StructObj { name, args }
     }
 }
@@ -215,7 +216,7 @@ pub struct Proj {
 
 #[derive(Clone)]
 pub struct FnObj {
-    pub head: Box<Atom>,
+    pub head: Box<FnObjHead>,
     pub body: Vec<Vec<Box<Obj>>>,
 }
 
@@ -352,7 +353,7 @@ impl ObjAtIndex {
 }
 
 impl FnObj {
-    pub fn new(head: Atom, body: Vec<Vec<Box<Obj>>>) -> Self {
+    pub fn new(head: FnObjHead, body: Vec<Vec<Box<Obj>>>) -> Self {
         FnObj {
             head: Box::new(head),
             body,
@@ -523,21 +524,6 @@ impl SetBuilder {
             facts,
         }
     }
-
-    // Same storage shape as parsing `{user cart(...): ...}`: bound name is `__` + user (facts rewritten).
-    pub fn new_with_mangled_name(
-        user_param: String,
-        param_set: Obj,
-        facts: Vec<OrAndChainAtomicFact>,
-    ) -> Self {
-        let mangled = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, user_param);
-        let param_set = Obj::replace_bound_identifier(param_set, &user_param, &mangled);
-        let facts = facts
-            .into_iter()
-            .map(|f| f.replace_bound_identifier(&user_param, &mangled))
-            .collect();
-        Self::new(mangled, param_set, facts)
-    }
 }
 
 impl FnSet {
@@ -656,9 +642,7 @@ impl FiniteSeqSet {
 
 impl SeqSet {
     pub fn new(set: Obj) -> Self {
-        SeqSet {
-            set: Box::new(set),
-        }
+        SeqSet { set: Box::new(set) }
     }
 }
 
@@ -863,8 +847,7 @@ impl Obj {
             Obj::SetDiff(x) => write!(f, "{}", x)?,
             Obj::Cup(x) => write!(f, "{}", x)?,
             Obj::Cap(x) => write!(f, "{}", x)?,
-            Obj::Identifier(x) => write!(f, "{}", x)?,
-            Obj::IdentifierWithMod(x) => write!(f, "{}", x)?,
+            Obj::Atom(x) => write!(f, "{}", x)?,
             Obj::FieldAccess(x) => write!(f, "{}", x)?,
             Obj::FieldAccessWithMod(x) => write!(f, "{}", x)?,
             Obj::FnObj(x) => write!(f, "{}", x)?,
@@ -891,6 +874,8 @@ impl Obj {
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
+            Obj::ForallFieldAccessObj(x) => write!(f, "{}", x)?,
+            Obj::DefFreeFieldAccessObj(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -903,20 +888,32 @@ impl Obj {
             return self;
         }
         match self {
-            Obj::Identifier(i) => {
-                if i.name == from {
-                    to.to_string().into()
-                } else {
-                    i.into()
-                }
-            }
-            Obj::IdentifierWithMod(m) => {
-                let name = if m.name == from {
+            Obj::Atom(a) => Obj::Atom(a.replace_bound_identifier(from, to)),
+            Obj::ForallFieldAccessObj(p) => {
+                let name = if p.name == from {
                     to.to_string()
                 } else {
-                    m.name
+                    p.name
                 };
-                IdentifierWithMod::new(m.mod_name, name).into()
+                let field = if p.field == from {
+                    to.to_string()
+                } else {
+                    p.field
+                };
+                ForallFieldAccessObj::new(name, field).into()
+            }
+            Obj::DefFreeFieldAccessObj(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                let field = if p.field == from {
+                    to.to_string()
+                } else {
+                    p.field
+                };
+                DefHeaderFreeFieldAccessObj::new(name, field).into()
             }
             Obj::FieldAccess(f) => {
                 let name = if f.name == from {
@@ -935,7 +932,7 @@ impl Obj {
                 FieldAccessWithMod::new(f.mod_name, name, f.field).into()
             }
             Obj::FnObj(inner) => {
-                let head = replace_bound_identifier_in_atom(*inner.head, from, to);
+                let head = replace_bound_identifier_in_fn_obj_head(*inner.head, from, to);
                 let body = inner
                     .body
                     .into_iter()
@@ -1105,9 +1102,7 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.n, from, to),
             )
             .into(),
-            Obj::SeqSet(x) => {
-                SeqSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
-            }
+            Obj::SeqSet(x) => SeqSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
             Obj::FiniteSeqListObj(x) => FiniteSeqListObj::new(
                 x.objs
                     .into_iter()
@@ -1185,27 +1180,28 @@ impl Obj {
     }
 }
 
-fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
+/// Replace in identifier / `mod::name` / `x.f` / `M::x.f` name-shaped [`Obj`] values only.
+fn replace_bound_identifier_in_name_obj(obj: Obj, from: &str, to: &str) -> Obj {
     if from == to {
-        return atom;
+        return obj;
     }
-    match atom {
-        Atom::Identifier(i) => {
+    match obj {
+        Obj::Atom(AtomObj::Identifier(i)) => {
             if i.name == from {
                 Identifier::new(to.to_string()).into()
             } else {
-                i.into()
+                Obj::Atom(AtomObj::Identifier(i))
             }
         }
-        Atom::IdentifierWithMod(m) => {
+        Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
             let name = if m.name == from {
                 to.to_string()
             } else {
                 m.name
             };
-            IdentifierWithMod::new(m.mod_name, name).into()
+            Obj::from(IdentifierWithMod::new(m.mod_name, name))
         }
-        Atom::FieldAccess(f) => {
+        Obj::FieldAccess(f) => {
             let name = if f.name == from {
                 to.to_string()
             } else {
@@ -1213,13 +1209,130 @@ fn replace_bound_identifier_in_atom(atom: Atom, from: &str, to: &str) -> Atom {
             };
             FieldAccess::new(name, f.field).into()
         }
-        Atom::FieldAccessWithMod(f) => {
+        Obj::FieldAccessWithMod(f) => {
             let name = if f.name == from {
                 to.to_string()
             } else {
                 f.name
             };
             FieldAccessWithMod::new(f.mod_name, name, f.field).into()
+        }
+        _ => obj,
+    }
+}
+
+fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str) -> FnObjHead {
+    if from == to {
+        return head;
+    }
+    match head {
+        FnObjHead::Identifier(i) => FnObjHead::from_name_obj(replace_bound_identifier_in_name_obj(
+            Obj::Atom(AtomObj::Identifier(i.clone())),
+            from,
+            to,
+        ))
+        .expect("name replace preserves fn head shape"),
+        FnObjHead::IdentifierWithMod(m) => FnObjHead::from_name_obj(
+            replace_bound_identifier_in_name_obj(Obj::Atom(AtomObj::IdentifierWithMod(m.clone())), from, to),
+        )
+        .expect("name replace preserves fn head shape"),
+        FnObjHead::FieldAccess(f) => FnObjHead::from_name_obj(
+            replace_bound_identifier_in_name_obj(Obj::FieldAccess(f.clone()), from, to),
+        )
+        .expect("name replace preserves fn head shape"),
+        FnObjHead::FieldAccessWithMod(f) => FnObjHead::from_name_obj(
+            replace_bound_identifier_in_name_obj(Obj::FieldAccessWithMod(f.clone()), from, to),
+        )
+        .expect("name replace preserves fn head shape"),
+        FnObjHead::Forall(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            ForallFreeParamObj::new(name).into()
+        }
+        FnObjHead::ForallFieldAccess(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            let field = if p.field == from {
+                to.to_string()
+            } else {
+                p.field
+            };
+            ForallFieldAccessObj::new(name, field).into()
+        }
+        FnObjHead::DefHeader(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            DefHeaderFreeParamObj::new(name).into()
+        }
+        FnObjHead::DefHeaderFieldAccess(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            let field = if p.field == from {
+                to.to_string()
+            } else {
+                p.field
+            };
+            DefHeaderFreeFieldAccessObj::new(name, field).into()
+        }
+        FnObjHead::Exist(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            ExistFreeParamObj::new(name).into()
+        }
+        FnObjHead::SetBuilder(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            SetBuilderFreeParamObj::new(name).into()
+        }
+        FnObjHead::FnSet(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            FnSetFreeParamObj::new(name).into()
+        }
+        FnObjHead::Induc(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            ByInducFreeParamObj::new(name).into()
+        }
+        FnObjHead::DefAlgo(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            DefAlgoFreeParamObj::new(name).into()
+        }
+        FnObjHead::StructSelfField(p) => {
+            let field = if p.field == from {
+                to.to_string()
+            } else {
+                p.field
+            };
+            StructSelfFieldFreeParamObj::new(field).into()
         }
     }
 }
@@ -1399,7 +1512,7 @@ impl fmt::Display for FnObj {
     }
 }
 
-pub fn fn_obj_to_string(head: &Atom, body: &Vec<Vec<Box<Obj>>>) -> String {
+pub fn fn_obj_to_string(head: &FnObjHead, body: &Vec<Vec<Box<Obj>>>) -> String {
     let mut fn_obj_string = head.to_string();
     for group in body.iter() {
         fn_obj_string = format!("{}{}", fn_obj_string, braced_vec_to_string(group));
@@ -1609,8 +1722,6 @@ impl fmt::Display for SetBuilder {
 }
 
 impl fmt::Display for FnSet {
-    /// 与 AST 一致：形参表、dom 均使用**存储名**（`fn` 形参为 `__` + 用户符面）。  
-    /// 区别于单独 [`ParamGroupWithSet`] 的 `Display`（会隐去 `__` 以便其它上下文）。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let params_with_sets_display: Vec<String> = self
             .params_def_with_set
@@ -1644,32 +1755,9 @@ impl fmt::Display for PowerSet {
     }
 }
 
-impl From<Atom> for Obj {
-    fn from(atom: Atom) -> Self {
-        match atom {
-            Atom::Identifier(a) => a.into(),
-            Atom::IdentifierWithMod(a) => a.into(),
-            Atom::FieldAccess(a) => a.into(),
-            Atom::FieldAccessWithMod(a) => a.into(),
-        }
-    }
-}
-
 impl From<Identifier> for Obj {
     fn from(id: Identifier) -> Self {
-        Obj::Identifier(id)
-    }
-}
-
-impl From<String> for Obj {
-    fn from(name: String) -> Self {
-        Identifier::new(name).into()
-    }
-}
-
-impl From<&str> for Obj {
-    fn from(name: &str) -> Self {
-        Identifier::new(name.to_string()).into()
+        Obj::Atom(AtomObj::Identifier(id))
     }
 }
 
@@ -1945,7 +2033,7 @@ impl From<FieldAccessWithMod> for Obj {
 
 impl From<IdentifierWithMod> for Obj {
     fn from(m: IdentifierWithMod) -> Self {
-        Obj::IdentifierWithMod(m)
+        Obj::Atom(AtomObj::IdentifierWithMod(m))
     }
 }
 
@@ -1968,7 +2056,7 @@ impl From<StandardSet> for Obj {
 }
 
 impl Identifier {
-    /// Build an Obj::Identifier from a name. Parameter is String (not &str).
+    /// Build a name-shaped [`Obj`] (via [`AtomObj::Identifier`]). Parameter is String (not &str).
     pub fn mk(name: String) -> Obj {
         Identifier::new(name).into()
     }

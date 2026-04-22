@@ -130,6 +130,37 @@ impl ExistFact {
         )
     }
 
+    /// Key for indexing `known_exist_facts_in_forall_facts`: exist witnesses renamed to `#0`, `#1`, …
+    /// so different witness names match the same stored shape.
+    pub fn alpha_normalized_key(&self) -> String {
+        let names = self.params_def_with_type.collect_param_names();
+        let mut normalized_facts: Vec<OrAndChainAtomicFact> = self.facts.clone();
+        for (i, name) in names.iter().enumerate() {
+            let ph = format!("#{}", i);
+            normalized_facts = normalized_facts
+                .into_iter()
+                .map(|f| f.replace_bound_identifier(name, &ph))
+                .collect();
+        }
+        let head = if self.is_exist_unique {
+            EXIST_UNIQUE
+        } else {
+            EXIST
+        };
+        format!(
+            "{} {}{}{}",
+            head,
+            LEFT_CURLY_BRACE,
+            vec_to_string_join_by_comma(
+                &normalized_facts
+                    .iter()
+                    .map(|fact| fact.key())
+                    .collect::<Vec<String>>()
+            ),
+            RIGHT_CURLY_BRACE
+        )
+    }
+
     pub fn line_file(&self) -> LineFile {
         self.line_file.clone()
     }

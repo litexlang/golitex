@@ -130,7 +130,10 @@ impl Runtime {
         while mapping_index < original_flat_param_names.len() {
             original_to_restrict_param_map.insert(
                 original_flat_param_names[mapping_index].clone(),
-                restrict_flat_param_names[mapping_index].clone().into(),
+                obj_for_bound_param_in_scope(
+                    restrict_flat_param_names[mapping_index].clone(),
+                    ParamObjType::FnSet,
+                ),
             );
             mapping_index += 1;
         }
@@ -149,12 +152,16 @@ impl Runtime {
         let mut index: usize = 0;
         for param_def_with_set in &original_fn_set.params_def_with_set {
             let instantiated_original_set =
-                runtime.inst_obj(&param_def_with_set.set, original_to_restrict_param_map)?;
+                runtime.inst_obj(
+                    &param_def_with_set.set,
+                    original_to_restrict_param_map,
+                    ParamObjType::FnSet,
+                )?;
             for _param_name in param_def_with_set.params.iter() {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
                 then_facts.push(
                     InFact::new(
-                        restrict_param_name.into(),
+                        obj_for_bound_param_in_scope(restrict_param_name, ParamObjType::Forall),
                         instantiated_original_set.clone(),
                         line_file.clone(),
                     )
@@ -166,7 +173,11 @@ impl Runtime {
 
         for dom_fact in &original_fn_set.dom_facts {
             let instantiated_dom_fact =
-                runtime.inst_or_and_chain_atomic_fact(dom_fact, original_to_restrict_param_map)?;
+                runtime.inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    original_to_restrict_param_map,
+                    ParamObjType::FnSet,
+                )?;
             then_facts.push(instantiated_dom_fact.into());
         }
 

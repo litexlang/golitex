@@ -66,13 +66,28 @@ pub struct DefFamilyStmt {
     pub line_file: LineFile,
 }
 
-/// `have fn` 里 `{ … }` 一段的源码形态：形参名为用户符，dom/ret 中标识符亦为源码名；**不含** `__` mangling。
-/// 需要存入 `Obj::FnSet` 时由 [`Runtime::fn_set_for_storage_from_have_fn_clause`] 生成存储用 [`FnSet`]。
+/// `have fn` `{ … }` piece: parameter names match binders in dom/ret; build stored `Obj::FnSet` with [`Runtime::fn_set_from_fn_set_clause`].
 #[derive(Clone)]
 pub struct FnSetClause {
     pub params_def_with_set: Vec<ParamGroupWithSet>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Obj,
+}
+
+impl FnSetClause {
+    /// Outer `{...}` binders first, then each nested function return `fn` layer, in order.
+    /// Used when parsing `have fn ... = rhs` so RHS identifiers match nested return fn-set params.
+    pub fn collect_all_param_names_including_nested_ret_fn_sets(&self) -> Vec<String> {
+        let mut names = ParamGroupWithSet::collect_param_names(&self.params_def_with_set);
+        let mut ret_set = self.ret_set.clone();
+        while let Obj::FnSet(inner) = ret_set {
+            names.extend(ParamGroupWithSet::collect_param_names(
+                &inner.params_def_with_set,
+            ));
+            ret_set = (*inner.ret_set).clone();
+        }
+        names
+    }
 }
 
 #[derive(Clone)]
@@ -92,6 +107,7 @@ pub struct HaveFnEqualStmt {
     pub line_file: LineFile,
 }
 
+// have by exist a R st {$p(a)}: a
 #[derive(Clone)]
 pub struct HaveByExistStmt {
     pub equal_tos: Vec<String>,
@@ -143,28 +159,19 @@ impl fmt::Display for DefAbstractPropStmt {
 
 impl fmt::Display for DefStructStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
-        // 解析器会为每个类型参数自动前置一条 field；Display 只还原用户写出来的字段。
-        let implicit_prefix_len = self.param_defs.number_of_params();
+        // Format: struct name(params): \n  fields... \n  <=>: \n  facts...
+        // `fields` and `facts` are exactly what the parser stored (no per-type-param prefix rows).
         let fields_str: String = self
             .fields
             .iter()
-            .skip(implicit_prefix_len)
             .map(|(name, or_val)| format!("{} {}", name, or_val))
             .collect::<Vec<_>>()
             .join("\n");
         let fields_indented =
             to_string_and_add_four_spaces_at_beginning_of_each_line(&fields_str, 1);
         let equiv_line = add_four_spaces_at_beginning(format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
-        let facts_indented = vec_to_string_add_four_spaces_at_beginning_of_each_line(
-            &self
-                .facts
-                .iter()
-                .skip(implicit_prefix_len)
-                .cloned()
-                .collect(),
-            1,
-        );
+        let facts_indented =
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1);
         write!(
             f,
             "{} {}{}{}{} {}\n{}\n{}\n{}",
@@ -434,7 +441,7 @@ fn merge_two_and_chain_clauses(
 }
 
 impl HaveFnByInducStmt {
-    /// 与源码一致的 `fn` 空间（用户形参名 + dom + ret），不含 `__`；存 `Obj::FnSet` 时用 [`Runtime::fn_set_for_storage_from_have_fn_clause`]。
+    /// Source-shaped `fn` block (param names + dom + ret); build stored [`FnSet`] via [`Runtime::fn_set_from_fn_set_clause`].
     pub fn fn_user_fn_set_clause(&self) -> FnSetClause {
         FnSetClause {
             params_def_with_set: vec![ParamGroupWithSet::new(
@@ -443,7 +450,7 @@ impl HaveFnByInducStmt {
             )],
             dom_facts: vec![OrAndChainAtomicFact::AtomicFact(
                 GreaterEqualFact::new(
-                    self.param.clone().into(),
+                    obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::FnSet),
                     self.induc_from.clone(),
                     self.line_file.clone(),
                 )
@@ -456,7 +463,7 @@ impl HaveFnByInducStmt {
     /// `forall x Z: ...` 里与 `fn` 定义域一致的那一段：标识符用源码 [`Self::param`]，与 [`Self::fn_user_fn_set_clause`] 的 dom 语义相同。
     pub fn forall_fn_base_dom_exist_or_facts(&self) -> Vec<Fact> {
         vec![GreaterEqualFact::new(
-            self.param.clone().into(),
+            obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::Forall),
             self.induc_from.clone(),
             self.line_file.clone(),
         )
@@ -486,7 +493,7 @@ impl HaveFnByInducStmt {
     /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（源码最后一条为 `case >= n:`（n 为特例个数），此处仍展开为 `param = from + n` 与可选子条件的合取）。
     pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
-        let left_id: Obj = self.param.clone().into();
+        let left_id: Obj = obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::Induc);
         let n = self.special_cases_equal_tos.len();
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
         let mut equal_tos: Vec<Obj> = Vec::new();
@@ -538,7 +545,7 @@ impl HaveFnByInducStmt {
 }
 
 impl fmt::Display for HaveFnByInducStmt {
-    /// 与源码一致：形参用用户名字，不出现 `__`；存 `FnSet` 时再 mangling。
+    /// Display uses the same parameter names as in source.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let n = self.special_cases_equal_tos.len();
         write!(

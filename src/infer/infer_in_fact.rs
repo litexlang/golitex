@@ -1,6 +1,43 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+/// Objects whose `to_string()` is used as the key in `Environment::known_objs_in_fn_sets`.
+pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
+    matches!(
+        obj,
+        Obj::Atom(AtomObj::Identifier(_))
+            | Obj::Atom(AtomObj::IdentifierWithMod(_))
+            | Obj::FieldAccess(_)
+            | Obj::FieldAccessWithMod(_)
+            | Obj::Atom(AtomObj::Forall(_))
+            | Obj::ForallFieldAccessObj(_)
+            | Obj::DefFreeFieldAccessObj(_)
+            | Obj::Atom(AtomObj::Exist(_))
+            | Obj::Atom(AtomObj::Def(_))
+            | Obj::Atom(AtomObj::SetBuilder(_))
+            | Obj::Atom(AtomObj::FnSet(_))
+            | Obj::Atom(AtomObj::Induc(_))
+            | Obj::Atom(AtomObj::DefAlgo(_))
+    )
+}
+
+/// Extra map keys so `FnObj` well-defined lookup (`Identifier` / `FieldAccess` head) finds entries
+/// registered under tagged free-param display (e.g. `~1a` vs `a`).
+fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
+    match element {
+        Obj::Atom(AtomObj::Forall(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::Exist(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::Def(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::SetBuilder(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::FnSet(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::Induc(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name.clone()],
+        Obj::ForallFieldAccessObj(p) => vec![field_access_to_string(&p.name, &p.field)],
+        Obj::DefFreeFieldAccessObj(p) => vec![field_access_to_string(&p.name, &p.field)],
+        _ => vec![],
+    }
+}
+
 impl Runtime {
     // Expand a type-level `FamilyObj` to its `equal_to` set object under the given type arguments.
     pub fn instantiate_family_member_set(
@@ -44,7 +81,7 @@ impl Runtime {
         let param_to_arg_map = def
             .params_def_with_type
             .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
-        self.inst_obj(&def.equal_to, &param_to_arg_map)
+        self.inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::DefHeader)
     }
 
     // Param typed as `FamilyObj`: store `name $in` the instantiated member set and run membership infer.
@@ -52,10 +89,15 @@ impl Runtime {
         &mut self,
         name: &str,
         family_ty: &FamilyObj,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let member_set = self.instantiate_family_member_set(family_ty)?;
-        let type_fact =
-            InFact::new(name.to_string().into(), member_set, default_line_file()).into();
+        let type_fact = InFact::new(
+            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            member_set,
+            default_line_file(),
+        )
+        .into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
     }
 
@@ -74,28 +116,26 @@ impl Runtime {
         self.infer_in_fact(&expanded)
     }
 
-    // RHS is a function space `FnSet`: record the element in `known_objs_in_fn_sets` (atomic identifiers only).
+    // RHS is a function space `FnSet`: record the element in `known_objs_in_fn_sets`.
     pub fn infer_membership_in_fn_set_from_in_fact(
         &mut self,
         in_fact: &InFact,
         fn_set_with_dom: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        let is_element_atom = match &in_fact.element {
-            Obj::Identifier(_)
-            | Obj::IdentifierWithMod(_)
-            | Obj::FieldAccess(_)
-            | Obj::FieldAccessWithMod(_) => true,
-            _ => false,
-        };
-
-        if !is_element_atom {
+        if !obj_eligible_for_known_objs_in_fn_sets(&in_fact.element) {
             return Ok(InferResult::new());
         }
 
         let key = in_fact.element.to_string();
         let env = self.top_level_env();
         env.known_objs_in_fn_sets
-            .insert(key, fn_set_with_dom.clone());
+            .insert(key.clone(), fn_set_with_dom.clone());
+        for alias in extra_known_fn_set_keys_for_bare_name_lookup(&in_fact.element) {
+            if alias != key {
+                env.known_objs_in_fn_sets
+                    .insert(alias, fn_set_with_dom.clone());
+            }
+        }
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&in_fact.clone().into());
@@ -124,7 +164,7 @@ impl Runtime {
 
         for fact_in_set_builder in set_builder.facts.iter() {
             let instantiated_fact_in_set_builder: OrAndChainAtomicFact = self
-                .inst_or_and_chain_atomic_fact(fact_in_set_builder, &param_to_arg_map)
+                .inst_or_and_chain_atomic_fact(fact_in_set_builder, &param_to_arg_map, ParamObjType::SetBuilder)
                 .map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,

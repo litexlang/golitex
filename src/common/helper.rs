@@ -74,7 +74,7 @@ pub fn vec_to_string_join_by_comma<T: fmt::Display>(vec: &Vec<T>) -> String {
         .join(", ")
 }
 
-/// `fn` / 内涵集 AST 中形参存为 `__` + 用户符面；打印时去掉此前缀。
+/// Comma-separated fn-set parameter names for display; strips a leading `__` if present (legacy).
 pub fn comma_separated_stored_fn_params_as_user_source(params: &[String]) -> String {
     params
         .iter()

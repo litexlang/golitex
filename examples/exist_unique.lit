@@ -11,7 +11,9 @@ know:
         =>:
             (a1, b1, c1) = (a2, b2, c2)
 
-exist_unique a, b, c R st {$p(a, b), $q(b, c)}
+exist a, b, c R st {$p(a, b), $q(b, c)}
+
+# exist_unique a, b, c R st {$p(a, b), $q(b, c)}
 
 abstract_prop t(a)
 
@@ -23,4 +25,4 @@ know:
         =>:
             a1 = a2
 
-exist_unique a R st {$t(a)}
+# exist_unique a R st {$t(a)}

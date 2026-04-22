@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
+// Same ∀-instantiation strategy as `verify_atomic_fact_with_known_forall` (σ from template to given).
+
 impl Runtime {
     pub fn verify_or_fact_with_known_forall(
         &mut self,
@@ -123,21 +125,12 @@ impl Runtime {
             args_for_params.push(obj.clone());
         }
 
-        for (key, obj) in arg_map.iter() {
-            if param_names.contains(key) {
-                continue;
-            } else {
-                if key != &obj.to_string() {
-                    return Ok(None);
-                }
-            }
-        }
-
         let args_param_types = self
             .verify_args_satisfy_param_def_flat_types(
                 &known_forall.params_def,
                 &args_for_params,
                 verify_state,
+                ParamObjType::Forall,
             )
             .map_err(|e| {
                 {
@@ -164,7 +157,11 @@ impl Runtime {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map)
+                .inst_fact(
+                    dom_fact,
+                    &param_to_arg_map,
+                    ParamObjType::Forall,
+                )
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(

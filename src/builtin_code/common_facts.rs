@@ -44,6 +44,7 @@ know:
             a!=0 and b!=0
 
     forall a R_pos, b R_nz:
+        0 < a ^ b
         a = (a^b)^(1/b)
 
     forall a R_pos, b R_nz:
@@ -59,4 +60,9 @@ know:
         a != 1
         =>:
             a ^ (log(a, b)) = b
+
+    forall a, b, c Z:
+        c != 0
+        =>:
+            (a + b) % c = ((a % c) + (b % c)) % c
 "#;

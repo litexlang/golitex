@@ -1,17 +1,18 @@
+use crate::infer::obj_eligible_for_known_objs_in_fn_sets;
 use crate::prelude::*;
 use crate::verify::{
     number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
     number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
-    number_is_in_z_nz, VerifyState,
+    number_is_in_z_nz, verify_number_in_standard_set::is_integer_after_simplification, VerifyState,
 };
 use std::collections::{HashMap, HashSet};
 
-// Rename param groups to mangled storage names using `flat_original` and `mangled_by_index`
+// Rename param groups to placeholder names using `flat_original` and `renamed_by_index`
 // (same flatten order as `FnSet::get_params`).
-fn param_def_with_set_rename_to_mangled(
+fn param_def_with_set_rename_params(
     groups: &[ParamGroupWithSet],
     flat_original: &[String],
-    mangled_by_index: &[String],
+    renamed_by_index: &[String],
 ) -> Vec<ParamGroupWithSet> {
     let mut name_to_i: HashMap<String, usize> = HashMap::new();
     for (i, n) in flat_original.iter().enumerate() {
@@ -24,7 +25,7 @@ fn param_def_with_set_rename_to_mangled(
             .iter()
             .map(|n| {
                 let i = name_to_i[n];
-                mangled_by_index[i].clone()
+                renamed_by_index[i].clone()
             })
             .collect();
         out.push(ParamGroupWithSet::new(new_names, g.set.clone()));
@@ -473,12 +474,15 @@ impl Runtime {
                 list_set,
                 verify_state,
             ),
-            (Obj::Identifier(identifier), Obj::FnSet(expected_fn_set)) => self
-                .verify_in_fact_identifier_in_fn_set_by_stored_definition(
-                    identifier,
+            (element, Obj::FnSet(expected_fn_set))
+                if obj_eligible_for_known_objs_in_fn_sets(element) =>
+            {
+                self.verify_in_fact_element_in_fn_set_by_stored_definition(
+                    element,
                     expected_fn_set,
                     in_fact,
-                ),
+                )
+            }
             (_, Obj::FamilyObj(family_ty)) => {
                 self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
             }
@@ -617,14 +621,20 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
-        let a_le_i =
-            LessEqualFact::new((*closed_range.start).clone(), elem.clone(), lf.clone()).into();
-        let i_le_b =
-            LessEqualFact::new(elem.clone(), (*closed_range.end).clone(), lf.clone()).into();
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&a_le_i, verify_state)? {
+        if !self.order_lower_bound_from_literals(
+            elem,
+            closed_range.start.as_ref(),
+            &lf,
+            verify_state,
+        )? {
             return Ok((StmtUnknown::new()).into());
         }
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&i_le_b, verify_state)? {
+        if !self.order_upper_bound_closed_from_literals(
+            elem,
+            closed_range.end.as_ref(),
+            &lf,
+            verify_state,
+        )? {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(number_in_set_verified_by_builtin_rules_result(
@@ -641,18 +651,120 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
-        let a_le_i = LessEqualFact::new((*range.start).clone(), elem.clone(), lf.clone()).into();
-        let i_lt_b = LessFact::new(elem.clone(), (*range.end).clone(), lf.clone()).into();
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&a_le_i, verify_state)? {
+        if !self.order_lower_bound_from_literals(elem, range.start.as_ref(), &lf, verify_state)? {
             return Ok((StmtUnknown::new()).into());
         }
-        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&i_lt_b, verify_state)? {
+        if !self.order_upper_bound_open_from_literals(elem, range.end.as_ref(), &lf, verify_state)? {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(number_in_set_verified_by_builtin_rules_result(
             in_fact,
             "in range: a <= i and i < b",
         ))
+    }
+
+    // When `x $in Z` and endpoints are integer literals: `lo <= x` iff `lo - 1 < x` (discrete lower).
+    // Example: dom `1 < i` with `i $in Z` proves the lower side of `i $in range(2, 6)` / `closed_range(2, 5)`.
+    fn order_lower_bound_from_literals(
+        &mut self,
+        elem: &Obj,
+        lower: &Obj,
+        lf: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let weak: AtomicFact = LessEqualFact::new(lower.clone(), elem.clone(), lf.clone()).into();
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&weak, verify_state)? {
+            return Ok(true);
+        }
+        let in_z: AtomicFact =
+            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
+            return Ok(false);
+        }
+        let Some(lower_num) = self.resolve_obj_to_number_resolved(lower) else {
+            return Ok(false);
+        };
+        if !is_integer_after_simplification(&lower_num) {
+            return Ok(false);
+        }
+        let pred = Obj::Sub(Sub::new(
+            lower.clone(),
+            Number::new("1".to_string()).into(),
+        ));
+        let Some(pred_n) = pred.evaluate_to_normalized_decimal_number() else {
+            return Ok(false);
+        };
+        let strict: AtomicFact = LessFact::new(pred_n.into(), elem.clone(), lf.clone()).into();
+        self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&strict, verify_state)
+    }
+
+    // When `x $in Z` and `hi` is an integer literal: `x < hi` iff `x <= hi - 1`.
+    // Example: `i <= 5` and `i $in Z` gives the upper side of `i $in range(2, 6)`.
+    fn order_upper_bound_open_from_literals(
+        &mut self,
+        elem: &Obj,
+        upper: &Obj,
+        lf: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let strict: AtomicFact = LessFact::new(elem.clone(), upper.clone(), lf.clone()).into();
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&strict, verify_state)? {
+            return Ok(true);
+        }
+        let in_z: AtomicFact =
+            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
+            return Ok(false);
+        }
+        let Some(upper_num) = self.resolve_obj_to_number_resolved(upper) else {
+            return Ok(false);
+        };
+        if !is_integer_after_simplification(&upper_num) {
+            return Ok(false);
+        }
+        let upper_minus_one = Obj::Sub(Sub::new(
+            upper.clone(),
+            Number::new("1".to_string()).into(),
+        ));
+        let Some(um) = upper_minus_one.evaluate_to_normalized_decimal_number() else {
+            return Ok(false);
+        };
+        let weak: AtomicFact = LessEqualFact::new(elem.clone(), um.into(), lf.clone()).into();
+        self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&weak, verify_state)
+    }
+
+    // When `x $in Z` and `hi` is an integer literal: `x <= hi` iff `x < hi + 1`.
+    fn order_upper_bound_closed_from_literals(
+        &mut self,
+        elem: &Obj,
+        upper: &Obj,
+        lf: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let weak: AtomicFact = LessEqualFact::new(elem.clone(), upper.clone(), lf.clone()).into();
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&weak, verify_state)? {
+            return Ok(true);
+        }
+        let in_z: AtomicFact =
+            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
+            return Ok(false);
+        }
+        let Some(upper_num) = self.resolve_obj_to_number_resolved(upper) else {
+            return Ok(false);
+        };
+        if !is_integer_after_simplification(&upper_num) {
+            return Ok(false);
+        }
+        let hi_plus_one = Obj::Add(Add::new(
+            upper.clone(),
+            Number::new("1".to_string()).into(),
+        ));
+        let Some(hp) = hi_plus_one.evaluate_to_normalized_decimal_number() else {
+            return Ok(false);
+        };
+        let strict: AtomicFact = LessFact::new(elem.clone(), hp.into(), lf.clone()).into();
+        self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&strict, verify_state)
     }
 
     // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and `^` when direct operands are in `Z`
@@ -993,8 +1105,8 @@ impl Runtime {
         }
     }
 
-    // `fn(x N_pos) R` vs `fn(y N_pos) R`: pick fresh base names per dimension with `__` prefix, substitute
-    // the same storage names on both sides, then compare `Display` of params / dom / ret.
+    // `fn(x N_pos) R` vs `fn(y N_pos) R`: pick fresh names per dimension, substitute the same
+    // placeholders on both sides, then compare `Display` of params / dom / ret.
     fn fn_set_with_params_equal_modulo_param_rename(
         &self,
         a: &FnSet,
@@ -1012,61 +1124,66 @@ impl Runtime {
             reserved.insert(s.clone());
         }
 
-        let mut mangled_placeholders: Vec<String> = Vec::with_capacity(n);
+        let mut placeholders: Vec<String> = Vec::with_capacity(n);
         for _ in 0..n {
             let base = self.generate_one_unused_name_with_reserved(&reserved);
             reserved.insert(base.clone());
-            mangled_placeholders.push(format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, base));
+            placeholders.push(base);
         }
 
         let mut pa_map = HashMap::new();
         let mut pb_map = HashMap::new();
         for i in 0..n {
-            let ph = mangled_placeholders[i].clone();
-            pa_map.insert(pa[i].clone(), ph.clone().into());
-            pb_map.insert(pb[i].clone(), ph.into());
+            let ph = placeholders[i].clone();
+            pa_map.insert(
+                pa[i].clone(),
+                obj_for_bound_param_in_scope(ph.clone(), ParamObjType::FnSet),
+            );
+            pb_map.insert(
+                pb[i].clone(),
+                obj_for_bound_param_in_scope(ph, ParamObjType::FnSet),
+            );
         }
 
-        let a_params = param_def_with_set_rename_to_mangled(
+        let a_params = param_def_with_set_rename_params(
             &a.params_def_with_set,
             &pa,
-            &mangled_placeholders,
+            &placeholders,
         );
-        let b_params = param_def_with_set_rename_to_mangled(
+        let b_params = param_def_with_set_rename_params(
             &b.params_def_with_set,
             &pb,
-            &mangled_placeholders,
+            &placeholders,
         );
 
         let a_dom: Vec<OrAndChainAtomicFact> = a
             .dom_facts
             .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map))
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map, ParamObjType::FnSet))
             .collect::<Result<Vec<_>, _>>()?;
         let b_dom: Vec<OrAndChainAtomicFact> = b
             .dom_facts
             .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map))
+            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map, ParamObjType::FnSet))
             .collect::<Result<Vec<_>, _>>()?;
 
-        let a_ret = a.ret_set.as_ref().clone();
-        let b_ret = b.ret_set.as_ref().clone();
+        let a_ret = self.inst_obj(a.ret_set.as_ref(), &pa_map, ParamObjType::FnSet)?;
+        let b_ret = self.inst_obj(b.ret_set.as_ref(), &pb_map, ParamObjType::FnSet)?;
 
-        let a_instantiated = self.new_fn_set_and_add_mangled_prefix(a_params, a_dom, a_ret)?;
-        let b_instantiated = self.new_fn_set_and_add_mangled_prefix(b_params, b_dom, b_ret)?;
+        let a_instantiated = self.new_fn_set(a_params, a_dom, a_ret)?;
+        let b_instantiated = self.new_fn_set(b_params, b_dom, b_ret)?;
 
         Ok(a_instantiated.to_string() == b_instantiated.to_string())
     }
 
-    // If the env already has `identifier $in fn_def` (from `known_obj_in_fn_set`), α-compare to the RHS `fn ...`.
-    fn verify_in_fact_identifier_in_fn_set_by_stored_definition(
+    // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), α-compare to the RHS `fn ...`.
+    fn verify_in_fact_element_in_fn_set_by_stored_definition(
         &mut self,
-        identifier: &Identifier,
+        element: &Obj,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let element_obj = identifier.name.clone().into();
-        let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(&element_obj) else {
+        let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(element) else {
             return Ok((StmtUnknown::new()).into());
         };
         if self

@@ -146,7 +146,7 @@ impl Runtime {
         }
 
         let source_ret_set = self
-            .inst_obj(&source.ret_set, &source_param_to_generated_arg_map)
+            .inst_obj(&source.ret_set, &source_param_to_generated_arg_map, ParamObjType::FnSet)
             .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
@@ -157,7 +157,7 @@ impl Runtime {
                 )
             })?;
         let target_ret_set = self
-            .inst_obj(&target.ret_set, &target_param_to_generated_arg_map)
+            .inst_obj(&target.ret_set, &target_param_to_generated_arg_map, ParamObjType::FnSet)
             .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
@@ -181,8 +181,10 @@ impl Runtime {
         for (param_name, generated_param_name) in
             flat_param_names.iter().zip(generated_param_names.iter())
         {
-            param_to_generated_arg_map
-                .insert(param_name.clone(), generated_param_name.clone().into());
+            param_to_generated_arg_map.insert(
+                param_name.clone(),
+                obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::FnSet),
+            );
         }
         param_to_generated_arg_map
     }
@@ -203,7 +205,7 @@ impl Runtime {
             let generated_names_for_current_group =
                 generated_param_names[flat_index..next_flat_index].to_vec();
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.set, &source_param_to_generated_arg_map)
+                .inst_obj(&param_def_with_set.set, &source_param_to_generated_arg_map, ParamObjType::FnSet)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,
@@ -236,7 +238,7 @@ impl Runtime {
             {
                 source_param_to_generated_arg_map.insert(
                     source_param_name.clone(),
-                    generated_param_name.clone().into(),
+                    obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::FnSet),
                 );
             }
             flat_index = next_flat_index;
@@ -254,7 +256,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for dom_fact in source.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, source_param_to_generated_arg_map)
+                .inst_or_and_chain_atomic_fact(dom_fact, source_param_to_generated_arg_map, ParamObjType::FnSet)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,
@@ -291,7 +293,7 @@ impl Runtime {
     ) -> Result<bool, RuntimeError> {
         for param_def_with_set in target.params_def_with_set.iter() {
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.set, target_param_to_generated_arg_map)
+                .inst_obj(&param_def_with_set.set, target_param_to_generated_arg_map, ParamObjType::FnSet)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,
@@ -340,7 +342,7 @@ impl Runtime {
     ) -> Result<bool, RuntimeError> {
         for dom_fact in target.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, target_param_to_generated_arg_map)
+                .inst_or_and_chain_atomic_fact(dom_fact, target_param_to_generated_arg_map, ParamObjType::FnSet)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,

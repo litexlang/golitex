@@ -51,12 +51,7 @@ pub fn to_latex_from_source_after_builtins(
     entry_label: &str,
 ) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
-    let mut runtime = Runtime::new();
-    let (_, builtin_error) =
-        crate::pipeline::run_source_code(builtin_code().as_str(), &mut runtime);
-    if let Some(e) = builtin_error {
-        return Err(e);
-    }
+    let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
     to_latex(normalized.as_str(), &mut runtime)
 }

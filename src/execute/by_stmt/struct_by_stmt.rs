@@ -22,7 +22,7 @@ impl Runtime {
                     let map = def
                         .params_def_with_type
                         .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
-                    self.inst_obj(&def.equal_to, &map)
+                    self.inst_obj(&def.equal_to, &map, ParamObjType::DefHeader)
                 }
                 _ => Ok(o.clone()),
             },
@@ -94,7 +94,7 @@ impl Runtime {
 
         let mut cart_dims: Vec<Obj> = Vec::with_capacity(def.fields.len());
         for (_, field_ty) in def.fields.iter() {
-            let pt = self.inst_param_type(field_ty, &param_to_arg_map)?;
+            let pt = self.inst_param_type(field_ty, &param_to_arg_map, ParamObjType::DefHeader)?;
             cart_dims.push(self.param_type_to_cart_dimension_obj(&pt)?);
         }
         let cart_obj = Cart::new(cart_dims).into();
@@ -126,7 +126,8 @@ impl Runtime {
         let forall_param = random_names[0].clone();
         let set_builder_param = random_names[1].clone();
 
-        let forall_param_obj: Obj = forall_param.clone().into();
+        let forall_param_obj: Obj =
+            obj_for_bound_param_in_scope(forall_param.clone(), ParamObjType::Forall);
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         then_facts.push(
@@ -162,7 +163,8 @@ impl Runtime {
         // `<=>:` 里 `self.field` 在定义验证时按「tuple 模型」展开。set-builder 的域变量 `x` 在 cart 上，
         // 故令 `self` 为 `(R, x[1], x[2], …)`：与 `def.fields` + `number_of_params` 的 tuple 下标一致，
         // `inst_field_access` 会把 `self.b` 等变成 `x[1]` 而非非法的 `x.b`。
-        let x_obj: Obj = set_builder_param.clone().into();
+        let x_obj: Obj =
+            obj_for_bound_param_in_scope(set_builder_param.clone(), ParamObjType::SetBuilder);
         let mut tuple_components: Vec<Obj> =
             Vec::with_capacity(def.number_of_params() + def.fields.len());
         for a in struct_ty.args.iter() {
@@ -184,11 +186,10 @@ impl Runtime {
 
         let mut inst_body_facts: Vec<OrAndChainAtomicFact> = Vec::with_capacity(def.facts.len());
         for fact in def.facts.iter() {
-            inst_body_facts.push(self.inst_or_and_chain_atomic_fact(fact, &extended_for_sb)?);
+            inst_body_facts.push(self.inst_or_and_chain_atomic_fact(fact, &extended_for_sb, ParamObjType::StructSelf)?);
         }
 
-        let set_builder =
-            SetBuilder::new_with_mangled_name(set_builder_param, cart_obj.clone(), inst_body_facts);
+        let set_builder = SetBuilder::new(set_builder_param, cart_obj.clone(), inst_body_facts);
         let rhs_sb_obj: Obj = set_builder.clone().into();
         self.verify_obj_well_defined_and_store_cache(&rhs_sb_obj, &verify_state)
             .map_err(|e| {

@@ -1,11 +1,12 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         self.parse_obj_hierarchy0(tb)
     }
 
-    /// Infix `\` is loosest; then `+-`, `*/%`, `^`, `[]`, `..`, primary.
+    /// Infix `\` is loosest; then `+-`, `*/%`, `^`, `[]`, `...`, primary.
     fn parse_obj_hierarchy0(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy1(tb)?;
         if tb.exceed_end_of_head() {
@@ -39,7 +40,19 @@ impl Runtime {
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
-            Ok(FnObj::new(fn_name, body).into())
+            let head = FnObjHead::from_name_obj(fn_name).ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "infix `\\` expects an identifier or single field-access name for the function"
+                            .to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                ))
+            })?;
+            Ok(FnObj::new(head, body).into())
         } else {
             Ok(left)
         }
@@ -142,12 +155,12 @@ impl Runtime {
         }
     }
 
-    /// Range `..` (closed_range); same band as `[]`, applied after subscripts.
+    /// Infix closed interval `...` (`closed_range`); same band as `[]`, applied after subscripts.
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy6(tb)?;
 
-        if tb.current_token_is_equal_to(DOT_DOT) {
-            tb.skip_token(DOT_DOT)?;
+        if tb.current_token_is_equal_to(DOT_DOT_DOT) {
+            tb.skip_token(DOT_DOT_DOT)?;
             let right = self.parse_obj_hierarchy1(tb)?;
             Ok(ClosedRange::new(left, right).into())
         } else {
@@ -239,11 +252,6 @@ impl Runtime {
 
                 let set = this.parse_obj(tb)?;
 
-                for p in current_params.clone().iter() {
-                    let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
-                    this.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
-                }
-
                 params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
 
                 if tb.current_token_is_equal_to(COMMA) {
@@ -266,6 +274,13 @@ impl Runtime {
                 }
             }
 
+            let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
+            this.parsing_free_param_collection.begin_scope(
+                ParamObjType::FnSet,
+                &all_fn_names,
+                tb.line_file.clone(),
+            )?;
+
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
@@ -280,13 +295,10 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            Ok(FnSetOrFnSetClause::FnSet(
-                this.new_fn_set_and_add_mangled_prefix(
-                    params_def_with_set,
-                    dom_facts,
-                    ret_set_parsed,
-                )?,
-            ))
+            let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
+            this.parsing_free_param_collection
+                .end_scope(ParamObjType::FnSet, &all_fn_names);
+            Ok(FnSetOrFnSetClause::FnSet(built?))
         });
         match fn_set {
             Ok(fn_set) => match fn_set {
@@ -317,14 +329,6 @@ impl Runtime {
 
                 let set = this.parse_obj(tb)?;
 
-                for p in current_params.clone().iter() {
-                    // Register plain names so later parsing can resolve them.
-                    this.register_name_into_name_scope(p, tb.line_file.clone())?;
-
-                    let p_with_prefix = format!("{}{}", DEFAULT_MANGLED_FN_PARAM_PREFIX, p);
-                    this.register_name_into_name_scope(&p_with_prefix, tb.line_file.clone())?;
-                }
-
                 params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
 
                 if tb.current_token_is_equal_to(COMMA) {
@@ -347,6 +351,13 @@ impl Runtime {
                 }
             }
 
+            let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
+            this.parsing_free_param_collection.begin_scope(
+                ParamObjType::FnSet,
+                &all_fn_names,
+                tb.line_file.clone(),
+            )?;
+
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
@@ -361,11 +372,14 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            Ok(FnSetOrFnSetClause::FnSetClause(FnSetClause {
+            let clause_ok = FnSetClause {
                 params_def_with_set,
                 dom_facts,
                 ret_set: ret_set_parsed,
-            }))
+            };
+            this.parsing_free_param_collection
+                .end_scope(ParamObjType::FnSet, &all_fn_names);
+            Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
         match clause {
             Ok(clause) => match clause {
@@ -473,13 +487,24 @@ impl Runtime {
         let mut result = self.parse_primary_obj(tb)?;
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
-        let (head_atom, mut body_vectors) = match &result {
-            Obj::Identifier(i) => (i.clone().into(), vec![]),
-            Obj::IdentifierWithMod(m) => (m.clone().into(), vec![]),
-            Obj::FieldAccess(field_access) => (field_access.clone().into(), vec![]),
-            Obj::FieldAccessWithMod(field_access_with_mod) => {
-                (field_access_with_mod.clone().into(), vec![])
-            }
+        let (head, mut body_vectors) = match &result {
+            Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => (FnObjHead::IdentifierWithMod(m.clone()), vec![]),
+            Obj::FieldAccess(field_access) => (FnObjHead::FieldAccess(field_access.clone()), vec![]),
+            Obj::FieldAccessWithMod(field_access_with_mod) => (
+                FnObjHead::FieldAccessWithMod(field_access_with_mod.clone()),
+                vec![],
+            ),
+            Obj::Atom(AtomObj::StructSelfField(p)) => (FnObjHead::StructSelfField(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Forall(p)) => (FnObjHead::Forall(p.clone()), vec![]),
+            Obj::ForallFieldAccessObj(p) => (FnObjHead::ForallFieldAccess(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Exist(p)) => (FnObjHead::Exist(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Def(p)) => (FnObjHead::DefHeader(p.clone()), vec![]),
+            Obj::DefFreeFieldAccessObj(p) => (FnObjHead::DefHeaderFieldAccess(p.clone()), vec![]),
+            Obj::Atom(AtomObj::SetBuilder(p)) => (FnObjHead::SetBuilder(p.clone()), vec![]),
+            Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
+            Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
+            Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -488,7 +513,7 @@ impl Runtime {
             body_vectors.push(group);
         }
         if !body_vectors.is_empty() {
-            result = FnObj::new(head_atom, body_vectors).into();
+            result = FnObj::new(head, body_vectors).into();
         }
         Ok(result)
     }
@@ -1235,9 +1260,46 @@ impl Runtime {
             return Ok(CartDim::new(args).into());
         }
 
-        // 普通 atom（标识符）
+        // Ordinary atom (identifier): resolve free-param scope without building `Obj::Identifier` first.
         let atom = self.parse_atom(tb)?;
-        return Ok(atom.into());
+
+        self.reclassify_atom_as_free_param_obj(atom)
+    }
+
+    fn reclassify_atom_as_free_param_obj(&self, obj: Obj) -> Result<Obj, RuntimeError> {
+        match obj {
+            Obj::Atom(AtomObj::Identifier(id)) => {
+                if id.name == SELF {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            "`self` must be written as `self.<field>`".to_string(),
+                            default_line_file(),
+                            None,
+                            vec![],
+                        ),
+                    )));
+                }
+                Ok(self
+                    .parsing_free_param_collection
+                    .resolve_identifier_to_free_param_obj(&id.name))
+            }
+            Obj::FieldAccess(fa) => self
+                .parsing_free_param_collection
+                .resolve_field_access_to_free_param_obj(&fa.name, &fa.field)
+                .map_err(|e| e.into()),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => Ok(Obj::Atom(AtomObj::IdentifierWithMod(m))),
+            Obj::FieldAccessWithMod(f) => Ok(Obj::FieldAccessWithMod(f)),
+            _ => Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "internal: atom position was not a name/field form".to_string(),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            ))),
+        }
     }
 
     pub fn parse_braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
@@ -1287,7 +1349,7 @@ impl Runtime {
 
         let left = self.parse_obj(tb)?;
         match left {
-            Obj::Identifier(a) => {
+            Obj::Atom(AtomObj::Identifier(a)) => {
                 if tb.current_token_is_equal_to(COMMA) || tb.current()? == RIGHT_CURLY_BRACE {
                     self.parse_list_set_obj_with_leftmost_obj(tb, a.into())
                 } else {
@@ -1305,36 +1367,49 @@ impl Runtime {
         a: Identifier,
     ) -> Result<Obj, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
-            let second = this.parse_obj(tb)?;
-            if tb.current()? == COLON {
-                tb.skip_token(COLON)?;
+            let set_builder_param = [a.name.clone()];
+            this.parsing_free_param_collection.begin_scope(
+                ParamObjType::SetBuilder,
+                &set_builder_param,
+                tb.line_file.clone(),
+            )?;
+            let parsed = (|| -> Result<Obj, RuntimeError> {
+                let second = this.parse_obj(tb)?;
+                if tb.current()? == COLON {
+                    tb.skip_token(COLON)?;
 
-                // 先登记形参 mangling，再解析域与条件（与 fn 集一致：先绑定再读体）
-                let user_names = vec![a.name.clone()];
-                let (mangled_names, param_arg_map) =
-                    this.register_mangled_fn_param_binding(&user_names, tb.line_file.clone())?;
-                let stored = mangled_names[0].clone();
-                let second_inst = this.inst_obj(&second, &param_arg_map)?;
+                    let user_names = vec![a.name.clone()];
+                    this.validate_user_fn_param_names_for_parse(&user_names, tb.line_file.clone())?;
+                    let empty: HashMap<String, Obj> = HashMap::new();
+                    let second_inst = this.inst_obj(&second, &empty, ParamObjType::SetBuilder)?;
 
-                let mut facts_inst = Vec::new();
-                while tb.current()? != RIGHT_CURLY_BRACE {
-                    let f = this.parse_or_and_chain_atomic_fact(tb)?;
-                    facts_inst.push(this.inst_or_and_chain_atomic_fact(&f, &param_arg_map)?);
+                    let mut facts_inst = Vec::new();
+                    while tb.current()? != RIGHT_CURLY_BRACE {
+                        let f = this.parse_or_and_chain_atomic_fact(tb)?;
+                        facts_inst.push(this.inst_or_and_chain_atomic_fact(
+                            &f,
+                            &empty,
+                            ParamObjType::SetBuilder,
+                        )?);
+                    }
+                    tb.skip_token(RIGHT_CURLY_BRACE)?;
+
+                    Ok(SetBuilder::new(a.name.clone(), second_inst, facts_inst).into())
+                } else {
+                    Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            "expected colon after first argument".to_string(),
+                            tb.line_file.clone(),
+                            None,
+                            vec![],
+                        ),
+                    )))
                 }
-                tb.skip_token(RIGHT_CURLY_BRACE)?;
-
-                Ok(SetBuilder::new(stored, second_inst, facts_inst).into())
-            } else {
-                Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "expected colon after first argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
-                )))
-            }
+            })();
+            this.parsing_free_param_collection
+                .end_scope(ParamObjType::SetBuilder, &set_builder_param);
+            parsed
         })
     }
 
@@ -1368,103 +1443,97 @@ impl Runtime {
         Ok(ListSet::new(objs))
     }
 
-    pub fn parse_atom(&self, tb: &mut TokenBlock) -> Result<Atom, RuntimeError> {
+    // Unqualified name-shaped atom: `name` or `name.field` (one `.` max). No `::`.
+    pub fn parse_identifier_or_field_access(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
-        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+        if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
             tb.skip()?;
-            let right = parse_synthetically_correct_identifier_string(tb)?;
+            let field = parse_synthetically_correct_identifier_string(tb)?;
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                tb.skip()?;
-                let field = parse_synthetically_correct_identifier_string(tb)?;
-                if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "chained field access `a.b.c` is not supported; use at most one `.`"
-                                .to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-
-                Ok(FieldAccessWithMod::new(left, right, field).into())
-            } else {
-                Ok(IdentifierWithMod::new(left, right).into())
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "chained field access `a.b.c` is not supported; use at most one `.`"
+                            .to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
             }
+            Ok(FieldAccess::new(left, field).into())
         } else {
-            // 如果后面有 .，则解析为 FieldAccess
-            if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                tb.skip()?;
-                let field = parse_synthetically_correct_identifier_string(tb)?;
-                if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "chained field access `a.b.c` is not supported; use at most one `.`"
-                                .to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-                Ok(FieldAccess::new(left, field).into())
-            } else {
-                Ok(Identifier::new(left).into())
-            }
+            Ok(Identifier::new(left).into())
         }
     }
 
-    pub fn parse_predicate(
-        &self,
-        tb: &mut TokenBlock,
-    ) -> Result<IdentifierOrIdentifierWithMod, RuntimeError> {
-        let left = tb.advance()?;
-        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+    fn parse_mod_qualified_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        let left = parse_synthetically_correct_identifier_string(tb)?;
+        tb.skip_token(MOD_SIGN)?;
+        let right = parse_synthetically_correct_identifier_string(tb)?;
+        if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
             tb.skip()?;
-            let right = tb.advance()?;
-            Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(
-                IdentifierWithMod::new(left, right),
-            ))
+            let field = parse_synthetically_correct_identifier_string(tb)?;
+            if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "chained field access `a.b.c` is not supported; use at most one `.`"
+                            .to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+
+            Ok(FieldAccessWithMod::new(left, right, field).into())
         } else {
-            Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
-                left,
-            )))
+            Ok(IdentifierWithMod::new(left, right).into())
         }
     }
 
-    pub fn parse_identifier_or_identifier_with_mod(
-        &self,
-        tb: &mut TokenBlock,
-    ) -> Result<IdentifierOrIdentifierWithMod, RuntimeError> {
-        let left = parse_synthetically_correct_identifier_string(tb)?;
-        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
-            tb.skip()?;
-            let right = parse_synthetically_correct_identifier_string(tb)?;
-            Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(
-                IdentifierWithMod::new(left, right),
-            ))
+    /// Unqualified or `::`-qualified name / field name; returns a name-shaped [`Obj`].
+    pub fn parse_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        let next_is_mod = tb.token_at_add_index(1) == MOD_SIGN;
+        if next_is_mod {
+            self.parse_mod_qualified_atom(tb)
         } else {
-            Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
-                left,
-            )))
+            self.parse_identifier_or_field_access(tb)
         }
+    }
+
+    pub fn parse_predicate(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
+        self.parse_atomic_name(tb)
     }
 
     pub fn parse_family_obj(&mut self, tb: &mut TokenBlock) -> Result<FamilyObj, RuntimeError> {
         tb.skip_token(FAMILY)?;
-        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let name = self.parse_atomic_name(tb)?;
         let params = self.parse_braced_objs(tb)?;
         Ok(FamilyObj { name, params })
     }
 
     pub fn parse_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<StructObj, RuntimeError> {
         tb.skip_token(STRUCT)?;
-        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let name = self.parse_atomic_name(tb)?;
         let params = self.parse_braced_objs(tb)?;
         Ok(StructObj { name, args: params })
+    }
+
+    /// `ident` or `mod::ident` as a predicate/atomic name in parse position.
+    pub fn parse_atomic_name(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
+        let left = parse_synthetically_correct_identifier_string(tb)?;
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
+            tb.skip()?;
+            let right = parse_synthetically_correct_identifier_string(tb)?;
+            Ok(AtomicName::WithMod(left, right))
+        } else {
+            Ok(AtomicName::WithoutMod(left))
+        }
     }
 }
 

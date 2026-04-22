@@ -28,16 +28,10 @@ pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) 
 
 fn run_source_code_with_output(source_code: &str, entry_label: &str) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
-    let mut runtime = Runtime::new();
-    let (builtin_stmt_results, builtin_error) =
-        run_source_code(builtin_code().as_str(), &mut runtime);
-    let (ok, msg) = render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
-    if !ok {
-        return (false, format!("builtin code execution failed: {}", msg));
-    }
+    let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
-    render_run_source_code_output(&runtime, &stmt_results, &runtime_error)
+    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true)
 }
 
 pub fn run_source_code(
@@ -76,24 +70,37 @@ pub fn run_source_code(
     (stmt_results, None)
 }
 
+/// When `strip_free_param_tags` is true, run [`strip_free_param_numeric_tags_in_display`] on the full
+/// concatenated output. Use false in `main_test` to print raw `~` tags for debugging.
 pub fn render_run_source_code_output(
     runtime: &Runtime,
     stmt_results: &Vec<StmtResult>,
     runtime_error: &Option<RuntimeError>,
+    strip_free_param_tags: bool,
 ) -> (bool, String) {
     let mut output_text = String::new();
     for stmt_result in stmt_results.iter() {
         output_text.push('\n');
-        output_text.push_str(display_stmt_exec_result_json(runtime, stmt_result).as_str());
+        output_text.push_str(display_stmt_exec_result_json(runtime, stmt_result, false).as_str());
         output_text.push('\n');
     }
 
+    let ok = runtime_error.is_none();
     if let Some(error) = runtime_error {
         output_text.push('\n');
-        output_text.push_str(display_runtime_error_json(runtime, error).as_str());
+        output_text.push_str(display_runtime_error_json(runtime, error, false).as_str());
         output_text.push('\n');
-        return (false, output_text);
     }
 
-    (true, output_text)
+    let output_text = if strip_free_param_tags {
+        strip_free_param_numeric_tags_in_display(&output_text)
+    } else {
+        output_text
+    };
+
+    if ok {
+        (true, output_text)
+    } else {
+        (false, output_text)
+    }
 }
