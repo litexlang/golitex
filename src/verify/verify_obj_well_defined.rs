@@ -25,8 +25,6 @@ impl Runtime {
         match obj {
             Obj::Atom(AtomObj::Identifier(identifier)) => self.verify_identifier_well_defined(identifier),
             Obj::Atom(AtomObj::IdentifierWithMod(x)) => self.verify_identifier_with_mod_well_defined(x),
-            Obj::FieldAccess(x) => self.verify_field_access_well_defined(x),
-            Obj::FieldAccessWithMod(x) => self.verify_field_access_with_mod_well_defined(x),
             Obj::FnObj(fn_obj) => self.verify_fn_obj_well_defined(fn_obj, verify_state),
             Obj::Number(_) => Ok(()),
             Obj::Add(add) => self.verify_add_well_defined(add, verify_state),
@@ -91,17 +89,11 @@ impl Runtime {
             Obj::FamilyObj(family) => {
                 self.verify_param_type_family_well_defined(family, verify_state)
             }
-            Obj::StructObj(struct_ty) => {
-                self.verify_param_type_struct_well_defined(struct_ty, verify_state)
-            }
             Obj::Atom(AtomObj::Forall(_)) => Ok(()),
-            Obj::ForallFieldAccessObj(_) => Ok(()),
             Obj::Atom(AtomObj::Def(_)) => Ok(()),
-            Obj::DefFreeFieldAccessObj(_) => Ok(()),
             Obj::Atom(AtomObj::Exist(_)) => Ok(()),
             Obj::Atom(AtomObj::SetBuilder(_)) => Ok(()),
             Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
-            Obj::Atom(AtomObj::StructSelfField(_)) => Ok(()),
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
         }?;
@@ -133,66 +125,6 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let _ = x;
         unreachable!()
-    }
-
-    fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), RuntimeError> {
-        let Some(def) = self.get_definition_of_struct_where_object_satisfies(
-            &AtomicName::WithoutMod(x.name.to_string()),
-        ) else {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "field access `{}` unknown, `{}` is not a struct",
-                        x.to_string(),
-                        x.name.to_string()
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
-            )));
-        };
-
-        for field in def.fields.iter() {
-            if field.0 == x.field.to_string() {
-                return Ok(());
-            }
-        }
-
-        return Err(RuntimeError::from(WellDefinedRuntimeError(
-            RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "field access `{}` unknown, {} does not contain field `{}`",
-                    x.to_string(),
-                    x.name.to_string(),
-                    x.field.to_string()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ),
-        )));
-    }
-
-    fn verify_field_access_with_mod_well_defined(
-        &self,
-        x: &FieldAccessWithMod,
-    ) -> Result<(), RuntimeError> {
-        let _ = x;
-        return Err(RuntimeError::from(WellDefinedRuntimeError(
-            RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "field access with mod `{}` is not well-defined",
-                    x.to_string()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ),
-        )));
     }
 
     fn verify_fn_obj_well_defined(
@@ -1859,9 +1791,6 @@ impl Runtime {
                 }
                 _ => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
             },
-            ParamType::Struct(struct_ty) => {
-                return self.verify_param_type_struct_well_defined(struct_ty, verify_state)
-            }
         }
     }
 
@@ -2006,135 +1935,6 @@ impl Runtime {
                 )))
             })?;
         self.verify_obj_well_defined_and_store_cache(&instantiated_equal_to, verify_state)?;
-
-        Ok(())
-    }
-
-    fn verify_param_type_struct_well_defined(
-        &mut self,
-        struct_ty: &StructObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        let struct_name = struct_ty.name.to_string();
-        let def = match self.get_cloned_definition_of_struct(&struct_name) {
-            Some(d) => d,
-            None => {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!("struct `{}` is not defined", struct_name),
-                        default_line_file(),
-                        None,
-                        vec![],
-                    ),
-                )));
-            }
-        };
-
-        let expected_count = def.param_defs.number_of_params();
-        if struct_ty.args.len() != expected_count {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "struct `{}` expects {} parameter(s), got {}",
-                        struct_name,
-                        expected_count,
-                        struct_ty.args.len()
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
-            )));
-        }
-
-        for arg in struct_ty.args.iter() {
-            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
-        }
-
-        let args_param_types = self
-            .verify_args_satisfy_param_def_flat_types(
-                &def.param_defs,
-                &struct_ty.args,
-                verify_state,
-                ParamObjType::DefHeader,
-            )
-            .map_err(|runtime_error| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to verify struct `{}` arguments satisfy parameter types",
-                        struct_name
-                    ),
-                    default_line_file(),
-                    Some(runtime_error),
-                    vec![],
-                )))
-            })?;
-        if args_param_types.is_unknown() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to verify struct `{}` arguments satisfy parameter types",
-                        struct_name
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
-            )));
-        }
-
-        let param_to_arg_map = def
-            .param_defs
-            .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
-
-        for dom_fact in def.dom_facts.iter() {
-            let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::DefHeader)
-                .map_err(|e| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
-                            "failed to instantiate struct `{}` domain fact: {}",
-                            struct_name, e
-                        ),
-                        default_line_file(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
-            let verify_result = self
-                .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
-                .map_err(|verify_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
-                            "failed to verify struct `{}` domain fact:\n{}",
-                            struct_name, instantiated_dom_fact
-                        ),
-                        default_line_file(),
-                        Some(verify_error),
-                        vec![],
-                    )))
-                })?;
-            if verify_result.is_unknown() {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!(
-                            "failed to verify struct `{}` domain fact:\n{}",
-                            struct_name, instantiated_dom_fact
-                        ),
-                        default_line_file(),
-                        None,
-                        vec![],
-                    ),
-                )));
-            }
-        }
 
         Ok(())
     }

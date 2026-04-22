@@ -7,7 +7,6 @@ pub struct Environment {
     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
-    pub defined_structs: HashMap<StructName, DefStructStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
 
@@ -38,8 +37,6 @@ pub struct Environment {
         HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
     pub known_objs_equal_to_normalized_decimal_number: HashMap<ObjString, Number>,
 
-    pub known_identifier_satisfy_struct: HashMap<FieldAccessName, StructObj>,
-
     pub known_objs_in_fn_sets: HashMap<ObjString, FnSet>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
@@ -50,11 +47,9 @@ impl Environment {
     pub fn new(
         objs: HashMap<IdentifierName, ParamObjType>,
         def_props: HashMap<PropName, DefPropStmt>,
-        struct_defs: HashMap<StructName, DefStructStmt>,
         families: HashMap<FamilyName, DefFamilyStmt>,
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
-        field_access_name: HashMap<FieldAccessName, StructObj>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, FnSet>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
@@ -97,11 +92,9 @@ impl Environment {
         Environment {
             defined_identifiers: objs,
             defined_def_props: def_props,
-            defined_structs: struct_defs,
             defined_families: families,
             defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
-            known_identifier_satisfy_struct: field_access_name,
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -128,7 +121,6 @@ impl fmt::Display for Environment {
         write!(f, "Environment {{\n")?;
         write!(f, "    objs: {:?}\n", self.defined_identifiers.len())?;
         write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;
-        write!(f, "    defined_structs: {:?}\n", self.defined_structs.len())?;
         write!(f, "    families: {:?}\n", self.defined_families.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
@@ -639,8 +631,6 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
-            HashMap::new(),
-            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

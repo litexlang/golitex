@@ -5,8 +5,6 @@ use std::fmt;
 #[derive(Clone)]
 pub enum Obj {
     Atom(AtomObj),
-    FieldAccess(FieldAccess),
-    FieldAccessWithMod(FieldAccessWithMod),
     FnObj(FnObj),
     Number(Number),
     Add(Add),
@@ -44,9 +42,6 @@ pub enum Obj {
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
     FamilyObj(FamilyObj),
-    StructObj(StructObj),
-    ForallFieldAccessObj(ForallFieldAccessObj),
-    DefFreeFieldAccessObj(DefHeaderFreeFieldAccessObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
     MatrixAdd(MatrixAdd),
@@ -104,19 +99,6 @@ pub struct FamilyObj {
     pub params: Vec<Obj>,
 }
 
-/// Instantiated struct type: `struct` name followed by argument objects (field types / indices).
-#[derive(Clone)]
-pub struct StructObj {
-    pub name: AtomicName,
-    pub args: Vec<Obj>,
-}
-
-impl StructObj {
-    pub fn new(name: AtomicName, args: Vec<Obj>) -> Self {
-        StructObj { name, args }
-    }
-}
-
 impl fmt::Display for FamilyObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -125,18 +107,6 @@ impl fmt::Display for FamilyObj {
             FAMILY,
             self.name,
             vec_to_string_join_by_comma(&self.params)
-        )
-    }
-}
-
-impl fmt::Display for StructObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}({})",
-            STRUCT,
-            self.name,
-            vec_to_string_join_by_comma(&self.args)
         )
     }
 }
@@ -848,8 +818,6 @@ impl Obj {
             Obj::Cup(x) => write!(f, "{}", x)?,
             Obj::Cap(x) => write!(f, "{}", x)?,
             Obj::Atom(x) => write!(f, "{}", x)?,
-            Obj::FieldAccess(x) => write!(f, "{}", x)?,
-            Obj::FieldAccessWithMod(x) => write!(f, "{}", x)?,
             Obj::FnObj(x) => write!(f, "{}", x)?,
             Obj::Number(x) => write!(f, "{}", x)?,
             Obj::ListSet(x) => write!(f, "{}", x)?,
@@ -873,9 +841,6 @@ impl Obj {
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
-            Obj::StructObj(x) => write!(f, "{}", x)?,
-            Obj::ForallFieldAccessObj(x) => write!(f, "{}", x)?,
-            Obj::DefFreeFieldAccessObj(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -889,48 +854,6 @@ impl Obj {
         }
         match self {
             Obj::Atom(a) => Obj::Atom(a.replace_bound_identifier(from, to)),
-            Obj::ForallFieldAccessObj(p) => {
-                let name = if p.name == from {
-                    to.to_string()
-                } else {
-                    p.name
-                };
-                let field = if p.field == from {
-                    to.to_string()
-                } else {
-                    p.field
-                };
-                ForallFieldAccessObj::new(name, field).into()
-            }
-            Obj::DefFreeFieldAccessObj(p) => {
-                let name = if p.name == from {
-                    to.to_string()
-                } else {
-                    p.name
-                };
-                let field = if p.field == from {
-                    to.to_string()
-                } else {
-                    p.field
-                };
-                DefHeaderFreeFieldAccessObj::new(name, field).into()
-            }
-            Obj::FieldAccess(f) => {
-                let name = if f.name == from {
-                    to.to_string()
-                } else {
-                    f.name
-                };
-                FieldAccess::new(name, f.field).into()
-            }
-            Obj::FieldAccessWithMod(f) => {
-                let name = if f.name == from {
-                    to.to_string()
-                } else {
-                    f.name
-                };
-                FieldAccessWithMod::new(f.mod_name, name, f.field).into()
-            }
             Obj::FnObj(inner) => {
                 let head = replace_bound_identifier_in_fn_obj_head(*inner.head, from, to);
                 let body = inner
@@ -1168,19 +1091,11 @@ impl Obj {
                     .collect(),
             }
             .into(),
-            Obj::StructObj(s) => StructObj::new(
-                s.name,
-                s.args
-                    .into_iter()
-                    .map(|o| Obj::replace_bound_identifier(o, from, to))
-                    .collect(),
-            )
-            .into(),
         }
     }
 }
 
-/// Replace in identifier / `mod::name` / `x.f` / `M::x.f` name-shaped [`Obj`] values only.
+/// Replace in identifier / `mod::name` name-shaped [`Obj`] values only.
 fn replace_bound_identifier_in_name_obj(obj: Obj, from: &str, to: &str) -> Obj {
     if from == to {
         return obj;
@@ -1201,22 +1116,6 @@ fn replace_bound_identifier_in_name_obj(obj: Obj, from: &str, to: &str) -> Obj {
             };
             Obj::from(IdentifierWithMod::new(m.mod_name, name))
         }
-        Obj::FieldAccess(f) => {
-            let name = if f.name == from {
-                to.to_string()
-            } else {
-                f.name
-            };
-            FieldAccess::new(name, f.field).into()
-        }
-        Obj::FieldAccessWithMod(f) => {
-            let name = if f.name == from {
-                to.to_string()
-            } else {
-                f.name
-            };
-            FieldAccessWithMod::new(f.mod_name, name, f.field).into()
-        }
         _ => obj,
     }
 }
@@ -1236,14 +1135,6 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             replace_bound_identifier_in_name_obj(Obj::Atom(AtomObj::IdentifierWithMod(m.clone())), from, to),
         )
         .expect("name replace preserves fn head shape"),
-        FnObjHead::FieldAccess(f) => FnObjHead::from_name_obj(
-            replace_bound_identifier_in_name_obj(Obj::FieldAccess(f.clone()), from, to),
-        )
-        .expect("name replace preserves fn head shape"),
-        FnObjHead::FieldAccessWithMod(f) => FnObjHead::from_name_obj(
-            replace_bound_identifier_in_name_obj(Obj::FieldAccessWithMod(f.clone()), from, to),
-        )
-        .expect("name replace preserves fn head shape"),
         FnObjHead::Forall(p) => {
             let name = if p.name == from {
                 to.to_string()
@@ -1252,19 +1143,6 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             ForallFreeParamObj::new(name).into()
         }
-        FnObjHead::ForallFieldAccess(p) => {
-            let name = if p.name == from {
-                to.to_string()
-            } else {
-                p.name
-            };
-            let field = if p.field == from {
-                to.to_string()
-            } else {
-                p.field
-            };
-            ForallFieldAccessObj::new(name, field).into()
-        }
         FnObjHead::DefHeader(p) => {
             let name = if p.name == from {
                 to.to_string()
@@ -1272,19 +1150,6 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
                 p.name
             };
             DefHeaderFreeParamObj::new(name).into()
-        }
-        FnObjHead::DefHeaderFieldAccess(p) => {
-            let name = if p.name == from {
-                to.to_string()
-            } else {
-                p.name
-            };
-            let field = if p.field == from {
-                to.to_string()
-            } else {
-                p.field
-            };
-            DefHeaderFreeFieldAccessObj::new(name, field).into()
         }
         FnObjHead::Exist(p) => {
             let name = if p.name == from {
@@ -1325,14 +1190,6 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
                 p.name
             };
             DefAlgoFreeParamObj::new(name).into()
-        }
-        FnObjHead::StructSelfField(p) => {
-            let field = if p.field == from {
-                to.to_string()
-            } else {
-                p.field
-            };
-            StructSelfFieldFreeParamObj::new(field).into()
         }
     }
 }
@@ -2019,27 +1876,9 @@ impl From<ObjAtIndex> for Obj {
     }
 }
 
-impl From<FieldAccess> for Obj {
-    fn from(f: FieldAccess) -> Self {
-        Obj::FieldAccess(f)
-    }
-}
-
-impl From<FieldAccessWithMod> for Obj {
-    fn from(f: FieldAccessWithMod) -> Self {
-        Obj::FieldAccessWithMod(f)
-    }
-}
-
 impl From<IdentifierWithMod> for Obj {
     fn from(m: IdentifierWithMod) -> Self {
         Obj::Atom(AtomObj::IdentifierWithMod(m))
-    }
-}
-
-impl From<StructObj> for Obj {
-    fn from(s: StructObj) -> Self {
-        Obj::StructObj(s)
     }
 }
 

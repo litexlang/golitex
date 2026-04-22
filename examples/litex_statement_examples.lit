@@ -59,15 +59,7 @@ prove:
             case x % 2 = 0: h(x - 2) + h(x - 1)
             case x % 2 = 1: h(x - 2) + h(x - 1)
 
-# --- Stmt::DefStructStmt — record-like type with fields and optional defining equivalence ---
-prove:
-    abstract_prop r(a)
-
-    struct row(a set):
-        fld a
-        fld2 a
-        <=>:
-            $r(self.fld)
+# --- Stmt::DefStructStmt — removed in this branch (record-like `struct`); see git history to restore. ---
 
 # --- Stmt::DefFamilyStmt — parametric type family, right-hand side fixed once parameters are fixed ---
 prove:
