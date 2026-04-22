@@ -363,11 +363,6 @@ impl Runtime {
         Ok(())
     }
 
-    /// Typing facts from `define_parameter_by_binding_*` use the same tagged free-param `Obj` as parsed bodies.
-    fn obj_for_param_typed_membership_lookup(obj: &Obj) -> Obj {
-        obj.clone()
-    }
-
     fn require_obj_in_r(
         &mut self,
         obj: &Obj,
@@ -389,7 +384,7 @@ impl Runtime {
             return self.require_obj_in_r(&l.arg, verify_state);
         }
         let r_obj = StandardSet::R.into();
-        let element = Self::obj_for_param_typed_membership_lookup(obj);
+        let element = obj.clone();
         let in_fact = InFact::new(element, r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -413,7 +408,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let z_obj = StandardSet::Z.into();
-        let element = Self::obj_for_param_typed_membership_lookup(obj);
+        let element = obj.clone();
         let in_fact = InFact::new(element, z_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -453,31 +448,6 @@ impl Runtime {
                 ),
             )));
         }
-        Ok(())
-    }
-
-    /// Verify `left <= right`, then store it (e.g. summation index domain in `sum`).
-    fn verify_and_store_less_equal(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        verify_state: &VerifyState,
-        err_detail: String,
-    ) -> Result<(), RuntimeError> {
-        let f: AtomicFact = LessEqualFact::new(left, right, default_line_file()).into();
-        let r = self.verify_atomic_fact(&f, verify_state)?;
-        if r.is_unknown() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    err_detail,
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
-            )));
-        }
-        self.store_atomic_fact_without_well_defined_verified_and_infer(f)?;
         Ok(())
     }
 
@@ -944,25 +914,29 @@ impl Runtime {
         self.run_in_local_env(|rt| {
             rt.store_free_param_or_identifier_name(&x.param, ParamObjType::Sum)?;
             let param_obj = obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::Sum);
-            rt.require_obj_in_z(&param_obj, verify_state)?;
-            rt.verify_and_store_less_equal(
+            // Summation index: assume `param $in Z` and `start <= param <= end` in the local scope
+            // (well-defined check for the body), not facts that must be proved from the outer env.
+            let param_in_z: AtomicFact = InFact::new(
+                param_obj.clone(),
+                StandardSet::Z.into(),
+                default_line_file(),
+            )
+            .into();
+            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
+            let lower: AtomicFact = LessEqualFact::new(
                 (*x.start).clone(),
                 param_obj.clone(),
-                verify_state,
-                format!(
-                    "sum: cannot verify summation index lower bound ({} <= {})",
-                    x.start, x.param
-                ),
-            )?;
-            rt.verify_and_store_less_equal(
+                default_line_file(),
+            )
+            .into();
+            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
+            let upper: AtomicFact = LessEqualFact::new(
                 param_obj,
                 (*x.end).clone(),
-                verify_state,
-                format!(
-                    "sum: cannot verify summation index upper bound ({} <= {})",
-                    x.param, x.end
-                ),
-            )?;
+                default_line_file(),
+            )
+            .into();
+            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
             rt.verify_obj_well_defined_and_store_cache(x.body.as_ref(), verify_state)
         })
     }
