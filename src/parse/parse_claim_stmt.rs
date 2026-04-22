@@ -1,3 +1,4 @@
+use crate::parse::parse_helpers::collect_forall_param_names_from_facts;
 use crate::prelude::*;
 
 impl Runtime {
@@ -60,13 +61,20 @@ impl Runtime {
             Ok::<Fact, RuntimeError>(f)
         }?;
 
-        let proof: Vec<Stmt> = self.run_in_local_parsing_time_name_scope(|this| {
-            tb.body
-                .iter_mut()
-                .skip(1)
-                .map(|b| this.parse_stmt(b))
-                .collect::<Result<_, _>>()
-        })?;
+        let names = collect_forall_param_names_from_facts(std::slice::from_ref(&fact));
+        let lf = tb.line_file.clone();
+        let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+            ParamObjType::Forall,
+            &names,
+            lf,
+            |this| {
+                tb.body
+                    .iter_mut()
+                    .skip(1)
+                    .map(|b| this.parse_stmt(b))
+                    .collect::<Result<_, _>>()
+            },
+        )?;
         Ok(ClaimStmt::new(fact, proof, tb.line_file.clone()))
     }
 }

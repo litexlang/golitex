@@ -50,11 +50,21 @@ impl Runtime {
                 vec![],
             ))));
             }
-            let mut proof = Vec::with_capacity(tb.body.len());
-            for block in tb.body.iter_mut() {
-                proof.push(self.parse_stmt(block)?);
-            }
-            proof
+            let names = exist_fact_in_witness
+                .params_def_with_type
+                .collect_param_names();
+            let lf = tb.line_file.clone();
+            self.parse_stmts_with_optional_free_param_scope(
+                ParamObjType::Exist,
+                &names,
+                lf,
+                |this| {
+                    tb.body
+                        .iter_mut()
+                        .map(|b| this.parse_stmt(b))
+                        .collect::<Result<_, _>>()
+                },
+            )?
         };
         Ok(WitnessExistFact::new(
             equal_tos,

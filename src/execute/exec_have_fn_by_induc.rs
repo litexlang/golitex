@@ -1,6 +1,8 @@
 use crate::prelude::*;
 use crate::stmt::definition_stmt::induc_obj_plus_offset;
 
+use super::exec_have_fn_equal_shared::inst_have_fn_forall_fact_for_store;
+
 impl Runtime {
     pub fn exec_have_fn_by_induc(
         &mut self,
@@ -33,13 +35,7 @@ impl Runtime {
         RuntimeError::ExecStmtError({
             let st: Stmt = stmt.clone().into();
             let lf = st.line_file();
-            RuntimeErrorStruct::new(
-                Some(st),
-                String::new(),
-                lf,
-                Some(cause),
-                vec![],
-            )
+            RuntimeErrorStruct::new(Some(st), String::new(), lf, Some(cause), vec![])
         })
     }
 
@@ -50,29 +46,32 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         param_name: &str,
     ) -> Result<(), RuntimeError> {
-        self.store_identifier_obj(&stmt.name)?;
+        self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)?;
 
         let random_param = self.generate_random_unused_name();
 
-        let param_minus_n: Obj =
-            Sub::new(param_name.into(), stmt.special_cases_equal_tos.len().into()).into();
+        let param_minus_n: Obj = Sub::new(
+            Identifier::new(param_name.to_string()).into(),
+            stmt.special_cases_equal_tos.len().into(),
+        )
+        .into();
 
         let dom_facts: Vec<OrAndChainAtomicFact> = vec![
             GreaterEqualFact::new(
-                random_param.clone().into(),
+                obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::FnSet),
                 param_minus_n,
                 stmt.line_file.clone(),
             )
             .into(),
             LessFact::new(
-                random_param.clone().into(),
-                param_name.into(),
+                obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::FnSet),
+                Identifier::new(param_name.to_string()).into(),
                 stmt.line_file.clone(),
             )
             .into(),
         ];
 
-        let fn_set = self.new_fn_set_and_add_mangled_prefix(
+        let fn_set = self.new_fn_set(
             vec![ParamGroupWithSet::new(
                 vec![random_param.clone()],
                 StandardSet::Z.into(),
@@ -82,7 +81,7 @@ impl Runtime {
         )?;
 
         let function_in_function_set_fact: Fact = InFact::new(
-            stmt.name.clone().into(),
+            Identifier::new(stmt.name.clone()).into(),
             fn_set.into(),
             stmt.line_file.clone(),
         )
@@ -114,14 +113,14 @@ impl Runtime {
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
             return Err(short_exec_error(
- stmt.clone().into(),
-                    format!(
+                stmt.clone().into(),
+                format!(
                     "have_fn_by_induc: {} is not in return set {}",
                     equal_to, stmt.ret_set
                 ),
-                    None,
-                    vec![],
-                ));
+                None,
+                vec![],
+            ));
         }
         Ok(())
     }
@@ -142,13 +141,15 @@ impl Runtime {
 
         let param_name_str = stmt.param.clone();
 
-        let left_id: Obj = param_name_str.as_str().into();
+        let left_id: Obj =
+            obj_for_bound_param_in_scope(param_name_str.clone(), ParamObjType::Induc);
 
-        self.store_identifier_obj(&param_name_str)?;
+        self.store_free_param_or_identifier_name(&param_name_str, ParamObjType::Induc)?;
 
         self.define_parameter_by_binding_param_type(
             &param_name_str,
             &ParamType::Obj(StandardSet::Z.into()),
+            ParamObjType::Induc,
         )?;
 
         let param_larger_than_induc_plus_offset: AndChainAtomicFact = GreaterEqualFact::new(
@@ -165,9 +166,13 @@ impl Runtime {
 
         // Induction step needs f(x-1)..f(x-n); cache alone skips fn membership, so store FnObj and in ret_set.
         for i in 1..=n {
-            let arg: Obj = Sub::new(param_name_str.as_str().into(), i.into()).into();
+            let arg: Obj = Sub::new(
+                obj_for_bound_param_in_scope(param_name_str.clone(), ParamObjType::Induc),
+                i.into(),
+            )
+            .into();
             let fn_obj: Obj = FnObj::new(
-                Identifier::new(stmt.name.clone()).into(),
+                FnObjHead::Identifier(Identifier::new(stmt.name.clone())),
                 vec![vec![Box::new(arg.clone())]],
             )
             .into();
@@ -191,12 +196,12 @@ impl Runtime {
                 self.verify_fact_return_err_if_not_true(&coverage, &verify_state)
                     .map_err(|e| {
                         short_exec_error(
- stmt.clone().into(),
-                    "have_fn_by_induc: nested last cases do not cover all situations"
-                                    .to_string(),
-                    Some(e),
-                    vec![],
-                )
+                            stmt.clone().into(),
+                            "have_fn_by_induc: nested last cases do not cover all situations"
+                                .to_string(),
+                            Some(e),
+                            vec![],
+                        )
                     })?;
 
                 for nested in last_pairs.iter() {
@@ -215,7 +220,7 @@ impl Runtime {
             }
             HaveFnByInducLastCase::NestedCases(_) => {
                 return Err(short_exec_error(
- stmt.clone().into(),
+                    stmt.clone().into(),
                     "have_fn_by_induc: nested last case list must not be empty".to_string(),
                     None,
                     vec![],
@@ -255,25 +260,23 @@ impl Runtime {
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if verify_result.is_unknown() {
             return Err(short_exec_error(
- stmt.clone().into(),
-                    "have_fn_by_induc: induc_from is not in Z".to_string(),
-                    None,
-                    vec![],
-                ));
+                stmt.clone().into(),
+                "have_fn_by_induc: induc_from is not in Z".to_string(),
+                None,
+                vec![],
+            ));
         }
 
         let mut infer_result = InferResult::new();
-        let fs = self.add_mangled_prefix_to_fn_set_clause(
-            &stmt.fn_user_fn_set_clause(),
-            stmt.line_file.clone(),
-        )?;
+        let fs = self.fn_set_from_fn_set_clause(&stmt.fn_user_fn_set_clause())?;
 
         let bind_infer = self.define_parameter_by_binding_param_type(
             &stmt.name,
             &ParamType::Obj(fs.clone().into()),
+            ParamObjType::Identifier,
         )?;
         let bind_fact: Fact = InFact::new(
-            stmt.name.clone().into(),
+            Identifier::new(stmt.name.clone()).into(),
             fs.clone().into(),
             stmt.line_file.clone(),
         )
@@ -293,7 +296,7 @@ impl Runtime {
             let equal_to = &stmt.special_cases_equal_tos[i];
 
             let fn_obj: Obj = FnObj::new(
-                Identifier::new(stmt.name.clone()).into(),
+                FnObjHead::Identifier(Identifier::new(stmt.name.clone())),
                 vec![vec![Box::new(arg.clone())]],
             )
             .into();
@@ -324,20 +327,23 @@ impl Runtime {
                         .0;
                 dom.push(
                     GreaterEqualFact::new(
-                        param_name.clone().into(),
+                        obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
                         induc_plus_n,
                         stmt.line_file.clone(),
                     )
                     .into(),
                 );
 
-                let forall_fact: Fact = ForallFact::new(
+                let forall_fact_raw = ForallFact::new(
                     ParamDefWithType::new(param_def),
                     dom,
                     vec![EqualFact::new(
                         FnObj::new(
-                            Identifier::new(stmt.name.clone()).into(),
-                            vec![vec![Box::new(param_name.clone().into())]],
+                            FnObjHead::Identifier(Identifier::new(stmt.name.clone())),
+                            vec![vec![Box::new(obj_for_bound_param_in_scope(
+                                param_name.clone(),
+                                ParamObjType::Forall,
+                            ))]],
                         )
                         .into(),
                         eq.clone(),
@@ -345,8 +351,10 @@ impl Runtime {
                     )
                     .into()],
                     stmt.line_file.clone(),
-                )
-                .into();
+                );
+
+                let forall_fact = inst_have_fn_forall_fact_for_store(self, forall_fact_raw)
+                    .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
                 let result = self
                     .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())
@@ -370,7 +378,7 @@ impl Runtime {
                             .0;
                     dom.push(
                         GreaterEqualFact::new(
-                            param_name.clone().into(),
+                            obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
                             induc_plus_n,
                             stmt.line_file.clone(),
                         )
@@ -380,13 +388,16 @@ impl Runtime {
                     let c: AndChainAtomicFact = nested.case_fact.clone();
                     dom.push(c.into());
 
-                    let forall_fact: Fact = ForallFact::new(
+                    let forall_fact_raw = ForallFact::new(
                         ParamDefWithType::new(param_def),
                         dom,
                         vec![EqualFact::new(
                             FnObj::new(
-                                Identifier::new(stmt.name.clone()).into(),
-                                vec![vec![Box::new(param_name.clone().into())]],
+                                FnObjHead::Identifier(Identifier::new(stmt.name.clone())),
+                                vec![vec![Box::new(obj_for_bound_param_in_scope(
+                                    param_name.clone(),
+                                    ParamObjType::Forall,
+                                ))]],
                             )
                             .into(),
                             eq.clone(),
@@ -394,8 +405,10 @@ impl Runtime {
                         )
                         .into()],
                         stmt.line_file.clone(),
-                    )
-                    .into();
+                    );
+
+                    let forall_fact = inst_have_fn_forall_fact_for_store(self, forall_fact_raw)
+                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
                     let result = self
                         .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())

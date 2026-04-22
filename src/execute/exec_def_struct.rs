@@ -23,7 +23,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let verify_state = VerifyState::new(0, false);
 
-        self.define_params_with_type(&stmt.param_defs, false)
+        self.define_params_with_type(&stmt.param_defs, false, ParamObjType::DefHeader)
             .map_err(|define_params_error| {
                 short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
             })?;
@@ -61,21 +61,22 @@ impl Runtime {
                 })?;
         }
 
-        self.store_identifier_obj(SELF).map_err(|store_error| {
-            short_exec_error(stmt.clone().into(), "", Some(store_error), vec![])
-        })?;
+        self.store_free_param_or_identifier_name(SELF, ParamObjType::StructSelf)
+            .map_err(|store_error| {
+                short_exec_error(stmt.clone().into(), "", Some(store_error), vec![])
+            })?;
 
         let mut struct_params = vec![];
         for param_def in stmt.param_defs.groups.iter() {
             for field in param_def.params.iter() {
-                struct_params.push(field.clone().into());
+                struct_params.push(Identifier::new(field.clone()).into());
             }
         }
 
         self.register_param_as_struct_instance(
             SELF,
             StructObj::new(
-                IdentifierOrIdentifierWithMod::Identifier(Identifier::new(stmt.name.clone())),
+                AtomicName::WithoutMod(stmt.name.clone()),
                 struct_params,
             ),
         );

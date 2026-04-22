@@ -180,7 +180,11 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            if let Err(e) = rt.define_params_with_type(exist_fact.params_def_with_type(), false) {
+            if let Err(e) = rt.define_params_with_type(
+                exist_fact.params_def_with_type(),
+                false,
+                ParamObjType::Exist,
+            ) {
                 return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,
                     "failed to define parameters in exist fact".to_string(),
@@ -226,7 +230,11 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        if let Err(e) = self.define_params_with_type(&forall_fact.params_def_with_type, false) {
+        if let Err(e) = self.define_params_with_type(
+            &forall_fact.params_def_with_type,
+            false,
+            ParamObjType::Forall,
+        ) {
             return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                 None,
                 "failed to define parameters in forall fact".to_string(),

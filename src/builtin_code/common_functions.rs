@@ -6,14 +6,4 @@ know:
 
     forall x, y R:
         abs(x * y) = abs(x) * abs(y)
-
-know:
-    forall x, y R:
-        x <= max(x, y)
-        y <= max(x, y)
-
-know:
-    forall x, y R:
-        min(x, y) <= x
-        min(x, y) <= y
 "#;

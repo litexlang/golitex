@@ -16,7 +16,11 @@ impl Runtime {
                     })?;
 
                 let body_exec_result = self.run_in_local_env(|rt| {
-                    rt.define_params_with_type(&forall_fact.params_def_with_type, false)
+                    rt.define_params_with_type(
+                        &forall_fact.params_def_with_type,
+                        false,
+                        ParamObjType::Forall,
+                    )
                         .map_err(|define_params_error| {
                             RuntimeError::ExecStmtError({
             let st: Stmt = stmt.clone().into();

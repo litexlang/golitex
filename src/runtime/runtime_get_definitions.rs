@@ -76,7 +76,7 @@ impl Runtime {
 
     pub fn get_definition_of_struct_where_object_satisfies(
         &self,
-        obj: &IdentifierOrIdentifierWithMod,
+        obj: &AtomicName,
     ) -> Option<&DefStructStmt> {
         let Some(struct_object_satisfies) = self.get_object_satisfy_struct(obj) else {
             return None;

@@ -55,7 +55,7 @@ impl Runtime {
                     )]),
                     vec![],
                     vec![InFact::new(
-                        unused_name.clone().into(),
+                        obj_for_bound_param_in_scope(unused_name.clone(), ParamObjType::Forall),
                         stmt.right.clone(),
                         stmt.line_file.clone(),
                     )
@@ -86,7 +86,7 @@ impl Runtime {
                     )]),
                     vec![],
                     vec![InFact::new(
-                        unused_name.clone().into(),
+                        obj_for_bound_param_in_scope(unused_name.clone(), ParamObjType::Forall),
                         stmt.left.clone(),
                         stmt.line_file.clone(),
                     )

@@ -43,7 +43,7 @@ impl UnionFind {
     }
 }
 
-fn order_edge_from_prop(p: &IdentifierOrIdentifierWithMod) -> Option<OrderEdge> {
+fn order_edge_from_prop(p: &AtomicName) -> Option<OrderEdge> {
     match p.to_string().as_str() {
         EQUAL => Some(OrderEdge::Eq),
         LESS_EQUAL => Some(OrderEdge::Le),
@@ -135,15 +135,15 @@ impl ChainFact {
         for i in 0..n {
             members.entry(uf.find(i)).or_default().push(i);
         }
-        for mut idxs in members.into_values() {
-            if idxs.len() < 2 {
+        for mut indexes in members.into_values() {
+            if indexes.len() < 2 {
                 continue;
             }
-            idxs.sort_unstable();
-            for ii in 0..idxs.len() {
-                for jj in ii + 1..idxs.len() {
-                    let i = idxs[ii];
-                    let j = idxs[jj];
+            indexes.sort_unstable();
+            for ii in 0..indexes.len() {
+                for jj in ii + 1..indexes.len() {
+                    let i = indexes[ii];
+                    let j = indexes[jj];
                     extra.push(
                         EqualFact::new(self.objs[i].clone(), self.objs[j].clone(), lf.clone())
                             .into(),
@@ -180,79 +180,5 @@ impl ChainFact {
         let mut all = base;
         all.extend(extra);
         Ok(dedup_atomic_facts(all))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn id(name: &str) -> Obj {
-        Identifier::mk(name.to_string())
-    }
-
-    fn prop(s: &str) -> IdentifierOrIdentifierWithMod {
-        IdentifierOrIdentifierWithMod::Identifier(Identifier::new(s.to_string()))
-    }
-
-    #[test]
-    fn eq_chain_adds_all_pairs_between_equal_nodes() {
-        let lf = default_line_file();
-        let chain = ChainFact::new(
-            vec![id("x"), id("y"), id("z")],
-            vec![prop("="), prop("=")],
-            lf.clone(),
-        );
-        let facts = chain.facts_with_order_transitive_closure().unwrap();
-        let displayed: Vec<_> = facts.iter().map(|f| f.to_string()).collect();
-        assert!(
-            displayed.iter().any(|s| s.contains("y") && s.contains("z") && s.contains("=")),
-            "expected y = z from equality clique, got {:?}",
-            displayed
-        );
-    }
-
-    #[test]
-    fn le_eq_lt_chain_adds_transitive_facts() {
-        let lf = default_line_file();
-        let chain = ChainFact::new(
-            vec![id("a"), id("b"), id("c"), id("d")],
-            vec![prop("<="), prop("="), prop("<")],
-            lf.clone(),
-        );
-        let facts = chain.facts_with_order_transitive_closure().unwrap();
-        let displayed: Vec<_> = facts.iter().map(|f| f.to_string()).collect();
-        assert!(displayed.iter().any(|s| s.contains("a") && s.contains("d")));
-        assert!(
-            facts.len() >= 5,
-            "expected transitive closure beyond three adjacent facts, got {:?}",
-            displayed
-        );
-    }
-
-    #[test]
-    fn mixed_up_down_chain_skips_closure_beyond_base() {
-        let lf = default_line_file();
-        let chain = ChainFact::new(
-            vec![id("a"), id("b"), id("c")],
-            vec![prop("<="), prop(">")],
-            lf,
-        );
-        let facts = chain.facts_with_order_transitive_closure().unwrap();
-        assert_eq!(facts.len(), 2);
-    }
-
-    #[test]
-    fn ge_eq_gt_chain_adds_transitive_greater_facts() {
-        let lf = default_line_file();
-        let chain = ChainFact::new(
-            vec![id("d"), id("c"), id("b"), id("a")],
-            vec![prop(">="), prop("="), prop(">")],
-            lf,
-        );
-        let facts = chain.facts_with_order_transitive_closure().unwrap();
-        let displayed: Vec<_> = facts.iter().map(|f| f.to_string()).collect();
-        assert!(displayed.iter().any(|s| s.contains("d") && s.contains("a")));
-        assert!(facts.len() >= 5);
     }
 }

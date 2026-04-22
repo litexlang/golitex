@@ -34,7 +34,7 @@ impl Runtime {
                 | Obj::MatrixMul(_)
                 | Obj::MatrixScalarMul(_)
                 | Obj::MatrixPow(_)
-                | Obj::Identifier(_)
+                | Obj::Atom(AtomObj::Identifier(_))
         )
     }
 
@@ -301,7 +301,7 @@ impl Runtime {
             }
             other => {
                 let lookup_key = match &other {
-                    Obj::Identifier(id) => id.name.clone(),
+                    Obj::Atom(AtomObj::Identifier(id)) => id.name.clone(),
                     _ => other.to_string(),
                 };
                 let Some(ml) = self.get_obj_equal_to_matrix_list(&lookup_key) else {
@@ -594,7 +594,7 @@ impl Runtime {
 
         for algo_case in algo_definition.cases.iter() {
             let instantiated_case_condition =
-                self.inst_atomic_fact(&algo_case.condition, &param_to_arg_map)?;
+                self.inst_atomic_fact(&algo_case.condition, &param_to_arg_map, ParamObjType::DefAlgo)?;
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
@@ -607,7 +607,7 @@ impl Runtime {
                 })?;
 
             if verify_result.is_true() {
-                return self.inst_obj(&algo_case.return_stmt.value, &param_to_arg_map);
+                return self.inst_obj(&algo_case.return_stmt.value, &param_to_arg_map, ParamObjType::DefAlgo);
             }
             if verify_result.is_unknown() {
                 let reversed_case_condition = instantiated_case_condition.make_reversed();
@@ -636,7 +636,7 @@ impl Runtime {
         }
 
         if let Some(default_return_stmt) = &algo_definition.default_return {
-            self.inst_obj(&default_return_stmt.value, &param_to_arg_map)
+            self.inst_obj(&default_return_stmt.value, &param_to_arg_map, ParamObjType::DefAlgo)
         } else {
             Err(short_exec_error(
                 eval_stmt.clone().into(),

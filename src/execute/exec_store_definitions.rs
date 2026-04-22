@@ -28,10 +28,26 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_identifier_obj(&mut self, name: &str) -> Result<(), RuntimeError> {
-        self.top_level_env()
-            .defined_identifiers
-            .insert(name.to_string(), ());
+    pub fn store_free_param_or_identifier_name(
+        &mut self,
+        name: &str,
+        kind: ParamObjType,
+    ) -> Result<(), RuntimeError> {
+        let env = self.top_level_env();
+        if let Some(existing_kind) = env.defined_identifiers.get(name) {
+            return Err(NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "identifier `{}` is already bound in this scope as {:?} (cannot re-bind as {:?})",
+                    name, existing_kind, kind
+                ),
+                default_line_file(),
+                None,
+                vec![],
+            ))
+            .into());
+        }
+        env.defined_identifiers.insert(name.to_string(), kind);
         Ok(())
     }
 

@@ -49,7 +49,7 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(family_ty.params.as_slice());
 
         let right = self
-            .inst_obj(&def.equal_to, &param_to_arg_map)
+            .inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::DefHeader)
             .map_err(|e| {
                 short_exec_error(
  stmt_exec.clone(),

@@ -20,7 +20,11 @@ impl Runtime {
         &mut self,
         def_prop_stmt: &DefPropStmt,
     ) -> Result<(), RuntimeError> {
-        self.define_params_with_type(&def_prop_stmt.params_def_with_type, false)
+        self.define_params_with_type(
+            &def_prop_stmt.params_def_with_type,
+            false,
+            ParamObjType::DefHeader,
+        )
             .map_err(|e| {
                 short_exec_error(def_prop_stmt.clone().into(), "", Some(e), vec![])
             })?;

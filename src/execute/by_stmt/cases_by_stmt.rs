@@ -17,19 +17,8 @@ impl Runtime {
 
         self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?;
 
-        let mut inside_results: Vec<StmtResult> = Vec::new();
         for case_index in 0..stmt.cases.len() {
-            let one_case_result =
-                self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index));
-
-            match one_case_result {
-                Ok(mut one_case_inside_results) => {
-                    inside_results.append(&mut one_case_inside_results);
-                }
-                Err(exec_stmt_error) => {
-                    return Err(exec_stmt_error);
-                }
-            }
+            self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?;
         }
 
         let mut infer_result = InferResult::new();
@@ -47,7 +36,8 @@ impl Runtime {
             infer_result.new_infer_result_inside(one_then_fact_infer_result);
         }
 
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
+        // Omit per-case stmt results from JSON/output; failures still attach inside_results on errors.
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }
 
     fn exec_by_cases_stmt_verify_cases_cover_all_situations(

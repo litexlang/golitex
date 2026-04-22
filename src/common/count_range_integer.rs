@@ -1,5 +1,5 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
-use crate::obj::Number;
+use crate::prelude::*;
 
 /// Integer `closed_range(a, b)` has `max(0, b - a + 1)` points; non-integer endpoints yield `None`.
 pub fn count_closed_range_integer_endpoints(a: &Number, b: &Number) -> Option<Number> {

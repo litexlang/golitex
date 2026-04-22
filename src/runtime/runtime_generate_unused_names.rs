@@ -14,14 +14,6 @@ impl Runtime {
         if reserved_names.contains(candidate_name) {
             return false;
         }
-        if self.is_name_used(candidate_name) {
-            return false;
-        }
-        for names_in_scope in self.parsing_time_name_scope_stack.iter() {
-            if names_in_scope.contains_key(candidate_name) {
-                return false;
-            }
-        }
         true
     }
 

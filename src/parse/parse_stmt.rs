@@ -16,6 +16,7 @@ impl Runtime {
                 }
             }
             KNOW => self.parse_know_stmt(tb),
+            CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             PROVE => self.parse_prove_stmt(tb),
             IMPORT => self.parse_import_stmt(tb),

@@ -6,7 +6,11 @@ impl Runtime {
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {
-        match fact {
+        let mut infer_result = InferResult::new();
+
+        infer_result.new_fact(&fact);
+
+        let ret = match fact {
             Fact::AtomicFact(_)
             | Fact::ExistFact(_)
             | Fact::OrFact(_)
@@ -19,7 +23,11 @@ impl Runtime {
                 .store_forall_fact_with_iff_without_well_defined_verified_and_infer(
                     forall_fact_with_iff,
                 ),
-        }
+        };
+
+        infer_result.new_infer_result_inside(ret?);
+
+        Ok(infer_result)
     }
 
     pub fn store_fact_without_forall_coverage_check_and_infer(

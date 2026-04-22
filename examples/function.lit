@@ -4,7 +4,7 @@ prove:
     forall a, b R:
         a > b
         =>:
-            g(2)(a, b) = a + b = f(a, b)
+            g(2)(a, b) = a + b= f(a, b)
     g(2)(2, 1) = f(2, 1)
 
 prove:
