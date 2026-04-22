@@ -177,6 +177,17 @@ impl Runtime {
                                 matched_args.push((param.clone(), other_param.clone()));
                             }
                         }
+                        (Obj::StructObj(s), Obj::StructObj(other_s)) => {
+                            if s.name.to_string() != other_s.name.to_string() {
+                                return Ok(None);
+                            }
+                            if s.args.len() != other_s.args.len() {
+                                return Ok(None);
+                            }
+                            for (a, b) in s.args.iter().zip(other_s.args.iter()) {
+                                matched_args.push((a.clone(), b.clone()));
+                            }
+                        }
                         _ => {
                             matched_args.push((obj.clone(), other_obj.clone()));
                         }
