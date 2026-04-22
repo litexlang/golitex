@@ -28,33 +28,6 @@ fn factual_equal_success_by_builtin_reason(
     )
 }
 
-/// `a + b + c` parses as left-associative `Add(Add(a, b), c)`; yields `[a, b, c]`.
-fn flatten_left_assoc_add_chain(obj: &Obj) -> Vec<Obj> {
-    let mut from_right = Vec::new();
-    let mut cur = obj;
-    loop {
-        match cur {
-            Obj::Add(a) => {
-                from_right.push((*a.right).clone());
-                cur = a.left.as_ref();
-            }
-            _ => {
-                from_right.push(cur.clone());
-                from_right.reverse();
-                return from_right;
-            }
-        }
-    }
-}
-
-fn fold_left_assoc_add_slice(parts: &[Obj]) -> Obj {
-    let mut acc = parts[0].clone();
-    for p in &parts[1..] {
-        acc = Add::new(acc, p.clone()).into();
-    }
-    acc
-}
-
 impl Runtime {
     // Instantiate family `equal_to` on one or both sides, then full `verify_objs_are_equal` on the expanded pair.
     fn try_verify_objs_equal_by_expanding_family(
@@ -443,8 +416,7 @@ impl Runtime {
         Ok(None)
     }
 
-    // sum(i,a,e+1,F) = sum(i,a,e,F) + F with i bound to (e+1) (same i,a,F on both sums; `+` either way).
-    // RHS may be left-associative: `s + t + u` is `Add(Add(s,t),u)` — flatten to `[s,t,u]` then tail = `t+u`.
+    // sum(i,a,e+1,F) = sum(i,a,e,F) + tail with i bound to outer end (same i,a,F; one binary + on the other side).
     fn try_finish_sum_peel_equality(
         &mut self,
         outer: &SumObj,
@@ -525,39 +497,45 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::Sum(lsum) = left {
-            let parts = flatten_left_assoc_add_chain(right);
-            if parts.len() >= 2 {
-                if let Obj::Sum(rsum) = &parts[0] {
-                    let tail = fold_left_assoc_add_slice(&parts[1..]);
-                    if let Some(done) = self.try_finish_sum_peel_equality(
-                        lsum,
-                        rsum,
-                        &tail,
-                        left,
-                        right,
-                        line_file.clone(),
-                        verify_state,
-                    )? {
-                        return Ok(Some(done));
+            if let Obj::Add(add) = right {
+                for (sum_side, tail_side) in [
+                    (add.left.as_ref(), add.right.as_ref()),
+                    (add.right.as_ref(), add.left.as_ref()),
+                ] {
+                    if let Obj::Sum(rsum) = sum_side {
+                        if let Some(done) = self.try_finish_sum_peel_equality(
+                            lsum,
+                            rsum,
+                            tail_side,
+                            left,
+                            right,
+                            line_file.clone(),
+                            verify_state,
+                        )? {
+                            return Ok(Some(done));
+                        }
                     }
                 }
             }
         }
         if let Obj::Sum(rsum) = right {
-            let parts = flatten_left_assoc_add_chain(left);
-            if parts.len() >= 2 {
-                if let Obj::Sum(lsum) = &parts[0] {
-                    let tail = fold_left_assoc_add_slice(&parts[1..]);
-                    if let Some(done) = self.try_finish_sum_peel_equality(
-                        rsum,
-                        lsum,
-                        &tail,
-                        left,
-                        right,
-                        line_file.clone(),
-                        verify_state,
-                    )? {
-                        return Ok(Some(done));
+            if let Obj::Add(add) = left {
+                for (sum_side, tail_side) in [
+                    (add.left.as_ref(), add.right.as_ref()),
+                    (add.right.as_ref(), add.left.as_ref()),
+                ] {
+                    if let Obj::Sum(lsum) = sum_side {
+                        if let Some(done) = self.try_finish_sum_peel_equality(
+                            rsum,
+                            lsum,
+                            tail_side,
+                            left,
+                            right,
+                            line_file.clone(),
+                            verify_state,
+                        )? {
+                            return Ok(Some(done));
+                        }
                     }
                 }
             }
