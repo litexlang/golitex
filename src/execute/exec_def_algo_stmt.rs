@@ -144,13 +144,13 @@ impl Runtime {
                 Vec::with_capacity(param_def_with_set.params.len());
             for fn_set_param_name in param_def_with_set.params.iter() {
                 match fn_set_param_name_to_algo_arg_obj.get(fn_set_param_name) {
-                    Some(Obj::Identifier(identifier)) => {
+                    Some(Obj::Atom(AtomObj::Identifier(identifier))) => {
                         mapped_param_names.push(identifier.name.clone());
                     }
-                    Some(Obj::FnSetFreeParamObj(p)) => {
+                    Some(Obj::Atom(AtomObj::FnSet(p))) => {
                         mapped_param_names.push(p.name.clone());
                     }
-                    Some(Obj::ForallFreeParamObj(p)) => {
+                    Some(Obj::Atom(AtomObj::Forall(p))) => {
                         mapped_param_names.push(p.name.clone());
                     }
                     _ => {

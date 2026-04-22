@@ -3,12 +3,12 @@ use crate::prelude::*;
 impl Runtime {
     pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {
         match left {
-            Obj::Identifier(a) => match right {
-                Obj::Identifier(b) => a.to_string() == b.to_string(),
+            Obj::Atom(AtomObj::Identifier(a)) => match right {
+                Obj::Atom(AtomObj::Identifier(b)) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::IdentifierWithMod(a) => match right {
-                Obj::IdentifierWithMod(b) => {
+            Obj::Atom(AtomObj::IdentifierWithMod(a)) => match right {
+                Obj::Atom(AtomObj::IdentifierWithMod(b)) => {
                     if a.mod_name == b.mod_name {
                         a.to_string() == b.to_string()
                     } else {
@@ -282,14 +282,14 @@ impl Runtime {
                 _ => false,
             },
             // Parsing-time free params: compare [`fmt::Display`] (`~tag` + spine), not only `.name`.
-            Obj::ForallFreeParamObj(a) => {
-                matches!(right, Obj::ForallFreeParamObj(b) if a.to_string() == b.to_string())
+            Obj::Atom(AtomObj::Forall(a)) => {
+                matches!(right, Obj::Atom(AtomObj::Forall(b)) if a.to_string() == b.to_string())
             }
             Obj::ForallFieldAccessObj(a) => {
                 matches!(right, Obj::ForallFieldAccessObj(b) if a.to_string() == b.to_string())
             }
-            Obj::DefFreeParamObj(a) => {
-                matches!(right, Obj::DefFreeParamObj(b) if a.to_string() == b.to_string())
+            Obj::Atom(AtomObj::Def(a)) => {
+                matches!(right, Obj::Atom(AtomObj::Def(b)) if a.to_string() == b.to_string())
             }
             Obj::DefFreeFieldAccessObj(a) => {
                 matches!(
@@ -297,26 +297,26 @@ impl Runtime {
                     Obj::DefFreeFieldAccessObj(b) if a.to_string() == b.to_string()
                 )
             }
-            Obj::ExistFreeParamObj(a) => {
-                matches!(right, Obj::ExistFreeParamObj(b) if a.to_string() == b.to_string())
+            Obj::Atom(AtomObj::Exist(a)) => {
+                matches!(right, Obj::Atom(AtomObj::Exist(b)) if a.to_string() == b.to_string())
             }
-            Obj::SetBuilderFreeParamObj(a) => {
-                matches!(right, Obj::SetBuilderFreeParamObj(b) if a.to_string() == b.to_string())
+            Obj::Atom(AtomObj::SetBuilder(a)) => {
+                matches!(right, Obj::Atom(AtomObj::SetBuilder(b)) if a.to_string() == b.to_string())
             }
-            Obj::FnSetFreeParamObj(a) => {
-                matches!(right, Obj::FnSetFreeParamObj(b) if a.to_string() == b.to_string())
+            Obj::Atom(AtomObj::FnSet(a)) => {
+                matches!(right, Obj::Atom(AtomObj::FnSet(b)) if a.to_string() == b.to_string())
             }
-            Obj::StructSelfFieldFreeParamObj(a) => {
+            Obj::Atom(AtomObj::StructSelfField(a)) => {
                 matches!(
                     right,
-                    Obj::StructSelfFieldFreeParamObj(b) if a.to_string() == b.to_string()
+                    Obj::Atom(AtomObj::StructSelfField(b)) if a.to_string() == b.to_string()
                 )
             }
-            Obj::ByInducFreeParamObj(a) => {
-                matches!(right, Obj::ByInducFreeParamObj(b) if a.to_string() == b.to_string())
+            Obj::Atom(AtomObj::Induc(a)) => {
+                matches!(right, Obj::Atom(AtomObj::Induc(b)) if a.to_string() == b.to_string())
             }
-            Obj::DefAlgoFreeParamObj(a) => {
-                matches!(right, Obj::DefAlgoFreeParamObj(b) if a.to_string() == b.to_string())
+            Obj::Atom(AtomObj::DefAlgo(a)) => {
+                matches!(right, Obj::Atom(AtomObj::DefAlgo(b)) if a.to_string() == b.to_string())
             }
         }
     }

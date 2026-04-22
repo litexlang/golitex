@@ -34,7 +34,7 @@ impl Runtime {
                 | Obj::MatrixMul(_)
                 | Obj::MatrixScalarMul(_)
                 | Obj::MatrixPow(_)
-                | Obj::Identifier(_)
+                | Obj::Atom(AtomObj::Identifier(_))
         )
     }
 
@@ -301,7 +301,7 @@ impl Runtime {
             }
             other => {
                 let lookup_key = match &other {
-                    Obj::Identifier(id) => id.name.clone(),
+                    Obj::Atom(AtomObj::Identifier(id)) => id.name.clone(),
                     _ => other.to_string(),
                 };
                 let Some(ml) = self.get_obj_equal_to_matrix_list(&lookup_key) else {

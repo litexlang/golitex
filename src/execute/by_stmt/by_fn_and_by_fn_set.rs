@@ -65,7 +65,7 @@ impl Runtime {
         let original_param_to_exist_inner: HashMap<String, Obj> = original_param_to_forall_obj
             .iter()
             .filter_map(|(orig, obj)| {
-                if let Obj::FnSetFreeParamObj(p) = obj {
+                if let Obj::Atom(AtomObj::FnSet(p)) = obj {
                     Some((
                         orig.clone(),
                         obj_for_bound_param_in_scope(p.name.clone(), ParamObjType::Exist),
@@ -238,7 +238,7 @@ impl Runtime {
         let original_param_to_forall_witness: HashMap<String, Obj> = original_param_to_exist_obj
             .iter()
             .filter_map(|(orig, obj)| {
-                if let Obj::FnSetFreeParamObj(p) = obj {
+                if let Obj::Atom(AtomObj::FnSet(p)) = obj {
                     Some((
                         orig.clone(),
                         obj_for_bound_param_in_scope(p.name.clone(), ParamObjType::Forall),

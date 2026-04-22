@@ -1,9 +1,11 @@
 mod atom;
+mod atom_obj;
 mod atomic_name;
 mod fn_obj_head;
 mod free_param_obj;
 mod obj;
 mod standard_set;
+pub use atom_obj::AtomObj;
 pub use atom::{
     field_access_to_string, field_access_with_mod_to_string, identifier_to_string,
     identifier_with_mod_to_string, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod,
