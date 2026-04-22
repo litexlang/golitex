@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// Parsed `sum(index, start, end, body)` — `index` is bound only in `body` as [`SumFreeParamObj`].
+// sum(i, 1, 3, i + 1)
 #[derive(Clone)]
 pub struct SumObj {
     pub param: String,
@@ -25,15 +25,18 @@ impl fmt::Display for SumObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}{}{}{}{}{}{}{}{}{}",
+            "{}{}{}{}{}{}{}{}{}{}{}{}{}",
             SUM,
             LEFT_BRACE,
             self.param,
             COMMA,
+            " ",
             self.start,
             COMMA,
+            " ",
             self.end,
             COMMA,
+            " ",
             self.body,
             RIGHT_BRACE,
         )
