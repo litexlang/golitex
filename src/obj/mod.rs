@@ -6,6 +6,7 @@ mod free_param_obj;
 mod obj;
 mod standard_set;
 mod sum_obj;
+mod product_obj;
 pub use atom_obj::AtomObj;
 pub use atom::{identifier_to_string, identifier_with_mod_to_string, Identifier, IdentifierWithMod};
 pub use atomic_name::AtomicName;
@@ -15,7 +16,7 @@ pub use free_param_obj::{
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
     ByInducFreeParamObj, DefAlgoFreeParamObj, DefHeaderFreeParamObj, ExistFreeParamObj,
     FnSetFreeParamObj, ForallFreeParamObj, InstObjState, ParamObjType, SetBuilderFreeParamObj,
-    SumFreeParamObj,
+    ProductFreeParamObj, SumFreeParamObj,
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
@@ -26,3 +27,4 @@ pub use obj::{
 };
 pub use standard_set::StandardSet;
 pub use sum_obj::SumObj;
+pub use product_obj::ProductObj;

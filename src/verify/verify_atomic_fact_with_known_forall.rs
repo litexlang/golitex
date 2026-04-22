@@ -388,6 +388,12 @@ impl Runtime {
                 }
                 Ok(Some(HashMap::new()))
             }
+            Obj::Product(ref left) => {
+                if left.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
+            }
             Obj::ObjAtIndex(ref left) => Self::match_arg_when_left_is_obj_at_index(
                 left.obj.as_ref(),
                 left.index.as_ref(),
@@ -457,6 +463,12 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::Sum(ref p)) => {
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
+            }
+            Obj::Atom(AtomObj::Product(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }

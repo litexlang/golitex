@@ -51,6 +51,9 @@ fn mark_forall_param_coverage_in_fn_obj_head(
         FnObjHead::Sum(p) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
+        FnObjHead::Product(p) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
         FnObjHead::DefHeader(_)
         | FnObjHead::Exist(_)
         | FnObjHead::SetBuilder(_)
@@ -272,6 +275,11 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(sum.end.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(sum.body.as_ref(), coverage_by_forall_param);
         }
+        Obj::Product(product) => {
+            mark_forall_param_coverage_in_obj(product.start.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(product.end.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(product.body.as_ref(), coverage_by_forall_param);
+        }
         Obj::Atom(AtomObj::Forall(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
@@ -294,6 +302,9 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::Atom(AtomObj::Sum(p)) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::Atom(AtomObj::Product(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
     }

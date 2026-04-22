@@ -907,6 +907,498 @@ impl Runtime {
         Ok(None)
     }
 
+    // product(i,a,e+1,F) = product(i,a,e,F) * tail with i bound to outer end (same i,a,F; one binary * on the other side).
+    fn try_finish_product_peel_equality(
+        &mut self,
+        outer: &ProductObj,
+        inner: &ProductObj,
+        actual_tail: &Obj,
+        display_left: &Obj,
+        display_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let one: Obj = Number::new("1".to_string()).into();
+        if outer.param != inner.param {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(
+                outer.start.as_ref(),
+                inner.start.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(
+                outer.body.as_ref(),
+                inner.body.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let end_plus_one: Obj = Add::new((*inner.end).clone(), one.clone()).into();
+        if !self
+            .verify_objs_are_equal(
+                outer.end.as_ref(),
+                &end_plus_one,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let mut m = HashMap::new();
+        m.insert(outer.param.clone(), (*outer.end).clone());
+        let Ok(expected_tail) = self.inst_obj(outer.body.as_ref(), &m, ParamObjType::Product)
+        else {
+            return Ok(None);
+        };
+        if !self
+            .verify_objs_are_equal(actual_tail, &expected_tail, line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            display_left,
+            display_right,
+            line_file,
+            "equality: product upper +1 = inner product * factor at new index",
+        )))
+    }
+
+    fn try_verify_product_peel_last_term_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Obj::Product(lprod) = left {
+            if let Obj::Mul(mul) = right {
+                for (prod_side, tail_side) in [
+                    (mul.left.as_ref(), mul.right.as_ref()),
+                    (mul.right.as_ref(), mul.left.as_ref()),
+                ] {
+                    if let Obj::Product(rprod) = prod_side {
+                        if let Some(done) = self.try_finish_product_peel_equality(
+                            lprod,
+                            rprod,
+                            tail_side,
+                            left,
+                            right,
+                            line_file.clone(),
+                            verify_state,
+                        )? {
+                            return Ok(Some(done));
+                        }
+                    }
+                }
+            }
+        }
+        if let Obj::Product(rprod) = right {
+            if let Obj::Mul(mul) = left {
+                for (prod_side, tail_side) in [
+                    (mul.left.as_ref(), mul.right.as_ref()),
+                    (mul.right.as_ref(), mul.left.as_ref()),
+                ] {
+                    if let Obj::Product(lprod) = prod_side {
+                        if let Some(done) = self.try_finish_product_peel_equality(
+                            rprod,
+                            lprod,
+                            tail_side,
+                            left,
+                            right,
+                            line_file.clone(),
+                            verify_state,
+                        )? {
+                            return Ok(Some(done));
+                        }
+                    }
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    // product(i,a,b,F*G) = product(i,a,b,F) * product(i,a,b,G); other side is one binary * with two products (order either way).
+    fn try_match_product_multiplicativity_one_direction(
+        &mut self,
+        outer: &ProductObj,
+        other: &Obj,
+        display_left: &Obj,
+        display_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Mul(body_mul) = outer.body.as_ref() else {
+            return Ok(None);
+        };
+        let Obj::Mul(outer_mul) = other else {
+            return Ok(None);
+        };
+        for (x_side, y_side) in [
+            (outer_mul.left.as_ref(), outer_mul.right.as_ref()),
+            (outer_mul.right.as_ref(), outer_mul.left.as_ref()),
+        ] {
+            if let (Obj::Product(px), Obj::Product(py)) = (x_side, y_side) {
+                if outer.param != px.param || outer.param != py.param {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        outer.start.as_ref(),
+                        px.start.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        outer.start.as_ref(),
+                        py.start.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        outer.end.as_ref(),
+                        px.end.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        outer.end.as_ref(),
+                        py.end.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                let fl = body_mul.left.as_ref();
+                let fr = body_mul.right.as_ref();
+                let match_fg = self
+                    .verify_objs_are_equal(fl, px.body.as_ref(), line_file.clone(), verify_state)?
+                    .is_true()
+                    && self
+                        .verify_objs_are_equal(fr, py.body.as_ref(), line_file.clone(), verify_state)?
+                        .is_true();
+                let match_gf = self
+                    .verify_objs_are_equal(fl, py.body.as_ref(), line_file.clone(), verify_state)?
+                    .is_true()
+                    && self
+                        .verify_objs_are_equal(fr, px.body.as_ref(), line_file.clone(), verify_state)?
+                        .is_true();
+                if match_fg || match_gf {
+                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                        display_left,
+                        display_right,
+                        line_file,
+                        "equality: product(factor * factor) = product * product same bounds",
+                    )));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_product_multiplicativity_same_bounds_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Obj::Product(lprod) = left {
+            if let Some(done) = self.try_match_product_multiplicativity_one_direction(
+                lprod,
+                right,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        if let Obj::Product(rprod) = right {
+            if let Some(done) = self.try_match_product_multiplicativity_one_direction(
+                rprod,
+                left,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        Ok(None)
+    }
+
+    // product(i,a,a,F) = inst(F, { i ↦ a }) when start and end are equal.
+    fn try_match_product_single_index_interval_one_direction(
+        &mut self,
+        s: &ProductObj,
+        other: &Obj,
+        display_left: &Obj,
+        display_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !self
+            .verify_objs_are_equal(
+                s.start.as_ref(),
+                s.end.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let mut m = HashMap::new();
+        m.insert(s.param.clone(), (*s.start).clone());
+        let Ok(inst_body) = self.inst_obj(s.body.as_ref(), &m, ParamObjType::Product) else {
+            return Ok(None);
+        };
+        if !self
+            .verify_objs_are_equal(&inst_body, other, line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            display_left,
+            display_right,
+            line_file,
+            "equality: product with start = end is single instantiated factor",
+        )))
+    }
+
+    fn try_verify_product_single_index_interval_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Obj::Product(lprod) = left {
+            if let Some(done) = self.try_match_product_single_index_interval_one_direction(
+                lprod,
+                right,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        if let Obj::Product(rprod) = right {
+            if let Some(done) = self.try_match_product_single_index_interval_one_direction(
+                rprod,
+                left,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        Ok(None)
+    }
+
+    // product(i,a,b,F) = product(i,a,k,F) * product(i,k+1,b,F): same i,a,b,F; first segment ends at k, second starts at k+1.
+    fn try_verify_product_split_adjacent_segments_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let one: Obj = Number::new("1".to_string()).into();
+        if let Obj::Product(lprod) = left {
+            if let Obj::Mul(mul) = right {
+                for (p1_side, p2_side) in [
+                    (mul.left.as_ref(), mul.right.as_ref()),
+                    (mul.right.as_ref(), mul.left.as_ref()),
+                ] {
+                    if let (Obj::Product(p1), Obj::Product(p2)) = (p1_side, p2_side) {
+                        if lprod.param != p1.param || lprod.param != p2.param {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lprod.start.as_ref(),
+                                p1.start.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lprod.end.as_ref(),
+                                p2.end.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lprod.body.as_ref(),
+                                p1.body.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lprod.body.as_ref(),
+                                p2.body.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        let first_end_plus_one: Obj =
+                            Add::new((*p1.end).clone(), one.clone()).into();
+                        if !self
+                            .verify_objs_are_equal(
+                                &first_end_plus_one,
+                                p2.start.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        return Ok(Some(factual_equal_success_by_builtin_reason(
+                            left,
+                            right,
+                            line_file,
+                            "equality: product splits into adjacent segments (end+1 = next start)",
+                        )));
+                    }
+                }
+            }
+        }
+        if let Obj::Product(rprod) = right {
+            if let Obj::Mul(mul) = left {
+                for (p1_side, p2_side) in [
+                    (mul.left.as_ref(), mul.right.as_ref()),
+                    (mul.right.as_ref(), mul.left.as_ref()),
+                ] {
+                    if let (Obj::Product(p1), Obj::Product(p2)) = (p1_side, p2_side) {
+                        if rprod.param != p1.param || rprod.param != p2.param {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                rprod.start.as_ref(),
+                                p1.start.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                rprod.end.as_ref(),
+                                p2.end.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                rprod.body.as_ref(),
+                                p1.body.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                rprod.body.as_ref(),
+                                p2.body.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        let first_end_plus_one: Obj =
+                            Add::new((*p1.end).clone(), one.clone()).into();
+                        if !self
+                            .verify_objs_are_equal(
+                                &first_end_plus_one,
+                                p2.start.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        return Ok(Some(factual_equal_success_by_builtin_reason(
+                            left,
+                            right,
+                            line_file,
+                            "equality: product splits into adjacent segments (end+1 = next start)",
+                        )));
+                    }
+                }
+            }
+        }
+        Ok(None)
+    }
+
     pub fn verify_equality_by_builtin_rules(
         &mut self,
         left: &Obj,
@@ -987,6 +1479,42 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_sum_split_adjacent_segments_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_product_peel_last_term_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_product_multiplicativity_same_bounds_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_product_single_index_interval_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_product_split_adjacent_segments_equality(
             left,
             right,
             line_file.clone(),
