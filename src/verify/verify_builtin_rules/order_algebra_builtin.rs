@@ -152,6 +152,43 @@ impl Runtime {
                     )));
                 }
             }
+            // a <= u + v from a <= u and 0 <= v (or symmetric addends).
+            let g_a_left = LessEqualFact::new(
+                f.left.clone(),
+                add.left.as_ref().clone(),
+                lf.clone(),
+            )
+            .into();
+            let g0_right = LessEqualFact::new(z.clone(), add.right.as_ref().clone(), lf.clone()).into();
+            let r1 = self.verify_order_subgoal(g_a_left)?;
+            let r2 = self.verify_order_subgoal(g0_right)?;
+            if r1.is_true() && r2.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a <= b + c from a <= b and 0 <= c".to_string(),
+                        vec![r1, r2],
+                    ),
+                )));
+            }
+            let g_a_right = LessEqualFact::new(
+                f.left.clone(),
+                add.right.as_ref().clone(),
+                lf.clone(),
+            )
+            .into();
+            let g0_left = LessEqualFact::new(z.clone(), add.left.as_ref().clone(), lf.clone()).into();
+            let r3 = self.verify_order_subgoal(g_a_right)?;
+            let r4 = self.verify_order_subgoal(g0_left)?;
+            if r3.is_true() && r4.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a <= b + c from a <= b and 0 <= c".to_string(),
+                        vec![r3, r4],
+                    ),
+                )));
+            }
         }
 
         if let Obj::Mul(m) = &f.right {
