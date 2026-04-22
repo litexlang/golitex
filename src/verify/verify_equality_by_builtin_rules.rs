@@ -28,6 +28,33 @@ fn factual_equal_success_by_builtin_reason(
     )
 }
 
+/// `a + b + c` parses as left-associative `Add(Add(a, b), c)`; yields `[a, b, c]`.
+fn flatten_left_assoc_add_chain(obj: &Obj) -> Vec<Obj> {
+    let mut from_right = Vec::new();
+    let mut cur = obj;
+    loop {
+        match cur {
+            Obj::Add(a) => {
+                from_right.push((*a.right).clone());
+                cur = a.left.as_ref();
+            }
+            _ => {
+                from_right.push(cur.clone());
+                from_right.reverse();
+                return from_right;
+            }
+        }
+    }
+}
+
+fn fold_left_assoc_add_slice(parts: &[Obj]) -> Obj {
+    let mut acc = parts[0].clone();
+    for p in &parts[1..] {
+        acc = Add::new(acc, p.clone()).into();
+    }
+    acc
+}
+
 impl Runtime {
     // Instantiate family `equal_to` on one or both sides, then full `verify_objs_are_equal` on the expanded pair.
     fn try_verify_objs_equal_by_expanding_family(
@@ -417,8 +444,129 @@ impl Runtime {
     }
 
     // sum(i,a,e+1,F) = sum(i,a,e,F) + F with i bound to (e+1) (same i,a,F on both sums; `+` either way).
-    // Sub-goals: same start and body, outer upper end equals inner end + 1, tail equals inst_obj(F, {i -> outer end}).
+    // RHS may be left-associative: `s + t + u` is `Add(Add(s,t),u)` — flatten to `[s,t,u]` then tail = `t+u`.
+    fn try_finish_sum_peel_equality(
+        &mut self,
+        outer: &SumObj,
+        inner: &SumObj,
+        actual_tail: &Obj,
+        display_left: &Obj,
+        display_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let one: Obj = Number::new("1".to_string()).into();
+        if outer.param != inner.param {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(
+                outer.start.as_ref(),
+                inner.start.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(
+                outer.body.as_ref(),
+                inner.body.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let end_plus_one: Obj = Add::new((*inner.end).clone(), one.clone()).into();
+        if !self
+            .verify_objs_are_equal(
+                outer.end.as_ref(),
+                &end_plus_one,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let mut m = HashMap::new();
+        m.insert(outer.param.clone(), (*outer.end).clone());
+        let Ok(expected_tail) = self.inst_obj(outer.body.as_ref(), &m, ParamObjType::Sum) else {
+            return Ok(None);
+        };
+        if !self
+            .verify_objs_are_equal(
+                actual_tail,
+                &expected_tail,
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            display_left,
+            display_right,
+            line_file,
+            "equality: sum upper +1 = inner sum + term at new index",
+        )))
+    }
+
     fn try_verify_sum_peel_last_term_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Obj::Sum(lsum) = left {
+            let parts = flatten_left_assoc_add_chain(right);
+            if parts.len() >= 2 {
+                if let Obj::Sum(rsum) = &parts[0] {
+                    let tail = fold_left_assoc_add_slice(&parts[1..]);
+                    if let Some(done) = self.try_finish_sum_peel_equality(
+                        lsum,
+                        rsum,
+                        &tail,
+                        left,
+                        right,
+                        line_file.clone(),
+                        verify_state,
+                    )? {
+                        return Ok(Some(done));
+                    }
+                }
+            }
+        }
+        if let Obj::Sum(rsum) = right {
+            let parts = flatten_left_assoc_add_chain(left);
+            if parts.len() >= 2 {
+                if let Obj::Sum(lsum) = &parts[0] {
+                    let tail = fold_left_assoc_add_slice(&parts[1..]);
+                    if let Some(done) = self.try_finish_sum_peel_equality(
+                        rsum,
+                        lsum,
+                        &tail,
+                        left,
+                        right,
+                        line_file.clone(),
+                        verify_state,
+                    )? {
+                        return Ok(Some(done));
+                    }
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    // sum(i,a,b,F) = sum(i,a,k,F) + sum(i,k+1,b,F): same i,a,b,F; first segment ends at k, second starts at k+1.
+    fn try_verify_sum_split_adjacent_segments_equality(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -428,18 +576,29 @@ impl Runtime {
         let one: Obj = Number::new("1".to_string()).into();
         if let Obj::Sum(lsum) = left {
             if let Obj::Add(add) = right {
-                for (sum_side, tail_side) in [
+                for (s1_side, s2_side) in [
                     (add.left.as_ref(), add.right.as_ref()),
                     (add.right.as_ref(), add.left.as_ref()),
                 ] {
-                    if let Obj::Sum(rsum) = sum_side {
-                        if lsum.param != rsum.param {
+                    if let (Obj::Sum(s1), Obj::Sum(s2)) = (s1_side, s2_side) {
+                        if lsum.param != s1.param || lsum.param != s2.param {
                             continue;
                         }
                         if !self
                             .verify_objs_are_equal(
                                 lsum.start.as_ref(),
-                                rsum.start.as_ref(),
+                                s1.start.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        if !self
+                            .verify_objs_are_equal(
+                                lsum.end.as_ref(),
+                                s2.end.as_ref(),
                                 line_file.clone(),
                                 verify_state,
                             )?
@@ -450,7 +609,7 @@ impl Runtime {
                         if !self
                             .verify_objs_are_equal(
                                 lsum.body.as_ref(),
-                                rsum.body.as_ref(),
+                                s1.body.as_ref(),
                                 line_file.clone(),
                                 verify_state,
                             )?
@@ -458,12 +617,10 @@ impl Runtime {
                         {
                             continue;
                         }
-                        let end_plus_one: Obj =
-                            Add::new((*rsum.end).clone(), one.clone()).into();
                         if !self
                             .verify_objs_are_equal(
-                                lsum.end.as_ref(),
-                                &end_plus_one,
+                                lsum.body.as_ref(),
+                                s2.body.as_ref(),
                                 line_file.clone(),
                                 verify_state,
                             )?
@@ -471,47 +628,43 @@ impl Runtime {
                         {
                             continue;
                         }
-                        let mut m = HashMap::new();
-                        m.insert(lsum.param.clone(), (*lsum.end).clone());
-                        let Ok(expected_tail) =
-                            self.inst_obj(lsum.body.as_ref(), &m, ParamObjType::Sum)
-                        else {
-                            continue;
-                        };
-                        if self
+                        let first_end_plus_one: Obj =
+                            Add::new((*s1.end).clone(), one.clone()).into();
+                        if !self
                             .verify_objs_are_equal(
-                                tail_side,
-                                &expected_tail,
+                                &first_end_plus_one,
+                                s2.start.as_ref(),
                                 line_file.clone(),
                                 verify_state,
                             )?
                             .is_true()
                         {
-                            return Ok(Some(factual_equal_success_by_builtin_reason(
-                                left,
-                                right,
-                                line_file,
-                                "equality: sum upper +1 = inner sum + term at new index",
-                            )));
+                            continue;
                         }
+                        return Ok(Some(factual_equal_success_by_builtin_reason(
+                            left,
+                            right,
+                            line_file,
+                            "equality: sum splits into adjacent segments (end+1 = next start)",
+                        )));
                     }
                 }
             }
         }
         if let Obj::Sum(rsum) = right {
             if let Obj::Add(add) = left {
-                for (sum_side, tail_side) in [
+                for (s1_side, s2_side) in [
                     (add.left.as_ref(), add.right.as_ref()),
                     (add.right.as_ref(), add.left.as_ref()),
                 ] {
-                    if let Obj::Sum(lsum) = sum_side {
-                        if lsum.param != rsum.param {
+                    if let (Obj::Sum(s1), Obj::Sum(s2)) = (s1_side, s2_side) {
+                        if rsum.param != s1.param || rsum.param != s2.param {
                             continue;
                         }
                         if !self
                             .verify_objs_are_equal(
-                                lsum.start.as_ref(),
                                 rsum.start.as_ref(),
+                                s1.start.as_ref(),
                                 line_file.clone(),
                                 verify_state,
                             )?
@@ -519,23 +672,10 @@ impl Runtime {
                         {
                             continue;
                         }
-                        if !self
-                            .verify_objs_are_equal(
-                                lsum.body.as_ref(),
-                                rsum.body.as_ref(),
-                                line_file.clone(),
-                                verify_state,
-                            )?
-                            .is_true()
-                        {
-                            continue;
-                        }
-                        let end_plus_one: Obj =
-                            Add::new((*lsum.end).clone(), one.clone()).into();
                         if !self
                             .verify_objs_are_equal(
                                 rsum.end.as_ref(),
-                                &end_plus_one,
+                                s2.end.as_ref(),
                                 line_file.clone(),
                                 verify_state,
                             )?
@@ -543,29 +683,47 @@ impl Runtime {
                         {
                             continue;
                         }
-                        let mut m = HashMap::new();
-                        m.insert(rsum.param.clone(), (*rsum.end).clone());
-                        let Ok(expected_tail) =
-                            self.inst_obj(rsum.body.as_ref(), &m, ParamObjType::Sum)
-                        else {
-                            continue;
-                        };
-                        if self
+                        if !self
                             .verify_objs_are_equal(
-                                tail_side,
-                                &expected_tail,
+                                rsum.body.as_ref(),
+                                s1.body.as_ref(),
                                 line_file.clone(),
                                 verify_state,
                             )?
                             .is_true()
                         {
-                            return Ok(Some(factual_equal_success_by_builtin_reason(
-                                left,
-                                right,
-                                line_file,
-                                "equality: sum upper +1 = inner sum + term at new index",
-                            )));
+                            continue;
                         }
+                        if !self
+                            .verify_objs_are_equal(
+                                rsum.body.as_ref(),
+                                s2.body.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        let first_end_plus_one: Obj =
+                            Add::new((*s1.end).clone(), one.clone()).into();
+                        if !self
+                            .verify_objs_are_equal(
+                                &first_end_plus_one,
+                                s2.start.as_ref(),
+                                line_file.clone(),
+                                verify_state,
+                            )?
+                            .is_true()
+                        {
+                            continue;
+                        }
+                        return Ok(Some(factual_equal_success_by_builtin_reason(
+                            left,
+                            right,
+                            line_file,
+                            "equality: sum splits into adjacent segments (end+1 = next start)",
+                        )));
                     }
                 }
             }
@@ -635,6 +793,15 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_sum_peel_last_term_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_sum_split_adjacent_segments_equality(
             left,
             right,
             line_file.clone(),
