@@ -1,4 +1,9 @@
-forall a, b R:
-    a - b = 100
-    =>:
-        (a - b) - 10 = 90
+by cases:
+    prove:
+        13 % 3 = 1
+    case 13 % 3 = 0:
+        impossible 13 % 3 = 0
+    case 13 % 3 = 1:
+        do_nothing
+    case 13 % 3 = 2:
+        impossible 13 % 3 = 2
