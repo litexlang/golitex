@@ -130,12 +130,7 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> Result<(), RuntimeError> {
         let lf = equal_fact.line_file.clone();
-        self.store_known_finite_seq_list_obj(
-            &target_obj.to_string(),
-            known_list.clone(),
-            None,
-            lf,
-        );
+        self.store_known_finite_seq_list_obj(&target_obj.to_string(), known_list.clone(), None, lf);
         Ok(())
     }
 
@@ -146,12 +141,7 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> Result<(), RuntimeError> {
         let lf = equal_fact.line_file.clone();
-        self.store_known_matrix_list_obj(
-            &target_obj.to_string(),
-            known_matrix.clone(),
-            None,
-            lf,
-        );
+        self.store_known_matrix_list_obj(&target_obj.to_string(), known_matrix.clone(), None, lf);
         Ok(())
     }
 
@@ -334,6 +324,16 @@ impl Runtime {
                 .insert(equal_fact.right.to_string(), left_calculated_value);
         }
 
+        if let Some(derived) =
+            crate::environment::equality_linear_derive::maybe_derived_linear_equal_fact(equal_fact)
+        {
+            if let Some(n) = self.resolve_obj_to_number(&derived.right) {
+                self.top_level_env()
+                    .known_objs_equal_to_normalized_decimal_number
+                    .insert(derived.left.to_string(), n);
+            }
+        }
+
         Ok(InferResult::new())
     }
 
@@ -355,6 +355,7 @@ impl Runtime {
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 normal_atomic_fact.line_file.clone(),
+                ParamObjType::DefHeader,
             )
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -376,8 +377,9 @@ impl Runtime {
         )?;
 
         for iff_fact in predicate_definition.iff_facts.iter() {
-            let instantiated_iff_fact =
-                self.inst_fact(iff_fact, &param_to_arg_map).map_err(|e| {
+            let instantiated_iff_fact = self
+                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader)
+                .map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                         None,
                         format!(

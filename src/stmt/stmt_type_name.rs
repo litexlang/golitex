@@ -63,6 +63,12 @@ impl DoNothingStmt {
     }
 }
 
+impl ClearStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ClearStmt".to_string()
+    }
+}
+
 impl WitnessExistFact {
     pub fn stmt_type_name(&self) -> String {
         "WitnessExistFact".to_string()

@@ -2,35 +2,6 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
-pub enum Atom {
-    Identifier(Identifier),
-    IdentifierWithMod(IdentifierWithMod),
-    FieldAccess(FieldAccess),
-    FieldAccessWithMod(FieldAccessWithMod),
-}
-
-#[derive(Clone)]
-pub enum IdentifierOrIdentifierWithMod {
-    Identifier(Identifier),
-    IdentifierWithMod(IdentifierWithMod),
-}
-
-impl fmt::Display for IdentifierOrIdentifierWithMod {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            IdentifierOrIdentifierWithMod::Identifier(i) => write!(f, "{}", i),
-            IdentifierOrIdentifierWithMod::IdentifierWithMod(m) => write!(f, "{}", m),
-        }
-    }
-}
-
-impl IdentifierOrIdentifierWithMod {
-    pub fn literally_the_same_as(&self, other: &IdentifierOrIdentifierWithMod) -> bool {
-        return self.to_string() == other.to_string();
-    }
-}
-
-#[derive(Clone)]
 pub struct Identifier {
     pub name: String,
 }
@@ -62,44 +33,9 @@ pub struct FieldAccessWithMod {
     pub field: String,
 }
 
-impl fmt::Display for Atom {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Atom::Identifier(atom) => write!(f, "{}", atom),
-            Atom::IdentifierWithMod(atom) => write!(f, "{}", atom),
-            Atom::FieldAccess(atom) => write!(f, "{}", atom),
-            Atom::FieldAccessWithMod(atom) => write!(f, "{}", atom),
-        }
-    }
-}
-
 impl Identifier {
     pub fn new(name: String) -> Self {
         Identifier { name }
-    }
-}
-
-impl From<Identifier> for Atom {
-    fn from(id: Identifier) -> Self {
-        Atom::Identifier(id)
-    }
-}
-
-impl From<IdentifierWithMod> for Atom {
-    fn from(m: IdentifierWithMod) -> Self {
-        Atom::IdentifierWithMod(m)
-    }
-}
-
-impl From<FieldAccess> for Atom {
-    fn from(f: FieldAccess) -> Self {
-        Atom::FieldAccess(f)
-    }
-}
-
-impl From<FieldAccessWithMod> for Atom {
-    fn from(f: FieldAccessWithMod) -> Self {
-        Atom::FieldAccessWithMod(f)
     }
 }
 

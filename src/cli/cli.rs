@@ -37,20 +37,16 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let mut runtime = Runtime::new();
-
-                let (builtin_stmt_results, builtin_error) =
-                    run_source_code(builtin_code().as_str(), &mut runtime);
-                let (ok, msg) =
-                    render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
-                if !ok {
-                    eprintln!("builtin code execution failed: {}", msg);
-                    process::exit(1);
-                }
+                let mut runtime = Runtime::new_with_builtin_code();
                 runtime.new_file_path_new_env_new_name_scope("-e");
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
-                let output = render_run_source_code_output(&runtime, &stmt_results, &runtime_error);
+                let output = render_run_source_code_output(
+                    &runtime,
+                    &stmt_results,
+                    &runtime_error,
+                    true,
+                );
                 println!("{}", output.1.trim());
                 println!("{}", repl_footer_placeholder());
                 return;
@@ -320,7 +316,7 @@ fn compile_code_to_latex(code: &str) -> String {
         Ok(s) => s,
         Err(e) => {
             let runtime = Runtime::new();
-            display_runtime_error_json(&runtime, &e)
+            display_runtime_error_json(&runtime, &e, true)
         }
     }
 }
@@ -334,7 +330,7 @@ fn compile_file_to_latex(file_path: &str) -> String {
         Ok(s) => s,
         Err(e) => {
             let runtime = Runtime::new();
-            display_runtime_error_json(&runtime, &e)
+            display_runtime_error_json(&runtime, &e, true)
         }
     }
 }

@@ -292,10 +292,10 @@ impl Runtime {
             let assigned_integer_string = param_value_strings_of_each_param[parameter_position]
                 [parameter_index_assignment[parameter_position]]
                 .clone();
-            self.store_identifier_obj(parameter_name)?;
+            self.store_free_param_or_identifier_name(parameter_name, ParamObjType::Forall)?;
 
             let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
-                parameter_name.to_string().into(),
+                obj_for_bound_param_in_scope(parameter_name.to_string(), ParamObjType::Forall),
                 StandardSet::Z.into(),
                 stmt.line_file.clone(),
             ));
@@ -305,7 +305,7 @@ impl Runtime {
 
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    parameter_name.to_string().into(),
+                    obj_for_bound_param_in_scope(parameter_name.to_string(), ParamObjType::Forall),
                     Number::new(assigned_integer_string).into(),
                     stmt.line_file.clone(),
                 ));

@@ -63,7 +63,11 @@ fn fn_set_clause_latex(clause: &FnSetClause) -> String {
         .join(r", ");
     let ret = clause.ret_set.to_latex_string();
     if dom.is_empty() {
-        format!(r"\mathrm{{fn}}\left({}\right)\to {}", slots.join(r", "), ret)
+        format!(
+            r"\mathrm{{fn}}\left({}\right)\to {}",
+            slots.join(r", "),
+            ret
+        )
     } else {
         format!(
             r"\mathrm{{fn}}\left({} \,\middle|\, {}\right)\to {}",
@@ -157,10 +161,7 @@ impl ByCasesStmt {
             .collect::<Vec<_>>()
             .join(r" \land ");
         let mut rows: Vec<String> = Vec::new();
-        rows.push(format!(
-            r"\text{{Proof by cases. Goal:}} & {}",
-            goal
-        ));
+        rows.push(format!(r"\text{{Proof by cases. Goal:}} & {}", goal));
         for (i, ((case, proof), imposs)) in self
             .cases
             .iter()
@@ -418,7 +419,10 @@ impl CartDim {
 impl ClaimStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![
-            format!(r"\text{{\textbf{{claim}}:}} & {}", self.fact.to_latex_string()),
+            format!(
+                r"\text{{\textbf{{claim}}:}} & {}",
+                self.fact.to_latex_string()
+            ),
             r"\text{\textbf{prove}:} &".to_string(),
         ];
         for st in &self.proof {
@@ -497,8 +501,12 @@ impl DefAlgoStmt {
             .map(|p| latex_local_ident(p))
             .collect::<Vec<_>>()
             .join(", ");
-        let mut rows =
-            vec![format!(r"\operatorname{{{}}}\, {}\left( {}\right) \texttt{{:}}", ALGO, latex_local_ident(&self.name), ps)];
+        let mut rows = vec![format!(
+            r"\operatorname{{{}}}\, {}\left( {}\right) \texttt{{:}}",
+            ALGO,
+            latex_local_ident(&self.name),
+            ps
+        )];
         for c in &self.cases {
             rows.push(format!(
                 r"& \quad \mathrm{{case}}\ {} \texttt{{:}}\ {}",
@@ -541,7 +549,11 @@ impl DefFamilyStmt {
 impl DefLetStmt {
     pub fn to_latex_string(&self) -> String {
         match self.facts.len() {
-            0 => format!(r"\operatorname{{{}}}\, {}", LET, self.param_def.to_latex_string()),
+            0 => format!(
+                r"\operatorname{{{}}}\, {}",
+                LET,
+                self.param_def.to_latex_string()
+            ),
             _ => {
                 let mut rows = vec![format!(
                     r"\operatorname{{{}}}\, {}",
@@ -631,6 +643,12 @@ impl DoNothingStmt {
     }
 }
 
+impl ClearStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\mathrm{{{}}}", CLEAR)
+    }
+}
+
 impl EqualFact {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -693,24 +711,24 @@ impl FamilyObj {
             .map(|o| o.to_latex_string())
             .collect::<Vec<_>>()
             .join(", ");
-        format!(r"\operatorname{{{}}}\, {}\left( {}\right)", FAMILY, head, args)
+        format!(
+            r"\operatorname{{{}}}\, {}\left( {}\right)",
+            FAMILY, head, args
+        )
     }
 }
 
 impl FieldAccess {
     pub fn to_latex_string(&self) -> String {
-        let s = crate::obj::field_access_to_string(&self.name, &self.field);
+        let s = field_access_to_string(&self.name, &self.field);
         format!(r"\text{{{}}}", latex_texttt_escape(&s))
     }
 }
 
 impl FieldAccessWithMod {
     pub fn to_latex_string(&self) -> String {
-        let s = crate::obj::field_access_with_mod_to_string(
-            &self.mod_name,
-            &self.name,
-            &self.field,
-        );
+        let s =
+            crate::obj::field_access_with_mod_to_string(&self.mod_name, &self.name, &self.field);
         format!(r"\text{{{}}}", latex_texttt_escape(&s))
     }
 }
@@ -741,10 +759,29 @@ impl FiniteSeqSet {
 impl FnObj {
     pub fn to_latex_string(&self) -> String {
         let head = match self.head.as_ref() {
-            Atom::Identifier(i) => i.to_latex_string(),
-            Atom::IdentifierWithMod(i) => i.to_latex_string(),
-            Atom::FieldAccess(x) => x.to_latex_string(),
-            Atom::FieldAccessWithMod(x) => x.to_latex_string(),
+            FnObjHead::Identifier(i) => i.to_latex_string(),
+            FnObjHead::IdentifierWithMod(i) => i.to_latex_string(),
+            FnObjHead::FieldAccess(x) => x.to_latex_string(),
+            FnObjHead::FieldAccessWithMod(x) => x.to_latex_string(),
+            FnObjHead::Forall(p) => latex_local_ident(&p.name),
+            FnObjHead::ForallFieldAccess(x) => {
+                let s = field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
+            FnObjHead::DefHeader(p) => latex_local_ident(&p.name),
+            FnObjHead::DefHeaderFieldAccess(x) => {
+                let s = field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
+            FnObjHead::Exist(p) => latex_local_ident(&p.name),
+            FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
+            FnObjHead::FnSet(p) => latex_local_ident(&p.name),
+            FnObjHead::Induc(p) => latex_local_ident(&p.name),
+            FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
+            FnObjHead::StructSelfField(x) => {
+                let s = field_access_to_string(SELF, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
         };
         let mut s = head;
         for group in self.body.iter() {
@@ -776,7 +813,11 @@ impl FnSet {
             .join(r", ");
         let ret = self.ret_set.to_latex_string();
         if dom.is_empty() {
-            format!(r"\mathrm{{fn}}\left({}\right)\to {}", slots.join(r", "), ret)
+            format!(
+                r"\mathrm{{fn}}\left({}\right)\to {}",
+                slots.join(r", "),
+                ret
+            )
         } else {
             format!(
                 r"\mathrm{{fn}}\left({} \,\middle|\, {}\right)\to {}",
@@ -981,6 +1022,19 @@ impl IdentifierWithMod {
             latex_local_ident(&self.mod_name),
             latex_local_ident(&self.name)
         )
+    }
+}
+
+impl AtomicName {
+    pub fn to_latex_string(&self) -> String {
+        match self {
+            AtomicName::WithoutMod(s) => latex_local_ident(s),
+            AtomicName::WithMod(m, n) => format!(
+                r"{}\mathbin{{\mathrm{{::}}}}{}",
+                latex_local_ident(m),
+                latex_local_ident(n)
+            ),
+        }
     }
 }
 
@@ -1605,7 +1659,10 @@ impl StructObj {
             .map(|o| o.to_latex_string())
             .collect::<Vec<_>>()
             .join(", ");
-        format!(r"\operatorname{{{}}}\, {}\left( {}\right)", STRUCT, head, args)
+        format!(
+            r"\operatorname{{{}}}\, {}\left( {}\right)",
+            STRUCT, head, args
+        )
     }
 }
 
@@ -1755,7 +1812,9 @@ impl ImportRelativePathStmt {
         match &self.as_mod_name {
             Some(m) => format!(
                 r"\operatorname{{{}}}\ \texttt{{{}}}\ \mathrm{{as}}\ {}",
-                IMPORT, path, latex_local_ident(m)
+                IMPORT,
+                path,
+                latex_local_ident(m)
             ),
             None => format!(r"\operatorname{{{}}}\ \texttt{{{}}}", IMPORT, path),
         }
@@ -1767,15 +1826,6 @@ impl ImportStmt {
         match self {
             ImportStmt::ImportRelativePath(s) => s.to_latex_string(),
             ImportStmt::ImportGlobalModule(s) => s.to_latex_string(),
-        }
-    }
-}
-
-impl IdentifierOrIdentifierWithMod {
-    pub fn to_latex_string(&self) -> String {
-        match self {
-            IdentifierOrIdentifierWithMod::Identifier(x) => x.to_latex_string(),
-            IdentifierOrIdentifierWithMod::IdentifierWithMod(x) => x.to_latex_string(),
         }
     }
 }
@@ -1854,8 +1904,8 @@ impl AtomicFact {
 impl Obj {
     pub fn to_latex_string(&self) -> String {
         match self {
-            Obj::Identifier(x) => x.to_latex_string(),
-            Obj::IdentifierWithMod(x) => x.to_latex_string(),
+            Obj::Atom(AtomObj::Identifier(x)) => x.to_latex_string(),
+            Obj::Atom(AtomObj::IdentifierWithMod(x)) => x.to_latex_string(),
             Obj::FieldAccess(x) => x.to_latex_string(),
             Obj::FieldAccessWithMod(x) => x.to_latex_string(),
             Obj::FnObj(x) => x.to_latex_string(),
@@ -1896,6 +1946,25 @@ impl Obj {
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
             Obj::StructObj(x) => x.to_latex_string(),
+            Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
+            Obj::ForallFieldAccessObj(x) => {
+                let s = field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
+            Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
+            Obj::DefFreeFieldAccessObj(x) => {
+                let s = field_access_to_string(&x.name, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
+            Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::SetBuilder(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::StructSelfField(x)) => {
+                let s = field_access_to_string(SELF, &x.field);
+                format!(r"\text{{{}}}", latex_texttt_escape(&s))
+            }
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),
@@ -1928,6 +1997,7 @@ impl Stmt {
             Stmt::ProveStmt(x) => x.to_latex_string(),
             Stmt::ImportStmt(x) => x.to_latex_string(),
             Stmt::DoNothingStmt(x) => x.to_latex_string(),
+            Stmt::ClearStmt(x) => x.to_latex_string(),
             Stmt::RunFileStmt(x) => x.to_latex_string(),
             Stmt::EvalStmt(x) => x.to_latex_string(),
             Stmt::WitnessExistFact(x) => x.to_latex_string(),

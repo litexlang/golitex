@@ -20,44 +20,54 @@ impl Runtime {
         &mut self,
         name: &str,
         param_type: &ParamType,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         match param_type {
             ParamType::Obj(obj) => match obj {
                 Obj::FamilyObj(family_ty) => {
-                    self.define_parameter_by_binding_family(name, family_ty)
+                    self.define_parameter_by_binding_family(name, family_ty, binding_kind)
                 }
                 Obj::FiniteSeqSet(fs) => {
                     let fn_set = self.finite_seq_set_to_fn_set(fs, default_line_file());
-                    let type_fact =
-                        InFact::new(name.to_string().into(), fn_set.into(), default_line_file())
-                            .into();
+                    let type_fact = InFact::new(
+                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
+                        fn_set.into(),
+                        default_line_file(),
+                    )
+                    .into();
                     self.store_fact_without_well_defined_verified_and_infer(type_fact)
                 }
                 Obj::SeqSet(ss) => {
                     let fn_set = self.seq_set_to_fn_set(ss, default_line_file());
-                    let type_fact =
-                        InFact::new(name.to_string().into(), fn_set.into(), default_line_file())
-                            .into();
+                    let type_fact = InFact::new(
+                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
+                        fn_set.into(),
+                        default_line_file(),
+                    )
+                    .into();
                     self.store_fact_without_well_defined_verified_and_infer(type_fact)
                 }
                 Obj::MatrixSet(ms) => {
                     let fn_set = self.matrix_set_to_fn_set(ms, default_line_file());
-                    let type_fact =
-                        InFact::new(name.to_string().into(), fn_set.into(), default_line_file())
-                            .into();
+                    let type_fact = InFact::new(
+                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
+                        fn_set.into(),
+                        default_line_file(),
+                    )
+                    .into();
                     self.store_fact_without_well_defined_verified_and_infer(type_fact)
                 }
-                _ => self.define_parameter_by_binding_obj(name, obj),
+                _ => self.define_parameter_by_binding_obj(name, obj, binding_kind),
             },
-            ParamType::Set(set) => self.define_parameter_by_binding_set(name, set),
+            ParamType::Set(set) => self.define_parameter_by_binding_set(name, set, binding_kind),
             ParamType::NonemptySet(nonempty_set) => {
-                self.define_parameter_by_binding_nonempty_set(name, nonempty_set)
+                self.define_parameter_by_binding_nonempty_set(name, nonempty_set, binding_kind)
             }
             ParamType::FiniteSet(finite_set) => {
-                self.define_parameter_by_binding_finite_set(name, finite_set)
+                self.define_parameter_by_binding_finite_set(name, finite_set, binding_kind)
             }
             ParamType::Struct(struct_ty) => {
-                self.define_parameter_by_binding_struct(name, struct_ty)
+                self.define_parameter_by_binding_struct(name, struct_ty, binding_kind)
             }
         }
     }
@@ -66,17 +76,23 @@ impl Runtime {
         &mut self,
         name: &str,
         family_ty: &FamilyObj,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        self.infer_membership_in_family_for_param_binding(name, family_ty)
+        self.infer_membership_in_family_for_param_binding(name, family_ty, binding_kind)
     }
 
     fn define_parameter_by_binding_obj(
         &mut self,
         name: &str,
         obj: &Obj,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact =
-            InFact::new(name.to_string().into(), obj.clone(), default_line_file()).into();
+        let type_fact = InFact::new(
+            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            obj.clone(),
+            default_line_file(),
+        )
+        .into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
     }
 
@@ -84,8 +100,13 @@ impl Runtime {
         &mut self,
         name: &str,
         _set: &Set,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = IsSetFact::new(name.to_string().into(), default_line_file()).into();
+        let type_fact = IsSetFact::new(
+            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            default_line_file(),
+        )
+        .into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
     }
 
@@ -93,8 +114,13 @@ impl Runtime {
         &mut self,
         name: &str,
         _nonempty_set: &NonemptySet,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = IsNonemptySetFact::new(name.to_string().into(), default_line_file()).into();
+        let type_fact = IsNonemptySetFact::new(
+            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            default_line_file(),
+        )
+        .into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
     }
 
@@ -102,8 +128,13 @@ impl Runtime {
         &mut self,
         name: &str,
         _finite_set: &FiniteSet,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = IsFiniteSetFact::new(name.to_string().into(), default_line_file()).into();
+        let type_fact = IsFiniteSetFact::new(
+            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            default_line_file(),
+        )
+        .into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
     }
 
@@ -111,13 +142,14 @@ impl Runtime {
         &mut self,
         name: &str,
         struct_ty: &StructObj,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         self.register_param_as_struct_instance(name, struct_ty.clone());
 
         let mut infer_result = InferResult::new();
 
         let new_fact = InFact::new(
-            name.to_string().into(),
+            param_binding_element_obj_for_store(name.to_string(), binding_kind),
             Obj::StructObj(struct_ty.clone()),
             default_line_file(),
         )
@@ -136,19 +168,25 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
         let lf = default_line_file();
         for (field_name, field_ty) in def.fields.iter() {
-            let arg = FieldAccess::new(name.to_string(), field_name.clone()).into();
-            let param_type = self.inst_param_type(field_ty, &base_map)?;
+            let arg = struct_instance_field_access_obj_for_binding(
+                name.to_string(),
+                field_name.clone(),
+                binding_kind,
+            );
+            let param_type = self.inst_param_type(field_ty, &base_map, ParamObjType::DefHeader)?;
             let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
+
             infer_result.new_infer_result_inside(
                 self.store_fact_without_well_defined_verified_and_infer(f)?,
             );
         }
 
-        let iff_facts = self.instantiated_struct_def_or_and_facts_for_def(struct_ty, &def, name)?;
+        let iff_facts =
+            self.instantiated_struct_iff_fact(struct_ty, &def, name, binding_kind)?;
         for ocf in iff_facts {
-            infer_result.new_infer_result_inside(
-                self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)?,
-            );
+            let result =
+                self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)?;
+            infer_result.new_infer_result_inside(result);
         }
 
         Ok(infer_result)
@@ -162,13 +200,16 @@ impl Runtime {
         self.top_level_env()
             .cache_well_defined_obj
             .insert(key.clone(), ());
-        self.top_level_env().defined_identifiers.insert(key, ());
+        self.top_level_env()
+            .defined_identifiers
+            .insert(key, ParamObjType::StructSelf);
     }
 
     pub fn define_params_with_type(
         &mut self,
         param_defs: &ParamDefWithType,
         check_type_nonempty: bool,
+        binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for param_def in param_defs.groups.iter() {
@@ -203,20 +244,25 @@ impl Runtime {
                 })?;
 
             for name in param_def.params.iter() {
-                self.store_identifier_obj(name).map_err(|runtime_error| {
-                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
-                            "define params with type: failed to declare parameter `{}`",
-                            name
-                        ),
-                        default_line_file(),
-                        Some(runtime_error),
-                        vec![],
-                    )))
-                })?;
+                self.store_free_param_or_identifier_name(name, binding_kind)
+                    .map_err(|runtime_error| {
+                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "define params with type: failed to declare parameter `{}`",
+                                name
+                            ),
+                            default_line_file(),
+                            Some(runtime_error),
+                            vec![],
+                        )))
+                    })?;
                 let fact_infer_result = self
-                    .define_parameter_by_binding_param_type(name, &param_def.param_type)
+                    .define_parameter_by_binding_param_type(
+                        name,
+                        &param_def.param_type,
+                        binding_kind,
+                    )
                     .map_err(|runtime_error| {
                         RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
                 None,

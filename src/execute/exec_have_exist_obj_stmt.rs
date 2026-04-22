@@ -41,13 +41,13 @@ impl Runtime {
         }
 
         for obj in have_exist_obj_stmt.equal_tos.iter() {
-            self.store_identifier_obj(obj)?;
+            self.store_free_param_or_identifier_name(obj, ParamObjType::Exist)?;
         }
 
         let new_obj_names_as_identifier_objs = have_exist_obj_stmt
             .equal_tos
             .iter()
-            .map(|s| s.clone().into())
+            .map(|s| Identifier::new(s.clone()).into())
             .collect();
 
         let mut infer_result = self
@@ -55,6 +55,7 @@ impl Runtime {
                 &exist_fact_in_have_obj_stmt.params_def_with_type,
                 &new_obj_names_as_identifier_objs,
                 have_exist_obj_stmt.line_file.clone(),
+                ParamObjType::Exist,
             )
             .map_err(|e| {
                 short_exec_error(have_exist_obj_stmt.clone().into(), "", Some(e), vec![])
@@ -66,7 +67,7 @@ impl Runtime {
 
         for fact in exist_fact_in_have_obj_stmt.facts.iter() {
             let instantiated_fact = self
-                .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map)
+                .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map, ParamObjType::Exist)
                 .map_err(|runtime_error| {
                     short_exec_error(
                         have_exist_obj_stmt.clone().into(),

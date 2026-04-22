@@ -1,4 +1,4 @@
-# Quick Reference                           
+# Litex Cheatsheet                           
 
 *version: 0.1.0*
 
@@ -40,6 +40,8 @@ prove:
     $is_set(Z)
     not $is_nonempty_set({})
 ```
+
+> **Hint — storing a linear equality.** When an equality is recorded, if one side evaluates to a numeric literal and the other is a single “layer” around one non-constant leaf (`+`, `-`, `*`, `/` with the other operand a literal), the checker also records the solved equality for that leaf (e.g. `t - 1 = 6` also stores `t = 7`). For `*`, division is used only when the coefficient literal is **not** zero (never divide by `0`).
 
 ---
 
@@ -276,6 +278,8 @@ abstract_prop P(a R, b R)
 
 **Meaning.** A record-like type: field declarations, optionally an iff-block (`<=>:`) tying instances to a predicate on `self`.
 
+Only `self.<field>` is allowed (each `<field>` must be a declared field name in that struct’s `<=>:` scope); bare `self` is rejected.
+
 **Syntax.** `struct` *name* `(` *parameters* `)` `:` field lines, optional `<=>:` block.
 
 **Example.**
@@ -439,6 +443,30 @@ prove:
 
 ---
 
+### `clear`
+
+**Meaning.** Clear only the **current** (top) environment and the **current** (top) parse-time name map: the top env is replaced by an empty one, and the top name map is emptied. The single builtin layer is left unchanged when it is the only layer. Use a **top-level** statement if you need the same source name again—inside one `prove:` block the body is parsed in one pass, so a second `let` with the same identifier is still rejected at parse time.
+
+**Syntax.** `clear`.
+
+**Example.**
+
+```litex
+prove:
+    let a R:
+        a = 1
+    a = 1
+
+clear
+
+prove:
+    let a R:
+        a = 2
+    a = 2
+```
+
+---
+
 ## Witnesses
 
 ### `witness exist … from …`
@@ -489,7 +517,7 @@ $is_nonempty_set(s)
 
 **Meaning.** Prove a goal under each case of a cover (disjunction of case assumptions).
 
-**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof …
+**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof … Each `prove:` fact must not be `forall` (use atomic, exist, or/and combinations, or chains).
 
 **Example.**
 
@@ -498,11 +526,18 @@ by cases:
     prove:
         1 + 1 = 2
     case 1 + 1 = 2:
-        do_nothing
+        1 + 1 = 2
     case 1 + 1 != 2:
         1 + 1 = 2
         impossible 1 + 1 = 2
 ```
+
+Execution:
+
+1. verify case1 or case2 or ... or caseN
+2. verify case by case: assume the case assumption, verify the case body, then conclude the case assumption. 
+    2.1 If the case assumption is impossible, write `impossible <fact>` at end of the case body. Verify that the fact itself and its negation are both true in this proof scope. Then contradiction is derived. So this case is impossible we no longer need to consider it.
+    2.2 If the case assumption is not impossible, run the case body and the goal must be proved in this case.
 
 ---
 
@@ -533,6 +568,12 @@ by contra:
         not $p(c + b)
     impossible $p(c)
 ```
+
+Execution:
+
+1. assume the negation of the goal
+2. verify the goal body
+3. At end of proof body, write `impossible <fact>`. Verify that the fact itself and its negation are both true in this proof scope. Then contradiction is derived.
 
 > **Hint.** The fact after `prove:` is what you **conclude**, not the assumption; the assumption is its negation.
 
@@ -571,7 +612,7 @@ by enumerate finite_set:
     do_nothing
 ```
 
-Integer **closed_range** membership with literal endpoints uses **`by enumerate` *lo*`..`*hi* `:`** *object* (next section), not list-set enumeration.
+Integer **closed_range** membership with literal endpoints uses **`by enumerate` *lo*`...`*hi* `:`** *object* (next section), not list-set enumeration.
 
 ---
 
@@ -579,21 +620,21 @@ Integer **closed_range** membership with literal endpoints uses **`by enumerate`
 
 **Meaning.** From membership of an object in a **closed interval** with **integer literal** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
 
-**Syntax.** `by enumerate` *lo* `..` *hi* `:` *object* — *range* parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`); *object* is any expression the parser accepts as an `obj`.
+**Syntax.** `by enumerate` *lo* `...` *hi* `:` *object* — *range* parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`); *object* is any expression the parser accepts as an `obj`.
 
 **Example.**
 
 ```litex
 prove:
-    have x closed_range(0, 10)
+    have x closed_range(0, 10) # equivalent to have x 0...10
 
-    by enumerate 0..10: x
+    by enumerate 0...10: x
 
 prove:
     have a Z
     have x closed_range(a, a + 10)
 
-    by enumerate a..a + 10: x
+    by enumerate a...a + 10: x
 ```
 
 ---
@@ -637,11 +678,49 @@ know:
 by induc n from 0:
     prove:
         $p(n)
+    $p(0)
+    forall n Z:
+        n >= 0
+        $p(n)
+        =>:
+            $p(n + 1)
 
+# Derived from the above by induction
 forall n Z:
     n >= 0
     =>:
         $p(n)
+```
+
+```litex
+claim:
+    prove:
+        forall x Z:
+            0 <= x
+            =>:
+                x % 2 = 0 or x % 2 = 1
+
+    by induc x from 0:
+        prove:
+            x % 2 = 0 or x % 2 = 1
+
+        0 % 2 = 0
+
+        claim:
+            prove:
+                forall y Z:
+                    0 <= y
+                    y % 2 = 0 or y % 2 = 1
+                    =>:
+                        (y + 1) % 2 = 0 or (y + 1) % 2 = 1
+
+            by cases:
+                prove:
+                    (y + 1) % 2 = 0 or (y + 1) % 2 = 1
+                case y % 2 = 0:
+                    (y + 1) % 2 = (y % 2 + 1 % 2) % 2 = (0 + 1) % 2 = 1
+                case y % 2 = 1:
+                    (y + 1) % 2 = (y % 2 + 1 % 2) % 2 = (1 + 1) % 2 = 0
 ```
 
 ---
@@ -995,6 +1074,7 @@ prove:
 | `import` | Import module/file |
 | `run_file` | Run a file |
 | `do_nothing` | No-op |
+| `clear` | Clear top env + top parse-time name map |
 | *(other)* | Assert a fact to verify |
 
 > **Hint.** Details and edge cases are covered in the **Example** code blocks above; the repository **`examples/`** folder may contain longer variants.

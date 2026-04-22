@@ -46,11 +46,11 @@ impl Runtime {
             Obj::Tuple(tuple) => self.run_in_local_env(|rt| {
                 rt.verify_tuple_satisfy_struct(tuple, struct_ty, &def, verify_state)
             }),
-            Obj::Identifier(_) | Obj::IdentifierWithMod(_) => {
+            Obj::Atom(AtomObj::Identifier(_)) | Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
                 let id_key = match &obj {
-                    Obj::Identifier(i) => IdentifierOrIdentifierWithMod::Identifier(i.clone()),
-                    Obj::IdentifierWithMod(m) => {
-                        IdentifierOrIdentifierWithMod::IdentifierWithMod(m.clone())
+                    Obj::Atom(AtomObj::Identifier(i)) => AtomicName::WithoutMod(i.name.clone()),
+                    Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
+                        AtomicName::WithMod(m.mod_name.clone(), m.name.clone())
                     }
                     _ => {
                         return Ok((StmtUnknown::new()).into());
@@ -83,7 +83,11 @@ impl Runtime {
 
                 Ok(
                     (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        InFact::new(obj.clone(), String::from("_").into(), default_line_file())
+                        InFact::new(
+                            obj.clone(),
+                            Identifier::new("_".to_string()).into(),
+                            default_line_file(),
+                        )
                             .into(),
                         "".to_string(),
                         None,
@@ -170,7 +174,7 @@ impl Runtime {
             .enumerate()
         {
             let instantiated_field_type = self
-                .inst_param_type(field_type, &param_arg_map)
+                .inst_param_type(field_type, &param_arg_map, ParamObjType::DefHeader)
                 .map_err(|e| {
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                 None,
@@ -201,7 +205,7 @@ impl Runtime {
 
         for iff_fact in struct_def.facts.iter() {
             let instantiated = self
-                .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map)
+                .inst_or_and_chain_atomic_fact(iff_fact, &param_arg_map, ParamObjType::StructSelf)
                 .map_err(|e| {
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                 None,

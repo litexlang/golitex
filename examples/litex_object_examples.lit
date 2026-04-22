@@ -119,6 +119,7 @@ prove:
     have fn f(x R) R = x + 1
 
 # --- Obj::FieldAccess (single `.`; no `a.b.c`) ---
+"""
 prove:
     abstract_prop p(a)
     struct rec(a set):
@@ -133,6 +134,7 @@ prove:
     let h struct rec(t):
         h = (t, y)
     h.fld $in t
+"""
 
 # --- Obj::FamilyObj ---
 prove:

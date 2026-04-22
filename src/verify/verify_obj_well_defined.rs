@@ -23,8 +23,8 @@ impl Runtime {
         }
 
         match obj {
-            Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
-            Obj::IdentifierWithMod(x) => self.verify_identifier_with_mod_well_defined(x),
+            Obj::Atom(AtomObj::Identifier(identifier)) => self.verify_identifier_well_defined(identifier),
+            Obj::Atom(AtomObj::IdentifierWithMod(x)) => self.verify_identifier_with_mod_well_defined(x),
             Obj::FieldAccess(x) => self.verify_field_access_well_defined(x),
             Obj::FieldAccessWithMod(x) => self.verify_field_access_with_mod_well_defined(x),
             Obj::FnObj(fn_obj) => self.verify_fn_obj_well_defined(fn_obj, verify_state),
@@ -94,6 +94,16 @@ impl Runtime {
             Obj::StructObj(struct_ty) => {
                 self.verify_param_type_struct_well_defined(struct_ty, verify_state)
             }
+            Obj::Atom(AtomObj::Forall(_)) => Ok(()),
+            Obj::ForallFieldAccessObj(_) => Ok(()),
+            Obj::Atom(AtomObj::Def(_)) => Ok(()),
+            Obj::DefFreeFieldAccessObj(_) => Ok(()),
+            Obj::Atom(AtomObj::Exist(_)) => Ok(()),
+            Obj::Atom(AtomObj::SetBuilder(_)) => Ok(()),
+            Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
+            Obj::Atom(AtomObj::StructSelfField(_)) => Ok(()),
+            Obj::Atom(AtomObj::Induc(_)) => Ok(()),
+            Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -127,7 +137,7 @@ impl Runtime {
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), RuntimeError> {
         let Some(def) = self.get_definition_of_struct_where_object_satisfies(
-            &IdentifierOrIdentifierWithMod::Identifier(Identifier::new(x.name.to_string())),
+            &AtomicName::WithoutMod(x.name.to_string()),
         ) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new(
@@ -190,7 +200,7 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let function_name_obj = fn_obj.head.to_string().into();
+        let function_name_obj: Obj = (*fn_obj.head).clone().into();
         let mut the_set_where_current_fn_obj_is_in = self
             .get_object_in_fn_set(&function_name_obj)
             .ok_or_else(|| {
@@ -327,6 +337,7 @@ impl Runtime {
                 self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_as_obj,
+                ParamObjType::FnSet,
             )
             .map_err(|stmt_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -375,7 +386,7 @@ impl Runtime {
         );
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::FnSet)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -418,6 +429,11 @@ impl Runtime {
         Ok(())
     }
 
+    /// Typing facts from `define_parameter_by_binding_*` use the same tagged free-param `Obj` as parsed bodies.
+    fn obj_for_param_typed_membership_lookup(obj: &Obj) -> Obj {
+        obj.clone()
+    }
+
     fn require_obj_in_r(
         &mut self,
         obj: &Obj,
@@ -439,7 +455,8 @@ impl Runtime {
             return self.require_obj_in_r(&l.arg, verify_state);
         }
         let r_obj = StandardSet::R.into();
-        let in_fact = InFact::new(obj.clone(), r_obj, default_line_file());
+        let element = Self::obj_for_param_typed_membership_lookup(obj);
+        let in_fact = InFact::new(element, r_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
@@ -462,7 +479,8 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let z_obj = StandardSet::Z.into();
-        let in_fact = InFact::new(obj.clone(), z_obj, default_line_file());
+        let element = Self::obj_for_param_typed_membership_lookup(obj);
+        let in_fact = InFact::new(element, z_obj, default_line_file());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
@@ -670,6 +688,13 @@ impl Runtime {
             default_line_file(),
         ));
 
+        let result =
+            self.verify_and_chain_atomic_fact(&positive_base_and_real_exponent, verify_state)?;
+
+        if result.is_true() {
+            return Ok(());
+        }
+
         let zero_base_and_positive_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
                 EqualFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file()).into(),
@@ -689,6 +714,12 @@ impl Runtime {
             default_line_file(),
         ));
 
+        let result =
+            self.verify_and_chain_atomic_fact(&zero_base_and_positive_real_exponent, verify_state)?;
+        if result.is_true() {
+            return Ok(());
+        }
+
         let nonzero_base_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
                 InFact::new(
@@ -697,7 +728,8 @@ impl Runtime {
                     default_line_file(),
                 )
                 .into(),
-                NotEqualFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file()).into(),
+                NotEqualFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file())
+                    .into(),
             ],
             default_line_file(),
         ));
@@ -722,18 +754,19 @@ impl Runtime {
         );
 
         let result = self.verify_or_fact(&pow_domain_or_fact, verify_state)?;
-        if result.is_unknown() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("base and exponent do not satisfy the pow domain"),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
-            )));
+        if result.is_true() {
+            return Ok(());
         }
-        Ok(())
+
+        return Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new(
+                None,
+                format!("base and exponent do not satisfy the pow domain"),
+                default_line_file(),
+                None,
+                vec![],
+            ),
+        )));
     }
 
     fn verify_union_well_defined(
@@ -1477,7 +1510,9 @@ impl Runtime {
     fn matrix_value_shape(rt: &Runtime, obj: &Obj) -> Result<(usize, usize), RuntimeError> {
         match obj {
             Obj::MatrixListObj(m) => Self::rectangular_shape_of_matrix_list_obj(m),
-            Obj::Identifier(id) => Self::matrix_list_shape_for_name_known_as_matrix_list(rt, &id.name),
+            Obj::Atom(AtomObj::Identifier(id)) => {
+                Self::matrix_list_shape_for_name_known_as_matrix_list(rt, &id.name)
+            }
             Obj::MatrixAdd(inner) => Self::matrix_value_shape(rt, &inner.left),
             Obj::MatrixSub(inner) => Self::matrix_value_shape(rt, &inner.left),
             Obj::MatrixMul(inner) => {
@@ -1487,10 +1522,7 @@ impl Runtime {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new(
                             None,
-                            format!(
-                                "matrix **: left columns {} != right rows {}",
-                                sl.1, sr.0
-                            ),
+                            format!("matrix **: left columns {} != right rows {}", sl.1, sr.0),
                             default_line_file(),
                             None,
                             vec![],
@@ -1506,10 +1538,7 @@ impl Runtime {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new(
                             None,
-                            format!(
-                                "matrix ^^: base must be square, got {}x{}",
-                                s.0, s.1
-                            ),
+                            format!("matrix ^^: base must be square, got {}x{}", s.0, s.1),
                             default_line_file(),
                             None,
                             vec![],
@@ -1532,10 +1561,7 @@ impl Runtime {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
-                    format!(
-                        "`{}` is not known as a matrix list value",
-                        key
-                    ),
+                    format!("`{}` is not known as a matrix list value", key),
                     default_line_file(),
                     None,
                     vec![],
@@ -1555,30 +1581,34 @@ impl Runtime {
         ms: &MatrixSet,
     ) -> Result<(), RuntimeError> {
         let (rows, cols) = Self::rectangular_shape_of_matrix_list_obj(m)?;
-        let row_expect = rt.resolve_obj_to_number(ms.row_len.as_ref()).ok_or_else(|| {
-            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "matrix: cannot resolve row_len {} of matrix type for list shape check",
-                    ms.row_len
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            )))
-        })?;
-        let col_expect = rt.resolve_obj_to_number(ms.col_len.as_ref()).ok_or_else(|| {
-            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "matrix: cannot resolve col_len {} of matrix type for list shape check",
-                    ms.col_len
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            )))
-        })?;
+        let row_expect = rt
+            .resolve_obj_to_number(ms.row_len.as_ref())
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "matrix: cannot resolve row_len {} of matrix type for list shape check",
+                        ms.row_len
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                )))
+            })?;
+        let col_expect = rt
+            .resolve_obj_to_number(ms.col_len.as_ref())
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "matrix: cannot resolve col_len {} of matrix type for list shape check",
+                        ms.col_len
+                    ),
+                    default_line_file(),
+                    None,
+                    vec![],
+                )))
+            })?;
         let r = row_expect.normalized_value.parse::<usize>().map_err(|_| {
             RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                 None,
@@ -1676,8 +1706,10 @@ impl Runtime {
 
         let random_param = self.generate_random_unused_name();
 
-        let nonempty_set_fact =
-            IsNonemptySetFact::new(random_param.clone().to_string().into(), default_line_file());
+        let nonempty_set_fact = IsNonemptySetFact::new(
+            obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::Forall),
+            default_line_file(),
+        );
 
         let forall_x_in_choose_from_x_is_nonempty = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -1881,6 +1913,7 @@ impl Runtime {
                 &def.params_def_with_type,
                 &family_param_type.params,
                 verify_state,
+                ParamObjType::DefHeader,
             )
             .map_err(|runtime_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -1915,7 +1948,7 @@ impl Runtime {
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::DefHeader)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -1958,20 +1991,20 @@ impl Runtime {
             }
         }
 
-        let instantiated_equal_to =
-            self.inst_obj(&def.equal_to, &param_to_arg_map)
-                .map_err(|e| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
-                            "failed to instantiate family `{}` member set: {}",
-                            family_name, e
-                        ),
-                        default_line_file(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
+        let instantiated_equal_to = self
+            .inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::DefHeader)
+            .map_err(|e| {
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "failed to instantiate family `{}` member set: {}",
+                        family_name, e
+                    ),
+                    default_line_file(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
         self.verify_obj_well_defined_and_store_cache(&instantiated_equal_to, verify_state)?;
 
         Ok(())
@@ -2025,6 +2058,7 @@ impl Runtime {
                 &def.param_defs,
                 &struct_ty.args,
                 verify_state,
+                ParamObjType::DefHeader,
             )
             .map_err(|runtime_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -2059,7 +2093,7 @@ impl Runtime {
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map)
+                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::DefHeader)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,

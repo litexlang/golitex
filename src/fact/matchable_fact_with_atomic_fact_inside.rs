@@ -19,16 +19,12 @@ impl AndFact {
 #[derive(Clone)]
 pub struct ChainFact {
     pub objs: Vec<Obj>,
-    pub prop_names: Vec<IdentifierOrIdentifierWithMod>,
+    pub prop_names: Vec<AtomicName>,
     pub line_file: LineFile,
 }
 
 impl ChainFact {
-    pub fn new(
-        objs: Vec<Obj>,
-        prop_names: Vec<IdentifierOrIdentifierWithMod>,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(objs: Vec<Obj>, prop_names: Vec<AtomicName>, line_file: LineFile) -> Self {
         ChainFact {
             objs,
             prop_names,

@@ -32,7 +32,11 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let verify_state = VerifyState::new(0, false);
         let mut family_definition_infer_result = self
-            .define_params_with_type(&def_family_stmt.params_def_with_type, false)
+            .define_params_with_type(
+                &def_family_stmt.params_def_with_type,
+                false,
+                ParamObjType::DefHeader,
+            )
             .map_err(|define_params_error| {
                 short_exec_error(
                     def_family_stmt.clone().into(),
