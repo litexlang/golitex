@@ -13,7 +13,6 @@ pub enum Stmt {
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
-    DefStructStmt(DefStructStmt),
     DefFamilyStmt(DefFamilyStmt),
     DefAlgoStmt(DefAlgoStmt),
     ClaimStmt(ClaimStmt),
@@ -34,7 +33,6 @@ pub enum Stmt {
     ByExtensionStmt(ByExtensionStmt),
     ByFnStmt(ByFnStmt),
     ByFamilyStmt(ByFamilyStmt),
-    ByStructStmt(ByStructStmt),
     ByTuple(ByTupleStmt),
     ByFnSetStmt(ByFnSetStmt),
     ByFiniteSeqSetStmt(ByFiniteSeqSetStmt),
@@ -161,7 +159,6 @@ impl fmt::Display for Stmt {
             Stmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
-            Stmt::DefStructStmt(x) => write!(f, "{}", x),
             Stmt::DefFamilyStmt(x) => write!(f, "{}", x),
             Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
             Stmt::ClaimStmt(x) => write!(f, "{}", x),
@@ -182,7 +179,6 @@ impl fmt::Display for Stmt {
             Stmt::ByExtensionStmt(x) => write!(f, "{}", x),
             Stmt::ByFnStmt(x) => write!(f, "{}", x),
             Stmt::ByFamilyStmt(x) => write!(f, "{}", x),
-            Stmt::ByStructStmt(x) => write!(f, "{}", x),
             Stmt::ByTuple(x) => write!(f, "{}", x),
             Stmt::ByFnSetStmt(x) => write!(f, "{}", x),
             Stmt::ByFiniteSeqSetStmt(x) => write!(f, "{}", x),
@@ -206,7 +202,6 @@ impl Stmt {
             Stmt::HaveFnEqualStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
-            Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefFamilyStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClaimStmt(stmt) => stmt.line_file.clone(),
@@ -227,7 +222,6 @@ impl Stmt {
             Stmt::ByExtensionStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFamilyStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByStructStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTuple(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.line_file.clone(),
@@ -249,7 +243,6 @@ impl Stmt {
             Stmt::HaveFnEqualStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefFamilyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
@@ -270,7 +263,6 @@ impl Stmt {
             Stmt::ByExtensionStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFamilyStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByStructStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFiniteSeqSetStmt(stmt) => stmt.stmt_type_name(),
@@ -338,12 +330,6 @@ impl From<HaveFnEqualCaseByCaseStmt> for Stmt {
 impl From<HaveFnByInducStmt> for Stmt {
     fn from(v: HaveFnByInducStmt) -> Self {
         Stmt::HaveFnByInducStmt(v)
-    }
-}
-
-impl From<DefStructStmt> for Stmt {
-    fn from(v: DefStructStmt) -> Self {
-        Stmt::DefStructStmt(v)
     }
 }
 
@@ -464,12 +450,6 @@ impl From<ByFnStmt> for Stmt {
 impl From<ByFamilyStmt> for Stmt {
     fn from(v: ByFamilyStmt) -> Self {
         Stmt::ByFamilyStmt(v)
-    }
-}
-
-impl From<ByStructStmt> for Stmt {
-    fn from(v: ByStructStmt) -> Self {
-        Stmt::ByStructStmt(v)
     }
 }
 

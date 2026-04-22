@@ -27,32 +27,6 @@ impl Runtime {
                 }
                 _ => false,
             },
-            Obj::FieldAccess(a) => match right {
-                Obj::FieldAccess(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::FieldAccessWithMod(a) => match right {
-                Obj::FieldAccessWithMod(b) => {
-                    if a.mod_name == b.mod_name {
-                        a.to_string() == b.to_string()
-                    } else {
-                        match (
-                            self.module_manager
-                                .module_name_and_path_map
-                                .get(&a.mod_name),
-                            self.module_manager
-                                .module_name_and_path_map
-                                .get(&b.mod_name),
-                        ) {
-                            (Some(p1), Some(p2)) => {
-                                p1 == p2 && a.name == b.name && a.field == b.field
-                            }
-                            _ => false,
-                        }
-                    }
-                }
-                _ => false,
-            },
             Obj::FnObj(f) => match right {
                 Obj::FnObj(g) => f.to_string() == g.to_string(),
                 _ => false,
@@ -237,6 +211,10 @@ impl Runtime {
                 Obj::Choose(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Sum(a) => match right {
+                Obj::Sum(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::ObjAtIndex(a) => match right {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -277,25 +255,12 @@ impl Runtime {
                 Obj::FamilyObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::StructObj(a) => match right {
-                Obj::StructObj(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             // Parsing-time free params: compare [`fmt::Display`] (`~tag` + spine), not only `.name`.
             Obj::Atom(AtomObj::Forall(a)) => {
                 matches!(right, Obj::Atom(AtomObj::Forall(b)) if a.to_string() == b.to_string())
             }
-            Obj::ForallFieldAccessObj(a) => {
-                matches!(right, Obj::ForallFieldAccessObj(b) if a.to_string() == b.to_string())
-            }
             Obj::Atom(AtomObj::Def(a)) => {
                 matches!(right, Obj::Atom(AtomObj::Def(b)) if a.to_string() == b.to_string())
-            }
-            Obj::DefFreeFieldAccessObj(a) => {
-                matches!(
-                    right,
-                    Obj::DefFreeFieldAccessObj(b) if a.to_string() == b.to_string()
-                )
             }
             Obj::Atom(AtomObj::Exist(a)) => {
                 matches!(right, Obj::Atom(AtomObj::Exist(b)) if a.to_string() == b.to_string())
@@ -306,17 +271,14 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(a)) => {
                 matches!(right, Obj::Atom(AtomObj::FnSet(b)) if a.to_string() == b.to_string())
             }
-            Obj::Atom(AtomObj::StructSelfField(a)) => {
-                matches!(
-                    right,
-                    Obj::Atom(AtomObj::StructSelfField(b)) if a.to_string() == b.to_string()
-                )
-            }
             Obj::Atom(AtomObj::Induc(a)) => {
                 matches!(right, Obj::Atom(AtomObj::Induc(b)) if a.to_string() == b.to_string())
             }
             Obj::Atom(AtomObj::DefAlgo(a)) => {
                 matches!(right, Obj::Atom(AtomObj::DefAlgo(b)) if a.to_string() == b.to_string())
+            }
+            Obj::Atom(AtomObj::Sum(a)) => {
+                matches!(right, Obj::Atom(AtomObj::Sum(b)) if a.to_string() == b.to_string())
             }
         }
     }

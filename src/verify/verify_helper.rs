@@ -63,16 +63,6 @@ impl Runtime {
                     Ok(())
                 }
             },
-            ParamType::Struct(struct_obj) => {
-                let is_nonempty_set =
-                    IsNonemptySetFact::new(Obj::StructObj(struct_obj.clone()), default_line_file())
-                        .into();
-                self.verify_fact_well_defined_and_store_and_infer(
-                    is_nonempty_set,
-                    &VerifyState::new(0, false),
-                )?;
-                Ok(())
-            }
         }
     }
 }

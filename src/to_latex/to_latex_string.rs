@@ -366,15 +366,6 @@ impl BySeqSetStmt {
     }
 }
 
-impl ByStructStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By struct}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding instance-set characterization.}}\n\\end{{aligned}}",
-            self.struct_obj.to_latex_string()
-        )
-    }
-}
-
 impl ByTupleStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -472,6 +463,18 @@ impl Choose {
             r"\operatorname{{{}}}\left( {}\right)",
             CHOOSE,
             self.set.to_latex_string()
+        )
+    }
+}
+
+impl SumObj {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\sum_{{{}={}}}^{{{}}} \left( {}\right)",
+            latex_local_ident(&self.param),
+            self.start.to_latex_string(),
+            self.end.to_latex_string(),
+            self.body.to_latex_string(),
         )
     }
 }
@@ -600,33 +603,6 @@ impl DefPropStmt {
     }
 }
 
-impl DefStructStmt {
-    pub fn to_latex_string(&self) -> String {
-        let implicit_prefix_len = self.param_defs.number_of_params();
-        let mut rows = vec![format!(
-            r"\operatorname{{{}}}\, {}\left( {}\right) \texttt{{:}}",
-            STRUCT,
-            latex_local_ident(&self.name),
-            self.param_defs.to_latex_string()
-        )];
-        for (fname, pty) in self.fields.iter().skip(implicit_prefix_len) {
-            rows.push(format!(
-                r"& \quad {} : {}",
-                latex_local_ident(fname),
-                pty.to_latex_string()
-            ));
-        }
-        rows.push(r"& \quad \Longleftrightarrow \texttt{:}".to_string());
-        for fact in self.facts.iter().skip(implicit_prefix_len) {
-            rows.push(format!(r"& \quad {}", fact.to_latex_string()));
-        }
-        format!(
-            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
-            rows.join(" \\\\\n")
-        )
-    }
-}
-
 impl Div {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -718,21 +694,6 @@ impl FamilyObj {
     }
 }
 
-impl FieldAccess {
-    pub fn to_latex_string(&self) -> String {
-        let s = field_access_to_string(&self.name, &self.field);
-        format!(r"\text{{{}}}", latex_texttt_escape(&s))
-    }
-}
-
-impl FieldAccessWithMod {
-    pub fn to_latex_string(&self) -> String {
-        let s =
-            crate::obj::field_access_with_mod_to_string(&self.mod_name, &self.name, &self.field);
-        format!(r"\text{{{}}}", latex_texttt_escape(&s))
-    }
-}
-
 impl FiniteSeqListObj {
     pub fn to_latex_string(&self) -> String {
         let inner = self
@@ -761,27 +722,14 @@ impl FnObj {
         let head = match self.head.as_ref() {
             FnObjHead::Identifier(i) => i.to_latex_string(),
             FnObjHead::IdentifierWithMod(i) => i.to_latex_string(),
-            FnObjHead::FieldAccess(x) => x.to_latex_string(),
-            FnObjHead::FieldAccessWithMod(x) => x.to_latex_string(),
             FnObjHead::Forall(p) => latex_local_ident(&p.name),
-            FnObjHead::ForallFieldAccess(x) => {
-                let s = field_access_to_string(&x.name, &x.field);
-                format!(r"\text{{{}}}", latex_texttt_escape(&s))
-            }
             FnObjHead::DefHeader(p) => latex_local_ident(&p.name),
-            FnObjHead::DefHeaderFieldAccess(x) => {
-                let s = field_access_to_string(&x.name, &x.field);
-                format!(r"\text{{{}}}", latex_texttt_escape(&s))
-            }
             FnObjHead::Exist(p) => latex_local_ident(&p.name),
             FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
+            FnObjHead::Sum(p) => latex_local_ident(&p.name),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
-            FnObjHead::StructSelfField(x) => {
-                let s = field_access_to_string(SELF, &x.field);
-                format!(r"\text{{{}}}", latex_texttt_escape(&s))
-            }
         };
         let mut s = head;
         for group in self.body.iter() {
@@ -1521,7 +1469,6 @@ impl ParamType {
             ParamType::NonemptySet(_) => format!(r"\mathrm{{{}}}", NONEMPTY_SET),
             ParamType::FiniteSet(_) => format!(r"\mathrm{{{}}}", FINITE_SET),
             ParamType::Obj(o) => o.to_latex_string(),
-            ParamType::Struct(s) => s.to_latex_string(),
         }
     }
 }
@@ -1646,22 +1593,6 @@ impl SetMinus {
             r"{} \setminus {}",
             self.left.to_latex_string(),
             self.right.to_latex_string()
-        )
-    }
-}
-
-impl StructObj {
-    pub fn to_latex_string(&self) -> String {
-        let head = self.name.to_latex_string();
-        let args = self
-            .args
-            .iter()
-            .map(|o| o.to_latex_string())
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(
-            r"\operatorname{{{}}}\, {}\left( {}\right)",
-            STRUCT, head, args
         )
     }
 }
@@ -1906,8 +1837,6 @@ impl Obj {
         match self {
             Obj::Atom(AtomObj::Identifier(x)) => x.to_latex_string(),
             Obj::Atom(AtomObj::IdentifierWithMod(x)) => x.to_latex_string(),
-            Obj::FieldAccess(x) => x.to_latex_string(),
-            Obj::FieldAccessWithMod(x) => x.to_latex_string(),
             Obj::FnObj(x) => x.to_latex_string(),
             Obj::Number(x) => x.to_latex_string(),
             Obj::Add(x) => x.to_latex_string(),
@@ -1942,29 +1871,18 @@ impl Obj {
             Obj::SeqSet(x) => x.to_latex_string(),
             Obj::FiniteSeqListObj(x) => x.to_latex_string(),
             Obj::Choose(x) => x.to_latex_string(),
+            Obj::Sum(x) => x.to_latex_string(),
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
-            Obj::StructObj(x) => x.to_latex_string(),
             Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
-            Obj::ForallFieldAccessObj(x) => {
-                let s = field_access_to_string(&x.name, &x.field);
-                format!(r"\text{{{}}}", latex_texttt_escape(&s))
-            }
             Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
-            Obj::DefFreeFieldAccessObj(x) => {
-                let s = field_access_to_string(&x.name, &x.field);
-                format!(r"\text{{{}}}", latex_texttt_escape(&s))
-            }
             Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::SetBuilder(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::StructSelfField(x)) => {
-                let s = field_access_to_string(SELF, &x.field);
-                format!(r"\text{{{}}}", latex_texttt_escape(&s))
-            }
+            Obj::Atom(AtomObj::Sum(x)) => latex_local_ident(&x.name),
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),
@@ -1989,7 +1907,6 @@ impl Stmt {
             Stmt::HaveFnEqualStmt(x) => x.to_latex_string(),
             Stmt::HaveFnEqualCaseByCaseStmt(x) => x.to_latex_string(),
             Stmt::HaveFnByInducStmt(x) => x.to_latex_string(),
-            Stmt::DefStructStmt(x) => x.to_latex_string(),
             Stmt::DefFamilyStmt(x) => x.to_latex_string(),
             Stmt::DefAlgoStmt(x) => x.to_latex_string(),
             Stmt::ClaimStmt(x) => x.to_latex_string(),
@@ -2010,7 +1927,6 @@ impl Stmt {
             Stmt::ByExtensionStmt(x) => x.to_latex_string(),
             Stmt::ByFnStmt(x) => x.to_latex_string(),
             Stmt::ByFamilyStmt(x) => x.to_latex_string(),
-            Stmt::ByStructStmt(x) => x.to_latex_string(),
             Stmt::ByTuple(x) => x.to_latex_string(),
             Stmt::ByFnSetStmt(x) => x.to_latex_string(),
             Stmt::ByFiniteSeqSetStmt(x) => x.to_latex_string(),

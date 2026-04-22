@@ -59,6 +59,7 @@ Normalizes the goal to `LessEqual` or `Less`, then runs **`try_less_equal_algebr
 | Pattern on `left <= right` | What you need to prove (sub-goals) | Builtin reason string (abbrev.) |
 |----------------------------|-------------------------------------|----------------------------------|
 | `right` is `a + b` and one addend is **syntactically** `left` | `0 <=` the **other** addend | `a <= a + b from 0 <= b` |
+| `right` is `u + v` | `left <= u` **and** `0 <= v`, or the symmetric swap of addends (`left <= v` **and** `0 <= u`) | `a <= b + c from a <= b and 0 <= c` |
 | `right` is `b * a` and **right factor** equals `left` | `0 <= left` **and** `1 <= b` (here `b` is the left factor of `*`) | `a <= b * a from 0 <= a and 1 <= b` |
 | `left` and `right` are `k*u` and `k*v` with **same** left factor `k` | Either (`0 <= k` and `u <= v`) **or** (`k <= 0` and `v <= u`) | `k * a <= k * b from …` / `… from k <= 0 and b <= a` |
 | Same with `*` and **same right factor** `k` | Same coefficient sign split on the **other** side | `a * k <= b * k from …` |
@@ -125,7 +126,7 @@ Short map (details live in the named modules):
 | Fact kind | First builtin entry |
 |-----------|---------------------|
 | `NotEqualFact` | `not_equal_builtin.rs` |
-| `InFact` / `NotInFact` | `in_fact_builtin.rs` |
+| `InFact` / `NotInFact` | `in_fact_builtin.rs` (for **`$in R`**, finite **`sum(...)`** is accepted like `+` / `*` arithmetic: no extra sub-goals; same reason as other real-closed surface forms) |
 | `SubsetFact` / `SupersetFact` / negated | `set_relation_duality.rs` (and related) |
 | All order atoms (`<`, `<=`, `>`, `>=`, `not …`) | **This order pipeline** |
 | `IsSetFact` | Unconditional: `"Every object is a set."` |
@@ -146,13 +147,21 @@ Runs **before** known equalities and before generic same-shape recursion (`verif
 2. **`0 = x - y`** — If one side is literal `0` and the other is `x - y`, requires **`x = y`** via full `verify_objs_are_equal`.
 3. **`0 = a^n`** — Literal integer **`n > 0`**, requires **`a = 0`** (again full equality).
 4. **Log** — `log(base, base^exp) = exp`; plus product/quotient/power algebra on `log`; **`log(a,b)=c`** from **`a^c = b`** (pow inverse).
-5. **Same + calculation** — `verify_equality_by_they_are_the_same_and_calculation` (identity and partial evaluation).
-6. **Rational simplification** — If still plausible, **`objs_equal_by_rational_expression_evaluation`** on evaluated pair; reason `calculation and rational expression simplification`.
-7. **Two `fn` set values** — `verify_fn_set_with_params_equality_by_builtin_rules` (structural compare).
+5. **Finite sum (peel last index)** — Matches a **single** binary **`+`** on the other side: **`sum(i, a, e+1, F) = sum(i, a, e, F) + tail`** (either addend order). Same **`i`**, **`a`**, **`F`**; **`outer_end`** vs **`inner_end + 1`**; **`tail`** is **`inst_obj(F, { i ↦ outer_end }, Sum)`**. For **`tail`** that parses as several **`+`** (e.g. **`last + 1`**), parenthesize **`(last + 1)`** so the RHS is one **`+`** node. Reason: `equality: sum upper +1 = inner sum + term at new index`.
+6. **Finite sum (additivity, same bounds)** — **`sum(i, a, b, F+G) = sum(i, a, b, F) + sum(i, a, b, G)`** (one **`+`** on the other side; the two inner sums may be swapped). Reason: `equality: sum(summand + summand) = sum + sum same bounds`.
+7. **Finite sum (single index)** — If **`verify_objs_are_equal(a, b)`** on the outer sum’s **`start`** and **`end`**, then **`sum(i, a, b, F) = inst_obj(F, { i ↦ a }, Sum)`**. Reason: `equality: sum with start = end is single instantiated summand`.
+8. **Finite sum (split into two adjacent segments)** — **`sum(i, a, b, F) = sum(i, a, k, F) + sum(i, k+1, b, F)`** (order of the two sums around **`+`** either way). Same **`i`**, **`a`**, **`b`**, **`F`**; **`verify_objs_are_equal`** on **`first_end + 1`** vs **`second_start`**. Reason: `equality: sum splits into adjacent segments (end+1 = next start)`.
+9. **Same + calculation** — `verify_equality_by_they_are_the_same_and_calculation` (identity and partial evaluation).
+10. **Rational simplification** — If still plausible, **`objs_equal_by_rational_expression_evaluation`** on evaluated pair; reason `calculation and rational expression simplification`.
+11. **Two `fn` set values** — `verify_fn_set_with_params_equality_by_builtin_rules` (structural compare).
 
 ```lit
 fact 1 + 1 = 2
 fact 0 = t - t
+fact sum(i, 1, 3, i) = sum(i, 1, 2, i) + 3
+fact sum(i, start, end, body) = sum(i, start, middle, body) + sum(i, middle + 1, end, body)
+fact sum(i, 1, 3, i + i) = sum(i, 1, 3, i) + sum(i, 1, 3, i)
+fact sum(i, 1, 1, i) = 1
 ```
 
 ---

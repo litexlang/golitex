@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use crate::verify::number_is_in_z;
-use std::collections::HashSet;
 
 impl Runtime {
     pub fn parse_def_prop_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -699,47 +698,6 @@ impl Runtime {
         Ok((params_def_with_type, dom_facts))
     }
 
-    /// Like [`Self::parse_braced_params_and_optional_dom_facts`]: leaves **Def** scope open for the
-    /// rest of `struct` (fields and `<=>` facts).
-    fn parse_braced_struct_field_params_and_optional_dom_facts(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<(ParamDefWithType, Vec<OrAndChainAtomicFact>), RuntimeError> {
-        tb.skip_token(LEFT_BRACE)?;
-        let param_defs =
-            self.parse_def_struct_header_param_groups_until_colon_or_right_brace(tb)?;
-        let scope_names = param_defs.collect_param_names();
-        let dom_facts = if tb.current_token_is_equal_to(COLON) {
-            tb.skip_token(COLON)?;
-            let mut facts = vec![];
-            let dom_result = loop {
-                if tb.current()? == RIGHT_BRACE {
-                    break Ok(facts);
-                }
-                match self.parse_or_and_chain_atomic_fact(tb) {
-                    Ok(f) => facts.push(f),
-                    Err(e) => {
-                        self.parsing_free_param_collection
-                            .end_scope(ParamObjType::DefHeader, &scope_names);
-                        break Err(e);
-                    }
-                }
-                if tb.current_token_is_equal_to(COMMA) {
-                    tb.skip_token(COMMA)?;
-                }
-            };
-            dom_result?
-        } else {
-            vec![]
-        };
-        if let Err(e) = tb.skip_token(RIGHT_BRACE) {
-            self.parsing_free_param_collection
-                .end_scope(ParamObjType::DefHeader, &scope_names);
-            return Err(e);
-        }
-        Ok((param_defs, dom_facts))
-    }
-
     pub fn parse_def_family_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(FAMILY)?;
         let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
@@ -772,140 +730,6 @@ impl Runtime {
             })();
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::DefHeader, &family_def_scope_names);
-            stmt_result
-        })
-    }
-
-    pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(STRUCT)?;
-        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-
-        self.run_in_local_parsing_time_name_scope(move |this| {
-            let (param_defs, dom_facts) =
-                this.parse_braced_struct_field_params_and_optional_dom_facts(tb)?;
-            let struct_def_scope_names = param_defs.collect_param_names();
-            let stmt_result = (|| -> Result<Stmt, RuntimeError> {
-                if tb.current_token_is_equal_to(EQUAL) {
-                    return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "use `family` for set-style definitions (`... {} = ...`); `struct` requires field definitions after `:`"
-                        .to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
-                }
-                tb.skip_token(COLON)?;
-
-                if tb.body.is_empty() {
-                    return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "struct with fields expects body".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
-                }
-
-                let mut fields: Vec<(String, ParamType)> = vec![];
-                let mut facts: Vec<OrAndChainAtomicFact> = vec![];
-
-                let body_len = tb.body.len();
-                let last_index = body_len - 1;
-                let last_is_equiv = {
-                    let last = tb.body.get(last_index).ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "Expected body".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
-                    })?;
-                    last.current_token_is_equal_to(EQUIVALENT_SIGN)
-                };
-
-                let field_end = if last_is_equiv { last_index } else { body_len };
-
-                for i in 0..field_end {
-                    let block = tb.body.get_mut(i).ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "Expected field block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
-                    })?;
-                    let field_name = block.advance()?;
-                    let pt = this.parse_param_type(block)?;
-                    this.reject_nested_struct_param_type(&pt, block.line_file.clone())?;
-                    fields.push((field_name, pt));
-                }
-
-                let mut seen = HashSet::new();
-                for (field_name, _) in fields.iter() {
-                    if !seen.insert(field_name.clone()) {
-                        return Err(
-                            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                format!("struct `{}`: duplicate field `{}`", name, field_name),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
-                    }
-                }
-
-                if fields.len() <= 1 {
-                    return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "struct with fields expects at least two fields".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
-                }
-
-                if last_is_equiv {
-                    let last = tb.body.get_mut(last_index).ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "Expected <=>: block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
-                    })?;
-                    last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
-                    let field_names: Vec<String> =
-                        fields.iter().map(|(n, _)| n.clone()).collect();
-                    this.parsing_free_param_collection.begin_scope(
-                        ParamObjType::StructSelf,
-                        &field_names,
-                        tb.line_file.clone(),
-                    )?;
-                    for block in last.body.iter_mut() {
-                        facts.push(this.parse_or_and_chain_atomic_fact(block)?);
-                    }
-                    this.parsing_free_param_collection
-                        .end_scope(ParamObjType::StructSelf, &field_names);
-                }
-
-                Ok(DefStructStmt::new(
-                    name,
-                    param_defs,
-                    dom_facts,
-                    fields,
-                    facts,
-                    tb.line_file.clone(),
-                )
-                .into())
-            })();
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::DefHeader, &struct_def_scope_names);
             stmt_result
         })
     }
@@ -1019,7 +843,7 @@ impl Runtime {
         Ok(param_defs)
     }
 
-    /// After `{` is consumed: param-type groups until `:` or `}` (family / struct header); registers names.
+    /// After `{` is consumed: param-type groups until `:` or `}` (family header); registers names.
     fn parse_def_param_type_groups_until_colon_or_right_brace(
         &mut self,
         tb: &mut TokenBlock,
@@ -1034,23 +858,6 @@ impl Runtime {
         let param_names = params_def_with_type.collect_param_names();
         self.register_collected_param_names_for_def_parse(&param_names, tb.line_file.clone())?;
         Ok(params_def_with_type)
-    }
-
-    /// After `{` is consumed: struct header param groups until `:` or `}`; no nested `struct` type; registers names.
-    fn parse_def_struct_header_param_groups_until_colon_or_right_brace(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithType, RuntimeError> {
-        let mut groups = vec![];
-        while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
-            let def = self.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::DefHeader)?;
-            self.reject_nested_struct_param_type(&def.param_type, tb.line_file.clone())?;
-            groups.push(def);
-        }
-        let param_defs = ParamDefWithType::new(groups);
-        let param_names = param_defs.collect_param_names();
-        self.register_collected_param_names_for_def_parse(&param_names, tb.line_file.clone())?;
-        Ok(param_defs)
     }
 
     pub fn insert_parsed_name_into_top_parsing_time_name_scope(

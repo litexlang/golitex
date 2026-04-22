@@ -647,6 +647,74 @@ impl Runtime {
         }
     }
 
+    /// Finite `sum(i, lo, hi, body)` with integer bounds: substitute `i` for each value in `lo..=hi`,
+    /// resolve and evaluate each term, then add (empty range yields `0`).
+    fn eval_sum_expanded_for_eval_stmt(
+        &mut self,
+        sum: &SumObj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<Obj, RuntimeError> {
+        let start_eval = self.evaluate_symbol_obj_iterative(
+            self.resolve_obj(sum.start.as_ref()).clone(),
+            eval_stmt,
+        )?;
+        let end_eval = self.evaluate_symbol_obj_iterative(
+            self.resolve_obj(sum.end.as_ref()).clone(),
+            eval_stmt,
+        )?;
+        let Some(start_n) = start_eval.evaluate_to_normalized_decimal_number() else {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum lower bound must evaluate to a number".to_string(),
+                None,
+                vec![],
+            ));
+        };
+        let Some(end_n) = end_eval.evaluate_to_normalized_decimal_number() else {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum upper bound must evaluate to a number".to_string(),
+                None,
+                vec![],
+            ));
+        };
+        let start_i = match start_n.normalized_value.parse::<i64>() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    "eval: sum lower bound must be an integer".to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+        };
+        let end_i = match end_n.normalized_value.parse::<i64>() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    "eval: sum upper bound must be an integer".to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+        };
+        if start_i > end_i {
+            return Ok(Number::new("0".to_string()).into());
+        }
+        let mut acc = Number::new("0".to_string()).into();
+        for k in start_i..=end_i {
+            let mut m = HashMap::new();
+            m.insert(sum.param.clone(), Number::new(k.to_string()).into());
+            let body_inst = self.inst_obj(sum.body.as_ref(), &m, ParamObjType::Sum)?;
+            let body_resolved = self.resolve_obj(&body_inst);
+            let term = self.evaluate_symbol_obj_iterative(body_resolved, eval_stmt)?;
+            acc = self.evaluate_symbol_obj_iterative(Add::new(acc, term).into(), eval_stmt)?;
+        }
+        Ok(acc)
+    }
+
     pub fn exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &stmt.obj_to_eval,
@@ -654,18 +722,21 @@ impl Runtime {
         )?;
 
         let resolved_obj = self.resolve_obj(&stmt.obj_to_eval);
-        if !Self::object_supported_by_eval_stmt(&resolved_obj) {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                "eval: need a function call, numeric expression (+ - * / ^), or matrix ++ -- ** *. ^^ / matrix literal"
-                    .to_string(),
-                None,
-                vec![],
-            ));
-        }
-
         let eval_result = self.run_in_local_env(|rt| {
-            rt.evaluate_symbol_obj_iterative(resolved_obj.clone(), stmt)
+            if let Obj::Sum(ref sum) = resolved_obj {
+                rt.eval_sum_expanded_for_eval_stmt(sum, stmt)
+            } else {
+                if !Self::object_supported_by_eval_stmt(&resolved_obj) {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        "eval: need a function call, numeric expression (+ - * / ^), finite sum(...), or matrix ++ -- ** *. ^^ / matrix literal"
+                            .to_string(),
+                        None,
+                        vec![],
+                    ));
+                }
+                rt.evaluate_symbol_obj_iterative(resolved_obj.clone(), stmt)
+            }
         });
 
         let evaluated_obj = eval_result?;

@@ -144,12 +144,4 @@ prove:
         a $in fn(y N_pos) R
         a(1) = a(1)
 
-# --- Obj::StructObj (type object `struct Name(args)`) ---
-prove:
-    abstract_prop q(a)
-    struct ty(a set):
-        f a
-        f2 a
-        <=>:
-            $q(self.f)
-    $is_set(struct ty(R))
+# --- Obj::StructObj / `struct Name(args)` type objects — removed in this branch; see git history to restore. ---

@@ -8,7 +8,6 @@ pub enum ParamType {
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
     Obj(Obj),
-    Struct(StructObj),
 }
 
 /// Full parameter list with types, e.g. `a, b T, c E` as a sequence of [`ParamGroupWithParamType`].
@@ -172,7 +171,6 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
-            ParamType::Struct(struct_ty) => write!(f, "{}", struct_ty),
         }
     }
 }

@@ -1,19 +1,5 @@
 use crate::prelude::*;
 
-fn fact_for_obj_satisfies_param_type_shallow(
-    arg: Obj,
-    param_type: &ParamType,
-    line_file: LineFile,
-) -> Fact {
-    match param_type {
-        ParamType::Set(_) => IsSetFact::new(arg, line_file).into(),
-        ParamType::NonemptySet(_) => IsNonemptySetFact::new(arg, line_file).into(),
-        ParamType::FiniteSet(_) => IsFiniteSetFact::new(arg, line_file).into(),
-        ParamType::Obj(obj) => InFact::new(arg, obj.clone(), line_file).into(),
-        ParamType::Struct(st) => InFact::new(arg, Obj::StructObj(st.clone()), line_file).into(),
-    }
-}
-
 impl Runtime {
     /// After `store_identifier_obj`, run param-type-specific work (type facts, storage, and later hooks).
     pub fn define_parameter_by_binding_param_type(
@@ -65,9 +51,6 @@ impl Runtime {
             }
             ParamType::FiniteSet(finite_set) => {
                 self.define_parameter_by_binding_finite_set(name, finite_set, binding_kind)
-            }
-            ParamType::Struct(struct_ty) => {
-                self.define_parameter_by_binding_struct(name, struct_ty, binding_kind)
             }
         }
     }
@@ -136,73 +119,6 @@ impl Runtime {
         )
         .into();
         self.store_fact_without_well_defined_verified_and_infer(type_fact)
-    }
-
-    pub fn define_parameter_by_binding_struct(
-        &mut self,
-        name: &str,
-        struct_ty: &StructObj,
-        binding_kind: ParamObjType,
-    ) -> Result<InferResult, RuntimeError> {
-        self.register_param_as_struct_instance(name, struct_ty.clone());
-
-        let mut infer_result = InferResult::new();
-
-        let new_fact = InFact::new(
-            param_binding_element_obj_for_store(name.to_string(), binding_kind),
-            Obj::StructObj(struct_ty.clone()),
-            default_line_file(),
-        )
-        .into();
-        infer_result.new_infer_result_inside(
-            self.store_fact_without_well_defined_verified_and_infer(new_fact)?,
-        );
-
-        let struct_name = struct_ty.name.to_string();
-        let Some(def) = self.get_cloned_definition_of_struct(&struct_name) else {
-            return Ok(infer_result);
-        };
-
-        let base_map = def
-            .param_defs
-            .param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
-        let lf = default_line_file();
-        for (field_name, field_ty) in def.fields.iter() {
-            let arg = struct_instance_field_access_obj_for_binding(
-                name.to_string(),
-                field_name.clone(),
-                binding_kind,
-            );
-            let param_type = self.inst_param_type(field_ty, &base_map, ParamObjType::DefHeader)?;
-            let f = fact_for_obj_satisfies_param_type_shallow(arg, &param_type, lf.clone());
-
-            infer_result.new_infer_result_inside(
-                self.store_fact_without_well_defined_verified_and_infer(f)?,
-            );
-        }
-
-        let iff_facts =
-            self.instantiated_struct_iff_fact(struct_ty, &def, name, binding_kind)?;
-        for ocf in iff_facts {
-            let result =
-                self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(ocf)?;
-            infer_result.new_infer_result_inside(result);
-        }
-
-        Ok(infer_result)
-    }
-
-    pub fn register_param_as_struct_instance(&mut self, env_key: &str, inst: StructObj) {
-        let key = env_key.to_string();
-        self.top_level_env()
-            .known_identifier_satisfy_struct
-            .insert(key.clone(), inst);
-        self.top_level_env()
-            .cache_well_defined_obj
-            .insert(key.clone(), ());
-        self.top_level_env()
-            .defined_identifiers
-            .insert(key, ParamObjType::StructSelf);
     }
 
     pub fn define_params_with_type(

@@ -160,10 +160,7 @@ mod lit_file_runner_tests {
         println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
         let mut sum_of_per_file_duration_ms: f64 = 0.0;
         for (file_name, duration_ms) in file_name_and_duration_ms_list.iter() {
-            println!(
-                "  {}  {:.2} ms (user file only, no builtin)",
-                file_name, duration_ms
-            );
+            println!("  {}  {:.2} ms", file_name, duration_ms);
             sum_of_per_file_duration_ms += duration_ms;
         }
         println!(
