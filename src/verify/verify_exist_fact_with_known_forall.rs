@@ -280,6 +280,7 @@ impl Runtime {
             Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::Induc(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Sum(p)) => Some(p.name.as_str()),
             _ => None,
         }
     }
@@ -293,6 +294,7 @@ impl Runtime {
             Obj::Atom(AtomObj::SetBuilder(p)) => p.name == name,
             Obj::Atom(AtomObj::Induc(p)) => p.name == name,
             Obj::Atom(AtomObj::DefAlgo(p)) => p.name == name,
+            Obj::Atom(AtomObj::Sum(p)) => p.name == name,
             _ => obj.to_string() == name,
         }
     }
