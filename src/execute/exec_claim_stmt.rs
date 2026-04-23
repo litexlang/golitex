@@ -30,7 +30,7 @@ impl Runtime {
                         })?;
 
                     for dom_fact in forall_fact.dom_facts.iter() {
-                        rt.store_fact_without_well_defined_verified_and_infer(dom_fact.clone())?;
+                        rt.verify_well_defined_and_store_and_infer_with_final_round_verify_state(dom_fact.clone())?;
                     }
 
                     let mut inside_results = vec![];
@@ -115,7 +115,7 @@ impl Runtime {
                 }
 
                 let infer_result_after_store =
-                    self.store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())?;
+                    self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(stmt.fact.clone())?;
 
                 let mut result = non_err_after_body;
                 if let StmtResult::NonFactualStmtSuccess(ref mut nfs) = result {
@@ -156,7 +156,7 @@ impl Runtime {
                     Err(runtime_error) => return Err(runtime_error),
                 };
                 let infer_result_after_store =
-                    self.store_fact_without_well_defined_verified_and_infer(stmt.fact.clone())?;
+                    self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(stmt.fact.clone())?;
 
                 Ok(non_err_after_body.with_infers(infer_result_after_store))
             }
