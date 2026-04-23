@@ -33,7 +33,7 @@ impl Runtime {
     }
 
     fn get_matched_atomic_fact_in_known_forall_fact_in_envs(
-        &self,
+        &mut self,
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
         given_fact: &AtomicFact,
@@ -49,25 +49,44 @@ impl Runtime {
         let is_true = given_fact.is_true();
 
         let envs_count = self.environment_stack.len();
+        let lookup_key = (key.clone(), is_true);
         for i in iterate_from_env_index..envs_count {
-            let env = &self.environment_stack[envs_count - 1 - i];
-            if let Some(known_forall_facts_in_env) = env
-                .known_atomic_facts_in_forall_facts
-                .get(&(key.clone(), is_true))
-            {
-                let known_forall_facts_count = known_forall_facts_in_env.len();
-                for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
-                    let current_known_forall =
-                        &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
-                    let atomic_fact_args_in_known_forall = current_known_forall.0.args();
-                    let match_result =
-                        Self::match_atomic_fact_args_against_known_forall_ordered_args(
-                            &atomic_fact_args_in_known_forall,
-                            given_fact,
-                        )?;
-                    if let Some(arg_map) = match_result {
-                        return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
-                    }
+            let stack_idx = envs_count - 1 - i;
+            let known_forall_facts_count = {
+                let env = &self.environment_stack[stack_idx];
+                match env
+                    .known_atomic_facts_in_forall_facts
+                    .get(&lookup_key)
+                {
+                    Some(v) => v.len(),
+                    None => continue,
+                }
+            };
+            for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
+                let entry_idx = known_forall_facts_count - 1 - j;
+                let (atomic_fact_args_in_known_forall, current_known_forall) = {
+                    let env = &self.environment_stack[stack_idx];
+                    let Some(known_forall_facts_in_env) = env
+                        .known_atomic_facts_in_forall_facts
+                        .get(&lookup_key)
+                    else {
+                        continue;
+                    };
+                    let Some(current_known_forall) = known_forall_facts_in_env.get(entry_idx) else {
+                        continue;
+                    };
+                    (
+                        current_known_forall.0.args(),
+                        current_known_forall.clone(),
+                    )
+                };
+                let match_result =
+                    self.match_atomic_fact_args_against_known_forall_ordered_args(
+                        &atomic_fact_args_in_known_forall,
+                        given_fact,
+                    )?;
+                if let Some(arg_map) = match_result {
+                    return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
                 }
             }
         }
@@ -218,11 +237,12 @@ impl Runtime {
     }
 
     fn match_atomic_fact_args_against_known_forall_ordered_args(
+        &mut self,
         atomic_fact_args_in_known_forall: &Vec<Obj>,
         given_fact: &AtomicFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let given_args = given_fact.args();
-        let forward = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+        let forward = self.match_args_in_fact_in_known_forall_fact_with_given_args(
             atomic_fact_args_in_known_forall,
             &given_args,
         )?;
@@ -230,6 +250,7 @@ impl Runtime {
     }
 
     pub fn match_args_in_fact_in_known_forall_fact_with_given_args(
+        &mut self,
         fact_args_in_known_forall: &Vec<Obj>,
         given_fact_args: &Vec<Obj>,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
@@ -243,7 +264,7 @@ impl Runtime {
         for (arg_in_atomic_fact_in_known_forall, arg_in_given) in
             fact_args_in_known_forall.iter().zip(given_fact_args.iter())
         {
-            let sub_map_option = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            let sub_map_option = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                 arg_in_atomic_fact_in_known_forall,
                 arg_in_given,
             )?;
@@ -251,7 +272,7 @@ impl Runtime {
                 Some(m) => m,
                 None => return Ok(None),
             };
-            if !Self::merge_arg_match_map_into(
+            if !self.merge_arg_match_map_into(
                 &mut atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map,
                 sub_map,
             ) {
@@ -267,6 +288,7 @@ impl Runtime {
     // Return None if the given arg does not match the known arg.
     // Return Some(HashMap::new()) if the given arg matches the known arg.
     fn match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+        &mut self,
         known_arg: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
@@ -279,108 +301,108 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
-                Self::match_arg_when_left_is_identifier_with_mod(given_arg)
+                self.match_arg_when_left_is_identifier_with_mod(given_arg)
             }
-            Obj::FnObj(ref f) => Self::match_arg_when_left_is_fn_obj(f, given_arg),
-            Obj::Number(ref left) => Self::match_arg_when_left_is_number(left, given_arg),
-            Obj::Add(ref a) => Self::match_arg_when_left_is_add(&a.left, &a.right, given_arg),
+            Obj::FnObj(ref f) => self.match_arg_when_left_is_fn_obj(f, given_arg),
+            Obj::Number(ref left) => self.match_arg_when_left_is_number(left, given_arg),
+            Obj::Add(ref a) => self.match_arg_when_left_is_add(&a.left, &a.right, given_arg),
             Obj::MatrixAdd(ref a) => {
-                Self::match_arg_when_left_is_matrix_add(&a.left, &a.right, given_arg)
+                self.match_arg_when_left_is_matrix_add(&a.left, &a.right, given_arg)
             }
             Obj::MatrixSub(ref a) => {
-                Self::match_arg_when_left_is_matrix_sub(&a.left, &a.right, given_arg)
+                self.match_arg_when_left_is_matrix_sub(&a.left, &a.right, given_arg)
             }
             Obj::MatrixMul(ref a) => {
-                Self::match_arg_when_left_is_matrix_mul(&a.left, &a.right, given_arg)
+                self.match_arg_when_left_is_matrix_mul(&a.left, &a.right, given_arg)
             }
             Obj::MatrixScalarMul(ref a) => {
-                Self::match_arg_when_left_is_matrix_scalar_mul(&a.scalar, &a.matrix, given_arg)
+                self.match_arg_when_left_is_matrix_scalar_mul(&a.scalar, &a.matrix, given_arg)
             }
             Obj::MatrixPow(ref a) => {
-                Self::match_arg_when_left_is_matrix_pow(&a.base, &a.exponent, given_arg)
+                self.match_arg_when_left_is_matrix_pow(&a.base, &a.exponent, given_arg)
             }
-            Obj::Sub(ref a) => Self::match_arg_when_left_is_sub(&a.left, &a.right, given_arg),
-            Obj::Mul(ref a) => Self::match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
-            Obj::Div(ref a) => Self::match_arg_when_left_is_div(&a.left, &a.right, given_arg),
-            Obj::Mod(ref a) => Self::match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
-            Obj::Pow(ref a) => Self::match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
-            Obj::Abs(ref a) => Self::match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
-            Obj::Log(ref a) => Self::match_arg_when_left_is_log(&a.base, &a.arg, given_arg),
-            Obj::Max(ref a) => Self::match_arg_when_left_is_max(&a.left, &a.right, given_arg),
-            Obj::Min(ref a) => Self::match_arg_when_left_is_min(&a.left, &a.right, given_arg),
-            Obj::Union(ref a) => Self::match_arg_when_left_is_union(&a.left, &a.right, given_arg),
+            Obj::Sub(ref a) => self.match_arg_when_left_is_sub(&a.left, &a.right, given_arg),
+            Obj::Mul(ref a) => self.match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
+            Obj::Div(ref a) => self.match_arg_when_left_is_div(&a.left, &a.right, given_arg),
+            Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
+            Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
+            Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
+            Obj::Log(ref a) => self.match_arg_when_left_is_log(&a.base, &a.arg, given_arg),
+            Obj::Max(ref a) => self.match_arg_when_left_is_max(&a.left, &a.right, given_arg),
+            Obj::Min(ref a) => self.match_arg_when_left_is_min(&a.left, &a.right, given_arg),
+            Obj::Union(ref a) => self.match_arg_when_left_is_union(&a.left, &a.right, given_arg),
             Obj::Intersect(ref a) => {
-                Self::match_arg_when_left_is_intersect(&a.left, &a.right, given_arg)
+                self.match_arg_when_left_is_intersect(&a.left, &a.right, given_arg)
             }
             Obj::SetMinus(ref a) => {
-                Self::match_arg_when_left_is_set_minus(&a.left, &a.right, given_arg)
+                self.match_arg_when_left_is_set_minus(&a.left, &a.right, given_arg)
             }
             Obj::SetDiff(ref a) => {
-                Self::match_arg_when_left_is_set_diff(&a.left, &a.right, given_arg)
+                self.match_arg_when_left_is_set_diff(&a.left, &a.right, given_arg)
             }
-            Obj::Cup(ref a) => Self::match_arg_when_left_is_cup(&a.left, given_arg),
-            Obj::Cap(ref a) => Self::match_arg_when_left_is_cap(&a.left, given_arg),
-            Obj::ListSet(ref left) => Self::match_arg_when_left_is_list_set(&left.list, given_arg),
-            Obj::SetBuilder(_) => Self::match_arg_when_left_is_set_builder(given_arg),
+            Obj::Cup(ref a) => self.match_arg_when_left_is_cup(&a.left, given_arg),
+            Obj::Cap(ref a) => self.match_arg_when_left_is_cap(&a.left, given_arg),
+            Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
+            Obj::SetBuilder(_) => self.match_arg_when_left_is_set_builder(given_arg),
             Obj::FnSet(ref left) => {
-                Self::match_arg_when_left_is_fn_set_with_params(left, given_arg)
+                self.match_arg_when_left_is_fn_set_with_params(left, given_arg)
             }
             Obj::StandardSet(StandardSet::NPos) => {
-                Self::match_arg_when_left_is_n_pos_obj(given_arg)
+                self.match_arg_when_left_is_n_pos_obj(given_arg)
             }
-            Obj::StandardSet(StandardSet::N) => Self::match_arg_when_left_is_n_obj(given_arg),
-            Obj::StandardSet(StandardSet::Q) => Self::match_arg_when_left_is_q_obj(given_arg),
-            Obj::StandardSet(StandardSet::Z) => Self::match_arg_when_left_is_z_obj(given_arg),
-            Obj::StandardSet(StandardSet::R) => Self::match_arg_when_left_is_r_obj(given_arg),
-            Obj::Cart(ref left) => Self::match_arg_when_left_is_cart(&left.args, given_arg),
+            Obj::StandardSet(StandardSet::N) => self.match_arg_when_left_is_n_obj(given_arg),
+            Obj::StandardSet(StandardSet::Q) => self.match_arg_when_left_is_q_obj(given_arg),
+            Obj::StandardSet(StandardSet::Z) => self.match_arg_when_left_is_z_obj(given_arg),
+            Obj::StandardSet(StandardSet::R) => self.match_arg_when_left_is_r_obj(given_arg),
+            Obj::Cart(ref left) => self.match_arg_when_left_is_cart(&left.args, given_arg),
             Obj::CartDim(ref left) => {
-                Self::match_arg_when_left_is_cart_dim(left.set.as_ref(), given_arg)
+                self.match_arg_when_left_is_cart_dim(left.set.as_ref(), given_arg)
             }
             Obj::Proj(ref left) => {
-                Self::match_arg_when_left_is_proj(left.set.as_ref(), left.dim.as_ref(), given_arg)
+                self.match_arg_when_left_is_proj(left.set.as_ref(), left.dim.as_ref(), given_arg)
             }
             Obj::TupleDim(ref left) => {
-                Self::match_arg_when_left_is_dim(left.arg.as_ref(), given_arg)
+                self.match_arg_when_left_is_dim(left.arg.as_ref(), given_arg)
             }
-            Obj::Tuple(ref left) => Self::match_arg_when_left_is_tuple(&left.args, given_arg),
+            Obj::Tuple(ref left) => self.match_arg_when_left_is_tuple(&left.args, given_arg),
             Obj::FiniteSeqListObj(ref left) => {
-                Self::match_arg_when_left_is_finite_seq_list(&left.objs, given_arg)
+                self.match_arg_when_left_is_finite_seq_list(&left.objs, given_arg)
             }
             Obj::Count(ref left) => {
-                Self::match_arg_when_left_is_count(left.set.as_ref(), given_arg)
+                self.match_arg_when_left_is_count(left.set.as_ref(), given_arg)
             }
-            Obj::Range(ref left) => Self::match_arg_when_left_is_range(
+            Obj::Range(ref left) => self.match_arg_when_left_is_range(
                 left.start.as_ref(),
                 left.end.as_ref(),
                 given_arg,
             ),
-            Obj::ClosedRange(ref left) => Self::match_arg_when_left_is_closed_range(
+            Obj::ClosedRange(ref left) => self.match_arg_when_left_is_closed_range(
                 left.start.as_ref(),
                 left.end.as_ref(),
                 given_arg,
             ),
-            Obj::FiniteSeqSet(ref left) => Self::match_arg_when_left_is_finite_seq_set(
+            Obj::FiniteSeqSet(ref left) => self.match_arg_when_left_is_finite_seq_set(
                 left.set.as_ref(),
                 left.n.as_ref(),
                 given_arg,
             ),
             Obj::SeqSet(ref left) => {
-                Self::match_arg_when_left_is_seq_set(left.set.as_ref(), given_arg)
+                self.match_arg_when_left_is_seq_set(left.set.as_ref(), given_arg)
             }
             Obj::MatrixListObj(ref left) => {
-                Self::match_arg_when_left_is_matrix_list(&left.rows, given_arg)
+                self.match_arg_when_left_is_matrix_list(&left.rows, given_arg)
             }
-            Obj::MatrixSet(ref left) => Self::match_arg_when_left_is_matrix_set(
+            Obj::MatrixSet(ref left) => self.match_arg_when_left_is_matrix_set(
                 left.set.as_ref(),
                 left.row_len.as_ref(),
                 left.col_len.as_ref(),
                 given_arg,
             ),
             Obj::PowerSet(ref left) => {
-                Self::match_arg_when_left_is_power_set(left.set.as_ref(), given_arg)
+                self.match_arg_when_left_is_power_set(left.set.as_ref(), given_arg)
             }
             Obj::Choose(ref left) => {
-                Self::match_arg_when_left_is_choose(left.set.as_ref(), given_arg)
+                self.match_arg_when_left_is_choose(left.set.as_ref(), given_arg)
             }
             Obj::Sum(ref left) => {
                 if left.to_string() != given_arg.to_string() {
@@ -394,30 +416,30 @@ impl Runtime {
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::ObjAtIndex(ref left) => Self::match_arg_when_left_is_obj_at_index(
+            Obj::ObjAtIndex(ref left) => self.match_arg_when_left_is_obj_at_index(
                 left.obj.as_ref(),
                 left.index.as_ref(),
                 given_arg,
             ),
-            Obj::StandardSet(StandardSet::QPos) => Self::match_arg_when_left_is_q_pos(given_arg),
-            Obj::StandardSet(StandardSet::RPos) => Self::match_arg_when_left_is_r_pos(given_arg),
-            Obj::StandardSet(StandardSet::QNeg) => Self::match_arg_when_left_is_q_neg(given_arg),
-            Obj::StandardSet(StandardSet::ZNeg) => Self::match_arg_when_left_is_z_neg(given_arg),
-            Obj::StandardSet(StandardSet::RNeg) => Self::match_arg_when_left_is_r_neg(given_arg),
-            Obj::StandardSet(StandardSet::QNz) => Self::match_arg_when_left_is_q_nz(given_arg),
-            Obj::StandardSet(StandardSet::ZNz) => Self::match_arg_when_left_is_z_nz(given_arg),
-            Obj::StandardSet(StandardSet::RNz) => Self::match_arg_when_left_is_r_nz(given_arg),
+            Obj::StandardSet(StandardSet::QPos) => self.match_arg_when_left_is_q_pos(given_arg),
+            Obj::StandardSet(StandardSet::RPos) => self.match_arg_when_left_is_r_pos(given_arg),
+            Obj::StandardSet(StandardSet::QNeg) => self.match_arg_when_left_is_q_neg(given_arg),
+            Obj::StandardSet(StandardSet::ZNeg) => self.match_arg_when_left_is_z_neg(given_arg),
+            Obj::StandardSet(StandardSet::RNeg) => self.match_arg_when_left_is_r_neg(given_arg),
+            Obj::StandardSet(StandardSet::QNz) => self.match_arg_when_left_is_q_nz(given_arg),
+            Obj::StandardSet(StandardSet::ZNz) => self.match_arg_when_left_is_z_nz(given_arg),
+            Obj::StandardSet(StandardSet::RNz) => self.match_arg_when_left_is_r_nz(given_arg),
             Obj::FamilyObj(known) => match given_arg {
                 Obj::FamilyObj(given) => {
                     if known.name.to_string() != given.name.to_string() {
                         return Ok(None);
                     }
-                    Self::match_arg_vec_then_merge(&known.params, &given.params)
+                    self.match_arg_vec_then_merge(&known.params, &given.params)
                 }
                 _ => Ok(None),
             },
             Obj::Atom(AtomObj::Forall(ref p)) => {
-                Self::match_arg_when_left_is_forall_param(p, given_arg)
+                self.match_arg_when_left_is_forall_param(p, given_arg)
             }
             Obj::Atom(AtomObj::Def(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
@@ -478,6 +500,7 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_forall_param(
+        &mut self,
         id_known: &ForallFreeParamObj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
@@ -487,15 +510,19 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_identifier_with_mod(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Atom(AtomObj::IdentifierWithMod(_)) => Self::match_arg_type_not_implemented("IdentifierWithMod"),
+            Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
+                self.match_arg_type_not_implemented("IdentifierWithMod")
+            }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_fn_obj(
+        &mut self,
         left: &FnObj,
         right: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
@@ -510,7 +537,7 @@ impl Runtime {
                 let right_head: Obj = right_fn.head.as_ref().clone().into();
 
                 // heads must match
-                let head_match = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                let head_match = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     &left_head,
                     &right_head,
                 )?;
@@ -525,14 +552,14 @@ impl Runtime {
                     }
                     for (left_arg, right_arg) in left_row.iter().zip(right_row.iter()) {
                         let sub_map =
-                            match Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                            match self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                                 left_arg.as_ref(),
                                 right_arg.as_ref(),
                             )? {
                                 Some(m) => m,
                                 None => return Ok(None),
                             };
-                        if !Self::merge_arg_match_map_into(&mut head_map, sub_map) {
+                        if !self.merge_arg_match_map_into(&mut head_map, sub_map) {
                             return Ok(None);
                         }
                     }
@@ -545,6 +572,7 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_number(
+        &mut self,
         left: &Number,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
@@ -560,89 +588,95 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_matrix_add(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::MatrixAdd(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_matrix_sub(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::MatrixSub(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_matrix_mul(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::MatrixMul(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_matrix_scalar_mul(
+        &mut self,
         left_scalar: &Obj,
         left_matrix: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::MatrixScalarMul(ref g) => {
-                Self::match_arg_binary_then_merge(left_scalar, left_matrix, &g.scalar, &g.matrix)
+                self.match_arg_binary_then_merge(left_scalar, left_matrix, &g.scalar, &g.matrix)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_matrix_pow(
+        &mut self,
         left_base: &Obj,
         left_exp: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::MatrixPow(ref g) => {
-                Self::match_arg_binary_then_merge(left_base, left_exp, &g.base, &g.exponent)
+                self.match_arg_binary_then_merge(left_base, left_exp, &g.base, &g.exponent)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_add(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Add(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => {
                 if let Obj::Number(left_left_number) = left_left {
                     let new_given = Sub::new(given_arg.clone(), left_left_number.clone().into());
-                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                         left_right,
                         &new_given.into(),
                     );
                 } else if let Obj::Number(left_right_number) = left_right {
                     let new_given = Sub::new(given_arg.clone(), left_right_number.clone().into());
-                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                         left_left,
                         &new_given.into(),
                     );
@@ -654,24 +688,25 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_sub(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Sub(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => {
                 if let Obj::Number(right_number) = left_right {
                     let new_given = Add::new(right_number.clone().into(), given_arg.clone());
-                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                         left_left,
                         &new_given.into(),
                     );
                 } else if let Obj::Number(left_left_number) = left_left {
                     let new_given = Sub::new(left_left_number.clone().into(), given_arg.clone());
-                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                         left_right,
                         &new_given.into(),
                     );
@@ -683,13 +718,14 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_mul(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Mul(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => {
                 let neg_one: Obj = Number::new("-1".to_string()).into();
@@ -702,7 +738,7 @@ impl Runtime {
                 };
                 if known_left_is_neg_one {
                     let synthetic: Obj = Mul::new(neg_one, given_arg.clone()).into();
-                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                         left_right, &synthetic,
                     );
                 } else {
@@ -712,14 +748,14 @@ impl Runtime {
                         } else {
                             let synthetic: Obj =
                                 Div::new(given_arg.clone(), n.clone().into()).into();
-                            return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                            return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                                 left_right, &synthetic,
                             );
                         }
                     } else if let Obj::Number(left_right_number) = left_right {
                         let new_given =
                             Div::new(given_arg.clone(), left_right_number.clone().into());
-                        return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                             left_left,
                             &new_given.into(),
                         );
@@ -732,18 +768,19 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_div(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Div(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => {
                 if let Obj::Number(left_right_number) = left_right {
                     let new_given = Mul::new(left_right_number.clone().into(), given_arg.clone());
-                    return Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                         left_left,
                         &new_given.into(),
                     );
@@ -755,153 +792,165 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_mod(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Mod(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_pow(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Pow(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.base, &g.exponent)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.base, &g.exponent)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_abs(
+        &mut self,
         left_arg: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Abs(ref g) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_arg, &g.arg)
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_arg, &g.arg)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_log(
+        &mut self,
         left_base: &Obj,
         left_arg: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Log(ref g) => {
-                Self::match_arg_binary_then_merge(left_base, left_arg, &g.base, &g.arg)
+                self.match_arg_binary_then_merge(left_base, left_arg, &g.base, &g.arg)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_max(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Max(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_min(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Min(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_union(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Union(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_intersect(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Intersect(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_set_minus(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::SetMinus(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_set_diff(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::SetDiff(ref g) => {
-                Self::match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
+                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_cup(
+        &mut self,
         left_left: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Cup(ref g) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_left, &g.left)
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_left, &g.left)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_cap(
+        &mut self,
         left_left: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Cap(ref g) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_left, &g.left)
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_left, &g.left)
             }
             _ => Ok(None),
         }
@@ -909,28 +958,30 @@ impl Runtime {
 
     /// Match two pairs (left_left, given_left) and (left_right, given_right); if either returns None, return None; else merge maps and return Some(merged).
     fn match_arg_binary_then_merge(
+        &mut self,
         left_left: &Obj,
         left_right: &Obj,
         given_left: &Obj,
         given_right: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let left_res =
-            Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_left, given_left)?;
+            self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_left, given_left)?;
         let map1 = match left_res {
             Some(m) => m,
             None => return Ok(None),
         };
         let right_res =
-            Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_right, given_right)?;
+            self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_right, given_right)?;
         let map2 = match right_res {
             Some(m) => m,
             None => return Ok(None),
         };
-        let merged = Self::merge_arg_match_maps(map1, map2);
+        let merged = self.merge_arg_match_maps(map1, map2);
         Ok(merged)
     }
 
     fn match_arg_ternary_then_merge(
+        &mut self,
         a1: &Obj,
         a2: &Obj,
         a3: &Obj,
@@ -938,21 +989,22 @@ impl Runtime {
         b2: &Obj,
         b3: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let m12 = Self::match_arg_binary_then_merge(a1, a2, b1, b2)?;
+        let m12 = self.match_arg_binary_then_merge(a1, a2, b1, b2)?;
         let map12 = match m12 {
             Some(m) => m,
             None => return Ok(None),
         };
-        let m3 = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(a3, b3)?;
+        let m3 = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(a3, b3)?;
         let map3 = match m3 {
             Some(m) => m,
             None => return Ok(None),
         };
-        Ok(Self::merge_arg_match_maps(map12, map3))
+        Ok(self.merge_arg_match_maps(map12, map3))
     }
 
     /// Merge `from` into `into`. Returns `false` when a key is already bound to a different object (`Display`).
     fn merge_arg_match_map_into(
+        &mut self,
         into: &mut HashMap<String, Obj>,
         from: HashMap<String, Obj>,
     ) -> bool {
@@ -968,10 +1020,11 @@ impl Runtime {
     }
 
     fn merge_arg_match_maps(
+        &mut self,
         mut map1: HashMap<String, Obj>,
         map2: HashMap<String, Obj>,
     ) -> Option<HashMap<String, Obj>> {
-        if !Self::merge_arg_match_map_into(&mut map1, map2) {
+        if !self.merge_arg_match_map_into(&mut map1, map2) {
             return None;
         }
         Some(map1)
@@ -979,17 +1032,18 @@ impl Runtime {
 
     /// Zip known/given argument pairs of equal length; merge substitution maps from each recursive match.
     fn match_arg_pairs_then_merge<'a>(
+        &mut self,
         pairs: impl Iterator<Item = (&'a Obj, &'a Obj)>,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (left_elem, given_elem) in pairs {
-            let sub_map = match Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            let sub_map = match self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                 left_elem, given_elem,
             )? {
                 Some(m) => m,
                 None => return Ok(None),
             };
-            if !Self::merge_arg_match_map_into(&mut merged, sub_map) {
+            if !self.merge_arg_match_map_into(&mut merged, sub_map) {
                 return Ok(None);
             }
         }
@@ -997,13 +1051,14 @@ impl Runtime {
     }
 
     fn match_boxed_arg_vec_then_merge(
+        &mut self,
         left_elements: &[Box<Obj>],
         given_elements: &[Box<Obj>],
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if left_elements.len() != given_elements.len() {
             return Ok(None);
         }
-        Self::match_arg_pairs_then_merge(
+        self.match_arg_pairs_then_merge(
             left_elements
                 .iter()
                 .zip(given_elements.iter())
@@ -1012,16 +1067,18 @@ impl Runtime {
     }
 
     fn match_arg_vec_then_merge(
+        &mut self,
         left: &[Obj],
         given: &[Obj],
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if left.len() != given.len() {
             return Ok(None);
         }
-        Self::match_arg_pairs_then_merge(left.iter().zip(given.iter()).map(|(l, g)| (l, g)))
+        self.match_arg_pairs_then_merge(left.iter().zip(given.iter()).map(|(l, g)| (l, g)))
     }
 
     fn match_arg_matrix_rows_then_merge(
+        &mut self,
         left_rows: &[Vec<Box<Obj>>],
         given_rows: &[Vec<Box<Obj>>],
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
@@ -1030,11 +1087,11 @@ impl Runtime {
         }
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (lr, gr) in left_rows.iter().zip(given_rows.iter()) {
-            let sub_map = match Self::match_boxed_arg_vec_then_merge(lr, gr)? {
+            let sub_map = match self.match_boxed_arg_vec_then_merge(lr, gr)? {
                 Some(m) => m,
                 None => return Ok(None),
             };
-            if !Self::merge_arg_match_map_into(&mut merged, sub_map) {
+            if !self.merge_arg_match_map_into(&mut merged, sub_map) {
                 return Ok(None);
             }
         }
@@ -1042,25 +1099,27 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_list_set(
+        &mut self,
         left_list: &[Box<Obj>],
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::ListSet(ref given) => Self::match_boxed_arg_vec_then_merge(left_list, &given.list),
+            Obj::ListSet(ref given) => self.match_boxed_arg_vec_then_merge(left_list, &given.list),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_set_builder(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::SetBuilder(_) => Self::match_arg_type_not_implemented("SetBuilder"),
+            Obj::SetBuilder(_) => self.match_arg_type_not_implemented("SetBuilder"),
             _ => Ok(None),
         }
     }
 
-    fn flatten_fn_set_with_params_param_sets_for_match(fn_set: &FnSet) -> Vec<Box<Obj>> {
+    fn flatten_fn_set_with_params_param_sets_for_match(&mut self, fn_set: &FnSet) -> Vec<Box<Obj>> {
         let mut flat_param_sets: Vec<Box<Obj>> = Vec::new();
         for param_def_with_set in &fn_set.params_def_with_set {
             for _param_name in param_def_with_set.params.iter() {
@@ -1071,22 +1130,23 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_fn_set_with_params(
+        &mut self,
         left: &FnSet,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::FnSet(ref given) => {
                 if !left.dom_facts.is_empty() || !given.dom_facts.is_empty() {
-                    return Self::match_arg_type_not_implemented("FnSetWithParams with dom_facts");
+                    return self.match_arg_type_not_implemented("FnSetWithParams with dom_facts");
                 }
-                let left_flat = Self::flatten_fn_set_with_params_param_sets_for_match(left);
-                let given_flat = Self::flatten_fn_set_with_params_param_sets_for_match(given);
-                let param_maps = Self::match_boxed_arg_vec_then_merge(&left_flat, &given_flat)?;
+                let left_flat = self.flatten_fn_set_with_params_param_sets_for_match(left);
+                let given_flat = self.flatten_fn_set_with_params_param_sets_for_match(given);
+                let param_maps = self.match_boxed_arg_vec_then_merge(&left_flat, &given_flat)?;
                 let param_map = match param_maps {
                     Some(m) => m,
                     None => return Ok(None),
                 };
-                let ret_map = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                let ret_map = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left.ret_set.as_ref(),
                     given.ret_set.as_ref(),
                 )?;
@@ -1094,7 +1154,7 @@ impl Runtime {
                     Some(m) => m,
                     None => return Ok(None),
                 };
-                let merged = Self::merge_arg_match_maps(param_map, ret_map);
+                let merged = self.merge_arg_match_maps(param_map, ret_map);
                 Ok(merged)
             }
             _ => Ok(None),
@@ -1102,67 +1162,74 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_n_pos_obj(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::NPos) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_n_obj(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::N) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::N) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_q_obj(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::Q) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::Q) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_z_obj(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::Z) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::Z) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_r_obj(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::R) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::R) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_cart(
+        &mut self,
         left_args: &[Box<Obj>],
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Cart(ref given) => Self::match_boxed_arg_vec_then_merge(left_args, &given.args),
+            Obj::Cart(ref given) => self.match_boxed_arg_vec_then_merge(left_args, &given.args),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_cart_dim(
+        &mut self,
         left_set: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::CartDim(ref given) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_set,
                     given.set.as_ref(),
                 )
@@ -1172,12 +1239,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_proj(
+        &mut self,
         left_set: &Obj,
         left_dim: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Proj(ref given) => Self::match_arg_binary_then_merge(
+            Obj::Proj(ref given) => self.match_arg_binary_then_merge(
                 left_set,
                 left_dim,
                 given.set.as_ref(),
@@ -1188,12 +1256,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_dim(
+        &mut self,
         left_dim: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::TupleDim(ref given) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_dim,
                     given.arg.as_ref(),
                 )
@@ -1203,35 +1272,38 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_tuple(
+        &mut self,
         left_elements: &[Box<Obj>],
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Tuple(ref given) => {
-                Self::match_boxed_arg_vec_then_merge(left_elements, &given.args)
+                self.match_boxed_arg_vec_then_merge(left_elements, &given.args)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_finite_seq_list(
+        &mut self,
         left_elements: &[Box<Obj>],
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::FiniteSeqListObj(ref given) => {
-                Self::match_boxed_arg_vec_then_merge(left_elements, &given.objs)
+                self.match_boxed_arg_vec_then_merge(left_elements, &given.objs)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_count(
+        &mut self,
         left_set: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Count(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            Obj::Count(ref given) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                 left_set,
                 given.set.as_ref(),
             ),
@@ -1240,12 +1312,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_range(
+        &mut self,
         left_start: &Obj,
         left_end: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Range(ref given) => Self::match_arg_binary_then_merge(
+            Obj::Range(ref given) => self.match_arg_binary_then_merge(
                 left_start,
                 left_end,
                 given.start.as_ref(),
@@ -1256,12 +1329,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_closed_range(
+        &mut self,
         left_start: &Obj,
         left_end: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::ClosedRange(ref given) => Self::match_arg_binary_then_merge(
+            Obj::ClosedRange(ref given) => self.match_arg_binary_then_merge(
                 left_start,
                 left_end,
                 given.start.as_ref(),
@@ -1272,12 +1346,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_finite_seq_set(
+        &mut self,
         left_set: &Obj,
         left_n: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::FiniteSeqSet(ref given) => Self::match_arg_binary_then_merge(
+            Obj::FiniteSeqSet(ref given) => self.match_arg_binary_then_merge(
                 left_set,
                 left_n,
                 given.set.as_ref(),
@@ -1288,12 +1363,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_seq_set(
+        &mut self,
         left_set: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::SeqSet(ref given) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_set,
                     given.set.as_ref(),
                 )
@@ -1303,25 +1379,27 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_matrix_list(
+        &mut self,
         left_rows: &[Vec<Box<Obj>>],
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::MatrixListObj(ref given) => {
-                Self::match_arg_matrix_rows_then_merge(left_rows, &given.rows)
+                self.match_arg_matrix_rows_then_merge(left_rows, &given.rows)
             }
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_matrix_set(
+        &mut self,
         left_set: &Obj,
         left_row_len: &Obj,
         left_col_len: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::MatrixSet(ref given) => Self::match_arg_ternary_then_merge(
+            Obj::MatrixSet(ref given) => self.match_arg_ternary_then_merge(
                 left_set,
                 left_row_len,
                 left_col_len,
@@ -1334,12 +1412,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_power_set(
+        &mut self,
         left_set: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::PowerSet(ref given) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_set,
                     given.set.as_ref(),
                 )
@@ -1349,12 +1428,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_choose(
+        &mut self,
         left_set: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Choose(ref given) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_set,
                     given.set.as_ref(),
                 )
@@ -1364,12 +1444,13 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_obj_at_index(
+        &mut self,
         left_obj: &Obj,
         left_index: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::ObjAtIndex(ref given) => Self::match_arg_binary_then_merge(
+            Obj::ObjAtIndex(ref given) => self.match_arg_binary_then_merge(
                 left_obj,
                 left_index,
                 given.obj.as_ref(),
@@ -1380,84 +1461,93 @@ impl Runtime {
     }
 
     fn match_arg_when_left_is_q_pos(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::QPos) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::QPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_r_pos(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::RPos) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::RPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_q_neg(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::QNeg) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::QNeg) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_z_neg(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::ZNeg) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::ZNeg) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_r_neg(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::RNeg) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::RNeg) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_q_nz(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::QNz) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::QNz) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_z_nz(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::ZNz) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::ZNz) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_r_nz(
+        &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::RNz) => Self::match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::RNz) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_same_type(given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+    fn match_arg_same_type(&mut self, given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let mut map = HashMap::new();
         map.insert(given_arg.to_string(), given_arg.clone());
         Ok(Some(map))
     }
 
     fn match_arg_type_not_implemented(
+        &mut self,
         obj_type_name: &str,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let _ = obj_type_name;
