@@ -1,3 +1,4 @@
-# Builtin: finite enum sets with different lengths cannot be equal.
-prove:
-    {1, 2} != {1, 2, 3}
+forall x Z:
+    x >= 2
+    =>:
+        x - 1 >= 0
