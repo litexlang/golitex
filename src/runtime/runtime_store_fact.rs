@@ -8,17 +8,16 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeError> {
         if let Err(wd_err) = self.verify_fact_well_defined(&fact, verify_state) {
-            let line_file = fact.line_file();
             return Err(StoreFactRuntimeError(RuntimeErrorStruct::new(
                 Some(fact.clone().into_stmt()),
                 "cannot store fact: not well-defined".to_string(),
-                line_file,
+                fact.line_file(),
                 Some(wd_err),
                 vec![],
             ))
             .into());
         }
-        self.store_fact_without_well_defined_verified_and_infer(fact)
+        self.store_and_infer_fact_without_well_defined_verified(fact)
     }
 
     pub fn verify_well_defined_and_store_and_infer_with_default_verify_state(
@@ -33,7 +32,7 @@ impl Runtime {
         self.verify_well_defined_and_store_and_infer(fact, &verify_state)
     }
 
-    fn store_fact_without_well_defined_verified_and_infer(
+    fn store_and_infer_fact_without_well_defined_verified(
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {
