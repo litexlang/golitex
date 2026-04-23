@@ -29,7 +29,7 @@ impl Runtime {
 
         let equal_atomic = EqualFact::new(left, right, stmt.line_file.clone());
         let equal_fact: Fact = equal_atomic.into();
-        match self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(equal_fact.clone()) {
+        match self.verify_well_defined_and_store_and_infer_with_default_verify_state(equal_fact.clone()) {
             Ok(mut infer_result) => {
                 infer_result.new_fact(&equal_fact);
                 Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())
