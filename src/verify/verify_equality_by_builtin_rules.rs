@@ -483,11 +483,9 @@ impl Runtime {
         if !bodies_equal {
             return Ok(None);
         }
-        let display_left: Obj = left.clone().into();
-        let display_right: Obj = right.clone().into();
         Ok(Some(factual_equal_success_by_builtin_reason(
-            &display_left,
-            &display_right,
+            &left.clone().into(),
+            &right.clone().into(),
             line_file,
             "equality: two sums same index and bounds; summands equal under index assumptions",
         )))
@@ -515,11 +513,8 @@ impl Runtime {
         outer: &SumObj,
         inner: &SumObj,
         actual_tail: &Obj,
-        display_left: &Obj,
-        display_right: &Obj,
-        line_file: LineFile,
         _verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<()>, RuntimeError> {
         let one: Obj = Number::new("1".to_string()).into();
         if outer.param != inner.param {
             return Ok(None);
@@ -542,12 +537,7 @@ impl Runtime {
         if !objs_equal_by_display_string(actual_tail, &expected_tail) {
             return Ok(None);
         }
-        Ok(Some(factual_equal_success_by_builtin_reason(
-            display_left,
-            display_right,
-            line_file,
-            "equality: sum upper +1 = inner sum + term at new index",
-        )))
+        Ok(Some(()))
     }
 
     fn try_verify_sum_peel_last_term_equality(
@@ -564,16 +554,19 @@ impl Runtime {
                     (add.right.as_ref(), add.left.as_ref()),
                 ] {
                     if let Obj::Sum(rsum) = sum_side {
-                        if let Some(done) = self.try_finish_sum_peel_equality(
+                        if self.try_finish_sum_peel_equality(
                             lsum,
                             rsum,
                             tail_side,
-                            left,
-                            right,
-                            line_file.clone(),
                             verify_state,
-                        )? {
-                            return Ok(Some(done));
+                        )? == Some(())
+                        {
+                            return Ok(Some(factual_equal_success_by_builtin_reason(
+                                left,
+                                right,
+                                line_file,
+                                "equality: sum upper +1 = inner sum + term at new index",
+                            )));
                         }
                     }
                 }
@@ -586,16 +579,19 @@ impl Runtime {
                     (add.right.as_ref(), add.left.as_ref()),
                 ] {
                     if let Obj::Sum(lsum) = sum_side {
-                        if let Some(done) = self.try_finish_sum_peel_equality(
+                        if self.try_finish_sum_peel_equality(
                             rsum,
                             lsum,
                             tail_side,
-                            left,
-                            right,
-                            line_file.clone(),
                             verify_state,
-                        )? {
-                            return Ok(Some(done));
+                        )? == Some(())
+                        {
+                            return Ok(Some(factual_equal_success_by_builtin_reason(
+                                left,
+                                right,
+                                line_file,
+                                "equality: sum upper +1 = inner sum + term at new index",
+                            )));
                         }
                     }
                 }
@@ -610,16 +606,14 @@ impl Runtime {
         &mut self,
         outer: &SumObj,
         other: &Obj,
-        display_left: &Obj,
-        display_right: &Obj,
-        line_file: LineFile,
+        _line_file: LineFile,
         _verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<bool, RuntimeError> {
         let Obj::Add(body_add) = outer.body.as_ref() else {
-            return Ok(None);
+            return Ok(false);
         };
         let Obj::Add(outer_add) = other else {
-            return Ok(None);
+            return Ok(false);
         };
         for (x_side, y_side) in [
             (outer_add.left.as_ref(), outer_add.right.as_ref()),
@@ -648,16 +642,11 @@ impl Runtime {
                 let match_gf = objs_equal_by_display_string(fl, sy.body.as_ref())
                     && objs_equal_by_display_string(fr, sx.body.as_ref());
                 if match_fg || match_gf {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        display_left,
-                        display_right,
-                        line_file,
-                        "equality: sum(summand + summand) = sum + sum same bounds",
-                    )));
+                    return Ok(true);
                 }
             }
         }
-        Ok(None)
+        Ok(false)
     }
 
     fn try_verify_sum_additivity_same_bounds_equality(
@@ -668,27 +657,33 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::Sum(lsum) = left {
-            if let Some(done) = self.try_match_sum_additivity_one_direction(
+            if self.try_match_sum_additivity_one_direction(
                 lsum,
-                right,
-                left,
                 right,
                 line_file.clone(),
                 verify_state,
             )? {
-                return Ok(Some(done));
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum(summand + summand) = sum + sum same bounds",
+                )));
             }
         }
         if let Obj::Sum(rsum) = right {
-            if let Some(done) = self.try_match_sum_additivity_one_direction(
+            if self.try_match_sum_additivity_one_direction(
                 rsum,
                 left,
-                left,
-                right,
                 line_file.clone(),
                 verify_state,
             )? {
-                return Ok(Some(done));
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum(summand + summand) = sum + sum same bounds",
+                )));
             }
         }
         Ok(None)
@@ -699,28 +694,21 @@ impl Runtime {
         &mut self,
         s: &SumObj,
         other: &Obj,
-        display_left: &Obj,
-        display_right: &Obj,
-        line_file: LineFile,
+        _line_file: LineFile,
         _verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<bool, RuntimeError> {
         if !objs_equal_by_display_string(s.start.as_ref(), s.end.as_ref()) {
-            return Ok(None);
+            return Ok(false);
         }
         let mut m = HashMap::new();
         m.insert(s.param.clone(), (*s.start).clone());
         let Ok(inst_body) = self.inst_obj(s.body.as_ref(), &m, ParamObjType::Sum) else {
-            return Ok(None);
+            return Ok(false);
         };
         if !objs_equal_by_display_string(&inst_body, other) {
-            return Ok(None);
+            return Ok(false);
         }
-        Ok(Some(factual_equal_success_by_builtin_reason(
-            display_left,
-            display_right,
-            line_file,
-            "equality: sum with start = end is single instantiated summand",
-        )))
+        Ok(true)
     }
 
     fn try_verify_sum_single_index_interval_equality(
@@ -731,27 +719,33 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::Sum(lsum) = left {
-            if let Some(done) = self.try_match_sum_single_index_interval_one_direction(
+            if self.try_match_sum_single_index_interval_one_direction(
                 lsum,
-                right,
-                left,
                 right,
                 line_file.clone(),
                 verify_state,
             )? {
-                return Ok(Some(done));
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum with start = end is single instantiated summand",
+                )));
             }
         }
         if let Obj::Sum(rsum) = right {
-            if let Some(done) = self.try_match_sum_single_index_interval_one_direction(
+            if self.try_match_sum_single_index_interval_one_direction(
                 rsum,
                 left,
-                left,
-                right,
                 line_file.clone(),
                 verify_state,
             )? {
-                return Ok(Some(done));
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum with start = end is single instantiated summand",
+                )));
             }
         }
         Ok(None)
@@ -858,16 +852,14 @@ impl Runtime {
         &mut self,
         outer: &SumObj,
         other: &Obj,
-        display_left: &Obj,
-        display_right: &Obj,
-        line_file: LineFile,
+        _line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<bool, RuntimeError> {
         let Obj::Mul(body_mul) = outer.body.as_ref() else {
-            return Ok(None);
+            return Ok(false);
         };
         let Obj::Mul(rhs_mul) = other else {
-            return Ok(None);
+            return Ok(false);
         };
         for (lk, lc) in [
             (body_mul.left.as_ref(), body_mul.right.as_ref()),
@@ -905,15 +897,10 @@ impl Runtime {
                 if !obj_lexically_bound_sum_product_index_atoms(lk, &mut bound) {
                     continue;
                 }
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    display_left,
-                    display_right,
-                    line_file,
-                    "equality: sum(k * summand) = k * sum(summand) with k well-defined and independent of sum index",
-                )));
+                return Ok(true);
             }
         }
-        Ok(None)
+        Ok(false)
     }
 
     fn try_verify_sum_scalar_factor_out_equality(
@@ -924,27 +911,33 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::Sum(lsum) = left {
-            if let Some(done) = self.try_match_sum_scalar_factor_out_one_direction(
+            if self.try_match_sum_scalar_factor_out_one_direction(
                 lsum,
-                right,
-                left,
                 right,
                 line_file.clone(),
                 verify_state,
             )? {
-                return Ok(Some(done));
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum(k * summand) = k * sum(summand) with k well-defined and independent of sum index",
+                )));
             }
         }
         if let Obj::Sum(rsum) = right {
-            if let Some(done) = self.try_match_sum_scalar_factor_out_one_direction(
+            if self.try_match_sum_scalar_factor_out_one_direction(
                 rsum,
                 left,
-                left,
-                right,
                 line_file.clone(),
                 verify_state,
             )? {
-                return Ok(Some(done));
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum(k * summand) = k * sum(summand) with k well-defined and independent of sum index",
+                )));
             }
         }
         Ok(None)
