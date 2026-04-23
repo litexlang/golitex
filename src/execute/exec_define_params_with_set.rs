@@ -37,7 +37,7 @@ impl Runtime {
                     )))
                 })?;
             let fact_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_final_round_verify_state(fact.clone())
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(fact.clone())
                 .map_err(|store_fact_error| {
                     RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
                         None,

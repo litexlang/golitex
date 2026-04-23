@@ -26,7 +26,7 @@ impl Runtime {
                 }
             };
             infer_result.new_infer_result_inside(
-                self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(new_fact)?,
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(new_fact)?,
             );
         }
 

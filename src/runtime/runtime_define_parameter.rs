@@ -21,7 +21,7 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(type_fact)
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
                 }
                 Obj::SeqSet(ss) => {
                     let fn_set = self.seq_set_to_fn_set(ss, default_line_file());
@@ -31,7 +31,7 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(type_fact)
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
                 }
                 Obj::MatrixSet(ms) => {
                     let fn_set = self.matrix_set_to_fn_set(ms, default_line_file());
@@ -41,7 +41,7 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(type_fact)
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
                 }
                 _ => self.define_parameter_by_binding_obj(name, obj, binding_kind),
             },
@@ -76,7 +76,7 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
     }
 
     fn define_parameter_by_binding_set(
@@ -90,7 +90,7 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
     }
 
     fn define_parameter_by_binding_nonempty_set(
@@ -104,7 +104,7 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
     }
 
     fn define_parameter_by_binding_finite_set(
@@ -118,7 +118,7 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
     }
 
     pub fn define_params_with_type(

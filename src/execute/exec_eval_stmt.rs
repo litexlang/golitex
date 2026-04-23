@@ -819,7 +819,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&evaluated_equal_fact);
-        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(evaluated_equal_fact)?;
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(evaluated_equal_fact)?;
 
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }

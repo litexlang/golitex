@@ -3,6 +3,7 @@ mod runtime_define_parameter;
 mod runtime_generate_unused_names;
 mod runtime_get_definitions;
 mod runtime_instantiate_fact;
+mod runtime_instantiate_have_fn_forall;
 mod runtime_instantiate_obj;
 mod runtime_known_object_properties;
 mod runtime_parsing_free_param_collection;

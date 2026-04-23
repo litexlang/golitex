@@ -36,7 +36,7 @@ impl Runtime {
             },
         )?;
         let infer_after_store =
-            self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(corresponding_forall_fact)?;
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(corresponding_forall_fact)?;
 
         Ok(non_err_after_body.with_infers(infer_after_store))
     }
@@ -69,7 +69,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(dom_ge)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(dom_ge)
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -88,7 +88,7 @@ impl Runtime {
             let inst = self
                 .inst_exist_or_and_chain_atomic_fact(fact, &induc_map, ParamObjType::Induc)?
                 .to_fact();
-            self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(inst)
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(inst)
                 .map_err(|e| {
                     short_exec_error(
                         stmt.clone().into(),

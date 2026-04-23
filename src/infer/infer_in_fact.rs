@@ -92,7 +92,7 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
     }
 
     // RHS is `FamilyObj`: instantiate to a concrete set, then infer `element $in` that set.
@@ -154,7 +154,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&element_in_param_set_fact);
-        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
             element_in_param_set_fact,
         )?;
 
@@ -182,9 +182,7 @@ impl Runtime {
                 instantiated_fact_as_fact.with_new_line_file(in_fact.line_file.clone());
 
             infer_result.new_fact(&fact_to_store);
-            self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
-                fact_to_store,
-            )?;
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)?;
         }
 
         Ok(infer_result)
@@ -221,9 +219,7 @@ impl Runtime {
                 let or_fact = OrFact::new(or_case_facts, in_fact.line_file.clone()).into();
                 let mut infer_result = InferResult::new();
                 infer_result.new_fact(&or_fact);
-                self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
-                    or_fact,
-                )?;
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(or_fact)?;
                 Ok(infer_result)
             }
             // Set comprehension: membership in parameter domain plus instantiated filter facts.
@@ -241,7 +237,7 @@ impl Runtime {
                     IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
 
                 infer_result.new_fact(&is_cart_fact);
-                self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
                     is_cart_fact,
                 )?;
 
@@ -256,7 +252,7 @@ impl Runtime {
                 .into();
 
                 infer_result.new_fact(&tuple_dim_fact);
-                self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
                     tuple_dim_fact,
                 )?;
 
