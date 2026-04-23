@@ -20,7 +20,7 @@ impl Runtime {
     }
 
     fn get_matched_or_fact_in_known_forall_fact_in_envs(
-        &self,
+        &mut self,
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
         given_or_fact: &OrFact,
@@ -36,24 +36,43 @@ impl Runtime {
 
         let envs_count = self.environment_stack.len();
         for i in iterate_from_env_index..envs_count {
-            let env = &self.environment_stack[envs_count - 1 - i];
-            if let Some(known_forall_facts_in_env) =
-                env.known_or_facts_in_forall_facts.get(lookup_key.as_str())
-            {
-                let known_forall_facts_count = known_forall_facts_in_env.len();
-                for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
-                    let current_known_forall =
-                        &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
-                    let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact();
-                    let given_fact_args = given_or_fact.get_args_from_fact();
-                    let match_result =
-                        Self::match_args_in_fact_in_known_forall_fact_with_given_args(
-                            &fact_args_in_known_forall,
-                            &given_fact_args,
-                        )?;
-                    if let Some(arg_map) = match_result {
-                        return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
-                    }
+            let stack_idx = envs_count - 1 - i;
+            let known_forall_facts_count = {
+                let env = &self.environment_stack[stack_idx];
+                match env
+                    .known_or_facts_in_forall_facts
+                    .get(lookup_key.as_str())
+                {
+                    Some(v) => v.len(),
+                    None => continue,
+                }
+            };
+            for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
+                let entry_idx = known_forall_facts_count - 1 - j;
+                let (fact_args_in_known_forall, given_fact_args, current_known_forall) = {
+                    let env = &self.environment_stack[stack_idx];
+                    let Some(known_forall_facts_in_env) = env
+                        .known_or_facts_in_forall_facts
+                        .get(lookup_key.as_str())
+                    else {
+                        continue;
+                    };
+                    let Some(current_known_forall) = known_forall_facts_in_env.get(entry_idx) else {
+                        continue;
+                    };
+                    (
+                        current_known_forall.0.get_args_from_fact(),
+                        given_or_fact.get_args_from_fact(),
+                        current_known_forall.clone(),
+                    )
+                };
+                let match_result =
+                    self.match_args_in_fact_in_known_forall_fact_with_given_args(
+                        &fact_args_in_known_forall,
+                        &given_fact_args,
+                    )?;
+                if let Some(arg_map) = match_result {
+                    return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
                 }
             }
         }

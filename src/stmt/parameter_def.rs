@@ -250,7 +250,7 @@ impl ParamGroupWithSet {
         runtime: &Runtime,
         param_defs: &Vec<ParamGroupWithSet>,
         args: &Vec<Obj>,
-        inst_state: InstObjState,
+        inst_state: ToInstWhatKindOfParam,
     ) -> Result<Vec<AtomicFact>, RuntimeError> {
         let instantiated_param_sets =
             runtime.inst_param_def_with_set_one_by_one(param_defs, args, inst_state)?;

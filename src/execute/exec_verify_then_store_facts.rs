@@ -61,21 +61,12 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().into();
-        self.verify_fact_well_defined(&fact, verify_state)
-            .map_err(|well_defined_error| {
-                short_exec_error(
-                    stmt_for_fact_errors.clone(),
-                    "",
-                    Some(well_defined_error),
-                    vec![],
-                )
-            })?;
-        self.store_fact_without_well_defined_verified_and_infer(fact)
-            .map_err(|store_fact_error| {
+        self.verify_well_defined_and_store_and_infer(fact, verify_state)
+            .map_err(|e| {
                 short_exec_error(
                     stmt_for_fact_errors,
                     "",
-                    Some(store_fact_error),
+                    Some(e),
                     vec![],
                 )
             })

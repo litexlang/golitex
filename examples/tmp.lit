@@ -1,7 +1,4 @@
-forall start, middle, last Z, c R:
-    start <= middle <= middle + 1<= last
+forall x Z:
+    x >= 2
     =>:
-        sum(i, start, last + 1, i) = sum(i, start, last, i) + (last + 1)
-        sum(i, start, middle, i) + sum(i, middle + 1, last, i) = sum(i, start, last, i)
-        sum(i, start, last, i + i) = sum(i, start, last, i) + sum(i, start, last, i)
-        sum(i, start, start, i) = start
+        x - 1 >= 0

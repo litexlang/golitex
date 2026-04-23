@@ -30,4 +30,8 @@ impl VerifyState {
     pub fn make_final_round_state(&self) -> Self {
         return Self::new(2, self.well_defined_already_verified);
     }
+
+    pub fn new_with_final_round(well_defined_already_verified: bool) -> Self {
+        return Self::new(2, well_defined_already_verified);
+    }
 }

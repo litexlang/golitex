@@ -13,6 +13,7 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
             | Obj::Atom(AtomObj::SetBuilder(_))
             | Obj::Atom(AtomObj::FnSet(_))
             | Obj::Atom(AtomObj::Sum(_))
+            | Obj::Atom(AtomObj::Product(_))
             | Obj::Atom(AtomObj::Induc(_))
             | Obj::Atom(AtomObj::DefAlgo(_))
     )
@@ -28,6 +29,7 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
         Obj::Atom(AtomObj::SetBuilder(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::FnSet(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::Sum(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::Product(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::Induc(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name.clone()],
         _ => vec![],
@@ -44,35 +46,31 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("family `{}` is not defined", family_name),
-                default_line_file(),
-                None,
-                vec![],
-            ))
-            .into(),
-                );
+                return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!("family `{}` is not defined", family_name),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ))
+                .into());
             }
         };
         let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
-            return Err(
-                UnknownRuntimeError(RuntimeErrorStruct::new(
+            return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
                 None,
                 format!(
-                        "family `{}` expects {} type argument(s), got {}",
-                        family_name,
-                        expected_count,
-                        family_ty.params.len()
-                    ),
+                    "family `{}` expects {} type argument(s), got {}",
+                    family_name,
+                    expected_count,
+                    family_ty.params.len()
+                ),
                 default_line_file(),
                 None,
                 vec![],
             ))
-            .into(),
-            );
+            .into());
         }
         let param_to_arg_map = def
             .params_def_with_type
@@ -94,7 +92,7 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        self.store_fact_without_well_defined_verified_and_infer(type_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
     }
 
     // RHS is `FamilyObj`: instantiate to a concrete set, then infer `element $in` that set.
@@ -156,29 +154,35 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&element_in_param_set_fact);
-        self.store_fact_without_well_defined_verified_and_infer(element_in_param_set_fact)?;
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+            element_in_param_set_fact,
+        )?;
 
         for fact_in_set_builder in set_builder.facts.iter() {
             let instantiated_fact_in_set_builder: OrAndChainAtomicFact = self
-                .inst_or_and_chain_atomic_fact(fact_in_set_builder, &param_to_arg_map, ParamObjType::SetBuilder)
+                .inst_or_and_chain_atomic_fact(
+                    fact_in_set_builder,
+                    &param_to_arg_map,
+                    ParamObjType::SetBuilder,
+                )
                 .map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                        None,
+                        format!(
                             "failed to instantiate set builder fact while inferring `{}`",
                             in_fact
                         ),
-                    in_fact.line_file.clone(),
-                    Some(e),
-                    vec![],
-                )))
+                        in_fact.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
                 })?;
             let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
             let fact_to_store =
                 instantiated_fact_as_fact.with_new_line_file(in_fact.line_file.clone());
 
             infer_result.new_fact(&fact_to_store);
-            self.store_fact_without_well_defined_verified_and_infer(fact_to_store)?;
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)?;
         }
 
         Ok(infer_result)
@@ -215,7 +219,7 @@ impl Runtime {
                 let or_fact = OrFact::new(or_case_facts, in_fact.line_file.clone()).into();
                 let mut infer_result = InferResult::new();
                 infer_result.new_fact(&or_fact);
-                self.store_fact_without_well_defined_verified_and_infer(or_fact)?;
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(or_fact)?;
                 Ok(infer_result)
             }
             // Set comprehension: membership in parameter domain plus instantiated filter facts.
@@ -233,7 +237,9 @@ impl Runtime {
                     IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
 
                 infer_result.new_fact(&is_cart_fact);
-                self.store_fact_without_well_defined_verified_and_infer(is_cart_fact)?;
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    is_cart_fact,
+                )?;
 
                 let cart_args_count = cart.args.len();
                 let tuple_dim_obj = TupleDim::new(in_fact.element.clone()).into();
@@ -246,7 +252,9 @@ impl Runtime {
                 .into();
 
                 infer_result.new_fact(&tuple_dim_fact);
-                self.store_fact_without_well_defined_verified_and_infer(tuple_dim_fact)?;
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    tuple_dim_fact,
+                )?;
 
                 self.store_tuple_obj_and_cart(
                     &in_fact.element.to_string(),
@@ -334,7 +342,9 @@ impl Runtime {
                 )
                 .into();
                 infer_result.new_infer_result_inside(
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_atomic)?,
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                        expanded_atomic,
+                    )?,
                 );
                 Ok(infer_result)
             }
@@ -350,7 +360,9 @@ impl Runtime {
                 )
                 .into();
                 infer_result.new_infer_result_inside(
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_atomic)?,
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                        expanded_atomic,
+                    )?,
                 );
                 Ok(infer_result)
             }
@@ -366,7 +378,9 @@ impl Runtime {
                 )
                 .into();
                 infer_result.new_infer_result_inside(
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_atomic)?,
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                        expanded_atomic,
+                    )?,
                 );
                 Ok(infer_result)
             }
