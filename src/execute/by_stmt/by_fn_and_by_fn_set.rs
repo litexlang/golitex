@@ -403,7 +403,7 @@ impl Runtime {
         // so avoid pre-recording the same fact here or JSON `infer_facts` will show duplicates.
         let mut infer_result = InferResult::new();
         let infer_shape = self
-            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_shape)
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_shape)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -414,7 +414,7 @@ impl Runtime {
             })?;
         infer_result.new_infer_result_inside(infer_shape);
         let infer_in = self
-            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_in)
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_in)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -426,7 +426,7 @@ impl Runtime {
         infer_result.new_infer_result_inside(infer_in);
 
         let infer_exist = self
-            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_exist)
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_exist)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),

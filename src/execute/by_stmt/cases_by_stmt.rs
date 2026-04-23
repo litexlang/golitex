@@ -24,7 +24,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for then_fact in stmt.then_facts.iter() {
             let one_then_fact_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_final_round_verify_state(then_fact.clone())
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(then_fact.clone())
                 .map_err(|store_fact_error| {
                     short_exec_error(
  stmt.clone().into(),

@@ -33,7 +33,7 @@ impl Runtime {
             .any(|one_param_value_strings| one_param_value_strings.is_empty());
         if for_cartesian_product_is_empty {
             let infer_result_from_stored_forall_fact = self
-                .verify_well_defined_and_store_and_infer_with_final_round_verify_state(
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
@@ -78,7 +78,7 @@ impl Runtime {
         }
 
         let infer_result_from_stored_forall_fact = self
-            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(corresponding_forall_fact.clone())
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(corresponding_forall_fact.clone())
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -299,7 +299,7 @@ impl Runtime {
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result = self.verify_fact(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
-                self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(dom_fact.clone())?;
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(dom_fact.clone())?;
             } else if verify_dom_result.is_unknown() {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
                     let verify_negation_result =

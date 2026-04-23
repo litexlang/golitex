@@ -146,6 +146,13 @@ impl Runtime {
                         return Ok(obj.clone());
                     }
                 }
+                // See `runtime_instantiate_have_fn_forall.rs`: under FnSet inst, align Forall atoms
+                // with the canonical forall binder map.
+                if to_inst_what_kind_of_param == ParamObjType::FnSet {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
+                    }
+                }
                 Ok(p.clone().into())
             }
             Obj::Atom(AtomObj::Def(p)) => {
@@ -200,6 +207,11 @@ impl Runtime {
                 if to_inst_what_kind_of_param == ParamObjType::Induc
                     || to_inst_what_kind_of_param == ParamObjType::Forall
                 {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
+                    }
+                }
+                if to_inst_what_kind_of_param == ParamObjType::FnSet {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
