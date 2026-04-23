@@ -25,7 +25,11 @@ impl Runtime {
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {
-        let verify_state = VerifyState::new_with_final_round(false);
+        let verify_state = match fact {
+            Fact::ForallFact(_) => VerifyState::new(0, false),
+            Fact::ForallFactWithIff(_) => VerifyState::new(0, false),
+            _ => VerifyState::new_with_final_round(false),
+        };
         self.verify_well_defined_and_store_and_infer(fact, &verify_state)
     }
 
