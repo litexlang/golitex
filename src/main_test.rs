@@ -163,11 +163,13 @@ mod lit_file_runner_tests {
         let mut file_name_and_duration_ms_list: Vec<(String, f64)> = Vec::new();
         let mut every_file_run_ok = true;
         let mut examples_ran = false;
+        let mut examples_phase_wall_ms: f64 = 0.0;
 
         if lit_file_paths.is_empty() {
             println!("--- examples folder: no .lit files ---");
         } else {
             examples_ran = true;
+            let examples_wall_start = Instant::now();
             let first_lit_path_str = match lit_file_paths[0].to_str() {
                 Some(path_string) => path_string,
                 None => panic!("{:?} must be valid UTF-8", lit_file_paths[0]),
@@ -217,8 +219,10 @@ mod lit_file_runner_tests {
                     break;
                 }
 
-                file_name_and_duration_ms_list.push((file_label_for_report, duration_ms_for_one_file));
+                file_name_and_duration_ms_list
+                    .push((file_label_for_report, duration_ms_for_one_file));
             }
+            examples_phase_wall_ms = examples_wall_start.elapsed().as_secs_f64() * 1000.0;
         }
 
         if every_file_run_ok && examples_ran {
@@ -238,6 +242,10 @@ mod lit_file_runner_tests {
                 "  sum of user-file runs: {:.2} ms",
                 sum_of_per_file_duration_ms
             );
+            println!(
+                "  examples phase (wall): {:.2} ms",
+                examples_phase_wall_ms
+            );
         }
 
         if !every_file_run_ok {
@@ -246,7 +254,14 @@ mod lit_file_runner_tests {
 
         let docs_dir = manifest_dir.join("docs");
         if !docs_dir.is_dir() {
-            println!("--- docs folder missing at {:?}; skip markdown litex blocks ---", docs_dir);
+            println!(
+                "--- docs folder missing at {:?}; skip markdown litex blocks ---",
+                docs_dir
+            );
+            println!(
+                "--- phase timing: examples {:.2} ms | docs {:.2} ms (skipped) ---",
+                examples_phase_wall_ms, 0.0_f64
+            );
             return;
         }
 
@@ -266,15 +281,16 @@ mod lit_file_runner_tests {
                 .into_iter()
                 .enumerate()
             {
-                doc_snippets.push((
-                    format!("{} ```litex```#{}", rel_label, block_index),
-                    block,
-                ));
+                doc_snippets.push((format!("{} ```litex```#{}", rel_label, block_index), block));
             }
         }
 
         if doc_snippets.is_empty() {
             println!("--- docs: no ```litex``` fenced blocks ---");
+            println!(
+                "--- phase timing: examples {:.2} ms | docs {:.2} ms (no blocks) ---",
+                examples_phase_wall_ms, 0.0_f64
+            );
             return;
         }
 
@@ -288,6 +304,7 @@ mod lit_file_runner_tests {
             md_paths.len()
         );
 
+        let docs_wall_start = Instant::now();
         let mut doc_durations_ms: Vec<(String, f64)> = Vec::new();
         for (snippet_index, (label, source_code)) in doc_snippets.iter().enumerate() {
             if examples_ran || snippet_index > 0 {
@@ -305,17 +322,19 @@ mod lit_file_runner_tests {
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
             if !run_succeeded {
-                panic!(
-                    "docs litex snippet FAILED: {}\n{}\n",
-                    label, run_output
-                );
+                panic!("docs litex snippet FAILED: {}\n{}\n", label, run_output);
             }
 
             doc_durations_ms.push((label.clone(), duration_ms));
         }
+        let docs_phase_wall_ms = docs_wall_start.elapsed().as_secs_f64() * 1000.0;
 
         for (label, duration_ms) in doc_durations_ms.iter() {
             println!("  OK  {:.2} ms  {}", duration_ms, label);
         }
+        println!(
+            "--- phase timing: examples {:.2} ms | docs {:.2} ms ---",
+            examples_phase_wall_ms, docs_phase_wall_ms
+        );
     }
 }
