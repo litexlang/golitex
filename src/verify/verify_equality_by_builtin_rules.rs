@@ -419,6 +419,95 @@ impl Runtime {
         Ok(None)
     }
 
+    // `sum(i, a, b, F) = sum(i, a', b', G)` when `i` matches on both sides: prove `a = a'`, `b = b'` with full
+    // `verify_objs_are_equal`, then in a local env register `i` as sum index, assume `i in Z`, `a <= i <= b`,
+    // and prove `F = G` with `verify_objs_are_equal`.
+    fn try_verify_two_sums_equal_by_pointwise_body(
+        &mut self,
+        left: &SumObj,
+        right: &SumObj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if left.param != right.param {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(
+                left.start.as_ref(),
+                right.start.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(
+                left.end.as_ref(),
+                right.end.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let param_name = left.param.clone();
+        let start_obj = (*left.start).clone();
+        let end_obj = (*left.end).clone();
+        let bodies_equal = self.run_in_local_env(|rt| {
+            rt.store_free_param_or_identifier_name(&param_name, ParamObjType::Sum)?;
+            let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Sum);
+            let param_in_z: AtomicFact = InFact::new(
+                param_obj.clone(),
+                StandardSet::Z.into(),
+                default_line_file(),
+            )
+            .into();
+            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
+            let lower: AtomicFact =
+                LessEqualFact::new(start_obj.clone(), param_obj.clone(), default_line_file()).into();
+            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
+            let upper: AtomicFact = LessEqualFact::new(param_obj, end_obj, default_line_file()).into();
+            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
+            let stmt = rt.verify_objs_are_equal(
+                left.body.as_ref(),
+                right.body.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?;
+            Ok::<bool, RuntimeError>(stmt.is_true())
+        })?;
+        if !bodies_equal {
+            return Ok(None);
+        }
+        let display_left: Obj = left.clone().into();
+        let display_right: Obj = right.clone().into();
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            &display_left,
+            &display_right,
+            line_file,
+            "equality: two sums same index and bounds; summands equal under index assumptions",
+        )))
+    }
+
+    fn try_verify_two_sums_pointwise_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let (Obj::Sum(lsum), Obj::Sum(rsum)) = (left, right) {
+            return self.try_verify_two_sums_equal_by_pointwise_body(
+                lsum, rsum, line_file, verify_state,
+            );
+        }
+        Ok(None)
+    }
+
     // sum(i,a,e+1,F) = sum(i,a,e,F) + tail with i bound to outer end (same i,a,F; one binary + on the other side).
     // Aligned parts use objs_equal_by_display_string (including outer end vs inner end + 1 and tail vs inst_obj).
     fn try_finish_sum_peel_equality(
@@ -910,6 +999,15 @@ impl Runtime {
         if let Some(done) =
             self.try_verify_log_equals_by_pow_inverse(left, right, line_file.clone(), verify_state)?
         {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_two_sums_pointwise_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
