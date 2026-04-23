@@ -336,7 +336,7 @@ impl Runtime {
             Obj::Cup(ref a) => self.match_arg_when_left_is_cup(&a.left, given_arg),
             Obj::Cap(ref a) => self.match_arg_when_left_is_cap(&a.left, given_arg),
             Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
-            Obj::SetBuilder(_) => self.match_arg_when_left_is_set_builder(given_arg),
+            Obj::SetBuilder(ref left) => self.match_arg_when_left_is_set_builder(left, given_arg),
             Obj::FnSet(ref left) => self.match_arg_when_left_is_fn_set_with_params(left, given_arg),
             Obj::StandardSet(StandardSet::NPos) => self.match_arg_when_left_is_n_pos_obj(given_arg),
             Obj::StandardSet(StandardSet::N) => self.match_arg_when_left_is_n_obj(given_arg),
@@ -1088,24 +1088,61 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_set_builder(
+    fn match_arg_or_and_chain_atomic_fact_in_known_forall(
         &mut self,
-        given_arg: &Obj,
+        left: &OrAndChainAtomicFact,
+        given: &OrAndChainAtomicFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::SetBuilder(_) => self.match_arg_type_not_implemented("SetBuilder"),
-            _ => Ok(None),
-        }
+        let Some(pairs) =
+            Self::_verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
+                left, given,
+            )?
+        else {
+            return Ok(None);
+        };
+        self.match_arg_pairs_then_merge(pairs.iter().map(|(l, g)| (l, g)))
     }
 
-    fn flatten_fn_set_with_params_param_sets_for_match(&mut self, fn_set: &FnSet) -> Vec<Box<Obj>> {
-        let mut flat_param_sets: Vec<Box<Obj>> = Vec::new();
-        for param_def_with_set in &fn_set.params_def_with_set {
-            for _param_name in param_def_with_set.params.iter() {
-                flat_param_sets.push(Box::new(param_def_with_set.set.clone()));
+    fn match_arg_when_left_is_set_builder(
+        &mut self,
+        left: &SetBuilder,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::SetBuilder(given) = given_arg else {
+            return Ok(None);
+        };
+        if left.param != given.param {
+            return Ok(None);
+        }
+        let Some(mut merged) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            left.param_set.as_ref(),
+            given.param_set.as_ref(),
+        )?
+        else {
+            return Ok(None);
+        };
+        if left.facts.len() != given.facts.len() {
+            return Ok(None);
+        }
+        for (lf, gf) in left.facts.iter().zip(given.facts.iter()) {
+            let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, fact_map) {
+                return Ok(None);
             }
         }
-        flat_param_sets
+        let verify_state = VerifyState::new_with_final_round(false);
+        for value in merged.values() {
+            if self
+                .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                .is_err()
+            {
+                return Ok(None);
+            }
+        }
+        Ok(Some(merged))
     }
 
     fn match_arg_when_left_is_fn_set_with_params(
@@ -1113,31 +1150,62 @@ impl Runtime {
         left: &FnSet,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::FnSet(ref given) => {
-                if !left.dom_facts.is_empty() || !given.dom_facts.is_empty() {
-                    return self.match_arg_type_not_implemented("FnSetWithParams with dom_facts");
-                }
-                let left_flat = self.flatten_fn_set_with_params_param_sets_for_match(left);
-                let given_flat = self.flatten_fn_set_with_params_param_sets_for_match(given);
-                let param_maps = self.match_boxed_arg_vec_then_merge(&left_flat, &given_flat)?;
-                let param_map = match param_maps {
-                    Some(m) => m,
-                    None => return Ok(None),
-                };
-                let ret_map = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    left.ret_set.as_ref(),
-                    given.ret_set.as_ref(),
-                )?;
-                let ret_map = match ret_map {
-                    Some(m) => m,
-                    None => return Ok(None),
-                };
-                let merged = self.merge_arg_match_maps(param_map, ret_map);
-                Ok(merged)
-            }
-            _ => Ok(None),
+        let Obj::FnSet(given) = given_arg else {
+            return Ok(None);
+        };
+        if left.params_def_with_set.len() != given.params_def_with_set.len() {
+            return Ok(None);
         }
+        let mut merged: HashMap<String, Obj> = HashMap::new();
+        for (lg, gg) in left
+            .params_def_with_set
+            .iter()
+            .zip(given.params_def_with_set.iter())
+        {
+            if lg.params != gg.params {
+                return Ok(None);
+            }
+            let Some(m) =
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&lg.set, &gg.set)?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, m) {
+                return Ok(None);
+            }
+        }
+        if left.dom_facts.len() != given.dom_facts.len() {
+            return Ok(None);
+        }
+        for (lf, gf) in left.dom_facts.iter().zip(given.dom_facts.iter()) {
+            let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, fact_map) {
+                return Ok(None);
+            }
+        }
+        let Some(ret_map) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            left.ret_set.as_ref(),
+            given.ret_set.as_ref(),
+        )?
+        else {
+            return Ok(None);
+        };
+        if !self.merge_arg_match_map_into(&mut merged, ret_map) {
+            return Ok(None);
+        }
+        let verify_state = VerifyState::new_with_final_round(false);
+        for value in merged.values() {
+            if self
+                .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                .is_err()
+            {
+                return Ok(None);
+            }
+        }
+        Ok(Some(merged))
     }
 
     fn match_arg_when_left_is_n_pos_obj(
@@ -1550,7 +1618,12 @@ impl Runtime {
         let verify_state = VerifyState::new_with_final_round(false);
         // Forall-bound args must not capture ill-defined pieces of the sum spine.
         for value in merged.values() {
-            self.verify_obj_well_defined_and_store_cache(value, &verify_state)?;
+            if self
+                .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                .is_err()
+            {
+                return Ok(None);
+            }
         }
 
         Ok(Some(merged))
@@ -1576,7 +1649,12 @@ impl Runtime {
 
         let verify_state = VerifyState::new_with_final_round(false);
         for value in merged.values() {
-            self.verify_obj_well_defined_and_store_cache(value, &verify_state)?;
+            if self
+                .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                .is_err()
+            {
+                return Ok(None);
+            }
         }
 
         Ok(Some(merged))

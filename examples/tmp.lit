@@ -1,0 +1,12 @@
+abstract_prop p(a, b)
+abstract_prop q(a, b)
+
+know forall a, b R:
+    $p(a, {x R: $p(x, b)})
+    $q(1, {x R: $q(a + b, x)})
+
+prove:
+    $p(1, {x R: $p(x, 2)})
+    # $p(1, {x R: $p(x, x)}) 是unknown，因为x作为set builder的参数不能匹配b
+    $q(1, {x R: $q(1 + 2, x)})
+    $q(1, {x R: $q(x, x)})
