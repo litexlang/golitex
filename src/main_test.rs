@@ -1,11 +1,82 @@
 #[cfg(test)]
 mod lit_file_runner_tests {
     use std::fs;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use std::time::Instant;
 
     use crate::pipeline::{render_run_source_code_output, run_source_code};
     use crate::prelude::*;
+
+    /// Collect ```litex``` bodies. A block is omitted when the last non-empty line before its opening
+    /// fence is exactly `<!-- litex:skip-test -->` (for snippets that are illustrative only).
+    fn extract_litex_fenced_blocks(markdown: &str) -> Vec<String> {
+        const SKIP_MARKER: &str = "<!-- litex:skip-test -->";
+        let mut blocks: Vec<String> = Vec::new();
+        let mut in_litex = false;
+        let mut skip_this_block = false;
+        let mut current = String::new();
+        let mut prev_non_empty_outside_block: Option<&str> = None;
+
+        for line in markdown.lines() {
+            let trimmed_start = line.trim_start();
+            if trimmed_start.starts_with("```") {
+                let info = trimmed_start[3..].trim();
+                if in_litex {
+                    if !skip_this_block {
+                        let trimmed = current.trim();
+                        if !trimmed.is_empty() {
+                            blocks.push(trimmed.to_string());
+                        }
+                    }
+                    current.clear();
+                    in_litex = false;
+                    skip_this_block = false;
+                    prev_non_empty_outside_block = None;
+                } else if info == "litex" {
+                    in_litex = true;
+                    skip_this_block = prev_non_empty_outside_block == Some(SKIP_MARKER);
+                    current.clear();
+                }
+            } else if in_litex {
+                if !skip_this_block {
+                    if !current.is_empty() {
+                        current.push('\n');
+                    }
+                    current.push_str(line);
+                }
+            } else {
+                let t = line.trim();
+                if !t.is_empty() {
+                    prev_non_empty_outside_block = Some(t);
+                }
+            }
+        }
+        blocks
+    }
+
+    fn collect_markdown_files_sorted(docs_dir: &Path) -> Vec<PathBuf> {
+        let mut out: Vec<PathBuf> = Vec::new();
+        fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+            let read_dir = match fs::read_dir(dir) {
+                Ok(entries) => entries,
+                Err(_) => return,
+            };
+            for entry in read_dir.flatten() {
+                let path = entry.path();
+                let Ok(file_type) = entry.file_type() else {
+                    continue;
+                };
+                if file_type.is_dir() {
+                    walk(&path, out);
+                } else if path.extension().is_some_and(|e| e == "md") {
+                    out.push(path);
+                }
+            }
+        }
+        walk(docs_dir, &mut out);
+        out.sort();
+        out
+    }
 
     #[test]
     fn run_tmp() {
@@ -54,7 +125,8 @@ mod lit_file_runner_tests {
 
     #[test]
     fn run_examples() {
-        let examples_directory_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples");
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let examples_directory_path = manifest_dir.join("examples");
 
         let read_directory = match fs::read_dir(&examples_directory_path) {
             Ok(entries) => entries,
@@ -84,88 +156,166 @@ mod lit_file_runner_tests {
         }
         lit_file_paths.sort();
 
-        if lit_file_paths.is_empty() {
-            println!("--- examples folder: no .lit files ---");
-            return;
-        }
-
         let builtin_start = Instant::now();
         let mut runtime = Runtime::new_with_builtin_code();
         let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
 
-        let first_lit_path_str = match lit_file_paths[0].to_str() {
-            Some(path_string) => path_string,
-            None => panic!("{:?} must be valid UTF-8", lit_file_paths[0]),
-        };
-        runtime.new_file_path_new_env_new_name_scope(first_lit_path_str);
-
         let mut file_name_and_duration_ms_list: Vec<(String, f64)> = Vec::new();
         let mut every_file_run_ok = true;
+        let mut examples_ran = false;
 
-        for (file_index, lit_file_path) in lit_file_paths.iter().enumerate() {
-            let lit_file_path_str = match lit_file_path.to_str() {
+        if lit_file_paths.is_empty() {
+            println!("--- examples folder: no .lit files ---");
+        } else {
+            examples_ran = true;
+            let first_lit_path_str = match lit_file_paths[0].to_str() {
                 Some(path_string) => path_string,
-                None => panic!("{:?} must be valid UTF-8", lit_file_path),
+                None => panic!("{:?} must be valid UTF-8", lit_file_paths[0]),
             };
+            runtime.new_file_path_new_env_new_name_scope(first_lit_path_str);
 
-            let file_label_for_report = match lit_file_path.file_name() {
-                Some(os_file_name) => match os_file_name.to_str() {
-                    Some(name_string) => String::from(name_string),
+            for (file_index, lit_file_path) in lit_file_paths.iter().enumerate() {
+                let lit_file_path_str = match lit_file_path.to_str() {
+                    Some(path_string) => path_string,
+                    None => panic!("{:?} must be valid UTF-8", lit_file_path),
+                };
+
+                let file_label_for_report = match lit_file_path.file_name() {
+                    Some(os_file_name) => match os_file_name.to_str() {
+                        Some(name_string) => String::from(name_string),
+                        None => format!("{:?}", lit_file_path),
+                    },
                     None => format!("{:?}", lit_file_path),
-                },
-                None => format!("{:?}", lit_file_path),
-            };
+                };
 
-            if file_index > 0 {
-                runtime.clear_current_env_and_parse_name_scope();
-                runtime.set_current_user_lit_file_path(lit_file_path_str);
+                if file_index > 0 {
+                    runtime.clear_current_env_and_parse_name_scope();
+                    runtime.set_current_user_lit_file_path(lit_file_path_str);
+                }
+
+                let source_code = match fs::read_to_string(lit_file_path) {
+                    Ok(content) => content,
+                    Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
+                };
+                let normalized_source = remove_windows_carriage_return(&source_code);
+
+                let start_time_for_one_file = Instant::now();
+                let (stmt_results, runtime_error) =
+                    run_source_code(normalized_source.as_str(), &mut runtime);
+                let duration_ms_for_one_file =
+                    start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
+
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                if !run_succeeded {
+                    every_file_run_ok = false;
+                    println!(
+                        "=== [{}] {:?} ===\n{}\n",
+                        "FAILED", lit_file_path, run_output
+                    );
+                    break;
+                }
+
+                file_name_and_duration_ms_list.push((file_label_for_report, duration_ms_for_one_file));
             }
+        }
 
-            let source_code = match fs::read_to_string(lit_file_path) {
-                Ok(content) => content,
-                Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
-            };
-            let normalized_source = remove_windows_carriage_return(&source_code);
+        if every_file_run_ok && examples_ran {
+            let number_of_lit_files = file_name_and_duration_ms_list.len();
 
-            let start_time_for_one_file = Instant::now();
-            let (stmt_results, runtime_error) =
-                run_source_code(normalized_source.as_str(), &mut runtime);
-            let duration_ms_for_one_file = start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
-
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-            if !run_succeeded {
-                every_file_run_ok = false;
-                println!(
-                    "=== [{}] {:?} ===\n{}\n",
-                    "FAILED", lit_file_path, run_output
-                );
-                break;
+            println!(
+                "--- examples folder: {} .lit files, all OK, timing ---",
+                number_of_lit_files
+            );
+            println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+            let mut sum_of_per_file_duration_ms: f64 = 0.0;
+            for (file_name, duration_ms) in file_name_and_duration_ms_list.iter() {
+                println!("  {}  {:.2} ms", file_name, duration_ms);
+                sum_of_per_file_duration_ms += *duration_ms;
             }
-
-            file_name_and_duration_ms_list.push((file_label_for_report, duration_ms_for_one_file));
+            println!(
+                "  sum of user-file runs: {:.2} ms",
+                sum_of_per_file_duration_ms
+            );
         }
 
         if !every_file_run_ok {
             return;
         }
 
-        let number_of_lit_files = file_name_and_duration_ms_list.len();
+        let docs_dir = manifest_dir.join("docs");
+        if !docs_dir.is_dir() {
+            println!("--- docs folder missing at {:?}; skip markdown litex blocks ---", docs_dir);
+            return;
+        }
+
+        let md_paths = collect_markdown_files_sorted(&docs_dir);
+        let mut doc_snippets: Vec<(String, String)> = Vec::new();
+        for md_path in md_paths.iter() {
+            let rel_label = md_path
+                .strip_prefix(&manifest_dir)
+                .unwrap_or(md_path)
+                .display()
+                .to_string();
+            let md_content = match fs::read_to_string(md_path) {
+                Ok(content) => content,
+                Err(read_error) => panic!("failed to read {:?}: {}", md_path, read_error),
+            };
+            for (block_index, block) in extract_litex_fenced_blocks(&md_content)
+                .into_iter()
+                .enumerate()
+            {
+                doc_snippets.push((
+                    format!("{} ```litex```#{}", rel_label, block_index),
+                    block,
+                ));
+            }
+        }
+
+        if doc_snippets.is_empty() {
+            println!("--- docs: no ```litex``` fenced blocks ---");
+            return;
+        }
+
+        if !examples_ran {
+            runtime.new_file_path_new_env_new_name_scope("docs/```litex``` snippets");
+        }
 
         println!(
-            "--- examples folder: {} .lit files, all OK, timing ---",
-            number_of_lit_files
+            "--- docs: {} ```litex``` block(s) in {} markdown file(s) ---",
+            doc_snippets.len(),
+            md_paths.len()
         );
-        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
-        let mut sum_of_per_file_duration_ms: f64 = 0.0;
-        for (file_name, duration_ms) in file_name_and_duration_ms_list.iter() {
-            println!("  {}  {:.2} ms", file_name, duration_ms);
-            sum_of_per_file_duration_ms += duration_ms;
+
+        let mut doc_durations_ms: Vec<(String, f64)> = Vec::new();
+        for (snippet_index, (label, source_code)) in doc_snippets.iter().enumerate() {
+            if examples_ran || snippet_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+            }
+            runtime.set_current_user_lit_file_path(label.as_str());
+
+            let normalized_source = remove_windows_carriage_return(source_code);
+            let start_snippet = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            if !run_succeeded {
+                panic!(
+                    "docs litex snippet FAILED: {}\n{}\n",
+                    label, run_output
+                );
+            }
+
+            doc_durations_ms.push((label.clone(), duration_ms));
         }
-        println!(
-            "  sum of user-file runs: {:.2} ms",
-            sum_of_per_file_duration_ms
-        );
+
+        for (label, duration_ms) in doc_durations_ms.iter() {
+            println!("  OK  {:.2} ms  {}", duration_ms, label);
+        }
     }
 }
