@@ -54,10 +54,7 @@ impl Runtime {
             let stack_idx = envs_count - 1 - i;
             let known_forall_facts_count = {
                 let env = &self.environment_stack[stack_idx];
-                match env
-                    .known_atomic_facts_in_forall_facts
-                    .get(&lookup_key)
-                {
+                match env.known_atomic_facts_in_forall_facts.get(&lookup_key) {
                     Some(v) => v.len(),
                     None => continue,
                 }
@@ -66,25 +63,21 @@ impl Runtime {
                 let entry_idx = known_forall_facts_count - 1 - j;
                 let (atomic_fact_args_in_known_forall, current_known_forall) = {
                     let env = &self.environment_stack[stack_idx];
-                    let Some(known_forall_facts_in_env) = env
-                        .known_atomic_facts_in_forall_facts
-                        .get(&lookup_key)
+                    let Some(known_forall_facts_in_env) =
+                        env.known_atomic_facts_in_forall_facts.get(&lookup_key)
                     else {
                         continue;
                     };
-                    let Some(current_known_forall) = known_forall_facts_in_env.get(entry_idx) else {
+                    let Some(current_known_forall) = known_forall_facts_in_env.get(entry_idx)
+                    else {
                         continue;
                     };
-                    (
-                        current_known_forall.0.args(),
-                        current_known_forall.clone(),
-                    )
+                    (current_known_forall.0.args(), current_known_forall.clone())
                 };
-                let match_result =
-                    self.match_atomic_fact_args_against_known_forall_ordered_args(
-                        &atomic_fact_args_in_known_forall,
-                        given_fact,
-                    )?;
+                let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
+                    &atomic_fact_args_in_known_forall,
+                    given_fact,
+                )?;
                 if let Some(arg_map) = match_result {
                     return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
                 }
@@ -344,12 +337,8 @@ impl Runtime {
             Obj::Cap(ref a) => self.match_arg_when_left_is_cap(&a.left, given_arg),
             Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(_) => self.match_arg_when_left_is_set_builder(given_arg),
-            Obj::FnSet(ref left) => {
-                self.match_arg_when_left_is_fn_set_with_params(left, given_arg)
-            }
-            Obj::StandardSet(StandardSet::NPos) => {
-                self.match_arg_when_left_is_n_pos_obj(given_arg)
-            }
+            Obj::FnSet(ref left) => self.match_arg_when_left_is_fn_set_with_params(left, given_arg),
+            Obj::StandardSet(StandardSet::NPos) => self.match_arg_when_left_is_n_pos_obj(given_arg),
             Obj::StandardSet(StandardSet::N) => self.match_arg_when_left_is_n_obj(given_arg),
             Obj::StandardSet(StandardSet::Q) => self.match_arg_when_left_is_q_obj(given_arg),
             Obj::StandardSet(StandardSet::Z) => self.match_arg_when_left_is_z_obj(given_arg),
@@ -368,14 +357,10 @@ impl Runtime {
             Obj::FiniteSeqListObj(ref left) => {
                 self.match_arg_when_left_is_finite_seq_list(&left.objs, given_arg)
             }
-            Obj::Count(ref left) => {
-                self.match_arg_when_left_is_count(left.set.as_ref(), given_arg)
+            Obj::Count(ref left) => self.match_arg_when_left_is_count(left.set.as_ref(), given_arg),
+            Obj::Range(ref left) => {
+                self.match_arg_when_left_is_range(left.start.as_ref(), left.end.as_ref(), given_arg)
             }
-            Obj::Range(ref left) => self.match_arg_when_left_is_range(
-                left.start.as_ref(),
-                left.end.as_ref(),
-                given_arg,
-            ),
             Obj::ClosedRange(ref left) => self.match_arg_when_left_is_closed_range(
                 left.start.as_ref(),
                 left.end.as_ref(),
@@ -405,16 +390,10 @@ impl Runtime {
                 self.match_arg_when_left_is_choose(left.set.as_ref(), given_arg)
             }
             Obj::Sum(ref left) => {
-                if left.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
+                return self.match_arg_when_left_is_sum(left, given_arg);
             }
             Obj::Product(ref left) => {
-                if left.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
+                return self.match_arg_when_left_is_product(left, given_arg);
             }
             Obj::ObjAtIndex(ref left) => self.match_arg_when_left_is_obj_at_index(
                 left.obj.as_ref(),
@@ -551,14 +530,14 @@ impl Runtime {
                         return Ok(None);
                     }
                     for (left_arg, right_arg) in left_row.iter().zip(right_row.iter()) {
-                        let sub_map =
-                            match self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        let sub_map = match self
+                            .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                                 left_arg.as_ref(),
                                 right_arg.as_ref(),
                             )? {
-                                Some(m) => m,
-                                None => return Ok(None),
-                            };
+                            Some(m) => m,
+                            None => return Ok(None),
+                        };
                         if !self.merge_arg_match_map_into(&mut head_map, sub_map) {
                             return Ok(None);
                         }
@@ -1037,9 +1016,9 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (left_elem, given_elem) in pairs {
-            let sub_map = match self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left_elem, given_elem,
-            )? {
+            let sub_map = match self
+                .match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_elem, given_elem)?
+            {
                 Some(m) => m,
                 None => return Ok(None),
             };
@@ -1228,12 +1207,11 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::CartDim(ref given) => {
-                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            Obj::CartDim(ref given) => self
+                .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_set,
                     given.set.as_ref(),
-                )
-            }
+                ),
             _ => Ok(None),
         }
     }
@@ -1261,12 +1239,11 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::TupleDim(ref given) => {
-                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            Obj::TupleDim(ref given) => self
+                .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_dim,
                     given.arg.as_ref(),
-                )
-            }
+                ),
             _ => Ok(None),
         }
     }
@@ -1368,12 +1345,10 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::SeqSet(ref given) => {
-                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    left_set,
-                    given.set.as_ref(),
-                )
-            }
+            Obj::SeqSet(ref given) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                left_set,
+                given.set.as_ref(),
+            ),
             _ => Ok(None),
         }
     }
@@ -1417,12 +1392,11 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::PowerSet(ref given) => {
-                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            Obj::PowerSet(ref given) => self
+                .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_set,
                     given.set.as_ref(),
-                )
-            }
+                ),
             _ => Ok(None),
         }
     }
@@ -1433,12 +1407,10 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Choose(ref given) => {
-                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    left_set,
-                    given.set.as_ref(),
-                )
-            }
+            Obj::Choose(ref given) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                left_set,
+                given.set.as_ref(),
+            ),
             _ => Ok(None),
         }
     }
@@ -1540,7 +1512,10 @@ impl Runtime {
         }
     }
 
-    fn match_arg_same_type(&mut self, given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+    fn match_arg_same_type(
+        &mut self,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let mut map = HashMap::new();
         map.insert(given_arg.to_string(), given_arg.clone());
         Ok(Some(map))
@@ -1552,5 +1527,87 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let _ = obj_type_name;
         Ok(None)
+    }
+
+    fn match_arg_when_left_is_sum(
+        &mut self,
+        left: &SumObj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::Sum(given_arg_as_sum) = given_arg else {
+            return Ok(None);
+        };
+
+        let Some(match_range_result) = self.match_arg_binary_then_merge(
+            left.start.as_ref(),
+            left.end.as_ref(),
+            given_arg_as_sum.start.as_ref(),
+            given_arg_as_sum.end.as_ref(),
+        )?
+        else {
+            return Ok(None);
+        };
+
+        let Some(match_body_result) = self
+            .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                left.body.as_ref(),
+                given_arg_as_sum.body.as_ref(),
+            )?
+        else {
+            return Ok(None);
+        };
+
+        let Some(merged) = self.merge_arg_match_maps(match_range_result, match_body_result) else {
+            return Ok(None);
+        };
+
+        let verify_state = VerifyState::new_with_final_round(false);
+        for value in merged.values() {
+            self.verify_obj_well_defined_and_store_cache(value, &verify_state)?;
+        }
+
+        Ok(Some(merged))
+    }
+
+    fn match_arg_when_left_is_product(
+        &mut self,
+        left: &ProductObj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::Product(given_arg_as_product) = given_arg else {
+            return Ok(None);
+        };
+
+        let Some(match_range_result) = self.match_arg_binary_then_merge(
+            left.start.as_ref(),
+            left.end.as_ref(),
+            given_arg_as_product.start.as_ref(),
+            given_arg_as_product.end.as_ref(),
+        )?
+        else {
+            return Ok(None);
+        };
+
+        let Some(match_body_result) = self
+            .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                left.body.as_ref(),
+                given_arg_as_product.body.as_ref(),
+            )?
+        else {
+            return Ok(None);
+        };
+
+        let Some(merged) =
+            self.merge_arg_match_maps(match_range_result, match_body_result)
+        else {
+            return Ok(None);
+        };
+
+        let verify_state = VerifyState::new_with_final_round(false);
+        for value in merged.values() {
+            self.verify_obj_well_defined_and_store_cache(value, &verify_state)?;
+        }
+
+        Ok(Some(merged))
     }
 }
