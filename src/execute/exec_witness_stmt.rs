@@ -101,7 +101,7 @@ impl Runtime {
         }
 
         // 6) Store exist fact into the top-level (big) environment.
-        let store_result = self.store_fact_without_well_defined_verified_and_infer(
+        let store_result = self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
             stmt.exist_fact_in_witness.clone().into(),
         );
         match store_result {
@@ -187,7 +187,7 @@ impl Runtime {
         }
 
         // 6) Store nonempty set fact into the top-level (big) environment.
-        let store_result = self.store_fact_without_well_defined_verified_and_infer(
+        let store_result = self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
             IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into(),
         );
         match store_result {

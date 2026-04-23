@@ -193,9 +193,9 @@ impl Runtime {
                 default_line_file(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
-            self.store_fact_without_well_defined_verified_and_infer(Fact::AtomicFact(
+            self.store_atomic_fact_without_well_defined_verified_and_infer(
                 intermediate_atomic_fact,
-            ))
+            )
             .map_err(|store_fact_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,

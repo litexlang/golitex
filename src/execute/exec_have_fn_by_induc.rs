@@ -87,7 +87,7 @@ impl Runtime {
         )
         .into();
 
-        self.store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
+        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(function_in_function_set_fact)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         Ok(())
@@ -159,7 +159,7 @@ impl Runtime {
         )
         .into();
 
-        self.store_fact_without_well_defined_verified_and_infer(
+        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
             param_larger_than_induc_plus_offset.into(),
         )
         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
@@ -179,7 +179,7 @@ impl Runtime {
             self.store_well_defined_obj_cache(&fn_obj);
             let fn_in_ret: Fact =
                 InFact::new(fn_obj, stmt.ret_set.clone(), line_file.clone()).into();
-            self.store_fact_without_well_defined_verified_and_infer(fn_in_ret)
+            self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(fn_in_ret)
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         }
 
@@ -206,7 +206,7 @@ impl Runtime {
 
                 for nested in last_pairs.iter() {
                     self.run_in_local_env(|rt| {
-                        rt.store_fact_without_well_defined_verified_and_infer(
+                        rt.verify_well_defined_and_store_and_infer_with_final_round_verify_state(
                             nested.case_fact.clone().into(),
                         )
                         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
@@ -305,7 +305,7 @@ impl Runtime {
                 EqualFact::new(fn_obj.clone(), equal_to.clone(), stmt.line_file.clone()).into();
 
             let result = self
-                .store_fact_without_well_defined_verified_and_infer(equal_fact.clone())
+                .verify_well_defined_and_store_and_infer_with_final_round_verify_state(equal_fact.clone())
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
             Self::merge_store_infer_with_fallback_fact(&mut infer_result, result, &equal_fact);
@@ -357,7 +357,7 @@ impl Runtime {
                     .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
                 let result = self
-                    .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())
+                    .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_fact.clone())
                     .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
                 Self::merge_store_infer_with_fallback_fact(&mut infer_result, result, &forall_fact);
             }
@@ -411,7 +411,7 @@ impl Runtime {
                         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
                     let result = self
-                        .store_fact_without_well_defined_verified_and_infer(forall_fact.clone())
+                        .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_fact.clone())
                         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
                     Self::merge_store_infer_with_fallback_fact(
                         &mut infer_result,

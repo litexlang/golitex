@@ -67,7 +67,7 @@ impl Runtime {
         .into();
 
         let mut infer_result = self
-            .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
+            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(function_in_function_set_fact)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
@@ -134,7 +134,7 @@ impl Runtime {
             )?;
 
             let forall_infer_result = self
-                .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
+                .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_as_fact)
                 .map_err(|store_fact_error| {
                     short_exec_error(
                         have_fn_equal_case_by_case_stmt.clone().into(),
@@ -241,7 +241,7 @@ impl Runtime {
         }
 
         let _ = self
-            .store_fact_without_well_defined_verified_and_infer(case_fact_as_fact)
+            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(case_fact_as_fact)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),

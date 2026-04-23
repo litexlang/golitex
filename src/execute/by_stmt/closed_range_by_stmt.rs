@@ -80,7 +80,7 @@ impl Runtime {
         let disjunction = OrFact::new(branches, stmt.line_file.clone());
         let disjunction_fact: Fact = disjunction.into();
         let infer_after_store = self
-            .store_fact_without_well_defined_verified_and_infer(disjunction_fact.clone())
+            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(disjunction_fact.clone())
             .map_err(|e| short_exec_error(stmt.clone().into(), "", Some(e), vec![]))?;
 
         let mut infer_result = InferResult::new();

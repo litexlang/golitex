@@ -20,7 +20,7 @@ impl Runtime {
         infer_step_description: &str,
     ) -> Result<(), RuntimeError> {
         infer_result.new_fact(&inferred_fact);
-        self.store_fact_without_well_defined_verified_and_infer(inferred_fact)
+        self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(inferred_fact)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -394,7 +394,7 @@ impl Runtime {
             let fact_to_store =
                 instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file.clone());
             infer_result.new_fact(&fact_to_store);
-            self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
+            self.verify_well_defined_and_store_and_infer_with_final_round_verify_state(fact_to_store)
                 .map_err(|previous_error| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                         None,

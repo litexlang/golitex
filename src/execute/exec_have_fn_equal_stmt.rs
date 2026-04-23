@@ -108,7 +108,7 @@ impl Runtime {
         .into();
 
         let infer_result = self
-            .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
+            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(function_in_function_set_fact)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_stmt.clone().into(),
@@ -143,7 +143,7 @@ impl Runtime {
         let to_store = inst_have_fn_forall_fact_for_store(self, forall_fact)?;
 
         let _ = self
-            .store_fact_without_well_defined_verified_and_infer(to_store)
+            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(to_store)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_stmt.clone().into(),
