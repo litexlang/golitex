@@ -33,6 +33,12 @@ So sub-goals can chain: known facts → numeric/builtin cone → algebra again, 
 
 **Every** order-related `AtomicFact` dispatched from `non_equational_dispatch.rs` enters here. Steps run **in order**; the **first** step that returns a definite success stops the chain. If none apply, the code may still fall through to reflexivity / numeric comparison at the end of the function.
 
+### Early step — `try_verify_order_nonnegative_from_membership_in_n`
+
+**Idea:** In Litex, **`N`** is **nonnegative integers** (includes **0**). So **`n >= 0`** and **`0 <= n`** follow from **`n $in N`** (e.g. **`forall n N:`**).
+
+**Mechanism:** If the goal is **`GreaterEqualFact(n, 0)`** or **`LessEqualFact(0, n)`** with literal **`0`**, check whether **`n $in N`** holds by the full non-equational pipeline. If yes, succeed with reason **`n >= 0 from n $in N`**.
+
 ### Step A — `verify_order_from_known_negated_complement`
 
 **Idea:** total-order duality from a **known negated** fact.
