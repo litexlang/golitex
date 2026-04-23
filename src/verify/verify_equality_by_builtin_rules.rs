@@ -468,9 +468,11 @@ impl Runtime {
             .into();
             rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
             let lower: AtomicFact =
-                LessEqualFact::new(start_obj.clone(), param_obj.clone(), default_line_file()).into();
+                LessEqualFact::new(start_obj.clone(), param_obj.clone(), default_line_file())
+                    .into();
             rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
-            let upper: AtomicFact = LessEqualFact::new(param_obj, end_obj, default_line_file()).into();
+            let upper: AtomicFact =
+                LessEqualFact::new(param_obj, end_obj, default_line_file()).into();
             rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
             let stmt = rt.verify_objs_are_equal(
                 left.body.as_ref(),
@@ -500,7 +502,10 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let (Obj::Sum(lsum), Obj::Sum(rsum)) = (left, right) {
             return self.try_verify_two_sums_equal_by_pointwise_body(
-                lsum, rsum, line_file, verify_state,
+                lsum,
+                rsum,
+                line_file,
+                verify_state,
             );
         }
         Ok(None)
@@ -532,7 +537,8 @@ impl Runtime {
         }
         let mut m = HashMap::new();
         m.insert(outer.param.clone(), (*outer.end).clone());
-        let Ok(expected_tail) = self.inst_obj(outer.body.as_ref(), &m, ParamObjType::Product) else {
+        let Ok(expected_tail) = self.inst_obj(outer.body.as_ref(), &m, ParamObjType::Product)
+        else {
             return Ok(None);
         };
         if !objs_equal_by_display_string(actual_tail, &expected_tail) {
@@ -649,12 +655,8 @@ impl Runtime {
                     (add.right.as_ref(), add.left.as_ref()),
                 ] {
                     if let Obj::Sum(rsum) = sum_side {
-                        if self.try_finish_sum_peel_equality(
-                            lsum,
-                            rsum,
-                            tail_side,
-                            verify_state,
-                        )? == Some(())
+                        if self.try_finish_sum_peel_equality(lsum, rsum, tail_side, verify_state)?
+                            == Some(())
                         {
                             return Ok(Some(factual_equal_success_by_builtin_reason(
                                 left,
@@ -674,12 +676,8 @@ impl Runtime {
                     (add.right.as_ref(), add.left.as_ref()),
                 ] {
                     if let Obj::Sum(lsum) = sum_side {
-                        if self.try_finish_sum_peel_equality(
-                            rsum,
-                            lsum,
-                            tail_side,
-                            verify_state,
-                        )? == Some(())
+                        if self.try_finish_sum_peel_equality(rsum, lsum, tail_side, verify_state)?
+                            == Some(())
                         {
                             return Ok(Some(factual_equal_success_by_builtin_reason(
                                 left,
@@ -1065,10 +1063,7 @@ impl Runtime {
                         }
                         let first_end_plus_one: Obj =
                             Add::new((*s1.end).clone(), one.clone()).into();
-                        if !objs_equal_by_display_string(
-                            &first_end_plus_one,
-                            s2.start.as_ref(),
-                        ) {
+                        if !objs_equal_by_display_string(&first_end_plus_one, s2.start.as_ref()) {
                             continue;
                         }
                         return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -1105,10 +1100,7 @@ impl Runtime {
                         }
                         let first_end_plus_one: Obj =
                             Add::new((*s1.end).clone(), one.clone()).into();
-                        if !objs_equal_by_display_string(
-                            &first_end_plus_one,
-                            s2.start.as_ref(),
-                        ) {
+                        if !objs_equal_by_display_string(&first_end_plus_one, s2.start.as_ref()) {
                             continue;
                         }
                         return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -1159,10 +1151,7 @@ impl Runtime {
                         }
                         let first_end_plus_one: Obj =
                             Add::new((*p1.end).clone(), one.clone()).into();
-                        if !objs_equal_by_display_string(
-                            &first_end_plus_one,
-                            p2.start.as_ref(),
-                        ) {
+                        if !objs_equal_by_display_string(&first_end_plus_one, p2.start.as_ref()) {
                             continue;
                         }
                         return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -1199,10 +1188,7 @@ impl Runtime {
                         }
                         let first_end_plus_one: Obj =
                             Add::new((*p1.end).clone(), one.clone()).into();
-                        if !objs_equal_by_display_string(
-                            &first_end_plus_one,
-                            p2.start.as_ref(),
-                        ) {
+                        if !objs_equal_by_display_string(&first_end_plus_one, p2.start.as_ref()) {
                             continue;
                         }
                         return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -1468,6 +1454,17 @@ impl Runtime {
             )?;
         if result.is_true() {
             return Ok(result);
+        }
+
+        if objs_equal_by_rational_expression_evaluation(&left, &right) {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "calculation and rational expression simplification".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
         }
 
         if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
@@ -2187,9 +2184,11 @@ fn obj_lexically_bound_sum_product_index_atoms(obj: &Obj, bound: &mut Vec<String
                 .all(|f| or_and_chain_lexically_bound_sum_product_index_atoms(f, bound))
         }
         Obj::FnSet(fs) => {
-            if !fs.params_def_with_set.iter().all(|ps| {
-                obj_lexically_bound_sum_product_index_atoms(&ps.set, bound)
-            }) {
+            if !fs
+                .params_def_with_set
+                .iter()
+                .all(|ps| obj_lexically_bound_sum_product_index_atoms(&ps.set, bound))
+            {
                 return false;
             }
             if !fs
@@ -2229,9 +2228,10 @@ fn obj_lexically_bound_sum_product_index_atoms(obj: &Obj, bound: &mut Vec<String
                 && obj_lexically_bound_sum_product_index_atoms(x.n.as_ref(), bound)
         }
         Obj::SeqSet(x) => obj_lexically_bound_sum_product_index_atoms(x.set.as_ref(), bound),
-        Obj::FiniteSeqListObj(v) => v.objs.iter().all(|o| {
-            obj_lexically_bound_sum_product_index_atoms(o.as_ref(), bound)
-        }),
+        Obj::FiniteSeqListObj(v) => v
+            .objs
+            .iter()
+            .all(|o| obj_lexically_bound_sum_product_index_atoms(o.as_ref(), bound)),
         Obj::MatrixSet(ms) => {
             obj_lexically_bound_sum_product_index_atoms(ms.set.as_ref(), bound)
                 && obj_lexically_bound_sum_product_index_atoms(ms.row_len.as_ref(), bound)
@@ -2348,7 +2348,9 @@ fn atomic_fact_lexically_bound_sum_product_index_atoms(
             obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
                 && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
         }
-        AtomicFact::IsSetFact(fact) => obj_lexically_bound_sum_product_index_atoms(&fact.set, bound),
+        AtomicFact::IsSetFact(fact) => {
+            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
+        }
         AtomicFact::NotIsSetFact(fact) => {
             obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
         }
@@ -2372,7 +2374,9 @@ fn atomic_fact_lexically_bound_sum_product_index_atoms(
             obj_lexically_bound_sum_product_index_atoms(&fact.element, bound)
                 && obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
         }
-        AtomicFact::IsCartFact(fact) => obj_lexically_bound_sum_product_index_atoms(&fact.set, bound),
+        AtomicFact::IsCartFact(fact) => {
+            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
+        }
         AtomicFact::NotIsCartFact(fact) => {
             obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
         }

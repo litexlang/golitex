@@ -60,7 +60,7 @@ by cases:
 e.g.
 
 ```litex
-have fn g(x R) R =:
+have fn g(x R) R:
     case x = 2: 3
     case x != 2: 4
 
@@ -194,14 +194,10 @@ by enumerate <param> <list_set> [, <param> <list_set> ]…:
 e.g.
 
 ```litex
-let a R:
-    a $in {1, 2}
-
-a = 1 or a = 2
-
-by enumerate a {1, 2, 3}:
+by enumerate finite_set:
     prove:
-        a < 4
+        forall a {1, 2, 3}:
+            a < 4
 ```
 
 # by induc
@@ -235,7 +231,8 @@ know:
             $p(n + 1)
 
 by induc n from 0:
-    $p(n)
+    prove:
+        $p(n)
 
 forall n Z:
     n >= 0
@@ -306,12 +303,14 @@ e.g.
 by extension:
     prove:
         {1, 2} = {2, 1}
-    by enumerate x {1, 2}:
+    by enumerate finite_set:
         prove:
-            x $in {2, 1}
-    by enumerate y {2, 1}:
+            forall x {1, 2}:
+                x $in {2, 1}
+    by enumerate finite_set:
         prove:
-            y $in {1, 2}
+            forall y {2, 1}:
+                y $in {1, 2}
 
 {1, 2} = {2, 1}
 ```
