@@ -14,6 +14,10 @@ sum(i, 1, 3, a(i) + b(i)) = 21
 have f fn(x Z) R
 have g fn(x Z) R
 
+# When both left and right are sums, we can use the builtin rules to prove equality.
+# Sum parameter on left and right are both the same. sum start and end are equal. When sum parameter `i` are in given range, the sum bodies are equal. Then the sums are equal.
+# In this case, `i` is the sum parameter on both left and right, `1` is both the start, `3` is both the end, and `f(i)` = `g(i)` when `i` is in the closed range `1` to `3`.
+
 know:
     forall i Z:
         f(i) = g(i)
