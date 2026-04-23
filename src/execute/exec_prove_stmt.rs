@@ -22,12 +22,9 @@ impl Runtime {
         });
 
         match inside_results {
-            Ok(_) => {
-                Ok(
-                    (NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![]))
-                        .into(),
-                )
-            }
+            Ok(inside_results) => Ok(
+                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), inside_results).into(),
+            ),
             Err(inside_results_error) => Err(inside_results_error),
         }
     }

@@ -1,12 +1,2 @@
-abstract_prop p(a)
-abstract_prop q(a, b)
-have f fn(a R) R
-
-know forall a R:
-    $p(a)
-
-know forall a, b R:
-    $q(f(a + b), b)
-
-$p(1)
-$q(f(1 + 2), 2)
+prove:
+    1 = 1
