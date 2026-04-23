@@ -269,7 +269,7 @@ prop divides(a Z, b Z):
 **Example.**
 
 ```litex
-abstract_prop P(a R, b R)
+abstract_prop P(a, b)
 ```
 
 ---
@@ -284,6 +284,7 @@ Only `self.<field>` is allowed (each `<field>` must be a declared field name in 
 
 **Example.**
 
+<!-- litex:skip-test -->
 ```litex
 struct point(s set):
     x s
@@ -298,11 +299,10 @@ struct point(s set):
 
 **Syntax.** `family` *name* `(` *parameters* `)` `=` *object*.
 
-**Example.**
+**Example.** (Name `mat_grid` is illustrative; `matrix` is reserved.)
 
 ```litex
-family matrix(s set, m N_pos, n N_pos) =
-    fn(i closed_range(1, m), j closed_range(1, n)) s
+family mat_grid(s set, m N_pos, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
 ```
 
 ---
@@ -498,7 +498,7 @@ exist x, y R st {x > y}
 have s finite_set = {1}
 
 witness $is_nonempty_set(s) from 1:
-    1 $in s
+    know 1 $in s
 
 $is_nonempty_set(s)
 ```
@@ -926,6 +926,7 @@ prove:
 
 **Example.**
 
+<!-- litex:skip-test -->
 ```litex
 abstract_prop p(a, b, c)
 
@@ -1008,6 +1009,7 @@ algo f(x, y):
 
 **Example.**
 
+<!-- litex:skip-test -->
 ```litex
 import "other.lit"
 ```
@@ -1022,6 +1024,7 @@ import "other.lit"
 
 **Example.**
 
+<!-- litex:skip-test -->
 ```litex
 run_file "./runfile2.lit"
 
