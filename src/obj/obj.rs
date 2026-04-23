@@ -722,7 +722,9 @@ impl fmt::Display for Obj {
 }
 
 impl Obj {
-    /// 按优先级输出：当子表达式优先级低于父节点时自动加括号，例如 ^ 下出现 + 则写成 (a + b)。
+    /// Precedence-aware display: add parens when a child binds looser than the parent (e.g. + under *).
+    /// For same-precedence `+`/`-`, pass a stricter bound (2) on Sub's sides and Add's right so
+    /// `a - (b + c)` and `a + (b - c)` do not print as the ambiguous `a - b + c` / `a + b - c`.
     pub fn fmt_with_precedence(
         &self,
         f: &mut fmt::Formatter<'_>,
@@ -737,12 +739,12 @@ impl Obj {
             Obj::Add(a) => {
                 a.left.fmt_with_precedence(f, 3)?;
                 write!(f, " {} ", ADD)?;
-                a.right.fmt_with_precedence(f, 3)?;
+                a.right.fmt_with_precedence(f, 2)?;
             }
             Obj::Sub(s) => {
-                s.left.fmt_with_precedence(f, 3)?;
+                s.left.fmt_with_precedence(f, 2)?;
                 write!(f, " {} ", SUB)?;
-                s.right.fmt_with_precedence(f, 3)?;
+                s.right.fmt_with_precedence(f, 2)?;
             }
             Obj::Mul(m) => {
                 m.left.fmt_with_precedence(f, 2)?;
