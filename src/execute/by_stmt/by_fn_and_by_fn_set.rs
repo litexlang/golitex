@@ -36,7 +36,11 @@ impl Runtime {
             let generated_names_for_current_group =
                 generated_forall_param_names[flat_index..next_flat_index].to_vec();
             let instantiated_set = self
-                .inst_obj(&param_def_with_set.set, &original_param_to_forall_obj, ParamObjType::FnSet)
+                .inst_obj(
+                    &param_def_with_set.set,
+                    &original_param_to_forall_obj,
+                    ParamObjType::FnSet,
+                )
                 .map_err(|inst_error| {
                     short_exec_error(
                         stmt_exec.clone(),
@@ -76,7 +80,11 @@ impl Runtime {
             })
             .collect();
         let forall_ret_set = self
-            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_forall_obj, ParamObjType::FnSet)
+            .inst_obj(
+                fn_set.ret_set.as_ref(),
+                &original_param_to_forall_obj,
+                ParamObjType::FnSet,
+            )
             .map_err(|inst_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -135,8 +143,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let forall_z_obj =
-            obj_for_bound_param_in_scope(forall_z_name.clone(), ParamObjType::Exist);
+        let forall_z_obj = obj_for_bound_param_in_scope(forall_z_name.clone(), ParamObjType::Exist);
         let pair_in_fn = if param_names.len() == 1 {
             Tuple::new(vec![forall_args_exist[0].clone(), forall_z_obj]).into()
         } else {
@@ -209,7 +216,11 @@ impl Runtime {
             let generated_names_for_current_group =
                 generated_exist_param_names[exist_flat_index..next_flat_index].to_vec();
             let instantiated_set = self
-                .inst_obj(&param_def_with_set.set, &original_param_to_exist_obj, ParamObjType::FnSet)
+                .inst_obj(
+                    &param_def_with_set.set,
+                    &original_param_to_exist_obj,
+                    ParamObjType::FnSet,
+                )
                 .map_err(|inst_error| {
                     short_exec_error(
                         stmt_exec.clone(),
@@ -249,7 +260,11 @@ impl Runtime {
             })
             .collect();
         let exist_ret_set = self
-            .inst_obj(fn_set.ret_set.as_ref(), &original_param_to_exist_obj, ParamObjType::FnSet)
+            .inst_obj(
+                fn_set.ret_set.as_ref(),
+                &original_param_to_exist_obj,
+                ParamObjType::FnSet,
+            )
             .map_err(|inst_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -298,18 +313,15 @@ impl Runtime {
                             &original_param_to_forall_witness,
                             ParamObjType::FnSet,
                         )
-                            .map_err(|inst_error| {
-                                short_exec_error(
-                                    stmt_exec.clone(),
-                                    format!(
-                                        "{}: failed to instantiate witness domain fact",
-                                        context
-                                    ),
-                                    Some(inst_error),
-                                    vec![],
-                                )
-                            })?
-                            .into(),
+                        .map_err(|inst_error| {
+                            short_exec_error(
+                                stmt_exec.clone(),
+                                format!("{}: failed to instantiate witness domain fact", context),
+                                Some(inst_error),
+                                vec![],
+                            )
+                        })?
+                        .into(),
                     );
                 }
                 dom_facts
@@ -391,7 +403,7 @@ impl Runtime {
         // so avoid pre-recording the same fact here or JSON `infer_facts` will show duplicates.
         let mut infer_result = InferResult::new();
         let infer_shape = self
-            .store_fact_without_well_defined_verified_and_infer(forall_shape)
+            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_shape)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -402,7 +414,7 @@ impl Runtime {
             })?;
         infer_result.new_infer_result_inside(infer_shape);
         let infer_in = self
-            .store_fact_without_well_defined_verified_and_infer(forall_in)
+            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_in)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
@@ -414,7 +426,7 @@ impl Runtime {
         infer_result.new_infer_result_inside(infer_in);
 
         let infer_exist = self
-            .store_fact_without_well_defined_verified_and_infer(forall_exist)
+            .verify_well_defined_and_store_and_infer_with_final_round_verify_state(forall_exist)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),

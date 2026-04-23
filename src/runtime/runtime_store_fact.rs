@@ -2,7 +2,24 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 impl Runtime {
-    pub fn store_fact_without_well_defined_verified_and_infer(
+    pub fn verify_well_defined_and_store_and_infer(
+        &mut self,
+        fact: Fact,
+        verify_state: &VerifyState,
+    ) -> Result<InferResult, RuntimeError> {
+        self.verify_fact_well_defined(&fact, verify_state)?;
+        self.store_fact_without_well_defined_verified_and_infer(fact)
+    }
+
+    pub fn verify_well_defined_and_store_and_infer_with_final_round_verify_state(
+        &mut self,
+        fact: Fact,
+    ) -> Result<InferResult, RuntimeError> {
+        let verify_state = VerifyState::new_with_final_round(false);
+        self.verify_well_defined_and_store_and_infer(fact, &verify_state)
+    }
+
+    fn store_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {
