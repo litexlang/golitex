@@ -1,4 +1,12 @@
-forall x Z:
-    x >= 2
+"""
+To solve the system of equations:
+2x + 3y = 10
+4x + 5y = 14
+"""
+
+forall x, y R:
+    2 * x + 3 * y = 10
+    4 * x + 5 * y = 14
     =>:
-        x - 1 >= 0
+        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
+        x = ((2 * x + 3 * y) - 3 * y) / 2 = (10 - 3 * 6) / 2 = -4
