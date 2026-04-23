@@ -5,34 +5,6 @@ use crate::verify::{
     number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
     number_is_in_z_nz, verify_number_in_standard_set::is_integer_after_simplification, VerifyState,
 };
-use std::collections::{HashMap, HashSet};
-
-// Rename param groups to placeholder names using `flat_original` and `renamed_by_index`
-// (same flatten order as `FnSet::get_params`).
-fn param_def_with_set_rename_params(
-    groups: &[ParamGroupWithSet],
-    flat_original: &[String],
-    renamed_by_index: &[String],
-) -> Vec<ParamGroupWithSet> {
-    let mut name_to_i: HashMap<String, usize> = HashMap::new();
-    for (i, n) in flat_original.iter().enumerate() {
-        name_to_i.insert(n.clone(), i);
-    }
-    let mut out = Vec::with_capacity(groups.len());
-    for g in groups {
-        let new_names: Vec<String> = g
-            .params
-            .iter()
-            .map(|n| {
-                let i = name_to_i[n];
-                renamed_by_index[i].clone()
-            })
-            .collect();
-        out.push(ParamGroupWithSet::new(new_names, g.set.clone()));
-    }
-    out
-}
-
 fn number_in_set_verified_by_builtin_rules_result(in_fact: &InFact, reason: &str) -> StmtResult {
     StmtResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -439,7 +411,8 @@ impl Runtime {
                 | Obj::Min(_)
                 | Obj::Abs(_)
                 | Obj::Log(_)
-                | Obj::Sum(_),
+                | Obj::Sum(_)
+                | Obj::Product(_),
                 Obj::StandardSet(StandardSet::R),
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
@@ -651,7 +624,12 @@ impl Runtime {
         if !self.order_lower_bound_from_literals(elem, range.start.as_ref(), &lf, verify_state)? {
             return Ok((StmtUnknown::new()).into());
         }
-        if !self.order_upper_bound_open_from_literals(elem, range.end.as_ref(), &lf, verify_state)? {
+        if !self.order_upper_bound_open_from_literals(
+            elem,
+            range.end.as_ref(),
+            &lf,
+            verify_state,
+        )? {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(number_in_set_verified_by_builtin_rules_result(
@@ -673,8 +651,7 @@ impl Runtime {
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&weak, verify_state)? {
             return Ok(true);
         }
-        let in_z: AtomicFact =
-            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
             return Ok(false);
         }
@@ -684,10 +661,7 @@ impl Runtime {
         if !is_integer_after_simplification(&lower_num) {
             return Ok(false);
         }
-        let pred = Obj::Sub(Sub::new(
-            lower.clone(),
-            Number::new("1".to_string()).into(),
-        ));
+        let pred = Obj::Sub(Sub::new(lower.clone(), Number::new("1".to_string()).into()));
         let Some(pred_n) = pred.evaluate_to_normalized_decimal_number() else {
             return Ok(false);
         };
@@ -708,8 +682,7 @@ impl Runtime {
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&strict, verify_state)? {
             return Ok(true);
         }
-        let in_z: AtomicFact =
-            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
             return Ok(false);
         }
@@ -719,10 +692,8 @@ impl Runtime {
         if !is_integer_after_simplification(&upper_num) {
             return Ok(false);
         }
-        let upper_minus_one = Obj::Sub(Sub::new(
-            upper.clone(),
-            Number::new("1".to_string()).into(),
-        ));
+        let upper_minus_one =
+            Obj::Sub(Sub::new(upper.clone(), Number::new("1".to_string()).into()));
         let Some(um) = upper_minus_one.evaluate_to_normalized_decimal_number() else {
             return Ok(false);
         };
@@ -742,8 +713,7 @@ impl Runtime {
         if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&weak, verify_state)? {
             return Ok(true);
         }
-        let in_z: AtomicFact =
-            InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
         if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
             return Ok(false);
         }
@@ -753,10 +723,7 @@ impl Runtime {
         if !is_integer_after_simplification(&upper_num) {
             return Ok(false);
         }
-        let hi_plus_one = Obj::Add(Add::new(
-            upper.clone(),
-            Number::new("1".to_string()).into(),
-        ));
+        let hi_plus_one = Obj::Add(Add::new(upper.clone(), Number::new("1".to_string()).into()));
         let Some(hp) = hi_plus_one.evaluate_to_normalized_decimal_number() else {
             return Ok(false);
         };
@@ -1102,78 +1069,7 @@ impl Runtime {
         }
     }
 
-    // `fn(x N_pos) R` vs `fn(y N_pos) R`: pick fresh names per dimension, substitute the same
-    // placeholders on both sides, then compare `Display` of params / dom / ret.
-    fn fn_set_with_params_equal_modulo_param_rename(
-        &self,
-        a: &FnSet,
-        b: &FnSet,
-    ) -> Result<bool, RuntimeError> {
-        let pa = a.get_params();
-        let pb = b.get_params();
-        if pa.len() != pb.len() {
-            return Ok(false);
-        }
-        let n = pa.len();
-
-        let mut reserved: HashSet<String> = HashSet::new();
-        for s in pa.iter().chain(pb.iter()) {
-            reserved.insert(s.clone());
-        }
-
-        let mut placeholders: Vec<String> = Vec::with_capacity(n);
-        for _ in 0..n {
-            let base = self.generate_one_unused_name_with_reserved(&reserved);
-            reserved.insert(base.clone());
-            placeholders.push(base);
-        }
-
-        let mut pa_map = HashMap::new();
-        let mut pb_map = HashMap::new();
-        for i in 0..n {
-            let ph = placeholders[i].clone();
-            pa_map.insert(
-                pa[i].clone(),
-                obj_for_bound_param_in_scope(ph.clone(), ParamObjType::FnSet),
-            );
-            pb_map.insert(
-                pb[i].clone(),
-                obj_for_bound_param_in_scope(ph, ParamObjType::FnSet),
-            );
-        }
-
-        let a_params = param_def_with_set_rename_params(
-            &a.params_def_with_set,
-            &pa,
-            &placeholders,
-        );
-        let b_params = param_def_with_set_rename_params(
-            &b.params_def_with_set,
-            &pb,
-            &placeholders,
-        );
-
-        let a_dom: Vec<OrAndChainAtomicFact> = a
-            .dom_facts
-            .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pa_map, ParamObjType::FnSet))
-            .collect::<Result<Vec<_>, _>>()?;
-        let b_dom: Vec<OrAndChainAtomicFact> = b
-            .dom_facts
-            .iter()
-            .map(|dom_fact| self.inst_or_and_chain_atomic_fact(dom_fact, &pb_map, ParamObjType::FnSet))
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let a_ret = self.inst_obj(a.ret_set.as_ref(), &pa_map, ParamObjType::FnSet)?;
-        let b_ret = self.inst_obj(b.ret_set.as_ref(), &pb_map, ParamObjType::FnSet)?;
-
-        let a_instantiated = self.new_fn_set(a_params, a_dom, a_ret)?;
-        let b_instantiated = self.new_fn_set(b_params, b_dom, b_ret)?;
-
-        Ok(a_instantiated.to_string() == b_instantiated.to_string())
-    }
-
-    // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), α-compare to the RHS `fn ...`.
+    // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), compare to the RHS `fn ...`.
     fn verify_in_fact_element_in_fn_set_by_stored_definition(
         &mut self,
         element: &Obj,
@@ -1183,24 +1079,33 @@ impl Runtime {
         let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(element) else {
             return Ok((StmtUnknown::new()).into());
         };
-        if self
-            .fn_set_with_params_equal_modulo_param_rename(&stored_fn_set, expected_fn_set)
-            .map_err(|e| {
-                {
-                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(in_fact.clone()).into_stmt()),
-                        String::new(),
-                        in_fact.line_file.clone(),
-                        Some(e),
-                        vec![],
-                    )))
-                }
-            })?
-        {
+        if stored_fn_set.to_string() == expected_fn_set.to_string() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
-                    "fn membership: stored fn signature matches RHS (α-renamed compare)"
+                    "fn membership: stored fn signature matches RHS".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+        let flat_stored =
+            ParamGroupWithSet::collect_param_names(&stored_fn_set.params_def_with_set);
+        let flat_expected =
+            ParamGroupWithSet::collect_param_names(&expected_fn_set.params_def_with_set);
+        if flat_stored.len() != flat_expected.len() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let shared_names = self.generate_random_unused_names(flat_stored.len());
+        let stored_norm =
+            self.fn_set_alpha_renamed_for_display_compare(&stored_fn_set, &shared_names)?;
+        let expected_norm =
+            self.fn_set_alpha_renamed_for_display_compare(expected_fn_set, &shared_names)?;
+        if stored_norm.to_string() == expected_norm.to_string() {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "fn membership: stored fn signature matches RHS (alpha-renamed parameters)"
                         .to_string(),
                     Vec::new(),
                 ))

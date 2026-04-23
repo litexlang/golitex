@@ -78,7 +78,7 @@ impl Runtime {
                 })?
                 .to_fact();
             let fact_infer_result = self
-                .store_fact_without_well_defined_verified_and_infer(instantiated_fact)
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(instantiated_fact)
                 .map_err(|store_fact_error| {
                     short_exec_error(
                         have_exist_obj_stmt.clone().into(),

@@ -46,6 +46,8 @@ pub const POWER_SET: &str = "power_set";
 pub const CHOOSE: &str = "choose";
 /// Summation: `sum(i, start, end, body)` — `i` is a sum-index binder in `body` only.
 pub const SUM: &str = "sum";
+/// Product: `product(i, start, end, body)` — `i` is a product-index binder in `body` only.
+pub const PRODUCT: &str = "product";
 pub const FN_LOWER_CASE: &str = "fn";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
@@ -188,6 +190,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         POWER_SET,
         CHOOSE,
         SUM,
+        PRODUCT,
         FN_LOWER_CASE,
         SET,
         NONEMPTY_SET,

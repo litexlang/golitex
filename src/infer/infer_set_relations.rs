@@ -28,7 +28,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&inferred_forall_fact);
-        self.store_fact_without_well_defined_verified_and_infer(inferred_forall_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(inferred_forall_fact)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -71,7 +71,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&inferred_forall_fact);
-        self.store_fact_without_well_defined_verified_and_infer(inferred_forall_fact)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(inferred_forall_fact)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
