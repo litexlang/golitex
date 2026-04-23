@@ -203,6 +203,52 @@ impl Runtime {
         Ok(result)
     }
 
+    /// `n >= 0` / `0 <= n` from known `n $in N` (e.g. `forall n N:` domain).
+    fn try_verify_order_nonnegative_from_membership_in_n(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (n, line_file) = match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) => {
+                let Some(z) = self.resolve_obj_to_number(&f.right) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_normalized_number_str_to_zero(&z.normalized_value),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.left.clone(), f.line_file.clone())
+            }
+            AtomicFact::LessEqualFact(f) => {
+                let Some(z) = self.resolve_obj_to_number(&f.left) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_normalized_number_str_to_zero(&z.normalized_value),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.right.clone(), f.line_file.clone())
+            }
+            _ => return Ok(None),
+        };
+        let in_n: AtomicFact = InFact::new(n, StandardSet::N.into(), line_file.clone()).into();
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_n, verify_state)? {
+            return Ok(Some(StmtResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "n >= 0 from n $in N".to_string(),
+                    Vec::new(),
+                ),
+            )));
+        }
+        Ok(None)
+    }
+
     fn verify_zero_le_abs_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -246,6 +292,12 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        let vs = VerifyState::new(0, true);
+        if let Some(result) =
+            self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_order_two_sums_same_index_and_bounds(atomic_fact)? {
             return Ok(result);
         }

@@ -27,7 +27,8 @@ Depends on the shape of `S`:
 | `N_pos`, `Q_pos`, `R_pos` | **`0 < element`** | positive ray |
 | `Z_neg`, `Q_neg`, `R_neg` | **`element < 0`** | negative ray |
 | `Z_nz`, `Q_nz`, `R_nz` | **`element != 0`** | nonzero |
-| `N`, `Z`, `Q`, `R` | (nothing extra here) | — |
+| `N` | **`element >= 0`** (equivalently **`0 <= element`**) | `k $in N` ⇒ `k >= 0` |
+| `Z`, `Q`, `R` | (nothing extra here) | — |
 | `FamilyObj` | Instantiate family to a concrete **member set**, then infer as that `InFact` | type-level family |
 | `FiniteSeqSet`, `SeqSet`, `MatrixSet` | Desugar to **`FnSet`**, same as function-space membership, plus stored **`InFact`** into that `FnSet` | — |
 | (other) | No inference on this path | — |
