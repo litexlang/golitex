@@ -6,7 +6,7 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         _line_file: LineFile,
-        inst_state: InstObjState,
+        inst_state: ToInstWhatKindOfParam,
     ) -> Result<InferResult, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, inst_state)?;
@@ -26,7 +26,7 @@ impl Runtime {
                 }
             };
             infer_result.new_infer_result_inside(
-                self.store_fact_without_well_defined_verified_and_infer(new_fact)?,
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(new_fact)?,
             );
         }
 

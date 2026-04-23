@@ -2,7 +2,38 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 impl Runtime {
-    pub fn store_fact_without_well_defined_verified_and_infer(
+    pub fn verify_well_defined_and_store_and_infer(
+        &mut self,
+        fact: Fact,
+        verify_state: &VerifyState,
+    ) -> Result<InferResult, RuntimeError> {
+        if let Err(wd_err) = self.verify_fact_well_defined(&fact, verify_state) {
+            let line_file = fact.line_file();
+            return Err(StoreFactRuntimeError(RuntimeErrorStruct::new(
+                Some(fact.clone().into_stmt()),
+                "cannot store fact: not well-defined".to_string(),
+                line_file,
+                Some(wd_err),
+                vec![],
+            ))
+            .into());
+        }
+        self.store_fact_without_well_defined_verified_and_infer(fact)
+    }
+
+    pub fn verify_well_defined_and_store_and_infer_with_default_verify_state(
+        &mut self,
+        fact: Fact,
+    ) -> Result<InferResult, RuntimeError> {
+        let verify_state = match fact {
+            Fact::ForallFact(_) => VerifyState::new(0, false),
+            Fact::ForallFactWithIff(_) => VerifyState::new(0, false),
+            _ => VerifyState::new_with_final_round(false),
+        };
+        self.verify_well_defined_and_store_and_infer(fact, &verify_state)
+    }
+
+    fn store_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {

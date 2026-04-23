@@ -20,7 +20,7 @@ impl Runtime {
     }
 
     fn get_matched_exist_fact_in_known_forall_fact_in_envs(
-        &self,
+        &mut self,
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
         given_exist_fact: &ExistFact,
@@ -56,12 +56,17 @@ impl Runtime {
             if !merged_bucket.is_empty() {
                 let known_forall_facts_count = merged_bucket.len();
                 for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
-                    let current_known_forall =
-                        &merged_bucket[known_forall_facts_count - 1 - j];
-                    let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact();
-                    let given_fact_args = given_exist_fact.get_args_from_fact();
+                    let entry_idx = known_forall_facts_count - 1 - j;
+                    let (fact_args_in_known_forall, given_fact_args, current_known_forall) = {
+                        let current_known_forall = &merged_bucket[entry_idx];
+                        (
+                            current_known_forall.0.get_args_from_fact(),
+                            given_exist_fact.get_args_from_fact(),
+                            current_known_forall.clone(),
+                        )
+                    };
                     let match_result =
-                        Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+                        self.match_args_in_fact_in_known_forall_fact_with_given_args(
                             &fact_args_in_known_forall,
                             &given_fact_args,
                         )?;
@@ -70,7 +75,7 @@ impl Runtime {
                         if exist_in_forall.is_exist_unique != given_exist_fact.is_exist_unique {
                             continue;
                         }
-                        return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
+                        return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
                     }
                 }
             }
@@ -281,6 +286,7 @@ impl Runtime {
             Obj::Atom(AtomObj::Induc(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::Sum(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Product(p)) => Some(p.name.as_str()),
             _ => None,
         }
     }
@@ -295,6 +301,7 @@ impl Runtime {
             Obj::Atom(AtomObj::Induc(p)) => p.name == name,
             Obj::Atom(AtomObj::DefAlgo(p)) => p.name == name,
             Obj::Atom(AtomObj::Sum(p)) => p.name == name,
+            Obj::Atom(AtomObj::Product(p)) => p.name == name,
             _ => obj.to_string() == name,
         }
     }

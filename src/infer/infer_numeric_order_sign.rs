@@ -155,7 +155,7 @@ impl Runtime {
             LessFact::new(Number::new("0".to_string()).into(), x, line_file.clone()).into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
-        self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -177,7 +177,7 @@ impl Runtime {
             LessEqualFact::new(x, Number::new("0".to_string()).into(), line_file.clone()).into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
-        self.store_fact_without_well_defined_verified_and_infer(fact_to_store)
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,

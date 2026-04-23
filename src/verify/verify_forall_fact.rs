@@ -36,10 +36,8 @@ impl Runtime {
             }
 
             for dom_fact in forall_fact.dom_facts.iter() {
-                rt.verify_fact_well_defined(dom_fact, verify_state)?;
-
                 let dom_infer_result = rt
-                    .store_fact_without_well_defined_verified_and_infer(dom_fact.clone())
+                    .verify_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
                     .map_err(|e| {
                         let message = "failed to assume dom fact in forall".to_string();
                         {

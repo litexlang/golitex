@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_function_obj_with_param_names, inst_have_fn_forall_fact_for_store,
+    build_function_obj_with_param_names,
     param_defs_with_type_from_have_fn_clause,
 };
 
@@ -67,7 +67,7 @@ impl Runtime {
         .into();
 
         let mut infer_result = self
-            .store_fact_without_well_defined_verified_and_infer(function_in_function_set_fact)
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(function_in_function_set_fact)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
@@ -122,7 +122,7 @@ impl Runtime {
                 vec![function_equals_equal_to_fact.into()],
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
             );
-            let forall_as_fact = inst_have_fn_forall_fact_for_store(self, forall_fact).map_err(
+            let forall_as_fact = self.inst_have_fn_forall_fact_for_store(forall_fact).map_err(
                 |store_inst_error| {
                     short_exec_error(
                         have_fn_equal_case_by_case_stmt.clone().into(),
@@ -134,7 +134,7 @@ impl Runtime {
             )?;
 
             let forall_infer_result = self
-                .store_fact_without_well_defined_verified_and_infer(forall_as_fact)
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_as_fact)
                 .map_err(|store_fact_error| {
                     short_exec_error(
                         have_fn_equal_case_by_case_stmt.clone().into(),
@@ -241,7 +241,7 @@ impl Runtime {
         }
 
         let _ = self
-            .store_fact_without_well_defined_verified_and_infer(case_fact_as_fact)
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(case_fact_as_fact)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),

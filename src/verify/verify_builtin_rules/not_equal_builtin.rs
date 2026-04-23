@@ -29,6 +29,19 @@ impl Runtime {
             _ => {}
         }
 
+        if let (Obj::ListSet(left_ls), Obj::ListSet(right_ls)) = (left_obj, right_obj) {
+            if left_ls.list.len() != right_ls.list.len() {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_equal_fact.clone().into(),
+                        "list_set_different_length".to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
+        }
+
         if let Some(verified_result) =
             self.try_verify_not_equal_from_known_strict_order(not_equal_fact)?
         {
