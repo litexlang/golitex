@@ -5,3 +5,5 @@ forall start ,middle,last Z:
         product(i, start, last, i * i) = product(i, start, last, i) * product(i, start, last, i)
         product(i, start, middle, i) * product(i, middle + 1, last, i) = product(i, start, last, i)
         product(i, start, start, i) = start
+
+eval product(i, 1, 3, i)
