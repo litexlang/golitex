@@ -1538,30 +1538,17 @@ impl Runtime {
             return Ok(None);
         };
 
-        let Some(match_range_result) = self.match_arg_binary_then_merge(
-            left.start.as_ref(),
-            left.end.as_ref(),
-            given_arg_as_sum.start.as_ref(),
-            given_arg_as_sum.end.as_ref(),
-        )?
-        else {
-            return Ok(None);
-        };
-
-        let Some(match_body_result) = self
-            .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left.body.as_ref(),
-                given_arg_as_sum.body.as_ref(),
-            )?
-        else {
-            return Ok(None);
-        };
-
-        let Some(merged) = self.merge_arg_match_maps(match_range_result, match_body_result) else {
+        let pair_vec: [(&Obj, &Obj); 3] = [
+            (left.start.as_ref(), given_arg_as_sum.start.as_ref()),
+            (left.end.as_ref(), given_arg_as_sum.end.as_ref()),
+            (left.body.as_ref(), given_arg_as_sum.body.as_ref()),
+        ];
+        let Some(merged) = self.match_arg_pairs_then_merge(pair_vec.into_iter())? else {
             return Ok(None);
         };
 
         let verify_state = VerifyState::new_with_final_round(false);
+        // Forall-bound args must not capture ill-defined pieces of the sum spine.
         for value in merged.values() {
             self.verify_obj_well_defined_and_store_cache(value, &verify_state)?;
         }
@@ -1578,28 +1565,12 @@ impl Runtime {
             return Ok(None);
         };
 
-        let Some(match_range_result) = self.match_arg_binary_then_merge(
-            left.start.as_ref(),
-            left.end.as_ref(),
-            given_arg_as_product.start.as_ref(),
-            given_arg_as_product.end.as_ref(),
-        )?
-        else {
-            return Ok(None);
-        };
-
-        let Some(match_body_result) = self
-            .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left.body.as_ref(),
-                given_arg_as_product.body.as_ref(),
-            )?
-        else {
-            return Ok(None);
-        };
-
-        let Some(merged) =
-            self.merge_arg_match_maps(match_range_result, match_body_result)
-        else {
+        let pair_vec: [(&Obj, &Obj); 3] = [
+            (left.start.as_ref(), given_arg_as_product.start.as_ref()),
+            (left.end.as_ref(), given_arg_as_product.end.as_ref()),
+            (left.body.as_ref(), given_arg_as_product.body.as_ref()),
+        ];
+        let Some(merged) = self.match_arg_pairs_then_merge(pair_vec.into_iter())? else {
             return Ok(None);
         };
 
