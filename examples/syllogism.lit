@@ -1,0 +1,5 @@
+have human nonempty_set, Jordan human
+abstract_prop intelligent(x)
+know forall x human:
+    $intelligent(x)
+$intelligent(Jordan)
