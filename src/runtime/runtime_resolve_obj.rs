@@ -2,6 +2,7 @@ use crate::common::count_range_integer::{
     count_closed_range_integer_endpoints, count_half_open_range_integer_endpoints,
 };
 use crate::prelude::*;
+use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 
 impl Runtime {
     pub fn resolve_obj_to_number(&self, obj: &Obj) -> Option<Number> {
@@ -327,5 +328,34 @@ impl Runtime {
             }
             _ => obj.clone(),
         }
+    }
+
+    pub(crate) fn obj_is_resolved_zero(&self, obj: &Obj) -> bool {
+        self.resolve_obj_to_number(obj)
+            .map(|n| {
+                matches!(
+                    compare_normalized_number_str_to_zero(&n.normalized_value),
+                    NumberCompareResult::Equal
+                )
+            })
+            .unwrap_or(false)
+    }
+
+    /// If `obj` is `(-1) * u` or `u * (-1)` with literal `-1`, returns `u`.
+    pub(crate) fn peel_mul_by_literal_neg_one(&self, obj: &Obj) -> Option<Obj> {
+        let Obj::Mul(m) = obj else {
+            return None;
+        };
+        if let Some(ln) = self.resolve_obj_to_number(m.left.as_ref()) {
+            if ln.normalized_value == "-1" {
+                return Some(m.right.as_ref().clone());
+            }
+        }
+        if let Some(rn) = self.resolve_obj_to_number(m.right.as_ref()) {
+            if rn.normalized_value == "-1" {
+                return Some(m.left.as_ref().clone());
+            }
+        }
+        None
     }
 }

@@ -424,6 +424,13 @@ impl Runtime {
                     power_set,
                     verify_state,
                 ),
+            (Obj::SetBuilder(set_builder), Obj::PowerSet(power_set)) => self
+                .verify_in_fact_set_builder_in_power_set_via_param_subset(
+                    in_fact,
+                    set_builder,
+                    power_set,
+                    verify_state,
+                ),
             (Obj::Choose(choose), where_is_obj) => {
                 let choose_from = choose.set.clone();
                 let equal_fact = EqualFact::new(
@@ -928,6 +935,50 @@ impl Runtime {
             }
             _ => Ok((StmtUnknown::new()).into()),
         }
+    }
+
+    // `{x S : …} ⊆ S` always. If `S ⊆ T` then `{x S : …} ⊆ T`, so `{x S : …} ∈ 𝒫(T)`.
+    // Example: from `N $subset Z`, deduce `{x N: x = x} $in power_set(Z)` once that subset is known.
+    fn verify_in_fact_set_builder_in_power_set_via_param_subset(
+        &mut self,
+        in_fact: &InFact,
+        set_builder: &SetBuilder,
+        power_set: &PowerSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let base_set = power_set.set.as_ref();
+        let subset_fact = SubsetFact::new(
+            (*set_builder.param_set).clone(),
+            base_set.clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let verify_subset_result = self.verify_atomic_fact(&subset_fact, verify_state)?;
+        if !verify_subset_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let mut infer_result = InferResult::new();
+        match verify_subset_result {
+            StmtResult::FactualStmtSuccess(factual_success) => {
+                infer_result.new_infer_result_inside(factual_success.infers.clone());
+            }
+            StmtResult::NonFactualStmtSuccess(non_factual_success) => {
+                infer_result.new_infer_result_inside(non_factual_success.infers.clone());
+            }
+            StmtResult::StmtUnknown(_) => {
+                return Ok((StmtUnknown::new()).into());
+            }
+        }
+        let stmt = in_fact.clone().into();
+        infer_result.new_fact(&stmt);
+        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
+            stmt,
+            infer_result,
+            "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
+                .to_string(),
+            Vec::new(),
+        ))
+        .into())
     }
 
     fn verify_in_fact_list_set_in_power_set_defines_membership(
