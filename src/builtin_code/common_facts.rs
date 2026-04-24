@@ -66,4 +66,11 @@ know:
         =>:
             (a + b) % c = ((a % c) + (b % c)) % c
 
+prop archimedean_property(e R_pos):
+    exist n N_pos st {1/n < e}
+
+know:
+    forall e R_pos:
+        $archimedean_property(e)
+        exist n N_pos st {1/n < e}
 "#;
