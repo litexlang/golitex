@@ -724,10 +724,14 @@ impl Runtime {
             return Ok(());
         }
 
+        let pow_display = Obj::Pow(pow.clone()).to_string();
         return Err(RuntimeError::from(WellDefinedRuntimeError(
             RuntimeErrorStruct::new(
                 None,
-                format!("base and exponent do not satisfy the pow domain"),
+                format!(
+                    "base and exponent do not satisfy the pow domain: {}",
+                    pow_display
+                ),
                 default_line_file(),
                 None,
                 vec![],
@@ -854,10 +858,49 @@ impl Runtime {
         x: &SetBuilder,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        if let Err(e) = self.define_params_with_set(&ParamGroupWithSet::new(
-            vec![x.param.clone()],
-            *x.param_set.clone(),
-        )) {
+        // Must use `ParamObjType::SetBuilder` here, not `define_params_with_set` (FnSet).
+        // Parsed set-builder facts use SetBuilder-tagged bound vars; a mismatched tag means
+        // e.g. `x $in N` is never found when checking `b ^ x`, so pow domain fails.
+        if let Err(well_defined_error) = self
+            .verify_obj_well_defined_and_store_cache(&x.param_set, &VerifyState::new(0, false))
+        {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "failed to verify well-defined of set builder {}",
+                        x.to_string()
+                    ),
+                    default_line_file(),
+                    Some(well_defined_error),
+                    vec![],
+                ),
+            )));
+        }
+        if let Err(e) = self.store_free_param_or_identifier_name(&x.param, ParamObjType::SetBuilder)
+        {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "failed to verify well-defined of set builder {}",
+                        x.to_string()
+                    ),
+                    default_line_file(),
+                    Some(e),
+                    vec![],
+                ),
+            )));
+        }
+        let param_in_set: Fact = InFact::new(
+            obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::SetBuilder),
+            (*x.param_set).clone(),
+            default_line_file(),
+        )
+        .into();
+        if let Err(e) = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(param_in_set)
+        {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
