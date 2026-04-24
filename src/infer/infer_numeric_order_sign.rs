@@ -5,7 +5,10 @@ impl Runtime {
     // Order atom with exactly one side a resolved numeric literal: may store `0 < x` or `x <= 0` for the other side.
     // Example: `2 < a` (literal left) infers `0 < a` when the constant branch applies; `b < 0` pairs use the `<= 0` path on `b`.
     //
-    // Additionally: comparing `x` with `0` may infer the opposite sign on `(-1)*x` (e.g. `x < 0` => `(-1)*x >= 0`).
+    // Additionally: comparing `x` with `0` on the **right** (`x < 0`, `x <= 0`, …) may infer the
+    // opposite sign on `(-1)*x` (e.g. `x < 0` => `(-1)*x >= 0`). We do **not** infer from `0 < x`
+    // (literal 0 on the left): that would require `x $in R` to store `(-1)*x < 0`, which often
+    // fails for scoped parameters. Verification builtins still prove such goals when needed.
     // Skips operands already of the form `(-1)*u` so we do not chain `(-1)*((-1)*n)`.
     pub fn infer_numeric_order_sign_from_order_atomic(
         &mut self,
@@ -89,58 +92,9 @@ impl Runtime {
                     .into(),
                 )
             }
-            AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.left) => {
-                if !self.order_flip_infer_operand_ok(&f.right) {
-                    return None;
-                }
-                Some(
-                    LessFact::new(
-                        self.obj_mul_literal_neg_one(f.right.clone()),
-                        z,
-                        f.line_file.clone(),
-                    )
-                    .into(),
-                )
-            }
-            AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
-                if !self.order_flip_infer_operand_ok(&f.right) {
-                    return None;
-                }
-                Some(
-                    LessEqualFact::new(
-                        self.obj_mul_literal_neg_one(f.right.clone()),
-                        z,
-                        f.line_file.clone(),
-                    )
-                    .into(),
-                )
-            }
-            AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.left) => {
-                if !self.order_flip_infer_operand_ok(&f.right) {
-                    return None;
-                }
-                Some(
-                    GreaterEqualFact::new(
-                        self.obj_mul_literal_neg_one(f.right.clone()),
-                        z,
-                        f.line_file.clone(),
-                    )
-                    .into(),
-                )
-            }
-            AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
-                if !self.order_flip_infer_operand_ok(&f.right) {
-                    return None;
-                }
-                Some(
-                    GreaterEqualFact::new(
-                        self.obj_mul_literal_neg_one(f.right.clone()),
-                        z,
-                        f.line_file.clone(),
-                    )
-                    .into(),
-                )
-            }
+            // No infer when literal `0` is on the **left** (e.g. `0 < a` from `a > k`, k>0).
+            // Flipping would store `(-1)*a < 0`, which requires `a $in R` for WD; parameters in a
+            // finite list or other scopes may not have that yet.
             _ => None,
         }
     }
@@ -153,10 +107,14 @@ impl Runtime {
         else {
             return Ok(InferResult::new());
         };
-        let fact_to_store: Fact = inferred_atomic.into();
+        let fact_to_store: Fact = inferred_atomic.clone().into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)
+        // Do not run full `verify_fact_well_defined` here: WD for the flipped atom can re-enter
+        // `verify_fn_obj_well_defined` (e.g. intermediate `… $in N`) and this infer path again,
+        // causing mutual recursion / stack overflow (see `examples/euler_phi.lit`).
+        let inner = self
+            .store_atomic_fact_without_well_defined_verified_and_infer(inferred_atomic)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -166,6 +124,7 @@ impl Runtime {
                     vec![],
                 )))
             })?;
+        infer_result.new_infer_result_inside(inner);
         Ok(infer_result)
     }
 

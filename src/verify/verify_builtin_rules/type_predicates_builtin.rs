@@ -29,6 +29,32 @@ impl Runtime {
                     )
                 }
             }
+            // Integer closed interval `{x in Z | lo <= x <= hi}` is nonempty iff `lo <= hi`.
+            // Numeric well-defined `closed_range` requires this order when endpoints are concrete;
+            // otherwise we still need a provable `lo <= hi` (e.g. from the environment).
+            // Example: `$is_nonempty_set(closed_range(0, 2))` via `0 <= 2`.
+            // Example: under `a <= b`, the same for `closed_range(a, b)`.
+            Obj::ClosedRange(closed_range) => {
+                let le = LessEqualFact::new(
+                    closed_range.start.as_ref().clone(),
+                    closed_range.end.as_ref().clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                );
+                let le_ok =
+                    self.verify_non_equational_known_then_builtin_rules_only(&le.into(), _verify_state)?;
+                if le_ok.is_true() {
+                    Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "closed_range_nonempty_when_start_le_end".to_string(),
+                            Vec::new(),
+                        ))
+                        .into(),
+                    )
+                } else {
+                    Ok((StmtUnknown::new()).into())
+                }
+            }
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
                     let is_nonempty_set_result = self
