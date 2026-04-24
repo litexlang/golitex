@@ -74,6 +74,24 @@ fn parse_level(
     current_file_path: Rc<str>,
     tokenizer: &mut Tokenizer,
 ) -> Result<Vec<TokenBlock>, RuntimeError> {
+    let pushed = base_indent > 0;
+    if pushed {
+        tokenizer.push_scope();
+    }
+    let out = parse_level_impl(lines, i, base_indent, current_file_path, tokenizer);
+    if pushed {
+        tokenizer.pop_scope();
+    }
+    out
+}
+
+fn parse_level_impl(
+    lines: &[&str],
+    i: &mut usize,
+    base_indent: usize,
+    current_file_path: Rc<str>,
+    tokenizer: &mut Tokenizer,
+) -> Result<Vec<TokenBlock>, RuntimeError> {
     let remaining_line_count_upper_bound = lines.len().saturating_sub(*i);
     let mut items = Vec::with_capacity(remaining_line_count_upper_bound);
     let mut body_indent = None;
@@ -81,6 +99,7 @@ fn parse_level(
     while *i < lines.len() {
         let raw = lines[*i];
         let line_no = *i + 1;
+        let line_file = (line_no, current_file_path.clone());
         let indent = indent_level(raw);
         let content = raw.trim();
 
@@ -95,7 +114,6 @@ fn parse_level(
 
         if indent > base_indent {
             return Err({
-                let line_file = (line_no, current_file_path.clone());
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                     None,
                     format!(
@@ -114,7 +132,7 @@ fn parse_level(
 
         // Tokenize header; if it's empty (e.g. whole line comment),
         // treat it like a blank line for block parsing.
-        let header_tokens = tokenizer.tokenize_line(content);
+        let header_tokens = tokenizer.tokenize_line(content, line_file.clone())?;
         if header_tokens.is_empty() {
             continue;
         }
@@ -156,7 +174,8 @@ fn parse_level(
                 });
             }
 
-            let body = parse_level(lines, i, next_indent, current_file_path.clone(), tokenizer)?;
+            let body =
+                parse_level(lines, i, next_indent, current_file_path.clone(), tokenizer)?;
             items.push(TokenBlock::new(
                 header_tokens,
                 body,

@@ -4,4 +4,5 @@ macro Nat "N"
 @M
 
 forall i @Nat:
+    i $in N
     

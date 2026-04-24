@@ -83,7 +83,9 @@ mod algebraic_identity_tests {
 
         fn parse_obj_line(line: &str) -> Obj {
             let mut tokenizer = Tokenizer::new();
-            let tokens = tokenizer.tokenize_line(line);
+            let tokens = tokenizer
+                .tokenize_line(line, (1, Rc::from("test.lit")))
+                .expect("tokenize");
             let mut tb = TokenBlock::new(tokens, vec![], (1, Rc::from("test.lit")));
             let mut rt = Runtime::new();
             rt.parse_obj(&mut tb).expect("parse")
