@@ -35,6 +35,7 @@ pub const RIGHT_BRACKET: &str = "]";
 pub const DOUBLE_QUOTE: &str = "\"";
 pub const COLON: &str = ":";
 pub const INFIX_FN_NAME_SIGN: &str = "\\";
+pub const AT: &str = "@";
 
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
@@ -132,8 +133,9 @@ pub const STRUCT: &str = "struct";
 pub const SELF: &str = "self";
 pub const RESTRICT: &str = "restrict";
 pub const STRATEGY: &str = "strategy";
-pub const BEGIN: &str = "begin";
-pub const END: &str = "end";
+pub const USE_STRATEGY: &str = "use_strategy";
+pub const END_STRATEGY: &str = "end_strategy";
+pub const MACRO: &str = "macro";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -171,6 +173,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         DOUBLE_QUOTE,
         COLON,
         INFIX_FN_NAME_SIGN,
+        AT,
     ];
     for &s in &symbols {
         m.insert(s, s);
@@ -270,8 +273,9 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SELF,
         RESTRICT,
         STRATEGY,
-        BEGIN,
-        END,
+        USE_STRATEGY,
+        END_STRATEGY,
+        MACRO,
     ];
     for &s in &words {
         m.insert(s, s);
