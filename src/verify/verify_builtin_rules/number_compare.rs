@@ -462,6 +462,11 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) =
+            self.verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
             self.verify_zero_le_pow_integer_exponent_from_nonneg_base_builtin_rule(atomic_fact)?
         {
             return Ok(result);
@@ -941,6 +946,58 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a^b from 0 < a and b in R".to_string(),
+                vec![base_result, in_r_result],
+            ),
+        )))
+    }
+
+    // `0 <= a^b` / `a^b >= 0` with the same premises as strict `0 < a^b`: `0 < a` and `b in R`.
+    // Covers symbolic exponents (e.g. `2^m`) where the literal-exponent `0 <= a^n` rule does not apply.
+    fn verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessEqualFact(less_equal_fact) = normalized_fact else {
+            return Ok(None);
+        };
+        if less_equal_fact.left.to_string() != "0" {
+            return Ok(None);
+        }
+        let Obj::Pow(pow_obj) = &less_equal_fact.right else {
+            return Ok(None);
+        };
+        let zero = &less_equal_fact.left;
+        let line_file = &less_equal_fact.line_file;
+        let base = pow_obj.base.as_ref();
+        let base_result = self.verify_zero_order_on_sub_expr(zero, base, false, line_file)?;
+        if !base_result.is_true() {
+            return Ok(None);
+        }
+        let in_r: AtomicFact = InFact::new(
+            (*pow_obj.exponent).clone(),
+            StandardSet::R.into(),
+            line_file.clone(),
+        )
+        .into();
+        let mut in_r_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_r)?;
+        if !in_r_result.is_true() {
+            in_r_result = self.verify_non_equational_atomic_fact(
+                &in_r,
+                &VerifyState::new(0, false),
+                true,
+            )?;
+        }
+        if !in_r_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "0 <= a^b from 0 < a and b in R".to_string(),
                 vec![base_result, in_r_result],
             ),
         )))
