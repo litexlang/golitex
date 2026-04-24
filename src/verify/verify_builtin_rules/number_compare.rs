@@ -274,6 +274,120 @@ impl Runtime {
         )))
     }
 
+    // `(-1)*x` order vs 0: e.g. `x < 0` or `x <= 0` implies `(-1)*x >= 0`; `x > 0` implies `(-1)*x < 0`.
+    // Also handles `0 <= (-1)*x` (equivalently `0 <= -x` when `-x` parses as `(-1)*x`).
+    fn try_verify_order_opposite_sign_mul_minus_one(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let z: Obj = Number::new("0".to_string()).into();
+        let success = |msg: &'static str| {
+            Ok(Some(StmtResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    msg.to_string(),
+                    Vec::new(),
+                ),
+            )))
+        };
+        match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let le: AtomicFact =
+                        LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&le, verify_state)?.is_true() {
+                        return success("order: (-1)*x >= 0 from x <= 0");
+                    }
+                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                        return success("order: (-1)*x >= 0 from x < 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                        return success("order: (-1)*x > 0 from x < 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let ge: AtomicFact =
+                        GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&ge, verify_state)?.is_true() {
+                        return success("order: (-1)*x <= 0 from x >= 0");
+                    }
+                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                        return success("order: (-1)*x <= 0 from x > 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                        return success("order: (-1)*x < 0 from x > 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
+                    let le: AtomicFact =
+                        LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&le, verify_state)?.is_true() {
+                        return success("order: 0 <= (-1)*x from x <= 0");
+                    }
+                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                        return success("order: 0 <= (-1)*x from x < 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
+                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                        return success("order: 0 < (-1)*x from x < 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
+                    let ge: AtomicFact =
+                        GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&ge, verify_state)?.is_true() {
+                        return success("order: 0 >= (-1)*x from x >= 0");
+                    }
+                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                        return success("order: 0 >= (-1)*x from x > 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
+                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                        return success("order: 0 > (-1)*x from x > 0");
+                    }
+                }
+                Ok(None)
+            }
+            _ => Ok(None),
+        }
+    }
+
     // Lit `know` facts for the nonnegative / positive cone under field operations used to live in
     // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
     // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
@@ -296,6 +410,9 @@ impl Runtime {
         if let Some(result) =
             self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, &vs)?
         {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_order_two_sums_same_index_and_bounds(atomic_fact)? {

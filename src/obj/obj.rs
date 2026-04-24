@@ -1153,10 +1153,14 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             to,
         ))
         .expect("name replace preserves fn head shape"),
-        FnObjHead::IdentifierWithMod(m) => FnObjHead::from_name_obj(
-            replace_bound_identifier_in_name_obj(Obj::Atom(AtomObj::IdentifierWithMod(m.clone())), from, to),
-        )
-        .expect("name replace preserves fn head shape"),
+        FnObjHead::IdentifierWithMod(m) => {
+            FnObjHead::from_name_obj(replace_bound_identifier_in_name_obj(
+                Obj::Atom(AtomObj::IdentifierWithMod(m.clone())),
+                from,
+                to,
+            ))
+            .expect("name replace preserves fn head shape")
+        }
         FnObjHead::Forall(p) => {
             let name = if p.name == from {
                 to.to_string()
