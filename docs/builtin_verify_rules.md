@@ -73,6 +73,7 @@ Normalizes the goal to `LessEqual` or `Less`, then runs **`try_less_equal_algebr
 | `right` is `a + b` and one addend is **syntactically** `left` | `0 <=` the **other** addend | `a <= a + b from 0 <= b` |
 | `right` is `u + v` | `left <= u` **and** `0 <= v`, or the symmetric swap of addends (`left <= v` **and** `0 <= u`) | `a <= b + c from a <= b and 0 <= c` |
 | `right` is `b * a` and **right factor** equals `left` | `0 <= left` **and** `1 <= b` (here `b` is the left factor of `*`) | `a <= b * a from 0 <= a and 1 <= b` |
+| `left` is `x1 * x2`, `right` is `y1 * y2` | `0 <= x1`, `0 <= x2`, `0 <= y1`, `0 <= y2`, and either (`x1 <= y1` **and** `x2 <= y2`) or (`x1 <= y2` **and** `x2 <= y1`) (tries **cross** pairing if aligned fails) | `x1 * x2 <= y1 * y2 from 0 <= factors and componentwise <=` |
 | `left` and `right` are `k*u` and `k*v` with **same** left factor `k` | Either (`0 <= k` and `u <= v`) **or** (`k <= 0` and `v <= u`) | `k * a <= k * b from …` / `… from k <= 0 and b <= a` |
 | Same with `*` and **same right factor** `k` | Same coefficient sign split on the **other** side | `a * k <= b * k from …` |
 | Both sides are `+` | `left.left <= right.left` **and** `left.right <= right.right` | `a + c <= b + d from a <= b and c <= d` |
@@ -114,6 +115,7 @@ Rough behavior (see comments above `verify_order_atomic_fact_numeric_builtin_onl
 - **Integer exponent** with `0 <= base` (and `0 < base` if exponent negative): `0 <= base^n`.
 - **`a * a`:** `0 <= a * a`.
 - **`0 < base^exp`:** from `0 < base` and exponent **in R** (real exponent, positive base).
+- **`0 <= base^exp` (weak, symbolic exponent):** same sub-goals as the previous line (`0 < base` and **`exp $in R`**). Reason: `0 <= a^b from 0 < a and b in R`. (Literal integer exponent still prefers the dedicated `0 <= a^n` rule when the exponent is a `Number`.)
 - **Products / quotients:** `0 <=` or `0 <` on `*` and `/` by splitting into operand sub-goals (denominator must be **strictly positive** for the non-flipped division rules).
 
 ### Step H — reflexivity
