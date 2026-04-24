@@ -33,6 +33,18 @@ So sub-goals can chain: known facts → numeric/builtin cone → algebra again, 
 
 **Every** order-related `AtomicFact` dispatched from `non_equational_dispatch.rs` enters here. Steps run **in order**; the **first** step that returns a definite success stops the chain. If none apply, the code may still fall through to reflexivity / numeric comparison at the end of the function.
 
+### Early step — `try_verify_order_nonnegative_from_membership_in_n`
+
+**Idea:** In Litex, **`N`** is **nonnegative integers** (includes **0**). So **`n >= 0`** and **`0 <= n`** follow from **`n $in N`** (e.g. **`forall n N:`**).
+
+**Mechanism:** If the goal is **`GreaterEqualFact(n, 0)`** or **`LessEqualFact(0, n)`** with literal **`0`**, check whether **`n $in N`** holds by the full non-equational pipeline. If yes, succeed with reason **`n >= 0 from n $in N`**.
+
+### Early step — `try_verify_order_opposite_sign_mul_minus_one` (`number_compare.rs`)
+
+**Idea:** Unary minus parses as **`(-1)*x`**. Order of **`x`** versus **`0`** is equivalent to order of **`(-1)*x`** versus **`0`** with strict/weak direction flipped the usual way (e.g. **`x < 0`** iff **`(-1)*x > 0`**).
+
+**Mechanism:** If the goal’s compared side peeling **`(-1)*`** yields **`x`**, **`verify_atomic_fact`** the corresponding fact on **`x`** (e.g. goal **`(-1)*n >= 0`** from **`n <= 0`** or **`n < 0`**). Success reasons are strings starting with **`order: (-1)*x`** or **`order: 0 … (-1)*x`**.
+
 ### Step A — `verify_order_from_known_negated_complement`
 
 **Idea:** total-order duality from a **known negated** fact.
@@ -61,6 +73,7 @@ Normalizes the goal to `LessEqual` or `Less`, then runs **`try_less_equal_algebr
 | `right` is `a + b` and one addend is **syntactically** `left` | `0 <=` the **other** addend | `a <= a + b from 0 <= b` |
 | `right` is `u + v` | `left <= u` **and** `0 <= v`, or the symmetric swap of addends (`left <= v` **and** `0 <= u`) | `a <= b + c from a <= b and 0 <= c` |
 | `right` is `b * a` and **right factor** equals `left` | `0 <= left` **and** `1 <= b` (here `b` is the left factor of `*`) | `a <= b * a from 0 <= a and 1 <= b` |
+| `left` is `x1 * x2`, `right` is `y1 * y2` | `0 <= x1`, `0 <= x2`, `0 <= y1`, `0 <= y2`, and either (`x1 <= y1` **and** `x2 <= y2`) or (`x1 <= y2` **and** `x2 <= y1`) (tries **cross** pairing if aligned fails) | `x1 * x2 <= y1 * y2 from 0 <= factors and componentwise <=` |
 | `left` and `right` are `k*u` and `k*v` with **same** left factor `k` | Either (`0 <= k` and `u <= v`) **or** (`k <= 0` and `v <= u`) | `k * a <= k * b from …` / `… from k <= 0 and b <= a` |
 | Same with `*` and **same right factor** `k` | Same coefficient sign split on the **other** side | `a * k <= b * k from …` |
 | Both sides are `+` | `left.left <= right.left` **and** `left.right <= right.right` | `a + c <= b + d from a <= b and c <= d` |
@@ -102,6 +115,7 @@ Rough behavior (see comments above `verify_order_atomic_fact_numeric_builtin_onl
 - **Integer exponent** with `0 <= base` (and `0 < base` if exponent negative): `0 <= base^n`.
 - **`a * a`:** `0 <= a * a`.
 - **`0 < base^exp`:** from `0 < base` and exponent **in R** (real exponent, positive base).
+- **`0 <= base^exp` (weak, symbolic exponent):** same sub-goals as the previous line (`0 < base` and **`exp $in R`**). Reason: `0 <= a^b from 0 < a and b in R`. (Literal integer exponent still prefers the dedicated `0 <= a^n` rule when the exponent is a `Number`.)
 - **Products / quotients:** `0 <=` or `0 <` on `*` and `/` by splitting into operand sub-goals (denominator must be **strictly positive** for the non-flipped division rules).
 
 ### Step H — reflexivity
@@ -126,7 +140,7 @@ Short map (details live in the named modules):
 | Fact kind | First builtin entry |
 |-----------|---------------------|
 | `NotEqualFact` | `not_equal_builtin.rs` |
-| `InFact` / `NotInFact` | `in_fact_builtin.rs` (for **`$in R`**, finite **`sum(...)`** and **`product(...)`** are accepted like `+` / `*` arithmetic: no extra sub-goals; same reason as other real-closed surface forms). For **`f $in`** a **`fn …`** on the RHS, if the env already has **`f`** typed by a stored **`fn_set`** (`known_objs_in_fn_sets`), equality of signatures is first **`to_string`**, then if that fails (and flat param counts match) one draw of **`generate_random_unused_names`** supplies shared fresh names for both sides and **`to_string`** is compared again after alpha-rename. |
+| `InFact` / `NotInFact` | `in_fact_builtin.rs` (for **`$in R`**, finite **`sum(...)`** and **`product(...)`** are accepted like `+` / `*` arithmetic: no extra sub-goals; same reason as other real-closed surface forms). For **`f $in`** a **`fn …`** on the RHS, if the env already has **`f`** typed by a stored **`fn_set`** (`known_objs_in_fn_sets`), equality of signatures is first **`to_string`**, then if that fails (and flat param counts match) one draw of **`generate_random_unused_names`** supplies shared fresh names for both sides and **`to_string`** is compared again after alpha-rename. Set builder **`$in power_set(T)`**: sub-goal **`param_set $subset T`** (see section below). |
 | `SubsetFact` / `SupersetFact` / negated | `set_relation_duality.rs` (and related) |
 | All order atoms (`<`, `<=`, `>`, `>=`, `not …`) | **This order pipeline** |
 | `IsSetFact` | Unconditional: `"Every object is a set."` |
@@ -135,6 +149,26 @@ Short map (details live in the named modules):
 ```lit
 know 0 <= abs(x)
 know 1 + 1 < 3
+```
+
+---
+
+## Membership: set builder in `power_set` (`in_fact_builtin.rs`)
+
+**Pattern:** `{x S : …} $in power_set(T)`.
+
+**Idea:** A set builder with domain **`S`** defines a subset of **`S`**. If **`S $subset T`** is provable, that defined set is a subset of **`T`**, hence a member of **`power_set(T)`** (i.e. **`𝒫(T)`**).
+
+**Sub-goal:** **`S $subset T`** on the AST of **`param_set`** and **`power_set`**’s inner set, via the usual **`verify_atomic_fact`** pipeline.
+
+**List-set analogue:** **`{a, b, …} $in power_set(T)`** is already handled by checking each listed element **`$in T`**.
+
+**Builtin reason string:** `set_builder in power_set: param_set subset of base implies builder defines a subset of base`
+
+```lit
+prove:
+    {1, 2} $subset {1, 2}
+    {x {1, 2}: x = 1} $in power_set({1, 2})
 ```
 
 ---

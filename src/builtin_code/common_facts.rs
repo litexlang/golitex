@@ -65,5 +65,36 @@ know:
         c != 0
         =>:
             (a + b) % c = ((a % c) + (b % c)) % c
+            (a - b) % c = ((a % c) - (b % c)) % c
+
+    forall n, m Z, k N_pos:
+        (n * m) % k = ((n % k) * (m % k)) % k
+
+    forall n Z, k N_pos:
+        (-n) % k = (k - (n % k)) % k
+
+    forall n Z, m N_pos, k N_pos:
+        n^m % k = ((n % k)^m) % k
+
+    forall x R:
+        0 <= abs(x)
+        abs(x) = x or abs(x) = -x
+
+    forall x, y R:
+        abs(x * y) = abs(x) * abs(y)
+
+    forall a, b N:
+        a <= b
+        b != 0
+        =>:
+            a % b = b
+
+prop archimedean_property(e R_pos):
+    exist n N_pos st {1/n < e}
+
+know:
+    forall e R_pos:
+        $archimedean_property(e)
+        exist n N_pos st {1/n < e}
 
 "#;
