@@ -67,7 +67,7 @@ impl Runtime {
         let mut impossible_facts: Vec<Option<AtomicFact>> = Vec::with_capacity(case_block_count);
         for block in tb.body.iter_mut().skip(1) {
             block.skip_token(CASE)?;
-            let case = self.parse_and_chain_atomic_fact(block)?;
+            let case = self.parse_and_chain_atomic_fact_allow_leading_not(block)?;
             block.skip_token(COLON)?;
             if !block.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
