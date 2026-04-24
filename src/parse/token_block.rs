@@ -1,4 +1,4 @@
-use super::tokenizer::tokenize_line;
+use super::tokenizer::Tokenizer;
 use crate::prelude::*;
 use std::rc::Rc;
 
@@ -24,18 +24,19 @@ fn indent_level(line: &str) -> usize {
 
 fn ends_with_colon(s: &str) -> bool {
     let trimmed = s.trim_end();
-    trimmed.ends_with(':') || trimmed.ends_with('：')
+    trimmed.ends_with(COLON)
 }
 
 impl TokenBlock {
     pub fn parse_blocks(
         s: &str,
         current_file_path: Rc<str>,
+        tokenizer: &mut Tokenizer,
     ) -> Result<Vec<TokenBlock>, RuntimeError> {
         let stripped_source_code = strip_triple_quote_comment_blocks(s);
         let lines: Vec<_> = stripped_source_code.lines().collect();
         let mut i = 0;
-        parse_level(&lines, &mut i, 0, current_file_path)
+        parse_level(&lines, &mut i, 0, current_file_path, tokenizer)
     }
 }
 
@@ -71,6 +72,7 @@ fn parse_level(
     i: &mut usize,
     base_indent: usize,
     current_file_path: Rc<str>,
+    tokenizer: &mut Tokenizer,
 ) -> Result<Vec<TokenBlock>, RuntimeError> {
     let remaining_line_count_upper_bound = lines.len().saturating_sub(*i);
     let mut items = Vec::with_capacity(remaining_line_count_upper_bound);
@@ -112,7 +114,7 @@ fn parse_level(
 
         // Tokenize header; if it's empty (e.g. whole line comment),
         // treat it like a blank line for block parsing.
-        let header_tokens = tokenize_line(content);
+        let header_tokens = tokenizer.tokenize_line(content);
         if header_tokens.is_empty() {
             continue;
         }
@@ -154,7 +156,7 @@ fn parse_level(
                 });
             }
 
-            let body = parse_level(lines, i, next_indent, current_file_path.clone())?;
+            let body = parse_level(lines, i, next_indent, current_file_path.clone(), tokenizer)?;
             items.push(TokenBlock::new(
                 header_tokens,
                 body,
