@@ -130,7 +130,7 @@ pub use crate::obj::Union;
 pub use crate::obj::{
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
 };
-pub use crate::parse::TokenBlock;
+pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, render_run_source_code_output,
     run_repl, run_source_code, run_source_code_in_file, run_source_code_in_file_with_ok,
