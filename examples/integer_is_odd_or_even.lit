@@ -1,0 +1,40 @@
+claim:
+    prove:
+        forall n Z:
+            n % 2 = 0 or n % 2 = 1
+    by induc n from 0:
+        prove:
+            n % 2 = 0 or n % 2 = 1
+        0 % 2 = 0
+        0 % 2 = 0 or 0 % 2 = 1
+
+        claim:
+            prove:
+                forall x Z:
+                    x >= 0
+                    x % 2 = 0 or x % 2 = 1
+                    =>:
+                        (x + 1) % 2 = 0 or (x + 1) % 2 = 1
+
+            by cases:
+                prove:
+                    (x + 1) % 2 = 0 or (x + 1) % 2 = 1
+                case x % 2 = 0:
+                    (x + 1) % 2 = (x % 2 + 1 % 2) % 2 = (0 + 1) % 2 = 1
+                case x % 2 = 1:
+                    (x + 1) % 2 = (x % 2 + 1 % 2) % 2 = (1 + 1) % 2 = 0
+    by cases:
+        prove:
+            n % 2 = 0 or n % 2 = 1
+        case n >= 0:
+            do_nothing
+        case n < 0:
+            -n >= 0
+            (-n) % 2 = 0 or (-n) % 2 = 1
+            by cases:
+                prove:
+                    (n) % 2 = 0 or (n) % 2 = 1
+                case -n % 2 = 0:
+                    (n) % 2 = (-(-n)) % 2 = (2 - ((-n) % 2)) % 2 = (2 - 0) % 2 = 0
+                case -n % 2 = 1:
+                    (n) % 2 = (-(-n)) % 2 = (2 - (-n) % 2) % 2 = (2 - 1) % 2 = 1

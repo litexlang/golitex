@@ -1380,15 +1380,30 @@ impl Runtime {
         }
 
         let left = self.parse_obj(tb)?;
-        match left {
-            Obj::Atom(AtomObj::Identifier(a)) => {
-                if tb.current_token_is_equal_to(COMMA) || tb.current()? == RIGHT_CURLY_BRACE {
-                    self.parse_list_set_obj_with_leftmost_obj(tb, a.into())
-                } else {
-                    self.parse_set_builder(tb, a)
-                }
+        // Plain identifiers and parsing-time free-param atoms (e.g. forall-bound `x`) must both
+        // allow `{ x S : ... }` set-builder syntax; only `Identifier` was handled originally.
+        let name_for_set_builder = match &left {
+            Obj::Atom(AtomObj::Identifier(a)) => Some(a.name.as_str()),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => Some(m.name.as_str()),
+            Obj::Atom(AtomObj::Forall(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Def(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Exist(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Sum(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Product(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Induc(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.as_str()),
+            _ => None,
+        };
+        if let Some(name) = name_for_set_builder {
+            if tb.current_token_is_equal_to(COMMA) || tb.current()? == RIGHT_CURLY_BRACE {
+                self.parse_list_set_obj_with_leftmost_obj(tb, left)
+            } else {
+                self.parse_set_builder(tb, Identifier::new(name.to_string()))
             }
-            _ => self.parse_list_set_obj_with_leftmost_obj(tb, left),
+        } else {
+            self.parse_list_set_obj_with_leftmost_obj(tb, left)
         }
     }
 

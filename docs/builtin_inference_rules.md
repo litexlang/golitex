@@ -27,7 +27,8 @@ Depends on the shape of `S`:
 | `N_pos`, `Q_pos`, `R_pos` | **`0 < element`** | positive ray |
 | `Z_neg`, `Q_neg`, `R_neg` | **`element < 0`** | negative ray |
 | `Z_nz`, `Q_nz`, `R_nz` | **`element != 0`** | nonzero |
-| `N`, `Z`, `Q`, `R` | (nothing extra here) | — |
+| `N` | **`element >= 0`** (equivalently **`0 <= element`**) | `k $in N` ⇒ `k >= 0` |
+| `Z`, `Q`, `R` | (nothing extra here) | — |
 | `FamilyObj` | Instantiate family to a concrete **member set**, then infer as that `InFact` | type-level family |
 | `FiniteSeqSet`, `SeqSet`, `MatrixSet` | Desugar to **`FnSet`**, same as function-space membership, plus stored **`InFact`** into that `FnSet` | — |
 | (other) | No inference on this path | — |
@@ -53,9 +54,13 @@ Infer **`forall` fresh `x`:** if **`x $in B`** then **`x $in A`**.
 
 ## Order atoms (`<`, `>`, `<=`, `>=`)
 
-Handled by `infer_numeric_order_sign_from_order_atomic` **only when exactly one side** is a resolved numeric literal. Then a sign fact for the **other** side may be stored (`0 < x` or `x <= 0`), according to the relation and the sign of the constant (see `src/infer/infer_numeric_order_sign.rs`).
+Handled by `infer_numeric_order_sign_from_order_atomic` (see `src/infer/infer_numeric_order_sign.rs`):
 
-*Example:* `2 < a` may yield **`0 < a`** when the corresponding branch applies.
+1. **Literal on one side only:** when exactly one side is a resolved numeric constant, a sign fact for the **other** side may be stored (`0 < x` or `x <= 0`), according to the relation and the sign of the constant.
+
+2. **Opposite sign via `(-1)*x`:** when comparing a **non-`(-1)*`-headed** operand with **`0`**, may also store the flipped comparison for **`(-1)*operand`** (same surface shape as unary `-` on that operand). Skips operands already of the form `(-1)*u` so inference does not chain `(-1)*((-1)*n)`.
+
+*Examples:* `n < 0` or `n <= 0` may infer **`(-1)*n >= 0`**; `n > 0` or `n >= 0` may infer **`(-1)*n < 0`** / **`(-1)*n <= 0`** as appropriate; same for **`0 < n`**, **`0 <= n`**, **`0 > n`**, **`0 >= n`** on the other side of the comparison. Proving goals like **`(-1)*n >= 0`** from **`n < 0`** is handled symmetrically in verification (`try_verify_order_opposite_sign_mul_minus_one` in `number_compare.rs`).
 
 ## Other atomic kinds
 

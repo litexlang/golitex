@@ -121,6 +121,49 @@ impl Runtime {
         Ok(None)
     }
 
+    // x1*x2 <= y1*y2 when 0 <= x1,x2,y1,y2 and (x1 <= y1, x2 <= y2) or (x1 <= y2, x2 <= y1).
+    // Example: (m+1)*2 <= 2^m * 2 from IH and 2 <= 2, with m+1, 2, 2^m, 2 all nonnegative.
+    fn try_mul_le_componentwise_nonnegative_factors(
+        &mut self,
+        l1: &Obj,
+        l2: &Obj,
+        r1: &Obj,
+        r2: &Obj,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let z = Self::literal_zero_obj();
+        let mut try_pairing = |x1: &Obj, x2: &Obj, y1: &Obj, y2: &Obj| -> Result<Option<StmtResult>, RuntimeError> {
+            let subgoals: [AtomicFact; 6] = [
+                LessEqualFact::new(z.clone(), x1.clone(), lf.clone()).into(),
+                LessEqualFact::new(z.clone(), x2.clone(), lf.clone()).into(),
+                LessEqualFact::new(z.clone(), y1.clone(), lf.clone()).into(),
+                LessEqualFact::new(z.clone(), y2.clone(), lf.clone()).into(),
+                LessEqualFact::new(x1.clone(), y1.clone(), lf.clone()).into(),
+                LessEqualFact::new(x2.clone(), y2.clone(), lf.clone()).into(),
+            ];
+            let mut rec = Vec::with_capacity(6);
+            for g in subgoals {
+                let r = self.verify_order_subgoal(g)?;
+                if !r.is_true() {
+                    return Ok(None);
+                }
+                rec.push(r);
+            }
+            Ok(Some(StmtResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "x1 * x2 <= y1 * y2 from 0 <= factors and componentwise <=".to_string(),
+                    rec,
+                ),
+            )))
+        };
+        if let Some(r) = try_pairing(l1, l2, r1, r2)? {
+            return Ok(Some(r));
+        }
+        try_pairing(l1, l2, r2, r1)
+    }
+
     fn try_less_equal_algebra(
         &mut self,
         f: &LessEqualFact,
@@ -214,6 +257,16 @@ impl Runtime {
         }
 
         if let (Obj::Mul(ml), Obj::Mul(mr)) = (&f.left, &f.right) {
+            if let Some(r) = self.try_mul_le_componentwise_nonnegative_factors(
+                ml.left.as_ref(),
+                ml.right.as_ref(),
+                mr.left.as_ref(),
+                mr.right.as_ref(),
+                lf,
+                atomic_fact,
+            )? {
+                return Ok(Some(r));
+            }
             if ml.left.to_string() == mr.left.to_string() {
                 if let Some(r) = self.try_mul_le_shared_left(
                     ml.left.as_ref(),

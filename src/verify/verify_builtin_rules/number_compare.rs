@@ -203,6 +203,52 @@ impl Runtime {
         Ok(result)
     }
 
+    /// `n >= 0` / `0 <= n` from known `n $in N` (e.g. `forall n N:` domain).
+    fn try_verify_order_nonnegative_from_membership_in_n(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (n, line_file) = match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) => {
+                let Some(z) = self.resolve_obj_to_number(&f.right) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_normalized_number_str_to_zero(&z.normalized_value),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.left.clone(), f.line_file.clone())
+            }
+            AtomicFact::LessEqualFact(f) => {
+                let Some(z) = self.resolve_obj_to_number(&f.left) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_normalized_number_str_to_zero(&z.normalized_value),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.right.clone(), f.line_file.clone())
+            }
+            _ => return Ok(None),
+        };
+        let in_n: AtomicFact = InFact::new(n, StandardSet::N.into(), line_file.clone()).into();
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_n, verify_state)? {
+            return Ok(Some(StmtResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "n >= 0 from n $in N".to_string(),
+                    Vec::new(),
+                ),
+            )));
+        }
+        Ok(None)
+    }
+
     fn verify_zero_le_abs_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -228,6 +274,120 @@ impl Runtime {
         )))
     }
 
+    // `(-1)*x` order vs 0: e.g. `x < 0` or `x <= 0` implies `(-1)*x >= 0`; `x > 0` implies `(-1)*x < 0`.
+    // Also handles `0 <= (-1)*x` (equivalently `0 <= -x` when `-x` parses as `(-1)*x`).
+    fn try_verify_order_opposite_sign_mul_minus_one(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let z: Obj = Number::new("0".to_string()).into();
+        let success = |msg: &'static str| {
+            Ok(Some(StmtResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    msg.to_string(),
+                    Vec::new(),
+                ),
+            )))
+        };
+        match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let le: AtomicFact =
+                        LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&le, verify_state)?.is_true() {
+                        return success("order: (-1)*x >= 0 from x <= 0");
+                    }
+                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                        return success("order: (-1)*x >= 0 from x < 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                        return success("order: (-1)*x > 0 from x < 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let ge: AtomicFact =
+                        GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&ge, verify_state)?.is_true() {
+                        return success("order: (-1)*x <= 0 from x >= 0");
+                    }
+                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                        return success("order: (-1)*x <= 0 from x > 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                        return success("order: (-1)*x < 0 from x > 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
+                    let le: AtomicFact =
+                        LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&le, verify_state)?.is_true() {
+                        return success("order: 0 <= (-1)*x from x <= 0");
+                    }
+                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                        return success("order: 0 <= (-1)*x from x < 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
+                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                        return success("order: 0 < (-1)*x from x < 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
+                    let ge: AtomicFact =
+                        GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&ge, verify_state)?.is_true() {
+                        return success("order: 0 >= (-1)*x from x >= 0");
+                    }
+                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                        return success("order: 0 >= (-1)*x from x > 0");
+                    }
+                }
+                Ok(None)
+            }
+            AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
+                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                        return success("order: 0 > (-1)*x from x > 0");
+                    }
+                }
+                Ok(None)
+            }
+            _ => Ok(None),
+        }
+    }
+
     // Lit `know` facts for the nonnegative / positive cone under field operations used to live in
     // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
     // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
@@ -246,6 +406,15 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        let vs = VerifyState::new(0, true);
+        if let Some(result) =
+            self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_order_two_sums_same_index_and_bounds(atomic_fact)? {
             return Ok(result);
         }
@@ -289,6 +458,11 @@ impl Runtime {
         }
         if let Some(result) =
             self.verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
         {
             return Ok(result);
         }
@@ -772,6 +946,58 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a^b from 0 < a and b in R".to_string(),
+                vec![base_result, in_r_result],
+            ),
+        )))
+    }
+
+    // `0 <= a^b` / `a^b >= 0` with the same premises as strict `0 < a^b`: `0 < a` and `b in R`.
+    // Covers symbolic exponents (e.g. `2^m`) where the literal-exponent `0 <= a^n` rule does not apply.
+    fn verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessEqualFact(less_equal_fact) = normalized_fact else {
+            return Ok(None);
+        };
+        if less_equal_fact.left.to_string() != "0" {
+            return Ok(None);
+        }
+        let Obj::Pow(pow_obj) = &less_equal_fact.right else {
+            return Ok(None);
+        };
+        let zero = &less_equal_fact.left;
+        let line_file = &less_equal_fact.line_file;
+        let base = pow_obj.base.as_ref();
+        let base_result = self.verify_zero_order_on_sub_expr(zero, base, false, line_file)?;
+        if !base_result.is_true() {
+            return Ok(None);
+        }
+        let in_r: AtomicFact = InFact::new(
+            (*pow_obj.exponent).clone(),
+            StandardSet::R.into(),
+            line_file.clone(),
+        )
+        .into();
+        let mut in_r_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_r)?;
+        if !in_r_result.is_true() {
+            in_r_result = self.verify_non_equational_atomic_fact(
+                &in_r,
+                &VerifyState::new(0, false),
+                true,
+            )?;
+        }
+        if !in_r_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "0 <= a^b from 0 < a and b in R".to_string(),
                 vec![base_result, in_r_result],
             ),
         )))

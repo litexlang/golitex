@@ -322,9 +322,22 @@ impl Runtime {
                 )?;
                 Ok(infer_result)
             }
-            // Full `N`, `Z`, `Q`, `R`: no extra atomic facts inferred here.
-            Obj::StandardSet(StandardSet::N)
-            | Obj::StandardSet(StandardSet::Q)
+            // `N` = {0,1,2,…}: store `n >= 0` so numeric resolution and order checks match `forall n N:`.
+            // Example: after `k $in N`, infer stores `k >= 0` (same as an explicit second line).
+            Obj::StandardSet(StandardSet::N) => {
+                let zero_obj: Obj = Number::new("0".to_string()).into();
+                let inferred_atomic_fact =
+                    GreaterEqualFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
+                        .into();
+                let mut infer_result = InferResult::new();
+                infer_result.push_atomic_fact(&inferred_atomic_fact);
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    inferred_atomic_fact.clone(),
+                )?;
+                Ok(infer_result)
+            }
+            // Full `Z`, `Q`, `R`: no extra atomic facts inferred here.
+            Obj::StandardSet(StandardSet::Q)
             | Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::R) => Ok(InferResult::new()),
             Obj::FamilyObj(family_obj) => {

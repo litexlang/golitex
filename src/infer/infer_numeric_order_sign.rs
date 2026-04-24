@@ -4,17 +4,169 @@ use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 impl Runtime {
     // Order atom with exactly one side a resolved numeric literal: may store `0 < x` or `x <= 0` for the other side.
     // Example: `2 < a` (literal left) infers `0 < a` when the constant branch applies; `b < 0` pairs use the `<= 0` path on `b`.
+    //
+    // Additionally: comparing `x` with `0` may infer the opposite sign on `(-1)*x` (e.g. `x < 0` => `(-1)*x >= 0`).
+    // Skips operands already of the form `(-1)*u` so we do not chain `(-1)*((-1)*n)`.
     pub fn infer_numeric_order_sign_from_order_atomic(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<InferResult, RuntimeError> {
-        match atomic_fact {
+        let mut acc = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => self.infer_numeric_order_sign_greater_equal(f),
             AtomicFact::GreaterFact(f) => self.infer_numeric_order_sign_greater(f),
             AtomicFact::LessEqualFact(f) => self.infer_numeric_order_sign_less_equal(f),
             AtomicFact::LessFact(f) => self.infer_numeric_order_sign_less(f),
             _ => Ok(InferResult::new()),
+        }?;
+        let flip = self.infer_flip_mul_minus_one_order_vs_zero(atomic_fact)?;
+        acc.new_infer_result_inside(flip);
+        Ok(acc)
+    }
+
+    fn order_flip_infer_operand_ok(&self, x: &Obj) -> bool {
+        self.peel_mul_by_literal_neg_one(x).is_none()
+    }
+
+    fn obj_mul_literal_neg_one(&self, x: Obj) -> Obj {
+        Mul::new(Number::new("-1".to_string()).into(), x).into()
+    }
+
+    fn atomic_fact_infer_opposite_mul_minus_one_target(
+        &self,
+        atomic_fact: &AtomicFact,
+    ) -> Option<AtomicFact> {
+        let z = Number::new("0".to_string()).into();
+        match atomic_fact {
+            AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if !self.order_flip_infer_operand_ok(&f.left) {
+                    return None;
+                }
+                Some(
+                    GreaterEqualFact::new(
+                        self.obj_mul_literal_neg_one(f.left.clone()),
+                        z,
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if !self.order_flip_infer_operand_ok(&f.left) {
+                    return None;
+                }
+                Some(
+                    GreaterEqualFact::new(
+                        self.obj_mul_literal_neg_one(f.left.clone()),
+                        z,
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if !self.order_flip_infer_operand_ok(&f.left) {
+                    return None;
+                }
+                Some(
+                    LessFact::new(
+                        self.obj_mul_literal_neg_one(f.left.clone()),
+                        z,
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
+                if !self.order_flip_infer_operand_ok(&f.left) {
+                    return None;
+                }
+                Some(
+                    LessEqualFact::new(
+                        self.obj_mul_literal_neg_one(f.left.clone()),
+                        z,
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if !self.order_flip_infer_operand_ok(&f.right) {
+                    return None;
+                }
+                Some(
+                    LessFact::new(
+                        self.obj_mul_literal_neg_one(f.right.clone()),
+                        z,
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if !self.order_flip_infer_operand_ok(&f.right) {
+                    return None;
+                }
+                Some(
+                    LessEqualFact::new(
+                        self.obj_mul_literal_neg_one(f.right.clone()),
+                        z,
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if !self.order_flip_infer_operand_ok(&f.right) {
+                    return None;
+                }
+                Some(
+                    GreaterEqualFact::new(
+                        self.obj_mul_literal_neg_one(f.right.clone()),
+                        z,
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
+                if !self.order_flip_infer_operand_ok(&f.right) {
+                    return None;
+                }
+                Some(
+                    GreaterEqualFact::new(
+                        self.obj_mul_literal_neg_one(f.right.clone()),
+                        z,
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            _ => None,
         }
+    }
+
+    fn infer_flip_mul_minus_one_order_vs_zero(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let Some(inferred_atomic) = self.atomic_fact_infer_opposite_mul_minus_one_target(atomic_fact)
+        else {
+            return Ok(InferResult::new());
+        };
+        let fact_to_store: Fact = inferred_atomic.into();
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&fact_to_store);
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)
+            .map_err(|previous_error| {
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "infer opposite sign mul (-1): failed to store inferred order fact".to_string(),
+                    atomic_fact.line_file(),
+                    Some(previous_error),
+                    vec![],
+                )))
+            })?;
+        Ok(infer_result)
     }
 
     fn infer_numeric_order_sign_greater_equal(
