@@ -372,6 +372,23 @@ impl Runtime {
         Ok(atomic)
     }
 
+    /// Normal and/chain atomic fact, or a single leading `not` on an atomic.
+    ///
+    /// [`Self::parse_and_chain_atomic_fact`] alone is wrong for `not $p()`: it uses
+    /// [`Self::parse_chain_atomic`], which treats `$p()` as an infix `$` between objs and parses
+    /// `()` as grouping (empty-`()` / EOT issues). Used for `or`-disjuncts and `case not ...`.
+    pub fn parse_and_chain_atomic_fact_allow_leading_not(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<AndChainAtomicFact, RuntimeError> {
+        if tb.current()? == NOT {
+            tb.skip_token(NOT)?;
+            let a = self.parse_atomic_fact(tb, false)?;
+            return Ok(AndChainAtomicFact::AtomicFact(a));
+        }
+        self.parse_and_chain_atomic_fact(tb)
+    }
+
     pub fn parse_or_and_chain_atomic_fact(
         &mut self,
         tb: &mut TokenBlock,
@@ -380,7 +397,7 @@ impl Runtime {
         let mut list: Vec<AndChainAtomicFact> = vec![first];
         while !tb.exceed_end_of_head() && tb.current()? == OR {
             tb.skip_token(OR)?;
-            list.push(self.parse_and_chain_atomic_fact(tb)?);
+            list.push(self.parse_and_chain_atomic_fact_allow_leading_not(tb)?);
         }
         if list.len() == 1 {
             return Ok(match list.remove(0) {
