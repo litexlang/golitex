@@ -55,11 +55,20 @@ impl Runtime {
                 ))),
                 _ => {
                     let nonempty_fact =
-                        IsNonemptySetFact::new(param_set.clone(), default_line_file()).into();
-                    self.verify_fact_well_defined_and_store_and_infer(
-                        nonempty_fact,
+                        IsNonemptySetFact::new(param_set.clone(), default_line_file());
+                    let ret=  self.verify_fact(
+                        &nonempty_fact.into(),
                         &VerifyState::new(0, false),
                     )?;
+                    if ret.is_unknown() {
+                        return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            "param type is not nonempty".to_string(),
+                            default_line_file(),
+                            None,
+                            vec![],
+                        ))));
+                    }
                     Ok(())
                 }
             },

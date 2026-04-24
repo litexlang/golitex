@@ -184,6 +184,21 @@ pub fn compare_number_strings(
 }
 
 impl Runtime {
+    /// Sub-goals inside numeric builtins: known env + builtin rules only.
+    /// Do not call [`Runtime::verify_non_equational_atomic_fact`] here: its forall / definition
+    /// round can recurse with outer goals (e.g. `b in R` for `0 <= a^b`, or order lemmas).
+    pub(crate) fn verify_non_equational_known_then_builtin_rules_only(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let r = self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
+        if r.is_true() {
+            return Ok(r);
+        }
+        self.verify_non_equational_atomic_fact_with_builtin_rules(atomic_fact, verify_state)
+    }
+
     fn verify_zero_order_on_sub_expr(
         &mut self,
         zero: &Obj,
@@ -237,7 +252,10 @@ impl Runtime {
             _ => return Ok(None),
         };
         let in_n: AtomicFact = InFact::new(n, StandardSet::N.into(), line_file.clone()).into();
-        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_n, verify_state)? {
+        if self
+            .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
+            .is_true()
+        {
             return Ok(Some(StmtResult::FactualStmtSuccess(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
@@ -296,11 +314,17 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let le: AtomicFact =
                         LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&le, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&le, verify_state)?
+                        .is_true()
+                    {
                         return success("order: (-1)*x >= 0 from x <= 0");
                     }
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?
+                        .is_true()
+                    {
                         return success("order: (-1)*x >= 0 from x < 0");
                     }
                 }
@@ -309,7 +333,10 @@ impl Runtime {
             AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?
+                        .is_true()
+                    {
                         return success("order: (-1)*x > 0 from x < 0");
                     }
                 }
@@ -319,11 +346,17 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let ge: AtomicFact =
                         GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&ge, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&ge, verify_state)?
+                        .is_true()
+                    {
                         return success("order: (-1)*x <= 0 from x >= 0");
                     }
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&gt, verify_state)?
+                        .is_true()
+                    {
                         return success("order: (-1)*x <= 0 from x > 0");
                     }
                 }
@@ -332,7 +365,10 @@ impl Runtime {
             AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&gt, verify_state)?
+                        .is_true()
+                    {
                         return success("order: (-1)*x < 0 from x > 0");
                     }
                 }
@@ -342,11 +378,17 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let le: AtomicFact =
                         LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&le, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&le, verify_state)?
+                        .is_true()
+                    {
                         return success("order: 0 <= (-1)*x from x <= 0");
                     }
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?
+                        .is_true()
+                    {
                         return success("order: 0 <= (-1)*x from x < 0");
                     }
                 }
@@ -355,7 +397,10 @@ impl Runtime {
             AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.left) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&lt, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?
+                        .is_true()
+                    {
                         return success("order: 0 < (-1)*x from x < 0");
                     }
                 }
@@ -365,11 +410,17 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let ge: AtomicFact =
                         GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&ge, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&ge, verify_state)?
+                        .is_true()
+                    {
                         return success("order: 0 >= (-1)*x from x >= 0");
                     }
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&gt, verify_state)?
+                        .is_true()
+                    {
                         return success("order: 0 >= (-1)*x from x > 0");
                     }
                 }
@@ -378,7 +429,10 @@ impl Runtime {
             AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.left) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
-                    if self.verify_atomic_fact(&gt, verify_state)?.is_true() {
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(&gt, verify_state)?
+                        .is_true()
+                    {
                         return success("order: 0 > (-1)*x from x > 0");
                     }
                 }
@@ -878,15 +932,10 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
 
-        let mut neq_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&base_neq_zero)?;
-        if !neq_result.is_true() {
-            neq_result = self.verify_non_equational_atomic_fact(
-                &base_neq_zero,
-                &VerifyState::new(0, false),
-                true,
-            )?;
-        }
+        let neq_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &base_neq_zero,
+            &VerifyState::new(0, true),
+        )?;
         if !neq_result.is_true() {
             return Ok(None);
         }
@@ -930,15 +979,10 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let mut in_r_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_r)?;
-        if !in_r_result.is_true() {
-            in_r_result = self.verify_non_equational_atomic_fact(
-                &in_r,
-                &VerifyState::new(0, false),
-                true,
-            )?;
-        }
+        let in_r_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &in_r,
+            &VerifyState::new(0, true),
+        )?;
         if !in_r_result.is_true() {
             return Ok(None);
         }
@@ -982,15 +1026,10 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let mut in_r_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_r)?;
-        if !in_r_result.is_true() {
-            in_r_result = self.verify_non_equational_atomic_fact(
-                &in_r,
-                &VerifyState::new(0, false),
-                true,
-            )?;
-        }
+        let in_r_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &in_r,
+            &VerifyState::new(0, true),
+        )?;
         if !in_r_result.is_true() {
             return Ok(None);
         }
