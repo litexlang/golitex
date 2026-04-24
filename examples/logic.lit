@@ -1,0 +1,122 @@
+abstract_prop p()
+abstract_prop q()
+abstract_prop r()
+
+# 5.1.1
+# 由 P∨Q 与 ¬Q 得 P：析取分情形，第二支与 ¬Q 矛盾。
+"""
+If P ∨ Q and ¬ Q, then P.
+"""
+prove:
+    know:
+        $p() or $q()
+        not $p()
+
+    by cases:
+        prove:
+            $q()
+        case $p():
+            impossible not $p()
+        case $q():
+            do_nothing
+
+# You can also formalize this in this way: Use forall without parameters.
+claim:
+    prove:
+        forall:
+            $p() or $q()
+            not $p()
+            =>:
+                $q()
+    by cases:
+        prove:
+            $q()
+        case $p():
+            impossible not $p()
+        case $q():
+            do_nothing
+
+"""
+# P → P ∨ ¬Q：由 P 可左注入得 P∨(¬Q)（书本 left）。
+"""
+"""
+P implies P ∨ (not Q).
+"""
+
+forall:
+    $p()
+    =>:
+        $p() or not $q()
+
+# 5.1.4
+# 两公式逻辑等价：指其 ↔ 在 Lean 可证（尚有一处 tactic 在 5.2 才齐全，故有些等价暂时无法演示）。
+# P∨P ↔ P：左到右析取消去；右到左重复左注入。
+"""
+(P ∨ P) is logically equivalent to P.
+"""
+claim:
+    prove:
+        forall:
+            $p() or $p()
+            =>:
+                $p()
+    by cases:
+        prove:
+            $p()
+        case $p():
+            do_nothing
+        case $p():
+            do_nothing
+
+forall:
+    =>:
+        $p() or $p()
+    <=>:
+        $p()
+
+# 5.1.5
+"""
+P ∧ (Q ∨ R) is logically equivalent to (P ∧ Q) ∨ (P ∧ R).
+"""
+claim:
+    prove:
+        forall:
+            $p()
+            $q() or $r()
+            =>:
+                $p() and $q() or $p() and $r()
+
+    by cases:
+        prove:
+            $p() and $q() or $p() and $r()
+        case $q():
+            $p() and $q()
+        case $r():
+            $p() and $r()
+
+# 5.1.6
+# 谓词 P(x)、Q(x)：由 ∀x Px 与 ∀x Qx 得 ∀x (Px∧Qx)。
+
+abstract_prop P(x)
+abstract_prop P2(x)
+
+forall x set:
+    $P(x)
+    $P2(x)
+    =>:
+        $P(x) and $P2(x)
+
+###标准库中应有quick prime check--能够check一个数是否为素数--函数应该要能够调用
+
+### 答：用 by for 从 2 到 n-1做迭代，证明 d % i != 0就能证明了
+
+# 5.2.6
+# 命题逻辑：¬¬P ⇒ P（「负负得正」）需排中律：对 P 本身作 by_cases。
+"""
+From ¬¬P deduce P (using excluded middle).
+"""
+
+forall:
+    not not $p()
+    =>:
+        $p()
