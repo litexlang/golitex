@@ -1,4 +1,4 @@
-use super::tokenizer::Tokenizer;
+use super::tokenizer::tokenize_line;
 use crate::prelude::*;
 use std::rc::Rc;
 
@@ -31,12 +31,11 @@ impl TokenBlock {
     pub fn parse_blocks(
         s: &str,
         current_file_path: Rc<str>,
-        tokenizer: &mut Tokenizer,
     ) -> Result<Vec<TokenBlock>, RuntimeError> {
         let stripped_source_code = strip_triple_quote_comment_blocks(s);
         let lines: Vec<_> = stripped_source_code.lines().collect();
         let mut i = 0;
-        parse_level(&lines, &mut i, 0, current_file_path, tokenizer)
+        parse_level(&lines, &mut i, 0, current_file_path)
     }
 }
 
@@ -72,25 +71,6 @@ fn parse_level(
     i: &mut usize,
     base_indent: usize,
     current_file_path: Rc<str>,
-    tokenizer: &mut Tokenizer,
-) -> Result<Vec<TokenBlock>, RuntimeError> {
-    let pushed = base_indent > 0;
-    if pushed {
-        tokenizer.push_scope();
-    }
-    let out = parse_level_impl(lines, i, base_indent, current_file_path, tokenizer);
-    if pushed {
-        tokenizer.pop_scope();
-    }
-    out
-}
-
-fn parse_level_impl(
-    lines: &[&str],
-    i: &mut usize,
-    base_indent: usize,
-    current_file_path: Rc<str>,
-    tokenizer: &mut Tokenizer,
 ) -> Result<Vec<TokenBlock>, RuntimeError> {
     let remaining_line_count_upper_bound = lines.len().saturating_sub(*i);
     let mut items = Vec::with_capacity(remaining_line_count_upper_bound);
@@ -132,7 +112,7 @@ fn parse_level_impl(
 
         // Tokenize header; if it's empty (e.g. whole line comment),
         // treat it like a blank line for block parsing.
-        let header_tokens = tokenizer.tokenize_line(content, line_file.clone())?;
+        let header_tokens = tokenize_line(content);
         if header_tokens.is_empty() {
             continue;
         }
@@ -174,8 +154,7 @@ fn parse_level_impl(
                 });
             }
 
-            let body =
-                parse_level(lines, i, next_indent, current_file_path.clone(), tokenizer)?;
+            let body = parse_level(lines, i, next_indent, current_file_path.clone())?;
             items.push(TokenBlock::new(
                 header_tokens,
                 body,

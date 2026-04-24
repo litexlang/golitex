@@ -64,11 +64,9 @@ where
 
         let normalized_source = remove_windows_carriage_return(trimmed_line);
 
-        let mut tokenizer = Tokenizer::new();
         let blocks = match TokenBlock::parse_blocks(
             normalized_source.as_str(),
             runtime.module_manager.current_file_path_rc(),
-            &mut tokenizer,
         ) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
