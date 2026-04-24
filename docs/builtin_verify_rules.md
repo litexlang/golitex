@@ -144,7 +144,20 @@ Short map (details live in the named modules):
 | `SubsetFact` / `SupersetFact` / negated | `set_relation_duality.rs` (and related) |
 | All order atoms (`<`, `<=`, `>`, `>=`, `not …`) | **This order pipeline** |
 | `IsSetFact` | Unconditional: `"Every object is a set."` |
-| `IsNonemptySetFact` / `IsFiniteSetFact` / `IsCartFact` / `IsTupleFact` / `NotIsNonemptySetFact` | `type_predicates_builtin.rs` (shape-based: standard sets, nonempty list syntax, `cart` factors, `fn` return nonempty, etc.) |
+| `IsNonemptySetFact` / `IsFiniteSetFact` / `IsCartFact` / `IsTupleFact` / `NotIsNonemptySetFact` | `type_predicates_builtin.rs` (shape-based: standard sets, nonempty list syntax, **`closed_range` when `start <= end` is provable**, `cart` factors, `fn` return nonempty, etc.) |
+
+### `IsNonemptySetFact` — `closed_range`
+
+**Rule:** `$is_nonempty_set(closed_range(lo, hi))` succeeds when **`lo <= hi`** is provable (matches the integer set `{x in Z | lo <= x <= hi}` having at least one point).
+
+**Builtin reason string:** `closed_range_nonempty_when_start_le_end`
+
+```lit
+prove:
+    $is_nonempty_set(closed_range(0, 3))
+```
+
+Under an assumption `a <= b`, the same predicate for `closed_range(a, b)` reduces to that assumption (see `examples/tmp.lit`).
 
 ```lit
 know 0 <= abs(x)
