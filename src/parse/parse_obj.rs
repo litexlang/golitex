@@ -1294,6 +1294,10 @@ impl Runtime {
 
     pub fn parse_braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
         tb.skip_token(LEFT_BRACE)?;
+        if tb.current_token_is_equal_to(RIGHT_BRACE) {
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(vec![]);
+        }
         let mut objs = vec![self.parse_obj(tb)?];
         while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
