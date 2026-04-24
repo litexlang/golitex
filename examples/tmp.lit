@@ -1,0 +1,7 @@
+macro M "1 + 1 = 2"
+macro Nat "N"
+
+@M
+
+forall i @Nat:
+    
