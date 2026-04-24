@@ -39,6 +39,12 @@ So sub-goals can chain: known facts → numeric/builtin cone → algebra again, 
 
 **Mechanism:** If the goal is **`GreaterEqualFact(n, 0)`** or **`LessEqualFact(0, n)`** with literal **`0`**, check whether **`n $in N`** holds by the full non-equational pipeline. If yes, succeed with reason **`n >= 0 from n $in N`**.
 
+### Early step — `try_verify_order_opposite_sign_mul_minus_one` (`number_compare.rs`)
+
+**Idea:** Unary minus parses as **`(-1)*x`**. Order of **`x`** versus **`0`** is equivalent to order of **`(-1)*x`** versus **`0`** with strict/weak direction flipped the usual way (e.g. **`x < 0`** iff **`(-1)*x > 0`**).
+
+**Mechanism:** If the goal’s compared side peeling **`(-1)*`** yields **`x`**, **`verify_atomic_fact`** the corresponding fact on **`x`** (e.g. goal **`(-1)*n >= 0`** from **`n <= 0`** or **`n < 0`**). Success reasons are strings starting with **`order: (-1)*x`** or **`order: 0 … (-1)*x`**.
+
 ### Step A — `verify_order_from_known_negated_complement`
 
 **Idea:** total-order duality from a **known negated** fact.
@@ -132,7 +138,7 @@ Short map (details live in the named modules):
 | Fact kind | First builtin entry |
 |-----------|---------------------|
 | `NotEqualFact` | `not_equal_builtin.rs` |
-| `InFact` / `NotInFact` | `in_fact_builtin.rs` (for **`$in R`**, finite **`sum(...)`** and **`product(...)`** are accepted like `+` / `*` arithmetic: no extra sub-goals; same reason as other real-closed surface forms). For **`f $in`** a **`fn …`** on the RHS, if the env already has **`f`** typed by a stored **`fn_set`** (`known_objs_in_fn_sets`), equality of signatures is first **`to_string`**, then if that fails (and flat param counts match) one draw of **`generate_random_unused_names`** supplies shared fresh names for both sides and **`to_string`** is compared again after alpha-rename. |
+| `InFact` / `NotInFact` | `in_fact_builtin.rs` (for **`$in R`**, finite **`sum(...)`** and **`product(...)`** are accepted like `+` / `*` arithmetic: no extra sub-goals; same reason as other real-closed surface forms). For **`f $in`** a **`fn …`** on the RHS, if the env already has **`f`** typed by a stored **`fn_set`** (`known_objs_in_fn_sets`), equality of signatures is first **`to_string`**, then if that fails (and flat param counts match) one draw of **`generate_random_unused_names`** supplies shared fresh names for both sides and **`to_string`** is compared again after alpha-rename. Set builder **`$in power_set(T)`**: sub-goal **`param_set $subset T`** (see section below). |
 | `SubsetFact` / `SupersetFact` / negated | `set_relation_duality.rs` (and related) |
 | All order atoms (`<`, `<=`, `>`, `>=`, `not …`) | **This order pipeline** |
 | `IsSetFact` | Unconditional: `"Every object is a set."` |
@@ -141,6 +147,26 @@ Short map (details live in the named modules):
 ```lit
 know 0 <= abs(x)
 know 1 + 1 < 3
+```
+
+---
+
+## Membership: set builder in `power_set` (`in_fact_builtin.rs`)
+
+**Pattern:** `{x S : …} $in power_set(T)`.
+
+**Idea:** A set builder with domain **`S`** defines a subset of **`S`**. If **`S $subset T`** is provable, that defined set is a subset of **`T`**, hence a member of **`power_set(T)`** (i.e. **`𝒫(T)`**).
+
+**Sub-goal:** **`S $subset T`** on the AST of **`param_set`** and **`power_set`**’s inner set, via the usual **`verify_atomic_fact`** pipeline.
+
+**List-set analogue:** **`{a, b, …} $in power_set(T)`** is already handled by checking each listed element **`$in T`**.
+
+**Builtin reason string:** `set_builder in power_set: param_set subset of base implies builder defines a subset of base`
+
+```lit
+prove:
+    {1, 2} $subset {1, 2}
+    {x {1, 2}: x = 1} $in power_set({1, 2})
 ```
 
 ---
