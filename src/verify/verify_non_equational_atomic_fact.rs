@@ -596,7 +596,7 @@ impl Runtime {
                     iff_fact,
                     &param_to_arg_map,
                     ParamObjType::DefHeader,
-                    Some(normal_atomic_fact.line_file.clone()),
+                    None,
                 )
                 .map_err(|e| {
                     {

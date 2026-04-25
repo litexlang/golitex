@@ -34,18 +34,6 @@ impl ExistFactBody {
         exist_fact_string_without_exist_as_prefix(&self.params_def_with_type, &self.facts)
     }
 
-    pub fn with_new_line_file(self, line_file: LineFile) -> Self {
-        ExistFactBody {
-            params_def_with_type: self.params_def_with_type,
-            facts: self
-                .facts
-                .into_iter()
-                .map(|x| x.with_new_line_file(line_file.clone()))
-                .collect(),
-            line_file,
-        }
-    }
-
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
         let mut args: Vec<Obj> = Vec::new();
         for param_def_with_type in self.params_def_with_type.groups.iter() {
@@ -142,15 +130,6 @@ impl ExistFactEnum {
 
     pub fn facts(&self) -> &Vec<OrAndChainAtomicFact> {
         &self.body().facts
-    }
-
-    pub fn with_new_line_file(self, line_file: LineFile) -> Self {
-        match self {
-            ExistFactEnum::ExistFact(b) => ExistFactEnum::ExistFact(b.with_new_line_file(line_file)),
-            ExistFactEnum::ExistUniqueFact(b) => {
-                ExistFactEnum::ExistUniqueFact(b.with_new_line_file(line_file))
-            }
-        }
     }
 
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
