@@ -155,7 +155,7 @@ impl Runtime {
                 ParamType::Obj(function.clone()),
             )]),
             vec![],
-            vec![ExistFact::new(
+            vec![ExistFactEnum::ExistFact(ExistFactBody::new(
                 ParamDefWithType::new({
                     let mut exist_param_defs = forall_param_defs_with_type;
                     exist_param_defs.push(ParamGroupWithParamType::new(
@@ -192,9 +192,8 @@ impl Runtime {
                     );
                     facts
                 },
-                false,
                 line_file.clone(),
-            )
+            ))
             .into()],
             line_file.clone(),
         )
@@ -290,7 +289,7 @@ impl Runtime {
         } else {
             Tuple::new(vec![Tuple::new(exist_args_for_pair).into(), exist_z_obj]).into()
         };
-        let exist_fact = ExistFact::new(
+        let exist_fact = ExistFactEnum::ExistFact(ExistFactBody::new(
             ParamDefWithType::new(vec![
                 ParamGroupWithParamType::new(
                     vec![exist_element_name],
@@ -299,9 +298,8 @@ impl Runtime {
                 ParamGroupWithParamType::new(vec![exist_z_name], ParamType::Obj(exist_ret_set)),
             ]),
             vec![EqualFact::new(exist_element_obj, exist_pair, line_file.clone()).into()],
-            false,
             line_file.clone(),
-        );
+        ));
         let forall_exist = ForallFact::new(
             ParamDefWithType::new(exist_param_defs_with_type),
             {

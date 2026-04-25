@@ -24,7 +24,7 @@ pub use crate::fact::AtomicFact;
 pub use crate::fact::ChainAtomicFact;
 pub use crate::fact::ChainFact;
 pub use crate::fact::EqualFact;
-pub use crate::fact::ExistFact;
+pub use crate::fact::{ExistFactBody, ExistFactEnum};
 pub use crate::fact::ExistOrAndChainAtomicFact;
 pub use crate::fact::Fact;
 pub use crate::fact::ForallFact;
