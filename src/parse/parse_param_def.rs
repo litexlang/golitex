@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     /// Each parameter name is pushed to [`Runtime::parsing_free_param_collection`] with `free_param_kind`
     /// before its shared type is parsed, so later parameter types in the same group (or later groups)
-    /// can resolve earlier parameters. Use [`ParamObjType::DefHeader`] for `prop { ... }` and family
+    /// can resolve earlier parameters. Use [`ParamObjType::DefHeader`] for `prop { ... }` and `family`
     /// headers, [`ParamObjType::Forall`] for `forall`, [`ParamObjType::Exist`] for `exist`, [`ParamObjType::Identifier`] for `let` / `have`, etc.
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
@@ -48,7 +48,7 @@ impl Runtime {
             NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
             FINITE_SET => self.parse_param_type_finite_set(tb),
             SET => self.parse_param_type_set(tb),
-            FAMILY => self
+            s if s == FAMILY_OBJ_PREFIX => self
                 .parse_family_obj(tb)
                 .map(|f| ParamType::Obj(Obj::FamilyObj(f))),
             _ => self.parse_param_type_obj(tb),

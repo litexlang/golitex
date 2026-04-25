@@ -700,8 +700,8 @@ impl FamilyObj {
             .collect::<Vec<_>>()
             .join(", ");
         format!(
-            r"\operatorname{{{}}}\, {}\left( {}\right)",
-            FAMILY, head, args
+            r"@\operatorname{{{}}}\left( {}\right)",
+            head, args
         )
     }
 }

@@ -260,6 +260,7 @@ pub use crate::common::keywords::EXIST_UNIQUE;
 pub use crate::common::keywords::EXTENSION;
 pub use crate::common::keywords::FACT_PREFIX;
 pub use crate::common::keywords::FAMILY;
+pub use crate::common::keywords::FAMILY_OBJ_PREFIX;
 pub use crate::common::keywords::FINITE_SEQ;
 pub use crate::common::keywords::FINITE_SET;
 pub use crate::common::keywords::FN_LOWER_CASE;
