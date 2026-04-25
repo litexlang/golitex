@@ -441,3 +441,33 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.tags.outputs.tags }}
+
+  # ─────────────────────────────────────────────
+  # Job 10: Deploy .deb to litexlang.com web server
+  # ─────────────────────────────────────────────
+  deploy-web-server:
+    name: Deploy .deb to web server
+    needs: [validate, package-deb, release]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - name: Deploy amd64 .deb on litexlang.com
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.WEB_DEPLOY_HOST }}
+          username: ${{ secrets.WEB_DEPLOY_USER }}
+          key: ${{ secrets.WEB_DEPLOY_SSH_KEY }}
+          passphrase: ${{ secrets.WEB_DEPLOY_SSH_PASSPHRASE }}
+          port: ${{ secrets.WEB_DEPLOY_PORT }}
+          script: |
+            set -e
+            TMP_DIR="$(mktemp -d)"
+            trap 'rm -rf "$TMP_DIR"' EXIT
+
+            cd "$TMP_DIR"
+            wget -O litex.deb \
+              "https://github.com/litexlang/golitex/releases/download/${VERSION}/litex_${VERSION}_amd64.deb"
+
+            sudo dpkg -i litex.deb
+            litex -version
