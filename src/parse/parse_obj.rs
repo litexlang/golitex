@@ -1441,6 +1441,7 @@ impl Runtime {
                             &f,
                             &empty,
                             ParamObjType::SetBuilder,
+                            None,
                         )?);
                     }
                     tb.skip_token(RIGHT_CURLY_BRACE)?;

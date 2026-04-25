@@ -640,6 +640,7 @@ impl Runtime {
                 fact,
                 &filtered_param_to_arg_map,
                 param_obj_type,
+                None,
             )?);
         }
         Ok(SetBuilder::new(
@@ -682,6 +683,7 @@ impl Runtime {
                 dom_fact,
                 &filtered_param_to_arg_map,
                 param_obj_type,
+                None,
             )?);
         }
         Ok(FnSet::new(

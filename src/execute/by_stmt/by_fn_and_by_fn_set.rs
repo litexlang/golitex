@@ -173,6 +173,7 @@ impl Runtime {
                                 dom_fact,
                                 &original_param_to_exist_inner,
                                 ParamObjType::FnSet,
+                                None,
                             )
                             .map_err(|inst_error| {
                                 short_exec_error(
@@ -310,6 +311,7 @@ impl Runtime {
                             dom_fact,
                             &original_param_to_forall_witness,
                             ParamObjType::FnSet,
+                            None,
                         )
                         .map_err(|inst_error| {
                             short_exec_error(
