@@ -8,6 +8,8 @@ impl Runtime {
             .unwrap_or_else(|| original.clone())
     }
 
+    /// `inst_to_line_file`: `None` keeps each node's original line file (verify, exec, parsing).
+    /// `Some(lf)` assigns `lf` throughout the instance (infer: tie the new fact to the use site).
     pub fn inst_fact(
         &self,
         fact: &Fact,
