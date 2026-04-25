@@ -6,10 +6,10 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         _line_file: LineFile,
-        inst_state: ToInstWhatKindOfParam,
+        param_obj_type: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let instantiated_types =
-            self.inst_param_def_with_type_one_by_one(param_defs, args, inst_state)?;
+            self.inst_param_def_with_type_one_by_one(param_defs, args, param_obj_type)?;
 
         let mut infer_result = InferResult::new();
         for (arg, param_type) in args.iter().zip(instantiated_types.iter()) {
