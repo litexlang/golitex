@@ -5,7 +5,7 @@ use std::result::Result;
 impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
@@ -40,7 +40,7 @@ impl Runtime {
                 return Ok(result);
             }
 
-            if exist_fact.is_exist_unique {
+            if exist_fact.is_exist_unique() {
                 if let Some(proved) = self.try_verify_exist_unique_by_exist_and_uniqueness_forall(
                     exist_fact,
                     verify_state,
@@ -55,10 +55,10 @@ impl Runtime {
 
     pub(crate) fn build_exist_unique_uniqueness_forall_fact(
         &self,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
     ) -> Result<ForallFact, RuntimeError> {
         let lf = exist_fact.line_file();
-        let flat_orig = exist_fact.params_def_with_type.collect_param_names();
+        let flat_orig = exist_fact.params_def_with_type().collect_param_names();
         let n = flat_orig.len();
         let flat_a: Vec<String> = flat_orig.iter().map(|name| format!("{}1", name)).collect();
         let flat_b: Vec<String> = flat_orig.iter().map(|name| format!("{}2", name)).collect();
@@ -66,7 +66,7 @@ impl Runtime {
         let mut map_running_a: HashMap<String, Obj> = HashMap::new();
         let mut map_running_b: HashMap<String, Obj> = HashMap::new();
         let mut forall_groups: Vec<ParamGroupWithParamType> = Vec::new();
-        for group in exist_fact.params_def_with_type.groups.iter() {
+        for group in exist_fact.params_def_with_type().groups.iter() {
             let chunk_a: Vec<String> = group
                 .params
                 .iter()
@@ -82,7 +82,7 @@ impl Runtime {
                 self.inst_param_type(&group.param_type, &map_running_a, ParamObjType::Forall)?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
         }
-        for group in exist_fact.params_def_with_type.groups.iter() {
+        for group in exist_fact.params_def_with_type().groups.iter() {
             let chunk_b: Vec<String> = group
                 .params
                 .iter()
@@ -123,12 +123,12 @@ impl Runtime {
         // Witness parameters in `exist_fact.facts` are [`ExistFreeParamObj`]; only `inst_*` with
         // [`ParamObjType::Exist`] substitutes them from `map_a` / `map_b` into the forall copies.
         let mut dom_facts: Vec<Fact> = Vec::new();
-        for inner in exist_fact.facts.iter() {
+        for inner in exist_fact.facts().iter() {
             let f_a = self.inst_or_and_chain_atomic_fact(inner, &map_a, ParamObjType::Exist)?;
             let o: OrAndChainAtomicFact = f_a;
             dom_facts.push(o.into());
         }
-        for inner in exist_fact.facts.iter() {
+        for inner in exist_fact.facts().iter() {
             let f_b = self.inst_or_and_chain_atomic_fact(inner, &map_b, ParamObjType::Exist)?;
             let o: OrAndChainAtomicFact = f_b;
             dom_facts.push(o.into());
@@ -191,18 +191,17 @@ impl Runtime {
 
     fn try_verify_exist_unique_by_exist_and_uniqueness_forall(
         &mut self,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if exist_fact.params_def_with_type.number_of_params() == 0 {
+        if exist_fact.params_def_with_type().number_of_params() == 0 {
             return Ok(None);
         }
-        let plain = ExistFact::new(
-            exist_fact.params_def_with_type.clone(),
-            exist_fact.facts.clone(),
-            false,
-            exist_fact.line_file.clone(),
-        );
+        let plain = ExistFactEnum::ExistFact(ExistFactBody::new(
+            exist_fact.params_def_with_type().clone(),
+            exist_fact.facts().clone(),
+            exist_fact.line_file(),
+        ));
         let wd_ok = verify_state.make_state_with_req_ok_set_to_true();
         let plain_res = self.verify_exist_fact(&plain, &wd_ok)?;
         if !plain_res.is_true() {
@@ -236,8 +235,8 @@ impl Runtime {
 
     pub fn verify_exist_fact_with_known_exist_fact(
         &mut self,
-        exist_fact: &ExistFact,
-        known_exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
+        known_exist_fact: &ExistFactEnum,
     ) -> Result<StmtResult, RuntimeError> {
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
@@ -257,10 +256,10 @@ impl Runtime {
     pub fn verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
         runtime: &Runtime,
         environment: &Environment,
-        exist_fact: &ExistFact,
-        known_exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
+        known_exist_fact: &ExistFactEnum,
     ) -> Result<StmtResult, RuntimeError> {
-        if exist_fact.is_exist_unique != known_exist_fact.is_exist_unique {
+        if exist_fact.is_exist_unique() != known_exist_fact.is_exist_unique() {
             return Ok((StmtUnknown::new()).into());
         }
         if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key())
@@ -278,7 +277,7 @@ impl Runtime {
                     }
                 })?;
             for known_fact in known_exist_facts.iter() {
-                if known_fact.is_exist_unique != exist_fact.is_exist_unique {
+                if known_fact.is_exist_unique() != exist_fact.is_exist_unique() {
                     continue;
                 }
                 let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
@@ -310,7 +309,7 @@ impl Runtime {
 
     fn exist_fact_normalized_string(
         runtime: &Runtime,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
     ) -> Result<String, RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         let mut normalized_params: Vec<ParamGroupWithParamType> = Vec::new();
@@ -359,7 +358,7 @@ impl Runtime {
         }
         let params_string = params_string_parts.join("; ");
         let facts_string = fact_strings.join("; ");
-        let head = if exist_fact.is_exist_unique {
+        let head = if exist_fact.is_exist_unique() {
             EXIST_UNIQUE
         } else {
             EXIST

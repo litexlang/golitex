@@ -575,28 +575,27 @@ impl Runtime {
 
     pub fn inst_exist_fact(
         &self,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
         param_to_arg_map: &HashMap<String, Obj>,
         ctx: ToInstWhatKindOfParam,
-    ) -> Result<ExistFact, RuntimeError> {
-        let mut groups = Vec::with_capacity(exist_fact.params_def_with_type.groups.len());
-        for param_def_with_type in exist_fact.params_def_with_type.groups.iter() {
+    ) -> Result<ExistFactEnum, RuntimeError> {
+        let mut groups = Vec::with_capacity(exist_fact.params_def_with_type().groups.len());
+        for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
             groups.push(ParamGroupWithParamType::new(
                 param_def_with_type.params.clone(),
                 self.inst_param_type(&param_def_with_type.param_type, param_to_arg_map, ctx)?,
             ));
         }
         let params_def_with_type = ParamDefWithType::new(groups);
-        let mut facts = Vec::with_capacity(exist_fact.facts.len());
-        for fact in exist_fact.facts.iter() {
+        let mut facts = Vec::with_capacity(exist_fact.facts().len());
+        for fact in exist_fact.facts().iter() {
             facts.push(self.inst_or_and_chain_atomic_fact(fact, param_to_arg_map, ctx)?);
         }
-        Ok(ExistFact::new(
-            params_def_with_type,
-            facts,
-            exist_fact.is_exist_unique,
-            exist_fact.line_file.clone(),
-        ))
+        let body = ExistFactBody::new(params_def_with_type, facts, exist_fact.line_file());
+        Ok(match exist_fact {
+            ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
+            ExistFactEnum::ExistUniqueFact(_) => ExistFactEnum::ExistUniqueFact(body),
+        })
     }
 
     pub fn inst_or_fact(

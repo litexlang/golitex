@@ -12,7 +12,7 @@ pub struct WitnessNonemptySet {
 #[derive(Clone)]
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
-    pub exist_fact_in_witness: ExistFact,
+    pub exist_fact_in_witness: ExistFactEnum,
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }
@@ -20,7 +20,7 @@ pub struct WitnessExistFact {
 impl WitnessExistFact {
     pub fn new(
         equal_tos: Vec<Obj>,
-        exist_fact_in_witness: ExistFact,
+        exist_fact_in_witness: ExistFactEnum,
         proof: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
@@ -42,9 +42,9 @@ impl fmt::Display for WitnessExistFact {
                 WITNESS,
                 vec_to_string_with_sep(&self.equal_tos, COMMA.to_string()),
                 COLON,
-                self.exist_fact_in_witness.params_def_with_type.to_string(),
+                self.exist_fact_in_witness.params_def_with_type().to_string(),
                 ST,
-                vec_to_string_join_by_comma(&self.exist_fact_in_witness.facts)
+                vec_to_string_join_by_comma(self.exist_fact_in_witness.facts())
             ),
             _ => write!(
                 f,
@@ -52,9 +52,9 @@ impl fmt::Display for WitnessExistFact {
                 WITNESS,
                 vec_to_string_with_sep(&self.equal_tos, COMMA.to_string()),
                 COLON,
-                self.exist_fact_in_witness.params_def_with_type.to_string(),
+                self.exist_fact_in_witness.params_def_with_type().to_string(),
                 ST,
-                vec_to_string_join_by_comma(&self.exist_fact_in_witness.facts),
+                vec_to_string_join_by_comma(self.exist_fact_in_witness.facts()),
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)
             ),

@@ -101,7 +101,7 @@ pub struct HaveFnEqualStmt {
 #[derive(Clone)]
 pub struct HaveByExistStmt {
     pub equal_tos: Vec<String>,
-    pub exist_fact_in_have_obj_st: ExistFact,
+    pub exist_fact_in_have_obj_st: ExistFactEnum,
     pub line_file: LineFile,
 }
 
@@ -254,7 +254,7 @@ impl fmt::Display for HaveObjEqualStmt {
 impl HaveByExistStmt {
     pub fn new(
         equal_tos: Vec<String>,
-        exist_fact_in_have_obj_st: ExistFact,
+        exist_fact_in_have_obj_st: ExistFactEnum,
         line_file: LineFile,
     ) -> Self {
         HaveByExistStmt {

@@ -44,8 +44,9 @@ impl Runtime {
         }
     }
 
-    fn infer_exist_fact(&mut self, exist_fact: &ExistFact) -> Result<InferResult, RuntimeError> {
-        if !exist_fact.is_exist_unique || exist_fact.params_def_with_type.number_of_params() == 0 {
+    fn infer_exist_fact(&mut self, exist_fact: &ExistFactEnum) -> Result<InferResult, RuntimeError> {
+        if !exist_fact.is_exist_unique() || exist_fact.params_def_with_type().number_of_params() == 0
+        {
             return Ok(InferResult::new());
         }
         let uniq = self.build_exist_unique_uniqueness_forall_fact(exist_fact)?;
