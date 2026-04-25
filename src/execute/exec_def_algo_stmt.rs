@@ -184,7 +184,12 @@ impl Runtime {
         }
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &fn_set_param_name_to_algo_arg_obj, ParamObjType::Forall)
+                .inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    &fn_set_param_name_to_algo_arg_obj,
+                    ParamObjType::Forall,
+                    None,
+                )
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                         def_algo_stmt,
@@ -268,6 +273,7 @@ impl Runtime {
             &algo_case.condition,
             &param_to_arg_map,
             ParamObjType::Forall,
+            None,
         )?;
         let inst_return_value = self.inst_obj(
             &algo_case.return_stmt.value,
@@ -358,6 +364,7 @@ impl Runtime {
                 &algo_case.condition,
                 &param_to_arg_map,
                 ParamObjType::Forall,
+                None,
             )?;
             case_conditions.push(inst_condition.into());
         }

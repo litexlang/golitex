@@ -164,6 +164,7 @@ impl Runtime {
                     fact_in_set_builder,
                     &param_to_arg_map,
                     ParamObjType::SetBuilder,
+                    Some(&in_fact.line_file),
                 )
                 .map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -178,8 +179,7 @@ impl Runtime {
                     )))
                 })?;
             let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
-            let fact_to_store =
-                instantiated_fact_as_fact.with_new_line_file(in_fact.line_file.clone());
+            let fact_to_store = instantiated_fact_as_fact;
 
             infer_result.new_fact(&fact_to_store);
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)?;

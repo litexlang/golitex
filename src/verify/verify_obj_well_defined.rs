@@ -322,7 +322,7 @@ impl Runtime {
         );
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::FnSet)
+                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::FnSet, None)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -2070,7 +2070,12 @@ impl Runtime {
 
         for dom_fact in def.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::DefHeader)
+                .inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    &param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    None,
+                )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
