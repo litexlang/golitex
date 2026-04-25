@@ -3,7 +3,7 @@ use std::fmt;
 #[derive(Clone)]
 pub enum Fact {
     AtomicFact(AtomicFact),
-    ExistFact(ExistFact),
+    ExistFact(ExistFactEnum),
     OrFact(OrFact),
     AndFact(AndFact),
     ChainFact(ChainFact),
@@ -70,15 +70,7 @@ impl Fact {
             Fact::AtomicFact(atomic_fact) => {
                 Fact::AtomicFact(atomic_fact.with_new_line_file(line_file))
             }
-            Fact::ExistFact(e) => Fact::ExistFact(ExistFact::new(
-                e.params_def_with_type,
-                e.facts
-                    .into_iter()
-                    .map(|x| x.with_new_line_file(line_file.clone()))
-                    .collect(),
-                e.is_exist_unique,
-                line_file,
-            )),
+            Fact::ExistFact(e) => Fact::ExistFact(e.with_new_line_file(line_file)),
             Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(
                 or_fact
                     .facts
@@ -158,8 +150,8 @@ impl From<ForallFact> for Fact {
     }
 }
 
-impl From<ExistFact> for Fact {
-    fn from(exist_fact: ExistFact) -> Self {
+impl From<ExistFactEnum> for Fact {
+    fn from(exist_fact: ExistFactEnum) -> Self {
         Fact::ExistFact(exist_fact)
     }
 }

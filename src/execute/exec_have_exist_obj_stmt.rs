@@ -28,7 +28,7 @@ impl Runtime {
         }
 
         if exist_fact_in_have_obj_stmt
-            .params_def_with_type
+            .params_def_with_type()
             .number_of_params()
             != have_exist_obj_stmt.equal_tos.len()
         {
@@ -52,7 +52,7 @@ impl Runtime {
 
         let mut infer_result = self
             .store_args_satisfy_param_type_when_not_defining_new_identifiers(
-                &exist_fact_in_have_obj_stmt.params_def_with_type,
+                exist_fact_in_have_obj_stmt.params_def_with_type(),
                 &new_obj_names_as_identifier_objs,
                 have_exist_obj_stmt.line_file.clone(),
                 ParamObjType::Exist,
@@ -62,10 +62,10 @@ impl Runtime {
             })?;
 
         let param_to_obj_map = exist_fact_in_have_obj_stmt
-            .params_def_with_type
+            .params_def_with_type()
             .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
 
-        for fact in exist_fact_in_have_obj_stmt.facts.iter() {
+        for fact in exist_fact_in_have_obj_stmt.facts().iter() {
             let instantiated_fact = self
                 .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map, ParamObjType::Exist)
                 .map_err(|runtime_error| {

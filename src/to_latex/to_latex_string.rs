@@ -657,16 +657,16 @@ impl EvalStmt {
     }
 }
 
-impl ExistFact {
+impl ExistFactEnum {
     pub fn to_latex_string(&self) -> String {
-        let head = if self.is_exist_unique {
+        let head = if self.is_exist_unique() {
             r"\exists!"
         } else {
             r"\exists"
         };
-        let params = self.params_def_with_type.to_latex_string();
+        let params = self.params_def_with_type().to_latex_string();
         let facts = self
-            .facts
+            .facts()
             .iter()
             .map(|f| f.to_latex_string())
             .collect::<Vec<_>>()
@@ -1682,7 +1682,7 @@ impl WitnessExistFact {
             .join(", ");
         let facts = self
             .exist_fact_in_witness
-            .facts
+            .facts()
             .iter()
             .map(|f| f.to_latex_string())
             .collect::<Vec<_>>()
@@ -1691,7 +1691,7 @@ impl WitnessExistFact {
             r"\mathrm{{witness}}\ {} : {} \mathrm{{st}} \left\{{ {}\right\}}",
             names,
             self.exist_fact_in_witness
-                .params_def_with_type
+                .params_def_with_type()
                 .to_latex_string(),
             facts
         );
