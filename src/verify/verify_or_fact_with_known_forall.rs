@@ -180,6 +180,7 @@ impl Runtime {
                     dom_fact,
                     &param_to_arg_map,
                     ParamObjType::Forall,
+                    None,
                 )
                 .map_err(|e| {
                     {

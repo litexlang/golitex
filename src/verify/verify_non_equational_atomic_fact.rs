@@ -592,7 +592,12 @@ impl Runtime {
 
         for iff_fact in definition.iff_facts.iter() {
             let instantiated_iff_fact = self
-                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader)
+                .inst_fact(
+                    iff_fact,
+                    &param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(normal_atomic_fact.line_file.clone()),
+                )
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -603,8 +608,7 @@ impl Runtime {
                             vec![],
                         )))
                     }
-                })?
-                .with_new_line_file(normal_atomic_fact.line_file.clone());
+                })?;
             let iff_clause_verify_result =
                 self.verify_fact(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;
             if iff_clause_verify_result.is_unknown() {
