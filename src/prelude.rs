@@ -123,7 +123,6 @@ pub use crate::obj::StandardSet;
 pub use crate::obj::Sub;
 pub use crate::obj::SumFreeParamObj;
 pub use crate::obj::SumObj;
-pub use crate::obj::ToInstWhatKindOfParam;
 pub use crate::obj::Tuple;
 pub use crate::obj::TupleDim;
 pub use crate::obj::Union;
