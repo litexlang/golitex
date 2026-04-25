@@ -66,8 +66,8 @@ impl Runtime {
                             current_known_forall.clone(),
                         )
                     };
-                    let match_result =
-                        self.match_args_in_fact_in_known_forall_fact_with_given_args(
+                    let match_result = self
+                        .match_args_in_fact_in_known_forall_fact_with_given_args(
                             &fact_args_in_known_forall,
                             &given_fact_args,
                         )?;
