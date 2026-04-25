@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// `by family: family p(R)` — 存储 `family p(R) =` 定义体中 `equal_to` 用实参 `R` 替换形参后的对象。
+    /// `by family: @p(R)` — 存储 `@p(R) =` 定义体中 `equal_to` 用实参 `R` 替换形参后的对象。
     pub fn exec_by_family_stmt(&mut self, stmt: &ByFamilyStmt) -> Result<StmtResult, RuntimeError> {
         let stmt_exec: Stmt = stmt.clone().into();
         let family_ty = match &stmt.family_obj {
@@ -9,7 +9,7 @@ impl Runtime {
             _ => {
                 return Err(short_exec_error(
  stmt_exec,
-                    "by family: expected `family name(...)` object".to_string(),
+                    "by family: expected `@name(...)` family object".to_string(),
                     None,
                     vec![],
                 ));

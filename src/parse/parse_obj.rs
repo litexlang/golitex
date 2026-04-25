@@ -570,7 +570,7 @@ impl Runtime {
             return Ok(StandardSet::RNz.into());
         }
 
-        if tok == FAMILY {
+        if tok == FAMILY_OBJ_PREFIX {
             let family = self.parse_family_obj(tb)?;
             return Ok(Obj::FamilyObj(family));
         }
@@ -1545,7 +1545,7 @@ impl Runtime {
     }
 
     pub fn parse_family_obj(&mut self, tb: &mut TokenBlock) -> Result<FamilyObj, RuntimeError> {
-        tb.skip_token(FAMILY)?;
+        tb.skip_token(FAMILY_OBJ_PREFIX)?;
         let name = self.parse_atomic_name(tb)?;
         let params = self.parse_braced_objs(tb)?;
         Ok(FamilyObj { name, params })
