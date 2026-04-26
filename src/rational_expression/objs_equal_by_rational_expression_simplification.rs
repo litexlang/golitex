@@ -77,8 +77,7 @@ mod algebraic_identity_tests {
 
     #[test]
     fn two_an_plus_bm_squared_equals_expanded_rhs() {
-        use crate::parse::tokenize_line;
-        use crate::parse::TokenBlock;
+        use crate::parse::{tokenize_line, TokenBlock};
         use crate::runtime::Runtime;
         use std::rc::Rc;
 

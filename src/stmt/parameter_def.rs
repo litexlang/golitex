@@ -250,10 +250,10 @@ impl ParamGroupWithSet {
         runtime: &Runtime,
         param_defs: &Vec<ParamGroupWithSet>,
         args: &Vec<Obj>,
-        inst_state: ToInstWhatKindOfParam,
+        param_obj_type: ParamObjType,
     ) -> Result<Vec<AtomicFact>, RuntimeError> {
         let instantiated_param_sets =
-            runtime.inst_param_def_with_set_one_by_one(param_defs, args, inst_state)?;
+            runtime.inst_param_def_with_set_one_by_one(param_defs, args, param_obj_type)?;
         let flat_param_sets =
             Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
         let mut facts = Vec::with_capacity(args.len());

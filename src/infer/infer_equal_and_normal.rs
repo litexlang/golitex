@@ -378,7 +378,12 @@ impl Runtime {
 
         for iff_fact in predicate_definition.iff_facts.iter() {
             let instantiated_iff_fact = self
-                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader)
+                .inst_fact(
+                    iff_fact,
+                    &param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(normal_atomic_fact.line_file.clone()),
+                )
                 .map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -391,8 +396,7 @@ impl Runtime {
                         vec![],
                     )))
                 })?;
-            let fact_to_store =
-                instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file.clone());
+            let fact_to_store = instantiated_iff_fact;
             infer_result.new_fact(&fact_to_store);
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)
                 .map_err(|previous_error| {

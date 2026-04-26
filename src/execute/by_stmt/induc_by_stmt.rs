@@ -86,7 +86,7 @@ impl Runtime {
             HashMap::from([(stmt.param.clone(), induc_param_obj)]);
         for fact in stmt.to_prove.iter() {
             let inst = self
-                .inst_exist_or_and_chain_atomic_fact(fact, &induc_map, ParamObjType::Induc)?
+                .inst_exist_or_and_chain_atomic_fact(fact, &induc_map, ParamObjType::Induc, None)?
                 .to_fact();
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(inst)
                 .map_err(|e| {
@@ -119,6 +119,7 @@ impl Runtime {
                 fact,
                 &forall_map,
                 ParamObjType::Forall,
+                None,
             )?);
         }
         Ok(
@@ -154,6 +155,7 @@ impl Runtime {
                 fact,
                 &base_case_param_to_arg_map,
                 ParamObjType::Induc,
+                None,
             )?
             .to_fact();
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
@@ -198,6 +200,7 @@ impl Runtime {
             fact,
             &forall_map,
             ParamObjType::Forall,
+            None,
         )?;
         let param_plus_one_obj = Add::new(
             forall_bound_param.clone(),
@@ -210,6 +213,7 @@ impl Runtime {
             fact,
             &induction_step_param_to_obj_map,
             ParamObjType::Forall,
+            None,
         )?;
 
         let corresponding_forall_fact = ForallFact::new(

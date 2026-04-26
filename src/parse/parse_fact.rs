@@ -187,7 +187,7 @@ impl Runtime {
         }
     }
 
-    pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, RuntimeError> {
+    pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFactEnum, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
             let is_exist_unique = match tb.current()? {
                 EXIST_UNIQUE => {
@@ -243,7 +243,12 @@ impl Runtime {
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
                     let line_file = tb.line_file.clone();
-                    Ok(ExistFact::new(param_def, facts, is_exist_unique, line_file))
+                    let body = ExistFactBody::new(param_def, facts, line_file);
+                    Ok(if is_exist_unique {
+                        ExistFactEnum::ExistUniqueFact(body)
+                    } else {
+                        ExistFactEnum::ExistFact(body)
+                    })
                 })();
                 inner
                     .parsing_free_param_collection

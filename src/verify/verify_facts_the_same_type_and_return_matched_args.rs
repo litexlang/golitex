@@ -136,26 +136,26 @@ impl Runtime {
     }
 
     pub fn _verify_exist_fact_the_same_type_and_return_matched_args(
-        fact: &ExistFact,
-        other: &ExistFact,
+        fact: &ExistFactEnum,
+        other: &ExistFactEnum,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
-        if fact.is_exist_unique != other.is_exist_unique {
+        if fact.is_exist_unique() != other.is_exist_unique() {
             return Ok(None);
         }
-        if fact.params_def_with_type.groups.len() != other.params_def_with_type.groups.len() {
+        if fact.params_def_with_type().groups.len() != other.params_def_with_type().groups.len() {
             return Ok(None);
         }
-        if fact.facts.len() != other.facts.len() {
+        if fact.facts().len() != other.facts().len() {
             return Ok(None);
         }
 
         let mut matched_args: Vec<(Obj, Obj)> = Vec::new();
 
         for (fact_param_def, other_param_def) in fact
-            .params_def_with_type
+            .params_def_with_type()
             .groups
             .iter()
-            .zip(other.params_def_with_type.groups.iter())
+            .zip(other.params_def_with_type().groups.iter())
         {
             if fact_param_def.params.len() != other_param_def.params.len() {
                 return Ok(None);
@@ -197,7 +197,7 @@ impl Runtime {
                 },
             }
         }
-        for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {
+        for (fact_item, other_item) in fact.facts().iter().zip(other.facts().iter()) {
             let sub_matched_args =
                 match Self::_verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
                     fact_item, other_item,

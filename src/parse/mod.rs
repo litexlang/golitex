@@ -1,8 +1,6 @@
 mod token_block;
 mod tokenizer;
 pub use token_block::TokenBlock;
-
-#[cfg(test)]
 pub use tokenizer::tokenize_line;
 
 mod by_stmt;

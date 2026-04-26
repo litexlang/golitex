@@ -34,7 +34,6 @@ impl ParamObjType {
     }
 }
 
-pub type ToInstWhatKindOfParam = ParamObjType;
 const FREE_PARAM_DISPLAY_TAG_PREFIX: char = '~';
 
 fn write_parsing_free_param_tagged_spine(

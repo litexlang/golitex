@@ -192,7 +192,7 @@ Runs **before** known equalities and before generic same-shape recursion (`verif
 
 **Structural rules for finite `sum` (6, 9–10, 12, 14) and `product` (7–8, 11, 13):** peel / additivity / single index / split / factor-scalar for sums use **`objs_equal_by_display_string`** where noted (same object **`Display`** text), not **`verify_objs_are_equal`**, except **8** (product multiplicativity) uses **`verify_objs_are_equal`** on **`start`** / **`end`** between the outer product and each inner product. Rule **5** (two sums) uses **`verify_objs_are_equal`** on bounds and on summands inside a local scope. Other product equalities still use generic equality / calculation / rational simplification unless proved otherwise.
 
-1. **Family expansion** — One or both sides `family …(…)` with known `equal_to`: substitute parameters, **`verify_objs_are_equal`** on expanded sets; success strings like `equality: expand family definition…`.
+1. **Family expansion** — One or both sides `@…(…)` (`FamilyObj`) with known `equal_to`: substitute parameters, **`verify_objs_are_equal`** on expanded sets; success strings like `equality: expand family definition…`.
 2. **`0 = x - y`** — If one side is literal `0` and the other is `x - y`, requires **`x = y`** via full `verify_objs_are_equal`.
 3. **`0 = a^n`** — Literal integer **`n > 0`**, requires **`a = 0`** (again full equality).
 4. **Log** — `log(base, base^exp) = exp`; plus product/quotient/power algebra on `log`; **`log(a,b)=c`** from **`a^c = b`** (pow inverse).

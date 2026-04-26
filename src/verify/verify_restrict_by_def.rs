@@ -177,6 +177,7 @@ impl Runtime {
                     dom_fact,
                     original_to_restrict_param_map,
                     ParamObjType::FnSet,
+                    None,
                 )?;
             then_facts.push(instantiated_dom_fact.into());
         }

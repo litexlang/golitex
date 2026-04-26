@@ -594,7 +594,12 @@ impl Runtime {
 
         for algo_case in algo_definition.cases.iter() {
             let instantiated_case_condition =
-                self.inst_atomic_fact(&algo_case.condition, &param_to_arg_map, ParamObjType::DefAlgo)?;
+                self.inst_atomic_fact(
+                    &algo_case.condition,
+                    &param_to_arg_map,
+                    ParamObjType::DefAlgo,
+                    None,
+                )?;
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {

@@ -16,7 +16,7 @@ impl Runtime {
     ) -> Result<Fact, RuntimeError> {
         let param_to_arg_map = have_fn_forall_store_binding_map(&forall_fact);
         let fact: Fact = forall_fact.into();
-        self.inst_fact(&fact, &param_to_arg_map, ParamObjType::FnSet)
+        self.inst_fact(&fact, &param_to_arg_map, ParamObjType::FnSet, None)
     }
 }
 

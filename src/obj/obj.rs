@@ -107,12 +107,15 @@ impl fmt::Display for FamilyObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}({})",
-            FAMILY,
-            self.name,
+            "{}({})",
+            display_family_obj_head(&self.name),
             vec_to_string_join_by_comma(&self.params)
         )
     }
+}
+
+fn display_family_obj_head(name: &AtomicName) -> String {
+    format!("{}{}", FAMILY_OBJ_PREFIX, name)
 }
 
 #[derive(Clone)]

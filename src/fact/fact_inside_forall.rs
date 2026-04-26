@@ -7,7 +7,7 @@ pub enum ExistOrAndChainAtomicFact {
     AndFact(AndFact),
     ChainFact(ChainFact),
     OrFact(OrFact),
-    ExistFact(ExistFact),
+    ExistFact(ExistFactEnum),
 }
 
 impl fmt::Display for ExistOrAndChainAtomicFact {
@@ -42,46 +42,6 @@ impl ExistOrAndChainAtomicFact {
             ExistOrAndChainAtomicFact::ExistFact(exist_fact) => exist_fact.line_file(),
         }
     }
-
-    pub fn with_new_line_file(self, line_file: LineFile) -> Self {
-        match self {
-            ExistOrAndChainAtomicFact::AtomicFact(a) => {
-                ExistOrAndChainAtomicFact::AtomicFact(a.with_new_line_file(line_file))
-            }
-            ExistOrAndChainAtomicFact::AndFact(af) => {
-                ExistOrAndChainAtomicFact::AndFact(AndFact::new(
-                    af.facts
-                        .into_iter()
-                        .map(|x| x.with_new_line_file(line_file.clone()))
-                        .collect(),
-                    line_file,
-                ))
-            }
-            ExistOrAndChainAtomicFact::ChainFact(cf) => ExistOrAndChainAtomicFact::ChainFact(
-                ChainFact::new(cf.objs, cf.prop_names, line_file),
-            ),
-            ExistOrAndChainAtomicFact::OrFact(of) => {
-                ExistOrAndChainAtomicFact::OrFact(OrFact::new(
-                    of.facts
-                        .into_iter()
-                        .map(|x| x.with_new_line_file(line_file.clone()))
-                        .collect(),
-                    line_file,
-                ))
-            }
-            ExistOrAndChainAtomicFact::ExistFact(e) => {
-                ExistOrAndChainAtomicFact::ExistFact(ExistFact::new(
-                    e.params_def_with_type,
-                    e.facts
-                        .into_iter()
-                        .map(|x| x.with_new_line_file(line_file.clone()))
-                        .collect(),
-                    e.is_exist_unique,
-                    line_file,
-                ))
-            }
-        }
-    }
 }
 
 impl From<AtomicFact> for ExistOrAndChainAtomicFact {
@@ -114,8 +74,19 @@ impl From<InFact> for ExistOrAndChainAtomicFact {
     }
 }
 
-impl From<ExistFact> for ExistOrAndChainAtomicFact {
-    fn from(exist_fact: ExistFact) -> Self {
+impl From<OrAndChainAtomicFact> for ExistOrAndChainAtomicFact {
+    fn from(f: OrAndChainAtomicFact) -> Self {
+        match f {
+            OrAndChainAtomicFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
+            OrAndChainAtomicFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
+            OrAndChainAtomicFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
+            OrAndChainAtomicFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
+        }
+    }
+}
+
+impl From<ExistFactEnum> for ExistOrAndChainAtomicFact {
+    fn from(exist_fact: ExistFactEnum) -> Self {
         ExistOrAndChainAtomicFact::ExistFact(exist_fact)
     }
 }
