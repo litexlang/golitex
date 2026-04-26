@@ -452,7 +452,23 @@ jobs:
     env:
       VERSION: ${{ needs.validate.outputs.version }}
     steps:
-      - name: Deploy amd64 .deb on litexlang.com
+      - name: Download amd64 .deb
+        run: |
+          curl -fSL -o "litex.deb" \
+            "https://github.com/litexlang/golitex/releases/download/${VERSION}/litex_${VERSION}_amd64.deb"
+
+      - name: Upload amd64 .deb to litexlang.com
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.WEB_DEPLOY_HOST }}
+          username: ${{ secrets.WEB_DEPLOY_USER }}
+          key: ${{ secrets.WEB_DEPLOY_SSH_KEY }}
+          passphrase: ${{ secrets.WEB_DEPLOY_SSH_PASSPHRASE }}
+          port: ${{ secrets.WEB_DEPLOY_PORT }}
+          source: litex.deb
+          target: /tmp/
+
+      - name: Install amd64 .deb on litexlang.com
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.WEB_DEPLOY_HOST }}
@@ -460,15 +476,8 @@ jobs:
           key: ${{ secrets.WEB_DEPLOY_SSH_KEY }}
           passphrase: ${{ secrets.WEB_DEPLOY_SSH_PASSPHRASE }}
           port: ${{ secrets.WEB_DEPLOY_PORT }}
-          envs: VERSION
           script: |
             set -e
-            TMP_DIR="$(mktemp -d)"
-            trap 'rm -rf "$TMP_DIR"' EXIT
-
-            cd "$TMP_DIR"
-            wget -O litex.deb \
-              "https://github.com/litexlang/golitex/releases/download/${VERSION}/litex_${VERSION}_amd64.deb"
-
-            sudo dpkg -i litex.deb
+            sudo dpkg -i /tmp/litex.deb
+            rm -f /tmp/litex.deb
             litex -version
