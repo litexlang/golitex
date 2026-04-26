@@ -460,6 +460,7 @@ jobs:
           key: ${{ secrets.WEB_DEPLOY_SSH_KEY }}
           passphrase: ${{ secrets.WEB_DEPLOY_SSH_PASSPHRASE }}
           port: ${{ secrets.WEB_DEPLOY_PORT }}
+          envs: VERSION
           script: |
             set -e
             TMP_DIR="$(mktemp -d)"
