@@ -19,13 +19,13 @@ pub struct Environment {
     pub known_atomic_facts_with_2_args:
         HashMap<(AtomicFactKey, bool), HashMap<(ObjString, ObjString), AtomicFact>>,
 
-    pub known_exist_facts: HashMap<ExistFactKey, Vec<ExistFact>>,
+    pub known_exist_facts: HashMap<ExistFactKey, Vec<ExistFactEnum>>,
     pub known_or_facts: HashMap<OrFactKey, Vec<OrFact>>,
 
     pub known_atomic_facts_in_forall_facts:
         HashMap<(AtomicFactKey, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_exist_facts_in_forall_facts:
-        HashMap<ExistFactKey, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>,
+        HashMap<ExistFactKey, Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_or_facts_in_forall_facts:
         HashMap<OrFactKey, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
 
@@ -64,14 +64,14 @@ impl Environment {
             (AtomicFactKey, bool),
             HashMap<(ObjString, ObjString), AtomicFact>,
         >,
-        known_exist_facts: HashMap<ExistFactKey, Vec<ExistFact>>,
+        known_exist_facts: HashMap<ExistFactKey, Vec<ExistFactEnum>>,
         known_atomic_facts_in_forall_facts: HashMap<
             (AtomicFactKey, bool),
             Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
         >,
         known_exist_facts_in_forall_facts: HashMap<
             ExistFactKey,
-            Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>,
+            Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
         >,
         known_or_facts: HashMap<OrFactKey, Vec<OrFact>>,
         known_or_facts_in_forall_facts: HashMap<
@@ -238,7 +238,7 @@ impl Environment {
         }
     }
 
-    fn store_exist_fact(&mut self, exist_fact: ExistFact) -> Result<(), RuntimeError> {
+    fn store_exist_fact(&mut self, exist_fact: ExistFactEnum) -> Result<(), RuntimeError> {
         let key: ExistFactKey = exist_fact.key();
         if let Some(vec_ref) = self.known_exist_facts.get_mut(&key) {
             vec_ref.push(exist_fact);
@@ -333,7 +333,7 @@ impl Environment {
 
     fn store_exist_fact_in_forall_fact(
         &mut self,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeError> {
         let pair = || (exist_fact.clone(), forall_params_and_dom.clone());
@@ -412,7 +412,7 @@ impl Environment {
         }
     }
 
-    pub fn store_exist_fact_by_ref(&mut self, exist_fact: &ExistFact) -> Result<(), RuntimeError> {
+    pub fn store_exist_fact_by_ref(&mut self, exist_fact: &ExistFactEnum) -> Result<(), RuntimeError> {
         self.store_exist_fact(exist_fact.clone())
     }
 

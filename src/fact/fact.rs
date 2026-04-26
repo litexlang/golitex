@@ -3,7 +3,7 @@ use std::fmt;
 #[derive(Clone)]
 pub enum Fact {
     AtomicFact(AtomicFact),
-    ExistFact(ExistFact),
+    ExistFact(ExistFactEnum),
     OrFact(OrFact),
     AndFact(AndFact),
     ChainFact(ChainFact),
@@ -63,83 +63,6 @@ impl Fact {
     }
 }
 
-impl Fact {
-    // TODO 未来删了比较好，因为默认所有stmt里的东西都不能变化了
-    pub fn with_new_line_file(self, line_file: LineFile) -> Fact {
-        match self {
-            Fact::AtomicFact(atomic_fact) => {
-                Fact::AtomicFact(atomic_fact.with_new_line_file(line_file))
-            }
-            Fact::ExistFact(e) => Fact::ExistFact(ExistFact::new(
-                e.params_def_with_type,
-                e.facts
-                    .into_iter()
-                    .map(|x| x.with_new_line_file(line_file.clone()))
-                    .collect(),
-                e.is_exist_unique,
-                line_file,
-            )),
-            Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(
-                or_fact
-                    .facts
-                    .into_iter()
-                    .map(|x| x.with_new_line_file(line_file.clone()))
-                    .collect(),
-                line_file,
-            )),
-            Fact::AndFact(and_fact) => Fact::AndFact(AndFact::new(
-                and_fact
-                    .facts
-                    .into_iter()
-                    .map(|x| x.with_new_line_file(line_file.clone()))
-                    .collect(),
-                line_file,
-            )),
-            Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(
-                chain_fact.objs,
-                chain_fact.prop_names,
-                line_file,
-            )),
-            Fact::ForallFact(f) => Fact::ForallFact(ForallFact::new(
-                f.params_def_with_type,
-                f.dom_facts
-                    .into_iter()
-                    .map(|x| x.with_new_line_file(line_file.clone()))
-                    .collect(),
-                f.then_facts
-                    .into_iter()
-                    .map(|x| x.with_new_line_file(line_file.clone()))
-                    .collect(),
-                line_file,
-            )),
-            Fact::ForallFactWithIff(f) => {
-                let inner_forall = f.forall_fact;
-                Fact::ForallFactWithIff(ForallFactWithIff::new(
-                    ForallFact::new(
-                        inner_forall.params_def_with_type,
-                        inner_forall
-                            .dom_facts
-                            .into_iter()
-                            .map(|x| x.with_new_line_file(line_file.clone()))
-                            .collect(),
-                        inner_forall
-                            .then_facts
-                            .into_iter()
-                            .map(|x| x.with_new_line_file(line_file.clone()))
-                            .collect(),
-                        line_file.clone(),
-                    ),
-                    f.iff_facts
-                        .into_iter()
-                        .map(|x| x.with_new_line_file(line_file.clone()))
-                        .collect(),
-                    line_file,
-                ))
-            }
-        }
-    }
-}
-
 impl From<AtomicFact> for Fact {
     fn from(atomic_fact: AtomicFact) -> Self {
         Fact::AtomicFact(atomic_fact)
@@ -158,8 +81,8 @@ impl From<ForallFact> for Fact {
     }
 }
 
-impl From<ExistFact> for Fact {
-    fn from(exist_fact: ExistFact) -> Self {
+impl From<ExistFactEnum> for Fact {
+    fn from(exist_fact: ExistFactEnum) -> Self {
         Fact::ExistFact(exist_fact)
     }
 }

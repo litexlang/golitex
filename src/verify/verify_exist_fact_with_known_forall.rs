@@ -8,7 +8,7 @@ use std::result::Result;
 impl Runtime {
     pub fn verify_exist_fact_with_known_forall(
         &mut self,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(fact_verified) =
@@ -23,12 +23,12 @@ impl Runtime {
         &mut self,
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
-        given_exist_fact: &ExistFact,
+        given_exist_fact: &ExistFactEnum,
     ) -> Result<
         (
             (usize, usize),
             Option<HashMap<String, Obj>>,
-            Option<(ExistFact, Rc<KnownForallFactParamsAndDom>)>,
+            Option<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
         ),
         RuntimeError,
     > {
@@ -43,7 +43,8 @@ impl Runtime {
         let envs_count = self.environment_stack.len();
         for i in iterate_from_env_index..envs_count {
             let env = &self.environment_stack[envs_count - 1 - i];
-            let mut merged_bucket: Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)> = Vec::new();
+            let mut merged_bucket: Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)> =
+                Vec::new();
             for lk in lookup_keys.iter() {
                 if let Some(known_forall_facts_in_env) =
                     env.known_exist_facts_in_forall_facts.get(lk.as_str())
@@ -65,14 +66,14 @@ impl Runtime {
                             current_known_forall.clone(),
                         )
                     };
-                    let match_result =
-                        self.match_args_in_fact_in_known_forall_fact_with_given_args(
+                    let match_result = self
+                        .match_args_in_fact_in_known_forall_fact_with_given_args(
                             &fact_args_in_known_forall,
                             &given_fact_args,
                         )?;
                     if let Some(arg_map) = match_result {
                         let exist_in_forall = &current_known_forall.0;
-                        if exist_in_forall.is_exist_unique != given_exist_fact.is_exist_unique {
+                        if exist_in_forall.is_exist_unique() != given_exist_fact.is_exist_unique() {
                             continue;
                         }
                         return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
@@ -86,7 +87,7 @@ impl Runtime {
 
     fn try_verify_exist_fact_with_known_forall_facts_in_envs(
         &mut self,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let mut iterate_from_env_index = 0;
@@ -122,20 +123,22 @@ impl Runtime {
 
     fn verify_exist_fact_args_satisfy_forall_requirements(
         &mut self,
-        exist_fact_in_known_forall: &ExistFact,
+        exist_fact_in_known_forall: &ExistFactEnum,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
         arg_map: HashMap<String, Obj>,
-        given_exist_fact: &ExistFact,
+        given_exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        if exist_fact_in_known_forall.is_exist_unique != given_exist_fact.is_exist_unique {
+        if exist_fact_in_known_forall.is_exist_unique() != given_exist_fact.is_exist_unique() {
             return Ok(None);
         }
         // exist param matches exist param
-        let given_exist_param_names = given_exist_fact.params_def_with_type.collect_param_names();
+        let given_exist_param_names = given_exist_fact
+            .params_def_with_type()
+            .collect_param_names();
 
         let known_exist_param_names = exist_fact_in_known_forall
-            .params_def_with_type
+            .params_def_with_type()
             .collect_param_names();
         if !known_exist_param_names
             .iter()
@@ -229,7 +232,7 @@ impl Runtime {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall)
+                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(

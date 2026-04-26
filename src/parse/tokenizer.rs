@@ -1,14 +1,20 @@
-use crate::prelude::*;
+//! Line tokenizer: splits one logical line into tokens for the block parser.
+//!
+//! - `#` starts an end-of-line comment.
+//! - Multi-character symbols from [`crate::common::keywords::key_symbols_sorted_by_len_desc`] are
+//!   matched with longest-first priority.
+//! - Double-quoted segments are one token (with `\"` and `\\` skips for the closing quote).
+
+use crate::common::keywords::key_symbols_sorted_by_len_desc;
+
 pub fn tokenize_line(line: &str) -> Vec<String> {
+    let line = line.trim_end();
     let symbols = key_symbols_sorted_by_len_desc();
     let mut tokens = Vec::with_capacity(line.len());
     let mut i = 0;
-    let line = line.trim_end();
     let bytes = line.as_bytes();
 
     while i < bytes.len() {
-        // Ensure `i` is always on a UTF-8 char boundary before slicing `line[i..]`.
-        // Otherwise Rust will unreachable when `&line[i..j]` is evaluated.
         if !line.is_char_boundary(i) {
             let mut char_start = i;
             while char_start > 0 && !line.is_char_boundary(char_start) {
@@ -18,7 +24,6 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
             continue;
         }
 
-        // Single-line comment: ignore everything after `#`.
         if bytes[i] == b'#' {
             break;
         }
@@ -79,10 +84,7 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
             while i < bytes.len() && bytes[i].is_ascii_digit() {
                 i += 1;
             }
-            if i + 1 < bytes.len()
-                && bytes[i] == b'.'
-                && bytes[i + 1].is_ascii_digit()
-            {
+            if i + 1 < bytes.len() && bytes[i] == b'.' && bytes[i + 1].is_ascii_digit() {
                 i += 1;
                 while i < bytes.len() && bytes[i].is_ascii_digit() {
                     i += 1;

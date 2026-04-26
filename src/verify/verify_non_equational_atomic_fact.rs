@@ -378,21 +378,23 @@ impl Runtime {
                     );
                     return Err({
                         VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(atomic_fact.clone()).into_stmt()),
-                message.clone(),
-                atomic_fact.line_file(),
-                Some(UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(atomic_fact.clone()).into_stmt()),
-                message,
-                atomic_fact.line_file(),
-                None,
-                vec![],
-            ))
-            .into()),
-                vec![],
-            ))
-            .into()
-        });
+                            Some(Fact::from(atomic_fact.clone()).into_stmt()),
+                            message.clone(),
+                            atomic_fact.line_file(),
+                            Some(
+                                UnknownRuntimeError(RuntimeErrorStruct::new(
+                                    Some(Fact::from(atomic_fact.clone()).into_stmt()),
+                                    message,
+                                    atomic_fact.line_file(),
+                                    None,
+                                    vec![],
+                                ))
+                                .into(),
+                            ),
+                            vec![],
+                        ))
+                        .into()
+                    });
                 }
                 let mut all_args_match = true;
                 for (index, known_arg) in known_fact.args().iter().enumerate() {
@@ -538,18 +540,16 @@ impl Runtime {
         let definition = match self.get_prop_definition_by_name(&predicate_name) {
             Some(definition_reference) => definition_reference.clone(),
             None => {
-                return Err(
-                    {
-                        VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
-                format!("prop definition not found for {}", predicate_name),
-                normal_atomic_fact.line_file.clone(),
-                None,
-                vec![],
-            ))
-            .into()
-        },
-                )
+                return Err({
+                    VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                        format!("prop definition not found for {}", predicate_name),
+                        normal_atomic_fact.line_file.clone(),
+                        None,
+                        vec![],
+                    ))
+                    .into()
+                })
             }
         };
 
@@ -563,18 +563,16 @@ impl Runtime {
         ) {
             Ok(x) => x,
             Err(_) => {
-                return Err(
-                    {
-                        VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
-                format!("failed to verify parameter types for {}", predicate_name),
-                normal_atomic_fact.line_file.clone(),
-                None,
-                vec![],
-            ))
-            .into()
-        },
-                )
+                return Err({
+                    VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                        format!("failed to verify parameter types for {}", predicate_name),
+                        normal_atomic_fact.line_file.clone(),
+                        None,
+                        vec![],
+                    ))
+                    .into()
+                })
             }
         };
         if args_param_types.is_unknown() {
@@ -594,19 +592,23 @@ impl Runtime {
 
         for iff_fact in definition.iff_facts.iter() {
             let instantiated_iff_fact = self
-                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader)
+                .inst_fact(
+                    iff_fact,
+                    &param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    None,
+                )
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
-                String::new(),
-                normal_atomic_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            )))
-        }
-                })?
-                .with_new_line_file(normal_atomic_fact.line_file.clone());
+                            Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                            String::new(),
+                            normal_atomic_fact.line_file.clone(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
+                })?;
             let iff_clause_verify_result =
                 self.verify_fact(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;
             if iff_clause_verify_result.is_unknown() {

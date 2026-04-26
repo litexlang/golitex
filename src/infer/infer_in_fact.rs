@@ -164,6 +164,7 @@ impl Runtime {
                     fact_in_set_builder,
                     &param_to_arg_map,
                     ParamObjType::SetBuilder,
+                    Some(&in_fact.line_file),
                 )
                 .map_err(|e| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -178,8 +179,7 @@ impl Runtime {
                     )))
                 })?;
             let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
-            let fact_to_store =
-                instantiated_fact_as_fact.with_new_line_file(in_fact.line_file.clone());
+            let fact_to_store = instantiated_fact_as_fact;
 
             infer_result.new_fact(&fact_to_store);
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)?;
@@ -326,9 +326,12 @@ impl Runtime {
             // Example: after `k $in N`, infer stores `k >= 0` (same as an explicit second line).
             Obj::StandardSet(StandardSet::N) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact =
-                    GreaterEqualFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
-                        .into();
+                let inferred_atomic_fact = GreaterEqualFact::new(
+                    in_fact.element.clone(),
+                    zero_obj,
+                    in_fact.line_file.clone(),
+                )
+                .into();
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 self.store_atomic_fact_without_well_defined_verified_and_infer(

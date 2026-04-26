@@ -24,7 +24,7 @@ fn indent_level(line: &str) -> usize {
 
 fn ends_with_colon(s: &str) -> bool {
     let trimmed = s.trim_end();
-    trimmed.ends_with(':') || trimmed.ends_with('：')
+    trimmed.ends_with(COLON)
 }
 
 impl TokenBlock {
@@ -79,6 +79,7 @@ fn parse_level(
     while *i < lines.len() {
         let raw = lines[*i];
         let line_no = *i + 1;
+        let line_file = (line_no, current_file_path.clone());
         let indent = indent_level(raw);
         let content = raw.trim();
 
@@ -93,7 +94,6 @@ fn parse_level(
 
         if indent > base_indent {
             return Err({
-                let line_file = (line_no, current_file_path.clone());
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                     None,
                     format!(

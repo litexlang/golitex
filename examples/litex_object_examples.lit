@@ -140,7 +140,7 @@ prove:
 prove:
     family fam(s set) = fn(x N_pos) s
 
-    forall a family fam(R):
+    forall a @fam(R):
         a $in fn(y N_pos) R
         a(1) = a(1)
 

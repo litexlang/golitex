@@ -36,8 +36,10 @@ fn standalone_latex_document(math_blocks: &[String]) -> String {
 // Parse-only path: one blank-separated block per top-level stmt via `Stmt::to_latex_string`.
 // Returns a full LaTeX file (preamble + each stmt in display math) ready for pdflatex/lualatex.
 pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
-    let blocks =
-        TokenBlock::parse_blocks(source_code, runtime.module_manager.current_file_path_rc())?;
+    let blocks = TokenBlock::parse_blocks(
+        source_code,
+        runtime.module_manager.current_file_path_rc(),
+    )?;
     let mut math_blocks: Vec<String> = Vec::new();
     for mut block in blocks {
         let stmt = runtime.parse_stmt(&mut block)?;

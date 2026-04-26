@@ -32,10 +32,10 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         verify_state: &VerifyState,
-        inst_state: ToInstWhatKindOfParam,
+        to_inst_param_type: ParamObjType,
     ) -> Result<StmtResult, RuntimeError> {
         let instantiated_types =
-            self.inst_param_def_with_type_one_by_one(param_defs, args, inst_state)?;
+            self.inst_param_def_with_type_one_by_one(param_defs, args, to_inst_param_type)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
         let mut infer_result = InferResult::new();
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
