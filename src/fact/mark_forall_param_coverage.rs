@@ -487,16 +487,16 @@ fn mark_forall_param_coverage_in_or_and_chain_atomic_fact(
 }
 
 fn mark_forall_param_coverage_in_exist_fact(
-    exist_fact: &ExistFact,
+    exist_fact: &ExistFactEnum,
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
 ) {
-    for param_def_with_type in exist_fact.params_def_with_type.groups.iter() {
+    for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
         mark_forall_param_coverage_in_param_type(
             &param_def_with_type.param_type,
             coverage_by_forall_param,
         );
     }
-    for inner_fact in exist_fact.facts.iter() {
+    for inner_fact in exist_fact.facts().iter() {
         mark_forall_param_coverage_in_or_and_chain_atomic_fact(
             inner_fact,
             coverage_by_forall_param,

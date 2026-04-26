@@ -101,24 +101,6 @@ impl AndChainAtomicFact {
         }
     }
 
-    pub fn with_new_line_file(self, line_file: LineFile) -> Self {
-        match self {
-            AndChainAtomicFact::AtomicFact(a) => {
-                AndChainAtomicFact::AtomicFact(a.with_new_line_file(line_file))
-            }
-            AndChainAtomicFact::AndFact(af) => AndChainAtomicFact::AndFact(AndFact::new(
-                af.facts
-                    .into_iter()
-                    .map(|x| x.with_new_line_file(line_file.clone()))
-                    .collect(),
-                line_file,
-            )),
-            AndChainAtomicFact::ChainFact(cf) => {
-                AndChainAtomicFact::ChainFact(ChainFact::new(cf.objs, cf.prop_names, line_file))
-            }
-        }
-    }
-
     pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
         if from == to {
             return self;

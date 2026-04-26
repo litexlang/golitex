@@ -457,7 +457,7 @@ impl Runtime {
         let empty: HashMap<String, Obj> = HashMap::new();
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
-            dom_stored.push(self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::FnSet)?);
+            dom_stored.push(self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::FnSet, None)?);
         }
         let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
         Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored))

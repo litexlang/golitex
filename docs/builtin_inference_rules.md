@@ -29,7 +29,7 @@ Depends on the shape of `S`:
 | `Z_nz`, `Q_nz`, `R_nz` | **`element != 0`** | nonzero |
 | `N` | **`element >= 0`** (equivalently **`0 <= element`**) | `k $in N` ⇒ `k >= 0` |
 | `Z`, `Q`, `R` | (nothing extra here) | — |
-| `FamilyObj` | Instantiate family to a concrete **member set**, then infer as that `InFact` | type-level family |
+| `FamilyObj` (`@name(args)`) | Instantiate family to a concrete **member set**, then infer as that `InFact` | type-level family |
 | `FiniteSeqSet`, `SeqSet`, `MatrixSet` | Desugar to **`FnSet`**, same as function-space membership, plus stored **`InFact`** into that `FnSet` | — |
 | (other) | No inference on this path | — |
 

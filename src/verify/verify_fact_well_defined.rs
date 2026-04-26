@@ -176,7 +176,7 @@ impl Runtime {
 
     pub fn verify_exist_fact_well_defined(
         &mut self,
-        exist_fact: &ExistFact,
+        exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {

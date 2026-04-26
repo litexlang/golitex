@@ -13,7 +13,7 @@ impl Runtime {
 
             let expected_param_count = stmt
                 .exist_fact_in_witness
-                .params_def_with_type
+                .params_def_with_type()
                 .number_of_params();
             if expected_param_count != stmt.equal_tos.len() {
                 return Err(short_exec_error(
@@ -51,7 +51,7 @@ impl Runtime {
             }
 
             let have_obj_equal_stmt = HaveObjEqualStmt {
-                param_def: stmt.exist_fact_in_witness.params_def_with_type.clone(),
+                param_def: stmt.exist_fact_in_witness.params_def_with_type().clone(),
                 objs_equal_to: stmt.equal_tos.clone(),
                 line_file: stmt.line_file.clone(),
             };
@@ -76,13 +76,18 @@ impl Runtime {
 
             let param_to_obj_map = stmt
                 .exist_fact_in_witness
-                .params_def_with_type
+                .params_def_with_type()
                 .param_defs_and_args_to_param_to_arg_map(stmt.equal_tos.as_slice());
             let instantiated_exist_fact =
-                rt.inst_exist_fact(&stmt.exist_fact_in_witness, &param_to_obj_map, ParamObjType::Exist)?;
+                rt.inst_exist_fact(
+                    &stmt.exist_fact_in_witness,
+                    &param_to_obj_map,
+                    ParamObjType::Exist,
+                    None,
+                )?;
 
             let verify_state_for_proof_check = VerifyState::new(0, false);
-            for internal_fact_template in instantiated_exist_fact.facts.iter() {
+            for internal_fact_template in instantiated_exist_fact.facts().iter() {
                 let internal_fact = internal_fact_template.clone().to_fact();
                 let verification_result = rt.verify_fact_return_err_if_not_true(
                     &internal_fact,

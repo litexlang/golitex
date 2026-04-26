@@ -223,7 +223,7 @@ impl Runtime {
         }
         let mut new_dom = Vec::with_capacity(fn_set.dom_facts.len());
         for d in fn_set.dom_facts.iter() {
-            new_dom.push(self.inst_or_and_chain_atomic_fact(d, &map, ParamObjType::FnSet)?);
+            new_dom.push(self.inst_or_and_chain_atomic_fact(d, &map, ParamObjType::FnSet, None)?);
         }
         let new_ret = self.inst_obj(fn_set.ret_set.as_ref(), &map, ParamObjType::FnSet)?;
         Ok(FnSet::new(new_params, new_dom, new_ret).into())
@@ -296,7 +296,12 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for dom_fact in source.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, source_param_to_generated_arg_map, ParamObjType::FnSet)
+                .inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    source_param_to_generated_arg_map,
+                    ParamObjType::FnSet,
+                    None,
+                )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,
@@ -382,7 +387,12 @@ impl Runtime {
     ) -> Result<bool, RuntimeError> {
         for dom_fact in target.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, target_param_to_generated_arg_map, ParamObjType::FnSet)
+                .inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    target_param_to_generated_arg_map,
+                    ParamObjType::FnSet,
+                    None,
+                )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,
