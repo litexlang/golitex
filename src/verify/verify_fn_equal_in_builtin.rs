@@ -18,15 +18,17 @@ fn fn_obj_apply_one_arg(func: &Obj, arg: Obj) -> Option<Obj> {
 }
 
 impl Runtime {
-    /// Builtin: `$fn_eq_on(f,g,S)` holds iff `forall x : x ∈ S` in the param typing, `f(x) = g(x)`;
+    /// Builtin: `$fn_eq_in(f,g,S)` holds iff `forall x : x ∈ S` in the param typing, `f(x) = g(x)`;
     /// we verify the equivalent [`ForallFact`] in a fresh local environment.
-    pub fn verify_fn_equal_on_fact_with_builtin_rules(
+    pub fn verify_fn_equal_in_fact_with_builtin_rules(
         &mut self,
-        f: &FnEqualOnFact,
+        f: &FnEqualInFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let x_name = self.generate_random_unused_names(1)[0].clone();
-        let x: Obj = Identifier::new(x_name.clone()).into();
+        // Use the same `Obj` shape as `define_params_with_type(..., Forall, ...)` and as parsed
+        // `forall` parameters, so `verify_equal` can match `f(x) = g(x)` from stored `forall` facts.
+        let x: Obj = param_binding_element_obj_for_store(x_name.clone(), ParamObjType::Forall);
         let Some(left_ap) = fn_obj_apply_one_arg(&f.left, x.clone()) else {
             return Ok(StmtUnknown::new().into());
         };
@@ -51,7 +53,7 @@ impl Runtime {
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 recorded,
-                "fn_eq_on: pointwise equality on the given set (forall x in S, f(x)=g(x))"
+                "fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x))"
                     .to_string(),
                 vec![forall_res],
             )
