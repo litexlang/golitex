@@ -190,7 +190,7 @@ prove:
 
 Runs **before** known equalities and before generic same-shape recursion (`verify_equality.rs`). Each line: **pattern** → **action**.
 
-1. **Family expansion** — One or both sides `@…(…)` (`FamilyObj`) with known `equal_to`: substitute parameters, **`verify_objs_are_equal`** on expanded sets; success strings like `equality: expand family definition…`.
+1. **Family expansion** — One or both sides `\…(…)` (`FamilyObj`) with known `equal_to`: substitute parameters, **`verify_objs_are_equal`** on expanded sets; success strings like `equality: expand family definition…`.
 2. **`0 = x - y`** — If one side is literal `0` and the other is `x - y`, requires **`x = y`** via full `verify_objs_are_equal`.
 3. **`0 = a^n`** — Literal integer **`n > 0`**, requires **`a = 0`** (again full equality).
 4. **Log** — `log(base, base^exp) = exp`; plus product/quotient/power algebra on `log`; **`log(a,b)=c`** from **`a^c = b`** (pow inverse).
