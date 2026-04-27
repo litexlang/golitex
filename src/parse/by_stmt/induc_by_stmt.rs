@@ -3,6 +3,19 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(INDUC)?;
+        self.parse_induc_stmt_after_keyword(tb, false)
+    }
+
+    pub fn parse_strong_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(STRONG_INDUC)?;
+        self.parse_induc_stmt_after_keyword(tb, true)
+    }
+
+    fn parse_induc_stmt_after_keyword(
+        &mut self,
+        tb: &mut TokenBlock,
+        strong: bool,
+    ) -> Result<Stmt, RuntimeError> {
         let param = tb.advance()?;
 
         tb.skip_token(FROM)?;
@@ -10,13 +23,19 @@ impl Runtime {
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file("by induc: expected end of head".to_string(), tb.line_file.clone()),
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "induc: expected end of head".to_string(),
+                    tb.line_file.clone(),
+                ),
             )));
         }
 
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file("by induc: expects prove: block".to_string(), tb.line_file.clone()),
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "induc: expects prove: block".to_string(),
+                    tb.line_file.clone(),
+                ),
             )));
         }
 
@@ -24,7 +43,10 @@ impl Runtime {
 
         if tb.body[0].body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file("by induc prove: expects at least one fact to prove".to_string(), tb.body[0].line_file.clone()),
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "induc prove: expects at least one fact to prove".to_string(),
+                    tb.body[0].line_file.clone(),
+                ),
             )));
         }
 
@@ -57,6 +79,16 @@ impl Runtime {
             },
         )?;
 
-        Ok(ByInducStmt::new(to_prove, param, induc_from, proof, tb.line_file.clone()).into())
+        Ok(
+            ByInducStmt::new(
+                to_prove,
+                param,
+                induc_from,
+                proof,
+                tb.line_file.clone(),
+                strong,
+            )
+            .into(),
+        )
     }
 }

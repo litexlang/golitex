@@ -29,6 +29,7 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_msg_and_line_file("`struct` definitions are not supported in this version".to_string(), tb.line_file.clone()),
             ))),
             ALGO => self.parse_def_algorithm_stmt(tb),
+            STRONG_INDUC => self.parse_strong_induc_stmt(tb),
             BY => self.parse_by_prefixed_stmt(tb),
             _ => {
                 let fact = self.parse_fact(tb)?;
