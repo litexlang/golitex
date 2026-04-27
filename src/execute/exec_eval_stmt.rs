@@ -57,6 +57,83 @@ impl Runtime {
         }
     }
 
+    /// After substituting the sum/product index, evaluate any nested `sum` / `product` in the
+    /// expression to a numeric value, then the outer accumulation can use `evaluate_to_normalized_decimal_number`.
+    fn eval_reduce_nested_sum_product_in_obj(
+        &mut self,
+        obj: Obj,
+        eval_stmt: &EvalStmt,
+    ) -> Result<Obj, RuntimeError> {
+        match obj {
+            Obj::Sum(s) => self.eval_sum_or_product_for_eval_stmt(
+                s.start.as_ref(),
+                s.end.as_ref(),
+                s.func.as_ref(),
+                false,
+                eval_stmt,
+            ),
+            Obj::Product(p) => self.eval_sum_or_product_for_eval_stmt(
+                p.start.as_ref(),
+                p.end.as_ref(),
+                p.func.as_ref(),
+                true,
+                eval_stmt,
+            ),
+            Obj::Add(b) => {
+                let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
+                let r = self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                Ok(Add::new(l, r).into())
+            }
+            Obj::Sub(b) => {
+                let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
+                let r = self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                Ok(Sub::new(l, r).into())
+            }
+            Obj::Mul(b) => {
+                let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
+                let r = self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                Ok(Mul::new(l, r).into())
+            }
+            Obj::Div(b) => {
+                let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
+                let r = self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                Ok(Div::new(l, r).into())
+            }
+            Obj::Mod(m) => {
+                let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
+                let r = self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                Ok(Mod::new(l, r).into())
+            }
+            Obj::Pow(p) => {
+                let base =
+                    self.eval_reduce_nested_sum_product_in_obj((*p.base).clone(), eval_stmt)?;
+                let exp = self
+                    .eval_reduce_nested_sum_product_in_obj((*p.exponent).clone(), eval_stmt)?;
+                Ok(Pow::new(base, exp).into())
+            }
+            Obj::Abs(a) => {
+                let arg = self.eval_reduce_nested_sum_product_in_obj((*a.arg).clone(), eval_stmt)?;
+                Ok(Abs::new(arg).into())
+            }
+            Obj::Log(l) => {
+                let b = self.eval_reduce_nested_sum_product_in_obj((*l.base).clone(), eval_stmt)?;
+                let x = self.eval_reduce_nested_sum_product_in_obj((*l.arg).clone(), eval_stmt)?;
+                Ok(Log::new(b, x).into())
+            }
+            Obj::Max(m) => {
+                let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
+                let r = self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                Ok(Max::new(l, r).into())
+            }
+            Obj::Min(m) => {
+                let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
+                let r = self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                Ok(Min::new(l, r).into())
+            }
+            other => Ok(other),
+        }
+    }
+
     /// Closed integer range: substitute index into the anonymous body `equal_to` and total + or *; no `fn`/algo in terms.
     fn eval_sum_or_product_for_eval_stmt(
         &mut self,
@@ -150,6 +227,7 @@ impl Runtime {
             param_to_arg_map.insert(pname.clone(), Number::new(k.to_string()).into());
             let inst = self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
             let term = self.resolve_obj(&inst);
+            let term = self.eval_reduce_nested_sum_product_in_obj(term, eval_stmt)?;
             let Some(n) = term.evaluate_to_normalized_decimal_number() else {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),
