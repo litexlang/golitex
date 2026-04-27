@@ -12,13 +12,7 @@ impl Runtime {
             Some(d) => d,
             None => {
                 return Err(
-                    VerifyRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("family `{}` is not defined", family_name),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                    VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("family `{}` is not defined", family_name)))
             .into(),
                 );
             }
@@ -26,18 +20,12 @@ impl Runtime {
         let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
             return Err(
-                VerifyRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+                VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                         "family `{}` expects {} type argument(s), got {}",
                         family_name,
                         expected_count,
                         family_ty.params.len()
-                    ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                    )))
             .into(),
             );
         }

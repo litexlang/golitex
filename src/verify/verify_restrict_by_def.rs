@@ -55,14 +55,14 @@ impl Runtime {
         };
 
         let mut restrict_flat_param_names: Vec<String> = Vec::new();
-        for param_def_with_set in &restrict_to_ref.params_def_with_set {
+        for param_def_with_set in &restrict_to_ref.body.params_def_with_set {
             for param_name in param_def_with_set.params.iter() {
                 restrict_flat_param_names.push(param_name.clone());
             }
         }
 
         let mut original_flat_param_names: Vec<String> = Vec::new();
-        for param_def_with_set in &original_fn_set.params_def_with_set {
+        for param_def_with_set in &original_fn_set.body.params_def_with_set {
             for param_name in param_def_with_set.params.iter() {
                 original_flat_param_names.push(param_name.clone());
             }
@@ -78,7 +78,7 @@ impl Runtime {
         );
 
         let mut forall_params: Vec<ParamGroupWithParamType> = Vec::new();
-        for param_def_with_set in &restrict_to_ref.params_def_with_set {
+        for param_def_with_set in &restrict_to_ref.body.params_def_with_set {
             forall_params.push(ParamGroupWithParamType::new(
                 param_def_with_set.params.clone(),
                 ParamType::Obj(param_def_with_set.set.clone()),
@@ -86,7 +86,7 @@ impl Runtime {
         }
 
         let mut forall_dom_facts: Vec<Fact> = Vec::new();
-        for dom_fact in &restrict_to_ref.dom_facts {
+        for dom_fact in &restrict_to_ref.body.dom_facts {
             let o: OrAndChainAtomicFact = dom_fact.clone();
             forall_dom_facts.push(o.into());
         }
@@ -115,8 +115,8 @@ impl Runtime {
             ParamDefWithType::new(forall_params),
             forall_dom_facts,
             then_facts,
-            &(*restrict_to_ref.ret_set).clone(),
-            &(*original_fn_set.ret_set).clone(),
+            &(*restrict_to_ref.body.ret_set).clone(),
+            &(*original_fn_set.body.ret_set).clone(),
             verify_state,
         )
     }
@@ -150,7 +150,7 @@ impl Runtime {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
         let mut index: usize = 0;
-        for param_def_with_set in &original_fn_set.params_def_with_set {
+        for param_def_with_set in &original_fn_set.body.params_def_with_set {
             let instantiated_original_set =
                 runtime.inst_obj(
                     &param_def_with_set.set,
@@ -171,7 +171,7 @@ impl Runtime {
             }
         }
 
-        for dom_fact in &original_fn_set.dom_facts {
+        for dom_fact in &original_fn_set.body.dom_facts {
             let instantiated_dom_fact =
                 runtime.inst_or_and_chain_atomic_fact(
                     dom_fact,

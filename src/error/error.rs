@@ -158,3 +158,17 @@ impl fmt::Display for RuntimeErrorStruct {
 }
 
 impl std::error::Error for RuntimeErrorStruct {}
+
+impl RuntimeErrorStruct {
+    pub fn new_with_just_msg(msg: String) -> Self {
+        Self::new(None, msg, default_line_file(), None, vec![])
+    }
+
+    pub fn new_with_msg_and_line_file(msg: String, line_file: LineFile) -> Self {
+        Self::new(None, msg, line_file, None, vec![])
+    }
+
+    pub fn new_with_msg_and_cause(msg: String, cause: RuntimeError) -> Self {
+        Self::new(None, msg, default_line_file(), Some(cause), vec![])
+    }
+}

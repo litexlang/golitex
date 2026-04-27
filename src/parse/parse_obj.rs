@@ -14,7 +14,7 @@ impl Runtime {
         }
         if tb.current_token_is_equal_to(INFIX_FN_NAME_SIGN) {
             tb.skip()?; // 先吃掉 \，再读中缀函数名
-            let fn_name = self.parse_atom(tb)?;
+            let fn_name = self.parse_identifier_or_identifier_with_mod(tb)?;
             let right = self.parse_obj(tb)?;
 
             if is_key_symbol_or_keyword(&fn_name.to_string()) {
@@ -27,13 +27,7 @@ impl Runtime {
                     CLOSED_RANGE => Ok(ClosedRange::new(left, right).into()),
                     PROJ => Ok(Proj::new(left, right).into()),
                     _ => Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!("{} does not support infix function syntax", fn_name),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file(format!("{} does not support infix function syntax", fn_name), tb.line_file.clone()),
                     ))),
                 };
             }
@@ -41,16 +35,8 @@ impl Runtime {
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
             let head = FnObjHead::from_name_obj(fn_name).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "infix `\\` expects an identifier or single field-access name for the function"
-                            .to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
-                ))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("infix `\\` expects an identifier or single field-access name for the function"
+                        .to_string(), tb.line_file.clone())))
             })?;
             Ok(FnObj::new(head, body).into())
         } else {
@@ -192,14 +178,8 @@ impl Runtime {
                         tb.skip_token(COMMA)?;
                         if !tb.current_token_is_equal_to(LEFT_BRACKET) {
                             return Err(RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new(
-                                    None,
-                                    "matrix literal: expected `[` after `,` between rows"
-                                        .to_string(),
-                                    tb.line_file.clone(),
-                                    None,
-                                    vec![],
-                                ),
+                                RuntimeErrorStruct::new_with_msg_and_line_file("matrix literal: expected `[` after `,` between rows"
+                                        .to_string(), tb.line_file.clone()),
                             )));
                         }
                     } else if tb.current_token_is_equal_to(RIGHT_BRACKET) {
@@ -207,13 +187,7 @@ impl Runtime {
                         return Ok(MatrixListObj::new(rows).into());
                     } else {
                         return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new(
-                                None,
-                                "matrix literal: expected `,` or closing `]`".to_string(),
-                                tb.line_file.clone(),
-                                None,
-                                vec![],
-                            ),
+                            RuntimeErrorStruct::new_with_msg_and_line_file("matrix literal: expected `,` or closing `]`".to_string(), tb.line_file.clone()),
                         )));
                     }
                 }
@@ -232,8 +206,125 @@ impl Runtime {
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
             Ok(self.parse_fn_set(tb)?.into())
+        } else if tb.current_token_is_equal_to(ANONYMOUS_FN_PREFIX) {
+            let mut result = self.parse_anonymous_fn(tb)?;
+            if let Obj::AnonymousFn(anon) = &result {
+                let mut body_vectors: Vec<Vec<Box<Obj>>> = vec![];
+                while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
+                    let args = self.parse_braced_objs(tb)?;
+                    let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
+                    body_vectors.push(group);
+                }
+                if !body_vectors.is_empty() {
+                    let head = FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()));
+                    result = FnObj::new(head, body_vectors).into();
+                }
+            }
+            Ok(result)
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
+        }
+    }
+
+    /// `'` + `(param sets [: dom])` + return set + `{ body }`, or `'` + set + `(names)` + `{ body }`.
+    ///
+    /// After a comma-separated name list, if the next token is `:` (domain facts) rather than a set
+    /// expression, parameters are taken to be in `R` (same as writing `x, y R : ...`).
+    pub fn parse_anonymous_fn(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        tb.skip_token(ANONYMOUS_FN_PREFIX)?;
+        if tb.current_token_is_equal_to(LEFT_BRACE) {
+            let built = self.run_in_local_parsing_time_name_scope(|this| {
+                tb.skip_token(LEFT_BRACE)?;
+                let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
+                loop {
+                    let param = parse_synthetically_correct_identifier_string(tb)?;
+                    let mut current_params = vec![param];
+
+                    while tb.current_token_is_equal_to(COMMA) {
+                        tb.skip_token(COMMA)?;
+                        current_params.push(parse_synthetically_correct_identifier_string(tb)?);
+                    }
+
+                    let set = if tb.current_token_is_equal_to(COLON) {
+                        StandardSet::R.into()
+                    } else {
+                        this.parse_obj(tb)?
+                    };
+
+                    params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
+
+                    if tb.current_token_is_equal_to(COMMA) {
+                        tb.skip_token(COMMA)?;
+                        continue;
+                    } else if tb.current_token_is_equal_to(COLON) {
+                        break;
+                    } else if tb.current_token_is_equal_to(RIGHT_BRACE) {
+                        break;
+                    } else {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file("anonymous fn: expected `,`, `:`, or closing `)` after parameter group"
+                                    .to_string(), tb.line_file.clone()),
+                        )));
+                    }
+                }
+
+                let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
+                this.parsing_free_param_collection.begin_scope(
+                    ParamObjType::FnSet,
+                    &all_fn_names,
+                    tb.line_file.clone(),
+                )?;
+
+                let mut dom_facts = vec![];
+                if tb.current_token_is_equal_to(COLON) {
+                    tb.skip_token(COLON)?;
+                    let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                    dom_facts.push(cur);
+                    while tb.current_token_is_equal_to(COMMA) {
+                        tb.skip_token(COMMA)?;
+                        let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                        dom_facts.push(cur);
+                    }
+                }
+
+                tb.skip_token(RIGHT_BRACE)?;
+                let ret_set_parsed = this.parse_obj(tb)?;
+                tb.skip_token(LEFT_CURLY_BRACE)?;
+                let equal_to = this.parse_obj(tb)?;
+                tb.skip_token(RIGHT_CURLY_BRACE)?;
+                let built =
+                    this.new_anonymous_fn(params_def_with_set, dom_facts, ret_set_parsed, equal_to)?;
+                this.parsing_free_param_collection
+                    .end_scope(ParamObjType::FnSet, &all_fn_names);
+                Ok(built)
+            })?;
+            Ok(built.into())
+        } else {
+            let set_obj = self.parse_and_reclassify_atom_as_free_param_obj(tb)?;
+            let built = self.run_in_local_parsing_time_name_scope(|this| {
+                tb.skip_token(LEFT_BRACE)?;
+                let mut params = vec![parse_synthetically_correct_identifier_string(tb)?];
+                while tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                    params.push(parse_synthetically_correct_identifier_string(tb)?);
+                }
+                tb.skip_token(RIGHT_BRACE)?;
+                let param_group = ParamGroupWithSet::new(params, set_obj.clone());
+                let param_groups = vec![param_group.clone()];
+                let all_names = ParamGroupWithSet::collect_param_names(&param_groups);
+                this.parsing_free_param_collection.begin_scope(
+                    ParamObjType::FnSet,
+                    &all_names,
+                    tb.line_file.clone(),
+                )?;
+                tb.skip_token(LEFT_CURLY_BRACE)?;
+                let equal_to = this.parse_obj(tb)?;
+                tb.skip_token(RIGHT_CURLY_BRACE)?;
+                this.parsing_free_param_collection
+                    .end_scope(ParamObjType::FnSet, &all_names);
+                this.new_anonymous_fn(vec![param_group], vec![], set_obj, equal_to)
+            })?;
+            Ok(built.into())
         }
     }
 
@@ -263,13 +354,7 @@ impl Runtime {
                     break;
                 } else {
                     return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "Expected comma or colon".to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file("Expected comma or colon".to_string(), tb.line_file.clone()),
                     )));
                 }
             }
@@ -340,13 +425,7 @@ impl Runtime {
                     break;
                 } else {
                     return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "Expected comma or colon".to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file("Expected comma or colon".to_string(), tb.line_file.clone()),
                     )));
                 }
             }
@@ -439,13 +518,7 @@ impl Runtime {
             if tb.exceed_end_of_head() {
                 if !is_number(&number) {
                     return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!("Invalid number: {}", number),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file(format!("Invalid number: {}", number), tb.line_file.clone()),
                     )));
                 }
                 return Ok(Number::new(number).into());
@@ -457,48 +530,40 @@ impl Runtime {
                 let number = format!("{}{}{}", number, DOT_AKA_FIELD_ACCESS_SIGN, fraction);
                 if !is_number(&number) {
                     return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!("Invalid number: {}", number),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file(format!("Invalid number: {}", number), tb.line_file.clone()),
                     )));
                 }
                 return Ok(Number::new(number).into());
             } else {
                 if !is_number(&number) {
                     return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!("Invalid number: {}", number),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file(format!("Invalid number: {}", number), tb.line_file.clone()),
                     )));
                 }
                 return Ok(Number::new(number).into());
             }
         }
 
-        // 2. 单符号集合、多元关键字、或 atom
+        // 2. 多元关键字、或 atom（内建 `StandardSet` 名在 reclassify 中处理）
         let mut result = self.parse_primary_obj(tb)?;
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
         let (head, mut body_vectors) = match &result {
             Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
-            Obj::Atom(AtomObj::IdentifierWithMod(m)) => (FnObjHead::IdentifierWithMod(m.clone()), vec![]),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
+                (FnObjHead::IdentifierWithMod(m.clone()), vec![])
+            }
             Obj::Atom(AtomObj::Forall(p)) => (FnObjHead::Forall(p.clone()), vec![]),
             Obj::Atom(AtomObj::Exist(p)) => (FnObjHead::Exist(p.clone()), vec![]),
             Obj::Atom(AtomObj::Def(p)) => (FnObjHead::DefHeader(p.clone()), vec![]),
             Obj::Atom(AtomObj::SetBuilder(p)) => (FnObjHead::SetBuilder(p.clone()), vec![]),
             Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
-            Obj::Atom(AtomObj::Sum(p)) => (FnObjHead::Sum(p.clone()), vec![]),
-            Obj::Atom(AtomObj::Product(p)) => (FnObjHead::Product(p.clone()), vec![]),
             Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
             Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
+            Obj::AnonymousFn(anon) => (
+                FnObjHead::AnonymousFnLiteral(Box::new(anon.clone())),
+                vec![],
+            ),
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -512,63 +577,9 @@ impl Runtime {
         Ok(result)
     }
 
-    /// 解析「主元」：当前 token 必须是单符号集合名、多元关键字、或普通标识符(atom)。
+    /// 解析「主元」：当前 token 必须是多元关键字、或普通标识符 (atom)（内建 `StandardSet` 名走 atom 路径）。
     fn parse_primary_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let tok = tb.current()?;
-
-        // 单符号集合（无参）
-        if tok == N_POS {
-            tb.skip()?;
-            return Ok(StandardSet::NPos.into());
-        }
-        if tok == N {
-            tb.skip()?;
-            return Ok(StandardSet::N.into());
-        }
-        if tok == Q {
-            tb.skip()?;
-            return Ok(StandardSet::Q.into());
-        }
-        if tok == Z {
-            tb.skip()?;
-            return Ok(StandardSet::Z.into());
-        }
-        if tok == R {
-            tb.skip()?;
-            return Ok(StandardSet::R.into());
-        }
-        if tok == Q_POS {
-            tb.skip()?;
-            return Ok(StandardSet::QPos.into());
-        }
-        if tok == R_POS {
-            tb.skip()?;
-            return Ok(StandardSet::RPos.into());
-        }
-        if tok == Q_NEG {
-            tb.skip()?;
-            return Ok(StandardSet::QNeg.into());
-        }
-        if tok == Z_NEG {
-            tb.skip()?;
-            return Ok(StandardSet::ZNeg.into());
-        }
-        if tok == R_NEG {
-            tb.skip()?;
-            return Ok(StandardSet::RNeg.into());
-        }
-        if tok == Q_NZ {
-            tb.skip()?;
-            return Ok(StandardSet::QNz.into());
-        }
-        if tok == Z_NZ {
-            tb.skip()?;
-            return Ok(StandardSet::ZNz.into());
-        }
-        if tok == R_NZ {
-            tb.skip()?;
-            return Ok(StandardSet::RNz.into());
-        }
 
         if tok == FAMILY_OBJ_PREFIX {
             let family = self.parse_family_obj(tb)?;
@@ -586,33 +597,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "max expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("max expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "max expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("max expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "max expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("max expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Max::new(left, right).into());
         }
@@ -621,33 +614,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "min expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("min expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "min expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("min expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "min expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("min expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Min::new(left, right).into());
         }
@@ -656,33 +631,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "log expects 2 arguments (base, argument)".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("log expects 2 arguments (base, argument)".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let base = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "log expects 2 arguments (base, argument)".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("log expects 2 arguments (base, argument)".to_string(), tb.line_file.clone())))
             })?;
             let arg = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "log expects 2 arguments (base, argument)".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("log expects 2 arguments (base, argument)".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Log::new(base, arg).into());
         }
@@ -693,33 +650,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "union expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("union expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "union expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("union expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "union expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("union expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Union::new(left, right).into());
         }
@@ -728,33 +667,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "intersect expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("intersect expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "intersect expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("intersect expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "intersect expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("intersect expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Intersect::new(left, right).into());
         }
@@ -763,33 +684,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "set_minus expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("set_minus expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "set_minus expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("set_minus expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "set_minus expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("set_minus expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(SetMinus::new(left, right).into());
         }
@@ -798,33 +701,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "disjoint_union expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("disjoint_union expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "disjoint_union expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("disjoint_union expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "disjoint_union expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("disjoint_union expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(SetDiff::new(left, right).into());
         }
@@ -833,24 +718,12 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "cap expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("cap expects 1 argument".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "cap expects 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("cap expects 1 argument".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Cap::new(value).into());
         }
@@ -859,24 +732,12 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "cup expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("cup expects 1 argument".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "cup expects 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("cup expects 1 argument".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Cup::new(value).into());
         }
@@ -885,65 +746,29 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "choice expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("choice expects 1 argument".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "choice expects 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("choice expects 1 argument".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Choose::new(value).into());
-        }
-        if tok == SUM {
-            return self.parse_sum_obj(tb);
-        }
-        if tok == PRODUCT {
-            return self.parse_product_obj(tb);
         }
         if tok == PROJ {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "proj expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("proj expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "proj expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("proj expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "proj expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("proj expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Proj::new(left, right).into());
         }
@@ -952,33 +777,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "range expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("range expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "range expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("range expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "range expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("range expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Range::new(left, right).into());
         }
@@ -987,33 +794,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "closed_range expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("closed_range expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "closed_range expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("closed_range expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "closed_range expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("closed_range expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(ClosedRange::new(left, right).into());
         }
@@ -1022,33 +811,15 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "finite_seq expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("finite_seq expects 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let set = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "finite_seq expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("finite_seq expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             let n = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "finite_seq expects 2 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("finite_seq expects 2 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(FiniteSeqSet::new(set, n).into());
         }
@@ -1057,23 +828,11 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "seq expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("seq expects 1 argument".to_string(), tb.line_file.clone()),
                 )));
             }
             let set = args.into_iter().next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "seq expects 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("seq expects 1 argument".to_string(), tb.line_file.clone())))
             })?;
             return Ok(SeqSet::new(set).into());
         }
@@ -1082,42 +841,18 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 3 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "matrix expects 3 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("matrix expects 3 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let set = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "matrix expects 3 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("matrix expects 3 arguments".to_string(), tb.line_file.clone())))
             })?;
             let row_len = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "matrix expects 3 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("matrix expects 3 arguments".to_string(), tb.line_file.clone())))
             })?;
             let col_len = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "matrix expects 3 arguments".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("matrix expects 3 arguments".to_string(), tb.line_file.clone())))
             })?;
             return Ok(MatrixSet::new(set, row_len, col_len).into());
         }
@@ -1127,24 +862,12 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "cup expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("cup expects 1 argument".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "cup expects 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("cup expects 1 argument".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Cup::new(value).into());
         }
@@ -1153,24 +876,12 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "power_set expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("power_set expects 1 argument".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "power_set expects 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("power_set expects 1 argument".to_string(), tb.line_file.clone())))
             })?;
             return Ok(PowerSet::new(value).into());
         }
@@ -1179,24 +890,12 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "set_dim expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("set_dim expects 1 argument".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "set_dim expects 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("set_dim expects 1 argument".to_string(), tb.line_file.clone())))
             })?;
             return Ok(CartDim::new(value).into());
         }
@@ -1205,39 +904,61 @@ impl Runtime {
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "count expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("count expects 1 argument".to_string(), tb.line_file.clone()),
                 )));
             }
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "count expects 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("count expects 1 argument".to_string(), tb.line_file.clone())))
             })?;
             return Ok(Count::new(value).into());
+        }
+        if tok == SUM {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 3 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file("sum expects 3 arguments (start, end, function)".to_string(), tb.line_file.clone()),
+                )));
+            }
+            let mut it = args.into_iter();
+            let start = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("sum expects 3 arguments (start, end, function)".to_string(), tb.line_file.clone())))
+            })?;
+            let end = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("sum expects 3 arguments (start, end, function)".to_string(), tb.line_file.clone())))
+            })?;
+            let func = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("sum expects 3 arguments (start, end, function)".to_string(), tb.line_file.clone())))
+            })?;
+            return Ok(Sum::new(start, end, func).into());
+        }
+        if tok == PRODUCT {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 3 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file("product expects 3 arguments (start, end, function)".to_string(), tb.line_file.clone()),
+                )));
+            }
+            let mut it = args.into_iter();
+            let start = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("product expects 3 arguments (start, end, function)".to_string(), tb.line_file.clone())))
+            })?;
+            let end = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("product expects 3 arguments (start, end, function)".to_string(), tb.line_file.clone())))
+            })?;
+            let func = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("product expects 3 arguments (start, end, function)".to_string(), tb.line_file.clone())))
+            })?;
+            return Ok(Product::new(start, end, func).into());
         }
         if tok == CART {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() < 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "cart expects at least 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("cart expects at least 2 arguments".to_string(), tb.line_file.clone()),
                 )));
             }
             return Ok(Cart::new(args).into());
@@ -1255,39 +976,34 @@ impl Runtime {
             return Ok(CartDim::new(args).into());
         }
 
-        // Ordinary atom (identifier): resolve free-param scope without building `Obj::Identifier` first.
-        let atom = self.parse_atom(tb)?;
+        // Bare `ident` or `mod::ident`: built-in single-token `StandardSet` names, else free params.
+        self.parse_and_reclassify_atom_as_free_param_obj(tb)
+    }
 
+    // parse_identifier_or_identifier_with_mod + reclassify (std sets + free params).
+    fn parse_and_reclassify_atom_as_free_param_obj(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
+        let atom = self.parse_identifier_or_identifier_with_mod(tb)?;
         self.reclassify_atom_as_free_param_obj(atom)
     }
 
     fn reclassify_atom_as_free_param_obj(&self, obj: Obj) -> Result<Obj, RuntimeError> {
         match obj {
             Obj::Atom(AtomObj::Identifier(id)) => {
-                if id.name == SELF {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "`self` is not supported in this version".to_string(),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ),
-                    )));
+                if let Some(standard) = standard_set_from_bare_identifier_name(&id.name) {
+                    return Ok(standard);
                 }
                 Ok(self
                     .parsing_free_param_collection
                     .resolve_identifier_to_free_param_obj(&id.name))
             }
-            Obj::Atom(AtomObj::IdentifierWithMod(m)) => Ok(Obj::Atom(AtomObj::IdentifierWithMod(m))),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
+                Ok(Obj::Atom(AtomObj::IdentifierWithMod(m)))
+            }
             _ => Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "internal: atom position was not a name form".to_string(),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg("internal: atom position was not a name form".to_string()),
             ))),
         }
     }
@@ -1311,13 +1027,7 @@ impl Runtime {
         let mut parsed_args = self.parse_braced_objs(tb)?;
         if parsed_args.len() != 1 {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "expected exactly 1 argument".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("expected exactly 1 argument".to_string(), tb.line_file.clone()),
             )));
         }
         let parsed_obj = parsed_args.remove(0);
@@ -1332,48 +1042,6 @@ impl Runtime {
             objs.push(self.parse_obj(tb)?);
         }
         Ok(objs)
-    }
-
-    /// `sum(index, start, end, body)` — `index` is bound as [`ParamObjType::Sum`] only while parsing `body`.
-    fn parse_sum_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        tb.skip_token(SUM)?;
-        tb.skip_token(LEFT_BRACE)?;
-        let param_name = parse_synthetically_correct_identifier_string(tb)?;
-        self.validate_user_fn_param_names_for_parse(&[param_name.clone()], tb.line_file.clone())?;
-        tb.skip_token(COMMA)?;
-        let start = self.parse_obj(tb)?;
-        tb.skip_token(COMMA)?;
-        let end = self.parse_obj(tb)?;
-        tb.skip_token(COMMA)?;
-        let body = self.parse_in_local_free_param_scope(
-            ParamObjType::Sum,
-            &[param_name.clone()],
-            tb.line_file.clone(),
-            |this| this.parse_obj(tb),
-        )?;
-        tb.skip_token(RIGHT_BRACE)?;
-        Ok(SumObj::new(param_name, start, end, body).into())
-    }
-
-    /// `product(index, start, end, body)` — `index` is bound as [`ParamObjType::Product`] only while parsing `body`.
-    fn parse_product_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        tb.skip_token(PRODUCT)?;
-        tb.skip_token(LEFT_BRACE)?;
-        let param_name = parse_synthetically_correct_identifier_string(tb)?;
-        self.validate_user_fn_param_names_for_parse(&[param_name.clone()], tb.line_file.clone())?;
-        tb.skip_token(COMMA)?;
-        let start = self.parse_obj(tb)?;
-        tb.skip_token(COMMA)?;
-        let end = self.parse_obj(tb)?;
-        tb.skip_token(COMMA)?;
-        let body = self.parse_in_local_free_param_scope(
-            ParamObjType::Product,
-            &[param_name.clone()],
-            tb.line_file.clone(),
-            |this| this.parse_obj(tb),
-        )?;
-        tb.skip_token(RIGHT_BRACE)?;
-        Ok(ProductObj::new(param_name, start, end, body).into())
     }
 
     fn parse_set_builder_or_set_list(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
@@ -1394,8 +1062,6 @@ impl Runtime {
             Obj::Atom(AtomObj::Exist(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::Sum(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::Product(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::Induc(p)) => Some(p.name.as_str()),
             Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.as_str()),
             _ => None,
@@ -1449,13 +1115,7 @@ impl Runtime {
                     Ok(SetBuilder::new(a.name.clone(), second_inst, facts_inst).into())
                 } else {
                     Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "expected colon after first argument".to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file("expected colon after first argument".to_string(), tb.line_file.clone()),
                     )))
                 }
             })();
@@ -1502,13 +1162,9 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "field access (`name.field`) is not supported in this version".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file("field access (`name.field`) is not supported in this version".to_string(), tb.line_file.clone()),
+            )));
         }
         Ok(Identifier::new(left).into())
     }
@@ -1518,20 +1174,19 @@ impl Runtime {
         tb.skip_token(MOD_SIGN)?;
         let right = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "field access on module-qualified names is not supported in this version"
-                    .to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file("field access on module-qualified names is not supported in this version"
+                        .to_string(), tb.line_file.clone()),
+            )));
         }
         Ok(IdentifierWithMod::new(left, right).into())
     }
 
     /// Unqualified or `::`-qualified name / field name; returns a name-shaped [`Obj`].
-    pub fn parse_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+    pub fn parse_identifier_or_identifier_with_mod(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
         let next_is_mod = tb.token_at_add_index(1) == MOD_SIGN;
         if next_is_mod {
             self.parse_mod_qualified_atom(tb)
@@ -1604,15 +1259,29 @@ fn parse_synthetically_correct_identifier_string(
 
     if cur == SET || cur == NONEMPTY_SET || cur == FINITE_SET {
         return Err(RuntimeError::from(ParseRuntimeError(
-            RuntimeErrorStruct::new(
-                None,
-                format!("{} is not a valid identifier", cur),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ),
+            RuntimeErrorStruct::new_with_msg_and_line_file(format!("{} is not a valid identifier", cur), tb.line_file.clone()),
         )));
     }
 
     Ok(cur)
+}
+
+// Maps a built-in one-token standard-set symbol to Obj::StandardSet; see reclassify_atom_as_free_param_obj.
+fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
+    match name {
+        N_POS => Some(StandardSet::NPos.into()),
+        N => Some(StandardSet::N.into()),
+        Q => Some(StandardSet::Q.into()),
+        Z => Some(StandardSet::Z.into()),
+        R => Some(StandardSet::R.into()),
+        Q_POS => Some(StandardSet::QPos.into()),
+        R_POS => Some(StandardSet::RPos.into()),
+        Q_NEG => Some(StandardSet::QNeg.into()),
+        Z_NEG => Some(StandardSet::ZNeg.into()),
+        R_NEG => Some(StandardSet::RNeg.into()),
+        Q_NZ => Some(StandardSet::QNz.into()),
+        Z_NZ => Some(StandardSet::ZNz.into()),
+        R_NZ => Some(StandardSet::RNz.into()),
+        _ => None,
+    }
 }

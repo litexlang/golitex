@@ -147,31 +147,19 @@ impl Runtime {
             self.verify_param_type_nonempty_if_required(&param_def.param_type, check_type_nonempty)
                 .map_err(|inner_exec_error| {
                     let param_names_text = param_def.params.join(", ");
-                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "define params with type: nonempty check failed for params [{}] with type {}",
                             param_names_text, param_def.param_type
-                        ),
-                default_line_file(),
-                Some(inner_exec_error),
-                vec![],
-            )))
+                        ), inner_exec_error)))
                 })?;
 
             for name in param_def.params.iter() {
                 self.store_free_param_or_identifier_name(name, binding_kind)
                     .map_err(|runtime_error| {
-                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
-                            None,
-                            format!(
+                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                                 "define params with type: failed to declare parameter `{}`",
                                 name
-                            ),
-                            default_line_file(),
-                            Some(runtime_error),
-                            vec![],
-                        )))
+                            ), runtime_error)))
                     })?;
                 let fact_infer_result = self
                     .define_parameter_by_binding_param_type(
@@ -180,16 +168,10 @@ impl Runtime {
                         binding_kind,
                     )
                     .map_err(|runtime_error| {
-                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                                 "define params with type: failed to apply param type for parameter `{}` with type {}",
                                 name, param_def.param_type
-                            ),
-                default_line_file(),
-                Some(runtime_error),
-                vec![],
-            )))
+                            ), runtime_error)))
                     })?;
                 infer_result.new_infer_result_inside(fact_infer_result);
             }

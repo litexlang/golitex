@@ -12,8 +12,6 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
             | Obj::Atom(AtomObj::Def(_))
             | Obj::Atom(AtomObj::SetBuilder(_))
             | Obj::Atom(AtomObj::FnSet(_))
-            | Obj::Atom(AtomObj::Sum(_))
-            | Obj::Atom(AtomObj::Product(_))
             | Obj::Atom(AtomObj::Induc(_))
             | Obj::Atom(AtomObj::DefAlgo(_))
     )
@@ -28,8 +26,6 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
         Obj::Atom(AtomObj::Def(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::SetBuilder(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::FnSet(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::Sum(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::Product(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::Induc(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name.clone()],
         _ => vec![],
@@ -46,30 +42,18 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!("family `{}` is not defined", family_name),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ))
+                return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("family `{}` is not defined", family_name)))
                 .into());
             }
         };
         let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
-            return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "family `{}` expects {} type argument(s), got {}",
                     family_name,
                     expected_count,
                     family_ty.params.len()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
         let param_to_arg_map = def

@@ -80,6 +80,9 @@ impl Runtime {
             Obj::FnSet(inner) => {
                 self.inst_fn_set_with_params(inner, param_to_arg_map, param_obj_type)
             }
+            Obj::AnonymousFn(inner) => {
+                self.inst_anonymous_fn_with_params(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::StandardSet(standard_set) => self.inst_standard_set(standard_set),
             Obj::Cart(inner) => self.inst_cart(inner, param_to_arg_map, param_obj_type),
             Obj::CartDim(inner) => {
@@ -94,6 +97,12 @@ impl Runtime {
             }
             Obj::Count(inner) => {
                 self.inst_count(inner, param_to_arg_map, param_obj_type)
+            }
+            Obj::Sum(inner) => {
+                self.inst_sum(inner, param_to_arg_map, param_obj_type)
+            }
+            Obj::Product(inner) => {
+                self.inst_product(inner, param_to_arg_map, param_obj_type)
             }
             Obj::Range(inner) => {
                 self.inst_range(inner, param_to_arg_map, param_obj_type)
@@ -121,10 +130,6 @@ impl Runtime {
             }
             Obj::Choose(inner) => {
                 self.inst_choose(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
-            Obj::Product(inner) => {
-                self.inst_product(inner, param_to_arg_map, param_obj_type)
             }
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
@@ -181,22 +186,6 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::FnSet(p)) => {
                 if param_obj_type == ParamObjType::FnSet {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::Sum(p)) => {
-                if param_obj_type == ParamObjType::Sum {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::Product(p)) => {
-                if param_obj_type == ParamObjType::Product {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -284,10 +273,9 @@ impl Runtime {
             Obj::Atom(AtomObj::Exist(p)) => p.clone().into(),
             Obj::Atom(AtomObj::SetBuilder(p)) => p.clone().into(),
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::Sum(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::Product(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
+            Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
                 merged_body = vec![];
@@ -295,13 +283,7 @@ impl Runtime {
                 merged_body.extend(merged_body_original);
                 *x.head.clone()
             }
-            _ => return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("instantiate fn object: after substitution, head must be an atom, curried fn, or free-param binder, got {}", inst_head),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+            _ => return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("instantiate fn object: after substitution, head must be an atom, curried fn, or free-param binder, got {}", inst_head)))
             .into()),
         };
 
@@ -662,12 +644,12 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         let param_names =
-            ParamGroupWithSet::collect_param_names(&fn_set_with_params.params_def_with_set);
+            ParamGroupWithSet::collect_param_names(&fn_set_with_params.body.params_def_with_set);
         let filtered_param_to_arg_map =
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
         let mut params_def_with_set =
-            Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
-        for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
+            Vec::with_capacity(fn_set_with_params.body.params_def_with_set.len());
+        for param_def_with_set in fn_set_with_params.body.params_def_with_set.iter() {
             params_def_with_set.push(ParamGroupWithSet::new(
                 param_def_with_set.params.clone(),
                 self.inst_obj(
@@ -677,8 +659,8 @@ impl Runtime {
                 )?,
             ));
         }
-        let mut dom_facts = Vec::with_capacity(fn_set_with_params.dom_facts.len());
-        for dom_fact in fn_set_with_params.dom_facts.iter() {
+        let mut dom_facts = Vec::with_capacity(fn_set_with_params.body.dom_facts.len());
+        for dom_fact in fn_set_with_params.body.dom_facts.iter() {
             dom_facts.push(self.inst_or_and_chain_atomic_fact(
                 dom_fact,
                 &filtered_param_to_arg_map,
@@ -690,7 +672,49 @@ impl Runtime {
             params_def_with_set,
             dom_facts,
             self.inst_obj(
-                &fn_set_with_params.ret_set,
+                &fn_set_with_params.body.ret_set,
+                &filtered_param_to_arg_map,
+                param_obj_type,
+            )?,
+        )
+        .into())
+    }
+
+    pub fn inst_anonymous_fn_with_params(
+        &self,
+        af: &AnonymousFn,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let filtered_param_to_arg_map =
+            remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
+        let mut params_def_with_set = Vec::with_capacity(af.body.params_def_with_set.len());
+        for param_def_with_set in af.body.params_def_with_set.iter() {
+            params_def_with_set.push(ParamGroupWithSet::new(
+                param_def_with_set.params.clone(),
+                self.inst_obj(
+                    &param_def_with_set.set,
+                    &filtered_param_to_arg_map,
+                    param_obj_type,
+                )?,
+            ));
+        }
+        let mut dom_facts = Vec::with_capacity(af.body.dom_facts.len());
+        for dom_fact in af.body.dom_facts.iter() {
+            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &filtered_param_to_arg_map,
+                param_obj_type,
+                None,
+            )?);
+        }
+        Ok(AnonymousFn::new(
+            params_def_with_set,
+            dom_facts,
+            self.inst_obj(af.body.ret_set.as_ref(), &filtered_param_to_arg_map, param_obj_type)?,
+            self.inst_obj(
+                af.equal_to.as_ref(),
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
@@ -775,6 +799,34 @@ impl Runtime {
             Count::new(self.inst_obj(&count.set, param_to_arg_map, param_obj_type)?)
                 .into(),
         )
+    }
+
+    pub fn inst_sum(
+        &self,
+        sum: &Sum,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Sum::new(
+            self.inst_obj(&sum.start, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&sum.end, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&sum.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
+    pub fn inst_product(
+        &self,
+        product: &Product,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Product::new(
+            self.inst_obj(&product.start, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&product.end, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&product.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
     }
 
     pub fn inst_range(
@@ -896,60 +948,6 @@ impl Runtime {
         )
     }
 
-    pub fn inst_sum(
-        &self,
-        sum: &SumObj,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(SumObj::new(
-            sum.param.clone(),
-            self.inst_obj(
-                sum.start.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                sum.end.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                sum.body.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-        )
-        .into())
-    }
-
-    pub fn inst_product(
-        &self,
-        product: &ProductObj,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(ProductObj::new(
-            product.param.clone(),
-            self.inst_obj(
-                product.start.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                product.end.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                product.body.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-        )
-        .into())
-    }
-
     pub fn inst_obj_at_index(
         &self,
         obj_at_index: &ObjAtIndex,
@@ -1001,17 +999,11 @@ impl Runtime {
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
         if total_param_count != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
 
@@ -1043,17 +1035,11 @@ impl Runtime {
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
 

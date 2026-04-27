@@ -169,7 +169,7 @@ impl Runtime {
             let verify_state_for_proof_check = VerifyState::new(0, false);
             if let Obj::FnSet(fn_set) = &stmt.set {
                 let ret_nonempty_fact =
-                    IsNonemptySetFact::new(fn_set.ret_set.as_ref().clone(), stmt.line_file.clone())
+                    IsNonemptySetFact::new(fn_set.body.ret_set.as_ref().clone(), stmt.line_file.clone())
                         .into();
                 let ret_check = rt.verify_non_equational_atomic_fact_with_builtin_rules(
                     &ret_nonempty_fact,

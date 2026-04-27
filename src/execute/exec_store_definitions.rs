@@ -35,16 +35,10 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let env = self.top_level_env();
         if let Some(existing_kind) = env.defined_identifiers.get(name) {
-            return Err(NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "identifier `{}` is already bound in this scope as {:?} (cannot re-bind as {:?})",
                     name, existing_kind, kind
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
         env.defined_identifiers.insert(name.to_string(), kind);

@@ -32,16 +32,10 @@ impl FreeParamCollection {
         let stack = self.params.entry(name.clone()).or_default();
         if stack.iter().any(|b| b.kind == kind) {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_msg_and_line_file(format!(
                         "free parameter `{}` is already bound as {:?} in an active scope",
                         name, kind
-                    ),
-                    line_file,
-                    None,
-                    vec![],
-                ),
+                    ), line_file),
             )));
         }
         stack.push(FreeParamTypeAndLineFile { kind, line_file });
@@ -95,10 +89,8 @@ impl FreeParamCollection {
             ParamObjType::Exist => ExistFreeParamObj::new(name.to_string()).into(),
             ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name.to_string()).into(),
             ParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::Sum => SumFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Induc => ByInducFreeParamObj::new(name.to_string()).into(),
             ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::Product => ProductFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Identifier => Identifier::new(name.to_string()).into(),
         }
     }

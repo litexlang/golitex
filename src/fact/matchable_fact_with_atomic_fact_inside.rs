@@ -38,17 +38,11 @@ impl ChainFact {
     pub fn facts(&self) -> Result<Vec<AtomicFact>, RuntimeError> {
         if self.objs.len() != self.prop_names.len() + 1 {
             return Err(
-                NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                         "the number of objects ({}) is not equal to the number of property names ({}) + 1",
                         self.objs.len(),
                         self.prop_names.len(),
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ))
+                    )))
                 .into(),
             );
         }

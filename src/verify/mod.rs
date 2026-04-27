@@ -11,6 +11,7 @@ mod verify_fact;
 mod verify_fact_well_defined;
 mod verify_facts_the_same_type_and_return_matched_args;
 mod verify_fn_set_equality_builtin_rule;
+mod verify_fn_equal_in_builtin;
 mod verify_forall_fact;
 mod verify_forall_fact_with_iff;
 mod verify_helper;
@@ -24,6 +25,7 @@ mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
 mod verify_restrict_by_def;
 mod verify_state;
+mod verify_well_defined_in_local_env;
 
 pub use verify_number_in_standard_set::number_is_in_n;
 pub use verify_number_in_standard_set::number_is_in_n_pos;

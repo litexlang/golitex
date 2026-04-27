@@ -63,18 +63,12 @@ impl Runtime {
             let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
                         "fact `{}` expects {} argument(s), but got {}",
                         name_string,
                         expected_len,
                         actual_args.len()
-                    ),
-                    atomic_fact.line_file(),
-                    None,
-                    vec![],
-                ))
+                    ), atomic_fact.line_file()))
                 .into());
             }
         } else {
@@ -87,30 +81,18 @@ impl Runtime {
             {
                 abstract_prop_definition.params.len()
             } else {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!("fact `{}` not defined", name_string),
-                    atomic_fact.line_file(),
-                    None,
-                    vec![],
-                ))
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!("fact `{}` not defined", name_string), atomic_fact.line_file()))
                 .into());
             };
 
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
                         "fact `{}` expects {} argument(s), but got {}",
                         name_string,
                         expected_len,
                         actual_args.len()
-                    ),
-                    atomic_fact.line_file(),
-                    None,
-                    vec![],
-                ))
+                    ), atomic_fact.line_file()))
                 .into());
             }
         }

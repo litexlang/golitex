@@ -602,6 +602,21 @@ impl Runtime {
                 ])),
                 _ => Ok(None),
             },
+            AtomicFact::FnEqualInFact(f) => match _other {
+                AtomicFact::FnEqualInFact(o) => Ok(Some(vec![
+                    (f.left.clone(), o.left.clone()),
+                    (f.right.clone(), o.right.clone()),
+                    (f.set.clone(), o.set.clone()),
+                ])),
+                _ => Ok(None),
+            },
+            AtomicFact::FnEqualFact(f) => match _other {
+                AtomicFact::FnEqualFact(o) => Ok(Some(vec![
+                    (f.left.clone(), o.left.clone()),
+                    (f.right.clone(), o.right.clone()),
+                ])),
+                _ => Ok(None),
+            },
         }
     }
 }

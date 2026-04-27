@@ -9,13 +9,7 @@ impl Runtime {
             self.parse_witness_nonempty_set(tb)
         } else {
             return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "witness expects a exist or nonempty set".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("witness expects a exist or nonempty set".to_string(), tb.line_file.clone()))));
         }
     }
 
@@ -28,27 +22,15 @@ impl Runtime {
         let proof = if tb.exceed_end_of_head() {
             if !tb.body.is_empty() {
                 return Err(
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "witness exist: indented proof body requires ':' at end of header line"
-                            .to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("witness exist: indented proof body requires ':' at end of header line"
+                            .to_string(), tb.line_file.clone()))));
             }
             Vec::new()
         } else {
             tb.skip_token(COLON)?;
             if !tb.exceed_end_of_head() {
                 return Err(
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "witness exist: unexpected tokens after ':' in header".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("witness exist: unexpected tokens after ':' in header".to_string(), tb.line_file.clone()))));
             }
             let names = exist_fact_in_witness
                 .params_def_with_type()
