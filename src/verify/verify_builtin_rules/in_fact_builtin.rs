@@ -283,6 +283,24 @@ impl Runtime {
         )))
     }
 
+    // Finite `sum` / `product` over a closed integer range: if the object is well-defined, its value
+    // is a real (used e.g. for `+` on real-valued operands).
+    fn verify_in_fact_sum_or_product_in_r(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+        reason: &str,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_ok()
+        {
+            Ok(number_in_set_verified_by_builtin_rules_result(in_fact, reason))
+        } else {
+            Ok((StmtUnknown::new()).into())
+        }
+    }
+
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,
@@ -414,6 +432,20 @@ impl Runtime {
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
             )),
+            (Obj::Sum(_), Obj::StandardSet(StandardSet::R)) => {
+                self.verify_in_fact_sum_or_product_in_r(
+                    in_fact,
+                    verify_state,
+                    "sum: well-defined on an integer range, in R",
+                )
+            }
+            (Obj::Product(_), Obj::StandardSet(StandardSet::R)) => {
+                self.verify_in_fact_sum_or_product_in_r(
+                    in_fact,
+                    verify_state,
+                    "product: well-defined on an integer range, in R",
+                )
+            }
             (Obj::ListSet(list_set), Obj::PowerSet(power_set)) => self
                 .verify_in_fact_list_set_in_power_set_defines_membership(
                     in_fact,
@@ -453,6 +485,14 @@ impl Runtime {
                 list_set,
                 verify_state,
             ),
+            (Obj::AnonymousFn(anon), Obj::FnSet(expected_fn_set)) => {
+                self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                    anon,
+                    expected_fn_set,
+                    in_fact,
+                    verify_state,
+                )
+            }
             (element, Obj::FnSet(expected_fn_set))
                 if obj_eligible_for_known_objs_in_fn_sets(element) =>
             {
@@ -1154,6 +1194,59 @@ impl Runtime {
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS (alpha-renamed parameters)"
+                        .to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+        Ok((StmtUnknown::new()).into())
+    }
+
+    /// `anon $in S` when `S` is a function space [`FnSet`] and the anonymous function's
+    /// [`FnSetBody`] (params, dom facts, return set) matches `S` (same as comparing `S` to a
+    /// [`FnSet`] built from the anon's body without the braced `equal_to`).
+    fn verify_in_fact_anonymous_fn_signature_matches_fn_set(
+        &mut self,
+        anon: &AnonymousFn,
+        expected_fn_set: &FnSet,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let _ = verify_state;
+        let signature_from_anon = FnSet::new(
+            anon.body.params_def_with_set.clone(),
+            anon.body.dom_facts.clone(),
+            (*anon.body.ret_set).clone(),
+        );
+        if signature_from_anon.to_string() == expected_fn_set.to_string() {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "anonymous function: signature (params, dom, codomain) matches `fn` set"
+                        .to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+        let flat_a = ParamGroupWithSet::collect_param_names(
+            &signature_from_anon.body.params_def_with_set,
+        );
+        let flat_e =
+            ParamGroupWithSet::collect_param_names(&expected_fn_set.body.params_def_with_set);
+        if flat_a.len() != flat_e.len() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let shared_names = self.generate_random_unused_names(flat_a.len());
+        let a_norm =
+            self.fn_set_alpha_renamed_for_display_compare(&signature_from_anon, &shared_names)?;
+        let e_norm = self.fn_set_alpha_renamed_for_display_compare(expected_fn_set, &shared_names)?;
+        if a_norm.to_string() == e_norm.to_string() {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "anonymous function: signature matches `fn` set (alpha-renamed parameters)"
                         .to_string(),
                     Vec::new(),
                 ))
