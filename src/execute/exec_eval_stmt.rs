@@ -28,6 +28,8 @@ impl Runtime {
                 | Obj::Mul(_)
                 | Obj::Div(_)
                 | Obj::Pow(_)
+                | Obj::Sum(_)
+                | Obj::Product(_)
                 | Obj::MatrixListObj(_)
                 | Obj::MatrixAdd(_)
                 | Obj::MatrixSub(_)
@@ -36,6 +38,152 @@ impl Runtime {
                 | Obj::MatrixPow(_)
                 | Obj::Atom(AtomObj::Identifier(_))
         )
+    }
+
+    /// Only unary `'` … `{ … }` forms (or equivalent bare anonymous head); used by `eval` on sum/product.
+    fn summand_as_unary_anonymous_fn_cloned(obj: &Obj) -> Option<AnonymousFn> {
+        match obj {
+            Obj::AnonymousFn(af) => Some(af.clone()),
+            Obj::FnObj(fo) => {
+                if !fo.body.is_empty() {
+                    return None;
+                }
+                match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => Some((**a).clone()),
+                    _ => None,
+                }
+            }
+            _ => None,
+        }
+    }
+
+    /// Closed integer range: substitute index into the anonymous body `equal_to` and total + or *; no `fn`/algo in terms.
+    fn eval_sum_or_product_for_eval_stmt(
+        &mut self,
+        start: &Obj,
+        end: &Obj,
+        func: &Obj,
+        is_product: bool,
+        eval_stmt: &EvalStmt,
+    ) -> Result<Obj, RuntimeError> {
+        let start_ev = self.evaluate_symbol_obj_iterative(start.clone(), eval_stmt)?;
+        let end_ev = self.evaluate_symbol_obj_iterative(end.clone(), eval_stmt)?;
+        let Some(a_num) = self.resolve_obj_to_number(&start_ev) else {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum/product start must resolve to a number".to_string(),
+                None,
+                vec![],
+            ));
+        };
+        let Some(b_num) = self.resolve_obj_to_number(&end_ev) else {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum/product end must resolve to a number".to_string(),
+                None,
+                vec![],
+            ));
+        };
+        let as_ = a_num.normalized_value.trim();
+        let bs = b_num.normalized_value.trim();
+        if !is_number_string_literally_integer_without_dot(as_.to_string())
+            || !is_number_string_literally_integer_without_dot(bs.to_string())
+        {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum/product need integer (no fractional part) start and end for iteration"
+                    .to_string(),
+                None,
+                vec![],
+            ));
+        }
+        let ai = as_.parse::<i128>().map_err(|_| {
+            short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum/product could not parse integer bounds".to_string(),
+                None,
+                vec![],
+            )
+        })?;
+        let bi = bs.parse::<i128>().map_err(|_| {
+            short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum/product could not parse integer bounds".to_string(),
+                None,
+                vec![],
+            )
+        })?;
+        if ai > bi {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum/product need start <= end (integer range)".to_string(),
+                None,
+                vec![],
+            ));
+        }
+        let Some(af) = Self::summand_as_unary_anonymous_fn_cloned(func) else {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum/product third argument must be a unary anonymous function (no calls)"
+                    .to_string(),
+                None,
+                vec![],
+            ));
+        };
+        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            return Err(short_exec_error(
+                eval_stmt.clone().into(),
+                "eval: sum/product index function must be unary".to_string(),
+                None,
+                vec![],
+            ));
+        }
+        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let pname = param_names[0].clone();
+        let mut acc_num = if is_product {
+            Number::new("1".to_string())
+        } else {
+            Number::new("0".to_string())
+        };
+        for k in ai..=bi {
+            let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+            param_to_arg_map.insert(pname.clone(), Number::new(k.to_string()).into());
+            let inst = self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
+            let term = self.resolve_obj(&inst);
+            let Some(n) = term.evaluate_to_normalized_decimal_number() else {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    format!(
+                        "eval: could not reduce sum/product body to a number at index {}",
+                        k
+                    ),
+                    None,
+                    vec![],
+                ));
+            };
+            if is_product {
+                let step: Obj = Mul::new(acc_num.into(), n.into()).into();
+                acc_num = step.evaluate_to_normalized_decimal_number().ok_or_else(|| {
+                    short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: product accumulation failed to normalize".to_string(),
+                        None,
+                        vec![],
+                    )
+                })?;
+            } else {
+                let step: Obj = Add::new(acc_num.into(), n.into()).into();
+                acc_num = step.evaluate_to_normalized_decimal_number().ok_or_else(|| {
+                    short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: sum accumulation failed to normalize".to_string(),
+                        None,
+                        vec![],
+                    )
+                })?;
+            }
+        }
+        Ok(acc_num.into())
     }
 
     fn eval_matrix_list_cells_for_eval_stmt(
@@ -405,6 +553,50 @@ impl Runtime {
                         }
                     }
                 }
+                Obj::Sum(sum) => {
+                    if !pending.is_empty() {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: sum with pending binary operation".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    }
+                    let v = self.eval_sum_or_product_for_eval_stmt(
+                        sum.start.as_ref(),
+                        sum.end.as_ref(),
+                        sum.func.as_ref(),
+                        false,
+                        eval_stmt,
+                    )?;
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        v,
+                        &mut pending,
+                        eval_stmt,
+                    );
+                }
+                Obj::Product(prod) => {
+                    if !pending.is_empty() {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: product with pending binary operation".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    }
+                    let v = self.eval_sum_or_product_for_eval_stmt(
+                        prod.start.as_ref(),
+                        prod.end.as_ref(),
+                        prod.func.as_ref(),
+                        true,
+                        eval_stmt,
+                    )?;
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        v,
+                        &mut pending,
+                        eval_stmt,
+                    );
+                }
                 Obj::MatrixListObj(m) => {
                     if !pending.is_empty() {
                         return Err(short_exec_error(
@@ -663,7 +855,7 @@ impl Runtime {
             if !Self::object_supported_by_eval_stmt(&resolved_obj) {
                 return Err(short_exec_error(
                     stmt.clone().into(),
-                    "eval: need a function call, numeric expression (+ - * / ^), or matrix ++ -- ** *. ^^ / matrix literal"
+                    "eval: need a function call, numeric expression (+ - * / ^), sum/product over a unary anonymous body, or matrix ++ -- ** *. ^^ / matrix literal"
                         .to_string(),
                     None,
                     vec![],

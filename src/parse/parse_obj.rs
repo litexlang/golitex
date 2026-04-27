@@ -1291,6 +1291,94 @@ impl Runtime {
             })?;
             return Ok(Count::new(value).into());
         }
+        if tok == SUM {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 3 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "sum expects 3 arguments (start, end, function)".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let start = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "sum expects 3 arguments (start, end, function)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            let end = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "sum expects 3 arguments (start, end, function)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            let func = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "sum expects 3 arguments (start, end, function)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            return Ok(Sum::new(start, end, func).into());
+        }
+        if tok == PRODUCT {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 3 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "product expects 3 arguments (start, end, function)".to_string(),
+                        tb.line_file.clone(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let start = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "product expects 3 arguments (start, end, function)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            let end = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "product expects 3 arguments (start, end, function)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            let func = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "product expects 3 arguments (start, end, function)".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+            return Ok(Product::new(start, end, func).into());
+        }
         if tok == CART {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
