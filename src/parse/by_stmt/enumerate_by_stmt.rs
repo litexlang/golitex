@@ -9,14 +9,8 @@ impl Runtime {
             return self.parse_by_enumerate_finite_set_stmt_forall_in_prove(tb);
         }
         if tb.current_token_is_equal_to(COLON) {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by enumerate: expected `finite_set` before `:` (use `by enumerate finite_set:`)"
-                    .to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate: expected `finite_set` before `:` (use `by enumerate finite_set:`)"
+                    .to_string(), tb.line_file.clone()))));
         }
         self.parse_by_enumerate_closed_range_stmt(tb)
     }
@@ -28,95 +22,47 @@ impl Runtime {
     ) -> Result<Stmt, RuntimeError> {
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "by enumerate finite_set: expected end of head after `:`".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: expected end of head after `:`".to_string(), tb.line_file.clone()),
             )));
         }
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "by enumerate finite_set: expects a body".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: expects a body".to_string(), tb.line_file.clone()),
             )));
         }
 
         let prove_block = tb.body.get_mut(0).ok_or_else(|| {
-            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by enumerate finite_set: expected prove block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: expected prove block".to_string(), tb.line_file.clone())))
         })?;
         if prove_block.header.get(0).map(|s| s.as_str()) != Some(PROVE) {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "by enumerate finite_set: first block must be `prove:`".to_string(),
-                    prove_block.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: first block must be `prove:`".to_string(), prove_block.line_file.clone()),
             )));
         }
         prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
         if prove_block.body.len() != 1 {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "by enumerate finite_set: `prove:` must contain exactly one forall fact"
-                        .to_string(),
-                    prove_block.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: `prove:` must contain exactly one forall fact"
+                        .to_string(), prove_block.line_file.clone()),
             )));
         }
 
         let forall_block = prove_block.body.get_mut(0).ok_or_else(|| {
-            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by enumerate finite_set: missing forall block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: missing forall block".to_string(), tb.line_file.clone())))
         })?;
         let fact = self.parse_fact(forall_block)?;
         let forall_fact = match fact {
             Fact::ForallFact(ff) => ff,
             Fact::ForallFactWithIff(_) => {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "by enumerate finite_set: forall with `<=>` is not allowed here"
-                            .to_string(),
-                        forall_block.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: forall with `<=>` is not allowed here"
+                            .to_string(), forall_block.line_file.clone()),
                 )));
             }
             _ => {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "by enumerate finite_set: `prove:` must be a single `forall` fact"
-                            .to_string(),
-                        forall_block.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: `prove:` must be a single `forall` fact"
+                            .to_string(), forall_block.line_file.clone()),
                 )));
             }
         };
@@ -126,14 +72,8 @@ impl Runtime {
                 ParamType::Obj(Obj::ListSet(_)) => {}
                 _ => {
                     return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "by enumerate finite_set: each forall parameter type must be a list set `{ ... }`"
-                                .to_string(),
-                            forall_fact.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: each forall parameter type must be a list set `{ ... }`"
+                                .to_string(), forall_fact.line_file.clone()),
                     )));
                 }
             }

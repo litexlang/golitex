@@ -6,24 +6,12 @@ impl Runtime {
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "cases: expects at least one body block".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("cases: expects at least one body block".to_string(), tb.line_file.clone()),
             )));
         }
         let then_facts: Vec<Fact> = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "Expected body".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("Expected body".to_string(), tb.line_file.clone())))
             })?;
             first.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             first
@@ -36,26 +24,14 @@ impl Runtime {
             match f {
                 Fact::ForallFact(ff) => {
                     return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
-                                .to_string(),
-                            ff.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file("by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
+                                .to_string(), ff.line_file.clone()),
                     )));
                 }
                 Fact::ForallFactWithIff(fi) => {
                     return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
-                                .to_string(),
-                            fi.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_msg_and_line_file("by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
+                                .to_string(), fi.line_file.clone()),
                     )));
                 }
                 _ => {}
@@ -71,13 +47,7 @@ impl Runtime {
             block.skip_token(COLON)?;
             if !block.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "case: expected end of head after condition".to_string(),
-                        block.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("case: expected end of head after condition".to_string(), block.line_file.clone()),
                 )));
             }
             cases.push(case);
@@ -94,13 +64,7 @@ impl Runtime {
                         .map(|b| self.parse_stmt(b))
                         .collect::<Result<_, _>>()?;
                     let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                            None,
-                            "Expected body".to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        )))
+                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("Expected body".to_string(), tb.line_file.clone())))
                     })?;
                     last_block.skip_token(IMPOSSIBLE)?;
                     let imp = self.parse_atomic_fact(last_block, true)?;

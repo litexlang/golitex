@@ -57,14 +57,8 @@ impl Runtime {
                     )?;
                     Ok(())
                 }
-                Obj::SetBuilder(_) => Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
-                    None,
-                    "set builder param type is not supported yet in verify_param_type_nonempty_if_required"
-                        .to_string(),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ))),
+                Obj::SetBuilder(_) => Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::new_with_just_msg("set builder param type is not supported yet in verify_param_type_nonempty_if_required"
+                        .to_string()))),
                 _ => {
                     let nonempty_fact =
                         IsNonemptySetFact::new(param_set.clone(), default_line_file());
@@ -73,13 +67,7 @@ impl Runtime {
                         &VerifyState::new(0, false),
                     )?;
                     if ret.is_unknown() {
-                        return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                            None,
-                            "param type is not nonempty".to_string(),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ))));
+                        return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg("param type is not nonempty".to_string()))));
                     }
                     Ok(())
                 }

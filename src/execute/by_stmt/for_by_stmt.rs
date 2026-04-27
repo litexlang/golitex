@@ -135,32 +135,20 @@ impl Runtime {
             match value {
                 Some(number) => number.normalized_value,
                 _ => {
-                    return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
                             "by for: range boundary `{}` must be a calculable number expression",
                             number_like_obj
-                        ),
-                        line_file,
-                        None,
-                        vec![],
-                    ))
+                        ), line_file))
                     .into());
                 }
             }
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
                     "by for: range boundary `{}` is not an integer number",
                     number_like_obj
-                ),
-                line_file,
-                None,
-                vec![],
-            ))
+                ), line_file))
             .into());
         }
         Ok(calculated_string)

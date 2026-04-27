@@ -283,13 +283,7 @@ impl Runtime {
                 merged_body.extend(merged_body_original);
                 *x.head.clone()
             }
-            _ => return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("instantiate fn object: after substitution, head must be an atom, curried fn, or free-param binder, got {}", inst_head),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+            _ => return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("instantiate fn object: after substitution, head must be an atom, curried fn, or free-param binder, got {}", inst_head)))
             .into()),
         };
 
@@ -1005,17 +999,11 @@ impl Runtime {
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
         if total_param_count != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
 
@@ -1047,17 +1035,11 @@ impl Runtime {
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
 

@@ -14,48 +14,24 @@ impl Runtime {
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "claim : expects at least one body block (=>: fact)".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("claim : expects at least one body block (=>: fact)".to_string(), tb.line_file.clone()),
             )));
         }
         let fact = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "claim : expects at least one body block (=>: fact)".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("claim : expects at least one body block (=>: fact)".to_string(), tb.line_file.clone())))
             })?;
 
             first.skip_token(PROVE)?;
             first.skip_token(COLON)?;
 
             let body_block = first.body.get_mut(0).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "claim =>: expects exactly one body block (the fact)".to_string(),
-                    first.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("claim =>: expects exactly one body block (the fact)".to_string(), first.line_file.clone())))
             })?;
             let f = self.parse_fact(body_block)?;
             if matches!(&f, Fact::ForallFactWithIff(_)) {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "claim multiline fact cannot be iff".to_string(),
-                        first.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("claim multiline fact cannot be iff".to_string(), first.line_file.clone()),
                 )));
             }
             Ok::<Fact, RuntimeError>(f)

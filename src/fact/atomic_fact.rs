@@ -990,13 +990,7 @@ impl AtomicFact {
             EQUAL => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", EQUAL, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1011,13 +1005,7 @@ impl AtomicFact {
             NOT_EQUAL => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", NOT_EQUAL, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1032,13 +1020,7 @@ impl AtomicFact {
             LESS => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", LESS, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1053,13 +1035,7 @@ impl AtomicFact {
             GREATER => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", GREATER, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1078,13 +1054,7 @@ impl AtomicFact {
                         LESS_EQUAL,
                         args.len()
                     );
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1103,13 +1073,7 @@ impl AtomicFact {
                         GREATER_EQUAL,
                         args.len()
                     );
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1124,13 +1088,7 @@ impl AtomicFact {
             IS_SET => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_SET, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1148,13 +1106,7 @@ impl AtomicFact {
                         IS_NONEMPTY_SET,
                         args.len()
                     );
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1172,13 +1124,7 @@ impl AtomicFact {
                         IS_FINITE_SET,
                         args.len()
                     );
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1192,13 +1138,7 @@ impl AtomicFact {
             IN => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", IN, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1213,13 +1153,7 @@ impl AtomicFact {
             IS_CART => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_CART, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1233,13 +1167,7 @@ impl AtomicFact {
             IS_TUPLE => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_TUPLE, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1253,13 +1181,7 @@ impl AtomicFact {
             SUBSET => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", SUBSET, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1274,13 +1196,7 @@ impl AtomicFact {
             SUPERSET => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", SUPERSET, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
@@ -1295,13 +1211,7 @@ impl AtomicFact {
             RESTRICT => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", RESTRICT, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        msg,
-                        line_file.clone(),
-                        None,
-                        vec![],
-                    ))
+                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
                     .into());
                 }
                 let mut args = args;
