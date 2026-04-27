@@ -47,6 +47,8 @@ pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const CHOOSE: &str = "choose";
 pub const FN_LOWER_CASE: &str = "fn";
+/// Prefix for anonymous function literals: `'(x S, …) T { … }` or `'S (x) { … }`.
+pub const ANONYMOUS_FN_PREFIX: &str = "'";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
@@ -170,6 +172,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         DOUBLE_QUOTE,
         COLON,
         INFIX_FN_NAME_SIGN,
+        ANONYMOUS_FN_PREFIX,
     ];
     for &s in &symbols {
         m.insert(s, s);

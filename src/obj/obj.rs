@@ -1,3 +1,4 @@
+use super::anonynous_fn_obj::AnonymousFn;
 use super::atom_obj::AtomObj;
 use crate::prelude::*;
 use std::fmt;
@@ -27,6 +28,7 @@ pub enum Obj {
     ListSet(ListSet),
     SetBuilder(SetBuilder),
     FnSet(FnSet),
+    AnonymousFn(AnonymousFn),
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
@@ -828,6 +830,7 @@ impl Obj {
             Obj::ListSet(x) => write!(f, "{}", x)?,
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
             Obj::FnSet(x) => write!(f, "{}", x)?,
+            Obj::AnonymousFn(x) => write!(f, "{}", x)?,
             Obj::StandardSet(standard_set) => write!(f, "{}", standard_set)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
@@ -990,6 +993,28 @@ impl Obj {
                     .collect();
                 let ret_set = Obj::replace_bound_identifier(*fs.ret_set, from, to);
                 FnSet::new(params_def_with_set, dom_facts, ret_set).into()
+            }
+            Obj::AnonymousFn(af) => {
+                let params_def_with_set = af
+                    .params_def_with_set
+                    .into_iter()
+                    .map(|pg| ParamGroupWithSet {
+                        params: pg
+                            .params
+                            .into_iter()
+                            .map(|p| if p == from { to.to_string() } else { p })
+                            .collect(),
+                        set: Obj::replace_bound_identifier(pg.set, from, to),
+                    })
+                    .collect();
+                let dom_facts = af
+                    .dom_facts
+                    .into_iter()
+                    .map(|f| f.replace_bound_identifier(from, to))
+                    .collect();
+                let ret_set = Obj::replace_bound_identifier(*af.ret_set, from, to);
+                let equal_to = Obj::replace_bound_identifier(*af.equal_to, from, to);
+                AnonymousFn::new(params_def_with_set, dom_facts, ret_set, equal_to).into()
             }
             Obj::Cart(c) => Cart::new(
                 c.args
@@ -1183,6 +1208,22 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
                 p.name
             };
             FnSetFreeParamObj::new(name).into()
+        }
+        FnObjHead::AnonymousFnParam(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            AnonymousFnFreeParamObj::new(name).into()
+        }
+        FnObjHead::AnonymousFnLiteral(a) => {
+            let inner = (*a).clone();
+            let replaced = Obj::replace_bound_identifier(Obj::AnonymousFn(inner), from, to);
+            let Obj::AnonymousFn(new_af) = replaced else {
+                unreachable!()
+            };
+            FnObjHead::AnonymousFnLiteral(Box::new(new_af))
         }
         FnObjHead::Induc(p) => {
             let name = if p.name == from {
@@ -1792,6 +1833,12 @@ impl From<SetBuilder> for Obj {
 impl From<FnSet> for Obj {
     fn from(f: FnSet) -> Self {
         Obj::FnSet(f)
+    }
+}
+
+impl From<AnonymousFn> for Obj {
+    fn from(f: AnonymousFn) -> Self {
+        Obj::AnonymousFn(f)
     }
 }
 

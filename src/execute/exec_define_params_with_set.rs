@@ -5,6 +5,14 @@ impl Runtime {
         &mut self,
         param_def: &ParamGroupWithSet,
     ) -> Result<InferResult, RuntimeError> {
+        self.define_params_with_set_in_scope(param_def, ParamObjType::FnSet)
+    }
+
+    pub fn define_params_with_set_in_scope(
+        &mut self,
+        param_def: &ParamGroupWithSet,
+        binding_scope: ParamObjType,
+    ) -> Result<InferResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&param_def.set, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 let param_names_text = param_def.params.join(", ");
@@ -21,9 +29,9 @@ impl Runtime {
                 )))
             })?;
         let mut infer_result = InferResult::new();
-        let facts = param_def.facts();
+        let facts = param_def.facts_for_binding_scope(binding_scope);
         for (name, fact) in param_def.params.iter().zip(facts.iter()) {
-            self.store_free_param_or_identifier_name(name, ParamObjType::FnSet)
+            self.store_free_param_or_identifier_name(name, binding_scope)
                 .map_err(|runtime_error| {
                     RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
                         None,

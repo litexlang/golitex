@@ -715,6 +715,8 @@ impl FnObj {
             FnObjHead::Exist(p) => latex_local_ident(&p.name),
             FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
+            FnObjHead::AnonymousFnParam(p) => latex_local_ident(&p.name),
+            FnObjHead::AnonymousFnLiteral(a) => a.to_latex_string(),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
         };
@@ -728,6 +730,39 @@ impl FnObj {
             s.push_str(&format!(r"\left( {} \right)", inner));
         }
         s
+    }
+}
+
+impl AnonymousFn {
+    pub fn to_latex_string(&self) -> String {
+        let mut slots: Vec<String> = Vec::new();
+        for g in &self.params_def_with_set {
+            let set = g.set.to_latex_string();
+            for p in &g.params {
+                slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
+            }
+        }
+        let dom = self
+            .dom_facts
+            .iter()
+            .map(|f| f.to_latex_string())
+            .collect::<Vec<_>>()
+            .join(r", ");
+        let ret = self.ret_set.to_latex_string();
+        let body = self.equal_to.to_latex_string();
+        let sig = if dom.is_empty() {
+            format!(r"\left({}\right)", slots.join(r", "))
+        } else {
+            format!(
+                r"\left({} \,\middle|\, {}\right)",
+                slots.join(r", "),
+                dom
+            )
+        };
+        format!(
+            r"'\, {} \to {} \mapsto \left\{{ {}\right\}}",
+            sig, ret, body
+        )
     }
 }
 
@@ -1846,6 +1881,7 @@ impl Obj {
             Obj::ListSet(x) => x.to_latex_string(),
             Obj::SetBuilder(x) => x.to_latex_string(),
             Obj::FnSet(x) => x.to_latex_string(),
+            Obj::AnonymousFn(x) => x.to_latex_string(),
             Obj::Cart(x) => x.to_latex_string(),
             Obj::CartDim(x) => x.to_latex_string(),
             Obj::Proj(x) => x.to_latex_string(),
@@ -1866,6 +1902,7 @@ impl Obj {
             Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::SetBuilder(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::AnonymousFn(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
             Obj::MatrixSet(x) => x.to_latex_string(),

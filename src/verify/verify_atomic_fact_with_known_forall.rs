@@ -338,6 +338,9 @@ impl Runtime {
             Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(ref left) => self.match_arg_when_left_is_set_builder(left, given_arg),
             Obj::FnSet(ref left) => self.match_arg_when_left_is_fn_set_with_params(left, given_arg),
+            Obj::AnonymousFn(ref left) => {
+                self.match_arg_when_left_is_anonymous_fn_with_params(left, given_arg)
+            }
             Obj::StandardSet(StandardSet::NPos) => self.match_arg_when_left_is_n_pos_obj(given_arg),
             Obj::StandardSet(StandardSet::N) => self.match_arg_when_left_is_n_obj(given_arg),
             Obj::StandardSet(StandardSet::Q) => self.match_arg_when_left_is_q_obj(given_arg),
@@ -440,6 +443,12 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::FnSet(ref p)) => {
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
+            }
+            Obj::Atom(AtomObj::AnonymousFn(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
@@ -1176,6 +1185,79 @@ impl Runtime {
             return Ok(None);
         };
         if !self.merge_arg_match_map_into(&mut merged, ret_map) {
+            return Ok(None);
+        }
+        let verify_state = VerifyState::new_with_final_round(false);
+        for value in merged.values() {
+            if self
+                .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                .is_err()
+            {
+                return Ok(None);
+            }
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_arg_when_left_is_anonymous_fn_with_params(
+        &mut self,
+        left: &AnonymousFn,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::AnonymousFn(given) = given_arg else {
+            return Ok(None);
+        };
+        if left.params_def_with_set.len() != given.params_def_with_set.len() {
+            return Ok(None);
+        }
+        let mut merged: HashMap<String, Obj> = HashMap::new();
+        for (lg, gg) in left
+            .params_def_with_set
+            .iter()
+            .zip(given.params_def_with_set.iter())
+        {
+            if lg.params != gg.params {
+                return Ok(None);
+            }
+            let Some(m) =
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&lg.set, &gg.set)?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, m) {
+                return Ok(None);
+            }
+        }
+        if left.dom_facts.len() != given.dom_facts.len() {
+            return Ok(None);
+        }
+        for (lf, gf) in left.dom_facts.iter().zip(given.dom_facts.iter()) {
+            let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
+            else {
+                return Ok(None);
+            };
+            if !self.merge_arg_match_map_into(&mut merged, fact_map) {
+                return Ok(None);
+            }
+        }
+        let Some(ret_map) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            left.ret_set.as_ref(),
+            given.ret_set.as_ref(),
+        )?
+        else {
+            return Ok(None);
+        };
+        if !self.merge_arg_match_map_into(&mut merged, ret_map) {
+            return Ok(None);
+        }
+        let Some(eq_map) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            left.equal_to.as_ref(),
+            given.equal_to.as_ref(),
+        )?
+        else {
+            return Ok(None);
+        };
+        if !self.merge_arg_match_map_into(&mut merged, eq_map) {
             return Ok(None);
         }
         let verify_state = VerifyState::new_with_final_round(false);

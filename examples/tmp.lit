@@ -1,0 +1,2 @@
+'(x, y R: x < y) R {x + y} = '(x, y R: x < y) R {x + y}
+'R(x){x} = 'R(x){x}

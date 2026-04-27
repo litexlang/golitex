@@ -463,6 +463,30 @@ impl Runtime {
         Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored))
     }
 
+    pub fn new_anonymous_fn(
+        &self,
+        params_and_their_sets: Vec<ParamGroupWithSet>,
+        dom_facts: Vec<OrAndChainAtomicFact>,
+        ret_set: Obj,
+        equal_to: Obj,
+    ) -> Result<AnonymousFn, RuntimeError> {
+        let empty: HashMap<String, Obj> = HashMap::new();
+        let mut dom_stored = Vec::with_capacity(dom_facts.len());
+        for d in &dom_facts {
+            dom_stored.push(
+                self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::AnonymousFn, None)?,
+            );
+        }
+        let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::AnonymousFn)?;
+        let eq_stored = self.inst_obj(&equal_to, &empty, ParamObjType::AnonymousFn)?;
+        Ok(AnonymousFn::new(
+            params_and_their_sets,
+            dom_stored,
+            ret_stored,
+            eq_stored,
+        ))
+    }
+
     pub fn fn_set_from_fn_set_clause(&self, clause: &FnSetClause) -> Result<FnSet, RuntimeError> {
         self.new_fn_set(
             clause.params_def_with_set.clone(),
