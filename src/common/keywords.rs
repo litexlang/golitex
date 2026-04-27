@@ -129,7 +129,6 @@ pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const FAMILY: &str = "family";
 pub const STRUCT: &str = "struct";
-pub const SELF: &str = "self";
 pub const RESTRICT: &str = "restrict";
 pub const STRATEGY: &str = "strategy";
 pub const USE_STRATEGY: &str = "use_strategy";
@@ -267,7 +266,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         FAMILY,
         STRUCT,
-        SELF,
         RESTRICT,
         STRATEGY,
         USE_STRATEGY,

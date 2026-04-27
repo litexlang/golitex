@@ -276,9 +276,9 @@ abstract_prop P(a, b)
 
 ### `struct` — structured type
 
-**Meaning.** A record-like type: field declarations, optionally an iff-block (`<=>:`) tying instances to a predicate on `self`.
+**Meaning.** A record-like type: field declarations, optionally an iff-block (`<=>:`) tying instances to a predicate (typically using `self` as the instance name).
 
-Only `self.<field>` is allowed (each `<field>` must be a declared field name in that struct’s `<=>:` scope); bare `self` is rejected.
+Only `self.<field>` is allowed in that block (each `<field>` must be a declared field name in that struct’s `<=>:` scope); `self` is not a reserved word elsewhere.
 
 **Syntax.** `struct` *name* `(` *parameters* `)` `:` field lines, optional `<=>:` block.
 

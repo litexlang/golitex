@@ -326,7 +326,6 @@ pub use crate::common::keywords::RUN_FILE;
 pub use crate::common::keywords::R_NEG;
 pub use crate::common::keywords::R_NZ;
 pub use crate::common::keywords::R_POS;
-pub use crate::common::keywords::SELF;
 pub use crate::common::keywords::SEQ;
 pub use crate::common::keywords::SET;
 pub use crate::common::keywords::SET_DIFF;
