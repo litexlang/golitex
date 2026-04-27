@@ -9,12 +9,8 @@ pub enum ParamObjType {
     Exist,
     SetBuilder,
     FnSet,
-    /// Summation index in `sum(i, lo, hi, body)` — bound only in `body`.
-    Sum,
     Induc,
     DefAlgo,
-    /// Product index in `product(i, lo, hi, body)` — bound only in `body`.
-    Product,
 }
 
 impl ParamObjType {
@@ -26,10 +22,8 @@ impl ParamObjType {
             ParamObjType::Exist => 3,
             ParamObjType::SetBuilder => 4,
             ParamObjType::FnSet => 5,
-            ParamObjType::Sum => 6,
-            ParamObjType::Induc => 7,
-            ParamObjType::DefAlgo => 8,
-            ParamObjType::Product => 9,
+            ParamObjType::Induc => 6,
+            ParamObjType::DefAlgo => 7,
         }
     }
 }
@@ -112,16 +106,6 @@ pub struct FnSetFreeParamObj {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SumFreeParamObj {
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ProductFreeParamObj {
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ByInducFreeParamObj {
     pub name: String,
 }
@@ -158,18 +142,6 @@ impl SetBuilderFreeParamObj {
 impl FnSetFreeParamObj {
     pub fn new(name: String) -> Self {
         FnSetFreeParamObj { name }
-    }
-}
-
-impl SumFreeParamObj {
-    pub fn new(name: String) -> Self {
-        SumFreeParamObj { name }
-    }
-}
-
-impl ProductFreeParamObj {
-    pub fn new(name: String) -> Self {
-        ProductFreeParamObj { name }
     }
 }
 
@@ -215,18 +187,6 @@ impl fmt::Display for FnSetFreeParamObj {
     }
 }
 
-impl fmt::Display for SumFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write_parsing_free_param_tagged_spine(f, ParamObjType::Sum, &self.name)
-    }
-}
-
-impl fmt::Display for ProductFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write_parsing_free_param_tagged_spine(f, ParamObjType::Product, &self.name)
-    }
-}
-
 impl fmt::Display for ByInducFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_parsing_free_param_tagged_spine(f, ParamObjType::Induc, &self.name)
@@ -269,18 +229,6 @@ impl From<FnSetFreeParamObj> for Obj {
     }
 }
 
-impl From<SumFreeParamObj> for Obj {
-    fn from(v: SumFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::Sum(v))
-    }
-}
-
-impl From<ProductFreeParamObj> for Obj {
-    fn from(v: ProductFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::Product(v))
-    }
-}
-
 impl From<ByInducFreeParamObj> for Obj {
     fn from(v: ByInducFreeParamObj) -> Self {
         Obj::Atom(AtomObj::Induc(v))
@@ -301,10 +249,8 @@ pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
         ParamObjType::DefHeader => DefHeaderFreeParamObj::new(name).into(),
         ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name).into(),
         ParamObjType::FnSet => FnSetFreeParamObj::new(name).into(),
-        ParamObjType::Sum => SumFreeParamObj::new(name).into(),
         ParamObjType::Induc => ByInducFreeParamObj::new(name).into(),
         ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name).into(),
-        ParamObjType::Product => ProductFreeParamObj::new(name).into(),
         ParamObjType::Identifier => {
             unreachable!(
                 "obj_for_bound_param_in_scope: {:?} is not a bare-name binding scope",
@@ -323,10 +269,8 @@ pub fn param_binding_element_obj_for_store(name: String, binding_kind: ParamObjT
         | ParamObjType::DefHeader
         | ParamObjType::SetBuilder
         | ParamObjType::FnSet
-        | ParamObjType::Sum
         | ParamObjType::Induc
-        | ParamObjType::DefAlgo
-        | ParamObjType::Product => obj_for_bound_param_in_scope(name, binding_kind),
+        | ParamObjType::DefAlgo => obj_for_bound_param_in_scope(name, binding_kind),
     }
 }
 

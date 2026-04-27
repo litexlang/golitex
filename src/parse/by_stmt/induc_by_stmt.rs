@@ -10,25 +10,13 @@ impl Runtime {
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "by induc: expected end of head".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("by induc: expected end of head".to_string(), tb.line_file.clone()),
             )));
         }
 
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "by induc: expects prove: block".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("by induc: expects prove: block".to_string(), tb.line_file.clone()),
             )));
         }
 
@@ -36,13 +24,7 @@ impl Runtime {
 
         if tb.body[0].body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "by induc prove: expects at least one fact to prove".to_string(),
-                    tb.body[0].line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("by induc prove: expects at least one fact to prove".to_string(), tb.body[0].line_file.clone()),
             )));
         }
 

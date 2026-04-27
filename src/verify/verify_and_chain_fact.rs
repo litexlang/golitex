@@ -27,21 +27,21 @@ impl Runtime {
 
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
-        let mut verify_what = Vec::with_capacity(and_fact.facts.len());
+        let mut child_results: Vec<StmtResult> = Vec::with_capacity(and_fact.facts.len());
         for fact in &and_fact.facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
                 return Ok(result);
             }
-            verify_what.push(fact.to_string());
+            child_results.push(result);
         }
         Ok(
             (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 and_fact.clone().into(),
-                format!("{} are verified", verify_what.join(", ")),
+                "and: each conjunct verified in order".to_string(),
                 None,
-                Some(default_line_file()),
-                Vec::new(),
+                Some(and_fact.line_file()),
+                child_results,
             ))
             .into(),
         )
@@ -81,7 +81,7 @@ impl Runtime {
                 vec![],
             )))
         })?;
-        let mut verify_what = Vec::with_capacity(facts.len());
+        let mut child_results: Vec<StmtResult> = Vec::with_capacity(facts.len());
         for fact in &facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
@@ -92,15 +92,15 @@ impl Runtime {
                 .into());
             }
 
-            verify_what.push(fact.to_string());
+            child_results.push(result);
         }
         Ok(
             (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 chain_fact.clone().into(),
-                format!("{} are verified", verify_what.join(", ")),
+                "chain: each step verified in order".to_string(),
                 None,
-                Some(default_line_file()),
-                Vec::new(),
+                Some(chain_fact.line_file()),
+                child_results,
             ))
             .into(),
         )

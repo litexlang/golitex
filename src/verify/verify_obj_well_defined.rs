@@ -50,6 +50,7 @@ impl Runtime {
             Obj::FnSet(x) => {
                 self.run_in_local_env(|rt| rt.verify_fn_set_well_defined(x, verify_state))
             }
+            Obj::AnonymousFn(x) => self.verify_anonymous_fn_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::NPos) => self.verify_n_pos_obj_well_defined(),
             Obj::StandardSet(StandardSet::N) => self.verify_n_obj_well_defined(),
             Obj::StandardSet(StandardSet::Q) => self.verify_q_obj_well_defined(),
@@ -61,6 +62,8 @@ impl Runtime {
             Obj::TupleDim(x) => self.verify_dim_well_defined(x, verify_state),
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
+            Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
+            Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
             Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
@@ -77,8 +80,6 @@ impl Runtime {
             Obj::MatrixPow(x) => self.verify_matrix_pow_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
-            Obj::Sum(x) => self.verify_sum_well_defined(x, verify_state),
-            Obj::Product(x) => self.verify_product_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::QPos) => self.verify_q_pos_well_defined(),
             Obj::StandardSet(StandardSet::RPos) => self.verify_r_pos_well_defined(),
@@ -98,8 +99,6 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
-            Obj::Atom(AtomObj::Sum(_)) => Ok(()),
-            Obj::Atom(AtomObj::Product(_)) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -112,13 +111,7 @@ impl Runtime {
             Ok(())
         } else {
             Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("identifier `{}` not defined", identifier.to_string()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("identifier `{}` not defined", identifier.to_string())),
             )))
         }
     }
@@ -136,60 +129,56 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let function_name_obj: Obj = (*fn_obj.head).clone().into();
-        let mut the_set_where_current_fn_obj_is_in = self
-            .get_object_in_fn_set(&function_name_obj)
-            .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    todo_error_message(format!(
-                        "`{}` is not a defined function",
-                        fn_obj.head.to_string()
-                    )),
-                    default_line_file(),
-                    None,
-                    vec![],
-                )))
-            })?
-            .clone();
+        let mut space = match fn_obj.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(a) => {
+                self.verify_anonymous_fn_well_defined(a.as_ref(), verify_state)
+                    .map_err(|well_defined_error| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                                "object {} is not well-defined: anonymous function head is not well-defined",
+                                fn_obj.to_string()
+                            ), well_defined_error)))
+                    })?;
+                FnSetSpace::Anon((**a).clone())
+            }
+            _ => {
+                let function_name_obj: Obj = (*fn_obj.head).clone().into();
+                FnSetSpace::Set(
+                    self.get_object_in_fn_set(&function_name_obj)
+                        .ok_or_else(|| {
+                            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
+                                    "`{}` is not a defined function",
+                                    fn_obj.head.to_string()
+                                )))))
+                        })?
+                        .clone(),
+                )
+            }
+        };
 
         for (i, args) in fn_obj.body.iter().enumerate() {
-            self.verify_fn_obj_well_defined_against_fn_set_with_dom(
+            self.verify_fn_obj_well_defined_against_fn_like_space(
                 args,
-                &the_set_where_current_fn_obj_is_in,
+                space.params(),
+                space.dom(),
+                space.binding(),
                 verify_state,
             )
             .map_err(|well_defined_error| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                         "object {} is not well-defined, failed to verify arguments satisfy function domain.",
                         fn_obj.to_string()
-                    ),
-                default_line_file(),
-                Some(well_defined_error),
-                vec![],
-            )))
+                    ), well_defined_error)))
             })?;
 
-            let set_where_the_next_fn_obj_is_in =
-                the_set_where_current_fn_obj_is_in.ret_set.clone();
+            let set_where_the_next_fn_obj_is_in = space.ret_set_obj();
 
-            // Store: after applying current argument group i,
-            // the intermediate prefix application fn_obj_prefix (e.g. f(a))
-            // must be in the current function set's return set.
-            //
-            // Example: input is f(a)(b), body = [[a], [b]]
-            // at i=0 we store: f(a) in ret_set_of_f
             let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
                 fn_obj.body[..=i].iter().cloned().collect();
             let fn_obj_prefix_as_obj: Obj =
                 FnObj::new(*fn_obj.head.clone(), fn_obj_prefix_body).into();
-            let set_where_the_next_fn_obj_is_in_obj =
-                (*set_where_the_next_fn_obj_is_in.clone()).clone();
             let intermediate_in_fact = InFact::new(
                 fn_obj_prefix_as_obj,
-                set_where_the_next_fn_obj_is_in_obj,
+                set_where_the_next_fn_obj_is_in,
                 default_line_file(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
@@ -197,65 +186,38 @@ impl Runtime {
                 intermediate_atomic_fact,
             )
             .map_err(|store_fact_error| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                         "failed to store intermediate fn-obj membership fact while verifying `{}`",
                         fn_obj.to_string()
-                    ),
-                    default_line_file(),
-                    Some(store_fact_error),
-                    vec![],
-                )))
+                    ), store_fact_error)))
             })?;
 
             if i == fn_obj.body.len() - 1 {
                 break;
             }
 
-            the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
-                Obj::FnSet(e) => e,
-                _ => {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!(
-                                "expect return set of {} to be a fn_set object.",
-                                the_set_where_current_fn_obj_is_in.to_string()
-                            ),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-            };
+            space = FnSetSpace::from_ret_obj(space.ret_set_obj())?;
         }
 
         Ok(())
     }
 
-    /// Verify that the given FnObj is well-defined with respect to a FnSetWithDom definition.
-    fn verify_fn_obj_well_defined_against_fn_set_with_dom(
+    fn verify_fn_obj_well_defined_against_fn_like_space(
         &mut self,
         args: &Vec<Box<Obj>>,
-        fn_set_with_dom: &FnSet,
+        params_def_with_set: &Vec<ParamGroupWithSet>,
+        dom_facts: &Vec<OrAndChainAtomicFact>,
+        param_binding: ParamObjType,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let param_count = ParamGroupWithSet::number_of_params(&fn_set_with_dom.params_def_with_set);
+        let param_count = ParamGroupWithSet::number_of_params(params_def_with_set);
         if args.len() != param_count {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "number of args ({}) does not match fn set with dom param count ({})",
                         args.len(),
                         param_count
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
 
@@ -271,93 +233,55 @@ impl Runtime {
         let args_satisfy_fn_set_params_set_facts =
             ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
                 self,
-                &fn_set_with_dom.params_def_with_set,
+                params_def_with_set,
                 &args_as_obj,
-                ParamObjType::FnSet,
+                param_binding,
             )
             .map_err(|stmt_error| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!("failed to build facts for args satisfy fn set parameter sets"),
-                    default_line_file(),
-                    Some(stmt_error),
-                    vec![],
-                )))
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("failed to build facts for args satisfy fn set parameter sets"), stmt_error)))
             })?;
 
         for fact in args_satisfy_fn_set_params_set_facts.iter() {
             let verify_result =
                 self.verify_atomic_fact(fact, verify_state)
                     .map_err(|verify_error| {
-                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                            None,
-                            format!(
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                                 "failed to verify arg satisfy fn set parameter set: {}",
                                 fact
-                            ),
-                            default_line_file(),
-                            Some(verify_error),
-                            vec![],
-                        )))
+                            ), verify_error)))
                     })?;
             if verify_result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
                             "arg does not satisfy fn set parameter set, the fact is unknown: {}",
                             fact
-                        ),
-                        default_line_file(),
-                        None,
-                        vec![],
-                    ),
+                        )),
                 )));
             }
         }
 
-        let param_to_arg_map = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
-            &fn_set_with_dom.params_def_with_set,
-            &args_as_obj,
-        );
-        for dom_fact in fn_set_with_dom.dom_facts.iter() {
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(params_def_with_set, &args_as_obj);
+        for dom_fact in dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::FnSet, None)
+                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, param_binding, None)
                 .map_err(|e| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!("failed to instantiate function domain fact: {}", e),
-                        default_line_file(),
-                        Some(e),
-                        vec![],
-                    )))
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("failed to instantiate function domain fact: {}", e), e)))
                 })?;
             let verify_result = self
                 .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "failed to verify function domain fact:\n{}",
                             instantiated_dom_fact
-                        ),
-                        default_line_file(),
-                        Some(verify_error),
-                        vec![],
-                    )))
+                        ), verify_error)))
                 })?;
             if verify_result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
                             "failed to verify function domain fact:\n{}",
                             instantiated_dom_fact
-                        ),
-                        default_line_file(),
-                        None,
-                        vec![],
-                    ),
+                        )),
                 )));
             }
         }
@@ -392,13 +316,7 @@ impl Runtime {
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("obj {} is not in r", obj.to_string()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("obj {} is not in r", obj.to_string())),
             )));
         }
         Ok(())
@@ -416,13 +334,7 @@ impl Runtime {
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("obj {} is not in z", obj.to_string()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("obj {} is not in z", obj.to_string())),
             )));
         }
         Ok(())
@@ -441,13 +353,7 @@ impl Runtime {
         let r = self.verify_atomic_fact(&f, verify_state)?;
         if r.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    err_detail,
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(err_detail),
             )));
         }
         Ok(())
@@ -513,13 +419,7 @@ impl Runtime {
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("divisor `{}` must be non-zero", div.right.to_string()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("divisor `{}` must be non-zero", div.right.to_string())),
             )));
         }
 
@@ -543,13 +443,7 @@ impl Runtime {
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("modulus `{}` must be non-zero", m.right.to_string()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("modulus `{}` must be non-zero", m.right.to_string())),
             )));
         }
         Ok(())
@@ -595,7 +489,7 @@ impl Runtime {
             let result = self.verify_atomic_fact(&atomic, verify_state)?;
             if result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(None, msg.to_string(), lf.clone(), None, vec![]),
+                    RuntimeErrorStruct::new_with_msg_and_line_file(msg.to_string(), lf.clone()),
                 )));
             }
         }
@@ -726,16 +620,10 @@ impl Runtime {
 
         let pow_display = Obj::Pow(pow.clone()).to_string();
         return Err(RuntimeError::from(WellDefinedRuntimeError(
-            RuntimeErrorStruct::new(
-                None,
-                format!(
+            RuntimeErrorStruct::new_with_just_msg(format!(
                     "base and exponent do not satisfy the pow domain: {}",
                     pow_display
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ),
+                )),
         )));
     }
 
@@ -825,25 +713,13 @@ impl Runtime {
                 let verify_result = self
                     .verify_atomic_fact(&not_equal_atomic_fact, &next_verify_state)
                     .map_err(|previous_error| {
-                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                            None,
-                            format!(
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                                 "failed to verify list set elements are pairwise not equal: {}",
                                 not_equal_atomic_fact
-                            ),
-                            default_line_file(),
-                            Some(previous_error),
-                            vec![],
-                        )))
+                            ), previous_error)))
                     })?;
                 if verify_result.is_unknown() {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("list set elements must be pairwise not equal, but it is not provable: {}", not_equal_atomic_fact),
-                default_line_file(),
-                None,
-                vec![],
-            ))));
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("list set elements must be pairwise not equal, but it is not provable: {}", not_equal_atomic_fact)))));
                 }
                 j += 1;
             }
@@ -861,174 +737,61 @@ impl Runtime {
         // Must use `ParamObjType::SetBuilder` here, not `define_params_with_set` (FnSet).
         // Parsed set-builder facts use SetBuilder-tagged bound vars; a mismatched tag means
         // e.g. `x $in N` is never found when checking `b ^ x`, so pow domain fails.
-        if let Err(well_defined_error) = self
-            .verify_obj_well_defined_and_store_cache(&x.param_set, &VerifyState::new(0, false))
-        {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to verify well-defined of set builder {}",
-                        x.to_string()
-                    ),
-                    default_line_file(),
-                    Some(well_defined_error),
-                    vec![],
-                ),
-            )));
-        }
-        if let Err(e) = self.store_free_param_or_identifier_name(&x.param, ParamObjType::SetBuilder)
-        {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to verify well-defined of set builder {}",
-                        x.to_string()
-                    ),
-                    default_line_file(),
-                    Some(e),
-                    vec![],
-                ),
-            )));
-        }
-        let param_in_set: Fact = InFact::new(
-            obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::SetBuilder),
-            (*x.param_set).clone(),
-            default_line_file(),
-        )
-        .into();
-        if let Err(e) = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(param_in_set)
-        {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to verify well-defined of set builder {}",
-                        x.to_string()
-                    ),
-                    default_line_file(),
-                    Some(e),
-                    vec![],
-                ),
-            )));
-        }
-
-        for fact in x.facts.iter() {
-            if let Err(e) = self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                fact,
-                verify_state,
-            ) {
+        // Run in local env so param binding and body facts do not leak into the outer scope.
+        self.run_in_local_env(|rt| {
+            if let Err(well_defined_error) = rt
+                .verify_obj_well_defined_and_store_cache(&x.param_set, &VerifyState::new(0, false))
+            {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "failed to verify well-defined of set builder {}",
                             x.to_string()
-                        ),
-                        default_line_file(),
-                        Some(e),
-                        vec![],
-                    ),
+                        ), well_defined_error),
                 )));
             }
-        }
+            if let Err(e) = rt.store_free_param_or_identifier_name(&x.param, ParamObjType::SetBuilder)
+            {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                            "failed to verify well-defined of set builder {}",
+                            x.to_string()
+                        ), e),
+                )));
+            }
+            let param_in_set: Fact = InFact::new(
+                obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::SetBuilder),
+                (*x.param_set).clone(),
+                default_line_file(),
+            )
+            .into();
+            if let Err(e) = rt
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(param_in_set)
+            {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                            "failed to verify well-defined of set builder {}",
+                            x.to_string()
+                        ), e),
+                )));
+            }
 
-        Ok(())
-    }
+            for fact in x.facts.iter() {
+                if let Err(e) = rt
+                    .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        fact,
+                        verify_state,
+                    )
+                {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                                "failed to verify well-defined of set builder {}",
+                                x.to_string()
+                            ), e),
+                    )));
+                }
+            }
 
-    fn verify_sum_well_defined(
-        &mut self,
-        x: &SumObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(x.start.as_ref(), verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(x.end.as_ref(), verify_state)?;
-        self.require_obj_in_z(x.start.as_ref(), verify_state)?;
-        self.require_obj_in_z(x.end.as_ref(), verify_state)?;
-        self.require_less_equal_verified(
-            x.start.as_ref(),
-            x.end.as_ref(),
-            verify_state,
-            format!(
-                "sum: cannot verify {} <= {} (summation bounds must be ordered)",
-                x.start, x.end
-            ),
-        )?;
-        self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(&x.param, ParamObjType::Sum)?;
-            let param_obj = obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::Sum);
-            // Summation index: assume `param $in Z` and `start <= param <= end` in the local scope
-            // (well-defined check for the body), not facts that must be proved from the outer env.
-            let param_in_z: AtomicFact = InFact::new(
-                param_obj.clone(),
-                StandardSet::Z.into(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
-            let lower: AtomicFact = LessEqualFact::new(
-                (*x.start).clone(),
-                param_obj.clone(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
-            let upper: AtomicFact = LessEqualFact::new(
-                param_obj,
-                (*x.end).clone(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
-            rt.verify_obj_well_defined_and_store_cache(x.body.as_ref(), verify_state)
-        })
-    }
-
-    fn verify_product_well_defined(
-        &mut self,
-        x: &ProductObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(x.start.as_ref(), verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(x.end.as_ref(), verify_state)?;
-        self.require_obj_in_z(x.start.as_ref(), verify_state)?;
-        self.require_obj_in_z(x.end.as_ref(), verify_state)?;
-        self.require_less_equal_verified(
-            x.start.as_ref(),
-            x.end.as_ref(),
-            verify_state,
-            format!(
-                "product: cannot verify {} <= {} (product bounds must be ordered)",
-                x.start, x.end
-            ),
-        )?;
-        self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(&x.param, ParamObjType::Product)?;
-            let param_obj = obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::Product);
-            let param_in_z: AtomicFact = InFact::new(
-                param_obj.clone(),
-                StandardSet::Z.into(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
-            let lower: AtomicFact = LessEqualFact::new(
-                (*x.start).clone(),
-                param_obj.clone(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
-            let upper: AtomicFact = LessEqualFact::new(
-                param_obj,
-                (*x.end).clone(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
-            rt.verify_obj_well_defined_and_store_cache(x.body.as_ref(), verify_state)
+            Ok(())
         })
     }
 
@@ -1037,59 +800,99 @@ impl Runtime {
         x: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        for param_def_with_set in x.params_def_with_set.iter() {
+        for param_def_with_set in x.body.params_def_with_set.iter() {
             if let Err(e) = self.define_params_with_set(param_def_with_set) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "failed to verify well-defined of fn set with dom {}",
                             x.to_string()
-                        ),
-                        default_line_file(),
-                        Some(e),
-                        vec![],
-                    ),
+                        ), e),
                 )));
             }
         }
 
-        for fact in x.dom_facts.iter() {
+        for fact in x.body.dom_facts.iter() {
             if let Err(e) = self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
                 fact,
                 verify_state,
             ) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "failed to verify well-defined of fn set with dom {}",
                             x.to_string()
-                        ),
-                        default_line_file(),
-                        Some(e),
-                        vec![],
-                    ),
+                        ), e),
                 )));
             }
         }
 
-        if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
+        if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.body.ret_set, verify_state) {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_msg_and_cause(format!(
                         "failed to verify well-defined of fn set with dom {}",
                         x.to_string()
-                    ),
-                    default_line_file(),
-                    Some(e),
-                    vec![],
-                ),
+                    ), e),
             )));
         }
 
         Ok(())
+    }
+
+    fn verify_anonymous_fn_well_defined(
+        &mut self,
+        x: &AnonymousFn,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.run_in_local_env(|rt| {
+            for param_def_with_set in x.body.params_def_with_set.iter() {
+                if let Err(e) = rt.define_params_with_set_in_scope(
+                    param_def_with_set,
+                    ParamObjType::FnSet,
+                ) {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                                "failed to verify well-defined of anonymous fn {}",
+                                x.to_string()
+                            ), e),
+                    )));
+                }
+            }
+
+            for fact in x.body.dom_facts.iter() {
+                if let Err(e) =
+                    rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        fact,
+                        verify_state,
+                    )
+                {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                                "failed to verify well-defined of anonymous fn {}",
+                                x.to_string()
+                            ), e),
+                    )));
+                }
+            }
+
+            if let Err(e) = rt.verify_obj_well_defined_and_store_cache(&x.body.ret_set, verify_state) {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                            "failed to verify well-defined of anonymous fn {}",
+                            x.to_string()
+                        ), e),
+                )));
+            }
+
+            if let Err(e) = rt.verify_obj_well_defined_and_store_cache(&x.equal_to, verify_state) {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                            "failed to verify well-defined of anonymous fn {}",
+                            x.to_string()
+                        ), e),
+                )));
+            }
+
+            Ok(())
+        })
     }
 
     fn verify_n_pos_obj_well_defined(&mut self) -> Result<(), RuntimeError> {
@@ -1134,13 +937,7 @@ impl Runtime {
         let result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("set {} is not a cart", x.set.to_string()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("set {} is not a cart", x.set.to_string())),
             )));
         }
 
@@ -1156,13 +953,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.dim, verify_state)?;
 
         let projection_dimension_number = self.resolve_obj_to_number(&x.dim).ok_or_else(|| {
-            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("projection dimension {} is not a number", x.dim),
-                default_line_file(),
-                None,
-                vec![],
-            )))
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("projection dimension {} is not a number", x.dim))))
         })?;
         let projection_dimension_obj: Obj =
             Number::new(projection_dimension_number.normalized_value).into();
@@ -1177,16 +968,10 @@ impl Runtime {
             self.verify_atomic_fact(&projection_dimension_is_positive_integer_fact, verify_state)?;
         if projection_dimension_is_positive_integer_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "projection dimension {} is not a positive integer",
                         projection_dimension_obj
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
 
@@ -1195,13 +980,7 @@ impl Runtime {
             self.verify_atomic_fact(&left_set_is_cart_fact, verify_state)?;
         if left_set_is_cart_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("projection left side {} is not a cart", x.set),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("projection left side {} is not a cart", x.set)),
             )));
         }
 
@@ -1217,16 +996,10 @@ impl Runtime {
             self.verify_atomic_fact(&proj_index_not_larger_than_cart_dim, verify_state)?;
         if left_set_cart_dim_less_equal_projection_dimension_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "{} <= {} is unknown",
                         projection_dimension_obj, left_set_cart_dim_obj
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
 
@@ -1244,16 +1017,10 @@ impl Runtime {
         let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "`{}` is unknown, `dim` object requires its argument to be a tuple",
                         is_tuple_fact
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
 
@@ -1281,16 +1048,312 @@ impl Runtime {
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("set {} is not a finite set", x.set.to_string()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("set {} is not a finite set", x.set.to_string())),
             )));
         }
         Ok(())
+    }
+
+    fn verify_sum_obj_well_defined(
+        &mut self,
+        x: &Sum,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.require_obj_in_z(&x.start, verify_state)?;
+        self.require_obj_in_z(&x.end, verify_state)?;
+        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
+            self.require_less_equal_verified(
+                &x.start,
+                &x.end,
+                verify_state,
+                "sum: cannot verify start <= end for the summation range".to_string(),
+            )?;
+        }
+        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_iterated_op_summand_under_integer_index_interval(
+            &x.func,
+            x.start.as_ref(),
+            x.end.as_ref(),
+            verify_state,
+            "sum",
+        )
+    }
+
+    fn verify_product_obj_well_defined(
+        &mut self,
+        x: &Product,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.require_obj_in_z(&x.start, verify_state)?;
+        self.require_obj_in_z(&x.end, verify_state)?;
+        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
+            self.require_less_equal_verified(
+                &x.start,
+                &x.end,
+                verify_state,
+                "product: cannot verify start <= end for the product range".to_string(),
+            )?;
+        }
+        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_iterated_op_summand_under_integer_index_interval(
+            &x.func,
+            x.start.as_ref(),
+            x.end.as_ref(),
+            verify_state,
+            "product",
+        )
+    }
+
+    /// Resolve the set `S` in `pname S` for the unary param from `params_def_with_set`.
+    fn unary_param_set_from_params_def(
+        params_def: &[ParamGroupWithSet],
+        pname: &str,
+    ) -> Option<Obj> {
+        for g in params_def {
+            if g.params.iter().any(|n| n == pname) {
+                return Some(g.set.clone());
+            }
+        }
+        None
+    }
+
+    /// For a closed range `[a,b]` with explicit integer endpoints, require each integer in the range
+    /// to be in the index parameter's declared set (e.g. `Z_neg` disallows 1,2,3 in `1..3`).
+    fn verify_closed_range_each_integer_satisfies_unary_param_set(
+        &mut self,
+        start: &Obj,
+        end: &Obj,
+        param_set: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<(), RuntimeError> {
+        let Some(a_num) = self.resolve_obj_to_number(start) else {
+            return Ok(());
+        };
+        let Some(b_num) = self.resolve_obj_to_number(end) else {
+            return Ok(());
+        };
+        let as_ = a_num.normalized_value.trim();
+        let bs = b_num.normalized_value.trim();
+        if !is_number_string_literally_integer_without_dot(as_.to_string())
+            || !is_number_string_literally_integer_without_dot(bs.to_string())
+        {
+            return Ok(());
+        }
+        let Some(ai) = as_.parse::<i128>().ok() else {
+            return Ok(());
+        };
+        let Some(bi) = bs.parse::<i128>().ok() else {
+            return Ok(());
+        };
+        if ai > bi {
+            return Ok(());
+        }
+        for k in ai..=bi {
+            let k_obj: Obj = Number::new(k.to_string()).into();
+            let in_fact = InFact::new(k_obj, param_set.clone(), default_line_file());
+            let atomic_fact = AtomicFact::InFact(in_fact);
+            let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
+            if result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                            "{op}: each integer in the closed range from {} to {} must belong to the index parameter's type; not satisfied at index {}",
+                            start, end, k
+                        )),
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_iterated_op_summand_under_integer_index_interval(
+        &mut self,
+        func: &Obj,
+        start: &Obj,
+        end: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<(), RuntimeError> {
+        if let Some(af) = Self::summand_as_unary_anonymous_fn(func) {
+            return self.verify_unary_iterated_anonymous_in_interval(af, start, end, verify_state, op);
+        }
+        if let Obj::FnObj(fo) = func {
+            if !fo.body.is_empty() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                            "{op}: expected a bare function as summand, not a function application"
+                        )),
+                )));
+            }
+            let function_name_obj: Obj = (*fo.head).clone().into();
+            let Some(fs) = self.get_object_in_fn_set(&function_name_obj).cloned() else {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                            "{op}: summand must be a unary anonymous function, or a name with a stored function set; got {}",
+                            func
+                        )),
+                )));
+            };
+            if ParamGroupWithSet::number_of_params(&fs.body.params_def_with_set) != 1 {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!("{op}: the function in the function set must be unary (one index)")),
+                )));
+            }
+            let param_names =
+                ParamGroupWithSet::collect_param_names(&fs.body.params_def_with_set);
+            let pname = param_names[0].clone();
+            let Some(param_set_for_index) =
+                Self::unary_param_set_from_params_def(&fs.body.params_def_with_set, &pname)
+            else {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!("{op}: could not find index parameter in params_def_with_set")),
+                )));
+            };
+            self.verify_closed_range_each_integer_satisfies_unary_param_set(
+                start,
+                end,
+                &param_set_for_index,
+                verify_state,
+                op,
+            )?;
+            let start_c = start.clone();
+            let end_c = end.clone();
+            return self.run_in_local_env(|rt| {
+                for g in fs.body.params_def_with_set.iter() {
+                    rt.define_params_with_set_in_scope(g, ParamObjType::FnSet)
+                        .map_err(|e| {
+                            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
+                                    "{op}: could not bind index parameter in local well-defined check"
+                                ), e)))
+                        })?;
+                }
+                let k: Obj = Identifier::new(pname).into();
+                let le_lo = OrAndChainAtomicFact::AtomicFact(
+                    LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
+                );
+                let le_hi = OrAndChainAtomicFact::AtomicFact(
+                    LessEqualFact::new(k, end_c.clone(), default_line_file()).into(),
+                );
+                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_lo)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add lower bound in local check"), e)))
+                    })?;
+                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_hi)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add upper bound in local check"), e)))
+                    })?;
+                for df in fs.body.dom_facts.iter() {
+                    rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        df,
+                        verify_state,
+                    )
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: function set dom in local check failed"), e)))
+                    })?;
+                }
+                rt.verify_obj_well_defined_and_store_cache(&fs.body.ret_set, verify_state)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: return set not well-defined on the integer range"), e)))
+                    })
+            });
+        }
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{op}: summand must be a unary anonymous function, or a defined unary function in a function set; got {}",
+                    func
+                )),
+        )))
+    }
+
+    fn summand_as_unary_anonymous_fn(obj: &Obj) -> Option<&AnonymousFn> {
+        match obj {
+            Obj::AnonymousFn(af) => Some(af),
+            Obj::FnObj(fo) => {
+                if !fo.body.is_empty() {
+                    return None;
+                }
+                match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => Some(a.as_ref()),
+                    _ => None,
+                }
+            }
+            _ => None,
+        }
+    }
+
+    fn verify_unary_iterated_anonymous_in_interval(
+        &mut self,
+        af: &AnonymousFn,
+        start: &Obj,
+        end: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<(), RuntimeError> {
+        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!("{op}: summation/product index function must be unary (one parameter)")),
+            )));
+        }
+        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let pname = param_names[0].clone();
+        let Some(param_set_for_index) =
+            Self::unary_param_set_from_params_def(&af.body.params_def_with_set, &pname)
+        else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!("{op}: could not find index parameter in params_def_with_set")),
+            )));
+        };
+        self.verify_closed_range_each_integer_satisfies_unary_param_set(
+            start,
+            end,
+            &param_set_for_index,
+            verify_state,
+            op,
+        )?;
+        self.run_in_local_env(|rt| {
+            for g in af.body.params_def_with_set.iter() {
+                rt.define_params_with_set_in_scope(g, ParamObjType::FnSet)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not bind index parameter in local well-defined check"), e)))
+                    })?;
+            }
+            let k: Obj = Identifier::new(pname).into();
+            let le_lo = OrAndChainAtomicFact::AtomicFact(
+                LessEqualFact::new(start.clone(), k.clone(), default_line_file()).into(),
+            );
+            let le_hi = OrAndChainAtomicFact::AtomicFact(
+                LessEqualFact::new(k, end.clone(), default_line_file()).into(),
+            );
+            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_lo)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add lower bound in local check"), e)))
+                })?;
+            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_hi)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add upper bound in local check"), e)))
+                })?;
+            for df in af.body.dom_facts.iter() {
+                rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                    df,
+                    verify_state,
+                )
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: local dom of anonymous summand in integer range check failed"), e)))
+                })?;
+            }
+            rt.verify_obj_well_defined_and_store_cache(&af.body.ret_set, verify_state)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: return set not well-defined on the integer range"), e)))
+                })?;
+            rt.verify_obj_well_defined_and_store_cache(&af.equal_to, verify_state)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: expression body not well-defined on the integer range"), e)))
+                })
+        })
     }
 
     fn verify_range_well_defined(
@@ -1350,13 +1413,7 @@ impl Runtime {
         let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
         if set_ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("finite_seq_set: first argument {} is not a set", x.set),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("finite_seq_set: first argument {} is not a set", x.set)),
             )));
         }
         let n_in_n_pos = InFact::new(
@@ -1368,16 +1425,10 @@ impl Runtime {
         let n_ok = self.verify_atomic_fact(&n_in_n_pos, verify_state)?;
         if n_ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "finite_seq_set: length argument {} is not verified in N_pos",
                         x.n
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
         Ok(())
@@ -1393,13 +1444,7 @@ impl Runtime {
         let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
         if set_ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("seq: argument {} is not a set", x.set),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("seq: argument {} is not a set", x.set)),
             )));
         }
         Ok(())
@@ -1428,13 +1473,7 @@ impl Runtime {
         let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
         if set_ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("matrix: first argument {} is not a set", x.set),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("matrix: first argument {} is not a set", x.set)),
             )));
         }
         for (label, len_obj) in [("row_len", &x.row_len), ("col_len", &x.col_len)] {
@@ -1447,16 +1486,10 @@ impl Runtime {
             let ok = self.verify_atomic_fact(&in_n_pos, verify_state)?;
             if ok.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
                             "matrix: {} argument {} is not verified in N_pos",
                             label, len_obj
-                        ),
-                        default_line_file(),
-                        None,
-                        vec![],
-                    ),
+                        )),
                 )));
             }
         }
@@ -1473,17 +1506,11 @@ impl Runtime {
             for row in x.rows.iter() {
                 if row.len() != col_len {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
                                 "matrix literal: row length {} differs from first row length {}",
                                 row.len(),
                                 col_len
-                            ),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ),
+                            )),
                     )));
                 }
             }
@@ -1507,16 +1534,10 @@ impl Runtime {
         let shape_right = Self::matrix_value_shape(self, &ma.right)?;
         if shape_left != shape_right {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "matrix ++: shape {:?} and {:?} do not match",
                         shape_left, shape_right
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
         Ok(())
@@ -1533,16 +1554,10 @@ impl Runtime {
         let shape_right = Self::matrix_value_shape(self, &ms.right)?;
         if shape_left != shape_right {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "matrix --: shape {:?} and {:?} do not match",
                         shape_left, shape_right
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
         Ok(())
@@ -1559,16 +1574,10 @@ impl Runtime {
         let shape_right = Self::matrix_value_shape(self, &mm.right)?;
         if shape_left.1 != shape_right.0 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "matrix **: left columns {} != right rows {}",
                         shape_left.1, shape_right.0
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
         Ok(())
@@ -1595,16 +1604,10 @@ impl Runtime {
         let shape_base = Self::matrix_value_shape(self, &m.base)?;
         if shape_base.0 != shape_base.1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "matrix ^^: base must be square, got {}x{}",
                         shape_base.0, shape_base.1
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
         let exp_in_n_pos = InFact::new(
@@ -1616,16 +1619,10 @@ impl Runtime {
         let ok = self.verify_atomic_fact(&exp_in_n_pos, verify_state)?;
         if ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "matrix ^^: exponent {} is not verified in N_pos",
                         m.exponent
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
         Ok(())
@@ -1645,13 +1642,7 @@ impl Runtime {
                 let sr = Self::matrix_value_shape(rt, &inner.right)?;
                 if sl.1 != sr.0 {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!("matrix **: left columns {} != right rows {}", sl.1, sr.0),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_just_msg(format!("matrix **: left columns {} != right rows {}", sl.1, sr.0)),
                     )));
                 }
                 Ok((sl.0, sr.1))
@@ -1661,13 +1652,7 @@ impl Runtime {
                 let s = Self::matrix_value_shape(rt, &inner.base)?;
                 if s.0 != s.1 {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!("matrix ^^: base must be square, got {}x{}", s.0, s.1),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ),
+                        RuntimeErrorStruct::new_with_just_msg(format!("matrix ^^: base must be square, got {}x{}", s.0, s.1)),
                     )));
                 }
                 Ok(s)
@@ -1684,13 +1669,7 @@ impl Runtime {
     ) -> Result<(usize, usize), RuntimeError> {
         let Some(known) = rt.get_obj_equal_to_matrix_list(key) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("`{}` is not known as a matrix list value", key),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("`{}` is not known as a matrix list value", key)),
             )));
         };
         let shape = Self::rectangular_shape_of_matrix_list_obj(&known)?;
@@ -1709,67 +1688,37 @@ impl Runtime {
         let row_expect = rt
             .resolve_obj_to_number(ms.row_len.as_ref())
             .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                         "matrix: cannot resolve row_len {} of matrix type for list shape check",
                         ms.row_len
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                )))
+                    ))))
             })?;
         let col_expect = rt
             .resolve_obj_to_number(ms.col_len.as_ref())
             .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                         "matrix: cannot resolve col_len {} of matrix type for list shape check",
                         ms.col_len
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                )))
+                    ))))
             })?;
         let r = row_expect.normalized_value.parse::<usize>().map_err(|_| {
-            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "matrix: row_len `{}` is not a valid size",
                     row_expect.normalized_value
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            )))
+                ))))
         })?;
         let c = col_expect.normalized_value.parse::<usize>().map_err(|_| {
-            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "matrix: col_len `{}` is not a valid size",
                     col_expect.normalized_value
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            )))
+                ))))
         })?;
         if r != rows || c != cols {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "matrix list has shape {}x{} but matrix type expects {}x{}",
                         rows, cols, r, c
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
         Ok(())
@@ -1783,13 +1732,7 @@ impl Runtime {
         for row in m.rows.iter() {
             if row.len() != cols {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "matrix list is not rectangular (row lengths differ)".to_string(),
-                        default_line_file(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_just_msg("matrix list is not rectangular (row lengths differ)".to_string()),
                 )));
             }
         }
@@ -1819,13 +1762,7 @@ impl Runtime {
             self.verify_atomic_fact(&choose_from_is_nonempty_set_fact, _verify_state)?;
         if choose_from_is_nonempty_set_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("set {} is not a nonempty set", choose_from.to_string()),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("set {} is not a nonempty set", choose_from.to_string())),
             )));
         }
 
@@ -1861,13 +1798,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;
 
         let index_calculated_number = self.resolve_obj_to_number(&x.index).ok_or_else(|| {
-            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("index {} is not a number", x.index.to_string()),
-                default_line_file(),
-                None,
-                vec![],
-            )))
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("index {} is not a number", x.index.to_string()))))
         })?;
         let index_calculated_obj: Obj =
             Number::new(index_calculated_number.normalized_value).into();
@@ -1882,13 +1813,7 @@ impl Runtime {
             self.verify_atomic_fact(&index_is_positive_integer_in_z_pos_fact, verify_state)?;
         if index_is_positive_integer_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("index {} is not a positive integer", index_calculated_obj),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("index {} is not a positive integer", index_calculated_obj)),
             )));
         }
 
@@ -1898,13 +1823,7 @@ impl Runtime {
             self.verify_atomic_fact(&target_obj_is_tuple_fact, verify_state)?;
         if target_obj_is_tuple_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!("index target {} is not a tuple", x.obj),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_just_msg(format!("index target {} is not a tuple", x.obj)),
             )));
         }
 
@@ -1919,16 +1838,10 @@ impl Runtime {
             self.verify_atomic_fact(&index_not_larger_than_tuple_dim_fact, verify_state)?;
         if index_not_larger_than_tuple_dim_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "{} <= {} is unknown",
                         index_calculated_obj, target_tuple_dim_obj
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
 
@@ -1997,13 +1910,7 @@ impl Runtime {
             Some(d) => d,
             None => {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!("family `{}` is not defined", family_name),
-                        default_line_file(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_just_msg(format!("family `{}` is not defined", family_name)),
                 )));
             }
         };
@@ -2011,18 +1918,12 @@ impl Runtime {
         let expected_count = def.params_def_with_type.number_of_params();
         if family_param_type.params.len() != expected_count {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "family `{}` expects {} parameter(s), got {}",
                         family_name,
                         expected_count,
                         family_param_type.params.len()
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
 
@@ -2038,29 +1939,17 @@ impl Runtime {
                 ParamObjType::DefHeader,
             )
             .map_err(|runtime_error| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                         "failed to verify family `{}` arguments satisfy parameter types",
                         family_name
-                    ),
-                    default_line_file(),
-                    Some(runtime_error),
-                    vec![],
-                )))
+                    ), runtime_error)))
             })?;
         if args_param_types.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeErrorStruct::new_with_just_msg(format!(
                         "failed to verify family `{}` arguments satisfy parameter types",
                         family_name
-                    ),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ),
+                    )),
             )));
         }
 
@@ -2077,43 +1966,25 @@ impl Runtime {
                     None,
                 )
                 .map_err(|e| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "failed to instantiate family `{}` domain fact: {}",
                             family_name, e
-                        ),
-                        default_line_file(),
-                        Some(e),
-                        vec![],
-                    )))
+                        ), e)))
                 })?;
             let verify_result = self
                 .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "failed to verify family `{}` domain fact:\n{}",
                             family_name, instantiated_dom_fact
-                        ),
-                        default_line_file(),
-                        Some(verify_error),
-                        vec![],
-                    )))
+                        ), verify_error)))
                 })?;
             if verify_result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
                             "failed to verify family `{}` domain fact:\n{}",
                             family_name, instantiated_dom_fact
-                        ),
-                        default_line_file(),
-                        None,
-                        vec![],
-                    ),
+                        )),
                 )));
             }
         }
@@ -2121,16 +1992,10 @@ impl Runtime {
         let instantiated_equal_to = self
             .inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::DefHeader)
             .map_err(|e| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
+                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                         "failed to instantiate family `{}` member set: {}",
                         family_name, e
-                    ),
-                    default_line_file(),
-                    Some(e),
-                    vec![],
-                )))
+                    ), e)))
             })?;
         self.verify_obj_well_defined_and_store_cache(&instantiated_equal_to, verify_state)?;
 

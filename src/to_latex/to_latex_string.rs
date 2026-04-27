@@ -447,6 +447,30 @@ impl Count {
     }
 }
 
+impl Sum {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {}, {} \right)",
+            SUM,
+            self.start.to_latex_string(),
+            self.end.to_latex_string(),
+            self.func.to_latex_string()
+        )
+    }
+}
+
+impl Product {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {}, {} \right)",
+            PRODUCT,
+            self.start.to_latex_string(),
+            self.end.to_latex_string(),
+            self.func.to_latex_string()
+        )
+    }
+}
+
 impl Cup {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -463,30 +487,6 @@ impl Choose {
             r"\operatorname{{{}}}\left( {}\right)",
             CHOOSE,
             self.set.to_latex_string()
-        )
-    }
-}
-
-impl SumObj {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\sum_{{{}={}}}^{{{}}} \left( {}\right)",
-            latex_local_ident(&self.param),
-            self.start.to_latex_string(),
-            self.end.to_latex_string(),
-            self.body.to_latex_string(),
-        )
-    }
-}
-
-impl ProductObj {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\prod_{{{}={}}}^{{{}}} \left( {}\right)",
-            latex_local_ident(&self.param),
-            self.start.to_latex_string(),
-            self.end.to_latex_string(),
-            self.body.to_latex_string(),
         )
     }
 }
@@ -739,8 +739,7 @@ impl FnObj {
             FnObjHead::Exist(p) => latex_local_ident(&p.name),
             FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
-            FnObjHead::Sum(p) => latex_local_ident(&p.name),
-            FnObjHead::Product(p) => latex_local_ident(&p.name),
+            FnObjHead::AnonymousFnLiteral(a) => a.to_latex_string(),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
         };
@@ -757,22 +756,57 @@ impl FnObj {
     }
 }
 
-impl FnSet {
+impl AnonymousFn {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
-        for g in &self.params_def_with_set {
+        for g in &self.body.params_def_with_set {
             let set = g.set.to_latex_string();
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
             }
         }
         let dom = self
+            .body
             .dom_facts
             .iter()
             .map(|f| f.to_latex_string())
             .collect::<Vec<_>>()
             .join(r", ");
-        let ret = self.ret_set.to_latex_string();
+        let ret = self.body.ret_set.to_latex_string();
+        let body = self.equal_to.to_latex_string();
+        let sig = if dom.is_empty() {
+            format!(r"\left({}\right)", slots.join(r", "))
+        } else {
+            format!(
+                r"\left({} \,\middle|\, {}\right)",
+                slots.join(r", "),
+                dom
+            )
+        };
+        format!(
+            r"'\, {} \to {} \mapsto \left\{{ {}\right\}}",
+            sig, ret, body
+        )
+    }
+}
+
+impl FnSet {
+    pub fn to_latex_string(&self) -> String {
+        let mut slots: Vec<String> = Vec::new();
+        for g in &self.body.params_def_with_set {
+            let set = g.set.to_latex_string();
+            for p in &g.params {
+                slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
+            }
+        }
+        let dom = self
+            .body
+            .dom_facts
+            .iter()
+            .map(|f| f.to_latex_string())
+            .collect::<Vec<_>>()
+            .join(r", ");
+        let ret = self.body.ret_set.to_latex_string();
         if dom.is_empty() {
             format!(
                 r"\mathrm{{fn}}\left({}\right)\to {}",
@@ -1841,6 +1875,17 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(x) => x.to_latex_string(),
             AtomicFact::NotSubsetFact(x) => x.to_latex_string(),
             AtomicFact::NotSupersetFact(x) => x.to_latex_string(),
+            AtomicFact::FnEqualInFact(f) => format!(
+                r"\mathsf{{fn\_eq\_in}}({},{},{})",
+                f.left.to_latex_string(),
+                f.right.to_latex_string(),
+                f.set.to_latex_string(),
+            ),
+            AtomicFact::FnEqualFact(f) => format!(
+                r"\mathsf{{fn\_eq}}({},{})",
+                f.left.to_latex_string(),
+                f.right.to_latex_string(),
+            ),
         }
     }
 }
@@ -1872,20 +1917,21 @@ impl Obj {
             Obj::ListSet(x) => x.to_latex_string(),
             Obj::SetBuilder(x) => x.to_latex_string(),
             Obj::FnSet(x) => x.to_latex_string(),
+            Obj::AnonymousFn(x) => x.to_latex_string(),
             Obj::Cart(x) => x.to_latex_string(),
             Obj::CartDim(x) => x.to_latex_string(),
             Obj::Proj(x) => x.to_latex_string(),
             Obj::TupleDim(x) => x.to_latex_string(),
             Obj::Tuple(x) => x.to_latex_string(),
             Obj::Count(x) => x.to_latex_string(),
+            Obj::Sum(x) => x.to_latex_string(),
+            Obj::Product(x) => x.to_latex_string(),
             Obj::Range(x) => x.to_latex_string(),
             Obj::ClosedRange(x) => x.to_latex_string(),
             Obj::FiniteSeqSet(x) => x.to_latex_string(),
             Obj::SeqSet(x) => x.to_latex_string(),
             Obj::FiniteSeqListObj(x) => x.to_latex_string(),
             Obj::Choose(x) => x.to_latex_string(),
-            Obj::Sum(x) => x.to_latex_string(),
-            Obj::Product(x) => x.to_latex_string(),
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
@@ -1896,8 +1942,6 @@ impl Obj {
             Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::Sum(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::Product(x)) => latex_local_ident(&x.name),
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),

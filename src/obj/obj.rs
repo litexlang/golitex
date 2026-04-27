@@ -1,6 +1,5 @@
 use super::atom_obj::AtomObj;
-use super::product_obj::ProductObj;
-use super::sum_obj::SumObj;
+use super::fn_set::{AnonymousFn, FnSet, FnSetBody};
 use crate::prelude::*;
 use std::fmt;
 
@@ -29,12 +28,15 @@ pub enum Obj {
     ListSet(ListSet),
     SetBuilder(SetBuilder),
     FnSet(FnSet),
+    AnonymousFn(AnonymousFn),
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
     TupleDim(TupleDim),
     Tuple(Tuple),
     Count(Count),
+    Sum(Sum),
+    Product(Product),
     Range(Range),
     ClosedRange(ClosedRange),
     FiniteSeqSet(FiniteSeqSet),
@@ -51,8 +53,20 @@ pub enum Obj {
     MatrixMul(MatrixMul),
     MatrixScalarMul(MatrixScalarMul),
     MatrixPow(MatrixPow),
-    Sum(SumObj),
-    Product(ProductObj),
+}
+
+#[derive(Clone)]
+pub struct Sum {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+    pub func: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Product {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+    pub func: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -309,13 +323,6 @@ pub struct SetBuilder {
 }
 
 #[derive(Clone)]
-pub struct FnSet {
-    pub params_def_with_set: Vec<ParamGroupWithSet>,
-    pub dom_facts: Vec<OrAndChainAtomicFact>,
-    pub ret_set: Box<Obj>,
-}
-
-#[derive(Clone)]
 pub struct Cart {
     pub args: Vec<Box<Obj>>,
 }
@@ -503,30 +510,6 @@ impl SetBuilder {
     }
 }
 
-impl FnSet {
-    pub fn new(
-        params_and_their_sets: Vec<ParamGroupWithSet>,
-        dom_facts: Vec<OrAndChainAtomicFact>,
-        ret_set: Obj,
-    ) -> Self {
-        FnSet {
-            params_def_with_set: params_and_their_sets,
-            dom_facts,
-            ret_set: Box::new(ret_set),
-        }
-    }
-
-    pub fn get_params(&self) -> Vec<String> {
-        let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
-            &self.params_def_with_set,
-        ));
-        for param_def_with_set in &self.params_def_with_set {
-            ret.extend(param_def_with_set.params.iter().cloned());
-        }
-        ret
-    }
-}
-
 impl PowerSet {
     pub fn new(set: Obj) -> Self {
         PowerSet { set: Box::new(set) }
@@ -697,6 +680,26 @@ impl MatrixPow {
     }
 }
 
+impl Sum {
+    pub fn new(start: Obj, end: Obj, func: Obj) -> Self {
+        Sum {
+            start: Box::new(start),
+            end: Box::new(end),
+            func: Box::new(func),
+        }
+    }
+}
+
+impl Product {
+    pub fn new(start: Obj, end: Obj, func: Obj) -> Self {
+        Product {
+            start: Box::new(start),
+            end: Box::new(end),
+            func: Box::new(func),
+        }
+    }
+}
+
 /// 算术运算符优先级：数值越小绑定越紧。^ / matrix ops =1, * / % / *. =2, + -=3；非算术=0 不参与括号。
 fn precedence(o: &Obj) -> u8 {
     match o {
@@ -832,6 +835,7 @@ impl Obj {
             Obj::ListSet(x) => write!(f, "{}", x)?,
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
             Obj::FnSet(x) => write!(f, "{}", x)?,
+            Obj::AnonymousFn(x) => write!(f, "{}", x)?,
             Obj::StandardSet(standard_set) => write!(f, "{}", standard_set)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
@@ -839,6 +843,8 @@ impl Obj {
             Obj::TupleDim(x) => write!(f, "{}", x)?,
             Obj::Tuple(x) => write!(f, "{}", x)?,
             Obj::Count(x) => write!(f, "{}", x)?,
+            Obj::Sum(x) => write!(f, "{}", x)?,
+            Obj::Product(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
@@ -850,8 +856,6 @@ impl Obj {
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
-            Obj::Sum(x) => write!(f, "{}", x)?,
-            Obj::Product(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -977,8 +981,13 @@ impl Obj {
                 })
             }
             Obj::FnSet(fs) => {
-                let params_def_with_set = fs
-                    .params_def_with_set
+                let FnSet { body } = fs;
+                let FnSetBody {
+                    params_def_with_set,
+                    dom_facts,
+                    ret_set,
+                } = body;
+                let params_def_with_set = params_def_with_set
                     .into_iter()
                     .map(|pg| ParamGroupWithSet {
                         params: pg
@@ -989,13 +998,38 @@ impl Obj {
                         set: Obj::replace_bound_identifier(pg.set, from, to),
                     })
                     .collect();
-                let dom_facts = fs
-                    .dom_facts
+                let dom_facts = dom_facts
                     .into_iter()
                     .map(|f| f.replace_bound_identifier(from, to))
                     .collect();
-                let ret_set = Obj::replace_bound_identifier(*fs.ret_set, from, to);
+                let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
                 FnSet::new(params_def_with_set, dom_facts, ret_set).into()
+            }
+            Obj::AnonymousFn(af) => {
+                let AnonymousFn { body, equal_to } = af;
+                let FnSetBody {
+                    params_def_with_set,
+                    dom_facts,
+                    ret_set,
+                } = body;
+                let params_def_with_set = params_def_with_set
+                    .into_iter()
+                    .map(|pg| ParamGroupWithSet {
+                        params: pg
+                            .params
+                            .into_iter()
+                            .map(|p| if p == from { to.to_string() } else { p })
+                            .collect(),
+                        set: Obj::replace_bound_identifier(pg.set, from, to),
+                    })
+                    .collect();
+                let dom_facts = dom_facts
+                    .into_iter()
+                    .map(|f| f.replace_bound_identifier(from, to))
+                    .collect();
+                let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
+                let equal_to = Obj::replace_bound_identifier(*equal_to, from, to);
+                AnonymousFn::new(params_def_with_set, dom_facts, ret_set, equal_to).into()
             }
             Obj::Cart(c) => Cart::new(
                 c.args
@@ -1021,6 +1055,18 @@ impl Obj {
             )
             .into(),
             Obj::Count(x) => Count::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
+            Obj::Sum(x) => Sum::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+                Obj::replace_bound_identifier(*x.func, from, to),
+            )
+            .into(),
+            Obj::Product(x) => Product::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+                Obj::replace_bound_identifier(*x.func, from, to),
+            )
+            .into(),
             Obj::Range(x) => Range::new(
                 Obj::replace_bound_identifier(*x.start, from, to),
                 Obj::replace_bound_identifier(*x.end, from, to),
@@ -1101,20 +1147,6 @@ impl Obj {
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
             }
-            .into(),
-            Obj::Sum(x) => SumObj::new(
-                x.param.clone(),
-                Obj::replace_bound_identifier(*x.start, from, to),
-                Obj::replace_bound_identifier(*x.end, from, to),
-                Obj::replace_bound_identifier(*x.body, from, to),
-            )
-            .into(),
-            Obj::Product(x) => ProductObj::new(
-                x.param.clone(),
-                Obj::replace_bound_identifier(*x.start, from, to),
-                Obj::replace_bound_identifier(*x.end, from, to),
-                Obj::replace_bound_identifier(*x.body, from, to),
-            )
             .into(),
         }
     }
@@ -1204,21 +1236,13 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             FnSetFreeParamObj::new(name).into()
         }
-        FnObjHead::Sum(p) => {
-            let name = if p.name == from {
-                to.to_string()
-            } else {
-                p.name
+        FnObjHead::AnonymousFnLiteral(a) => {
+            let inner = (*a).clone();
+            let replaced = Obj::replace_bound_identifier(Obj::AnonymousFn(inner), from, to);
+            let Obj::AnonymousFn(new_af) = replaced else {
+                unreachable!()
             };
-            SumFreeParamObj::new(name).into()
-        }
-        FnObjHead::Product(p) => {
-            let name = if p.name == from {
-                to.to_string()
-            } else {
-                p.name
-            };
-            ProductFreeParamObj::new(name).into()
+            FnObjHead::AnonymousFnLiteral(Box::new(new_af))
         }
         FnObjHead::Induc(p) => {
             let name = if p.name == from {
@@ -1359,6 +1383,36 @@ impl fmt::Display for Count {
             "{}{}",
             COUNT,
             braced_vec_to_string(&vec![self.set.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for Sum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            SUM,
+            braced_vec_to_string(&vec![
+                self.start.as_ref(),
+                self.end.as_ref(),
+                self.func.as_ref(),
+            ])
+        )
+    }
+}
+
+impl fmt::Display for Product {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            PRODUCT,
+            braced_vec_to_string(&vec![
+                self.start.as_ref(),
+                self.end.as_ref(),
+                self.func.as_ref(),
+            ])
         )
     }
 }
@@ -1623,23 +1677,6 @@ impl fmt::Display for SetBuilder {
     }
 }
 
-impl fmt::Display for FnSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let params_with_sets_display: Vec<String> = self
-            .params_def_with_set
-            .iter()
-            .map(|g| format!("{} {}", vec_to_string_join_by_comma(&g.params), g.set))
-            .collect();
-        write!(
-            f,
-            "{} {} {}",
-            FN_LOWER_CASE,
-            brace_vec_colon_vec_to_string(&params_with_sets_display, &self.dom_facts),
-            self.ret_set
-        )
-    }
-}
-
 impl fmt::Display for Cart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", CART, braced_vec_to_string(&self.args))
@@ -1825,12 +1862,6 @@ impl From<SetBuilder> for Obj {
     }
 }
 
-impl From<FnSet> for Obj {
-    fn from(f: FnSet) -> Self {
-        Obj::FnSet(f)
-    }
-}
-
 impl From<Cart> for Obj {
     fn from(c: Cart) -> Self {
         Obj::Cart(c)
@@ -1864,6 +1895,18 @@ impl From<Tuple> for Obj {
 impl From<Count> for Obj {
     fn from(c: Count) -> Self {
         Obj::Count(c)
+    }
+}
+
+impl From<Sum> for Obj {
+    fn from(s: Sum) -> Self {
+        Obj::Sum(s)
+    }
+}
+
+impl From<Product> for Obj {
+    fn from(p: Product) -> Self {
+        Obj::Product(p)
     }
 }
 
@@ -1930,18 +1973,6 @@ impl From<IdentifierWithMod> for Obj {
 impl From<FamilyObj> for Obj {
     fn from(f: FamilyObj) -> Self {
         Obj::FamilyObj(f)
-    }
-}
-
-impl From<SumObj> for Obj {
-    fn from(s: SumObj) -> Self {
-        Obj::Sum(s)
-    }
-}
-
-impl From<ProductObj> for Obj {
-    fn from(p: ProductObj) -> Self {
-        Obj::Product(p)
     }
 }
 

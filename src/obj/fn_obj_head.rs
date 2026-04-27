@@ -11,8 +11,8 @@ pub enum FnObjHead {
     Exist(ExistFreeParamObj),
     SetBuilder(SetBuilderFreeParamObj),
     FnSet(FnSetFreeParamObj),
-    Sum(SumFreeParamObj),
-    Product(ProductFreeParamObj),
+    /// Anonymous function literal used as applied head, e.g. `'(x R) R {x}(a)`.
+    AnonymousFnLiteral(Box<AnonymousFn>),
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
 }
@@ -27,8 +27,7 @@ impl fmt::Display for FnObjHead {
             FnObjHead::Exist(p) => write!(f, "{}", p),
             FnObjHead::SetBuilder(p) => write!(f, "{}", p),
             FnObjHead::FnSet(p) => write!(f, "{}", p),
-            FnObjHead::Sum(p) => write!(f, "{}", p),
-            FnObjHead::Product(p) => write!(f, "{}", p),
+            FnObjHead::AnonymousFnLiteral(a) => write!(f, "{}", a),
             FnObjHead::Induc(p) => write!(f, "{}", p),
             FnObjHead::DefAlgo(p) => write!(f, "{}", p),
         }
@@ -47,8 +46,6 @@ impl FnObjHead {
                 AtomObj::Exist(p) => Some(FnObjHead::Exist(p)),
                 AtomObj::SetBuilder(p) => Some(FnObjHead::SetBuilder(p)),
                 AtomObj::FnSet(p) => Some(FnObjHead::FnSet(p)),
-                AtomObj::Sum(p) => Some(FnObjHead::Sum(p)),
-                AtomObj::Product(p) => Some(FnObjHead::Product(p)),
                 AtomObj::Induc(p) => Some(FnObjHead::Induc(p)),
                 AtomObj::DefAlgo(p) => Some(FnObjHead::DefAlgo(p)),
             },
@@ -87,18 +84,6 @@ impl From<FnSetFreeParamObj> for FnObjHead {
     }
 }
 
-impl From<SumFreeParamObj> for FnObjHead {
-    fn from(p: SumFreeParamObj) -> Self {
-        FnObjHead::Sum(p)
-    }
-}
-
-impl From<ProductFreeParamObj> for FnObjHead {
-    fn from(p: ProductFreeParamObj) -> Self {
-        FnObjHead::Product(p)
-    }
-}
-
 impl From<ByInducFreeParamObj> for FnObjHead {
     fn from(p: ByInducFreeParamObj) -> Self {
         FnObjHead::Induc(p)
@@ -121,8 +106,7 @@ impl From<FnObjHead> for Obj {
             FnObjHead::Exist(p) => p.into(),
             FnObjHead::SetBuilder(p) => p.into(),
             FnObjHead::FnSet(p) => p.into(),
-            FnObjHead::Sum(p) => p.into(),
-            FnObjHead::Product(p) => p.into(),
+            FnObjHead::AnonymousFnLiteral(a) => (*a).clone().into(),
             FnObjHead::Induc(p) => p.into(),
             FnObjHead::DefAlgo(p) => p.into(),
         }

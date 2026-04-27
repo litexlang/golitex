@@ -46,11 +46,9 @@ pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const CHOOSE: &str = "choose";
-/// Summation: `sum(i, start, end, body)` — `i` is a sum-index binder in `body` only.
-pub const SUM: &str = "sum";
-/// Product: `product(i, start, end, body)` — `i` is a product-index binder in `body` only.
-pub const PRODUCT: &str = "product";
 pub const FN_LOWER_CASE: &str = "fn";
+/// Prefix for anonymous function literals: `'(x S, …) T { … }` or `'S (x) { … }`.
+pub const ANONYMOUS_FN_PREFIX: &str = "'";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
@@ -69,6 +67,8 @@ pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
+pub const SUM: &str = "sum";
+pub const PRODUCT: &str = "product";
 pub const EXIST: &str = "exist";
 pub const EXIST_UNIQUE: &str = "exist_unique";
 pub const ST: &str = "st";
@@ -131,11 +131,14 @@ pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const FAMILY: &str = "family";
 pub const STRUCT: &str = "struct";
-pub const SELF: &str = "self";
 pub const RESTRICT: &str = "restrict";
 pub const STRATEGY: &str = "strategy";
 pub const USE_STRATEGY: &str = "use_strategy";
 pub const END_STRATEGY: &str = "end_strategy";
+/// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
+pub const FN_EQ_IN: &str = "fn_eq_in";
+/// `$fn_eq(f, g)`: mutual function-space typing and pointwise equality on the shared dom (see verify).
+pub const FN_EQ: &str = "fn_eq";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -174,6 +177,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         DOUBLE_QUOTE,
         COLON,
         INFIX_FN_NAME_SIGN,
+        ANONYMOUS_FN_PREFIX,
     ];
     for &s in &symbols {
         m.insert(s, s);
@@ -192,8 +196,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CAP,
         POWER_SET,
         CHOOSE,
-        SUM,
-        PRODUCT,
         FN_LOWER_CASE,
         SET,
         NONEMPTY_SET,
@@ -208,6 +210,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE_DIM,
         PROJ,
         COUNT,
+        SUM,
+        PRODUCT,
         FINITE_SEQ,
         SEQ,
         MATRIX,
@@ -270,11 +274,12 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         FAMILY,
         STRUCT,
-        SELF,
         RESTRICT,
         STRATEGY,
         USE_STRATEGY,
         END_STRATEGY,
+        FN_EQ_IN,
+        FN_EQ,
     ];
     for &s in &words {
         m.insert(s, s);
@@ -336,6 +341,8 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == SUPERSET
         || atom_name == IN
         || atom_name == RESTRICT
+        || atom_name == FN_EQ_IN
+        || atom_name == FN_EQ
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {

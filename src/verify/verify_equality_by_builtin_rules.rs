@@ -3,7 +3,6 @@ use crate::verify::verify_builtin_rules::{
     compare_normalized_number_str_to_zero, NumberCompareResult,
 };
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 /// Structural alignment for builtin patterns: two objects match iff their `Display` text matches.
@@ -14,6 +13,130 @@ pub fn objs_equal_by_display_string(a: &Obj, b: &Obj) -> bool {
 
 pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
     objs_equal_by_display_string(left, right)
+}
+
+#[inline]
+fn obj_expr_mentions_bare_id_on_two(l: &Obj, r: &Obj, id: &str) -> bool {
+    obj_expr_mentions_bare_id(l, id) || obj_expr_mentions_bare_id(r, id)
+}
+
+/// Whether `obj` contains a bare [`Identifier`] equal to `id` (used to detect index use in a
+/// summand `equal_to`). Unknown / unhandled shapes return `true` (conservative).
+fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
+    match obj {
+        Obj::Atom(AtomObj::Identifier(i)) => i.name == id,
+        Obj::Number(_) | Obj::StandardSet(_) => false,
+        Obj::Add(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Sub(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Mul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Div(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Mod(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Max(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Min(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Union(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Intersect(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::SetMinus(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::SetDiff(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::MatrixAdd(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::MatrixSub(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::MatrixMul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Pow(p) => {
+            obj_expr_mentions_bare_id(p.base.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.exponent.as_ref(), id)
+        }
+        Obj::MatrixScalarMul(m) => {
+            obj_expr_mentions_bare_id(m.scalar.as_ref(), id)
+                || obj_expr_mentions_bare_id(m.matrix.as_ref(), id)
+        }
+        Obj::MatrixPow(m) => {
+            obj_expr_mentions_bare_id(m.base.as_ref(), id)
+                || obj_expr_mentions_bare_id(m.exponent.as_ref(), id)
+        }
+        Obj::Abs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::PowerSet(u) => obj_expr_mentions_bare_id(u.set.as_ref(), id),
+        Obj::Cup(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::Cap(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::Log(l) => {
+            obj_expr_mentions_bare_id(l.base.as_ref(), id)
+                || obj_expr_mentions_bare_id(l.arg.as_ref(), id)
+        }
+        Obj::ListSet(list) => list
+            .list
+            .iter()
+            .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
+        Obj::Tuple(t) => t
+            .args
+            .iter()
+            .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
+        Obj::Cart(c) => c
+            .args
+            .iter()
+            .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
+        Obj::Count(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
+        Obj::TupleDim(t) => obj_expr_mentions_bare_id(t.arg.as_ref(), id),
+        Obj::CartDim(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
+        Obj::Proj(p) => {
+            obj_expr_mentions_bare_id(p.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.dim.as_ref(), id)
+        }
+        Obj::ObjAtIndex(oi) => {
+            obj_expr_mentions_bare_id(oi.obj.as_ref(), id)
+                || obj_expr_mentions_bare_id(oi.index.as_ref(), id)
+        }
+        Obj::Range(r) => obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id),
+        Obj::ClosedRange(r) => obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id),
+        Obj::Sum(s) => {
+            obj_expr_mentions_bare_id(s.start.as_ref(), id)
+                || obj_expr_mentions_bare_id(s.end.as_ref(), id)
+                || obj_expr_mentions_bare_id(s.func.as_ref(), id)
+        }
+        Obj::Product(p) => {
+            obj_expr_mentions_bare_id(p.start.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.end.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.func.as_ref(), id)
+        }
+        Obj::FiniteSeqListObj(f) => f
+            .objs
+            .iter()
+            .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
+        Obj::MatrixListObj(m) => m.rows.iter().any(|row| {
+            row.iter()
+                .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id))
+        }),
+        Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
+        Obj::FamilyObj(fo) => fo
+            .params
+            .iter()
+            .any(|p| obj_expr_mentions_bare_id(p, id)),
+        Obj::FiniteSeqSet(fs) => {
+            obj_expr_mentions_bare_id(fs.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(fs.n.as_ref(), id)
+        }
+        Obj::SeqSet(ss) => obj_expr_mentions_bare_id(ss.set.as_ref(), id),
+        Obj::MatrixSet(ms) => {
+            obj_expr_mentions_bare_id(ms.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(ms.row_len.as_ref(), id)
+                || obj_expr_mentions_bare_id(ms.col_len.as_ref(), id)
+        }
+        Obj::Atom(AtomObj::IdentifierWithMod(_)) => false,
+        Obj::AnonymousFn(anon) => {
+            for g in &anon.body.params_def_with_set {
+                if obj_expr_mentions_bare_id(&g.set, id) {
+                    return true;
+                }
+            }
+            obj_expr_mentions_bare_id(anon.body.ret_set.as_ref(), id)
+                || obj_expr_mentions_bare_id(anon.equal_to.as_ref(), id)
+        }
+        Obj::FnObj(_) | Obj::FnSet(_) | Obj::SetBuilder(_) => true,
+        Obj::Atom(AtomObj::Forall(p)) => p.name == id,
+        Obj::Atom(AtomObj::Def(p)) => p.name == id,
+        Obj::Atom(AtomObj::Exist(p)) => p.name == id,
+        Obj::Atom(AtomObj::SetBuilder(p)) => p.name == id,
+        Obj::Atom(AtomObj::FnSet(p)) => p.name == id,
+        Obj::Atom(AtomObj::Induc(p)) => p.name == id,
+        Obj::Atom(AtomObj::DefAlgo(p)) => p.name == id,
+    }
 }
 
 fn factual_equal_success_by_builtin_reason(
@@ -388,6 +511,66 @@ impl Runtime {
         Ok(None)
     }
 
+    // Beta-reduction for anonymous `fn` heads: if argument lists match the parameter list, substitute
+    // into the braced `equal_to` body and require that to equal the other side (same as evaluation).
+    fn try_verify_anonymous_fn_application_equals_other_side(
+        &mut self,
+        statement_left: &Obj,
+        statement_right: &Obj,
+        application_side: &Obj,
+        other_side: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::FnObj(fn_obj) = application_side else {
+            return Ok(None);
+        };
+        let FnObjHead::AnonymousFnLiteral(af) = fn_obj.head.as_ref() else {
+            return Ok(None);
+        };
+        if fn_obj.body.is_empty() {
+            return Ok(None);
+        }
+        let param_defs = &af.body.params_def_with_set;
+        let n_params = ParamGroupWithSet::number_of_params(param_defs);
+        if n_params == 0 {
+            return Ok(None);
+        }
+        let mut args: Vec<Obj> = Vec::new();
+        for g in fn_obj.body.iter() {
+            for b in g.iter() {
+                args.push((**b).clone());
+            }
+        }
+        if args.len() != n_params {
+            return Ok(None);
+        }
+        let param_to_arg_map = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
+            param_defs,
+            &args,
+        );
+        let reduced = self.inst_obj(
+            af.equal_to.as_ref(),
+            &param_to_arg_map,
+            ParamObjType::FnSet,
+        )?;
+        let inner = self.verify_objs_are_equal(
+            &reduced,
+            other_side,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if inner.is_true() {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                statement_left,
+                statement_right,
+                line_file,
+                "equality: anonymous function application — substitute args into the body, equals the other side",
+            )));
+        }
+        Ok(None)
+    }
+
     // log_a(b) = c  iff  a^c = b  (Litex `log(a, b) = c`; reduces to proving `a^c = b`.)
     fn try_verify_log_equals_by_pow_inverse(
         &mut self,
@@ -419,1402 +602,356 @@ impl Runtime {
         Ok(None)
     }
 
-    // `sum(i, a, b, F) = sum(i, a', b', G)` when `i` matches on both sides: prove `a = a'`, `b = b'` with full
-    // `verify_objs_are_equal`, then in a local env register `i` as sum index, assume `i in Z`, `a <= i <= b`,
-    // and prove `F = G` with `verify_objs_are_equal`.
-    fn try_verify_two_sums_equal_by_pointwise_body(
+    /// `sum(s,e,f) = sum(s,e,g) + sum(s,e,h)` when for all integer `x` with `s <= x <= e`,
+    /// `f(x) = g(x) + h(x)` (summands are unary anonymous `fn` bodies, instantiated at `x`).
+    fn try_verify_sum_additivity(
         &mut self,
-        left: &SumObj,
-        right: &SumObj,
+        left: &Obj,
+        right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if left.param != right.param {
+        if !verify_state.is_round_0() {
             return Ok(None);
         }
-        if !self
-            .verify_objs_are_equal(
-                left.start.as_ref(),
-                right.start.as_ref(),
+
+        let (sum_m, sum_a, sum_b) = match (left, right) {
+            (Obj::Sum(m), Obj::Add(a)) => match (a.left.as_ref(), a.right.as_ref()) {
+                (Obj::Sum(a1), Obj::Sum(a2)) => (m, a1, a2),
+                _ => return Ok(None),
+            },
+            (Obj::Add(a), Obj::Sum(m)) => match (a.left.as_ref(), a.right.as_ref()) {
+                (Obj::Sum(a1), Obj::Sum(a2)) => (m, a1, a2),
+                _ => return Ok(None),
+            },
+            _ => return Ok(None),
+        };
+
+        let mut require_eq = |a: &Obj, b: &Obj| -> Result<bool, RuntimeError> {
+            Ok(self
+                .verify_objs_are_equal(a, b, line_file.clone(), verify_state)?
+                .is_true())
+        };
+        if !require_eq(sum_m.start.as_ref(), sum_a.start.as_ref())? {
+            return Ok(None);
+        }
+        if !require_eq(sum_m.start.as_ref(), sum_b.start.as_ref())? {
+            return Ok(None);
+        }
+        if !require_eq(sum_m.end.as_ref(), sum_a.end.as_ref())? {
+            return Ok(None);
+        }
+        if !require_eq(sum_m.end.as_ref(), sum_b.end.as_ref())? {
+            return Ok(None);
+        }
+
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+
+        let Some(l_inst) =
+            self.instantiate_unary_anonymous_summand_at(sum_m.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(a_inst) =
+            self.instantiate_unary_anonymous_summand_at(sum_a.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(b_inst) =
+            self.instantiate_unary_anonymous_summand_at(sum_b.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+
+        let then_fact: ExistOrAndChainAtomicFact = EqualFact::new(
+            l_inst,
+            Add::new(a_inst, b_inst).into(),
+            line_file.clone(),
+        )
+        .into();
+
+        let dom_lo: Fact = LessEqualFact::new(
+            (*sum_m.start).clone(),
+            x_obj.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let dom_hi: Fact = LessEqualFact::new(
+            x_obj.clone(),
+            (*sum_m.end).clone(),
+            line_file.clone(),
+        )
+        .into();
+
+        let forall_fact: Fact = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_name],
+                ParamType::Obj(StandardSet::Z.into()),
+            )]),
+            vec![dom_lo, dom_hi],
+            vec![then_fact],
+            line_file.clone(),
+        )
+        .into();
+
+        let r = self.verify_fact(&forall_fact, verify_state)?;
+        if r.is_true() {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: sum additivity from pointwise equality on the integer index range",
+            )));
+        }
+        Ok(None)
+    }
+
+    fn instantiate_unary_anonymous_summand_at(
+        &mut self,
+        func: &Obj,
+        x: &Obj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let af: &AnonymousFn = match func {
+            Obj::AnonymousFn(af) => af,
+            Obj::FnObj(fo) => {
+                if !fo.body.is_empty() {
+                    return Ok(None);
+                }
+                match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                    _ => return Ok(None),
+                }
+            }
+            _ => return Ok(None),
+        };
+        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            return Ok(None);
+        }
+        let param_defs = &af.body.params_def_with_set;
+        let args = vec![x.clone()];
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+        Ok(Some(
+            self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?,
+        ))
+    }
+
+    /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.
+    fn try_verify_sum_merge_adjacent_ranges(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let (add, s3) = match (left, right) {
+            (Obj::Add(a), Obj::Sum(s)) => (a, s),
+            (Obj::Sum(s), Obj::Add(a)) => (a, s),
+            _ => return Ok(None),
+        };
+        let (s1, s2) = match (add.left.as_ref(), add.right.as_ref()) {
+            (Obj::Sum(x), Obj::Sum(y)) => (x, y),
+            _ => return Ok(None),
+        };
+        for (a, b) in [(s1, s2), (s2, s1)] {
+            if let Some(done) = self.try_verify_sum_merge_ordered_pair(
+                a,
+                b,
+                s3,
+                left,
+                right,
                 line_file.clone(),
                 verify_state,
-            )?
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_sum_merge_ordered_pair(
+        &mut self,
+        s1: &Sum,
+        s2: &Sum,
+        s3: &Sum,
+        stmt_left: &Obj,
+        stmt_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let one: Obj = Number::new("1".to_string()).into();
+        let gap = Add::new((*s1.end).clone(), one).into();
+        if !self
+            .verify_objs_are_equal(&gap, s2.start.as_ref(), line_file.clone(), verify_state)?
             .is_true()
         {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(
-                left.end.as_ref(),
-                right.end.as_ref(),
-                line_file.clone(),
-                verify_state,
-            )?
+            .verify_objs_are_equal(s1.start.as_ref(), s3.start.as_ref(), line_file.clone(), verify_state)?
             .is_true()
         {
             return Ok(None);
         }
-        let param_name = left.param.clone();
-        let start_obj = (*left.start).clone();
-        let end_obj = (*left.end).clone();
-        let bodies_equal = self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(&param_name, ParamObjType::Sum)?;
-            let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Sum);
-            let param_in_z: AtomicFact = InFact::new(
-                param_obj.clone(),
-                StandardSet::Z.into(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
-            let lower: AtomicFact =
-                LessEqualFact::new(start_obj.clone(), param_obj.clone(), default_line_file())
-                    .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
-            let upper: AtomicFact =
-                LessEqualFact::new(param_obj, end_obj, default_line_file()).into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
-            let stmt = rt.verify_objs_are_equal(
-                left.body.as_ref(),
-                right.body.as_ref(),
-                line_file.clone(),
-                verify_state,
-            )?;
-            Ok::<bool, RuntimeError>(stmt.is_true())
-        })?;
-        if !bodies_equal {
+        if !self
+            .verify_objs_are_equal(s2.end.as_ref(), s3.end.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(s1.func.as_ref(), s2.func.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(s1.func.as_ref(), s3.func.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            &left.clone().into(),
-            &right.clone().into(),
+            stmt_left,
+            stmt_right,
             line_file,
-            "equality: two sums same index and bounds; summands equal under index assumptions",
+            "equality: merge adjacent sum ranges with the same summand",
         )))
     }
 
-    fn try_verify_two_sums_pointwise_equality(
+    /// `sum(L) = sum(R)` with `R` a translate of `L` by `k` on both bounds, reduced to pointwise
+    /// equality on the right-hand index range.
+    fn try_verify_sum_reindex_shift(
         &mut self,
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let (Obj::Sum(lsum), Obj::Sum(rsum)) = (left, right) {
-            return self.try_verify_two_sums_equal_by_pointwise_body(
-                lsum,
-                rsum,
-                line_file,
-                verify_state,
-            );
+        if !verify_state.is_round_0() {
+            return Ok(None);
         }
-        Ok(None)
-    }
-
-    /// `sum(i,a,b,F) <= sum(i,a,b,G)` or strict `<` when the index name and bounds match: same setup as
-    /// [`Self::try_verify_two_sums_equal_by_pointwise_body`], then prove `F <= G` (or `F < G`) under
-    /// `i in Z`, `a <= i <= b`.
-    pub(crate) fn try_verify_order_two_sums_same_index_and_bounds(
-        &mut self,
-        atomic_fact: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let (left_sum, right_sum, strict) = match atomic_fact {
-            AtomicFact::LessEqualFact(f) => {
-                let (Obj::Sum(l), Obj::Sum(r)) = (&f.left, &f.right) else {
-                    return Ok(None);
-                };
-                (l, r, false)
+        for (l_obj, r_obj) in [(left, right), (right, left)] {
+            let (Obj::Sum(l_sum), Obj::Sum(r_sum)) = (l_obj, r_obj) else {
+                continue;
+            };
+            let k: Obj = Sub::new((*r_sum.start).clone(), (*l_sum.start).clone()).into();
+            let k_end = Sub::new((*r_sum.end).clone(), (*l_sum.end).clone()).into();
+            if !self
+                .verify_objs_are_equal(&k, &k_end, line_file.clone(), verify_state)?
+                .is_true()
+            {
+                continue;
             }
-            AtomicFact::LessFact(f) => {
-                let (Obj::Sum(l), Obj::Sum(r)) = (&f.left, &f.right) else {
-                    return Ok(None);
-                };
-                (l, r, true)
-            }
-            _ => return Ok(None),
-        };
-
-        if left_sum.param != right_sum.param {
-            return Ok(None);
-        }
-
-        let line_file = atomic_fact.line_file();
-        let verify_state = VerifyState::new(0, false);
-        if !self
-            .verify_objs_are_equal(
-                left_sum.start.as_ref(),
-                right_sum.start.as_ref(),
+            let y_name = self.generate_random_unused_name();
+            let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
+            let index_for_left = Sub::new(y_obj.clone(), k.clone()).into();
+            let Some(at_l) =
+                self.instantiate_unary_anonymous_summand_at(l_sum.func.as_ref(), &index_for_left)?
+            else {
+                continue;
+            };
+            let Some(at_r) =
+                self.instantiate_unary_anonymous_summand_at(r_sum.func.as_ref(), &y_obj)?
+            else {
+                continue;
+            };
+            let then_fact: ExistOrAndChainAtomicFact =
+                EqualFact::new(at_l, at_r, line_file.clone()).into();
+            let dom_lo: Fact = LessEqualFact::new(
+                (*r_sum.start).clone(),
+                y_obj.clone(),
                 line_file.clone(),
-                &verify_state,
-            )?
-            .is_true()
-        {
-            return Ok(None);
-        }
-        if !self
-            .verify_objs_are_equal(
-                left_sum.end.as_ref(),
-                right_sum.end.as_ref(),
-                line_file.clone(),
-                &verify_state,
-            )?
-            .is_true()
-        {
-            return Ok(None);
-        }
-
-        let param_name = left_sum.param.clone();
-        let start_obj = (*left_sum.start).clone();
-        let end_obj = (*left_sum.end).clone();
-        let inner_line_file = line_file.clone();
-
-        let order_holds = self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(&param_name, ParamObjType::Sum)?;
-            let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Sum);
-            let param_in_z: AtomicFact = InFact::new(
-                param_obj.clone(),
-                StandardSet::Z.into(),
-                default_line_file(),
             )
             .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
-            let lower: AtomicFact =
-                LessEqualFact::new(start_obj.clone(), param_obj.clone(), default_line_file())
-                    .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
-            let upper: AtomicFact =
-                LessEqualFact::new(param_obj, end_obj, default_line_file()).into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
-
-            let inner_fact: AtomicFact = if strict {
-                LessFact::new(
-                    (*left_sum.body).clone(),
-                    (*right_sum.body).clone(),
-                    inner_line_file,
-                )
-                .into()
-            } else {
-                LessEqualFact::new(
-                    (*left_sum.body).clone(),
-                    (*right_sum.body).clone(),
-                    inner_line_file,
-                )
-                .into()
-            };
-
-            let mut result =
-                rt.verify_non_equational_atomic_fact_with_known_atomic_facts(&inner_fact)?;
-            if !result.is_true() {
-                result = rt.verify_order_atomic_fact_numeric_builtin_only(&inner_fact)?;
-            }
-            Ok::<bool, RuntimeError>(result.is_true())
-        })?;
-
-        if !order_holds {
-            return Ok(None);
-        }
-
-        let reason = if strict {
-            "order: two sums same index and bounds; pointwise strict order on summands under index assumptions"
-        } else {
-            "order: two sums same index and bounds; pointwise non-strict order on summands under index assumptions"
-        };
-        Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                atomic_fact.clone().into(),
-                reason.to_string(),
-                Vec::new(),
-            )
-            .into(),
-        ))
-    }
-
-    /// `0 <= sum(i,a,b,F)` or `0 < sum(i,a,b,F)` when the left side is literal `0`: in the usual sum-index
-    /// scope (`i in Z`, `a <= i <= b`), prove `0 <= F` or `0 < F` respectively.
-    pub(crate) fn try_verify_zero_order_sum_by_pointwise_summand_order(
-        &mut self,
-        atomic_fact: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let (sum_obj, strict) = match atomic_fact {
-            AtomicFact::LessEqualFact(f) if Self::obj_is_builtin_literal_zero(&f.left) => {
-                let Obj::Sum(s) = &f.right else {
-                    return Ok(None);
-                };
-                (s, false)
-            }
-            AtomicFact::LessFact(f) if Self::obj_is_builtin_literal_zero(&f.left) => {
-                let Obj::Sum(s) = &f.right else {
-                    return Ok(None);
-                };
-                (s, true)
-            }
-            _ => return Ok(None),
-        };
-
-        let line_file = atomic_fact.line_file();
-        let param_name = sum_obj.param.clone();
-        let start_obj = (*sum_obj.start).clone();
-        let end_obj = (*sum_obj.end).clone();
-        let inner_line_file = line_file.clone();
-        let zero: Obj = Number::new("0".to_string()).into();
-
-        let order_holds = self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(&param_name, ParamObjType::Sum)?;
-            let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Sum);
-            let param_in_z: AtomicFact = InFact::new(
-                param_obj.clone(),
-                StandardSet::Z.into(),
-                default_line_file(),
+            let dom_hi: Fact = LessEqualFact::new(
+                y_obj.clone(),
+                (*r_sum.end).clone(),
+                line_file.clone(),
             )
             .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
-            let lower: AtomicFact =
-                LessEqualFact::new(start_obj.clone(), param_obj.clone(), default_line_file())
-                    .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
-            let upper: AtomicFact =
-                LessEqualFact::new(param_obj, end_obj, default_line_file()).into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
-
-            let inner_fact: AtomicFact = if strict {
-                LessFact::new(zero, (*sum_obj.body).clone(), inner_line_file).into()
-            } else {
-                LessEqualFact::new(zero, (*sum_obj.body).clone(), inner_line_file).into()
-            };
-
-            let mut result =
-                rt.verify_non_equational_atomic_fact_with_known_atomic_facts(&inner_fact)?;
-            if !result.is_true() {
-                result = rt.verify_order_atomic_fact_numeric_builtin_only(&inner_fact)?;
-            }
-            Ok::<bool, RuntimeError>(result.is_true())
-        })?;
-
-        if !order_holds {
-            return Ok(None);
-        }
-
-        let reason = if strict {
-            "order: 0 < sum(i,a,b,F) from 0 < F under index assumptions"
-        } else {
-            "order: 0 <= sum(i,a,b,F) from 0 <= F under index assumptions"
-        };
-        Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                atomic_fact.clone().into(),
-                reason.to_string(),
-                Vec::new(),
+            let forall_fact: Fact = ForallFact::new(
+                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                    vec![y_name],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]),
+                vec![dom_lo, dom_hi],
+                vec![then_fact],
+                line_file.clone(),
             )
-            .into(),
-        ))
-    }
-
-    // product(i,a,e+1,F) = product(i,a,e,F) * tail: extending the upper index multiplies by F with i ↦ outer end.
-    // Example: product(i, start, last + 1, i) = product(i, start, last, i) * (last + 1) when tail matches inst body.
-    // Same structural checks as sum peel but * and ParamObjType::Product.
-    fn try_finish_product_peel_equality(
-        &mut self,
-        outer: &ProductObj,
-        inner: &ProductObj,
-        actual_tail: &Obj,
-        _verify_state: &VerifyState,
-    ) -> Result<Option<()>, RuntimeError> {
-        let one: Obj = Number::new("1".to_string()).into();
-        if outer.param != inner.param {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(outer.start.as_ref(), inner.start.as_ref()) {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(outer.body.as_ref(), inner.body.as_ref()) {
-            return Ok(None);
-        }
-        let end_plus_one: Obj = Add::new((*inner.end).clone(), one.clone()).into();
-        if !objs_equal_by_display_string(outer.end.as_ref(), &end_plus_one) {
-            return Ok(None);
-        }
-        let mut m = HashMap::new();
-        m.insert(outer.param.clone(), (*outer.end).clone());
-        let Ok(expected_tail) = self.inst_obj(outer.body.as_ref(), &m, ParamObjType::Product)
-        else {
-            return Ok(None);
-        };
-        if !objs_equal_by_display_string(actual_tail, &expected_tail) {
-            return Ok(None);
-        }
-        Ok(Some(()))
-    }
-
-    fn try_verify_product_peel_last_factor_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Product(lprod) = left {
-            if let Obj::Mul(mul) = right {
-                for (prod_side, tail_side) in [
-                    (mul.left.as_ref(), mul.right.as_ref()),
-                    (mul.right.as_ref(), mul.left.as_ref()),
-                ] {
-                    if let Obj::Product(rprod) = prod_side {
-                        if self.try_finish_product_peel_equality(
-                            lprod,
-                            rprod,
-                            tail_side,
-                            verify_state,
-                        )? == Some(())
-                        {
-                            return Ok(Some(factual_equal_success_by_builtin_reason(
-                                left,
-                                right,
-                                line_file,
-                                "equality: product upper +1 = inner product * factor at new index",
-                            )));
-                        }
-                    }
-                }
-            }
-        }
-        if let Obj::Product(rprod) = right {
-            if let Obj::Mul(mul) = left {
-                for (prod_side, tail_side) in [
-                    (mul.left.as_ref(), mul.right.as_ref()),
-                    (mul.right.as_ref(), mul.left.as_ref()),
-                ] {
-                    if let Obj::Product(lprod) = prod_side {
-                        if self.try_finish_product_peel_equality(
-                            rprod,
-                            lprod,
-                            tail_side,
-                            verify_state,
-                        )? == Some(())
-                        {
-                            return Ok(Some(factual_equal_success_by_builtin_reason(
-                                left,
-                                right,
-                                line_file,
-                                "equality: product upper +1 = inner product * factor at new index",
-                            )));
-                        }
-                    }
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    // sum(i,a,e+1,F) = sum(i,a,e,F) + tail with i bound to outer end (same i,a,F; one binary + on the other side).
-    // Aligned parts use objs_equal_by_display_string (including outer end vs inner end + 1 and tail vs inst_obj).
-    fn try_finish_sum_peel_equality(
-        &mut self,
-        outer: &SumObj,
-        inner: &SumObj,
-        actual_tail: &Obj,
-        _verify_state: &VerifyState,
-    ) -> Result<Option<()>, RuntimeError> {
-        let one: Obj = Number::new("1".to_string()).into();
-        if outer.param != inner.param {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(outer.start.as_ref(), inner.start.as_ref()) {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(outer.body.as_ref(), inner.body.as_ref()) {
-            return Ok(None);
-        }
-        let end_plus_one: Obj = Add::new((*inner.end).clone(), one.clone()).into();
-        if !objs_equal_by_display_string(outer.end.as_ref(), &end_plus_one) {
-            return Ok(None);
-        }
-        let mut m = HashMap::new();
-        m.insert(outer.param.clone(), (*outer.end).clone());
-        let Ok(expected_tail) = self.inst_obj(outer.body.as_ref(), &m, ParamObjType::Sum) else {
-            return Ok(None);
-        };
-        if !objs_equal_by_display_string(actual_tail, &expected_tail) {
-            return Ok(None);
-        }
-        Ok(Some(()))
-    }
-
-    fn try_verify_sum_peel_last_term_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Sum(lsum) = left {
-            if let Obj::Add(add) = right {
-                for (sum_side, tail_side) in [
-                    (add.left.as_ref(), add.right.as_ref()),
-                    (add.right.as_ref(), add.left.as_ref()),
-                ] {
-                    if let Obj::Sum(rsum) = sum_side {
-                        if self.try_finish_sum_peel_equality(lsum, rsum, tail_side, verify_state)?
-                            == Some(())
-                        {
-                            return Ok(Some(factual_equal_success_by_builtin_reason(
-                                left,
-                                right,
-                                line_file,
-                                "equality: sum upper +1 = inner sum + term at new index",
-                            )));
-                        }
-                    }
-                }
-            }
-        }
-        if let Obj::Sum(rsum) = right {
-            if let Obj::Add(add) = left {
-                for (sum_side, tail_side) in [
-                    (add.left.as_ref(), add.right.as_ref()),
-                    (add.right.as_ref(), add.left.as_ref()),
-                ] {
-                    if let Obj::Sum(lsum) = sum_side {
-                        if self.try_finish_sum_peel_equality(rsum, lsum, tail_side, verify_state)?
-                            == Some(())
-                        {
-                            return Ok(Some(factual_equal_success_by_builtin_reason(
-                                left,
-                                right,
-                                line_file,
-                                "equality: sum upper +1 = inner sum + term at new index",
-                            )));
-                        }
-                    }
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    // sum(i,a,b,F+G) = sum(i,a,b,F) + sum(i,a,b,G); other side is one binary + with two sums (order either way).
-    // Bounds and F,G vs inner bodies: objs_equal_by_display_string.
-    fn try_match_sum_additivity_one_direction(
-        &mut self,
-        outer: &SumObj,
-        other: &Obj,
-        _line_file: LineFile,
-        _verify_state: &VerifyState,
-    ) -> Result<bool, RuntimeError> {
-        let Obj::Add(body_add) = outer.body.as_ref() else {
-            return Ok(false);
-        };
-        let Obj::Add(outer_add) = other else {
-            return Ok(false);
-        };
-        for (x_side, y_side) in [
-            (outer_add.left.as_ref(), outer_add.right.as_ref()),
-            (outer_add.right.as_ref(), outer_add.left.as_ref()),
-        ] {
-            if let (Obj::Sum(sx), Obj::Sum(sy)) = (x_side, y_side) {
-                if outer.param != sx.param || outer.param != sy.param {
-                    continue;
-                }
-                if !objs_equal_by_display_string(outer.start.as_ref(), sx.start.as_ref()) {
-                    continue;
-                }
-                if !objs_equal_by_display_string(outer.start.as_ref(), sy.start.as_ref()) {
-                    continue;
-                }
-                if !objs_equal_by_display_string(outer.end.as_ref(), sx.end.as_ref()) {
-                    continue;
-                }
-                if !objs_equal_by_display_string(outer.end.as_ref(), sy.end.as_ref()) {
-                    continue;
-                }
-                let fl = body_add.left.as_ref();
-                let fr = body_add.right.as_ref();
-                let match_fg = objs_equal_by_display_string(fl, sx.body.as_ref())
-                    && objs_equal_by_display_string(fr, sy.body.as_ref());
-                let match_gf = objs_equal_by_display_string(fl, sy.body.as_ref())
-                    && objs_equal_by_display_string(fr, sx.body.as_ref());
-                if match_fg || match_gf {
-                    return Ok(true);
-                }
-            }
-        }
-        Ok(false)
-    }
-
-    fn try_verify_sum_additivity_same_bounds_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Sum(lsum) = left {
-            if self.try_match_sum_additivity_one_direction(
-                lsum,
-                right,
-                line_file.clone(),
-                verify_state,
-            )? {
+            .into();
+            let r = self.verify_fact(&forall_fact, verify_state)?;
+            if r.is_true() {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     left,
                     right,
                     line_file,
-                    "equality: sum(summand + summand) = sum + sum same bounds",
-                )));
-            }
-        }
-        if let Obj::Sum(rsum) = right {
-            if self.try_match_sum_additivity_one_direction(
-                rsum,
-                left,
-                line_file.clone(),
-                verify_state,
-            )? {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: sum(summand + summand) = sum + sum same bounds",
+                    "equality: sum reindexing (integer shift) from pointwise equality on the range",
                 )));
             }
         }
         Ok(None)
     }
 
-    // product(i,a,b,F*G) = product(i,a,b,F) * product(i,a,b,G); one * on the other side with two inner products (order either way).
-    // Index name matches on all three; start/end vs each inner product use verify_objs_are_equal; factors vs inner bodies use display text.
-    // Example: product(i, s, t, i * i) = product(i, s, t, i) * product(i, s, t, i).
-    fn try_match_product_multiplicativity_one_direction(
+    /// `sum(s,e, \lambda x.c) = (e - s + 1) * c` when `c` does not mention the index parameter.
+    fn try_verify_sum_constant_summand(
         &mut self,
-        outer: &ProductObj,
-        other: &Obj,
+        left: &Obj,
+        right: &Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<bool, RuntimeError> {
-        let Obj::Mul(body_mul) = outer.body.as_ref() else {
-            return Ok(false);
-        };
-        let Obj::Mul(outer_mul) = other else {
-            return Ok(false);
-        };
-        for (x_side, y_side) in [
-            (outer_mul.left.as_ref(), outer_mul.right.as_ref()),
-            (outer_mul.right.as_ref(), outer_mul.left.as_ref()),
-        ] {
-            if let (Obj::Product(px), Obj::Product(py)) = (x_side, y_side) {
-                if outer.param != px.param || outer.param != py.param {
-                    continue;
-                }
-                if !self
-                    .verify_objs_are_equal(
-                        outer.start.as_ref(),
-                        px.start.as_ref(),
-                        line_file.clone(),
-                        verify_state,
-                    )?
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (sum_side, other) in [(left, right), (right, left)] {
+            let Obj::Sum(s) = sum_side else {
+                continue;
+            };
+            let af = match s.func.as_ref() {
+                Obj::AnonymousFn(af) => af,
+                Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                    _ => continue,
+                },
+                _ => continue,
+            };
+            if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+                continue;
+            }
+            let names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+            let pname = match names.first() {
+                Some(n) => n.as_str(),
+                None => continue,
+            };
+            if obj_expr_mentions_bare_id(af.equal_to.as_ref(), pname) {
+                continue;
+            }
+            let c = (*af.equal_to).clone();
+            let one: Obj = Number::new("1".to_string()).into();
+            let count: Obj = Add::new(
+                Sub::new((*s.end).clone(), (*s.start).clone()).into(),
+                one,
+            )
+            .into();
+            let m1: Obj = Mul::new(count.clone(), c.clone()).into();
+            let m2: Obj = Mul::new(c, count).into();
+            if self
+                .verify_objs_are_equal(other, &m1, line_file.clone(), verify_state)?
+                .is_true()
+                || self
+                    .verify_objs_are_equal(other, &m2, line_file.clone(), verify_state)?
                     .is_true()
-                {
-                    continue;
-                }
-                if !self
-                    .verify_objs_are_equal(
-                        outer.start.as_ref(),
-                        py.start.as_ref(),
-                        line_file.clone(),
-                        verify_state,
-                    )?
-                    .is_true()
-                {
-                    continue;
-                }
-                if !self
-                    .verify_objs_are_equal(
-                        outer.end.as_ref(),
-                        px.end.as_ref(),
-                        line_file.clone(),
-                        verify_state,
-                    )?
-                    .is_true()
-                {
-                    continue;
-                }
-                if !self
-                    .verify_objs_are_equal(
-                        outer.end.as_ref(),
-                        py.end.as_ref(),
-                        line_file.clone(),
-                        verify_state,
-                    )?
-                    .is_true()
-                {
-                    continue;
-                }
-                let fl = body_mul.left.as_ref();
-                let fr = body_mul.right.as_ref();
-                let match_fg = objs_equal_by_display_string(fl, px.body.as_ref())
-                    && objs_equal_by_display_string(fr, py.body.as_ref());
-                let match_gf = objs_equal_by_display_string(fl, py.body.as_ref())
-                    && objs_equal_by_display_string(fr, px.body.as_ref());
-                if match_fg || match_gf {
-                    return Ok(true);
-                }
-            }
-        }
-        Ok(false)
-    }
-
-    fn try_verify_product_multiplicativity_same_bounds_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Product(lprod) = left {
-            if self.try_match_product_multiplicativity_one_direction(
-                lprod,
-                right,
-                line_file.clone(),
-                verify_state,
-            )? {
+            {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     left,
                     right,
                     line_file,
-                    "equality: product(factor * factor) = product * product same bounds",
-                )));
-            }
-        }
-        if let Obj::Product(rprod) = right {
-            if self.try_match_product_multiplicativity_one_direction(
-                rprod,
-                left,
-                line_file.clone(),
-                verify_state,
-            )? {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: product(factor * factor) = product * product same bounds",
-                )));
-            }
-        }
-        Ok(None)
-    }
-
-    // sum(i,a,a,F) = inst(F, { i ↦ a }) when start and end match by objs_equal_by_display_string; RHS same for inst body.
-    fn try_match_sum_single_index_interval_one_direction(
-        &mut self,
-        s: &SumObj,
-        other: &Obj,
-        _line_file: LineFile,
-        _verify_state: &VerifyState,
-    ) -> Result<bool, RuntimeError> {
-        if !objs_equal_by_display_string(s.start.as_ref(), s.end.as_ref()) {
-            return Ok(false);
-        }
-        let mut m = HashMap::new();
-        m.insert(s.param.clone(), (*s.start).clone());
-        let Ok(inst_body) = self.inst_obj(s.body.as_ref(), &m, ParamObjType::Sum) else {
-            return Ok(false);
-        };
-        if !objs_equal_by_display_string(&inst_body, other) {
-            return Ok(false);
-        }
-        Ok(true)
-    }
-
-    fn try_verify_sum_single_index_interval_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Sum(lsum) = left {
-            if self.try_match_sum_single_index_interval_one_direction(
-                lsum,
-                right,
-                line_file.clone(),
-                verify_state,
-            )? {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: sum with start = end is single instantiated summand",
-                )));
-            }
-        }
-        if let Obj::Sum(rsum) = right {
-            if self.try_match_sum_single_index_interval_one_direction(
-                rsum,
-                left,
-                line_file.clone(),
-                verify_state,
-            )? {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: sum with start = end is single instantiated summand",
-                )));
-            }
-        }
-        Ok(None)
-    }
-
-    // product(i,a,a,F) = inst(F, { i ↦ a }) when start and end match by objs_equal_by_display_string; other side matches inst body.
-    // Example: product(i, start, start, i) = start.
-    fn try_match_product_single_index_interval_one_direction(
-        &mut self,
-        p: &ProductObj,
-        other: &Obj,
-        _line_file: LineFile,
-        _verify_state: &VerifyState,
-    ) -> Result<bool, RuntimeError> {
-        if !objs_equal_by_display_string(p.start.as_ref(), p.end.as_ref()) {
-            return Ok(false);
-        }
-        let mut m = HashMap::new();
-        m.insert(p.param.clone(), (*p.start).clone());
-        let Ok(inst_body) = self.inst_obj(p.body.as_ref(), &m, ParamObjType::Product) else {
-            return Ok(false);
-        };
-        if !objs_equal_by_display_string(&inst_body, other) {
-            return Ok(false);
-        }
-        Ok(true)
-    }
-
-    fn try_verify_product_single_index_interval_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Product(lprod) = left {
-            if self.try_match_product_single_index_interval_one_direction(
-                lprod,
-                right,
-                line_file.clone(),
-                verify_state,
-            )? {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: product with start = end is single instantiated factor",
-                )));
-            }
-        }
-        if let Obj::Product(rprod) = right {
-            if self.try_match_product_single_index_interval_one_direction(
-                rprod,
-                left,
-                line_file.clone(),
-                verify_state,
-            )? {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: product with start = end is single instantiated factor",
-                )));
-            }
-        }
-        Ok(None)
-    }
-
-    // sum(i,a,b,F) = sum(i,a,k,F) + sum(i,k+1,b,F): same i,a,b,F; first segment ends at k, second starts at k+1.
-    // Matching uses objs_equal_by_display_string (including k+1 vs second start).
-    fn try_verify_sum_split_adjacent_segments_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        _verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let one: Obj = Number::new("1".to_string()).into();
-        if let Obj::Sum(lsum) = left {
-            if let Obj::Add(add) = right {
-                for (s1_side, s2_side) in [
-                    (add.left.as_ref(), add.right.as_ref()),
-                    (add.right.as_ref(), add.left.as_ref()),
-                ] {
-                    if let (Obj::Sum(s1), Obj::Sum(s2)) = (s1_side, s2_side) {
-                        if lsum.param != s1.param || lsum.param != s2.param {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(lsum.start.as_ref(), s1.start.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(lsum.end.as_ref(), s2.end.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(lsum.body.as_ref(), s1.body.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(lsum.body.as_ref(), s2.body.as_ref()) {
-                            continue;
-                        }
-                        let first_end_plus_one: Obj =
-                            Add::new((*s1.end).clone(), one.clone()).into();
-                        if !objs_equal_by_display_string(&first_end_plus_one, s2.start.as_ref()) {
-                            continue;
-                        }
-                        return Ok(Some(factual_equal_success_by_builtin_reason(
-                            left,
-                            right,
-                            line_file,
-                            "equality: sum splits into adjacent segments (end+1 = next start)",
-                        )));
-                    }
-                }
-            }
-        }
-        if let Obj::Sum(rsum) = right {
-            if let Obj::Add(add) = left {
-                for (s1_side, s2_side) in [
-                    (add.left.as_ref(), add.right.as_ref()),
-                    (add.right.as_ref(), add.left.as_ref()),
-                ] {
-                    if let (Obj::Sum(s1), Obj::Sum(s2)) = (s1_side, s2_side) {
-                        if rsum.param != s1.param || rsum.param != s2.param {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(rsum.start.as_ref(), s1.start.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(rsum.end.as_ref(), s2.end.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(rsum.body.as_ref(), s1.body.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(rsum.body.as_ref(), s2.body.as_ref()) {
-                            continue;
-                        }
-                        let first_end_plus_one: Obj =
-                            Add::new((*s1.end).clone(), one.clone()).into();
-                        if !objs_equal_by_display_string(&first_end_plus_one, s2.start.as_ref()) {
-                            continue;
-                        }
-                        return Ok(Some(factual_equal_success_by_builtin_reason(
-                            left,
-                            right,
-                            line_file,
-                            "equality: sum splits into adjacent segments (end+1 = next start)",
-                        )));
-                    }
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    fn flatten_add_operands_for_chain<'a>(obj: &'a Obj) -> Vec<&'a Obj> {
-        match obj {
-            Obj::Add(a) => {
-                let mut v = Self::flatten_add_operands_for_chain(a.left.as_ref());
-                v.extend(Self::flatten_add_operands_for_chain(a.right.as_ref()));
-                v
-            }
-            _ => vec![obj],
-        }
-    }
-
-    fn flatten_mul_operands_for_chain<'a>(obj: &'a Obj) -> Vec<&'a Obj> {
-        match obj {
-            Obj::Mul(m) => {
-                let mut v = Self::flatten_mul_operands_for_chain(m.left.as_ref());
-                v.extend(Self::flatten_mul_operands_for_chain(m.right.as_ref()));
-                v
-            }
-            _ => vec![obj],
-        }
-    }
-
-    /// `sum(i,a,b,F) = sum(i,a,k,F) + inst(F,{i↦k+1}) + sum(i,k+2,b,F)` with the same `i` and `F` on each sum
-    /// (`k` is the first segment's end; singleton index is `k+1`; third segment starts at `k+2`). Third start and
-    /// the singleton term are matched with [`verify_objs_are_equal`] so `3` and `1 + 2` (and similar) align.
-    fn try_finish_sum_three_part_split_equality(
-        &mut self,
-        full: &SumObj,
-        s1: &SumObj,
-        term: &Obj,
-        s2: &SumObj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<()>, RuntimeError> {
-        let one: Obj = Number::new("1".to_string()).into();
-        let two: Obj = Number::new("2".to_string()).into();
-        if full.param != s1.param || full.param != s2.param {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(full.start.as_ref(), s1.start.as_ref()) {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(full.end.as_ref(), s2.end.as_ref()) {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(full.body.as_ref(), s1.body.as_ref()) {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(full.body.as_ref(), s2.body.as_ref()) {
-            return Ok(None);
-        }
-        let k_plus_2: Obj = Add::new((*s1.end).clone(), two).into();
-        if !self
-            .verify_objs_are_equal(
-                s2.start.as_ref(),
-                &k_plus_2,
-                line_file.clone(),
-                verify_state,
-            )?
-            .is_true()
-        {
-            return Ok(None);
-        }
-        let k_plus_1: Obj = Add::new((*s1.end).clone(), one).into();
-        let mut m = HashMap::new();
-        m.insert(full.param.clone(), k_plus_1);
-        let Ok(expected_term) = self.inst_obj(full.body.as_ref(), &m, ParamObjType::Sum) else {
-            return Ok(None);
-        };
-        if !self
-            .verify_objs_are_equal(term, &expected_term, line_file.clone(), verify_state)?
-            .is_true()
-        {
-            return Ok(None);
-        }
-        Ok(Some(()))
-    }
-
-    fn try_sum_three_part_split_from_three_addends(
-        &mut self,
-        full: &SumObj,
-        parts: [&Obj; 3],
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<()>, RuntimeError> {
-        let mut sums: Vec<&SumObj> = Vec::new();
-        let mut non_sum: Option<&Obj> = None;
-        for p in parts {
-            match p {
-                Obj::Sum(s) => sums.push(s),
-                _ => {
-                    if non_sum.is_some() {
-                        return Ok(None);
-                    }
-                    non_sum = Some(p);
-                }
-            }
-        }
-        if sums.len() != 2 || non_sum.is_none() {
-            return Ok(None);
-        }
-        let term = non_sum.unwrap();
-        if let Some(()) = self.try_finish_sum_three_part_split_equality(
-            full,
-            sums[0],
-            term,
-            sums[1],
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(Some(()));
-        }
-        self.try_finish_sum_three_part_split_equality(
-            full,
-            sums[1],
-            term,
-            sums[0],
-            line_file,
-            verify_state,
-        )
-    }
-
-    fn try_verify_sum_three_part_split_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Sum(lsum) = left {
-            let ops = Self::flatten_add_operands_for_chain(right);
-            if ops.len() == 3 {
-                let parts: [&Obj; 3] = [ops[0], ops[1], ops[2]];
-                if self.try_sum_three_part_split_from_three_addends(
-                    lsum,
-                    parts,
-                    line_file.clone(),
-                    verify_state,
-                )? == Some(())
-                {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
-                        "equality: sum = segment + inst at end+1 + segment from end+2",
-                    )));
-                }
-            }
-        }
-        if let Obj::Sum(rsum) = right {
-            let ops = Self::flatten_add_operands_for_chain(left);
-            if ops.len() == 3 {
-                let parts: [&Obj; 3] = [ops[0], ops[1], ops[2]];
-                if self.try_sum_three_part_split_from_three_addends(
-                    rsum,
-                    parts,
-                    line_file.clone(),
-                    verify_state,
-                )? == Some(())
-                {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
-                        "equality: sum = segment + inst at end+1 + segment from end+2",
-                    )));
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    fn try_finish_product_three_part_split_equality(
-        &mut self,
-        full: &ProductObj,
-        p1: &ProductObj,
-        factor: &Obj,
-        p2: &ProductObj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<()>, RuntimeError> {
-        let one: Obj = Number::new("1".to_string()).into();
-        let two: Obj = Number::new("2".to_string()).into();
-        if full.param != p1.param || full.param != p2.param {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(full.start.as_ref(), p1.start.as_ref()) {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(full.end.as_ref(), p2.end.as_ref()) {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(full.body.as_ref(), p1.body.as_ref()) {
-            return Ok(None);
-        }
-        if !objs_equal_by_display_string(full.body.as_ref(), p2.body.as_ref()) {
-            return Ok(None);
-        }
-        let k_plus_2: Obj = Add::new((*p1.end).clone(), two).into();
-        if !self
-            .verify_objs_are_equal(
-                p2.start.as_ref(),
-                &k_plus_2,
-                line_file.clone(),
-                verify_state,
-            )?
-            .is_true()
-        {
-            return Ok(None);
-        }
-        let k_plus_1: Obj = Add::new((*p1.end).clone(), one).into();
-        let mut m = HashMap::new();
-        m.insert(full.param.clone(), k_plus_1);
-        let Ok(expected_factor) = self.inst_obj(full.body.as_ref(), &m, ParamObjType::Product)
-        else {
-            return Ok(None);
-        };
-        if !self
-            .verify_objs_are_equal(factor, &expected_factor, line_file.clone(), verify_state)?
-            .is_true()
-        {
-            return Ok(None);
-        }
-        Ok(Some(()))
-    }
-
-    fn try_product_three_part_split_from_three_factors(
-        &mut self,
-        full: &ProductObj,
-        parts: [&Obj; 3],
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<()>, RuntimeError> {
-        let mut prods: Vec<&ProductObj> = Vec::new();
-        let mut non_prod: Option<&Obj> = None;
-        for p in parts {
-            match p {
-                Obj::Product(pr) => prods.push(pr),
-                _ => {
-                    if non_prod.is_some() {
-                        return Ok(None);
-                    }
-                    non_prod = Some(p);
-                }
-            }
-        }
-        if prods.len() != 2 || non_prod.is_none() {
-            return Ok(None);
-        }
-        let fac = non_prod.unwrap();
-        if let Some(()) = self.try_finish_product_three_part_split_equality(
-            full,
-            prods[0],
-            fac,
-            prods[1],
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(Some(()));
-        }
-        self.try_finish_product_three_part_split_equality(
-            full,
-            prods[1],
-            fac,
-            prods[0],
-            line_file,
-            verify_state,
-        )
-    }
-
-    fn try_verify_product_three_part_split_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Product(lprod) = left {
-            let ops = Self::flatten_mul_operands_for_chain(right);
-            if ops.len() == 3 {
-                let parts: [&Obj; 3] = [ops[0], ops[1], ops[2]];
-                if self.try_product_three_part_split_from_three_factors(
-                    lprod,
-                    parts,
-                    line_file.clone(),
-                    verify_state,
-                )? == Some(())
-                {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
-                        "equality: product = segment * inst at end+1 * segment from end+2",
-                    )));
-                }
-            }
-        }
-        if let Obj::Product(rprod) = right {
-            let ops = Self::flatten_mul_operands_for_chain(left);
-            if ops.len() == 3 {
-                let parts: [&Obj; 3] = [ops[0], ops[1], ops[2]];
-                if self.try_product_three_part_split_from_three_factors(
-                    rprod,
-                    parts,
-                    line_file.clone(),
-                    verify_state,
-                )? == Some(())
-                {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
-                        "equality: product = segment * inst at end+1 * segment from end+2",
-                    )));
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    // product(i,a,k,F) * product(i,k+1,b,F) = product(i,a,b,F): same i and body on all three; a,b line up with
-    // outer start/end; first segment end + 1 matches second start (objs_equal_by_display_string). Dual: one product = two factors.
-    // Example: product(i, start, middle, i) * product(i, middle + 1, last, i) = product(i, start, last, i).
-    fn try_verify_product_merge_adjacent_segments_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        _verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let one: Obj = Number::new("1".to_string()).into();
-        if let Obj::Mul(mul) = left {
-            if let Obj::Product(p_full) = right {
-                for (p1_side, p2_side) in [
-                    (mul.left.as_ref(), mul.right.as_ref()),
-                    (mul.right.as_ref(), mul.left.as_ref()),
-                ] {
-                    if let (Obj::Product(p1), Obj::Product(p2)) = (p1_side, p2_side) {
-                        if p_full.param != p1.param || p_full.param != p2.param {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(p_full.start.as_ref(), p1.start.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(p_full.end.as_ref(), p2.end.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(p_full.body.as_ref(), p1.body.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(p_full.body.as_ref(), p2.body.as_ref()) {
-                            continue;
-                        }
-                        let first_end_plus_one: Obj =
-                            Add::new((*p1.end).clone(), one.clone()).into();
-                        if !objs_equal_by_display_string(&first_end_plus_one, p2.start.as_ref()) {
-                            continue;
-                        }
-                        return Ok(Some(factual_equal_success_by_builtin_reason(
-                            left,
-                            right,
-                            line_file,
-                            "equality: product merges adjacent segments (end+1 = next start)",
-                        )));
-                    }
-                }
-            }
-        }
-        if let Obj::Mul(mul) = right {
-            if let Obj::Product(p_full) = left {
-                for (p1_side, p2_side) in [
-                    (mul.left.as_ref(), mul.right.as_ref()),
-                    (mul.right.as_ref(), mul.left.as_ref()),
-                ] {
-                    if let (Obj::Product(p1), Obj::Product(p2)) = (p1_side, p2_side) {
-                        if p_full.param != p1.param || p_full.param != p2.param {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(p_full.start.as_ref(), p1.start.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(p_full.end.as_ref(), p2.end.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(p_full.body.as_ref(), p1.body.as_ref()) {
-                            continue;
-                        }
-                        if !objs_equal_by_display_string(p_full.body.as_ref(), p2.body.as_ref()) {
-                            continue;
-                        }
-                        let first_end_plus_one: Obj =
-                            Add::new((*p1.end).clone(), one.clone()).into();
-                        if !objs_equal_by_display_string(&first_end_plus_one, p2.start.as_ref()) {
-                            continue;
-                        }
-                        return Ok(Some(factual_equal_success_by_builtin_reason(
-                            left,
-                            right,
-                            line_file,
-                            "equality: product merges adjacent segments (end+1 = next start)",
-                        )));
-                    }
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    // sum(i,a,b,k*c) = k * sum(i,a,b,c): same param string; start, end, summand c, and factor k match by
-    // obj Display text (objs_equal_by_display_string). Requires k well-defined and every sum/product index
-    // atom in k bound by an enclosing sum/product (k must not use the outer i).
-    // Example: sum(n,1,3,2*n) = 2 * sum(n,1,3,n).
-    fn try_match_sum_scalar_factor_out_one_direction(
-        &mut self,
-        outer: &SumObj,
-        other: &Obj,
-        _line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<bool, RuntimeError> {
-        let Obj::Mul(body_mul) = outer.body.as_ref() else {
-            return Ok(false);
-        };
-        let Obj::Mul(rhs_mul) = other else {
-            return Ok(false);
-        };
-        for (lk, lc) in [
-            (body_mul.left.as_ref(), body_mul.right.as_ref()),
-            (body_mul.right.as_ref(), body_mul.left.as_ref()),
-        ] {
-            for (rk_factor, rk_sum_side) in [
-                (rhs_mul.left.as_ref(), rhs_mul.right.as_ref()),
-                (rhs_mul.right.as_ref(), rhs_mul.left.as_ref()),
-            ] {
-                let Obj::Sum(inner) = rk_sum_side else {
-                    continue;
-                };
-                if outer.param != inner.param {
-                    continue;
-                }
-                if !objs_equal_by_display_string(outer.start.as_ref(), inner.start.as_ref()) {
-                    continue;
-                }
-                if !objs_equal_by_display_string(outer.end.as_ref(), inner.end.as_ref()) {
-                    continue;
-                }
-                if !objs_equal_by_display_string(lc, inner.body.as_ref()) {
-                    continue;
-                }
-                if !objs_equal_by_display_string(lk, rk_factor) {
-                    continue;
-                }
-                if self
-                    .verify_obj_well_defined_and_store_cache(lk, verify_state)
-                    .is_err()
-                {
-                    continue;
-                }
-                let mut bound = Vec::new();
-                if !obj_lexically_bound_sum_product_index_atoms(lk, &mut bound) {
-                    continue;
-                }
-                return Ok(true);
-            }
-        }
-        Ok(false)
-    }
-
-    fn try_verify_sum_scalar_factor_out_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::Sum(lsum) = left {
-            if self.try_match_sum_scalar_factor_out_one_direction(
-                lsum,
-                right,
-                line_file.clone(),
-                verify_state,
-            )? {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: sum(k * summand) = k * sum(summand) with k well-defined and independent of sum index",
-                )));
-            }
-        }
-        if let Obj::Sum(rsum) = right {
-            if self.try_match_sum_scalar_factor_out_one_direction(
-                rsum,
-                left,
-                line_file.clone(),
-                verify_state,
-            )? {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: sum(k * summand) = k * sum(summand) with k well-defined and independent of sum index",
+                    "equality: sum of a constant summand over a closed integer range",
                 )));
             }
         }
@@ -1873,111 +1010,27 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_two_sums_pointwise_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_sum_additivity(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_peel_last_term_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_sum_merge_adjacent_ranges(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_product_peel_last_factor_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_sum_reindex_shift(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_additivity_same_bounds_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_product_multiplicativity_same_bounds_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_sum_single_index_interval_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_product_single_index_interval_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_sum_split_adjacent_segments_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_sum_three_part_split_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_product_merge_adjacent_segments_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_product_three_part_split_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_sum_scalar_factor_out_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_sum_constant_summand(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
@@ -2014,6 +1067,27 @@ impl Runtime {
             );
         }
 
+        if let Some(done) = self.try_verify_anonymous_fn_application_equals_other_side(
+            left,
+            right,
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+        if let Some(done) = self.try_verify_anonymous_fn_application_equals_other_side(
+            left,
+            right,
+            right,
+            left,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let (Obj::FnSet(left_fn_set), Obj::FnSet(right_fn_set)) = (left, right) {
             return self.verify_fn_set_with_params_equality_by_builtin_rules(
                 left_fn_set,
@@ -2021,6 +1095,20 @@ impl Runtime {
                 line_file,
                 verify_state,
             );
+        }
+
+        if let (Obj::AnonymousFn(l), Obj::AnonymousFn(r)) = (left, right) {
+            if l.to_string() == r.to_string() {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                        "anonymous fn: identical surface syntax (params, dom, ret, body)"
+                            .to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
         }
 
         Ok((StmtUnknown::new()).into())
@@ -2464,6 +1552,32 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::Sum(l), Obj::Sum(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.start, &r.start),
+                    (&l.end, &r.end),
+                    (&l.func, &r.func),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::Product(l), Obj::Product(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.start, &r.start),
+                    (&l.end, &r.end),
+                    (&l.func, &r.func),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::ClosedRange(l), Obj::ClosedRange(r)) => {
                 if self
                     .arg_pairs_share_known_equality_class(&[(&l.start, &r.start), (&l.end, &r.end)])
@@ -2594,363 +1708,5 @@ impl Runtime {
             left_resolved,
             right_resolved,
         ))
-    }
-}
-
-/// Every `AtomObj::Sum` / `AtomObj::Product` spine in `obj` must be bound by some enclosing
-/// `Obj::Sum` / `Obj::Product` with the same index name (nested binders may shadow).
-fn obj_lexically_bound_sum_product_index_atoms(obj: &Obj, bound: &mut Vec<String>) -> bool {
-    match obj {
-        Obj::Sum(s) => {
-            bound.push(s.param.clone());
-            let ok = obj_lexically_bound_sum_product_index_atoms(s.start.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(s.end.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(s.body.as_ref(), bound);
-            bound.pop();
-            ok
-        }
-        Obj::Product(p) => {
-            bound.push(p.param.clone());
-            let ok = obj_lexically_bound_sum_product_index_atoms(p.start.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(p.end.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(p.body.as_ref(), bound);
-            bound.pop();
-            ok
-        }
-        Obj::Atom(AtomObj::Sum(p)) => bound.iter().any(|n| n == &p.name),
-        Obj::Atom(AtomObj::Product(p)) => bound.iter().any(|n| n == &p.name),
-        Obj::Atom(_) => true,
-        Obj::FnObj(f) => {
-            let head: Obj = f.head.as_ref().clone().into();
-            if !obj_lexically_bound_sum_product_index_atoms(&head, bound) {
-                return false;
-            }
-            f.body.iter().all(|g| {
-                g.iter()
-                    .all(|o| obj_lexically_bound_sum_product_index_atoms(o.as_ref(), bound))
-            })
-        }
-        Obj::Number(_) | Obj::StandardSet(_) => true,
-        Obj::Add(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Sub(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Mul(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Div(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Mod(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Pow(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.base.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.exponent.as_ref(), bound)
-        }
-        Obj::MatrixAdd(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::MatrixSub(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::MatrixMul(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::MatrixScalarMul(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.scalar.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.matrix.as_ref(), bound)
-        }
-        Obj::MatrixPow(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.base.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.exponent.as_ref(), bound)
-        }
-        Obj::Abs(x) => obj_lexically_bound_sum_product_index_atoms(x.arg.as_ref(), bound),
-        Obj::Log(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.base.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.arg.as_ref(), bound)
-        }
-        Obj::Max(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Min(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Union(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Intersect(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::SetMinus(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::SetDiff(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.right.as_ref(), bound)
-        }
-        Obj::Cup(x) => obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound),
-        Obj::Cap(x) => obj_lexically_bound_sum_product_index_atoms(x.left.as_ref(), bound),
-        Obj::PowerSet(x) => obj_lexically_bound_sum_product_index_atoms(x.set.as_ref(), bound),
-        Obj::ListSet(ls) => ls
-            .list
-            .iter()
-            .all(|o| obj_lexically_bound_sum_product_index_atoms(o.as_ref(), bound)),
-        Obj::SetBuilder(sb) => {
-            if !obj_lexically_bound_sum_product_index_atoms(sb.param_set.as_ref(), bound) {
-                return false;
-            }
-            sb.facts
-                .iter()
-                .all(|f| or_and_chain_lexically_bound_sum_product_index_atoms(f, bound))
-        }
-        Obj::FnSet(fs) => {
-            if !fs
-                .params_def_with_set
-                .iter()
-                .all(|ps| obj_lexically_bound_sum_product_index_atoms(&ps.set, bound))
-            {
-                return false;
-            }
-            if !fs
-                .dom_facts
-                .iter()
-                .all(|df| or_and_chain_lexically_bound_sum_product_index_atoms(df, bound))
-            {
-                return false;
-            }
-            obj_lexically_bound_sum_product_index_atoms(fs.ret_set.as_ref(), bound)
-        }
-        Obj::Cart(c) => c
-            .args
-            .iter()
-            .all(|a| obj_lexically_bound_sum_product_index_atoms(a.as_ref(), bound)),
-        Obj::CartDim(x) => obj_lexically_bound_sum_product_index_atoms(x.set.as_ref(), bound),
-        Obj::Proj(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.set.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.dim.as_ref(), bound)
-        }
-        Obj::TupleDim(x) => obj_lexically_bound_sum_product_index_atoms(x.arg.as_ref(), bound),
-        Obj::Tuple(t) => t
-            .args
-            .iter()
-            .all(|a| obj_lexically_bound_sum_product_index_atoms(a.as_ref(), bound)),
-        Obj::Count(x) => obj_lexically_bound_sum_product_index_atoms(x.set.as_ref(), bound),
-        Obj::Range(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.start.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.end.as_ref(), bound)
-        }
-        Obj::ClosedRange(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.start.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.end.as_ref(), bound)
-        }
-        Obj::FiniteSeqSet(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.set.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.n.as_ref(), bound)
-        }
-        Obj::SeqSet(x) => obj_lexically_bound_sum_product_index_atoms(x.set.as_ref(), bound),
-        Obj::FiniteSeqListObj(v) => v
-            .objs
-            .iter()
-            .all(|o| obj_lexically_bound_sum_product_index_atoms(o.as_ref(), bound)),
-        Obj::MatrixSet(ms) => {
-            obj_lexically_bound_sum_product_index_atoms(ms.set.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(ms.row_len.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(ms.col_len.as_ref(), bound)
-        }
-        Obj::MatrixListObj(v) => v.rows.iter().all(|row| {
-            row.iter()
-                .all(|o| obj_lexically_bound_sum_product_index_atoms(o.as_ref(), bound))
-        }),
-        Obj::Choose(x) => obj_lexically_bound_sum_product_index_atoms(x.set.as_ref(), bound),
-        Obj::ObjAtIndex(x) => {
-            obj_lexically_bound_sum_product_index_atoms(x.obj.as_ref(), bound)
-                && obj_lexically_bound_sum_product_index_atoms(x.index.as_ref(), bound)
-        }
-        Obj::FamilyObj(f) => f
-            .params
-            .iter()
-            .all(|o| obj_lexically_bound_sum_product_index_atoms(o, bound)),
-    }
-}
-
-fn or_and_chain_lexically_bound_sum_product_index_atoms(
-    parent_fact: &OrAndChainAtomicFact,
-    bound: &mut Vec<String>,
-) -> bool {
-    match parent_fact {
-        OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
-            atomic_fact_lexically_bound_sum_product_index_atoms(atomic_fact, bound)
-        }
-        OrAndChainAtomicFact::AndFact(and_fact) => and_fact
-            .facts
-            .iter()
-            .all(|f| atomic_fact_lexically_bound_sum_product_index_atoms(f, bound)),
-        OrAndChainAtomicFact::ChainFact(chain_fact) => chain_fact
-            .objs
-            .iter()
-            .all(|o| obj_lexically_bound_sum_product_index_atoms(o, bound)),
-        OrAndChainAtomicFact::OrFact(or_fact) => or_fact
-            .facts
-            .iter()
-            .all(|b| and_chain_lexically_bound_sum_product_index_atoms(b, bound)),
-    }
-}
-
-fn and_chain_lexically_bound_sum_product_index_atoms(
-    parent_fact: &AndChainAtomicFact,
-    bound: &mut Vec<String>,
-) -> bool {
-    match parent_fact {
-        AndChainAtomicFact::AtomicFact(atomic_fact) => {
-            atomic_fact_lexically_bound_sum_product_index_atoms(atomic_fact, bound)
-        }
-        AndChainAtomicFact::AndFact(and_fact) => and_fact
-            .facts
-            .iter()
-            .all(|f| atomic_fact_lexically_bound_sum_product_index_atoms(f, bound)),
-        AndChainAtomicFact::ChainFact(chain_fact) => chain_fact
-            .objs
-            .iter()
-            .all(|o| obj_lexically_bound_sum_product_index_atoms(o, bound)),
-    }
-}
-
-fn atomic_fact_lexically_bound_sum_product_index_atoms(
-    fact: &AtomicFact,
-    bound: &mut Vec<String>,
-) -> bool {
-    match fact {
-        AtomicFact::NormalAtomicFact(fact) => fact
-            .body
-            .iter()
-            .all(|o| obj_lexically_bound_sum_product_index_atoms(o, bound)),
-        AtomicFact::NotNormalAtomicFact(fact) => fact
-            .body
-            .iter()
-            .all(|o| obj_lexically_bound_sum_product_index_atoms(o, bound)),
-        AtomicFact::EqualFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::LessFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::GreaterFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::LessEqualFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::GreaterEqualFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::NotEqualFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::NotLessFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::NotGreaterFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::NotLessEqualFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::NotGreaterEqualFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::IsSetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::NotIsSetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::IsNonemptySetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::NotIsNonemptySetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::IsFiniteSetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::NotIsFiniteSetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::InFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.element, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::NotInFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.element, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::IsCartFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::NotIsCartFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::IsTupleFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::NotIsTupleFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.set, bound)
-        }
-        AtomicFact::SubsetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::SupersetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::NotSubsetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::NotSupersetFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.left, bound)
-                && obj_lexically_bound_sum_product_index_atoms(&fact.right, bound)
-        }
-        AtomicFact::RestrictFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.obj, bound)
-                && obj_lexically_bound_sum_product_index_atoms(
-                    &fact.obj_can_restrict_to_fn_set,
-                    bound,
-                )
-        }
-        AtomicFact::NotRestrictFact(fact) => {
-            obj_lexically_bound_sum_product_index_atoms(&fact.obj, bound)
-                && obj_lexically_bound_sum_product_index_atoms(
-                    &fact.obj_cannot_restrict_to_fn_set,
-                    bound,
-                )
-        }
     }
 }
