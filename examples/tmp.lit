@@ -1,9 +1,0 @@
-have fn f(x R) R = x
-have fn g(x R) R = x 
-
-forall x R:
-    f(x) = x = g(x)
-
-$fn_eq_in(f, g, R)
-
-$fn_eq_in('R(x){x}, 'R(y){y}, R)
