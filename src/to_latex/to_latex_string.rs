@@ -329,8 +329,14 @@ impl ByInducStmt {
             .map(|f| f.to_latex_string())
             .collect::<Vec<_>>()
             .join(r" \land ");
+        let induc_label = if self.strong {
+            r"\text{\textbf{strong induc} on }"
+        } else {
+            r"\text{\textbf{by induc} on }"
+        };
         let mut rows = vec![format!(
-            r"\text{{\textbf{{by induc}} on }} {} \text{{ from }} {} \texttt{{:}} & {}",
+            r"{} {} \text{{ from }} {} \texttt{{:}} & {}",
+            induc_label,
             latex_local_ident(&self.param),
             self.induc_from.to_latex_string(),
             goals
