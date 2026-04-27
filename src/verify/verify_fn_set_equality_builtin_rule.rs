@@ -200,14 +200,8 @@ impl Runtime {
         let flat = ParamGroupWithSet::collect_param_names(&fn_set.body.params_def_with_set);
         if flat.len() != generated_flat_names.len() {
             return Err(
-                VerifyRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "internal: fn_set alpha rename requires generated_flat_names len == flat param count"
-                        .to_string(),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ))
+                VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg("internal: fn_set alpha rename requires generated_flat_names len == flat param count"
+                        .to_string()))
                 .into(),
             );
         }

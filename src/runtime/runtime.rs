@@ -45,13 +45,7 @@ impl Runtime {
         _current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                invalid_name_message,
-                default_line_file(),
-                None,
-                vec![],
-            ))
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(invalid_name_message))
             .into());
         }
 
@@ -65,13 +59,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for name in names {
             if let Err(e) = is_valid_litex_name(name) {
-                return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    e,
-                    line_file.clone(),
-                    None,
-                    vec![],
-                ))
+                return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(e, line_file.clone()))
                 .into());
             }
         }
@@ -504,17 +492,11 @@ impl Runtime {
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let param_names = param_defs.collect_param_names();
         if param_names.len() != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "params_to_arg_map: expected {} argument(s), got {}",
                     param_names.len(),
                     args.len()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
 

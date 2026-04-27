@@ -26,13 +26,7 @@ impl Runtime {
             WITNESS => self.parse_witness_stmt(tb),
             FAMILY => self.parse_def_family_stmt(tb),
             STRUCT => Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "`struct` definitions are not supported in this version".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("`struct` definitions are not supported in this version".to_string(), tb.line_file.clone()),
             ))),
             ALGO => self.parse_def_algorithm_stmt(tb),
             BY => self.parse_by_prefixed_stmt(tb),

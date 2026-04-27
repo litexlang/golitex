@@ -5,36 +5,18 @@ impl Runtime {
         tb.skip_token_and_colon_and_exceed_end_of_head(EXTENSION)?;
 
         if tb.body.is_empty() {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by extension: expects at least one body block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by extension: expects at least one body block".to_string(), tb.line_file.clone()))));
         }
 
         tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
 
         if tb.body[0].body.len() != 1 {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by extension: prove: expects exactly one atomic fact block".to_string(),
-                tb.body[0].line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by extension: prove: expects exactly one atomic fact block".to_string(), tb.body[0].line_file.clone()))));
         }
 
         let to_prove_equal_fact = self.parse_atomic_fact(
             tb.body[0].body.get_mut(0).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "Expected body".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("Expected body".to_string(), tb.line_file.clone())))
             })?,
             true,
         )?;
@@ -42,13 +24,7 @@ impl Runtime {
         let (left, right) = match to_prove_equal_fact {
             AtomicFact::EqualFact(equal_fact) => (equal_fact.left, equal_fact.right),
             _ => {
-                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "by extension: prove: expects equal fact".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ))));
+                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by extension: prove: expects equal fact".to_string(), tb.line_file.clone()))));
             }
         };
 
