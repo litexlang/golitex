@@ -278,6 +278,7 @@ pub use crate::common::keywords::IMPORT;
 pub use crate::common::keywords::IMPOSSIBLE;
 pub use crate::common::keywords::IN;
 pub use crate::common::keywords::INDUC;
+pub use crate::common::keywords::STRONG_INDUC;
 pub use crate::common::keywords::INDUC_PARAM_2_NAME;
 pub use crate::common::keywords::INFIX_FN_NAME_SIGN;
 pub use crate::common::keywords::INTERSECT;
