@@ -389,12 +389,6 @@ impl Runtime {
             Obj::Choose(ref left) => {
                 self.match_arg_when_left_is_choose(left.set.as_ref(), given_arg)
             }
-            Obj::Sum(ref left) => {
-                return self.match_arg_when_left_is_sum(left, given_arg);
-            }
-            Obj::Product(ref left) => {
-                return self.match_arg_when_left_is_product(left, given_arg);
-            }
             Obj::ObjAtIndex(ref left) => self.match_arg_when_left_is_obj_at_index(
                 left.obj.as_ref(),
                 left.index.as_ref(),
@@ -458,18 +452,6 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::DefAlgo(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::Atom(AtomObj::Sum(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::Atom(AtomObj::Product(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }
@@ -1597,66 +1579,4 @@ impl Runtime {
         Ok(None)
     }
 
-    fn match_arg_when_left_is_sum(
-        &mut self,
-        left: &SumObj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let Obj::Sum(given_arg_as_sum) = given_arg else {
-            return Ok(None);
-        };
-
-        let pair_vec: [(&Obj, &Obj); 3] = [
-            (left.start.as_ref(), given_arg_as_sum.start.as_ref()),
-            (left.end.as_ref(), given_arg_as_sum.end.as_ref()),
-            (left.body.as_ref(), given_arg_as_sum.body.as_ref()),
-        ];
-        let Some(merged) = self.match_arg_pairs_then_merge(pair_vec.into_iter())? else {
-            return Ok(None);
-        };
-
-        let verify_state = VerifyState::new_with_final_round(false);
-        // Forall-bound args must not capture ill-defined pieces of the sum spine.
-        for value in merged.values() {
-            if self
-                .verify_obj_well_defined_and_store_cache(value, &verify_state)
-                .is_err()
-            {
-                return Ok(None);
-            }
-        }
-
-        Ok(Some(merged))
-    }
-
-    fn match_arg_when_left_is_product(
-        &mut self,
-        left: &ProductObj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let Obj::Product(given_arg_as_product) = given_arg else {
-            return Ok(None);
-        };
-
-        let pair_vec: [(&Obj, &Obj); 3] = [
-            (left.start.as_ref(), given_arg_as_product.start.as_ref()),
-            (left.end.as_ref(), given_arg_as_product.end.as_ref()),
-            (left.body.as_ref(), given_arg_as_product.body.as_ref()),
-        ];
-        let Some(merged) = self.match_arg_pairs_then_merge(pair_vec.into_iter())? else {
-            return Ok(None);
-        };
-
-        let verify_state = VerifyState::new_with_final_round(false);
-        for value in merged.values() {
-            if self
-                .verify_obj_well_defined_and_store_cache(value, &verify_state)
-                .is_err()
-            {
-                return Ok(None);
-            }
-        }
-
-        Ok(Some(merged))
-    }
 }
