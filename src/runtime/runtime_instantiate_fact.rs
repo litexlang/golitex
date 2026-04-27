@@ -315,6 +315,12 @@ impl Runtime {
             AtomicFact::NotRestrictFact(fact) => AtomicFact::NotRestrictFact(
                 self.inst_not_restrict_fact(fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
             ),
+            AtomicFact::FnEqualOnFact(fact) => AtomicFact::FnEqualOnFact(FnEqualOnFact::new(
+                self.inst_obj(&fact.left, param_to_arg_map, to_inst_param_type)?,
+                self.inst_obj(&fact.right, param_to_arg_map, to_inst_param_type)?,
+                self.inst_obj(&fact.set, param_to_arg_map, to_inst_param_type)?,
+                Self::line_file_after_inst(&fact.line_file, inst_lf),
+            )),
         })
     }
 

@@ -1,0 +1,6 @@
+# 演示 `$fn_eq_on(f, g, S)`：在 S 上逐点相等；builtin 将目标归约为 forall x in S, f(x)=g(x)
+# 本例用 `f` 与 `f` 相同，因而不依赖 forall 的 alpha 匹配，即可在证明中直接验证
+have fn f(x R) R = x
+$fn_eq_on(f, f, R)
+
+$fn_eq_on('R(x){x}, 'R(y){y}, R)
