@@ -72,9 +72,9 @@ impl FnSetClause {
         let mut ret_set = self.ret_set.clone();
         while let Obj::FnSet(inner) = ret_set {
             names.extend(ParamGroupWithSet::collect_param_names(
-                &inner.params_def_with_set,
+                &inner.body.params_def_with_set,
             ));
-            ret_set = (*inner.ret_set).clone();
+            ret_set = (*inner.body.ret_set).clone();
         }
         names
     }

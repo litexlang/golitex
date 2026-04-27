@@ -87,6 +87,7 @@ pub use crate::obj::FnObj;
 pub use crate::obj::FnObjHead;
 pub use crate::obj::FnSetSpace;
 pub use crate::obj::FnSet;
+pub use crate::obj::FnSetBody;
 pub use crate::obj::AnonymousFn;
 pub use crate::obj::FnSetFreeParamObj;
 pub use crate::obj::ForallFreeParamObj;

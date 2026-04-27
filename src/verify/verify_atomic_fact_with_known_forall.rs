@@ -1138,14 +1138,15 @@ impl Runtime {
         let Obj::FnSet(given) = given_arg else {
             return Ok(None);
         };
-        if left.params_def_with_set.len() != given.params_def_with_set.len() {
+        if left.body.params_def_with_set.len() != given.body.params_def_with_set.len() {
             return Ok(None);
         }
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (lg, gg) in left
+            .body
             .params_def_with_set
             .iter()
-            .zip(given.params_def_with_set.iter())
+            .zip(given.body.params_def_with_set.iter())
         {
             if lg.params != gg.params {
                 return Ok(None);
@@ -1159,10 +1160,15 @@ impl Runtime {
                 return Ok(None);
             }
         }
-        if left.dom_facts.len() != given.dom_facts.len() {
+        if left.body.dom_facts.len() != given.body.dom_facts.len() {
             return Ok(None);
         }
-        for (lf, gf) in left.dom_facts.iter().zip(given.dom_facts.iter()) {
+        for (lf, gf) in left
+            .body
+            .dom_facts
+            .iter()
+            .zip(given.body.dom_facts.iter())
+        {
             let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
             else {
                 return Ok(None);
@@ -1172,8 +1178,8 @@ impl Runtime {
             }
         }
         let Some(ret_map) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-            left.ret_set.as_ref(),
-            given.ret_set.as_ref(),
+            left.body.ret_set.as_ref(),
+            given.body.ret_set.as_ref(),
         )?
         else {
             return Ok(None);
@@ -1201,14 +1207,15 @@ impl Runtime {
         let Obj::AnonymousFn(given) = given_arg else {
             return Ok(None);
         };
-        if left.params_def_with_set.len() != given.params_def_with_set.len() {
+        if left.body.params_def_with_set.len() != given.body.params_def_with_set.len() {
             return Ok(None);
         }
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (lg, gg) in left
+            .body
             .params_def_with_set
             .iter()
-            .zip(given.params_def_with_set.iter())
+            .zip(given.body.params_def_with_set.iter())
         {
             if lg.params != gg.params {
                 return Ok(None);
@@ -1222,10 +1229,15 @@ impl Runtime {
                 return Ok(None);
             }
         }
-        if left.dom_facts.len() != given.dom_facts.len() {
+        if left.body.dom_facts.len() != given.body.dom_facts.len() {
             return Ok(None);
         }
-        for (lf, gf) in left.dom_facts.iter().zip(given.dom_facts.iter()) {
+        for (lf, gf) in left
+            .body
+            .dom_facts
+            .iter()
+            .zip(given.body.dom_facts.iter())
+        {
             let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
             else {
                 return Ok(None);
@@ -1235,8 +1247,8 @@ impl Runtime {
             }
         }
         let Some(ret_map) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-            left.ret_set.as_ref(),
-            given.ret_set.as_ref(),
+            left.body.ret_set.as_ref(),
+            given.body.ret_set.as_ref(),
         )?
         else {
             return Ok(None);

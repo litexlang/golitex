@@ -644,12 +644,12 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         let param_names =
-            ParamGroupWithSet::collect_param_names(&fn_set_with_params.params_def_with_set);
+            ParamGroupWithSet::collect_param_names(&fn_set_with_params.body.params_def_with_set);
         let filtered_param_to_arg_map =
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
         let mut params_def_with_set =
-            Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
-        for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
+            Vec::with_capacity(fn_set_with_params.body.params_def_with_set.len());
+        for param_def_with_set in fn_set_with_params.body.params_def_with_set.iter() {
             params_def_with_set.push(ParamGroupWithSet::new(
                 param_def_with_set.params.clone(),
                 self.inst_obj(
@@ -659,8 +659,8 @@ impl Runtime {
                 )?,
             ));
         }
-        let mut dom_facts = Vec::with_capacity(fn_set_with_params.dom_facts.len());
-        for dom_fact in fn_set_with_params.dom_facts.iter() {
+        let mut dom_facts = Vec::with_capacity(fn_set_with_params.body.dom_facts.len());
+        for dom_fact in fn_set_with_params.body.dom_facts.iter() {
             dom_facts.push(self.inst_or_and_chain_atomic_fact(
                 dom_fact,
                 &filtered_param_to_arg_map,
@@ -672,7 +672,7 @@ impl Runtime {
             params_def_with_set,
             dom_facts,
             self.inst_obj(
-                &fn_set_with_params.ret_set,
+                &fn_set_with_params.body.ret_set,
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
@@ -686,11 +686,11 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let param_names = ParamGroupWithSet::collect_param_names(&af.params_def_with_set);
+        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
         let filtered_param_to_arg_map =
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
-        let mut params_def_with_set = Vec::with_capacity(af.params_def_with_set.len());
-        for param_def_with_set in af.params_def_with_set.iter() {
+        let mut params_def_with_set = Vec::with_capacity(af.body.params_def_with_set.len());
+        for param_def_with_set in af.body.params_def_with_set.iter() {
             params_def_with_set.push(ParamGroupWithSet::new(
                 param_def_with_set.params.clone(),
                 self.inst_obj(
@@ -700,8 +700,8 @@ impl Runtime {
                 )?,
             ));
         }
-        let mut dom_facts = Vec::with_capacity(af.dom_facts.len());
-        for dom_fact in af.dom_facts.iter() {
+        let mut dom_facts = Vec::with_capacity(af.body.dom_facts.len());
+        for dom_fact in af.body.dom_facts.iter() {
             dom_facts.push(self.inst_or_and_chain_atomic_fact(
                 dom_fact,
                 &filtered_param_to_arg_map,
@@ -712,7 +712,7 @@ impl Runtime {
         Ok(AnonymousFn::new(
             params_def_with_set,
             dom_facts,
-            self.inst_obj(af.ret_set.as_ref(), &filtered_param_to_arg_map, param_obj_type)?,
+            self.inst_obj(af.body.ret_set.as_ref(), &filtered_param_to_arg_map, param_obj_type)?,
             self.inst_obj(
                 af.equal_to.as_ref(),
                 &filtered_param_to_arg_map,

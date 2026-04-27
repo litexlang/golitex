@@ -47,8 +47,8 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if ParamGroupWithSet::number_of_params(&left.params_def_with_set)
-            != ParamGroupWithSet::number_of_params(&right.params_def_with_set)
+        if ParamGroupWithSet::number_of_params(&left.body.params_def_with_set)
+            != ParamGroupWithSet::number_of_params(&right.body.params_def_with_set)
         {
             return Ok((StmtUnknown::new()).into());
         }
@@ -103,7 +103,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let target_flat_param_names =
-            ParamGroupWithSet::collect_param_names(&target.params_def_with_set);
+            ParamGroupWithSet::collect_param_names(&target.body.params_def_with_set);
         let generated_param_names =
             self.generate_random_unused_names(target_flat_param_names.len());
         let source_param_to_generated_arg_map = self
@@ -146,7 +146,7 @@ impl Runtime {
         }
 
         let source_ret_set = self
-            .inst_obj(&source.ret_set, &source_param_to_generated_arg_map, ParamObjType::FnSet)
+            .inst_obj(&source.body.ret_set, &source_param_to_generated_arg_map, ParamObjType::FnSet)
             .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
@@ -157,7 +157,7 @@ impl Runtime {
                 )
             })?;
         let target_ret_set = self
-            .inst_obj(&target.ret_set, &target_param_to_generated_arg_map, ParamObjType::FnSet)
+            .inst_obj(&target.body.ret_set, &target_param_to_generated_arg_map, ParamObjType::FnSet)
             .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
@@ -197,7 +197,7 @@ impl Runtime {
         fn_set: &FnSet,
         generated_flat_names: &[String],
     ) -> Result<Obj, RuntimeError> {
-        let flat = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
+        let flat = ParamGroupWithSet::collect_param_names(&fn_set.body.params_def_with_set);
         if flat.len() != generated_flat_names.len() {
             return Err(
                 VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -212,20 +212,20 @@ impl Runtime {
             );
         }
         let map = Self::build_param_to_generated_arg_map(&flat, generated_flat_names);
-        let mut new_params = Vec::with_capacity(fn_set.params_def_with_set.len());
+        let mut new_params = Vec::with_capacity(fn_set.body.params_def_with_set.len());
         let mut c_idx: usize = 0;
-        for g in fn_set.params_def_with_set.iter() {
+        for g in fn_set.body.params_def_with_set.iter() {
             let n = g.params.len();
             let names = generated_flat_names[c_idx..c_idx + n].to_vec();
             c_idx += n;
             let new_set = self.inst_obj(&g.set, &map, ParamObjType::FnSet)?;
             new_params.push(ParamGroupWithSet::new(names, new_set));
         }
-        let mut new_dom = Vec::with_capacity(fn_set.dom_facts.len());
-        for d in fn_set.dom_facts.iter() {
+        let mut new_dom = Vec::with_capacity(fn_set.body.dom_facts.len());
+        for d in fn_set.body.dom_facts.iter() {
             new_dom.push(self.inst_or_and_chain_atomic_fact(d, &map, ParamObjType::FnSet, None)?);
         }
-        let new_ret = self.inst_obj(fn_set.ret_set.as_ref(), &map, ParamObjType::FnSet)?;
+        let new_ret = self.inst_obj(fn_set.body.ret_set.as_ref(), &map, ParamObjType::FnSet)?;
         Ok(FnSet::new(new_params, new_dom, new_ret).into())
     }
 
@@ -240,7 +240,7 @@ impl Runtime {
             HashMap::with_capacity(generated_param_names.len());
         let mut flat_index: usize = 0;
 
-        for param_def_with_set in source.params_def_with_set.iter() {
+        for param_def_with_set in source.body.params_def_with_set.iter() {
             let next_flat_index = flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_param_names[flat_index..next_flat_index].to_vec();
@@ -294,7 +294,7 @@ impl Runtime {
         target: &FnSet,
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        for dom_fact in source.dom_facts.iter() {
+        for dom_fact in source.body.dom_facts.iter() {
             let instantiated_dom_fact = self
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,
@@ -336,7 +336,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        for param_def_with_set in target.params_def_with_set.iter() {
+        for param_def_with_set in target.body.params_def_with_set.iter() {
             let instantiated_param_set = self
                 .inst_obj(&param_def_with_set.set, target_param_to_generated_arg_map, ParamObjType::FnSet)
                 .map_err(|e| {
@@ -385,7 +385,7 @@ impl Runtime {
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        for dom_fact in target.dom_facts.iter() {
+        for dom_fact in target.body.dom_facts.iter() {
             let instantiated_dom_fact = self
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,

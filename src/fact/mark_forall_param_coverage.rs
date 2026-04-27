@@ -183,34 +183,34 @@ fn mark_forall_param_coverage_in_obj(
             }
         }
         Obj::FnSet(fn_set) => {
-            for param_def_with_set in fn_set.params_def_with_set.iter() {
+            for param_def_with_set in fn_set.body.params_def_with_set.iter() {
                 mark_forall_param_coverage_in_obj(
                     &param_def_with_set.set,
                     coverage_by_forall_param,
                 );
             }
-            for dom_fact in fn_set.dom_facts.iter() {
+            for dom_fact in fn_set.body.dom_facts.iter() {
                 mark_forall_param_coverage_in_or_and_chain_atomic_fact(
                     dom_fact,
                     coverage_by_forall_param,
                 );
             }
-            mark_forall_param_coverage_in_obj(fn_set.ret_set.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(fn_set.body.ret_set.as_ref(), coverage_by_forall_param);
         }
         Obj::AnonymousFn(anon) => {
-            for param_def_with_set in anon.params_def_with_set.iter() {
+            for param_def_with_set in anon.body.params_def_with_set.iter() {
                 mark_forall_param_coverage_in_obj(
                     &param_def_with_set.set,
                     coverage_by_forall_param,
                 );
             }
-            for dom_fact in anon.dom_facts.iter() {
+            for dom_fact in anon.body.dom_facts.iter() {
                 mark_forall_param_coverage_in_or_and_chain_atomic_fact(
                     dom_fact,
                     coverage_by_forall_param,
                 );
             }
-            mark_forall_param_coverage_in_obj(anon.ret_set.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(anon.body.ret_set.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(anon.equal_to.as_ref(), coverage_by_forall_param);
         }
         Obj::Cart(cart) => {

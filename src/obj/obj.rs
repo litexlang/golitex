@@ -1,5 +1,5 @@
-use super::anonynous_fn_obj::AnonymousFn;
 use super::atom_obj::AtomObj;
+use super::fn_set::{AnonymousFn, FnSet, FnSetBody};
 use crate::prelude::*;
 use std::fmt;
 
@@ -307,13 +307,6 @@ pub struct SetBuilder {
 }
 
 #[derive(Clone)]
-pub struct FnSet {
-    pub params_def_with_set: Vec<ParamGroupWithSet>,
-    pub dom_facts: Vec<OrAndChainAtomicFact>,
-    pub ret_set: Box<Obj>,
-}
-
-#[derive(Clone)]
 pub struct Cart {
     pub args: Vec<Box<Obj>>,
 }
@@ -498,30 +491,6 @@ impl SetBuilder {
             param_set: Box::new(param_set),
             facts,
         }
-    }
-}
-
-impl FnSet {
-    pub fn new(
-        params_and_their_sets: Vec<ParamGroupWithSet>,
-        dom_facts: Vec<OrAndChainAtomicFact>,
-        ret_set: Obj,
-    ) -> Self {
-        FnSet {
-            params_def_with_set: params_and_their_sets,
-            dom_facts,
-            ret_set: Box::new(ret_set),
-        }
-    }
-
-    pub fn get_params(&self) -> Vec<String> {
-        let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
-            &self.params_def_with_set,
-        ));
-        for param_def_with_set in &self.params_def_with_set {
-            ret.extend(param_def_with_set.params.iter().cloned());
-        }
-        ret
     }
 }
 
@@ -974,8 +943,13 @@ impl Obj {
                 })
             }
             Obj::FnSet(fs) => {
-                let params_def_with_set = fs
-                    .params_def_with_set
+                let FnSet { body } = fs;
+                let FnSetBody {
+                    params_def_with_set,
+                    dom_facts,
+                    ret_set,
+                } = body;
+                let params_def_with_set = params_def_with_set
                     .into_iter()
                     .map(|pg| ParamGroupWithSet {
                         params: pg
@@ -986,17 +960,21 @@ impl Obj {
                         set: Obj::replace_bound_identifier(pg.set, from, to),
                     })
                     .collect();
-                let dom_facts = fs
-                    .dom_facts
+                let dom_facts = dom_facts
                     .into_iter()
                     .map(|f| f.replace_bound_identifier(from, to))
                     .collect();
-                let ret_set = Obj::replace_bound_identifier(*fs.ret_set, from, to);
+                let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
                 FnSet::new(params_def_with_set, dom_facts, ret_set).into()
             }
             Obj::AnonymousFn(af) => {
-                let params_def_with_set = af
-                    .params_def_with_set
+                let AnonymousFn { body, equal_to } = af;
+                let FnSetBody {
+                    params_def_with_set,
+                    dom_facts,
+                    ret_set,
+                } = body;
+                let params_def_with_set = params_def_with_set
                     .into_iter()
                     .map(|pg| ParamGroupWithSet {
                         params: pg
@@ -1007,13 +985,12 @@ impl Obj {
                         set: Obj::replace_bound_identifier(pg.set, from, to),
                     })
                     .collect();
-                let dom_facts = af
-                    .dom_facts
+                let dom_facts = dom_facts
                     .into_iter()
                     .map(|f| f.replace_bound_identifier(from, to))
                     .collect();
-                let ret_set = Obj::replace_bound_identifier(*af.ret_set, from, to);
-                let equal_to = Obj::replace_bound_identifier(*af.equal_to, from, to);
+                let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
+                let equal_to = Obj::replace_bound_identifier(*equal_to, from, to);
                 AnonymousFn::new(params_def_with_set, dom_facts, ret_set, equal_to).into()
             }
             Obj::Cart(c) => Cart::new(
@@ -1620,23 +1597,6 @@ impl fmt::Display for SetBuilder {
     }
 }
 
-impl fmt::Display for FnSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let params_with_sets_display: Vec<String> = self
-            .params_def_with_set
-            .iter()
-            .map(|g| format!("{} {}", vec_to_string_join_by_comma(&g.params), g.set))
-            .collect();
-        write!(
-            f,
-            "{} {} {}",
-            FN_LOWER_CASE,
-            brace_vec_colon_vec_to_string(&params_with_sets_display, &self.dom_facts),
-            self.ret_set
-        )
-    }
-}
-
 impl fmt::Display for Cart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", CART, braced_vec_to_string(&self.args))
@@ -1819,18 +1779,6 @@ impl From<ListSet> for Obj {
 impl From<SetBuilder> for Obj {
     fn from(s: SetBuilder) -> Self {
         Obj::SetBuilder(s)
-    }
-}
-
-impl From<FnSet> for Obj {
-    fn from(f: FnSet) -> Self {
-        Obj::FnSet(f)
-    }
-}
-
-impl From<AnonymousFn> for Obj {
-    fn from(f: AnonymousFn) -> Self {
-        Obj::AnonymousFn(f)
     }
 }
 

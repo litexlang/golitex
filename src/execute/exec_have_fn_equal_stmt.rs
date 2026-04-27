@@ -63,18 +63,19 @@ impl Runtime {
 
         let mut ret_set = clause.ret_set.clone();
         while let Obj::FnSet(inner) = ret_set {
-            for pg in inner.params_def_with_set.iter() {
+            for pg in inner.body.params_def_with_set.iter() {
                 type_groups.push(ParamGroupWithParamType::new(
                     pg.params.clone(),
                     ParamType::Obj(pg.set.clone()),
                 ));
             }
 
-            for d in inner.dom_facts.iter() {
+            for d in inner.body.dom_facts.iter() {
                 dom_facts.push(d.clone().into());
             }
 
             let layer_names: Vec<String> = inner
+                .body
                 .params_def_with_set
                 .iter()
                 .flat_map(|pg| pg.params.iter())
@@ -82,7 +83,7 @@ impl Runtime {
                 .collect();
             layers.push(layer_names);
 
-            ret_set = (*inner.ret_set).clone();
+            ret_set = (*inner.body.ret_set).clone();
         }
 
         Ok((ParamDefWithType::new(type_groups), dom_facts, layers))
@@ -214,7 +215,7 @@ impl Runtime {
         let mut ret_set = have_fn_equal_stmt.fn_set_clause.ret_set.clone();
         let equal_to_for_in_fact = have_fn_equal_stmt.equal_to.clone();
         while let Obj::FnSet(inner) = ret_set {
-            for param_def_with_set in inner.params_def_with_set.iter() {
+            for param_def_with_set in inner.body.params_def_with_set.iter() {
                 self.define_params_with_set(param_def_with_set)
                     .map_err(|define_params_error| {
                         short_exec_error(
@@ -225,7 +226,7 @@ impl Runtime {
                         )
                     })?;
             }
-            for dom_fact in inner.dom_facts.iter() {
+            for dom_fact in inner.body.dom_facts.iter() {
                 let _ = self
                     .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                         dom_fact.clone(),
@@ -239,7 +240,7 @@ impl Runtime {
                         )
                     })?;
             }
-            ret_set = (*inner.ret_set).clone();
+            ret_set = (*inner.body.ret_set).clone();
         }
 
         let equal_to_in_ret_set_atomic_fact = InFact::new(

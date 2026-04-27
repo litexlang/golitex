@@ -35,7 +35,7 @@ impl Runtime {
             ParamType::Obj(param_set) => match param_set {
                 Obj::FnSet(fn_set) => {
                     let ret_nonempty = IsNonemptySetFact::new(
-                        fn_set.ret_set.as_ref().clone(),
+                        fn_set.body.ret_set.as_ref().clone(),
                         default_line_file(),
                     )
                     .into();
@@ -47,7 +47,7 @@ impl Runtime {
                 }
                 Obj::AnonymousFn(anon) => {
                     let ret_nonempty = IsNonemptySetFact::new(
-                        anon.ret_set.as_ref().clone(),
+                        anon.body.ret_set.as_ref().clone(),
                         default_line_file(),
                     )
                     .into();

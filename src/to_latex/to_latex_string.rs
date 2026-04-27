@@ -735,19 +735,20 @@ impl FnObj {
 impl AnonymousFn {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
-        for g in &self.params_def_with_set {
+        for g in &self.body.params_def_with_set {
             let set = g.set.to_latex_string();
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
             }
         }
         let dom = self
+            .body
             .dom_facts
             .iter()
             .map(|f| f.to_latex_string())
             .collect::<Vec<_>>()
             .join(r", ");
-        let ret = self.ret_set.to_latex_string();
+        let ret = self.body.ret_set.to_latex_string();
         let body = self.equal_to.to_latex_string();
         let sig = if dom.is_empty() {
             format!(r"\left({}\right)", slots.join(r", "))
@@ -768,19 +769,20 @@ impl AnonymousFn {
 impl FnSet {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
-        for g in &self.params_def_with_set {
+        for g in &self.body.params_def_with_set {
             let set = g.set.to_latex_string();
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
             }
         }
         let dom = self
+            .body
             .dom_facts
             .iter()
             .map(|f| f.to_latex_string())
             .collect::<Vec<_>>()
             .join(r", ");
-        let ret = self.ret_set.to_latex_string();
+        let ret = self.body.ret_set.to_latex_string();
         if dom.is_empty() {
             format!(
                 r"\mathrm{{fn}}\left({}\right)\to {}",
