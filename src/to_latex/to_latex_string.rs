@@ -1875,6 +1875,12 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(x) => x.to_latex_string(),
             AtomicFact::NotSubsetFact(x) => x.to_latex_string(),
             AtomicFact::NotSupersetFact(x) => x.to_latex_string(),
+            AtomicFact::FnEqualOnFact(f) => format!(
+                r"\mathsf{{fn\_eq\_on}}({},{},{})",
+                f.left.to_latex_string(),
+                f.right.to_latex_string(),
+                f.set.to_latex_string(),
+            ),
         }
     }
 }

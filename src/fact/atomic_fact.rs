@@ -33,6 +33,36 @@ pub enum AtomicFact {
     NotIsTupleFact(NotIsTupleFact),
     NotSubsetFact(NotSubsetFact),
     NotSupersetFact(NotSupersetFact),
+    FnEqualOnFact(FnEqualOnFact),
+}
+
+#[derive(Clone)]
+pub struct FnEqualOnFact {
+    pub left: Obj,
+    pub right: Obj,
+    pub set: Obj,
+    pub line_file: LineFile,
+}
+
+impl FnEqualOnFact {
+    pub fn new(left: Obj, right: Obj, set: Obj, line_file: LineFile) -> Self {
+        FnEqualOnFact {
+            left,
+            right,
+            set,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for FnEqualOnFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}({}, {}, {})",
+            FACT_PREFIX, FN_EQ_ON, self.left, self.right, self.set
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -514,6 +544,7 @@ impl fmt::Display for AtomicFact {
             AtomicFact::NotSupersetFact(x) => write!(f, "{}", x),
             AtomicFact::RestrictFact(x) => write!(f, "{}", x),
             AtomicFact::NotRestrictFact(x) => write!(f, "{}", x),
+            AtomicFact::FnEqualOnFact(x) => write!(f, "{}", x),
         }
     }
 }
@@ -868,6 +899,13 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(x) => {
                 NotSupersetFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
             }
+            AtomicFact::FnEqualOnFact(x) => FnEqualOnFact::new(
+                r(x.left, from, to),
+                r(x.right, from, to),
+                r(x.set, from, to),
+                x.line_file,
+            )
+            .into(),
         }
     }
 }
@@ -905,6 +943,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
             AtomicFact::RestrictFact(_) => RESTRICT.to_string(),
             AtomicFact::NotRestrictFact(_) => RESTRICT.to_string(),
+            AtomicFact::FnEqualOnFact(_) => FN_EQ_ON.to_string(),
         }
     }
 
@@ -940,6 +979,7 @@ impl AtomicFact {
             AtomicFact::NotSubsetFact(_) => false,
             AtomicFact::NotSupersetFact(_) => false,
             AtomicFact::NotRestrictFact(_) => false,
+            AtomicFact::FnEqualOnFact(_) => true,
         }
     }
 
@@ -990,7 +1030,9 @@ impl AtomicFact {
             EQUAL => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", EQUAL, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1005,7 +1047,9 @@ impl AtomicFact {
             NOT_EQUAL => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", NOT_EQUAL, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1020,7 +1064,9 @@ impl AtomicFact {
             LESS => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", LESS, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1035,7 +1081,9 @@ impl AtomicFact {
             GREATER => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", GREATER, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1054,7 +1102,9 @@ impl AtomicFact {
                         LESS_EQUAL,
                         args.len()
                     );
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1073,7 +1123,9 @@ impl AtomicFact {
                         GREATER_EQUAL,
                         args.len()
                     );
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1088,7 +1140,9 @@ impl AtomicFact {
             IS_SET => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_SET, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1106,7 +1160,9 @@ impl AtomicFact {
                         IS_NONEMPTY_SET,
                         args.len()
                     );
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1124,7 +1180,9 @@ impl AtomicFact {
                         IS_FINITE_SET,
                         args.len()
                     );
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1138,7 +1196,9 @@ impl AtomicFact {
             IN => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", IN, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1153,7 +1213,9 @@ impl AtomicFact {
             IS_CART => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_CART, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1167,7 +1229,9 @@ impl AtomicFact {
             IS_TUPLE => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_TUPLE, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1181,7 +1245,9 @@ impl AtomicFact {
             SUBSET => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", SUBSET, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1196,7 +1262,9 @@ impl AtomicFact {
             SUPERSET => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", SUPERSET, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1211,7 +1279,9 @@ impl AtomicFact {
             RESTRICT => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", RESTRICT, args.len());
-                    return Err(NewAtomicFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()))
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
                     .into());
                 }
                 let mut args = args;
@@ -1222,6 +1292,31 @@ impl AtomicFact {
                 } else {
                     Ok(NotRestrictFact::new(a0, a1, line_file).into())
                 }
+            }
+            FN_EQ_ON => {
+                if !is_true {
+                    let msg = format!("{} does not support `not`", FN_EQ_ON);
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
+                    .into());
+                }
+                if args.len() != 3 {
+                    let msg = format!(
+                        "{} requires 3 arguments (f, g, set), but got {}",
+                        FN_EQ_ON,
+                        args.len()
+                    );
+                    return Err(NewAtomicFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                    )
+                    .into());
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                let a2 = args.remove(0);
+                Ok(FnEqualOnFact::new(a0, a1, a2, line_file).into())
             }
             _ => {
                 if is_true {
@@ -1316,6 +1411,9 @@ impl AtomicFact {
                 not_restrict_fact.obj.clone(),
                 not_restrict_fact.obj_cannot_restrict_to_fn_set.clone(),
             ],
+            AtomicFact::FnEqualOnFact(f) => {
+                vec![f.left.clone(), f.right.clone(), f.set.clone()]
+            }
         }
     }
 }
@@ -1352,6 +1450,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(_) => 2,
             AtomicFact::RestrictFact(_) => 2,
             AtomicFact::NotRestrictFact(_) => 2,
+            AtomicFact::FnEqualOnFact(_) => 3,
             _ => unreachable!("其他情况不是builtin predicate"),
         }
     }
@@ -1390,6 +1489,7 @@ impl AtomicFact {
             AtomicFact::NotNormalAtomicFact(a) => a.body.len(),
             AtomicFact::RestrictFact(_) => 2,
             AtomicFact::NotRestrictFact(_) => 2,
+            AtomicFact::FnEqualOnFact(_) => 3,
         }
     }
 
@@ -1425,6 +1525,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(a) => a.line_file.clone(),
             AtomicFact::RestrictFact(a) => a.line_file.clone(),
             AtomicFact::NotRestrictFact(a) => a.line_file.clone(),
+            AtomicFact::FnEqualOnFact(a) => a.line_file.clone(),
         }
     }
 }
@@ -1571,6 +1672,13 @@ impl AtomicFact {
             AtomicFact::NotRestrictFact(a) => RestrictFact::new(
                 a.obj.clone(),
                 a.obj_cannot_restrict_to_fn_set.clone(),
+                a.line_file.clone(),
+            )
+            .into(),
+            AtomicFact::FnEqualOnFact(a) => FnEqualOnFact::new(
+                a.right.clone(),
+                a.left.clone(),
+                a.set.clone(),
                 a.line_file.clone(),
             )
             .into(),
@@ -1897,6 +2005,22 @@ impl AtomicFact {
                 inner.line_file.clone(),
             )
             .into(),
+            AtomicFact::FnEqualOnFact(inner) => FnEqualOnFact::new(
+                inner
+                    .left
+                    .replace_with_numeric_result_if_can_be_calculated()
+                    .0,
+                inner
+                    .right
+                    .replace_with_numeric_result_if_can_be_calculated()
+                    .0,
+                inner
+                    .set
+                    .replace_with_numeric_result_if_can_be_calculated()
+                    .0,
+                inner.line_file.clone(),
+            )
+            .into(),
         };
         let any_argument_replaced = calculated_atomic_fact.to_string() != self.to_string();
         (calculated_atomic_fact, any_argument_replaced)
@@ -2083,6 +2207,12 @@ impl From<NotSupersetFact> for AtomicFact {
     }
 }
 
+impl From<FnEqualOnFact> for AtomicFact {
+    fn from(f: FnEqualOnFact) -> Self {
+        AtomicFact::FnEqualOnFact(f)
+    }
+}
+
 impl From<NormalAtomicFact> for Fact {
     fn from(f: NormalAtomicFact) -> Self {
         Fact::AtomicFact(f.into())
@@ -2175,6 +2305,12 @@ impl From<RestrictFact> for Fact {
 
 impl From<NotRestrictFact> for Fact {
     fn from(f: NotRestrictFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<FnEqualOnFact> for Fact {
+    fn from(f: FnEqualOnFact) -> Self {
         Fact::AtomicFact(f.into())
     }
 }
