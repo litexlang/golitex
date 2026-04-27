@@ -1,3 +1,4 @@
+use crate::parse::parse_helpers::collect_forall_param_names_from_facts;
 use crate::prelude::*;
 
 impl Runtime {
@@ -20,23 +21,37 @@ impl Runtime {
                 .map(|b| self.parse_fact(b))
                 .collect::<Result<_, _>>()?
         };
-        for f in &then_facts {
-            match f {
-                Fact::ForallFact(ff) => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file("by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
-                                .to_string(), ff.line_file.clone()),
-                    )));
-                }
-                Fact::ForallFactWithIff(fi) => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file("by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
-                                .to_string(), fi.line_file.clone()),
-                    )));
-                }
-                _ => {}
-            }
-        }
+        let forall_param_names = collect_forall_param_names_from_facts(&then_facts);
+        let line_file = tb.line_file.clone();
+        let (cases, proofs, impossible_facts) = if forall_param_names.is_empty() {
+            self.parse_by_cases_case_and_proof_blocks(tb)?
+        } else {
+            self.parse_in_local_free_param_scope(ParamObjType::Forall, &forall_param_names, line_file, |rt| {
+                rt.parse_by_cases_case_and_proof_blocks(tb)
+            })?
+        };
+        Ok(ByCasesStmt::new(
+            cases,
+            then_facts,
+            proofs,
+            impossible_facts,
+            tb.line_file.clone(),
+        )
+        .into())
+    }
+
+    /// Parses all `case ...:` arms (conditions, proof bodies, optional `impossible` facts).
+    fn parse_by_cases_case_and_proof_blocks(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<
+        (
+            Vec<AndChainAtomicFact>,
+            Vec<Vec<Stmt>>,
+            Vec<Option<AtomicFact>>,
+        ),
+        RuntimeError,
+    > {
         let case_block_count = tb.body.len().saturating_sub(1);
         let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
         let mut proofs: Vec<Vec<Stmt>> = Vec::with_capacity(case_block_count);
@@ -80,13 +95,6 @@ impl Runtime {
             proofs.push(proof_stmts);
             impossible_facts.push(impossible);
         }
-        Ok(ByCasesStmt::new(
-            cases,
-            then_facts,
-            proofs,
-            impossible_facts,
-            tb.line_file.clone(),
-        )
-        .into())
+        Ok((cases, proofs, impossible_facts))
     }
 }
