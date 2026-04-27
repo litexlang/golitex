@@ -11,6 +11,7 @@ pub enum ParamObjType {
     FnSet,
     Induc,
     DefAlgo,
+    AnonymousFn,
 }
 
 impl ParamObjType {
@@ -24,6 +25,7 @@ impl ParamObjType {
             ParamObjType::FnSet => 5,
             ParamObjType::Induc => 6,
             ParamObjType::DefAlgo => 7,
+            ParamObjType::AnonymousFn => 8,
         }
     }
 }
@@ -106,6 +108,11 @@ pub struct FnSetFreeParamObj {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AnonymousFnFreeParamObj {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ByInducFreeParamObj {
     pub name: String,
 }
@@ -142,6 +149,12 @@ impl SetBuilderFreeParamObj {
 impl FnSetFreeParamObj {
     pub fn new(name: String) -> Self {
         FnSetFreeParamObj { name }
+    }
+}
+
+impl AnonymousFnFreeParamObj {
+    pub fn new(name: String) -> Self {
+        AnonymousFnFreeParamObj { name }
     }
 }
 
@@ -187,6 +200,12 @@ impl fmt::Display for FnSetFreeParamObj {
     }
 }
 
+impl fmt::Display for AnonymousFnFreeParamObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write_parsing_free_param_tagged_spine(f, ParamObjType::AnonymousFn, &self.name)
+    }
+}
+
 impl fmt::Display for ByInducFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_parsing_free_param_tagged_spine(f, ParamObjType::Induc, &self.name)
@@ -229,6 +248,12 @@ impl From<FnSetFreeParamObj> for Obj {
     }
 }
 
+impl From<AnonymousFnFreeParamObj> for Obj {
+    fn from(v: AnonymousFnFreeParamObj) -> Self {
+        Obj::Atom(AtomObj::AnonymousFn(v))
+    }
+}
+
 impl From<ByInducFreeParamObj> for Obj {
     fn from(v: ByInducFreeParamObj) -> Self {
         Obj::Atom(AtomObj::Induc(v))
@@ -249,6 +274,7 @@ pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
         ParamObjType::DefHeader => DefHeaderFreeParamObj::new(name).into(),
         ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name).into(),
         ParamObjType::FnSet => FnSetFreeParamObj::new(name).into(),
+        ParamObjType::AnonymousFn => AnonymousFnFreeParamObj::new(name).into(),
         ParamObjType::Induc => ByInducFreeParamObj::new(name).into(),
         ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name).into(),
         ParamObjType::Identifier => {
@@ -269,6 +295,7 @@ pub fn param_binding_element_obj_for_store(name: String, binding_kind: ParamObjT
         | ParamObjType::DefHeader
         | ParamObjType::SetBuilder
         | ParamObjType::FnSet
+        | ParamObjType::AnonymousFn
         | ParamObjType::Induc
         | ParamObjType::DefAlgo => obj_for_bound_param_in_scope(name, binding_kind),
     }

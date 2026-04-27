@@ -50,6 +50,7 @@ impl Runtime {
             Obj::FnSet(x) => {
                 self.run_in_local_env(|rt| rt.verify_fn_set_well_defined(x, verify_state))
             }
+            Obj::AnonymousFn(x) => self.verify_anonymous_fn_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::NPos) => self.verify_n_pos_obj_well_defined(),
             Obj::StandardSet(StandardSet::N) => self.verify_n_obj_well_defined(),
             Obj::StandardSet(StandardSet::Q) => self.verify_q_obj_well_defined(),
@@ -94,6 +95,7 @@ impl Runtime {
             Obj::Atom(AtomObj::Exist(_)) => Ok(()),
             Obj::Atom(AtomObj::SetBuilder(_)) => Ok(()),
             Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
+            Obj::Atom(AtomObj::AnonymousFn(_)) => Ok(()),
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
         }?;
@@ -132,60 +134,74 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let function_name_obj: Obj = (*fn_obj.head).clone().into();
-        let mut the_set_where_current_fn_obj_is_in = self
-            .get_object_in_fn_set(&function_name_obj)
-            .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    todo_error_message(format!(
-                        "`{}` is not a defined function",
-                        fn_obj.head.to_string()
-                    )),
-                    default_line_file(),
-                    None,
-                    vec![],
-                )))
-            })?
-            .clone();
+        let mut space = match fn_obj.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(a) => {
+                self.verify_anonymous_fn_well_defined(a.as_ref(), verify_state)
+                    .map_err(|well_defined_error| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "object {} is not well-defined: anonymous function head is not well-defined",
+                                fn_obj.to_string()
+                            ),
+                            default_line_file(),
+                            Some(well_defined_error),
+                            vec![],
+                        )))
+                    })?;
+                FnSetSpace::Anon((**a).clone())
+            }
+            _ => {
+                let function_name_obj: Obj = (*fn_obj.head).clone().into();
+                FnSetSpace::Set(
+                    self.get_object_in_fn_set(&function_name_obj)
+                        .ok_or_else(|| {
+                            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                                None,
+                                todo_error_message(format!(
+                                    "`{}` is not a defined function",
+                                    fn_obj.head.to_string()
+                                )),
+                                default_line_file(),
+                                None,
+                                vec![],
+                            )))
+                        })?
+                        .clone(),
+                )
+            }
+        };
 
         for (i, args) in fn_obj.body.iter().enumerate() {
-            self.verify_fn_obj_well_defined_against_fn_set_with_dom(
+            self.verify_fn_obj_well_defined_against_fn_like_space(
                 args,
-                &the_set_where_current_fn_obj_is_in,
+                space.params(),
+                space.dom(),
+                space.binding(),
                 verify_state,
             )
             .map_err(|well_defined_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+                    None,
+                    format!(
                         "object {} is not well-defined, failed to verify arguments satisfy function domain.",
                         fn_obj.to_string()
                     ),
-                default_line_file(),
-                Some(well_defined_error),
-                vec![],
-            )))
+                    default_line_file(),
+                    Some(well_defined_error),
+                    vec![],
+                )))
             })?;
 
-            let set_where_the_next_fn_obj_is_in =
-                the_set_where_current_fn_obj_is_in.ret_set.clone();
+            let set_where_the_next_fn_obj_is_in = space.ret_set_obj();
 
-            // Store: after applying current argument group i,
-            // the intermediate prefix application fn_obj_prefix (e.g. f(a))
-            // must be in the current function set's return set.
-            //
-            // Example: input is f(a)(b), body = [[a], [b]]
-            // at i=0 we store: f(a) in ret_set_of_f
             let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
                 fn_obj.body[..=i].iter().cloned().collect();
             let fn_obj_prefix_as_obj: Obj =
                 FnObj::new(*fn_obj.head.clone(), fn_obj_prefix_body).into();
-            let set_where_the_next_fn_obj_is_in_obj =
-                (*set_where_the_next_fn_obj_is_in.clone()).clone();
             let intermediate_in_fact = InFact::new(
                 fn_obj_prefix_as_obj,
-                set_where_the_next_fn_obj_is_in_obj,
+                set_where_the_next_fn_obj_is_in,
                 default_line_file(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
@@ -209,36 +225,21 @@ impl Runtime {
                 break;
             }
 
-            the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
-                Obj::FnSet(e) => e,
-                _ => {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            format!(
-                                "expect return set of {} to be a fn_set object.",
-                                the_set_where_current_fn_obj_is_in.to_string()
-                            ),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-            };
+            space = FnSetSpace::from_ret_obj(space.ret_set_obj())?;
         }
 
         Ok(())
     }
 
-    /// Verify that the given FnObj is well-defined with respect to a FnSetWithDom definition.
-    fn verify_fn_obj_well_defined_against_fn_set_with_dom(
+    fn verify_fn_obj_well_defined_against_fn_like_space(
         &mut self,
         args: &Vec<Box<Obj>>,
-        fn_set_with_dom: &FnSet,
+        params_def_with_set: &Vec<ParamGroupWithSet>,
+        dom_facts: &Vec<OrAndChainAtomicFact>,
+        param_binding: ParamObjType,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let param_count = ParamGroupWithSet::number_of_params(&fn_set_with_dom.params_def_with_set);
+        let param_count = ParamGroupWithSet::number_of_params(params_def_with_set);
         if args.len() != param_count {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new(
@@ -267,9 +268,9 @@ impl Runtime {
         let args_satisfy_fn_set_params_set_facts =
             ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
                 self,
-                &fn_set_with_dom.params_def_with_set,
+                params_def_with_set,
                 &args_as_obj,
-                ParamObjType::FnSet,
+                param_binding,
             )
             .map_err(|stmt_error| {
                 RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -312,13 +313,11 @@ impl Runtime {
             }
         }
 
-        let param_to_arg_map = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
-            &fn_set_with_dom.params_def_with_set,
-            &args_as_obj,
-        );
-        for dom_fact in fn_set_with_dom.dom_facts.iter() {
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(params_def_with_set, &args_as_obj);
+        for dom_fact in dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, ParamObjType::FnSet, None)
+                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, param_binding, None)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -992,6 +991,88 @@ impl Runtime {
         }
 
         Ok(())
+    }
+
+    fn verify_anonymous_fn_well_defined(
+        &mut self,
+        x: &AnonymousFn,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.run_in_local_env(|rt| {
+            for param_def_with_set in x.params_def_with_set.iter() {
+                if let Err(e) = rt.define_params_with_set_in_scope(
+                    param_def_with_set,
+                    ParamObjType::AnonymousFn,
+                ) {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "failed to verify well-defined of anonymous fn {}",
+                                x.to_string()
+                            ),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        ),
+                    )));
+                }
+            }
+
+            for fact in x.dom_facts.iter() {
+                if let Err(e) =
+                    rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        fact,
+                        verify_state,
+                    )
+                {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "failed to verify well-defined of anonymous fn {}",
+                                x.to_string()
+                            ),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        ),
+                    )));
+                }
+            }
+
+            if let Err(e) = rt.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "failed to verify well-defined of anonymous fn {}",
+                            x.to_string()
+                        ),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    ),
+                )));
+            }
+
+            if let Err(e) = rt.verify_obj_well_defined_and_store_cache(&x.equal_to, verify_state) {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "failed to verify well-defined of anonymous fn {}",
+                            x.to_string()
+                        ),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    ),
+                )));
+            }
+
+            Ok(())
+        })
     }
 
     fn verify_n_pos_obj_well_defined(&mut self) -> Result<(), RuntimeError> {

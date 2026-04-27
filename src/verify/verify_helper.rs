@@ -45,6 +45,18 @@ impl Runtime {
                     )?;
                     Ok(())
                 }
+                Obj::AnonymousFn(anon) => {
+                    let ret_nonempty = IsNonemptySetFact::new(
+                        anon.ret_set.as_ref().clone(),
+                        default_line_file(),
+                    )
+                    .into();
+                    self.verify_fact_well_defined_and_store_and_infer(
+                        ret_nonempty,
+                        &VerifyState::new(2, false),
+                    )?;
+                    Ok(())
+                }
                 Obj::SetBuilder(_) => Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
                     None,
                     "set builder param type is not supported yet in verify_param_type_nonempty_if_required"

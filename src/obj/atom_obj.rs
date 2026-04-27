@@ -11,6 +11,7 @@ pub enum AtomObj {
     Exist(ExistFreeParamObj),
     SetBuilder(SetBuilderFreeParamObj),
     FnSet(FnSetFreeParamObj),
+    AnonymousFn(AnonymousFnFreeParamObj),
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
 }
@@ -25,6 +26,7 @@ impl fmt::Display for AtomObj {
             AtomObj::Exist(x) => write!(f, "{}", x),
             AtomObj::SetBuilder(x) => write!(f, "{}", x),
             AtomObj::FnSet(x) => write!(f, "{}", x),
+            AtomObj::AnonymousFn(x) => write!(f, "{}", x),
             AtomObj::Induc(x) => write!(f, "{}", x),
             AtomObj::DefAlgo(x) => write!(f, "{}", x),
         }
@@ -91,6 +93,14 @@ impl AtomObj {
                     p.name
                 };
                 AtomObj::FnSet(FnSetFreeParamObj::new(name))
+            }
+            AtomObj::AnonymousFn(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                AtomObj::AnonymousFn(AnonymousFnFreeParamObj::new(name))
             }
             AtomObj::Induc(p) => {
                 let name = if p.name == from {

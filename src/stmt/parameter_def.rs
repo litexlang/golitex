@@ -230,11 +230,12 @@ impl ParamGroupWithSet {
         ParamGroupWithSet { params, set }
     }
 
-    pub fn facts(&self) -> Vec<Fact> {
+    /// Membership facts for parameters; element tagging must match [`define_params_with_set_in_scope`]'s `binding_scope` (e.g. `FnSet` ~5 vs `AnonymousFn` ~8).
+    pub fn facts_for_binding_scope(&self, binding_scope: ParamObjType) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
         for name in self.params.iter() {
             let fact = InFact::new(
-                obj_for_bound_param_in_scope(name.clone(), ParamObjType::FnSet),
+                obj_for_bound_param_in_scope(name.clone(), binding_scope),
                 self.set.clone(),
                 default_line_file(),
             )
@@ -242,6 +243,10 @@ impl ParamGroupWithSet {
             facts.push(fact);
         }
         facts
+    }
+
+    pub fn facts(&self) -> Vec<Fact> {
+        self.facts_for_binding_scope(ParamObjType::FnSet)
     }
 
     // Example: given fn(x R, y Q), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q.

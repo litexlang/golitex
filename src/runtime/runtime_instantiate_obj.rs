@@ -80,6 +80,9 @@ impl Runtime {
             Obj::FnSet(inner) => {
                 self.inst_fn_set_with_params(inner, param_to_arg_map, param_obj_type)
             }
+            Obj::AnonymousFn(inner) => {
+                self.inst_anonymous_fn_with_params(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::StandardSet(standard_set) => self.inst_standard_set(standard_set),
             Obj::Cart(inner) => self.inst_cart(inner, param_to_arg_map, param_obj_type),
             Obj::CartDim(inner) => {
@@ -144,7 +147,9 @@ impl Runtime {
                 }
                 // See `runtime_instantiate_have_fn_forall.rs`: under FnSet inst, align Forall atoms
                 // with the canonical forall binder map.
-                if param_obj_type == ParamObjType::FnSet {
+                if param_obj_type == ParamObjType::FnSet
+                    || param_obj_type == ParamObjType::AnonymousFn
+                {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -176,7 +181,17 @@ impl Runtime {
                 Ok(p.clone().into())
             }
             Obj::Atom(AtomObj::FnSet(p)) => {
-                if param_obj_type == ParamObjType::FnSet {
+                if param_obj_type == ParamObjType::FnSet
+                    || param_obj_type == ParamObjType::AnonymousFn
+                {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
+                    }
+                }
+                Ok(p.clone().into())
+            }
+            Obj::Atom(AtomObj::AnonymousFn(p)) => {
+                if param_obj_type == ParamObjType::AnonymousFn {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -191,7 +206,9 @@ impl Runtime {
                         return Ok(obj.clone());
                     }
                 }
-                if param_obj_type == ParamObjType::FnSet {
+                if param_obj_type == ParamObjType::FnSet
+                    || param_obj_type == ParamObjType::AnonymousFn
+                {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -264,8 +281,10 @@ impl Runtime {
             Obj::Atom(AtomObj::Exist(p)) => p.clone().into(),
             Obj::Atom(AtomObj::SetBuilder(p)) => p.clone().into(),
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::AnonymousFn(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
+            Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
                 merged_body = vec![];
@@ -669,6 +688,48 @@ impl Runtime {
             dom_facts,
             self.inst_obj(
                 &fn_set_with_params.ret_set,
+                &filtered_param_to_arg_map,
+                param_obj_type,
+            )?,
+        )
+        .into())
+    }
+
+    pub fn inst_anonymous_fn_with_params(
+        &self,
+        af: &AnonymousFn,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        let param_names = ParamGroupWithSet::collect_param_names(&af.params_def_with_set);
+        let filtered_param_to_arg_map =
+            remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
+        let mut params_def_with_set = Vec::with_capacity(af.params_def_with_set.len());
+        for param_def_with_set in af.params_def_with_set.iter() {
+            params_def_with_set.push(ParamGroupWithSet::new(
+                param_def_with_set.params.clone(),
+                self.inst_obj(
+                    &param_def_with_set.set,
+                    &filtered_param_to_arg_map,
+                    param_obj_type,
+                )?,
+            ));
+        }
+        let mut dom_facts = Vec::with_capacity(af.dom_facts.len());
+        for dom_fact in af.dom_facts.iter() {
+            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+                dom_fact,
+                &filtered_param_to_arg_map,
+                param_obj_type,
+                None,
+            )?);
+        }
+        Ok(AnonymousFn::new(
+            params_def_with_set,
+            dom_facts,
+            self.inst_obj(af.ret_set.as_ref(), &filtered_param_to_arg_map, param_obj_type)?,
+            self.inst_obj(
+                af.equal_to.as_ref(),
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
