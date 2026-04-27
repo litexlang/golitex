@@ -474,11 +474,11 @@ impl Runtime {
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
             dom_stored.push(
-                self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::AnonymousFn, None)?,
+                self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::FnSet, None)?,
             );
         }
-        let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::AnonymousFn)?;
-        let eq_stored = self.inst_obj(&equal_to, &empty, ParamObjType::AnonymousFn)?;
+        let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
+        let eq_stored = self.inst_obj(&equal_to, &empty, ParamObjType::FnSet)?;
         Ok(AnonymousFn::new(
             params_and_their_sets,
             dom_stored,

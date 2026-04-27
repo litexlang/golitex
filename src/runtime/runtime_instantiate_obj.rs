@@ -147,9 +147,7 @@ impl Runtime {
                 }
                 // See `runtime_instantiate_have_fn_forall.rs`: under FnSet inst, align Forall atoms
                 // with the canonical forall binder map.
-                if param_obj_type == ParamObjType::FnSet
-                    || param_obj_type == ParamObjType::AnonymousFn
-                {
+                if param_obj_type == ParamObjType::FnSet {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -181,17 +179,7 @@ impl Runtime {
                 Ok(p.clone().into())
             }
             Obj::Atom(AtomObj::FnSet(p)) => {
-                if param_obj_type == ParamObjType::FnSet
-                    || param_obj_type == ParamObjType::AnonymousFn
-                {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::AnonymousFn(p)) => {
-                if param_obj_type == ParamObjType::AnonymousFn {
+                if param_obj_type == ParamObjType::FnSet {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -206,9 +194,7 @@ impl Runtime {
                         return Ok(obj.clone());
                     }
                 }
-                if param_obj_type == ParamObjType::FnSet
-                    || param_obj_type == ParamObjType::AnonymousFn
-                {
+                if param_obj_type == ParamObjType::FnSet {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -281,7 +267,6 @@ impl Runtime {
             Obj::Atom(AtomObj::Exist(p)) => p.clone().into(),
             Obj::Atom(AtomObj::SetBuilder(p)) => p.clone().into(),
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::AnonymousFn(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
             Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),

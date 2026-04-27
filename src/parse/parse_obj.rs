@@ -1,6 +1,31 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+/// `'R(x){...}` shorthand uses [`parse_atom`], which yields [`Identifier`] for `R`; map the same
+/// single-token standard-set names as [`Runtime::parse_primary_obj`] so membership checks use
+/// [`Obj::StandardSet`] (e.g. builtin `number in R`).
+fn obj_as_anonymous_fn_shorthand_param_set(obj: Obj) -> Obj {
+    match obj {
+        Obj::Atom(AtomObj::Identifier(ref id)) => match id.name.as_str() {
+            N_POS => StandardSet::NPos.into(),
+            N => StandardSet::N.into(),
+            Q => StandardSet::Q.into(),
+            Z => StandardSet::Z.into(),
+            R => StandardSet::R.into(),
+            Q_POS => StandardSet::QPos.into(),
+            R_POS => StandardSet::RPos.into(),
+            Q_NEG => StandardSet::QNeg.into(),
+            Z_NEG => StandardSet::ZNeg.into(),
+            R_NEG => StandardSet::RNeg.into(),
+            Q_NZ => StandardSet::QNz.into(),
+            Z_NZ => StandardSet::ZNz.into(),
+            R_NZ => StandardSet::RNz.into(),
+            _ => obj,
+        },
+        _ => obj,
+    }
+}
+
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         self.parse_obj_hierarchy0(tb)
@@ -233,13 +258,29 @@ impl Runtime {
             tb.skip_token(FN_LOWER_CASE)?;
             Ok(self.parse_fn_set(tb)?.into())
         } else if tb.current_token_is_equal_to(ANONYMOUS_FN_PREFIX) {
-            self.parse_anonymous_fn(tb)
+            let mut result = self.parse_anonymous_fn(tb)?;
+            if let Obj::AnonymousFn(anon) = &result {
+                let mut body_vectors: Vec<Vec<Box<Obj>>> = vec![];
+                while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
+                    let args = self.parse_braced_objs(tb)?;
+                    let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
+                    body_vectors.push(group);
+                }
+                if !body_vectors.is_empty() {
+                    let head = FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()));
+                    result = FnObj::new(head, body_vectors).into();
+                }
+            }
+            Ok(result)
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
     }
 
     /// `'` + `(param sets [: dom])` + return set + `{ body }`, or `'` + set + `(names)` + `{ body }`.
+    ///
+    /// After a comma-separated name list, if the next token is `:` (domain facts) rather than a set
+    /// expression, parameters are taken to be in `R` (same as writing `x, y R : ...`).
     pub fn parse_anonymous_fn(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         tb.skip_token(ANONYMOUS_FN_PREFIX)?;
         if tb.current_token_is_equal_to(LEFT_BRACE) {
@@ -255,7 +296,11 @@ impl Runtime {
                         current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                     }
 
-                    let set = this.parse_obj(tb)?;
+                    let set = if tb.current_token_is_equal_to(COLON) {
+                        StandardSet::R.into()
+                    } else {
+                        this.parse_obj(tb)?
+                    };
 
                     params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
 
@@ -282,7 +327,7 @@ impl Runtime {
 
                 let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
                 this.parsing_free_param_collection.begin_scope(
-                    ParamObjType::AnonymousFn,
+                    ParamObjType::FnSet,
                     &all_fn_names,
                     tb.line_file.clone(),
                 )?;
@@ -307,14 +352,15 @@ impl Runtime {
                 let built =
                     this.new_anonymous_fn(params_def_with_set, dom_facts, ret_set_parsed, equal_to)?;
                 this.parsing_free_param_collection
-                    .end_scope(ParamObjType::AnonymousFn, &all_fn_names);
+                    .end_scope(ParamObjType::FnSet, &all_fn_names);
                 Ok(built)
             })?;
             Ok(built.into())
         } else {
             let set_obj = {
                 let atom = self.parse_atom(tb)?;
-                self.reclassify_atom_as_free_param_obj(atom)?
+                let obj = self.reclassify_atom_as_free_param_obj(atom)?;
+                obj_as_anonymous_fn_shorthand_param_set(obj)
             };
             let built = self.run_in_local_parsing_time_name_scope(|this| {
                 tb.skip_token(LEFT_BRACE)?;
@@ -328,7 +374,7 @@ impl Runtime {
                 let param_groups = vec![param_group.clone()];
                 let all_names = ParamGroupWithSet::collect_param_names(&param_groups);
                 this.parsing_free_param_collection.begin_scope(
-                    ParamObjType::AnonymousFn,
+                    ParamObjType::FnSet,
                     &all_names,
                     tb.line_file.clone(),
                 )?;
@@ -336,7 +382,7 @@ impl Runtime {
                 let equal_to = this.parse_obj(tb)?;
                 tb.skip_token(RIGHT_CURLY_BRACE)?;
                 this.parsing_free_param_collection
-                    .end_scope(ParamObjType::AnonymousFn, &all_names);
+                    .end_scope(ParamObjType::FnSet, &all_names);
                 this.new_anonymous_fn(vec![param_group], vec![], set_obj, equal_to)
             })?;
             Ok(built.into())
@@ -601,7 +647,6 @@ impl Runtime {
             Obj::Atom(AtomObj::Def(p)) => (FnObjHead::DefHeader(p.clone()), vec![]),
             Obj::Atom(AtomObj::SetBuilder(p)) => (FnObjHead::SetBuilder(p.clone()), vec![]),
             Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
-            Obj::Atom(AtomObj::AnonymousFn(p)) => (FnObjHead::AnonymousFnParam(p.clone()), vec![]),
             Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
             Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
             Obj::AnonymousFn(anon) => (

@@ -271,9 +271,6 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(a)) => {
                 matches!(right, Obj::Atom(AtomObj::FnSet(b)) if a.to_string() == b.to_string())
             }
-            Obj::Atom(AtomObj::AnonymousFn(a)) => {
-                matches!(right, Obj::Atom(AtomObj::AnonymousFn(b)) if a.to_string() == b.to_string())
-            }
             Obj::Atom(AtomObj::Induc(a)) => {
                 matches!(right, Obj::Atom(AtomObj::Induc(b)) if a.to_string() == b.to_string())
             }

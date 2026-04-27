@@ -448,12 +448,6 @@ impl Runtime {
                 }
                 Ok(Some(HashMap::new()))
             }
-            Obj::Atom(AtomObj::AnonymousFn(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
             Obj::Atom(AtomObj::Induc(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);

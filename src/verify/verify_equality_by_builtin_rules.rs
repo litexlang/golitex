@@ -512,6 +512,20 @@ impl Runtime {
             );
         }
 
+        if let (Obj::AnonymousFn(l), Obj::AnonymousFn(r)) = (left, right) {
+            if l.to_string() == r.to_string() {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                        "anonymous fn: identical surface syntax (params, dom, ret, body)"
+                            .to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
+        }
+
         Ok((StmtUnknown::new()).into())
     }
 }
