@@ -1048,6 +1048,32 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::Sum(l), Obj::Sum(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.start, &r.start),
+                    (&l.end, &r.end),
+                    (&l.func, &r.func),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::Product(l), Obj::Product(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.start, &r.start),
+                    (&l.end, &r.end),
+                    (&l.func, &r.func),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::ClosedRange(l), Obj::ClosedRange(r)) => {
                 if self
                     .arg_pairs_share_known_equality_class(&[(&l.start, &r.start), (&l.end, &r.end)])

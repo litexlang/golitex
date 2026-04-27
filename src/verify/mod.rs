@@ -24,6 +24,7 @@ mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
 mod verify_restrict_by_def;
 mod verify_state;
+mod verify_well_defined_in_local_env;
 
 pub use verify_number_in_standard_set::number_is_in_n;
 pub use verify_number_in_standard_set::number_is_in_n_pos;

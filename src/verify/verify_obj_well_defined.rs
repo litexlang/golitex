@@ -62,6 +62,8 @@ impl Runtime {
             Obj::TupleDim(x) => self.verify_dim_well_defined(x, verify_state),
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
+            Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
+            Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
             Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
@@ -1278,6 +1280,312 @@ impl Runtime {
             )));
         }
         Ok(())
+    }
+
+    fn verify_sum_obj_well_defined(
+        &mut self,
+        x: &Sum,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.require_obj_in_z(&x.start, verify_state)?;
+        self.require_obj_in_z(&x.end, verify_state)?;
+        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
+            self.require_less_equal_verified(
+                &x.start,
+                &x.end,
+                verify_state,
+                "sum: cannot verify start <= end for the summation range".to_string(),
+            )?;
+        }
+        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_iterated_op_summand_under_integer_index_interval(
+            &x.func,
+            x.start.as_ref(),
+            x.end.as_ref(),
+            verify_state,
+            "sum",
+        )
+    }
+
+    fn verify_product_obj_well_defined(
+        &mut self,
+        x: &Product,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.require_obj_in_z(&x.start, verify_state)?;
+        self.require_obj_in_z(&x.end, verify_state)?;
+        if self.range_endpoints_are_numeric_for_interval_order_check(&x.start, &x.end) {
+            self.require_less_equal_verified(
+                &x.start,
+                &x.end,
+                verify_state,
+                "product: cannot verify start <= end for the product range".to_string(),
+            )?;
+        }
+        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_iterated_op_summand_under_integer_index_interval(
+            &x.func,
+            x.start.as_ref(),
+            x.end.as_ref(),
+            verify_state,
+            "product",
+        )
+    }
+
+    fn verify_iterated_op_summand_under_integer_index_interval(
+        &mut self,
+        func: &Obj,
+        start: &Obj,
+        end: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<(), RuntimeError> {
+        if let Some(af) = Self::summand_as_unary_anonymous_fn(func) {
+            return self.verify_unary_iterated_anonymous_in_interval(af, start, end, verify_state, op);
+        }
+        if let Obj::FnObj(fo) = func {
+            if !fo.body.is_empty() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "{op}: expected a bare function as summand, not a function application"
+                        ),
+                        default_line_file(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+            let function_name_obj: Obj = (*fo.head).clone().into();
+            let Some(fs_ref) = self.get_object_in_fn_set(&function_name_obj) else {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "{op}: summand must be a unary anonymous function, or a name with a stored function set; got {}",
+                            func
+                        ),
+                        default_line_file(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            };
+            if ParamGroupWithSet::number_of_params(&fs_ref.body.params_def_with_set) != 1 {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!("{op}: the function in the function set must be unary (one index)"),
+                        default_line_file(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+            let param_names =
+                ParamGroupWithSet::collect_param_names(&fs_ref.body.params_def_with_set);
+            let pname = param_names[0].clone();
+            let fs: FnSet = fs_ref.clone();
+            let start_c = start.clone();
+            let end_c = end.clone();
+            return self.run_in_local_env(|rt| {
+                let group =
+                    ParamGroupWithSet::new(vec![pname.clone()], StandardSet::Z.into());
+                rt.define_params_with_set_in_scope(&group, ParamObjType::FnSet)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!("{op}: could not bind index parameter in Z in local check"),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })?;
+                let k: Obj = Identifier::new(pname).into();
+                let le_lo = OrAndChainAtomicFact::AtomicFact(
+                    LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
+                );
+                let le_hi = OrAndChainAtomicFact::AtomicFact(
+                    LessEqualFact::new(k, end_c.clone(), default_line_file()).into(),
+                );
+                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_lo)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!("{op}: could not add lower bound in local check"),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })?;
+                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_hi)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!("{op}: could not add upper bound in local check"),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })?;
+                for df in fs.body.dom_facts.iter() {
+                    rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        df,
+                        verify_state,
+                    )
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!("{op}: function set dom in local check failed"),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })?;
+                }
+                rt.verify_obj_well_defined_and_store_cache(&fs.body.ret_set, verify_state)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!("{op}: return set not well-defined on the integer range"),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })
+            });
+        }
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "{op}: summand must be a unary anonymous function, or a defined unary function in a function set; got {}",
+                    func
+                ),
+                default_line_file(),
+                None,
+                vec![],
+            ),
+        )))
+    }
+
+    fn summand_as_unary_anonymous_fn(obj: &Obj) -> Option<&AnonymousFn> {
+        match obj {
+            Obj::AnonymousFn(af) => Some(af),
+            Obj::FnObj(fo) => {
+                if !fo.body.is_empty() {
+                    return None;
+                }
+                match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => Some(a.as_ref()),
+                    _ => None,
+                }
+            }
+            _ => None,
+        }
+    }
+
+    fn verify_unary_iterated_anonymous_in_interval(
+        &mut self,
+        af: &AnonymousFn,
+        start: &Obj,
+        end: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<(), RuntimeError> {
+        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!("{op}: summation/product index function must be unary (one parameter)"),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        }
+        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let pname = param_names[0].clone();
+        self.run_in_local_env(|rt| {
+            let group = ParamGroupWithSet::new(vec![pname.clone()], StandardSet::Z.into());
+            rt.define_params_with_set_in_scope(&group, ParamObjType::FnSet)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!("{op}: could not bind index in Z in local check"),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+            let k: Obj = Identifier::new(pname).into();
+            let le_lo = OrAndChainAtomicFact::AtomicFact(
+                LessEqualFact::new(start.clone(), k.clone(), default_line_file()).into(),
+            );
+            let le_hi = OrAndChainAtomicFact::AtomicFact(
+                LessEqualFact::new(k, end.clone(), default_line_file()).into(),
+            );
+            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_lo)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!("{op}: could not add lower bound in local check"),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_hi)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!("{op}: could not add upper bound in local check"),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+            for df in af.body.dom_facts.iter() {
+                rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                    df,
+                    verify_state,
+                )
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!("{op}: local dom of anonymous summand in integer range check failed"),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+            }
+            rt.verify_obj_well_defined_and_store_cache(&af.body.ret_set, verify_state)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!("{op}: return set not well-defined on the integer range"),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+            rt.verify_obj_well_defined_and_store_cache(&af.equal_to, verify_state)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!("{op}: expression body not well-defined on the integer range"),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    )))
+                })
+        })
     }
 
     fn verify_range_well_defined(
