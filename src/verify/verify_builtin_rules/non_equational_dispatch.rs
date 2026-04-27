@@ -66,8 +66,8 @@ impl Runtime {
                     not_is_nonempty_set_fact,
                     verify_state,
                 ),
-            AtomicFact::FnEqualOnFact(fe) => {
-                self.verify_fn_equal_on_fact_with_builtin_rules(fe, verify_state)
+            AtomicFact::FnEqualInFact(fe) => {
+                self.verify_fn_equal_in_fact_with_builtin_rules(fe, verify_state)
             }
             _ => Ok((StmtUnknown::new()).into()),
         }

@@ -33,20 +33,20 @@ pub enum AtomicFact {
     NotIsTupleFact(NotIsTupleFact),
     NotSubsetFact(NotSubsetFact),
     NotSupersetFact(NotSupersetFact),
-    FnEqualOnFact(FnEqualOnFact),
+    FnEqualInFact(FnEqualInFact),
 }
 
 #[derive(Clone)]
-pub struct FnEqualOnFact {
+pub struct FnEqualInFact {
     pub left: Obj,
     pub right: Obj,
     pub set: Obj,
     pub line_file: LineFile,
 }
 
-impl FnEqualOnFact {
+impl FnEqualInFact {
     pub fn new(left: Obj, right: Obj, set: Obj, line_file: LineFile) -> Self {
-        FnEqualOnFact {
+        FnEqualInFact {
             left,
             right,
             set,
@@ -55,12 +55,12 @@ impl FnEqualOnFact {
     }
 }
 
-impl fmt::Display for FnEqualOnFact {
+impl fmt::Display for FnEqualInFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{}({}, {}, {})",
-            FACT_PREFIX, FN_EQ_ON, self.left, self.right, self.set
+            FACT_PREFIX, FN_EQ_IN, self.left, self.right, self.set
         )
     }
 }
@@ -544,7 +544,7 @@ impl fmt::Display for AtomicFact {
             AtomicFact::NotSupersetFact(x) => write!(f, "{}", x),
             AtomicFact::RestrictFact(x) => write!(f, "{}", x),
             AtomicFact::NotRestrictFact(x) => write!(f, "{}", x),
-            AtomicFact::FnEqualOnFact(x) => write!(f, "{}", x),
+            AtomicFact::FnEqualInFact(x) => write!(f, "{}", x),
         }
     }
 }
@@ -899,7 +899,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(x) => {
                 NotSupersetFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
             }
-            AtomicFact::FnEqualOnFact(x) => FnEqualOnFact::new(
+            AtomicFact::FnEqualInFact(x) => FnEqualInFact::new(
                 r(x.left, from, to),
                 r(x.right, from, to),
                 r(x.set, from, to),
@@ -943,7 +943,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
             AtomicFact::RestrictFact(_) => RESTRICT.to_string(),
             AtomicFact::NotRestrictFact(_) => RESTRICT.to_string(),
-            AtomicFact::FnEqualOnFact(_) => FN_EQ_ON.to_string(),
+            AtomicFact::FnEqualInFact(_) => FN_EQ_IN.to_string(),
         }
     }
 
@@ -979,7 +979,7 @@ impl AtomicFact {
             AtomicFact::NotSubsetFact(_) => false,
             AtomicFact::NotSupersetFact(_) => false,
             AtomicFact::NotRestrictFact(_) => false,
-            AtomicFact::FnEqualOnFact(_) => true,
+            AtomicFact::FnEqualInFact(_) => true,
         }
     }
 
@@ -1293,9 +1293,9 @@ impl AtomicFact {
                     Ok(NotRestrictFact::new(a0, a1, line_file).into())
                 }
             }
-            FN_EQ_ON => {
+            FN_EQ_IN => {
                 if !is_true {
-                    let msg = format!("{} does not support `not`", FN_EQ_ON);
+                    let msg = format!("{} does not support `not`", FN_EQ_IN);
                     return Err(NewAtomicFactRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
                     )
@@ -1304,7 +1304,7 @@ impl AtomicFact {
                 if args.len() != 3 {
                     let msg = format!(
                         "{} requires 3 arguments (f, g, set), but got {}",
-                        FN_EQ_ON,
+                        FN_EQ_IN,
                         args.len()
                     );
                     return Err(NewAtomicFactRuntimeError(
@@ -1316,7 +1316,7 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 let a2 = args.remove(0);
-                Ok(FnEqualOnFact::new(a0, a1, a2, line_file).into())
+                Ok(FnEqualInFact::new(a0, a1, a2, line_file).into())
             }
             _ => {
                 if is_true {
@@ -1411,7 +1411,7 @@ impl AtomicFact {
                 not_restrict_fact.obj.clone(),
                 not_restrict_fact.obj_cannot_restrict_to_fn_set.clone(),
             ],
-            AtomicFact::FnEqualOnFact(f) => {
+            AtomicFact::FnEqualInFact(f) => {
                 vec![f.left.clone(), f.right.clone(), f.set.clone()]
             }
         }
@@ -1450,7 +1450,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(_) => 2,
             AtomicFact::RestrictFact(_) => 2,
             AtomicFact::NotRestrictFact(_) => 2,
-            AtomicFact::FnEqualOnFact(_) => 3,
+            AtomicFact::FnEqualInFact(_) => 3,
             _ => unreachable!("其他情况不是builtin predicate"),
         }
     }
@@ -1489,7 +1489,7 @@ impl AtomicFact {
             AtomicFact::NotNormalAtomicFact(a) => a.body.len(),
             AtomicFact::RestrictFact(_) => 2,
             AtomicFact::NotRestrictFact(_) => 2,
-            AtomicFact::FnEqualOnFact(_) => 3,
+            AtomicFact::FnEqualInFact(_) => 3,
         }
     }
 
@@ -1525,7 +1525,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(a) => a.line_file.clone(),
             AtomicFact::RestrictFact(a) => a.line_file.clone(),
             AtomicFact::NotRestrictFact(a) => a.line_file.clone(),
-            AtomicFact::FnEqualOnFact(a) => a.line_file.clone(),
+            AtomicFact::FnEqualInFact(a) => a.line_file.clone(),
         }
     }
 }
@@ -1675,7 +1675,7 @@ impl AtomicFact {
                 a.line_file.clone(),
             )
             .into(),
-            AtomicFact::FnEqualOnFact(a) => FnEqualOnFact::new(
+            AtomicFact::FnEqualInFact(a) => FnEqualInFact::new(
                 a.right.clone(),
                 a.left.clone(),
                 a.set.clone(),
@@ -2005,7 +2005,7 @@ impl AtomicFact {
                 inner.line_file.clone(),
             )
             .into(),
-            AtomicFact::FnEqualOnFact(inner) => FnEqualOnFact::new(
+            AtomicFact::FnEqualInFact(inner) => FnEqualInFact::new(
                 inner
                     .left
                     .replace_with_numeric_result_if_can_be_calculated()
@@ -2207,9 +2207,9 @@ impl From<NotSupersetFact> for AtomicFact {
     }
 }
 
-impl From<FnEqualOnFact> for AtomicFact {
-    fn from(f: FnEqualOnFact) -> Self {
-        AtomicFact::FnEqualOnFact(f)
+impl From<FnEqualInFact> for AtomicFact {
+    fn from(f: FnEqualInFact) -> Self {
+        AtomicFact::FnEqualInFact(f)
     }
 }
 
@@ -2309,8 +2309,8 @@ impl From<NotRestrictFact> for Fact {
     }
 }
 
-impl From<FnEqualOnFact> for Fact {
-    fn from(f: FnEqualOnFact) -> Self {
+impl From<FnEqualInFact> for Fact {
+    fn from(f: FnEqualInFact) -> Self {
         Fact::AtomicFact(f.into())
     }
 }
