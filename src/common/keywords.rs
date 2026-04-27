@@ -67,6 +67,8 @@ pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
+pub const SUM: &str = "sum";
+pub const PRODUCT: &str = "product";
 pub const EXIST: &str = "exist";
 pub const EXIST_UNIQUE: &str = "exist_unique";
 pub const ST: &str = "st";
@@ -204,6 +206,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE_DIM,
         PROJ,
         COUNT,
+        SUM,
+        PRODUCT,
         FINITE_SEQ,
         SEQ,
         MATRIX,

@@ -1,0 +1,11 @@
+'(x, y: x < y) R {x + y} = '(x, y: x < y) R {x + y}
+'R(x){x} = 'R(x){x}
+'R(x){x} = '(x R) R {x}
+
+'R(x){x + 2*x}(3) = 9
+
+forall y R:
+    'R(x){x + 2*x}(y) = y + 2*y
+    'R(x){x}(y) + 'R(x){2*x}(y) = y + 2*y
+    'R(x){x + 2*x}(y) = 'R(x){x}(y) + 'R(x){2*x}(y)
+

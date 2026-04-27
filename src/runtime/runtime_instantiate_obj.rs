@@ -98,6 +98,12 @@ impl Runtime {
             Obj::Count(inner) => {
                 self.inst_count(inner, param_to_arg_map, param_obj_type)
             }
+            Obj::Sum(inner) => {
+                self.inst_sum(inner, param_to_arg_map, param_obj_type)
+            }
+            Obj::Product(inner) => {
+                self.inst_product(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Range(inner) => {
                 self.inst_range(inner, param_to_arg_map, param_obj_type)
             }
@@ -799,6 +805,34 @@ impl Runtime {
             Count::new(self.inst_obj(&count.set, param_to_arg_map, param_obj_type)?)
                 .into(),
         )
+    }
+
+    pub fn inst_sum(
+        &self,
+        sum: &Sum,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Sum::new(
+            self.inst_obj(&sum.start, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&sum.end, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&sum.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
+    pub fn inst_product(
+        &self,
+        product: &Product,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Product::new(
+            self.inst_obj(&product.start, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&product.end, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&product.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
     }
 
     pub fn inst_range(

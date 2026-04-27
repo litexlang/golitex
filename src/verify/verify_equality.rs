@@ -533,6 +533,42 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::Sum(ls), Obj::Sum(rs)) => {
+                if !self.verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &ls.start,
+                    &ls.end,
+                    &rs.start,
+                    &rs.end,
+                    verify_state,
+                    equality_line_file.clone(),
+                )? {
+                    return Ok(false);
+                }
+                self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    ls.func.as_ref(),
+                    rs.func.as_ref(),
+                    verify_state,
+                    equality_line_file,
+                )
+            }
+            (Obj::Product(ls), Obj::Product(rs)) => {
+                if !self.verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &ls.start,
+                    &ls.end,
+                    &rs.start,
+                    &rs.end,
+                    verify_state,
+                    equality_line_file.clone(),
+                )? {
+                    return Ok(false);
+                }
+                self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    ls.func.as_ref(),
+                    rs.func.as_ref(),
+                    verify_state,
+                    equality_line_file,
+                )
+            }
             (Obj::ClosedRange(left_closed_range), Obj::ClosedRange(right_closed_range)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_closed_range.start,
