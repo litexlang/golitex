@@ -830,7 +830,7 @@ f(100,99) = f(100,99)
 
 ### `by family`
 
-**Meaning.** Use an instantiated **family** (syntax `@` *name* `(` *args* `)`; `family` is only the definition keyword).
+**Meaning.** Use an instantiated **family** (syntax `\` *name* `(` *args* `)`; `family` is only the definition keyword).
 
 **Syntax.** `by family` `:` *object*.
 
@@ -839,13 +839,13 @@ f(100,99) = f(100,99)
 ```litex
 family self_seq(s set) = fn(x N_pos) s
 
-forall a @self_seq(R):
+forall a \self_seq(R):
     a $in fn(y N_pos)R
     a(1) = a(1)
 
 family p(a set) = fn(x a) a
 
-by family: @p(R) # 生成 @p(R) = fn(x R) R。即用实参 R 替换形参 a
+by family: \p(R) # 生成 \p(R) = fn(x R) R。即用实参 R 替换形参 a
 ```
 
 ---
