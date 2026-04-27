@@ -36,7 +36,8 @@ pub const LEFT_BRACKET: &str = "[";
 pub const RIGHT_BRACKET: &str = "]";
 pub const DOUBLE_QUOTE: &str = "\"";
 pub const COLON: &str = ":";
-pub const INFIX_FN_NAME_SIGN: &str = "\\";
+// Infix operator: one backtick before the name, e.g. A `union B (same role as former A \union B).
+pub const INFIX_FN_NAME_SIGN: &str = "`";
 
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
