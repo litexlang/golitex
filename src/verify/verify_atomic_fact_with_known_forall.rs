@@ -361,6 +361,18 @@ impl Runtime {
                 self.match_arg_when_left_is_finite_seq_list(&left.objs, given_arg)
             }
             Obj::Count(ref left) => self.match_arg_when_left_is_count(left.set.as_ref(), given_arg),
+            Obj::Sum(ref left) => self.match_arg_when_left_is_sum(
+                left.start.as_ref(),
+                left.end.as_ref(),
+                left.func.as_ref(),
+                given_arg,
+            ),
+            Obj::Product(ref left) => self.match_arg_when_left_is_product(
+                left.start.as_ref(),
+                left.end.as_ref(),
+                left.func.as_ref(),
+                given_arg,
+            ),
             Obj::Range(ref left) => {
                 self.match_arg_when_left_is_range(left.start.as_ref(), left.end.as_ref(), given_arg)
             }
@@ -1438,6 +1450,46 @@ impl Runtime {
                 left_end,
                 given.start.as_ref(),
                 given.end.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_sum(
+        &mut self,
+        left_start: &Obj,
+        left_end: &Obj,
+        left_func: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Sum(ref g) => self.match_arg_ternary_then_merge(
+                left_start,
+                left_end,
+                left_func,
+                g.start.as_ref(),
+                g.end.as_ref(),
+                g.func.as_ref(),
+            ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_product(
+        &mut self,
+        left_start: &Obj,
+        left_end: &Obj,
+        left_func: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Product(ref g) => self.match_arg_ternary_then_merge(
+                left_start,
+                left_end,
+                left_func,
+                g.start.as_ref(),
+                g.end.as_ref(),
+                g.func.as_ref(),
             ),
             _ => Ok(None),
         }

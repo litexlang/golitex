@@ -35,6 +35,8 @@ pub enum Obj {
     TupleDim(TupleDim),
     Tuple(Tuple),
     Count(Count),
+    Sum(Sum),
+    Product(Product),
     Range(Range),
     ClosedRange(ClosedRange),
     FiniteSeqSet(FiniteSeqSet),
@@ -51,6 +53,20 @@ pub enum Obj {
     MatrixMul(MatrixMul),
     MatrixScalarMul(MatrixScalarMul),
     MatrixPow(MatrixPow),
+}
+
+#[derive(Clone)]
+pub struct Sum {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+    pub func: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Product {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+    pub func: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -664,6 +680,26 @@ impl MatrixPow {
     }
 }
 
+impl Sum {
+    pub fn new(start: Obj, end: Obj, func: Obj) -> Self {
+        Sum {
+            start: Box::new(start),
+            end: Box::new(end),
+            func: Box::new(func),
+        }
+    }
+}
+
+impl Product {
+    pub fn new(start: Obj, end: Obj, func: Obj) -> Self {
+        Product {
+            start: Box::new(start),
+            end: Box::new(end),
+            func: Box::new(func),
+        }
+    }
+}
+
 /// 算术运算符优先级：数值越小绑定越紧。^ / matrix ops =1, * / % / *. =2, + -=3；非算术=0 不参与括号。
 fn precedence(o: &Obj) -> u8 {
     match o {
@@ -807,6 +843,8 @@ impl Obj {
             Obj::TupleDim(x) => write!(f, "{}", x)?,
             Obj::Tuple(x) => write!(f, "{}", x)?,
             Obj::Count(x) => write!(f, "{}", x)?,
+            Obj::Sum(x) => write!(f, "{}", x)?,
+            Obj::Product(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
@@ -1017,6 +1055,18 @@ impl Obj {
             )
             .into(),
             Obj::Count(x) => Count::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
+            Obj::Sum(x) => Sum::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+                Obj::replace_bound_identifier(*x.func, from, to),
+            )
+            .into(),
+            Obj::Product(x) => Product::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+                Obj::replace_bound_identifier(*x.func, from, to),
+            )
+            .into(),
             Obj::Range(x) => Range::new(
                 Obj::replace_bound_identifier(*x.start, from, to),
                 Obj::replace_bound_identifier(*x.end, from, to),
@@ -1333,6 +1383,36 @@ impl fmt::Display for Count {
             "{}{}",
             COUNT,
             braced_vec_to_string(&vec![self.set.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for Sum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            SUM,
+            braced_vec_to_string(&vec![
+                self.start.as_ref(),
+                self.end.as_ref(),
+                self.func.as_ref(),
+            ])
+        )
+    }
+}
+
+impl fmt::Display for Product {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            PRODUCT,
+            braced_vec_to_string(&vec![
+                self.start.as_ref(),
+                self.end.as_ref(),
+                self.func.as_ref(),
+            ])
         )
     }
 }
@@ -1815,6 +1895,18 @@ impl From<Tuple> for Obj {
 impl From<Count> for Obj {
     fn from(c: Count) -> Self {
         Obj::Count(c)
+    }
+}
+
+impl From<Sum> for Obj {
+    fn from(s: Sum) -> Self {
+        Obj::Sum(s)
+    }
+}
+
+impl From<Product> for Obj {
+    fn from(p: Product) -> Self {
+        Obj::Product(p)
     }
 }
 

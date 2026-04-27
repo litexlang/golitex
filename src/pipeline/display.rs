@@ -25,6 +25,21 @@ fn user_visible_stmt_or_msg_text(raw: &str) -> String {
     raw.to_string()
 }
 
+/// `infer_facts` for JSON: all inferred lines except the one that only repeats the same text as
+/// this entry's `stmt` field (that fact is already shown under `stmt` and stored in the fact store).
+fn json_infer_fact_items_excluding_self_stmt(
+    infers: &InferResult,
+    stmt_text_as_in_json: &str,
+) -> Vec<JsonValue> {
+    let exclude = user_visible_stmt_or_msg_text(stmt_text_as_in_json);
+    infers
+        .infer_lines_unique_in_order()
+        .iter()
+        .filter(|s| user_visible_stmt_or_msg_text(s) != exclude)
+        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
+        .collect()
+}
+
 /// Apply [`strip_free_param_numeric_tags_in_display`] once on a finished JSON blob (CLI/REPL/file run).
 /// Nested JSON is built with `strip_free_param_tags == false` so a single final strip covers the whole tree.
 fn finalize_display_text_with_optional_strip(
@@ -107,7 +122,9 @@ fn factual_success_verified_by_value(runtime: &Runtime, x: &FactualStmtSuccess) 
     )
 }
 
-fn stmt_result_to_forall_step_verified_by(runtime: &Runtime, r: &StmtResult) -> JsonValue {
+/// Map one child [`StmtResult`] to the per-step `verified_by` object used in `verified_by` JSON arrays
+/// (forall / and / chain composite facts).
+fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) -> JsonValue {
     match r {
         StmtResult::FactualStmtSuccess(f) => factual_success_verified_by_value(runtime, f),
         StmtResult::NonFactualStmtSuccess(n) => JsonValue::Object(vec![
@@ -127,20 +144,19 @@ fn stmt_result_to_forall_step_verified_by(runtime: &Runtime, r: &StmtResult) -> 
     }
 }
 
-fn forall_factual_with_then_proofs_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+/// JSON for [`Fact::ForallFact`], [`Fact::AndFact`], or [`Fact::ChainFact`] when
+/// `inside_results` holds one entry per sub-fact (then / conjunct / chain step).
+fn composite_factual_with_step_proofs_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
+    let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by_items: Vec<JsonValue> = x
         .inside_results
         .iter()
-        .map(|r| stmt_result_to_forall_step_verified_by(runtime, r))
+        .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
         .collect();
 
-    let infer_items: Vec<JsonValue> = x
-        .infers
-        .infer_lines_unique_in_order()
-        .iter()
-        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
-        .collect();
+    let infer_items: Vec<JsonValue> =
+        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
 
     JsonValue::Object(vec![
         (
@@ -157,7 +173,7 @@ fn forall_factual_with_then_proofs_to_json(runtime: &Runtime, x: &FactualStmtSuc
         ),
         (
             "stmt".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&x.stmt.to_string())),
+            JsonValue::JsonString(stmt_user_visible.clone()),
         ),
         (
             JSON_KEY_VERIFIED_BY.to_string(),
@@ -217,12 +233,7 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
         _ => stmt_display_string,
     };
 
-    let infer_items: Vec<JsonValue> = x
-        .infers
-        .infer_lines_unique_in_order()
-        .iter()
-        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
-        .collect();
+    let infer_items: Vec<JsonValue> = json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_text);
 
     let inside_items: Vec<JsonValue> = x
         .inside_results
@@ -256,8 +267,12 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
 }
 
 fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
-    if matches!(&x.stmt, Fact::ForallFact(_)) && !x.inside_results.is_empty() {
-        return forall_factual_with_then_proofs_to_json(runtime, x);
+    if matches!(
+        &x.stmt,
+        Fact::ForallFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
+    ) && !x.inside_results.is_empty()
+    {
+        return composite_factual_with_step_proofs_to_json(runtime, x);
     }
     if x.is_verified_by_builtin_rules_only() {
         factual_builtin_rules_to_json(runtime, x)
@@ -268,14 +283,11 @@ fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> Js
 
 fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
+    let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by = factual_success_verified_by_value(runtime, x);
 
-    let infer_items: Vec<JsonValue> = x
-        .infers
-        .infer_lines_unique_in_order()
-        .iter()
-        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
-        .collect();
+    let infer_items: Vec<JsonValue> =
+        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
 
     let inside_items: Vec<JsonValue> = x
         .inside_results
@@ -298,7 +310,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
         ),
         (
             "stmt".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&x.stmt.to_string())),
+            JsonValue::JsonString(stmt_user_visible.clone()),
         ),
         (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (
@@ -311,14 +323,11 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
 
 fn factual_known_fact_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
+    let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by = factual_success_verified_by_value(runtime, x);
 
-    let infer_items: Vec<JsonValue> = x
-        .infers
-        .infer_lines_unique_in_order()
-        .iter()
-        .map(|s| JsonValue::JsonString(user_visible_stmt_or_msg_text(s)))
-        .collect();
+    let infer_items: Vec<JsonValue> =
+        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
 
     let inside_items: Vec<JsonValue> = x
         .inside_results
@@ -341,7 +350,7 @@ fn factual_known_fact_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> Json
         ),
         (
             "stmt".to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&x.stmt.to_string())),
+            JsonValue::JsonString(stmt_user_visible.clone()),
         ),
         (JSON_KEY_VERIFIED_BY.to_string(), verified_by),
         (

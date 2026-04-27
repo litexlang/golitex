@@ -447,6 +447,30 @@ impl Count {
     }
 }
 
+impl Sum {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {}, {} \right)",
+            SUM,
+            self.start.to_latex_string(),
+            self.end.to_latex_string(),
+            self.func.to_latex_string()
+        )
+    }
+}
+
+impl Product {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {}, {} \right)",
+            PRODUCT,
+            self.start.to_latex_string(),
+            self.end.to_latex_string(),
+            self.func.to_latex_string()
+        )
+    }
+}
+
 impl Cup {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1889,6 +1913,8 @@ impl Obj {
             Obj::TupleDim(x) => x.to_latex_string(),
             Obj::Tuple(x) => x.to_latex_string(),
             Obj::Count(x) => x.to_latex_string(),
+            Obj::Sum(x) => x.to_latex_string(),
+            Obj::Product(x) => x.to_latex_string(),
             Obj::Range(x) => x.to_latex_string(),
             Obj::ClosedRange(x) => x.to_latex_string(),
             Obj::FiniteSeqSet(x) => x.to_latex_string(),
