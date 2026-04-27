@@ -196,7 +196,8 @@ Runs **before** known equalities and before generic same-shape recursion (`verif
 4. **Log** — `log(base, base^exp) = exp`; plus product/quotient/power algebra on `log`; **`log(a,b)=c`** from **`a^c = b`** (pow inverse).
 5. **Same + calculation** — `verify_equality_by_they_are_the_same_and_calculation` (identity and partial evaluation).
 6. **Rational simplification** — If still plausible, **`objs_equal_by_rational_expression_evaluation`** on evaluated pair; reason `calculation and rational expression simplification`.
-7. **Two `fn` set values** — `verify_fn_set_with_params_equality_by_builtin_rules` (structural compare).
+7. **Anonymous `fn` application** — If one side is a **`'(…) … { body }(args…)`** application and the other side is an arbitrary object, flatten **`args`** in order, require **`#args` = #parameters**, substitute into **`body`** (same as runtime **`inst_obj`**, **`ParamObjType::FnSet`**), then **`verify_objs_are_equal`** (recursive pipeline) for the reduced object vs. the other side. Works in either order (`application = c` or `c = application`). Reason string starts with `equality: anonymous function application — substitute args…`.
+8. **Two `fn` set values** — `verify_fn_set_with_params_equality_by_builtin_rules` (structural compare).
 
 ```lit
 fact 1 + 1 = 2
