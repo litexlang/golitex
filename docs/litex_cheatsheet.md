@@ -967,7 +967,7 @@ by tuple: (1, 2)
 
 ### `eval`
 
-**Meaning.** Evaluate a call using the **`algo`** attached to a function. For a **finite** summation `sum(i, lo, hi, body)` whose bounds `lo` and `hi` evaluate to integers, `eval` expands the sum: it substitutes `i` for each integer from `lo` to `hi` (inclusive), resolves and evaluates each `body`, and adds the terms (an empty range yields `0`).
+**Meaning.** Evaluate a call using the **`algo`** attached to a function (and other forms supported by the runtime’s `eval` pipeline, such as numeric expressions and matrix literals).
 
 **Syntax.** `eval` *expression* (typically a function application).
 

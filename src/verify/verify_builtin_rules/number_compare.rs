@@ -469,12 +469,6 @@ impl Runtime {
         if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_order_two_sums_same_index_and_bounds(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.try_verify_zero_order_sum_by_pointwise_summand_order(atomic_fact)? {
-            return Ok(result);
-        }
         if let Some(result) = self.verify_order_from_known_negated_complement(atomic_fact)? {
             return Ok(result);
         }

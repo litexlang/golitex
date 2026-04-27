@@ -122,10 +122,6 @@ impl Runtime {
             Obj::Choose(inner) => {
                 self.inst_choose(inner, param_to_arg_map, param_obj_type)
             }
-            Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
-            Obj::Product(inner) => {
-                self.inst_product(inner, param_to_arg_map, param_obj_type)
-            }
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
             }
@@ -181,22 +177,6 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::FnSet(p)) => {
                 if param_obj_type == ParamObjType::FnSet {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::Sum(p)) => {
-                if param_obj_type == ParamObjType::Sum {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::Product(p)) => {
-                if param_obj_type == ParamObjType::Product {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -284,8 +264,6 @@ impl Runtime {
             Obj::Atom(AtomObj::Exist(p)) => p.clone().into(),
             Obj::Atom(AtomObj::SetBuilder(p)) => p.clone().into(),
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::Sum(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::Product(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
             Obj::FnObj(x) => {
@@ -894,60 +872,6 @@ impl Runtime {
             )?)
             .into(),
         )
-    }
-
-    pub fn inst_sum(
-        &self,
-        sum: &SumObj,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(SumObj::new(
-            sum.param.clone(),
-            self.inst_obj(
-                sum.start.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                sum.end.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                sum.body.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-        )
-        .into())
-    }
-
-    pub fn inst_product(
-        &self,
-        product: &ProductObj,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(ProductObj::new(
-            product.param.clone(),
-            self.inst_obj(
-                product.start.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                product.end.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                product.body.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-        )
-        .into())
     }
 
     pub fn inst_obj_at_index(
