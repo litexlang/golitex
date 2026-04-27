@@ -1138,9 +1138,9 @@ impl Runtime {
             );
         }
         let flat_stored =
-            ParamGroupWithSet::collect_param_names(&stored_fn_set.params_def_with_set);
+            ParamGroupWithSet::collect_param_names(&stored_fn_set.body.params_def_with_set);
         let flat_expected =
-            ParamGroupWithSet::collect_param_names(&expected_fn_set.params_def_with_set);
+            ParamGroupWithSet::collect_param_names(&expected_fn_set.body.params_def_with_set);
         if flat_stored.len() != flat_expected.len() {
             return Ok((StmtUnknown::new()).into());
         }

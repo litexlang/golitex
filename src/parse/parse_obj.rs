@@ -1,32 +1,6 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-/// `'R(x){...}` shorthand uses [`parse_identifier_or_identifier_with_mod`], which yields
-/// [`Identifier`] for `R`; map the same single-token standard-set names as
-/// [`Runtime::parse_primary_obj`] so membership checks use [`Obj::StandardSet`] (e.g. builtin
-/// `number in R`).
-fn obj_as_anonymous_fn_shorthand_param_set(obj: Obj) -> Obj {
-    match obj {
-        Obj::Atom(AtomObj::Identifier(ref id)) => match id.name.as_str() {
-            N_POS => StandardSet::NPos.into(),
-            N => StandardSet::N.into(),
-            Q => StandardSet::Q.into(),
-            Z => StandardSet::Z.into(),
-            R => StandardSet::R.into(),
-            Q_POS => StandardSet::QPos.into(),
-            R_POS => StandardSet::RPos.into(),
-            Q_NEG => StandardSet::QNeg.into(),
-            Z_NEG => StandardSet::ZNeg.into(),
-            R_NEG => StandardSet::RNeg.into(),
-            Q_NZ => StandardSet::QNz.into(),
-            Z_NZ => StandardSet::ZNz.into(),
-            R_NZ => StandardSet::RNz.into(),
-            _ => obj,
-        },
-        _ => obj,
-    }
-}
-
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         self.parse_obj_hierarchy0(tb)
@@ -356,10 +330,7 @@ impl Runtime {
             })?;
             Ok(built.into())
         } else {
-            let set_obj = {
-                let obj = self.parse_and_reclassify_atom_as_free_param_obj(tb)?;
-                obj_as_anonymous_fn_shorthand_param_set(obj)
-            };
+            let set_obj = self.parse_and_reclassify_atom_as_free_param_obj(tb)?;
             let built = self.run_in_local_parsing_time_name_scope(|this| {
                 tb.skip_token(LEFT_BRACE)?;
                 let mut params = vec![parse_synthetically_correct_identifier_string(tb)?];
@@ -633,7 +604,7 @@ impl Runtime {
             }
         }
 
-        // 2. 单符号集合、多元关键字、或 atom
+        // 2. 多元关键字、或 atom（内建 `StandardSet` 名在 reclassify 中处理）
         let mut result = self.parse_primary_obj(tb)?;
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
@@ -666,63 +637,9 @@ impl Runtime {
         Ok(result)
     }
 
-    /// 解析「主元」：当前 token 必须是单符号集合名、多元关键字、或普通标识符(atom)。
+    /// 解析「主元」：当前 token 必须是多元关键字、或普通标识符 (atom)（内建 `StandardSet` 名走 atom 路径）。
     fn parse_primary_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let tok = tb.current()?;
-
-        // 单符号集合（无参）
-        if tok == N_POS {
-            tb.skip()?;
-            return Ok(StandardSet::NPos.into());
-        }
-        if tok == N {
-            tb.skip()?;
-            return Ok(StandardSet::N.into());
-        }
-        if tok == Q {
-            tb.skip()?;
-            return Ok(StandardSet::Q.into());
-        }
-        if tok == Z {
-            tb.skip()?;
-            return Ok(StandardSet::Z.into());
-        }
-        if tok == R {
-            tb.skip()?;
-            return Ok(StandardSet::R.into());
-        }
-        if tok == Q_POS {
-            tb.skip()?;
-            return Ok(StandardSet::QPos.into());
-        }
-        if tok == R_POS {
-            tb.skip()?;
-            return Ok(StandardSet::RPos.into());
-        }
-        if tok == Q_NEG {
-            tb.skip()?;
-            return Ok(StandardSet::QNeg.into());
-        }
-        if tok == Z_NEG {
-            tb.skip()?;
-            return Ok(StandardSet::ZNeg.into());
-        }
-        if tok == R_NEG {
-            tb.skip()?;
-            return Ok(StandardSet::RNeg.into());
-        }
-        if tok == Q_NZ {
-            tb.skip()?;
-            return Ok(StandardSet::QNz.into());
-        }
-        if tok == Z_NZ {
-            tb.skip()?;
-            return Ok(StandardSet::ZNz.into());
-        }
-        if tok == R_NZ {
-            tb.skip()?;
-            return Ok(StandardSet::RNz.into());
-        }
 
         if tok == FAMILY_OBJ_PREFIX {
             let family = self.parse_family_obj(tb)?;
@@ -1403,11 +1320,11 @@ impl Runtime {
             return Ok(CartDim::new(args).into());
         }
 
-        // Ordinary atom (identifier): resolve free-param scope without building `Obj::Identifier` first.
+        // Bare `ident` or `mod::ident`: built-in single-token `StandardSet` names, else free params.
         self.parse_and_reclassify_atom_as_free_param_obj(tb)
     }
 
-    /// Parses a bare `ident` or `mod::ident`, then [`reclassify_atom_as_free_param_obj`].
+    // parse_identifier_or_identifier_with_mod + reclassify (std sets + free params).
     fn parse_and_reclassify_atom_as_free_param_obj(
         &mut self,
         tb: &mut TokenBlock,
@@ -1418,9 +1335,14 @@ impl Runtime {
 
     fn reclassify_atom_as_free_param_obj(&self, obj: Obj) -> Result<Obj, RuntimeError> {
         match obj {
-            Obj::Atom(AtomObj::Identifier(id)) => Ok(self
-                .parsing_free_param_collection
-                .resolve_identifier_to_free_param_obj(&id.name)),
+            Obj::Atom(AtomObj::Identifier(id)) => {
+                if let Some(standard) = standard_set_from_bare_identifier_name(&id.name) {
+                    return Ok(standard);
+                }
+                Ok(self
+                    .parsing_free_param_collection
+                    .resolve_identifier_to_free_param_obj(&id.name))
+            }
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
                 Ok(Obj::Atom(AtomObj::IdentifierWithMod(m)))
             }
@@ -1722,4 +1644,24 @@ fn parse_synthetically_correct_identifier_string(
     }
 
     Ok(cur)
+}
+
+// Maps a built-in one-token standard-set symbol to Obj::StandardSet; see reclassify_atom_as_free_param_obj.
+fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
+    match name {
+        N_POS => Some(StandardSet::NPos.into()),
+        N => Some(StandardSet::N.into()),
+        Q => Some(StandardSet::Q.into()),
+        Z => Some(StandardSet::Z.into()),
+        R => Some(StandardSet::R.into()),
+        Q_POS => Some(StandardSet::QPos.into()),
+        R_POS => Some(StandardSet::RPos.into()),
+        Q_NEG => Some(StandardSet::QNeg.into()),
+        Z_NEG => Some(StandardSet::ZNeg.into()),
+        R_NEG => Some(StandardSet::RNeg.into()),
+        Q_NZ => Some(StandardSet::QNz.into()),
+        Z_NZ => Some(StandardSet::ZNz.into()),
+        R_NZ => Some(StandardSet::RNz.into()),
+        _ => None,
+    }
 }

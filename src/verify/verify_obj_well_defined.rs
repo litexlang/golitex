@@ -855,65 +855,26 @@ impl Runtime {
         // Must use `ParamObjType::SetBuilder` here, not `define_params_with_set` (FnSet).
         // Parsed set-builder facts use SetBuilder-tagged bound vars; a mismatched tag means
         // e.g. `x $in N` is never found when checking `b ^ x`, so pow domain fails.
-        if let Err(well_defined_error) = self
-            .verify_obj_well_defined_and_store_cache(&x.param_set, &VerifyState::new(0, false))
-        {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to verify well-defined of set builder {}",
-                        x.to_string()
+        // Run in local env so param binding and body facts do not leak into the outer scope.
+        self.run_in_local_env(|rt| {
+            if let Err(well_defined_error) = rt
+                .verify_obj_well_defined_and_store_cache(&x.param_set, &VerifyState::new(0, false))
+            {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "failed to verify well-defined of set builder {}",
+                            x.to_string()
+                        ),
+                        default_line_file(),
+                        Some(well_defined_error),
+                        vec![],
                     ),
-                    default_line_file(),
-                    Some(well_defined_error),
-                    vec![],
-                ),
-            )));
-        }
-        if let Err(e) = self.store_free_param_or_identifier_name(&x.param, ParamObjType::SetBuilder)
-        {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to verify well-defined of set builder {}",
-                        x.to_string()
-                    ),
-                    default_line_file(),
-                    Some(e),
-                    vec![],
-                ),
-            )));
-        }
-        let param_in_set: Fact = InFact::new(
-            obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::SetBuilder),
-            (*x.param_set).clone(),
-            default_line_file(),
-        )
-        .into();
-        if let Err(e) = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(param_in_set)
-        {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to verify well-defined of set builder {}",
-                        x.to_string()
-                    ),
-                    default_line_file(),
-                    Some(e),
-                    vec![],
-                ),
-            )));
-        }
-
-        for fact in x.facts.iter() {
-            if let Err(e) = self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                fact,
-                verify_state,
-            ) {
+                )));
+            }
+            if let Err(e) = rt.store_free_param_or_identifier_name(&x.param, ParamObjType::SetBuilder)
+            {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new(
                         None,
@@ -927,9 +888,53 @@ impl Runtime {
                     ),
                 )));
             }
-        }
+            let param_in_set: Fact = InFact::new(
+                obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::SetBuilder),
+                (*x.param_set).clone(),
+                default_line_file(),
+            )
+            .into();
+            if let Err(e) = rt
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(param_in_set)
+            {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "failed to verify well-defined of set builder {}",
+                            x.to_string()
+                        ),
+                        default_line_file(),
+                        Some(e),
+                        vec![],
+                    ),
+                )));
+            }
 
-        Ok(())
+            for fact in x.facts.iter() {
+                if let Err(e) = rt
+                    .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        fact,
+                        verify_state,
+                    )
+                {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new(
+                            None,
+                            format!(
+                                "failed to verify well-defined of set builder {}",
+                                x.to_string()
+                            ),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        ),
+                    )));
+                }
+            }
+
+            Ok(())
+        })
     }
 
     fn verify_fn_set_well_defined(
@@ -937,7 +942,7 @@ impl Runtime {
         x: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        for param_def_with_set in x.params_def_with_set.iter() {
+        for param_def_with_set in x.body.params_def_with_set.iter() {
             if let Err(e) = self.define_params_with_set(param_def_with_set) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new(
@@ -954,7 +959,7 @@ impl Runtime {
             }
         }
 
-        for fact in x.dom_facts.iter() {
+        for fact in x.body.dom_facts.iter() {
             if let Err(e) = self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
                 fact,
                 verify_state,
@@ -974,7 +979,7 @@ impl Runtime {
             }
         }
 
-        if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
+        if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.body.ret_set, verify_state) {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
@@ -998,7 +1003,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            for param_def_with_set in x.params_def_with_set.iter() {
+            for param_def_with_set in x.body.params_def_with_set.iter() {
                 if let Err(e) = rt.define_params_with_set_in_scope(
                     param_def_with_set,
                     ParamObjType::FnSet,
@@ -1018,7 +1023,7 @@ impl Runtime {
                 }
             }
 
-            for fact in x.dom_facts.iter() {
+            for fact in x.body.dom_facts.iter() {
                 if let Err(e) =
                     rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
                         fact,
@@ -1040,7 +1045,7 @@ impl Runtime {
                 }
             }
 
-            if let Err(e) = rt.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
+            if let Err(e) = rt.verify_obj_well_defined_and_store_cache(&x.body.ret_set, verify_state) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new(
                         None,
