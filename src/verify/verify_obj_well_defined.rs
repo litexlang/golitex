@@ -1336,6 +1336,74 @@ impl Runtime {
         )
     }
 
+    /// Resolve the set `S` in `pname S` for the unary param from `params_def_with_set`.
+    fn unary_param_set_from_params_def(
+        params_def: &[ParamGroupWithSet],
+        pname: &str,
+    ) -> Option<Obj> {
+        for g in params_def {
+            if g.params.iter().any(|n| n == pname) {
+                return Some(g.set.clone());
+            }
+        }
+        None
+    }
+
+    /// For a closed range `[a,b]` with explicit integer endpoints, require each integer in the range
+    /// to be in the index parameter's declared set (e.g. `Z_neg` disallows 1,2,3 in `1..3`).
+    fn verify_closed_range_each_integer_satisfies_unary_param_set(
+        &mut self,
+        start: &Obj,
+        end: &Obj,
+        param_set: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<(), RuntimeError> {
+        let Some(a_num) = self.resolve_obj_to_number(start) else {
+            return Ok(());
+        };
+        let Some(b_num) = self.resolve_obj_to_number(end) else {
+            return Ok(());
+        };
+        let as_ = a_num.normalized_value.trim();
+        let bs = b_num.normalized_value.trim();
+        if !is_number_string_literally_integer_without_dot(as_.to_string())
+            || !is_number_string_literally_integer_without_dot(bs.to_string())
+        {
+            return Ok(());
+        }
+        let Some(ai) = as_.parse::<i128>().ok() else {
+            return Ok(());
+        };
+        let Some(bi) = bs.parse::<i128>().ok() else {
+            return Ok(());
+        };
+        if ai > bi {
+            return Ok(());
+        }
+        for k in ai..=bi {
+            let k_obj: Obj = Number::new(k.to_string()).into();
+            let in_fact = InFact::new(k_obj, param_set.clone(), default_line_file());
+            let atomic_fact = AtomicFact::InFact(in_fact);
+            let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
+            if result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "{op}: each integer in the closed range from {} to {} must belong to the index parameter's type; not satisfied at index {}",
+                            start, end, k
+                        ),
+                        default_line_file(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+        }
+        Ok(())
+    }
+
     fn verify_iterated_op_summand_under_integer_index_interval(
         &mut self,
         func: &Obj,
@@ -1362,7 +1430,7 @@ impl Runtime {
                 )));
             }
             let function_name_obj: Obj = (*fo.head).clone().into();
-            let Some(fs_ref) = self.get_object_in_fn_set(&function_name_obj) else {
+            let Some(fs) = self.get_object_in_fn_set(&function_name_obj).cloned() else {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new(
                         None,
@@ -1376,7 +1444,7 @@ impl Runtime {
                     ),
                 )));
             };
-            if ParamGroupWithSet::number_of_params(&fs_ref.body.params_def_with_set) != 1 {
+            if ParamGroupWithSet::number_of_params(&fs.body.params_def_with_set) != 1 {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new(
                         None,
@@ -1388,24 +1456,45 @@ impl Runtime {
                 )));
             }
             let param_names =
-                ParamGroupWithSet::collect_param_names(&fs_ref.body.params_def_with_set);
+                ParamGroupWithSet::collect_param_names(&fs.body.params_def_with_set);
             let pname = param_names[0].clone();
-            let fs: FnSet = fs_ref.clone();
+            let Some(param_set_for_index) =
+                Self::unary_param_set_from_params_def(&fs.body.params_def_with_set, &pname)
+            else {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        format!("{op}: could not find index parameter in params_def_with_set"),
+                        default_line_file(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            };
+            self.verify_closed_range_each_integer_satisfies_unary_param_set(
+                start,
+                end,
+                &param_set_for_index,
+                verify_state,
+                op,
+            )?;
             let start_c = start.clone();
             let end_c = end.clone();
             return self.run_in_local_env(|rt| {
-                let group =
-                    ParamGroupWithSet::new(vec![pname.clone()], StandardSet::Z.into());
-                rt.define_params_with_set_in_scope(&group, ParamObjType::FnSet)
-                    .map_err(|e| {
-                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                            None,
-                            format!("{op}: could not bind index parameter in Z in local check"),
-                            default_line_file(),
-                            Some(e),
-                            vec![],
-                        )))
-                    })?;
+                for g in fs.body.params_def_with_set.iter() {
+                    rt.define_params_with_set_in_scope(g, ParamObjType::FnSet)
+                        .map_err(|e| {
+                            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                                None,
+                                format!(
+                                    "{op}: could not bind index parameter in local well-defined check"
+                                ),
+                                default_line_file(),
+                                Some(e),
+                                vec![],
+                            )))
+                        })?;
+                }
                 let k: Obj = Identifier::new(pname).into();
                 let le_lo = OrAndChainAtomicFact::AtomicFact(
                     LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
@@ -1511,18 +1600,39 @@ impl Runtime {
         }
         let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
         let pname = param_names[0].clone();
+        let Some(param_set_for_index) =
+            Self::unary_param_set_from_params_def(&af.body.params_def_with_set, &pname)
+        else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    format!("{op}: could not find index parameter in params_def_with_set"),
+                    default_line_file(),
+                    None,
+                    vec![],
+                ),
+            )));
+        };
+        self.verify_closed_range_each_integer_satisfies_unary_param_set(
+            start,
+            end,
+            &param_set_for_index,
+            verify_state,
+            op,
+        )?;
         self.run_in_local_env(|rt| {
-            let group = ParamGroupWithSet::new(vec![pname.clone()], StandardSet::Z.into());
-            rt.define_params_with_set_in_scope(&group, ParamObjType::FnSet)
-                .map_err(|e| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!("{op}: could not bind index in Z in local check"),
-                        default_line_file(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
+            for g in af.body.params_def_with_set.iter() {
+                rt.define_params_with_set_in_scope(g, ParamObjType::FnSet)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            format!("{op}: could not bind index parameter in local well-defined check"),
+                            default_line_file(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })?;
+            }
             let k: Obj = Identifier::new(pname).into();
             let le_lo = OrAndChainAtomicFact::AtomicFact(
                 LessEqualFact::new(start.clone(), k.clone(), default_line_file()).into(),
