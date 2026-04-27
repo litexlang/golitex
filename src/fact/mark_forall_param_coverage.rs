@@ -52,8 +52,15 @@ fn mark_forall_param_coverage_in_fn_obj_head(
         | FnObjHead::Exist(_)
         | FnObjHead::SetBuilder(_)
         | FnObjHead::FnSet(_)
+        | FnObjHead::AnonymousFnParam(_)
         | FnObjHead::Induc(_)
         | FnObjHead::DefAlgo(_) => {}
+        FnObjHead::AnonymousFnLiteral(a) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::AnonymousFn((**a).clone()),
+                coverage_by_forall_param,
+            );
+        }
     }
 }
 
@@ -191,6 +198,22 @@ fn mark_forall_param_coverage_in_obj(
             }
             mark_forall_param_coverage_in_obj(fn_set.ret_set.as_ref(), coverage_by_forall_param);
         }
+        Obj::AnonymousFn(anon) => {
+            for param_def_with_set in anon.params_def_with_set.iter() {
+                mark_forall_param_coverage_in_obj(
+                    &param_def_with_set.set,
+                    coverage_by_forall_param,
+                );
+            }
+            for dom_fact in anon.dom_facts.iter() {
+                mark_forall_param_coverage_in_or_and_chain_atomic_fact(
+                    dom_fact,
+                    coverage_by_forall_param,
+                );
+            }
+            mark_forall_param_coverage_in_obj(anon.ret_set.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(anon.equal_to.as_ref(), coverage_by_forall_param);
+        }
         Obj::Cart(cart) => {
             for boxed_arg in cart.args.iter() {
                 mark_forall_param_coverage_in_obj(boxed_arg.as_ref(), coverage_by_forall_param);
@@ -277,6 +300,9 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::Atom(AtomObj::FnSet(p)) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
+        }
+        Obj::Atom(AtomObj::AnonymousFn(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::Atom(AtomObj::Induc(p)) => {
