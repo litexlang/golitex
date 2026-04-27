@@ -42,30 +42,18 @@ impl Runtime {
         let def = match self.get_cloned_family_definition_by_name(&family_name) {
             Some(d) => d,
             None => {
-                return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!("family `{}` is not defined", family_name),
-                    default_line_file(),
-                    None,
-                    vec![],
-                ))
+                return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("family `{}` is not defined", family_name)))
                 .into());
             }
         };
         let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
-            return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "family `{}` expects {} type argument(s), got {}",
                     family_name,
                     expected_count,
                     family_ty.params.len()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
         let param_to_arg_map = def

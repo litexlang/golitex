@@ -6,85 +6,37 @@ impl Runtime {
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by for: expected `:` immediately after `for`".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: expected `:` immediately after `for`".to_string(), tb.line_file.clone()))));
         }
         if tb.body.is_empty() {
             return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by for: expects a body".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: expects a body".to_string(), tb.line_file.clone()))));
         }
 
         let prove_block = tb.body.get_mut(0).ok_or_else(|| {
-            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by for: expected prove block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: expected prove block".to_string(), tb.line_file.clone())))
         })?;
         if prove_block.header.get(0).map(|s| s.as_str()) != Some(PROVE) {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by for: first block must be `prove:`".to_string(),
-                prove_block.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: first block must be `prove:`".to_string(), prove_block.line_file.clone()))));
         }
         prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
         if prove_block.body.len() != 1 {
             return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by for: `prove:` must contain exactly one forall fact".to_string(),
-                prove_block.line_file.clone(),
-                None,
-                vec![],
-            ))));
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: `prove:` must contain exactly one forall fact".to_string(), prove_block.line_file.clone()))));
         }
 
         let forall_block = prove_block.body.get_mut(0).ok_or_else(|| {
-            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "by for: missing forall block".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            )))
+            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: missing forall block".to_string(), tb.line_file.clone())))
         })?;
         let fact = self.parse_fact(forall_block)?;
         let forall_fact = match fact {
             Fact::ForallFact(ff) => ff,
             Fact::ForallFactWithIff(_) => {
-                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "by for: forall with `<=>` is not allowed here".to_string(),
-                    forall_block.line_file.clone(),
-                    None,
-                    vec![],
-                ))));
+                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: forall with `<=>` is not allowed here".to_string(), forall_block.line_file.clone()))));
             }
             _ => {
                 return Err(
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by for: `prove:` must be a single `forall` fact".to_string(),
-                forall_block.line_file.clone(),
-                None,
-                vec![],
-            ))));
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: `prove:` must be a single `forall` fact".to_string(), forall_block.line_file.clone()))));
             }
         };
 
@@ -93,14 +45,8 @@ impl Runtime {
                 ParamType::Obj(Obj::Range(_)) | ParamType::Obj(Obj::ClosedRange(_)) => {}
                 _ => {
                     return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                "by for: each forall parameter type must be range or closed_range"
-                                .to_string(),
-                forall_fact.line_file.clone(),
-                None,
-                vec![],
-            ))));
+                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by for: each forall parameter type must be range or closed_range"
+                                .to_string(), forall_fact.line_file.clone()))));
                 }
             }
         }

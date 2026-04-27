@@ -33,30 +33,18 @@ impl Runtime {
         for (name, fact) in param_def.params.iter().zip(facts.iter()) {
             self.store_free_param_or_identifier_name(name, binding_scope)
                 .map_err(|runtime_error| {
-                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "define params with set: failed to declare parameter `{}`",
                             name
-                        ),
-                        default_line_file(),
-                        Some(runtime_error),
-                        vec![],
-                    )))
+                        ), runtime_error)))
                 })?;
             let fact_infer_result = self
                 .verify_well_defined_and_store_and_infer_with_default_verify_state(fact.clone())
                 .map_err(|store_fact_error| {
-                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        format!(
+                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "define params with set: failed to store in-set fact for parameter `{}`",
                             name
-                        ),
-                        default_line_file(),
-                        Some(store_fact_error),
-                        vec![],
-                    )))
+                        ), store_fact_error)))
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
         }
