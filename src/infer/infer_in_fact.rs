@@ -12,7 +12,6 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
             | Obj::Atom(AtomObj::Def(_))
             | Obj::Atom(AtomObj::SetBuilder(_))
             | Obj::Atom(AtomObj::FnSet(_))
-            | Obj::Atom(AtomObj::AnonymousFn(_))
             | Obj::Atom(AtomObj::Induc(_))
             | Obj::Atom(AtomObj::DefAlgo(_))
     )
@@ -27,7 +26,6 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
         Obj::Atom(AtomObj::Def(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::SetBuilder(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::FnSet(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::AnonymousFn(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::Induc(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name.clone()],
         _ => vec![],

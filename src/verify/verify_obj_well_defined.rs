@@ -95,7 +95,6 @@ impl Runtime {
             Obj::Atom(AtomObj::Exist(_)) => Ok(()),
             Obj::Atom(AtomObj::SetBuilder(_)) => Ok(()),
             Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
-            Obj::Atom(AtomObj::AnonymousFn(_)) => Ok(()),
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
         }?;
@@ -1002,7 +1001,7 @@ impl Runtime {
             for param_def_with_set in x.params_def_with_set.iter() {
                 if let Err(e) = rt.define_params_with_set_in_scope(
                     param_def_with_set,
-                    ParamObjType::AnonymousFn,
+                    ParamObjType::FnSet,
                 ) {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new(

@@ -32,7 +32,7 @@ impl FnSetSpace {
     pub fn binding(&self) -> ParamObjType {
         match self {
             FnSetSpace::Set(_) => ParamObjType::FnSet,
-            FnSetSpace::Anon(_) => ParamObjType::AnonymousFn,
+            FnSetSpace::Anon(_) => ParamObjType::FnSet,
         }
     }
 

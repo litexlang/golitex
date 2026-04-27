@@ -1209,14 +1209,6 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             FnSetFreeParamObj::new(name).into()
         }
-        FnObjHead::AnonymousFnParam(p) => {
-            let name = if p.name == from {
-                to.to_string()
-            } else {
-                p.name
-            };
-            AnonymousFnFreeParamObj::new(name).into()
-        }
         FnObjHead::AnonymousFnLiteral(a) => {
             let inner = (*a).clone();
             let replaced = Obj::replace_bound_identifier(Obj::AnonymousFn(inner), from, to);
