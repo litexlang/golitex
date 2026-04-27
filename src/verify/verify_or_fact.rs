@@ -1,5 +1,31 @@
 use crate::prelude::*;
+use crate::verify::verify_equality_by_builtin_rules::objs_equal_by_display_string;
 use std::result::Result;
+
+/// Two atomic facts of the form `s > t` / `s <= t` (or `<` / `>=`) with the same left and right
+/// operands; the disjunction is a trivial order split (totally ordered carriers such as `R`).
+fn order_split_or_is_exhaustive_pair(a: &AtomicFact, b: &AtomicFact) -> bool {
+    use AtomicFact::*;
+    match (a, b) {
+        (GreaterFact(g), LessEqualFact(le)) => {
+            objs_equal_by_display_string(&g.left, &le.left)
+                && objs_equal_by_display_string(&g.right, &le.right)
+        }
+        (LessFact(l), GreaterEqualFact(ge)) => {
+            objs_equal_by_display_string(&l.left, &ge.left)
+                && objs_equal_by_display_string(&l.right, &ge.right)
+        }
+        (LessEqualFact(le), GreaterFact(g)) => {
+            objs_equal_by_display_string(&le.left, &g.left)
+                && objs_equal_by_display_string(&le.right, &g.right)
+        }
+        (GreaterEqualFact(ge), LessFact(l)) => {
+            objs_equal_by_display_string(&ge.left, &l.left)
+                && objs_equal_by_display_string(&ge.right, &l.right)
+        }
+        _ => false,
+    }
+}
 
 impl Runtime {
     pub fn verify_or_fact(
@@ -43,6 +69,19 @@ impl Runtime {
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             or_fact.clone().into(),
                             "or: complementary atomic facts (make_reversed first equals second)"
+                                .to_string(),
+                            Vec::new(),
+                        ))
+                        .into(),
+                    );
+                }
+                if order_split_or_is_exhaustive_pair(first_atomic, second_atomic)
+                    || order_split_or_is_exhaustive_pair(second_atomic, first_atomic)
+                {
+                    return Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            or_fact.clone().into(),
+                            "or: complementary order relations (strict vs non-strict) on the same terms"
                                 .to_string(),
                             Vec::new(),
                         ))
