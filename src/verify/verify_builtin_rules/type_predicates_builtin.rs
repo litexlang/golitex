@@ -91,7 +91,7 @@ impl Runtime {
             }
             Obj::FnSet(fn_set) => {
                 let ret_nonempty_fact = IsNonemptySetFact::new(
-                    fn_set.ret_set.as_ref().clone(),
+                    fn_set.body.ret_set.as_ref().clone(),
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
@@ -114,7 +114,7 @@ impl Runtime {
             }
             Obj::AnonymousFn(anon) => {
                 let ret_nonempty_fact = IsNonemptySetFact::new(
-                    anon.ret_set.as_ref().clone(),
+                    anon.body.ret_set.as_ref().clone(),
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
