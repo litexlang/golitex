@@ -137,6 +137,8 @@ pub const USE_STRATEGY: &str = "use_strategy";
 pub const END_STRATEGY: &str = "end_strategy";
 /// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
 pub const FN_EQ_IN: &str = "fn_eq_in";
+/// `$fn_eq(f, g)`: mutual function-space typing and pointwise equality on the shared dom (see verify).
+pub const FN_EQ: &str = "fn_eq";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -277,6 +279,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         USE_STRATEGY,
         END_STRATEGY,
         FN_EQ_IN,
+        FN_EQ,
     ];
     for &s in &words {
         m.insert(s, s);
@@ -339,6 +342,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == IN
         || atom_name == RESTRICT
         || atom_name == FN_EQ_IN
+        || atom_name == FN_EQ
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {

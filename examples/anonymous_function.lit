@@ -9,3 +9,6 @@ forall y R:
     'R(x){x}(y) + 'R(x){2*x}(y) = y + 2*y
     'R(x){x + 2*x}(y) = 'R(x){x}(y) + 'R(x){2*x}(y)
 
+have f fn(x R) R = 'R(x){x}
+
+f(1) = 'R(x){x}(1) = 1

@@ -10,7 +10,7 @@ mod exec_family_def;
 mod exec_have_exist_obj_stmt;
 mod exec_have_fn_by_induc;
 mod exec_have_fn_equal_case_by_case_stmt;
-mod exec_have_fn_equal_shared;
+pub(crate) mod exec_have_fn_equal_shared;
 mod exec_have_fn_equal_stmt;
 mod exec_have_obj_equal_stmt;
 mod exec_have_obj_in_nonempty_set_or_param_type_stmt;

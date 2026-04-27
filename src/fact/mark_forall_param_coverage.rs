@@ -448,6 +448,10 @@ fn mark_forall_param_coverage_in_atomic_fact(
             mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(&fact.set, coverage_by_forall_param);
         }
+        AtomicFact::FnEqualFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
+        }
     }
 }
 

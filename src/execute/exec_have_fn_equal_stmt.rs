@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_curried_function_obj_from_layers,
+    build_curried_function_obj_from_layers, forall_binders_dom_and_curried_layers_from_fn_set_clause,
 };
 
 impl Runtime {
@@ -43,50 +43,9 @@ impl Runtime {
         &self,
         clause: &FnSetClause,
     ) -> Result<(ParamDefWithType, Vec<Fact>, Vec<Vec<String>>), RuntimeError> {
-        let mut type_groups: Vec<ParamGroupWithParamType> = Vec::new();
-        let mut dom_facts: Vec<Fact> = Vec::new();
-        let mut layers: Vec<Vec<String>> = Vec::new();
-
-        for pg in clause.params_def_with_set.iter() {
-            type_groups.push(ParamGroupWithParamType::new(
-                pg.params.clone(),
-                ParamType::Obj(pg.set.clone()),
-            ));
-        }
-        for d in clause.dom_facts.iter() {
-            let f: OrAndChainAtomicFact = d.clone();
-            dom_facts.push(f.into());
-        }
-        layers.push(ParamGroupWithSet::collect_param_names(
-            &clause.params_def_with_set,
-        ));
-
-        let mut ret_set = clause.ret_set.clone();
-        while let Obj::FnSet(inner) = ret_set {
-            for pg in inner.body.params_def_with_set.iter() {
-                type_groups.push(ParamGroupWithParamType::new(
-                    pg.params.clone(),
-                    ParamType::Obj(pg.set.clone()),
-                ));
-            }
-
-            for d in inner.body.dom_facts.iter() {
-                dom_facts.push(d.clone().into());
-            }
-
-            let layer_names: Vec<String> = inner
-                .body
-                .params_def_with_set
-                .iter()
-                .flat_map(|pg| pg.params.iter())
-                .cloned()
-                .collect();
-            layers.push(layer_names);
-
-            ret_set = (*inner.body.ret_set).clone();
-        }
-
-        Ok((ParamDefWithType::new(type_groups), dom_facts, layers))
+        Ok(forall_binders_dom_and_curried_layers_from_fn_set_clause(
+            clause,
+        ))
     }
 
     fn store_have_fn_equal_stmt_facts(

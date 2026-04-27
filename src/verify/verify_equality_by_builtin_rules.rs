@@ -15,6 +15,130 @@ pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
     objs_equal_by_display_string(left, right)
 }
 
+#[inline]
+fn obj_expr_mentions_bare_id_on_two(l: &Obj, r: &Obj, id: &str) -> bool {
+    obj_expr_mentions_bare_id(l, id) || obj_expr_mentions_bare_id(r, id)
+}
+
+/// Whether `obj` contains a bare [`Identifier`] equal to `id` (used to detect index use in a
+/// summand `equal_to`). Unknown / unhandled shapes return `true` (conservative).
+fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
+    match obj {
+        Obj::Atom(AtomObj::Identifier(i)) => i.name == id,
+        Obj::Number(_) | Obj::StandardSet(_) => false,
+        Obj::Add(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Sub(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Mul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Div(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Mod(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Max(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Min(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Union(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Intersect(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::SetMinus(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::SetDiff(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::MatrixAdd(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::MatrixSub(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::MatrixMul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Pow(p) => {
+            obj_expr_mentions_bare_id(p.base.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.exponent.as_ref(), id)
+        }
+        Obj::MatrixScalarMul(m) => {
+            obj_expr_mentions_bare_id(m.scalar.as_ref(), id)
+                || obj_expr_mentions_bare_id(m.matrix.as_ref(), id)
+        }
+        Obj::MatrixPow(m) => {
+            obj_expr_mentions_bare_id(m.base.as_ref(), id)
+                || obj_expr_mentions_bare_id(m.exponent.as_ref(), id)
+        }
+        Obj::Abs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::PowerSet(u) => obj_expr_mentions_bare_id(u.set.as_ref(), id),
+        Obj::Cup(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::Cap(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::Log(l) => {
+            obj_expr_mentions_bare_id(l.base.as_ref(), id)
+                || obj_expr_mentions_bare_id(l.arg.as_ref(), id)
+        }
+        Obj::ListSet(list) => list
+            .list
+            .iter()
+            .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
+        Obj::Tuple(t) => t
+            .args
+            .iter()
+            .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
+        Obj::Cart(c) => c
+            .args
+            .iter()
+            .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
+        Obj::Count(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
+        Obj::TupleDim(t) => obj_expr_mentions_bare_id(t.arg.as_ref(), id),
+        Obj::CartDim(c) => obj_expr_mentions_bare_id(c.set.as_ref(), id),
+        Obj::Proj(p) => {
+            obj_expr_mentions_bare_id(p.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.dim.as_ref(), id)
+        }
+        Obj::ObjAtIndex(oi) => {
+            obj_expr_mentions_bare_id(oi.obj.as_ref(), id)
+                || obj_expr_mentions_bare_id(oi.index.as_ref(), id)
+        }
+        Obj::Range(r) => obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id),
+        Obj::ClosedRange(r) => obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id),
+        Obj::Sum(s) => {
+            obj_expr_mentions_bare_id(s.start.as_ref(), id)
+                || obj_expr_mentions_bare_id(s.end.as_ref(), id)
+                || obj_expr_mentions_bare_id(s.func.as_ref(), id)
+        }
+        Obj::Product(p) => {
+            obj_expr_mentions_bare_id(p.start.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.end.as_ref(), id)
+                || obj_expr_mentions_bare_id(p.func.as_ref(), id)
+        }
+        Obj::FiniteSeqListObj(f) => f
+            .objs
+            .iter()
+            .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id)),
+        Obj::MatrixListObj(m) => m.rows.iter().any(|row| {
+            row.iter()
+                .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id))
+        }),
+        Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
+        Obj::FamilyObj(fo) => fo
+            .params
+            .iter()
+            .any(|p| obj_expr_mentions_bare_id(p, id)),
+        Obj::FiniteSeqSet(fs) => {
+            obj_expr_mentions_bare_id(fs.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(fs.n.as_ref(), id)
+        }
+        Obj::SeqSet(ss) => obj_expr_mentions_bare_id(ss.set.as_ref(), id),
+        Obj::MatrixSet(ms) => {
+            obj_expr_mentions_bare_id(ms.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(ms.row_len.as_ref(), id)
+                || obj_expr_mentions_bare_id(ms.col_len.as_ref(), id)
+        }
+        Obj::Atom(AtomObj::IdentifierWithMod(_)) => false,
+        Obj::AnonymousFn(anon) => {
+            for g in &anon.body.params_def_with_set {
+                if obj_expr_mentions_bare_id(&g.set, id) {
+                    return true;
+                }
+            }
+            obj_expr_mentions_bare_id(anon.body.ret_set.as_ref(), id)
+                || obj_expr_mentions_bare_id(anon.equal_to.as_ref(), id)
+        }
+        Obj::FnObj(_) | Obj::FnSet(_) | Obj::SetBuilder(_) => true,
+        Obj::Atom(AtomObj::Forall(p)) => p.name == id,
+        Obj::Atom(AtomObj::Def(p)) => p.name == id,
+        Obj::Atom(AtomObj::Exist(p)) => p.name == id,
+        Obj::Atom(AtomObj::SetBuilder(p)) => p.name == id,
+        Obj::Atom(AtomObj::FnSet(p)) => p.name == id,
+        Obj::Atom(AtomObj::Induc(p)) => p.name == id,
+        Obj::Atom(AtomObj::DefAlgo(p)) => p.name == id,
+    }
+}
+
 fn factual_equal_success_by_builtin_reason(
     left: &Obj,
     right: &Obj,
@@ -478,6 +602,362 @@ impl Runtime {
         Ok(None)
     }
 
+    /// `sum(s,e,f) = sum(s,e,g) + sum(s,e,h)` when for all integer `x` with `s <= x <= e`,
+    /// `f(x) = g(x) + h(x)` (summands are unary anonymous `fn` bodies, instantiated at `x`).
+    fn try_verify_sum_additivity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+
+        let (sum_m, sum_a, sum_b) = match (left, right) {
+            (Obj::Sum(m), Obj::Add(a)) => match (a.left.as_ref(), a.right.as_ref()) {
+                (Obj::Sum(a1), Obj::Sum(a2)) => (m, a1, a2),
+                _ => return Ok(None),
+            },
+            (Obj::Add(a), Obj::Sum(m)) => match (a.left.as_ref(), a.right.as_ref()) {
+                (Obj::Sum(a1), Obj::Sum(a2)) => (m, a1, a2),
+                _ => return Ok(None),
+            },
+            _ => return Ok(None),
+        };
+
+        let mut require_eq = |a: &Obj, b: &Obj| -> Result<bool, RuntimeError> {
+            Ok(self
+                .verify_objs_are_equal(a, b, line_file.clone(), verify_state)?
+                .is_true())
+        };
+        if !require_eq(sum_m.start.as_ref(), sum_a.start.as_ref())? {
+            return Ok(None);
+        }
+        if !require_eq(sum_m.start.as_ref(), sum_b.start.as_ref())? {
+            return Ok(None);
+        }
+        if !require_eq(sum_m.end.as_ref(), sum_a.end.as_ref())? {
+            return Ok(None);
+        }
+        if !require_eq(sum_m.end.as_ref(), sum_b.end.as_ref())? {
+            return Ok(None);
+        }
+
+        let x_name = self.generate_random_unused_name();
+        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+
+        let Some(l_inst) =
+            self.instantiate_unary_anonymous_summand_at(sum_m.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(a_inst) =
+            self.instantiate_unary_anonymous_summand_at(sum_a.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(b_inst) =
+            self.instantiate_unary_anonymous_summand_at(sum_b.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+
+        let then_fact: ExistOrAndChainAtomicFact = EqualFact::new(
+            l_inst,
+            Add::new(a_inst, b_inst).into(),
+            line_file.clone(),
+        )
+        .into();
+
+        let dom_lo: Fact = LessEqualFact::new(
+            (*sum_m.start).clone(),
+            x_obj.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let dom_hi: Fact = LessEqualFact::new(
+            x_obj.clone(),
+            (*sum_m.end).clone(),
+            line_file.clone(),
+        )
+        .into();
+
+        let forall_fact: Fact = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_name],
+                ParamType::Obj(StandardSet::Z.into()),
+            )]),
+            vec![dom_lo, dom_hi],
+            vec![then_fact],
+            line_file.clone(),
+        )
+        .into();
+
+        let r = self.verify_fact(&forall_fact, verify_state)?;
+        if r.is_true() {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: sum additivity from pointwise equality on the integer index range",
+            )));
+        }
+        Ok(None)
+    }
+
+    fn instantiate_unary_anonymous_summand_at(
+        &mut self,
+        func: &Obj,
+        x: &Obj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let af: &AnonymousFn = match func {
+            Obj::AnonymousFn(af) => af,
+            Obj::FnObj(fo) => {
+                if !fo.body.is_empty() {
+                    return Ok(None);
+                }
+                match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                    _ => return Ok(None),
+                }
+            }
+            _ => return Ok(None),
+        };
+        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            return Ok(None);
+        }
+        let param_defs = &af.body.params_def_with_set;
+        let args = vec![x.clone()];
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+        Ok(Some(
+            self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?,
+        ))
+    }
+
+    /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.
+    fn try_verify_sum_merge_adjacent_ranges(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let (add, s3) = match (left, right) {
+            (Obj::Add(a), Obj::Sum(s)) => (a, s),
+            (Obj::Sum(s), Obj::Add(a)) => (a, s),
+            _ => return Ok(None),
+        };
+        let (s1, s2) = match (add.left.as_ref(), add.right.as_ref()) {
+            (Obj::Sum(x), Obj::Sum(y)) => (x, y),
+            _ => return Ok(None),
+        };
+        for (a, b) in [(s1, s2), (s2, s1)] {
+            if let Some(done) = self.try_verify_sum_merge_ordered_pair(
+                a,
+                b,
+                s3,
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )? {
+                return Ok(Some(done));
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_sum_merge_ordered_pair(
+        &mut self,
+        s1: &Sum,
+        s2: &Sum,
+        s3: &Sum,
+        stmt_left: &Obj,
+        stmt_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let one: Obj = Number::new("1".to_string()).into();
+        let gap = Add::new((*s1.end).clone(), one).into();
+        if !self
+            .verify_objs_are_equal(&gap, s2.start.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(s1.start.as_ref(), s3.start.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(s2.end.as_ref(), s3.end.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(s1.func.as_ref(), s2.func.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(s1.func.as_ref(), s3.func.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            stmt_left,
+            stmt_right,
+            line_file,
+            "equality: merge adjacent sum ranges with the same summand",
+        )))
+    }
+
+    /// `sum(L) = sum(R)` with `R` a translate of `L` by `k` on both bounds, reduced to pointwise
+    /// equality on the right-hand index range.
+    fn try_verify_sum_reindex_shift(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (l_obj, r_obj) in [(left, right), (right, left)] {
+            let (Obj::Sum(l_sum), Obj::Sum(r_sum)) = (l_obj, r_obj) else {
+                continue;
+            };
+            let k: Obj = Sub::new((*r_sum.start).clone(), (*l_sum.start).clone()).into();
+            let k_end = Sub::new((*r_sum.end).clone(), (*l_sum.end).clone()).into();
+            if !self
+                .verify_objs_are_equal(&k, &k_end, line_file.clone(), verify_state)?
+                .is_true()
+            {
+                continue;
+            }
+            let y_name = self.generate_random_unused_name();
+            let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
+            let index_for_left = Sub::new(y_obj.clone(), k.clone()).into();
+            let Some(at_l) =
+                self.instantiate_unary_anonymous_summand_at(l_sum.func.as_ref(), &index_for_left)?
+            else {
+                continue;
+            };
+            let Some(at_r) =
+                self.instantiate_unary_anonymous_summand_at(r_sum.func.as_ref(), &y_obj)?
+            else {
+                continue;
+            };
+            let then_fact: ExistOrAndChainAtomicFact =
+                EqualFact::new(at_l, at_r, line_file.clone()).into();
+            let dom_lo: Fact = LessEqualFact::new(
+                (*r_sum.start).clone(),
+                y_obj.clone(),
+                line_file.clone(),
+            )
+            .into();
+            let dom_hi: Fact = LessEqualFact::new(
+                y_obj.clone(),
+                (*r_sum.end).clone(),
+                line_file.clone(),
+            )
+            .into();
+            let forall_fact: Fact = ForallFact::new(
+                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                    vec![y_name],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]),
+                vec![dom_lo, dom_hi],
+                vec![then_fact],
+                line_file.clone(),
+            )
+            .into();
+            let r = self.verify_fact(&forall_fact, verify_state)?;
+            if r.is_true() {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum reindexing (integer shift) from pointwise equality on the range",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    /// `sum(s,e, \lambda x.c) = (e - s + 1) * c` when `c` does not mention the index parameter.
+    fn try_verify_sum_constant_summand(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        for (sum_side, other) in [(left, right), (right, left)] {
+            let Obj::Sum(s) = sum_side else {
+                continue;
+            };
+            let af = match s.func.as_ref() {
+                Obj::AnonymousFn(af) => af,
+                Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(a) => a.as_ref(),
+                    _ => continue,
+                },
+                _ => continue,
+            };
+            if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+                continue;
+            }
+            let names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+            let pname = match names.first() {
+                Some(n) => n.as_str(),
+                None => continue,
+            };
+            if obj_expr_mentions_bare_id(af.equal_to.as_ref(), pname) {
+                continue;
+            }
+            let c = (*af.equal_to).clone();
+            let one: Obj = Number::new("1".to_string()).into();
+            let count: Obj = Add::new(
+                Sub::new((*s.end).clone(), (*s.start).clone()).into(),
+                one,
+            )
+            .into();
+            let m1: Obj = Mul::new(count.clone(), c.clone()).into();
+            let m2: Obj = Mul::new(c, count).into();
+            if self
+                .verify_objs_are_equal(other, &m1, line_file.clone(), verify_state)?
+                .is_true()
+                || self
+                    .verify_objs_are_equal(other, &m2, line_file.clone(), verify_state)?
+                    .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum of a constant summand over a closed integer range",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
     pub fn verify_equality_by_builtin_rules(
         &mut self,
         left: &Obj,
@@ -526,6 +1006,30 @@ impl Runtime {
 
         if let Some(done) =
             self.try_verify_log_equals_by_pow_inverse(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_additivity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_merge_adjacent_ranges(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_reindex_shift(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_constant_summand(left, right, line_file.clone(), verify_state)?
         {
             return Ok(done);
         }

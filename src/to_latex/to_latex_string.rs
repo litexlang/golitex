@@ -1881,6 +1881,11 @@ impl AtomicFact {
                 f.right.to_latex_string(),
                 f.set.to_latex_string(),
             ),
+            AtomicFact::FnEqualFact(f) => format!(
+                r"\mathsf{{fn\_eq}}({},{})",
+                f.left.to_latex_string(),
+                f.right.to_latex_string(),
+            ),
         }
     }
 }
