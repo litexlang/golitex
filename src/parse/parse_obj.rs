@@ -1,9 +1,10 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-/// `'R(x){...}` shorthand uses [`parse_atom`], which yields [`Identifier`] for `R`; map the same
-/// single-token standard-set names as [`Runtime::parse_primary_obj`] so membership checks use
-/// [`Obj::StandardSet`] (e.g. builtin `number in R`).
+/// `'R(x){...}` shorthand uses [`parse_identifier_or_identifier_with_mod`], which yields
+/// [`Identifier`] for `R`; map the same single-token standard-set names as
+/// [`Runtime::parse_primary_obj`] so membership checks use [`Obj::StandardSet`] (e.g. builtin
+/// `number in R`).
 fn obj_as_anonymous_fn_shorthand_param_set(obj: Obj) -> Obj {
     match obj {
         Obj::Atom(AtomObj::Identifier(ref id)) => match id.name.as_str() {
@@ -39,7 +40,7 @@ impl Runtime {
         }
         if tb.current_token_is_equal_to(INFIX_FN_NAME_SIGN) {
             tb.skip()?; // 先吃掉 \，再读中缀函数名
-            let fn_name = self.parse_atom(tb)?;
+            let fn_name = self.parse_identifier_or_identifier_with_mod(tb)?;
             let right = self.parse_obj(tb)?;
 
             if is_key_symbol_or_keyword(&fn_name.to_string()) {
@@ -66,16 +67,14 @@ impl Runtime {
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
             let head = FnObjHead::from_name_obj(fn_name).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "infix `\\` expects an identifier or single field-access name for the function"
-                            .to_string(),
-                        tb.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
-                ))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "infix `\\` expects an identifier or single field-access name for the function"
+                        .to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                )))
             })?;
             Ok(FnObj::new(head, body).into())
         } else {
@@ -358,8 +357,7 @@ impl Runtime {
             Ok(built.into())
         } else {
             let set_obj = {
-                let atom = self.parse_atom(tb)?;
-                let obj = self.reclassify_atom_as_free_param_obj(atom)?;
+                let obj = self.parse_and_reclassify_atom_as_free_param_obj(tb)?;
                 obj_as_anonymous_fn_shorthand_param_set(obj)
             };
             let built = self.run_in_local_parsing_time_name_scope(|this| {
@@ -641,7 +639,9 @@ impl Runtime {
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
         let (head, mut body_vectors) = match &result {
             Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
-            Obj::Atom(AtomObj::IdentifierWithMod(m)) => (FnObjHead::IdentifierWithMod(m.clone()), vec![]),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
+                (FnObjHead::IdentifierWithMod(m.clone()), vec![])
+            }
             Obj::Atom(AtomObj::Forall(p)) => (FnObjHead::Forall(p.clone()), vec![]),
             Obj::Atom(AtomObj::Exist(p)) => (FnObjHead::Exist(p.clone()), vec![]),
             Obj::Atom(AtomObj::Def(p)) => (FnObjHead::DefHeader(p.clone()), vec![]),
@@ -1404,30 +1404,26 @@ impl Runtime {
         }
 
         // Ordinary atom (identifier): resolve free-param scope without building `Obj::Identifier` first.
-        let atom = self.parse_atom(tb)?;
+        self.parse_and_reclassify_atom_as_free_param_obj(tb)
+    }
 
+    /// Parses a bare `ident` or `mod::ident`, then [`reclassify_atom_as_free_param_obj`].
+    fn parse_and_reclassify_atom_as_free_param_obj(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
+        let atom = self.parse_identifier_or_identifier_with_mod(tb)?;
         self.reclassify_atom_as_free_param_obj(atom)
     }
 
     fn reclassify_atom_as_free_param_obj(&self, obj: Obj) -> Result<Obj, RuntimeError> {
         match obj {
-            Obj::Atom(AtomObj::Identifier(id)) => {
-                if id.name == SELF {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "`self` is not supported in this version".to_string(),
-                            default_line_file(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-                Ok(self
-                    .parsing_free_param_collection
-                    .resolve_identifier_to_free_param_obj(&id.name))
+            Obj::Atom(AtomObj::Identifier(id)) => Ok(self
+                .parsing_free_param_collection
+                .resolve_identifier_to_free_param_obj(&id.name)),
+            Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
+                Ok(Obj::Atom(AtomObj::IdentifierWithMod(m)))
             }
-            Obj::Atom(AtomObj::IdentifierWithMod(m)) => Ok(Obj::Atom(AtomObj::IdentifierWithMod(m))),
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new(
                     None,
@@ -1606,13 +1602,15 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "field access (`name.field`) is not supported in this version".to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "field access (`name.field`) is not supported in this version".to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                ),
+            )));
         }
         Ok(Identifier::new(left).into())
     }
@@ -1622,20 +1620,25 @@ impl Runtime {
         tb.skip_token(MOD_SIGN)?;
         let right = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "field access on module-qualified names is not supported in this version"
-                    .to_string(),
-                tb.line_file.clone(),
-                None,
-                vec![],
-            ))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new(
+                    None,
+                    "field access on module-qualified names is not supported in this version"
+                        .to_string(),
+                    tb.line_file.clone(),
+                    None,
+                    vec![],
+                ),
+            )));
         }
         Ok(IdentifierWithMod::new(left, right).into())
     }
 
     /// Unqualified or `::`-qualified name / field name; returns a name-shaped [`Obj`].
-    pub fn parse_atom(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+    pub fn parse_identifier_or_identifier_with_mod(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Obj, RuntimeError> {
         let next_is_mod = tb.token_at_add_index(1) == MOD_SIGN;
         if next_is_mod {
             self.parse_mod_qualified_atom(tb)

@@ -63,7 +63,11 @@ mod tests {
         assert!(is_valid_litex_name("exist").is_err());
         assert!(is_valid_litex_name("R").is_err());
         assert!(is_valid_litex_name("in").is_err());
-        assert!(is_valid_litex_name("self").is_err());
+    }
+
+    #[test]
+    fn self_is_allowed_name() {
+        assert!(is_valid_litex_name("self").is_ok());
     }
 
     #[test]
