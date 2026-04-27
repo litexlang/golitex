@@ -52,7 +52,6 @@ fn mark_forall_param_coverage_in_fn_obj_head(
         | FnObjHead::Exist(_)
         | FnObjHead::SetBuilder(_)
         | FnObjHead::FnSet(_)
-        | FnObjHead::AnonymousFnParam(_)
         | FnObjHead::Induc(_)
         | FnObjHead::DefAlgo(_) => {}
         FnObjHead::AnonymousFnLiteral(a) => {
@@ -300,9 +299,6 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::Atom(AtomObj::FnSet(p)) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
-        }
-        Obj::Atom(AtomObj::AnonymousFn(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
         Obj::Atom(AtomObj::Induc(p)) => {

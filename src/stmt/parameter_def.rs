@@ -230,7 +230,7 @@ impl ParamGroupWithSet {
         ParamGroupWithSet { params, set }
     }
 
-    /// Membership facts for parameters; element tagging must match [`define_params_with_set_in_scope`]'s `binding_scope` (e.g. `FnSet` ~5 vs `AnonymousFn` ~8).
+    /// Membership facts for parameters; element tagging must match [`define_params_with_set_in_scope`]'s `binding_scope` (e.g. `FnSet` ~5 for `fn` and `'` anonymous heads).
     pub fn facts_for_binding_scope(&self, binding_scope: ParamObjType) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
         for name in self.params.iter() {
