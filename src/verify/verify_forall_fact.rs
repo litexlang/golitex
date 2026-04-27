@@ -62,6 +62,7 @@ impl Runtime {
             }
 
             let mut all_then_facts_are_verified_by_builtin_rules = true;
+            let mut then_verification_results: Vec<StmtResult> = Vec::new();
 
             let then_count = forall_fact.then_facts.len();
             for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
@@ -87,8 +88,9 @@ impl Runtime {
                         if !factual_verification_result.is_verified_by_builtin_rules_only() {
                             all_then_facts_are_verified_by_builtin_rules = false;
                         }
-                        // Do not merge then-fact verification `infers` (e.g. instantiated `min(a,b) <= a`
-                        // from a known forall): JSON/CLI should show the enclosing `forall` only.
+                        // Do not merge then-fact verification `infers` into `infer_result` (e.g. instantiated
+                        // `min(a,b) <= a` from a known forall). Each then proof is listed in
+                        // `FactualStmtSuccess::inside_results` for JSON/CLI.
                     }
                     StmtResult::NonFactualStmtSuccess(non_factual_success) => {
                         all_then_facts_are_verified_by_builtin_rules = false;
@@ -98,6 +100,7 @@ impl Runtime {
                         unreachable!("stmt unknown is handled above before this match")
                     }
                 }
+                then_verification_results.push(result);
             }
 
             if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
@@ -106,7 +109,7 @@ impl Runtime {
                     forall_fact.clone().into(),
                     forall_infers,
                     "forall: then-facts by builtin rules".to_string(),
-                    Vec::new(),
+                    then_verification_results,
                 ))
                 .into());
             }
@@ -118,7 +121,7 @@ impl Runtime {
                 "".to_string(),
                 None,
                 Some(forall_fact.line_file.clone()),
-                Vec::new(),
+                then_verification_results,
             ))
             .into())
         })
