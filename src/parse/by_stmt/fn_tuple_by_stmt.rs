@@ -41,16 +41,10 @@ impl Runtime {
         let line_file = tb.line_file.clone();
         match obj {
             Obj::FiniteSeqSet(fs) => Ok(ByFiniteSeqSetStmt::new(fs, line_file).into()),
-            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
                     "by finite_seq: expected a finite_seq(...) object, got `{}`",
                     obj
-                ),
-                line_file,
-                None,
-                vec![],
-            )))),
+                ), line_file)))),
         }
     }
 
@@ -61,13 +55,7 @@ impl Runtime {
         let line_file = tb.line_file.clone();
         match obj {
             Obj::SeqSet(ss) => Ok(BySeqSetStmt::new(ss, line_file).into()),
-            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!("by seq: expected a seq(...) object, got `{}`", obj),
-                line_file,
-                None,
-                vec![],
-            )))),
+            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!("by seq: expected a seq(...) object, got `{}`", obj), line_file)))),
         }
     }
 
@@ -82,16 +70,10 @@ impl Runtime {
         let line_file = tb.line_file.clone();
         match obj {
             Obj::MatrixSet(ms) => Ok(ByMatrixSetStmt::new(ms, line_file).into()),
-            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
                     "by matrix: expected a matrix(...) object, got `{}`",
                     obj
-                ),
-                line_file,
-                None,
-                vec![],
-            )))),
+                ), line_file)))),
         }
     }
 }

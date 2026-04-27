@@ -45,13 +45,7 @@ impl Runtime {
         _current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                None,
-                invalid_name_message,
-                default_line_file(),
-                None,
-                vec![],
-            ))
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(invalid_name_message))
             .into());
         }
 
@@ -65,13 +59,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for name in names {
             if let Err(e) = is_valid_litex_name(name) {
-                return Err(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    e,
-                    line_file.clone(),
-                    None,
-                    vec![],
-                ))
+                return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(e, line_file.clone()))
                 .into());
             }
         }
@@ -463,6 +451,30 @@ impl Runtime {
         Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored))
     }
 
+    pub fn new_anonymous_fn(
+        &self,
+        params_and_their_sets: Vec<ParamGroupWithSet>,
+        dom_facts: Vec<OrAndChainAtomicFact>,
+        ret_set: Obj,
+        equal_to: Obj,
+    ) -> Result<AnonymousFn, RuntimeError> {
+        let empty: HashMap<String, Obj> = HashMap::new();
+        let mut dom_stored = Vec::with_capacity(dom_facts.len());
+        for d in &dom_facts {
+            dom_stored.push(
+                self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::FnSet, None)?,
+            );
+        }
+        let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
+        let eq_stored = self.inst_obj(&equal_to, &empty, ParamObjType::FnSet)?;
+        Ok(AnonymousFn::new(
+            params_and_their_sets,
+            dom_stored,
+            ret_stored,
+            eq_stored,
+        ))
+    }
+
     pub fn fn_set_from_fn_set_clause(&self, clause: &FnSetClause) -> Result<FnSet, RuntimeError> {
         self.new_fn_set(
             clause.params_def_with_set.clone(),
@@ -480,17 +492,11 @@ impl Runtime {
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let param_names = param_defs.collect_param_names();
         if param_names.len() != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
+            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "params_to_arg_map: expected {} argument(s), got {}",
                     param_names.len(),
                     args.len()
-                ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
+                )))
             .into());
         }
 

@@ -91,7 +91,30 @@ impl Runtime {
             }
             Obj::FnSet(fn_set) => {
                 let ret_nonempty_fact = IsNonemptySetFact::new(
-                    fn_set.ret_set.as_ref().clone(),
+                    fn_set.body.ret_set.as_ref().clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
+                let ret_check = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                    &ret_nonempty_fact,
+                    _verify_state,
+                )?;
+                if ret_check.is_true() {
+                    Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
+                            Vec::new(),
+                        ))
+                        .into(),
+                    )
+                } else {
+                    Ok((StmtUnknown::new()).into())
+                }
+            }
+            Obj::AnonymousFn(anon) => {
+                let ret_nonempty_fact = IsNonemptySetFact::new(
+                    anon.body.ret_set.as_ref().clone(),
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();

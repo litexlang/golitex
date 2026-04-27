@@ -1,3 +1,4 @@
+use crate::parse::parse_helpers::collect_forall_param_names_from_facts;
 use crate::prelude::*;
 
 impl Runtime {
@@ -6,24 +7,12 @@ impl Runtime {
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new(
-                    None,
-                    "cases: expects at least one body block".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                ),
+                RuntimeErrorStruct::new_with_msg_and_line_file("cases: expects at least one body block".to_string(), tb.line_file.clone()),
             )));
         }
         let then_facts: Vec<Fact> = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "Expected body".to_string(),
-                    tb.line_file.clone(),
-                    None,
-                    vec![],
-                )))
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("Expected body".to_string(), tb.line_file.clone())))
             })?;
             first.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             first
@@ -32,35 +21,37 @@ impl Runtime {
                 .map(|b| self.parse_fact(b))
                 .collect::<Result<_, _>>()?
         };
-        for f in &then_facts {
-            match f {
-                Fact::ForallFact(ff) => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
-                                .to_string(),
-                            ff.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-                Fact::ForallFactWithIff(fi) => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new(
-                            None,
-                            "by cases: `prove:` must not use `forall`; use atomic, exist, or/and combinations, or chain facts only"
-                                .to_string(),
-                            fi.line_file.clone(),
-                            None,
-                            vec![],
-                        ),
-                    )));
-                }
-                _ => {}
-            }
-        }
+        let forall_param_names = collect_forall_param_names_from_facts(&then_facts);
+        let line_file = tb.line_file.clone();
+        let (cases, proofs, impossible_facts) = if forall_param_names.is_empty() {
+            self.parse_by_cases_case_and_proof_blocks(tb)?
+        } else {
+            self.parse_in_local_free_param_scope(ParamObjType::Forall, &forall_param_names, line_file, |rt| {
+                rt.parse_by_cases_case_and_proof_blocks(tb)
+            })?
+        };
+        Ok(ByCasesStmt::new(
+            cases,
+            then_facts,
+            proofs,
+            impossible_facts,
+            tb.line_file.clone(),
+        )
+        .into())
+    }
+
+    /// Parses all `case ...:` arms (conditions, proof bodies, optional `impossible` facts).
+    fn parse_by_cases_case_and_proof_blocks(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<
+        (
+            Vec<AndChainAtomicFact>,
+            Vec<Vec<Stmt>>,
+            Vec<Option<AtomicFact>>,
+        ),
+        RuntimeError,
+    > {
         let case_block_count = tb.body.len().saturating_sub(1);
         let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
         let mut proofs: Vec<Vec<Stmt>> = Vec::with_capacity(case_block_count);
@@ -71,13 +62,7 @@ impl Runtime {
             block.skip_token(COLON)?;
             if !block.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new(
-                        None,
-                        "case: expected end of head after condition".to_string(),
-                        block.line_file.clone(),
-                        None,
-                        vec![],
-                    ),
+                    RuntimeErrorStruct::new_with_msg_and_line_file("case: expected end of head after condition".to_string(), block.line_file.clone()),
                 )));
             }
             cases.push(case);
@@ -94,13 +79,7 @@ impl Runtime {
                         .map(|b| self.parse_stmt(b))
                         .collect::<Result<_, _>>()?;
                     let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                            None,
-                            "Expected body".to_string(),
-                            tb.line_file.clone(),
-                            None,
-                            vec![],
-                        )))
+                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("Expected body".to_string(), tb.line_file.clone())))
                     })?;
                     last_block.skip_token(IMPOSSIBLE)?;
                     let imp = self.parse_atomic_fact(last_block, true)?;
@@ -116,13 +95,6 @@ impl Runtime {
             proofs.push(proof_stmts);
             impossible_facts.push(impossible);
         }
-        Ok(ByCasesStmt::new(
-            cases,
-            then_facts,
-            proofs,
-            impossible_facts,
-            tb.line_file.clone(),
-        )
-        .into())
+        Ok((cases, proofs, impossible_facts))
     }
 }

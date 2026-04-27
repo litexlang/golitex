@@ -1,0 +1,7 @@
+$fn_eq('R(x){x}, 'R(y){y})
+
+have fn f(x R) R = x
+have fn g(x R) R = x
+forall x R: 
+    f(x) = x = g(x)
+$fn_eq(f, g)
