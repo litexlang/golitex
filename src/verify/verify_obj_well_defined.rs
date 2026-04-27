@@ -77,8 +77,6 @@ impl Runtime {
             Obj::MatrixPow(x) => self.verify_matrix_pow_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
-            Obj::Sum(x) => self.verify_sum_well_defined(x, verify_state),
-            Obj::Product(x) => self.verify_product_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
             Obj::StandardSet(StandardSet::QPos) => self.verify_q_pos_well_defined(),
             Obj::StandardSet(StandardSet::RPos) => self.verify_r_pos_well_defined(),
@@ -98,8 +96,6 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
-            Obj::Atom(AtomObj::Sum(_)) => Ok(()),
-            Obj::Atom(AtomObj::Product(_)) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -936,100 +932,6 @@ impl Runtime {
         }
 
         Ok(())
-    }
-
-    fn verify_sum_well_defined(
-        &mut self,
-        x: &SumObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(x.start.as_ref(), verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(x.end.as_ref(), verify_state)?;
-        self.require_obj_in_z(x.start.as_ref(), verify_state)?;
-        self.require_obj_in_z(x.end.as_ref(), verify_state)?;
-        self.require_less_equal_verified(
-            x.start.as_ref(),
-            x.end.as_ref(),
-            verify_state,
-            format!(
-                "sum: cannot verify {} <= {} (summation bounds must be ordered)",
-                x.start, x.end
-            ),
-        )?;
-        self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(&x.param, ParamObjType::Sum)?;
-            let param_obj = obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::Sum);
-            // Summation index: assume `param $in Z` and `start <= param <= end` in the local scope
-            // (well-defined check for the body), not facts that must be proved from the outer env.
-            let param_in_z: AtomicFact = InFact::new(
-                param_obj.clone(),
-                StandardSet::Z.into(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
-            let lower: AtomicFact = LessEqualFact::new(
-                (*x.start).clone(),
-                param_obj.clone(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
-            let upper: AtomicFact = LessEqualFact::new(
-                param_obj,
-                (*x.end).clone(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
-            rt.verify_obj_well_defined_and_store_cache(x.body.as_ref(), verify_state)
-        })
-    }
-
-    fn verify_product_well_defined(
-        &mut self,
-        x: &ProductObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(x.start.as_ref(), verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(x.end.as_ref(), verify_state)?;
-        self.require_obj_in_z(x.start.as_ref(), verify_state)?;
-        self.require_obj_in_z(x.end.as_ref(), verify_state)?;
-        self.require_less_equal_verified(
-            x.start.as_ref(),
-            x.end.as_ref(),
-            verify_state,
-            format!(
-                "product: cannot verify {} <= {} (product bounds must be ordered)",
-                x.start, x.end
-            ),
-        )?;
-        self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(&x.param, ParamObjType::Product)?;
-            let param_obj = obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::Product);
-            let param_in_z: AtomicFact = InFact::new(
-                param_obj.clone(),
-                StandardSet::Z.into(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(param_in_z)?;
-            let lower: AtomicFact = LessEqualFact::new(
-                (*x.start).clone(),
-                param_obj.clone(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(lower)?;
-            let upper: AtomicFact = LessEqualFact::new(
-                param_obj,
-                (*x.end).clone(),
-                default_line_file(),
-            )
-            .into();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(upper)?;
-            rt.verify_obj_well_defined_and_store_cache(x.body.as_ref(), verify_state)
-        })
     }
 
     fn verify_fn_set_well_defined(
