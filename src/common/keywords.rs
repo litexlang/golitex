@@ -135,8 +135,8 @@ pub const RESTRICT: &str = "restrict";
 pub const STRATEGY: &str = "strategy";
 pub const USE_STRATEGY: &str = "use_strategy";
 pub const END_STRATEGY: &str = "end_strategy";
-/// `$fn_eq_on(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
-pub const FN_EQ_ON: &str = "fn_eq_on";
+/// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
+pub const FN_EQ_IN: &str = "fn_eq_in";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -276,7 +276,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         STRATEGY,
         USE_STRATEGY,
         END_STRATEGY,
-        FN_EQ_ON,
+        FN_EQ_IN,
     ];
     for &s in &words {
         m.insert(s, s);
@@ -338,7 +338,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == SUPERSET
         || atom_name == IN
         || atom_name == RESTRICT
-        || atom_name == FN_EQ_ON
+        || atom_name == FN_EQ_IN
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
