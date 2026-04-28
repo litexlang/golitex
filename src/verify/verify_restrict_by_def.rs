@@ -4,17 +4,28 @@
 // step2_1: if known return-set equals RHS return-set, accept immediately.
 // step2_2: otherwise prove forall RHS params: f(x, ...) is in RHS return-set.
 
-use crate::prelude::*;
-use std::collections::HashMap;
+// Example:
+// have f fn(x R, y Q: x < y) Z
+// restrict_fn_in(f, fn(a Q, b Q: x < y, x < 0) Z)
+// 1. prove forall a Q, b Q: x < y: f(a, b) is well-defined.
+// 2. prove restriction keeps outputs in Z.
+// 2.1 if known return_set of f is already Z, return success directly.
+// 2.2 otherwise build and verify:
+//     forall a Q, b Q: x < y, x < 0: f(a, b) $in Z
 
+use crate::prelude::*;
 struct RestrictProofFlow {
+    // The whole restrict_fn_in(...) fact to be proved.
     restrict_fact: RestrictFact,
+    // The RHS function set in restrict_fn_in, e.g. fn(a Q, b Q: x < y, x < 0) Z.
     rhs_fn_set: FnSet,
+    // Known function-set body of f from env, e.g. fn(x R, y Q: x < y) Z.
     known_fn_body: FnSetBody,
-    rhs_flat_param_names: Vec<String>,
-    known_to_rhs_param_map: HashMap<String, Obj>,
+    // Forall binders for step 1/2.2, e.g. a Q, b Q.
     forall_params: ParamDefWithType,
+    // Forall domain facts for step 1/2.2, e.g. x < y, x < 0.
     forall_dom_facts: Vec<Fact>,
+    // Applied function object under forall vars, e.g. f(a, b).
     applied_fn_obj: Obj,
 }
 
@@ -86,9 +97,6 @@ impl Runtime {
             return Ok(None);
         }
 
-        let known_to_rhs_param_map = self
-            .restrict_build_known_to_rhs_param_map(&known_flat_param_names, &rhs_flat_param_names);
-
         let forall_params = self.restrict_build_forall_params_from_rhs(&rhs_fn_set.body);
         let forall_dom_facts = self.restrict_build_forall_dom_facts_from_rhs(&rhs_fn_set.body);
 
@@ -106,8 +114,6 @@ impl Runtime {
             restrict_fact: restrict_fact.clone(),
             rhs_fn_set,
             known_fn_body,
-            rhs_flat_param_names,
-            known_to_rhs_param_map,
             forall_params,
             forall_dom_facts,
             applied_fn_obj,
@@ -214,15 +220,12 @@ impl Runtime {
         flow: RestrictProofFlow,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let mut then_facts = self.restrict_build_then_facts_from_known_fn_body(&flow)?;
-        then_facts.push(
-            InFact::new(
-                flow.applied_fn_obj,
-                (*flow.rhs_fn_set.body.ret_set).clone(),
-                flow.restrict_fact.line_file.clone(),
-            )
-            .into(),
-        );
+        let then_facts = vec![InFact::new(
+            flow.applied_fn_obj.clone(),
+            (*flow.rhs_fn_set.body.ret_set).clone(),
+            flow.restrict_fact.line_file.clone(),
+        )
+        .into()];
 
         let forall = ForallFact::new(
             flow.forall_params,
@@ -294,62 +297,5 @@ impl Runtime {
             }
         }
         vec![all_args]
-    }
-
-    fn restrict_build_known_to_rhs_param_map(
-        &self,
-        known_flat_param_names: &[String],
-        rhs_flat_param_names: &[String],
-    ) -> HashMap<String, Obj> {
-        let mut out: HashMap<String, Obj> = HashMap::new();
-        let mut i: usize = 0;
-        while i < known_flat_param_names.len() {
-            out.insert(
-                known_flat_param_names[i].clone(),
-                obj_for_bound_param_in_scope(rhs_flat_param_names[i].clone(), ParamObjType::FnSet),
-            );
-            i += 1;
-        }
-        out
-    }
-
-    fn restrict_build_then_facts_from_known_fn_body(
-        &self,
-        flow: &RestrictProofFlow,
-    ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeError> {
-        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
-
-        let mut index: usize = 0;
-        for param_group in flow.known_fn_body.params_def_with_set.iter() {
-            let instantiated_known_set = self.inst_obj(
-                &param_group.set,
-                &flow.known_to_rhs_param_map,
-                ParamObjType::FnSet,
-            )?;
-            for _ in param_group.params.iter() {
-                let rhs_param_name = flow.rhs_flat_param_names[index].clone();
-                then_facts.push(
-                    InFact::new(
-                        obj_for_bound_param_in_scope(rhs_param_name, ParamObjType::Forall),
-                        instantiated_known_set.clone(),
-                        flow.restrict_fact.line_file.clone(),
-                    )
-                    .into(),
-                );
-                index += 1;
-            }
-        }
-
-        for dom_fact in flow.known_fn_body.dom_facts.iter() {
-            let instantiated_known_dom_fact = self.inst_or_and_chain_atomic_fact(
-                dom_fact,
-                &flow.known_to_rhs_param_map,
-                ParamObjType::FnSet,
-                None,
-            )?;
-            then_facts.push(instantiated_known_dom_fact.into());
-        }
-
-        Ok(then_facts)
     }
 }
