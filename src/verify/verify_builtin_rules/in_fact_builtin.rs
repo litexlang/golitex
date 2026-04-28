@@ -3,7 +3,8 @@ use crate::prelude::*;
 use crate::verify::{
     number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
     number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
-    number_is_in_z_nz, verify_number_in_standard_set::is_integer_after_simplification, VerifyState,
+    number_is_in_z_nz, verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same,
+    verify_number_in_standard_set::is_integer_after_simplification, VerifyState,
 };
 fn number_in_set_verified_by_builtin_rules_result(in_fact: &InFact, reason: &str) -> StmtResult {
     StmtResult::FactualStmtSuccess(
@@ -301,6 +302,55 @@ impl Runtime {
         }
     }
 
+    /// `f(args) $in S` when `S` agrees with the head's typing return set and the application is
+    /// well-defined in the current environment (e.g. domain facts already assumed).
+    fn verify_in_fact_fn_application_in_typed_return_set(
+        &mut self,
+        fn_obj: &FnObj,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let typed_ret = match fn_obj.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(a) => (*a.body.ret_set).clone(),
+            _ => {
+                let head_obj: Obj = (*fn_obj.head.clone()).into();
+                let Some(fn_set) = self.get_cloned_object_in_fn_set(&head_obj) else {
+                    return Ok((StmtUnknown::new()).into());
+                };
+                (*fn_set.body.ret_set).clone()
+            }
+        };
+        let target = &in_fact.set;
+        let ret_matches = verify_equality_by_they_are_the_same(target, &typed_ret)
+            || self
+                .verify_equal_fact(
+                    &EqualFact::new(
+                        target.clone(),
+                        typed_ret.clone(),
+                        in_fact.line_file.clone(),
+                    ),
+                    verify_state,
+                )?
+                .is_true();
+        if !ret_matches {
+            return Ok((StmtUnknown::new()).into());
+        }
+        if self
+            .verify_obj_well_defined_and_store_cache(&Obj::FnObj(fn_obj.clone()), verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "fn application in declared return set (well-defined under typing)".to_string(),
+                Vec::new(),
+            )
+            .into(),
+        )
+    }
+
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,
@@ -587,6 +637,16 @@ impl Runtime {
                 self.verify_atomic_fact(&expanded.into(), verify_state)
             }
             (_, target_set_obj) => {
+                if let Obj::FnObj(fn_obj) = &in_fact.element {
+                    let fn_try = self.verify_in_fact_fn_application_in_typed_return_set(
+                        fn_obj,
+                        in_fact,
+                        verify_state,
+                    )?;
+                    if fn_try.is_true() {
+                        return Ok(fn_try);
+                    }
+                }
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
         }

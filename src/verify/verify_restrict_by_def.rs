@@ -9,32 +9,58 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let function = &restrict_fact.obj;
 
-        let original_fn_set =
-            match self.get_cloned_object_in_fn_set(function) {
-                Some(fn_set) => fn_set,
-                None => {
-                    return Err({
-                        VerifyRuntimeError(RuntimeErrorStruct::new(
+        self.verify_obj_well_defined_and_store_cache(function, verify_state)
+            .map_err(|e| {
+                RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                    Some(Fact::from(restrict_fact.clone()).into_stmt()),
+                    String::new(),
+                    restrict_fact.line_file.clone(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
+
+        self.verify_obj_well_defined_and_store_cache(
+            &restrict_fact.obj_can_restrict_to_fn_set,
+            verify_state,
+        )
+        .map_err(|e| {
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                 Some(Fact::from(restrict_fact.clone()).into_stmt()),
                 String::new(),
                 restrict_fact.line_file.clone(),
-                Some(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                            "function `{}` belongs to what function set is unknown",
-                            function.to_string()
+                Some(e),
+                vec![],
+            )))
+        })?;
+
+        let original_fn_set = match self.get_cloned_object_in_fn_set(function) {
+            Some(fn_set) => fn_set,
+            None => {
+                return Err(
+                    VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(restrict_fact.clone()).into_stmt()),
+                        String::new(),
+                        restrict_fact.line_file.clone(),
+                        Some(
+                            WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                                None,
+                                format!(
+                                    "function `{}` belongs to what function set is unknown",
+                                    function.to_string()
+                                ),
+                                default_line_file(),
+                                None,
+                                vec![],
+                            ))
+                            .into(),
                         ),
-                default_line_file(),
-                None,
-                vec![],
-            ))
-            .into()),
-                vec![],
-            ))
-            .into()
-        });
-                }
-            };
+                        vec![],
+                    ))
+                    .into(),
+                );
+            }
+        };
 
         self.verify_restrict_to_fn_set_with_params_against_original_with_params(
             restrict_fact,
@@ -91,7 +117,7 @@ impl Runtime {
             forall_dom_facts.push(o.into());
         }
 
-        let then_facts = Self::build_then_facts_for_original_with_params(
+        let mut then_facts = Self::build_then_facts_for_original_with_params(
             self,
             original_fn_set,
             &original_to_restrict_param_map,
@@ -110,15 +136,51 @@ impl Runtime {
         }
         })?;
 
+        let fn_head = match FnObjHead::from_name_obj(restrict_fact.obj.clone()) {
+            Some(h) => h,
+            None => return Ok(None),
+        };
+        let application_groups =
+            Self::restrict_full_application_arg_groups(original_fn_set, &restrict_flat_param_names);
+        let applied_fn_obj: Obj = FnObj::new(fn_head, application_groups).into();
+        then_facts.push(
+            InFact::new(
+                applied_fn_obj,
+                (*restrict_to_ref.body.ret_set).clone(),
+                restrict_fact.line_file.clone(),
+            )
+            .into(),
+        );
+
         self.verify_forall_and_return_restrict_success(
             restrict_fact,
             ParamDefWithType::new(forall_params),
             forall_dom_facts,
             then_facts,
-            &(*restrict_to_ref.body.ret_set).clone(),
-            &(*original_fn_set.body.ret_set).clone(),
             verify_state,
         )
+    }
+
+    // One application group `f(a, b, ...)` with every parameter in order. This matches
+    // `verify_fn_obj_well_defined`, which checks arg count against total param count for the whole
+    // signature in the first (often only) application step — not one step per `ParamGroupWithSet`.
+    fn restrict_full_application_arg_groups(
+        original_fn_set: &FnSet,
+        restrict_flat_param_names: &[String],
+    ) -> Vec<Vec<Box<Obj>>> {
+        let mut all_args: Vec<Box<Obj>> = Vec::new();
+        let mut index: usize = 0;
+        for param_def_with_set in &original_fn_set.body.params_def_with_set {
+            for _ in param_def_with_set.params.iter() {
+                let restrict_param_name = restrict_flat_param_names[index].clone();
+                all_args.push(Box::new(obj_for_bound_param_in_scope(
+                    restrict_param_name,
+                    ParamObjType::Forall,
+                )));
+                index += 1;
+            }
+        }
+        vec![all_args]
     }
 
     fn build_original_to_restrict_param_map(
@@ -191,8 +253,6 @@ impl Runtime {
         forall_params: ParamDefWithType,
         forall_dom_facts: Vec<Fact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
-        restrict_ret_set: &Obj,
-        original_ret_set: &Obj,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let params_in_original_sets_forall = ForallFact::new(
@@ -207,20 +267,10 @@ impl Runtime {
             return Ok(None);
         }
 
-        let ret_equal_fact = EqualFact::new(
-            restrict_ret_set.clone(),
-            original_ret_set.clone(),
-            restrict_fact.line_file.clone(),
-        );
-        let ret_equal_result = self.verify_equal_fact(&ret_equal_fact, verify_state)?;
-        if !ret_equal_result.is_true() {
-            return Ok(None);
-        }
-
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 restrict_fact.clone().into(),
-                "restrict by definition (forall param sets narrower, same ret set)".to_string(),
+                "restrict_fn_in: forall on narrowed domain; outputs in stated return set".to_string(),
                 Vec::new(),
             ))
             .into(),

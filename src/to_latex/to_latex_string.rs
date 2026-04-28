@@ -1441,7 +1441,7 @@ impl NotRestrictFact {
         format!(
             r"\neg \left( {} \mathrel{{\$}} \mathrm{{{}}}\, {} \right)",
             self.obj.to_latex_string(),
-            RESTRICT,
+            RESTRICT_FN_IN,
             self.obj_cannot_restrict_to_fn_set.to_latex_string()
         )
     }
@@ -1586,7 +1586,7 @@ impl RestrictFact {
         format!(
             r"{} \mathrel{{\$}} \mathrm{{{}}}\, {}",
             self.obj.to_latex_string(),
-            RESTRICT,
+            RESTRICT_FN_IN,
             self.obj_can_restrict_to_fn_set.to_latex_string()
         )
     }

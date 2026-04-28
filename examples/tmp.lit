@@ -1,7 +1,11 @@
-# Split last index: sum/product through e vs through e-1 (see builtin verify rules).
+have f fn(x R, y Q) R 
 
-prove:
-    sum(1, 3, 'Z(x){x}) = sum(1, 2, 'Z(x){x}) + 'Z(x){x}(3)
-    product(1, 3, 'Z(x){x}) = product(1, 2, 'Z(x){x}) * 'Z(x){x}(3)
+$restrict_fn_in(f, fn(a Q, b Q) R)
 
-    sum(1, 10, 'Z(x){x}) = sum(1, 3, 'Z(x){x}) + sum(4, 8, 'Z(x){x}) + sum(9, 10, 'Z(x){x})
+$restrict_fn_in(f, fn(x R, y Q: x < y) R)
+
+have g fn(x, y R) R
+
+$restrict_fn_in(g, fn(x, y R: x < y, x < 0) R)
+
+$restrict_fn_in(g, fn(p Q, q Q) R)
