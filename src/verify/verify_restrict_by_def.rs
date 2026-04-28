@@ -206,7 +206,7 @@ impl Runtime {
             return Some(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     flow.restrict_fact.clone().into(),
-                    "restrict_fn_in: WD on narrowed domain; known fn_set already has same return_set"
+                    "restrict_fn_in: well-defined on narrowed domain; known fn_set already has same return_set"
                         .to_string(),
                     Vec::new(),
                 ))

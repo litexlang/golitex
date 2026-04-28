@@ -1,0 +1,86 @@
+# Litex vs Lean: Basic Math — narrative in `#` comments; runnable Litex mixed in.
+# (Lean code is only in comments for comparison.)
+
+# --- Example 1 — 1 + 1 = 2
+# Task: state a closed arithmetic fact.
+# Litex: verifier uses built-in arithmetic. Lean: `norm_num` after Mathlib import.
+
+1 + 1 = 2
+
+prove:
+    # --- Example 2 — rational identity under a non-vanishing denominator
+    # Task: forall real a,b,c,d under the exact expanded denominator, fraction simplifies to 1.
+    # Old tutorial used `dom:` as a labelled block under `forall`; current syntax separates premises with newline then `=>:`.
+
+    forall a, b, c, d R:
+        a * c + a * d + b * c + b * d != 0
+        =>:
+            (a + b) * (c + d) / (a * c + a * d + b * c + b * d) = 1
+
+prove:
+    # --- Example 3 — defining `is_prime` and checking a fixed prime
+    # Task: characterize primes then discharge `$is_prime(97)`.
+    # Full divisorWalk could be done with `by for` if every branch reduces; here the standard pattern is to `know` the finite family of modular facts (same semantic load as a big `decide` in Lean).
+
+    prop is_prime(x N_pos):
+        2 <= x
+        forall y N_pos:
+            2 <= y < x
+            =>:
+                x % y != 0
+
+    know forall i range(2, 97):
+        97 % i != 0
+
+    $is_prime(97)
+
+prove:
+    # --- Example 4 — addition is commutative modulo a nonzero modulus
+    # Omitting an explicit `$congr` predicate: the commutative equality of residues is verified directly here.
+
+    forall a, b, c Z:
+        c != 0
+        =>:
+            (a + b) % c = (b + a) % c
+
+prove:
+    # --- Example 5 — counterexample polynomial (Euler quartic equation)
+    # Witness existentials use `witness exist ... from ... :` proof block syntax.
+
+    prop euler_counterexample(a, b, c, d N_pos):
+        a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4
+
+    witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481:
+        95800 ^ 4 + 217519 ^ 4 + 414560 ^ 4 = 422481 ^ 4
+
+prove:
+    # --- Example 6 — mixed-type function and application
+    # If you pass a non-integer where `Z` is required, the checker reports a domain error (error text not reproduced in comments).
+
+    have fn f(x R, y Z) R = x * y
+
+    f(1, 2) = 1 * 2 = 2
+
+prove:
+    # --- Example 7 — universal statement over Cartesian product of finite list-sets (`by enumerate finite_set`)
+
+    by enumerate finite_set:
+        prove:
+            forall x {4, 17, 6.6}, y {1, 2 * 0.2, 3.0}:
+                x > y
+        do_nothing
+
+prove:
+    # --- Example 8 — `by for` over integer ranges
+    # Older texts used top-level `for ... prove_for` / `prove_for` spelling; enumerate `range`/`closed_range` uniformly through `by for` now.
+    # A parity-heavy variant (checking `i % 2`) needs tighter typing discipline in the enumerator — see cheatsheet notes.
+
+    by for:
+        prove:
+            forall n range(0, 11):
+                n < 11
+        do_nothing
+
+# --- Summary (comment only)
+#
+# Lean’s tactic stack is extremely general; Litex biases toward algebraic closure and searchable facts for everyday arithmetic.

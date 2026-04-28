@@ -1,0 +1,130 @@
+# Litex vs Lean: Set theory — explanatory `#` blocks with runnable snippets.
+# Canonical website copy used to ship as Markdown/HTML; repository copy is this `.lit` for direct checking.
+
+prove:
+    # ### Example 1 — membership in a finite list-set
+    # Lean: finset membership + simp. Litex checks list-set membership mechanically.
+
+    1 $in {1, 2}
+
+prove:
+    # ### Example 2 — sets containing sets (`{{}, {1,2}}` style tagging at kernel level remains list-set literals)
+
+    {1, 2} $in {{}, {1, 2}}
+
+prove:
+    # ### Example 3 — disjunctive characterization of enumeration parameters
+
+    forall i {1, 2}:
+        i = 1 or i = 2
+
+prove:
+    # ### Example 4 — positivity carried through a set-builder type index
+
+    forall x {y R: y > 0}:
+        x > 0
+
+prove:
+    # ### Example 5 — distinct finite cardinalities forbid set equality (`by contra` replaces legacy `contra ... :` spelling).
+
+    by contra:
+        prove:
+            {1, 2, 3} != {1, 2}
+        count({1, 2, 3}) = 3
+        count({1, 2}) = 2
+        count({1, 2, 3}) = count({1, 2})
+        impossible 3 = 2
+
+# ### Example 6 — duplicate-free list-sets (`{a,1}` with symbolic `a`) 
+# Uncommenting naive equality would fail verification when `a` is not proved apart from literals.
+# Typical error gist: duplicated parameters require known distinctness (`a ≠ 1` unresolved).
+#
+#have a N
+#{a, 1}
+
+prove:
+    # ### Example 7 — range `{5,...,7}` enumerated as literals via `by for`
+    # The older `for i range(...) :`/`prove_for` top-level iterators are spelled as `by for` proofs today.
+
+    by for:
+        prove:
+            forall i range(5, 8):
+                i = 5 or i = 6 or i = 7
+        do_nothing
+
+prove:
+    # ### Example 8 — inclusion transitivity chaining from two global `forall`s
+
+    have a nonempty_set, b nonempty_set, c nonempty_set
+
+    know forall x a:
+        x $in b
+
+    know forall x b:
+        x $in c
+
+    have x a
+    x $in b
+    x $in c
+
+prove:
+    # ### Example 9 — domain-heavy set builders (minimal sketch)
+    # Use `... and $q(...)` inside builders when commas would parse as arity separators today.
+
+    prop p9(x Z):
+        x < 100
+
+    prop q9(y Q):
+        y > 0
+
+    know $q9(17)
+
+prove:
+    # ### Example 10 — finite enumerator on a tame statement (parity `%` skips need careful typing in list enumerators).
+
+    by enumerate finite_set:
+        prove:
+            forall x {2, 4}:
+                x = 2 or x = 4
+        do_nothing
+
+prove:
+    # ### Example 11 — restriction written with inline domain predicates (set-builder `fn({ ... })` codomain needs extra parser care)
+
+    have fn g(x R: x > 0) R = x + 1
+
+    know forall z R:
+        z > 0
+        =>:
+            z + 1 > 1
+
+    know forall z R:
+        z > 0
+        =>:
+            z + 1 > 0
+
+    g $in fn(x R: x > 0) R
+
+prove:
+    # ### Example 12 — constant witness for a strict bound on the positive half-line
+
+    have fn h(x R) R = 100
+
+    know forall z R:
+        z > 0
+        =>:
+            h(z) > 1
+
+    h(1) > 1
+
+prove:
+    # ### Example 13 — read a total function as belonging to a typed function space with domain restriction
+
+    have fn f_int(x Z: x > 0) R = x + 1
+
+    f_int $in fn(x Z: x > 0) R
+
+prove:
+    # ### Example 14 — `have` over small finite set (checker records definitional facts)
+
+    have a_list {1, 2, 3}
