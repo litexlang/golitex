@@ -37,21 +37,80 @@ impl Runtime {
     fn upsert_known_fn_info_for_key(
         map: &mut HashMap<ObjString, KnownFnInfo>,
         key: ObjString,
-        body: FnSetBody,
+        body: Option<FnSetBody>,
         equal_to: Option<Obj>,
     ) {
         match map.entry(key) {
             Entry::Occupied(mut o) => {
                 let info = o.get_mut();
-                info.fn_set = Some(body);
+                if let Some(b) = body {
+                    info.fn_set = Some(b);
+                }
                 if let Some(eq) = equal_to {
                     info.equal_to = Some(eq);
                 }
             }
             Entry::Vacant(v) => {
+                if body.is_none() && equal_to.is_none() {
+                    return;
+                }
                 v.insert(KnownFnInfo::with_fn_set(body, equal_to));
             }
         }
+    }
+
+    fn upsert_known_fn_restrict_to_for_key(
+        map: &mut HashMap<ObjString, KnownFnInfo>,
+        key: ObjString,
+        restrict_body: FnSetBody,
+    ) {
+        match map.entry(key) {
+            Entry::Occupied(mut o) => {
+                o.get_mut().update_restrict_to(restrict_body);
+            }
+            Entry::Vacant(v) => {
+                let mut info = KnownFnInfo::default();
+                info.update_restrict_to(restrict_body);
+                v.insert(info);
+            }
+        }
+    }
+
+    /// Record `$restrict_fn_in(f, fn …)` RHS body for `f` (overwrites prior `restrict_to` for that key).
+    pub(crate) fn register_known_fn_restrict_to_for_element(
+        &mut self,
+        element: &Obj,
+        restrict_body: FnSetBody,
+    ) {
+        if !obj_eligible_for_known_objs_in_fn_sets(element) {
+            return;
+        }
+        let key = element.to_string();
+        let env = self.top_level_env();
+        Self::upsert_known_fn_restrict_to_for_key(
+            &mut env.known_objs_in_fn_sets,
+            key.clone(),
+            restrict_body.clone(),
+        );
+        for alias in extra_known_fn_set_keys_for_bare_name_lookup(element) {
+            if alias != key {
+                Self::upsert_known_fn_restrict_to_for_key(
+                    &mut env.known_objs_in_fn_sets,
+                    alias,
+                    restrict_body.clone(),
+                );
+            }
+        }
+    }
+
+    /// `$restrict_fn_in(f, narrower_fn_set)` after the fact is stored: remember the narrowed `FnSetBody`.
+    pub fn infer_restrict_fact(&mut self, rf: &RestrictFact) -> Result<InferResult, RuntimeError> {
+        let restrict_body = match &rf.obj_can_restrict_to_fn_set {
+            Obj::FnSet(fs) => fs.body.clone(),
+            _ => return Ok(InferResult::new()),
+        };
+        self.register_known_fn_restrict_to_for_element(&rf.obj, restrict_body);
+        Ok(InferResult::new())
     }
 
     /// Record `element` as having function signature `body` (same keys/aliases as `element $in fn ...` infer).
@@ -70,7 +129,7 @@ impl Runtime {
         Self::upsert_known_fn_info_for_key(
             &mut env.known_objs_in_fn_sets,
             key.clone(),
-            body.clone(),
+            Some(body.clone()),
             equal_to.clone(),
         );
         for alias in extra_known_fn_set_keys_for_bare_name_lookup(element) {
@@ -78,7 +137,7 @@ impl Runtime {
                 Self::upsert_known_fn_info_for_key(
                     &mut env.known_objs_in_fn_sets,
                     alias,
-                    body.clone(),
+                    Some(body.clone()),
                     equal_to.clone(),
                 );
             }
