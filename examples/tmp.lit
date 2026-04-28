@@ -1,1 +1,0 @@
-\integral(1, 2, 'R(x){x}) = \integral(1/2, 1, 'R(x){2 * x})
