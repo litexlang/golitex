@@ -71,7 +71,7 @@ In the best case, what you write is organized around the problem — not bent to
   </tr>
 </table>
 
-Here is a thorough collection of comparison between Litex and Lean: [Litex vs Lean Set Theory Examples](https://litexlang.com/doc/Litex_vs_Lean/Set_Theory). Visit our [website](https://litexlang.com) for more details. Dataset on [Hugging Face](https://huggingface.co/litexlang) is also available.
+Litex vs Lean walkthroughs ship in this repo as [`Litex_vs_Lean/*.lit`](Litex_vs_Lean/) (numbered in [`Litex_vs_Lean/.order`](Litex_vs_Lean/.order): `#` comments plus runnable code—use `litex -f Litex_vs_Lean/Basic_Math.lit`). The website still hosts [HTML versions](https://litexlang.com/doc/Litex_vs_Lean/Set_Theory). Dataset on [Hugging Face](https://huggingface.co/litexlang) is also available.
 
 ## How Litex Works
 

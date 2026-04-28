@@ -1,0 +1,16 @@
+# Typical example — “there are infinitely many primes” (Litex vs Lean)
+#
+# Both sides follow one storyline: factorial + 1, pick a prime factor, contradict small divisors.
+# Litex often bundles lemmas in `know` blocks; Lean interleaves `have`/tactics.
+#
+# Lean 4 excerpt (shown only in comments — not Litex-parseable):
+
+# ```
+# example (N : ℕ) : ∃ p ≥ N, Prime p := by
+#   have hN0 : 0 < N ! := by apply factorial_pos
+#   have hN2 : 2 ≤ N ! + 1 := by addarith [hN0]
+#   obtain ⟨p, hp, hpN⟩ : ∃ p : ℕ, Prime p ∧ p ∣ N ! + 1 := exists_prime_factor hN2
+#   ...
+# ```
+
+run_file "../examples/there_exists_infinite_number_of_prime_numbers.lit"
