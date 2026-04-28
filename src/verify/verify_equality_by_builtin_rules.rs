@@ -823,6 +823,406 @@ impl Runtime {
         )))
     }
 
+    // sum(s,e,f) = sum(s,e-1,f) + f(e): same unary summand, shared start, e = (e-1)+1 on the shorter range.
+    fn try_verify_sum_split_last_term(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let one: Obj = Number::new("1".to_string()).into();
+        for (full_obj, add_obj) in [(left, right), (right, left)] {
+            let Obj::Sum(s_full) = full_obj else {
+                continue;
+            };
+            let Obj::Add(a) = add_obj else {
+                continue;
+            };
+            for (sum_part, tail) in [
+                (a.left.as_ref(), a.right.as_ref()),
+                (a.right.as_ref(), a.left.as_ref()),
+            ] {
+                let Obj::Sum(s_pre) = sum_part else {
+                    continue;
+                };
+                if !self
+                    .verify_objs_are_equal(
+                        s_full.start.as_ref(),
+                        s_pre.start.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                let end_pre_plus_one: Obj = Add::new((*s_pre.end).clone(), one.clone()).into();
+                if !self
+                    .verify_objs_are_equal(
+                        s_full.end.as_ref(),
+                        &end_pre_plus_one,
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        s_full.func.as_ref(),
+                        s_pre.func.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                let Some(expected_tail) = self.instantiate_unary_anonymous_summand_at(
+                    s_full.func.as_ref(),
+                    s_full.end.as_ref(),
+                )?
+                else {
+                    continue;
+                };
+                if !self
+                    .verify_objs_are_equal(&expected_tail, tail, line_file.clone(), verify_state)?
+                    .is_true()
+                {
+                    continue;
+                }
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: sum through e equals sum through e-1 plus last summand f(e)",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // product(s,e,f) = product(s,e-1,f) * f(e): same unary factor, shared start, e = (e-1)+1.
+    fn try_verify_product_split_last_term(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let one: Obj = Number::new("1".to_string()).into();
+        for (full_obj, mul_obj) in [(left, right), (right, left)] {
+            let Obj::Product(p_full) = full_obj else {
+                continue;
+            };
+            let Obj::Mul(m) = mul_obj else {
+                continue;
+            };
+            for (prod_part, tail) in [
+                (m.left.as_ref(), m.right.as_ref()),
+                (m.right.as_ref(), m.left.as_ref()),
+            ] {
+                let Obj::Product(p_pre) = prod_part else {
+                    continue;
+                };
+                if !self
+                    .verify_objs_are_equal(
+                        p_full.start.as_ref(),
+                        p_pre.start.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                let end_pre_plus_one: Obj = Add::new((*p_pre.end).clone(), one.clone()).into();
+                if !self
+                    .verify_objs_are_equal(
+                        p_full.end.as_ref(),
+                        &end_pre_plus_one,
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                if !self
+                    .verify_objs_are_equal(
+                        p_full.func.as_ref(),
+                        p_pre.func.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    continue;
+                }
+                let Some(expected_tail) = self.instantiate_unary_anonymous_summand_at(
+                    p_full.func.as_ref(),
+                    p_full.end.as_ref(),
+                )?
+                else {
+                    continue;
+                };
+                if !self
+                    .verify_objs_are_equal(&expected_tail, tail, line_file.clone(), verify_state)?
+                    .is_true()
+                {
+                    continue;
+                }
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: product through e equals product through e-1 times last factor f(e)",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    fn flatten_left_assoc_add_chain(obj: &Obj) -> Vec<&Obj> {
+        match obj {
+            Obj::Add(a) => {
+                let mut v = Self::flatten_left_assoc_add_chain(a.left.as_ref());
+                v.push(a.right.as_ref());
+                v
+            }
+            _ => vec![obj],
+        }
+    }
+
+    fn flatten_left_assoc_mul_chain(obj: &Obj) -> Vec<&Obj> {
+        match obj {
+            Obj::Mul(m) => {
+                let mut v = Self::flatten_left_assoc_mul_chain(m.left.as_ref());
+                v.push(m.right.as_ref());
+                v
+            }
+            _ => vec![obj],
+        }
+    }
+
+    // sum(s,e,f) = sum(s1,e1,f) + sum(s2,e2,f) + ... with contiguous [si,ei] tiling [s,e], same unary f.
+    fn try_verify_sum_partition_adjacent_ranges(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let one: Obj = Number::new("1".to_string()).into();
+        for (full_side, add_side) in [(left, right), (right, left)] {
+            let Obj::Sum(s_full) = full_side else {
+                continue;
+            };
+            let Obj::Add(_) = add_side else {
+                continue;
+            };
+            let parts = Self::flatten_left_assoc_add_chain(add_side);
+            if parts.len() < 2 {
+                continue;
+            }
+            let mut sums: Vec<&Sum> = Vec::with_capacity(parts.len());
+            let mut all_sum = true;
+            for p in &parts {
+                if let Obj::Sum(s) = p {
+                    sums.push(s);
+                } else {
+                    all_sum = false;
+                    break;
+                }
+            }
+            if !all_sum {
+                continue;
+            }
+            if !self
+                .verify_objs_are_equal(
+                    s_full.start.as_ref(),
+                    sums[0].start.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            if !self
+                .verify_objs_are_equal(
+                    s_full.end.as_ref(),
+                    sums[sums.len() - 1].end.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            let mut gaps_ok = true;
+            for i in 0..sums.len().saturating_sub(1) {
+                let gap = Add::new((*sums[i].end).clone(), one.clone()).into();
+                if !self
+                    .verify_objs_are_equal(
+                        &gap,
+                        sums[i + 1].start.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    gaps_ok = false;
+                    break;
+                }
+            }
+            if !gaps_ok {
+                continue;
+            }
+            let mut func_ok = true;
+            for s in &sums {
+                if !self
+                    .verify_objs_are_equal(
+                        s_full.func.as_ref(),
+                        s.func.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    func_ok = false;
+                    break;
+                }
+            }
+            if !func_ok {
+                continue;
+            }
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: sum partitions closed range into adjacent sub-sums with the same summand",
+            )));
+        }
+        Ok(None)
+    }
+
+    // product(s,e,f) = product(s1,e1,f) * product(s2,e2,f) * ... contiguous tiling, same unary f.
+    fn try_verify_product_partition_adjacent_ranges(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !verify_state.is_round_0() {
+            return Ok(None);
+        }
+        let one: Obj = Number::new("1".to_string()).into();
+        for (full_side, mul_side) in [(left, right), (right, left)] {
+            let Obj::Product(p_full) = full_side else {
+                continue;
+            };
+            let Obj::Mul(_) = mul_side else {
+                continue;
+            };
+            let parts = Self::flatten_left_assoc_mul_chain(mul_side);
+            if parts.len() < 2 {
+                continue;
+            }
+            let mut products: Vec<&Product> = Vec::with_capacity(parts.len());
+            let mut all_prod = true;
+            for p in &parts {
+                if let Obj::Product(pr) = p {
+                    products.push(pr);
+                } else {
+                    all_prod = false;
+                    break;
+                }
+            }
+            if !all_prod {
+                continue;
+            }
+            if !self
+                .verify_objs_are_equal(
+                    p_full.start.as_ref(),
+                    products[0].start.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            if !self
+                .verify_objs_are_equal(
+                    p_full.end.as_ref(),
+                    products[products.len() - 1].end.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            let mut gaps_ok = true;
+            for i in 0..products.len().saturating_sub(1) {
+                let gap = Add::new((*products[i].end).clone(), one.clone()).into();
+                if !self
+                    .verify_objs_are_equal(
+                        &gap,
+                        products[i + 1].start.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    gaps_ok = false;
+                    break;
+                }
+            }
+            if !gaps_ok {
+                continue;
+            }
+            let mut func_ok = true;
+            for p in &products {
+                if !self
+                    .verify_objs_are_equal(
+                        p_full.func.as_ref(),
+                        p.func.as_ref(),
+                        line_file.clone(),
+                        verify_state,
+                    )?
+                    .is_true()
+                {
+                    func_ok = false;
+                    break;
+                }
+            }
+            if !func_ok {
+                continue;
+            }
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: product partitions closed range into adjacent sub-products with the same factor",
+            )));
+        }
+        Ok(None)
+    }
+
     /// `sum(L) = sum(R)` with `R` a translate of `L` by `k` on both bounds, reduced to pointwise
     /// equality on the right-hand index range.
     fn try_verify_sum_reindex_shift(
@@ -1221,6 +1621,36 @@ impl Runtime {
         if let Some(done) =
             self.try_verify_sum_merge_adjacent_ranges(left, right, line_file.clone(), verify_state)?
         {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_split_last_term(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_product_split_last_term(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_sum_partition_adjacent_ranges(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_product_partition_adjacent_ranges(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
