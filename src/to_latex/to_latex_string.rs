@@ -1521,6 +1521,13 @@ impl ParamType {
             ParamType::Set(_) => format!(r"\mathrm{{{}}}", SET),
             ParamType::NonemptySet(_) => format!(r"\mathrm{{{}}}", NONEMPTY_SET),
             ParamType::FiniteSet(_) => format!(r"\mathrm{{{}}}", FINITE_SET),
+            ParamType::Restrictive(fs) => format!(
+                r"\mathrm{{{}}} {}{}{}",
+                RESTRICTIVE,
+                "(",
+                Obj::FnSet(fs.clone()).to_latex_string(),
+                ")"
+            ),
             ParamType::Obj(o) => o.to_latex_string(),
         }
     }

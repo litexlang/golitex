@@ -325,6 +325,7 @@ pub use crate::common::keywords::Q_POS;
 pub use crate::common::keywords::R;
 pub use crate::common::keywords::RANGE;
 pub use crate::common::keywords::RESTRICT_FN_IN;
+pub use crate::common::keywords::RESTRICTIVE;
 pub use crate::common::keywords::FN_EQ;
 pub use crate::common::keywords::FN_EQ_IN;
 pub use crate::common::keywords::RIGHT_ARROW;
