@@ -1,11 +1,1 @@
-by cases => 1 = 1:
-    case 1 = 1:
-        do_nothing
-    case 1 != 1:
-        impossible 1 = 1
-
-by contra => 1 = 1:
-    impossible 1 != 1
-
-claim => 1 = 1:
-    do_nothing
+\integral(1, 2, 'R(x){x}) = \integral(1/2, 1, 'R(x){2 * x})
