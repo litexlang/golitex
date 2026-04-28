@@ -58,10 +58,11 @@ impl Runtime {
             ParamObjType::Identifier,
         )?;
 
-        let function_identifier_obj = Identifier::new(have_fn_equal_stmt.name.clone()).into();
+        let function_identifier_obj: Obj =
+            Identifier::new(have_fn_equal_stmt.name.clone()).into();
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
-            function_identifier_obj,
+            function_identifier_obj.clone(),
             function_set_obj,
             have_fn_equal_stmt.line_file.clone(),
         )
@@ -77,6 +78,12 @@ impl Runtime {
                     vec![],
                 )
             })?;
+
+        self.register_known_objs_in_fn_sets_for_element_body(
+            &function_identifier_obj,
+            fn_set_stored.body.clone(),
+            Some(have_fn_equal_stmt.equal_to.clone()),
+        );
 
         let (param_defs_with_type, forall_dom_facts, curried_layers) = self
             .have_fn_equal_stmt_forall_binders_dom_and_curried_layers(
