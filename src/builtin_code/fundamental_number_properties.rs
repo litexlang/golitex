@@ -39,4 +39,7 @@ know:
 
     forall a, b N_pos:
         exist k N_pos st {a = k * b}
+
+    forall a N_pos:
+        1 % a = 1
 "#;
