@@ -1,11 +1,33 @@
-have f fn(x R, y Q) R 
+prove:
+    have f fn(x R, y Q) R 
 
-$restrict(f, fn(a Q, b Q) R)
+    $restrict_fn_in(f, fn(a Q, b Q) R)
 
-$restrict(f, fn(x R, y Q: x < y) R)
+    $restrict_fn_in(f, fn(x R, y Q: x < y) R)
 
-have g fn(x, y R) R
+    have g fn(x, y R) R
 
-$restrict(g, fn(x, y R: x < y, x < 0) R)
+    $restrict_fn_in(g, fn(x, y R: x < y, x < 0) R)
 
-$restrict(g, fn(p Q, q Q) R)
+    $restrict_fn_in(g, fn(p Q, q Q) R)
+
+prove:
+    have f set
+    know:
+        $restrict_fn_in(f, fn(x R, y Q) R)
+
+    f(1, 2) = f(1, 2)
+
+prove:
+    forall f restrictive(fn(x R, y Q) R):
+        f(1, 2) = f(1, 2)
+
+prove:
+    abstract_prop p(x)
+
+    know:
+        forall f restrictive(fn(x R, y Q) R):
+            $p(f)
+
+    have f fn(x R, y Q) R
+    $p(f)

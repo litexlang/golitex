@@ -67,9 +67,6 @@ know:
             (a + b) % c = ((a % c) + (b % c)) % c
             (a - b) % c = ((a % c) - (b % c)) % c
 
-    forall n, m Z, k N_pos:
-        (n * m) % k = ((n % k) * (m % k)) % k
-
     forall n Z, k N_pos:
         (-n) % k = (k - (n % k)) % k
 
