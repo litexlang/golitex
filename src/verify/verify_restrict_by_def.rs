@@ -34,8 +34,8 @@ impl Runtime {
             )))
         })?;
 
-        let original_fn_set = match self.get_cloned_object_in_fn_set(function) {
-            Some(fn_set) => fn_set,
+        let original_fn_body = match self.get_cloned_object_in_fn_set(function) {
+            Some(fn_body) => fn_body,
             None => {
                 return Err(
                     VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -64,7 +64,7 @@ impl Runtime {
 
         self.verify_restrict_to_fn_set_with_params_against_original_with_params(
             restrict_fact,
-            &original_fn_set,
+            &original_fn_body,
             verify_state,
         )
     }
@@ -72,7 +72,7 @@ impl Runtime {
     fn verify_restrict_to_fn_set_with_params_against_original_with_params(
         &mut self,
         restrict_fact: &RestrictFact,
-        original_fn_set: &FnSet,
+        original_fn_body: &FnSetBody,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let restrict_to_ref = match &restrict_fact.obj_can_restrict_to_fn_set {
@@ -88,7 +88,7 @@ impl Runtime {
         }
 
         let mut original_flat_param_names: Vec<String> = Vec::new();
-        for param_def_with_set in &original_fn_set.body.params_def_with_set {
+        for param_def_with_set in &original_fn_body.params_def_with_set {
             for param_name in param_def_with_set.params.iter() {
                 original_flat_param_names.push(param_name.clone());
             }
@@ -119,7 +119,7 @@ impl Runtime {
 
         let mut then_facts = Self::build_then_facts_for_original_with_params(
             self,
-            original_fn_set,
+            original_fn_body,
             &original_to_restrict_param_map,
             &restrict_flat_param_names,
             restrict_fact.line_file.clone(),
@@ -141,7 +141,7 @@ impl Runtime {
             None => return Ok(None),
         };
         let application_groups =
-            Self::restrict_full_application_arg_groups(original_fn_set, &restrict_flat_param_names);
+            Self::restrict_full_application_arg_groups(original_fn_body, &restrict_flat_param_names);
         let applied_fn_obj: Obj = FnObj::new(fn_head, application_groups).into();
         then_facts.push(
             InFact::new(
@@ -165,12 +165,12 @@ impl Runtime {
     // `verify_fn_obj_well_defined`, which checks arg count against total param count for the whole
     // signature in the first (often only) application step — not one step per `ParamGroupWithSet`.
     fn restrict_full_application_arg_groups(
-        original_fn_set: &FnSet,
+        original_fn_body: &FnSetBody,
         restrict_flat_param_names: &[String],
     ) -> Vec<Vec<Box<Obj>>> {
         let mut all_args: Vec<Box<Obj>> = Vec::new();
         let mut index: usize = 0;
-        for param_def_with_set in &original_fn_set.body.params_def_with_set {
+        for param_def_with_set in &original_fn_body.params_def_with_set {
             for _ in param_def_with_set.params.iter() {
                 let restrict_param_name = restrict_flat_param_names[index].clone();
                 all_args.push(Box::new(obj_for_bound_param_in_scope(
@@ -204,7 +204,7 @@ impl Runtime {
 
     fn build_then_facts_for_original_with_params(
         runtime: &Runtime,
-        original_fn_set: &FnSet,
+        original_fn_body: &FnSetBody,
         original_to_restrict_param_map: &HashMap<String, Obj>,
         restrict_flat_param_names: &Vec<String>,
         line_file: LineFile,
@@ -212,7 +212,7 @@ impl Runtime {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
         let mut index: usize = 0;
-        for param_def_with_set in &original_fn_set.body.params_def_with_set {
+        for param_def_with_set in &original_fn_body.params_def_with_set {
             let instantiated_original_set =
                 runtime.inst_obj(
                     &param_def_with_set.set,
@@ -233,7 +233,7 @@ impl Runtime {
             }
         }
 
-        for dom_fact in &original_fn_set.body.dom_facts {
+        for dom_fact in &original_fn_body.dom_facts {
             let instantiated_dom_fact =
                 runtime.inst_or_and_chain_atomic_fact(
                     dom_fact,

@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 /// Objects whose `to_string()` is used as the key in `Environment::known_objs_in_fn_sets`.
@@ -33,28 +34,84 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
 }
 
 impl Runtime {
+    fn upsert_known_fn_info_for_key(
+        map: &mut HashMap<ObjString, KnownFnInfo>,
+        key: ObjString,
+        body: FnSetBody,
+        equal_to: Option<Obj>,
+    ) {
+        match map.entry(key) {
+            Entry::Occupied(mut o) => {
+                let info = o.get_mut();
+                info.fn_set = Some(body);
+                if let Some(eq) = equal_to {
+                    info.equal_to = Some(eq);
+                }
+            }
+            Entry::Vacant(v) => {
+                v.insert(KnownFnInfo::with_fn_set(body, equal_to));
+            }
+        }
+    }
+
+    /// Record `element` as having function signature `body` (same keys/aliases as `element $in fn ...` infer).
+    /// When `equal_to` is `Some`, stores the defining expression (e.g. from `a = '…{…}` or `have fn`).
+    pub(crate) fn register_known_objs_in_fn_sets_for_element_body(
+        &mut self,
+        element: &Obj,
+        body: FnSetBody,
+        equal_to: Option<Obj>,
+    ) {
+        if !obj_eligible_for_known_objs_in_fn_sets(element) {
+            return;
+        }
+        let key = element.to_string();
+        let env = self.top_level_env();
+        Self::upsert_known_fn_info_for_key(
+            &mut env.known_objs_in_fn_sets,
+            key.clone(),
+            body.clone(),
+            equal_to.clone(),
+        );
+        for alias in extra_known_fn_set_keys_for_bare_name_lookup(element) {
+            if alias != key {
+                Self::upsert_known_fn_info_for_key(
+                    &mut env.known_objs_in_fn_sets,
+                    alias,
+                    body.clone(),
+                    equal_to.clone(),
+                );
+            }
+        }
+    }
+
     // Expand a type-level `FamilyObj` to its `equal_to` set object under the given type arguments.
     pub fn instantiate_family_member_set(
         &mut self,
         family_ty: &FamilyObj,
     ) -> Result<Obj, RuntimeError> {
         let family_name = family_ty.name.to_string();
-        let def = match self.get_cloned_family_definition_by_name(&family_name) {
-            Some(d) => d,
-            None => {
-                return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("family `{}` is not defined", family_name)))
-                .into());
-            }
-        };
+        let def =
+            match self.get_cloned_family_definition_by_name(&family_name) {
+                Some(d) => d,
+                None => {
+                    return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                        format!("family `{}` is not defined", family_name),
+                    ))
+                    .into());
+                }
+            };
         let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
-            return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
+            return Err(
+                UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "family `{}` expects {} type argument(s), got {}",
                     family_name,
                     expected_count,
                     family_ty.params.len()
                 )))
-            .into());
+                .into(),
+            );
         }
         let param_to_arg_map = def
             .params_def_with_type
@@ -104,16 +161,11 @@ impl Runtime {
             return Ok(InferResult::new());
         }
 
-        let key = in_fact.element.to_string();
-        let env = self.top_level_env();
-        env.known_objs_in_fn_sets
-            .insert(key.clone(), fn_set_with_dom.clone());
-        for alias in extra_known_fn_set_keys_for_bare_name_lookup(&in_fact.element) {
-            if alias != key {
-                env.known_objs_in_fn_sets
-                    .insert(alias, fn_set_with_dom.clone());
-            }
-        }
+        self.register_known_objs_in_fn_sets_for_element_body(
+            &in_fact.element,
+            fn_set_with_dom.body.clone(),
+            None,
+        );
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&in_fact.clone().into());

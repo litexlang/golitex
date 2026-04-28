@@ -142,16 +142,21 @@ impl Runtime {
             }
             _ => {
                 let function_name_obj: Obj = (*fn_obj.head).clone().into();
-                FnSetSpace::Set(
-                    self.get_object_in_fn_set(&function_name_obj)
+                FnSetSpace::Set(FnSet {
+                    body: self
+                        .get_object_in_fn_set(&function_name_obj)
                         .ok_or_else(|| {
-                            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
-                                    "`{}` is not a defined function",
-                                    fn_obj.head.to_string()
-                                )))))
+                            RuntimeError::from(WellDefinedRuntimeError(
+                                RuntimeErrorStruct::new_with_just_msg(todo_error_message(
+                                    format!(
+                                        "`{}` is not a defined function",
+                                        fn_obj.head.to_string()
+                                    ),
+                                )),
+                            ))
                         })?
                         .clone(),
-                )
+                })
             }
         };
 
@@ -1170,6 +1175,107 @@ impl Runtime {
         Ok(())
     }
 
+    fn verify_iterated_op_summand_with_stored_fn_set_body(
+        &mut self,
+        fs_body: FnSetBody,
+        start: &Obj,
+        end: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<(), RuntimeError> {
+        if ParamGroupWithSet::number_of_params(&fs_body.params_def_with_set) != 1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{op}: the function in the function set must be unary (one index)"
+                )),
+            )));
+        }
+        let param_names =
+            ParamGroupWithSet::collect_param_names(&fs_body.params_def_with_set);
+        let pname = param_names[0].clone();
+        let Some(param_set_for_index) =
+            Self::unary_param_set_from_params_def(&fs_body.params_def_with_set, &pname)
+        else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{op}: could not find index parameter in params_def_with_set"
+                )),
+            )));
+        };
+        self.verify_closed_range_each_integer_satisfies_unary_param_set(
+            start,
+            end,
+            &param_set_for_index,
+            verify_state,
+            op,
+        )?;
+        let start_c = start.clone();
+        let end_c = end.clone();
+        self.run_in_local_env(|rt| {
+            for g in fs_body.params_def_with_set.iter() {
+                rt.define_params_with_set_in_scope(g, ParamObjType::FnSet)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!(
+                                    "{op}: could not bind index parameter in local well-defined check"
+                                ),
+                                e,
+                            ),
+                        ))
+                    })?;
+            }
+            let k: Obj = Identifier::new(pname).into();
+            let le_lo = OrAndChainAtomicFact::AtomicFact(
+                LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
+            );
+            let le_hi = OrAndChainAtomicFact::AtomicFact(
+                LessEqualFact::new(k, end_c.clone(), default_line_file()).into(),
+            );
+            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_lo)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!("{op}: could not add lower bound in local check"),
+                            e,
+                        ),
+                    ))
+                })?;
+            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_hi)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!("{op}: could not add upper bound in local check"),
+                            e,
+                        ),
+                    ))
+                })?;
+            for df in fs_body.dom_facts.iter() {
+                rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                    df,
+                    verify_state,
+                )
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!("{op}: function set dom in local check failed"),
+                            e,
+                        ),
+                    ))
+                })?;
+            }
+            rt.verify_obj_well_defined_and_store_cache(&fs_body.ret_set, verify_state)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!("{op}: return set not well-defined on the integer range"),
+                            e,
+                        ),
+                    ))
+                })
+        })
+    }
+
     fn verify_iterated_op_summand_under_integer_index_interval(
         &mut self,
         func: &Obj,
@@ -1185,87 +1291,41 @@ impl Runtime {
             if !fo.body.is_empty() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
-                            "{op}: expected a bare function as summand, not a function application"
-                        )),
+                        "{op}: expected a bare function as summand, not a function application"
+                    )),
                 )));
             }
             let function_name_obj: Obj = (*fo.head).clone().into();
-            let Some(fs) = self.get_object_in_fn_set(&function_name_obj).cloned() else {
+            let Some(fs_body) = self.get_object_in_fn_set(&function_name_obj).cloned() else {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
-                            "{op}: summand must be a unary anonymous function, or a name with a stored function set; got {}",
-                            func
-                        )),
+                        "{op}: summand must be a unary anonymous function, or a name with a stored function set; got {}",
+                        func
+                    )),
                 )));
             };
-            if ParamGroupWithSet::number_of_params(&fs.body.params_def_with_set) != 1 {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!("{op}: the function in the function set must be unary (one index)")),
-                )));
-            }
-            let param_names =
-                ParamGroupWithSet::collect_param_names(&fs.body.params_def_with_set);
-            let pname = param_names[0].clone();
-            let Some(param_set_for_index) =
-                Self::unary_param_set_from_params_def(&fs.body.params_def_with_set, &pname)
-            else {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!("{op}: could not find index parameter in params_def_with_set")),
-                )));
-            };
-            self.verify_closed_range_each_integer_satisfies_unary_param_set(
+            return self.verify_iterated_op_summand_with_stored_fn_set_body(
+                fs_body,
                 start,
                 end,
-                &param_set_for_index,
                 verify_state,
                 op,
-            )?;
-            let start_c = start.clone();
-            let end_c = end.clone();
-            return self.run_in_local_env(|rt| {
-                for g in fs.body.params_def_with_set.iter() {
-                    rt.define_params_with_set_in_scope(g, ParamObjType::FnSet)
-                        .map_err(|e| {
-                            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
-                                    "{op}: could not bind index parameter in local well-defined check"
-                                ), e)))
-                        })?;
-                }
-                let k: Obj = Identifier::new(pname).into();
-                let le_lo = OrAndChainAtomicFact::AtomicFact(
-                    LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
-                );
-                let le_hi = OrAndChainAtomicFact::AtomicFact(
-                    LessEqualFact::new(k, end_c.clone(), default_line_file()).into(),
-                );
-                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_lo)
-                    .map_err(|e| {
-                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add lower bound in local check"), e)))
-                    })?;
-                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_hi)
-                    .map_err(|e| {
-                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add upper bound in local check"), e)))
-                    })?;
-                for df in fs.body.dom_facts.iter() {
-                    rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                        df,
-                        verify_state,
-                    )
-                    .map_err(|e| {
-                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: function set dom in local check failed"), e)))
-                    })?;
-                }
-                rt.verify_obj_well_defined_and_store_cache(&fs.body.ret_set, verify_state)
-                    .map_err(|e| {
-                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: return set not well-defined on the integer range"), e)))
-                    })
-            });
+            );
+        }
+        if let Some(fs_body) = self.get_cloned_object_in_fn_set(func) {
+            return self.verify_iterated_op_summand_with_stored_fn_set_body(
+                fs_body,
+                start,
+                end,
+                verify_state,
+                op,
+            );
         }
         Err(RuntimeError::from(WellDefinedRuntimeError(
             RuntimeErrorStruct::new_with_just_msg(format!(
-                    "{op}: summand must be a unary anonymous function, or a defined unary function in a function set; got {}",
-                    func
-                )),
+                "{op}: summand must be a unary anonymous function, or a defined unary function in a function set; got {}",
+                func
+            )),
         )))
     }
 

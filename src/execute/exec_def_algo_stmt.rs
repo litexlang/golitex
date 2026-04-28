@@ -74,7 +74,7 @@ impl Runtime {
     fn collect_requirement_facts_and_algo_param_defs(
         &self,
         def_algo_stmt: &DefAlgoStmt,
-        fn_set_where_algo_belongs: &FnSet,
+        fn_set_where_algo_belongs: &FnSetBody,
     ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
@@ -85,7 +85,7 @@ impl Runtime {
     fn requirement_facts_and_param_defs_for_fn_set_with_dom(
         &self,
         def_algo_stmt: &DefAlgoStmt,
-        fn_set_with_dom: &FnSet,
+        fn_set_with_dom: &FnSetBody,
     ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
@@ -98,7 +98,7 @@ impl Runtime {
         let param_satisfy_fn_param_set_facts_atomic =
             ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
                 self,
-                &fn_set_with_dom.body.params_def_with_set,
+                &fn_set_with_dom.params_def_with_set,
                 &args_for_algo_params,
                 ParamObjType::Forall,
             )
@@ -137,9 +137,9 @@ impl Runtime {
 
         let mut requirement_facts: Vec<Fact> = Vec::new();
         let mut algo_param_defs_with_type: Vec<ParamGroupWithParamType> =
-            Vec::with_capacity(fn_set_with_dom.body.params_def_with_set.len());
+            Vec::with_capacity(fn_set_with_dom.params_def_with_set.len());
 
-        for param_def_with_set in fn_set_with_dom.body.params_def_with_set.iter() {
+        for param_def_with_set in fn_set_with_dom.params_def_with_set.iter() {
             let mut mapped_param_names: Vec<String> =
                 Vec::with_capacity(param_def_with_set.params.len());
             for fn_set_param_name in param_def_with_set.params.iter() {
@@ -182,7 +182,7 @@ impl Runtime {
         for in_fact_atomic in param_satisfy_fn_param_set_facts_atomic.iter() {
             requirement_facts.push(in_fact_atomic.clone().into());
         }
-        for dom_fact in fn_set_with_dom.body.dom_facts.iter() {
+        for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,

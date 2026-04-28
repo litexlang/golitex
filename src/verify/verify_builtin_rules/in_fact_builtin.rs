@@ -296,7 +296,9 @@ impl Runtime {
             .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
             .is_ok()
         {
-            Ok(number_in_set_verified_by_builtin_rules_result(in_fact, reason))
+            Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact, reason,
+            ))
         } else {
             Ok((StmtUnknown::new()).into())
         }
@@ -317,18 +319,14 @@ impl Runtime {
                 let Some(fn_set) = self.get_cloned_object_in_fn_set(&head_obj) else {
                     return Ok((StmtUnknown::new()).into());
                 };
-                (*fn_set.body.ret_set).clone()
+                (*fn_set.ret_set).clone()
             }
         };
         let target = &in_fact.set;
         let ret_matches = verify_equality_by_they_are_the_same(target, &typed_ret)
             || self
                 .verify_equal_fact(
-                    &EqualFact::new(
-                        target.clone(),
-                        typed_ret.clone(),
-                        in_fact.line_file.clone(),
-                    ),
+                    &EqualFact::new(target.clone(), typed_ret.clone(), in_fact.line_file.clone()),
                     verify_state,
                 )?
                 .is_true();
@@ -482,20 +480,18 @@ impl Runtime {
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
             )),
-            (Obj::Sum(_), Obj::StandardSet(StandardSet::R)) => {
-                self.verify_in_fact_sum_or_product_in_r(
+            (Obj::Sum(_), Obj::StandardSet(StandardSet::R)) => self
+                .verify_in_fact_sum_or_product_in_r(
                     in_fact,
                     verify_state,
                     "sum: well-defined on an integer range, in R",
-                )
-            }
-            (Obj::Product(_), Obj::StandardSet(StandardSet::R)) => {
-                self.verify_in_fact_sum_or_product_in_r(
+                ),
+            (Obj::Product(_), Obj::StandardSet(StandardSet::R)) => self
+                .verify_in_fact_sum_or_product_in_r(
                     in_fact,
                     verify_state,
                     "product: well-defined on an integer range, in R",
-                )
-            }
+                ),
             (Obj::ListSet(list_set), Obj::PowerSet(power_set)) => self
                 .verify_in_fact_list_set_in_power_set_defines_membership(
                     in_fact,
@@ -535,14 +531,13 @@ impl Runtime {
                 list_set,
                 verify_state,
             ),
-            (Obj::AnonymousFn(anon), Obj::FnSet(expected_fn_set)) => {
-                self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
+            (Obj::AnonymousFn(anon), Obj::FnSet(expected_fn_set)) => self
+                .verify_in_fact_anonymous_fn_signature_matches_fn_set(
                     anon,
                     expected_fn_set,
                     in_fact,
                     verify_state,
-                )
-            }
+                ),
             (element, Obj::FnSet(expected_fn_set))
                 if obj_eligible_for_known_objs_in_fn_sets(element) =>
             {
@@ -1238,7 +1233,7 @@ impl Runtime {
             );
         }
         let flat_stored =
-            ParamGroupWithSet::collect_param_names(&stored_fn_set.body.params_def_with_set);
+            ParamGroupWithSet::collect_param_names(&stored_fn_set.params_def_with_set);
         let flat_expected =
             ParamGroupWithSet::collect_param_names(&expected_fn_set.body.params_def_with_set);
         if flat_stored.len() != flat_expected.len() {
@@ -1248,7 +1243,7 @@ impl Runtime {
         let stored_norm =
             self.fn_set_alpha_renamed_for_display_compare(&stored_fn_set, &shared_names)?;
         let expected_norm =
-            self.fn_set_alpha_renamed_for_display_compare(expected_fn_set, &shared_names)?;
+            self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if stored_norm.to_string() == expected_norm.to_string() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1283,25 +1278,25 @@ impl Runtime {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
-                    "anonymous function: signature (params, dom, codomain) matches `fn` set"
+                    "anonymous function: signature (params, dom, co-domain) matches `fn` set"
                         .to_string(),
                     Vec::new(),
                 ))
                 .into(),
             );
         }
-        let flat_a = ParamGroupWithSet::collect_param_names(
-            &signature_from_anon.body.params_def_with_set,
-        );
+        let flat_a =
+            ParamGroupWithSet::collect_param_names(&signature_from_anon.body.params_def_with_set);
         let flat_e =
             ParamGroupWithSet::collect_param_names(&expected_fn_set.body.params_def_with_set);
         if flat_a.len() != flat_e.len() {
             return Ok((StmtUnknown::new()).into());
         }
         let shared_names = self.generate_random_unused_names(flat_a.len());
-        let a_norm =
-            self.fn_set_alpha_renamed_for_display_compare(&signature_from_anon, &shared_names)?;
-        let e_norm = self.fn_set_alpha_renamed_for_display_compare(expected_fn_set, &shared_names)?;
+        let a_norm = self
+            .fn_set_alpha_renamed_for_display_compare(&signature_from_anon.body, &shared_names)?;
+        let e_norm =
+            self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if a_norm.to_string() == e_norm.to_string() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

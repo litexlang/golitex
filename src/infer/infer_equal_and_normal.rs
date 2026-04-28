@@ -216,8 +216,38 @@ impl Runtime {
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_finite_seq_list(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_matrix_list(equal_fact)?);
+        infer_result.new_infer_result_inside(self.infer_equal_fact_by_anonymous_fn(equal_fact)?);
 
         Ok(infer_result)
+    }
+
+    /// `name = '(... ) ... { ... }'`: treat `name` as having the anonymous function's `FnSetBody`
+    /// (same side table as `name $in fn ...` after infer).
+    fn infer_equal_fact_by_anonymous_fn(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, RuntimeError> {
+        if let Obj::AnonymousFn(anon) = &equal_fact.right {
+            if !matches!(&equal_fact.left, Obj::AnonymousFn(_)) {
+                let eq = (*anon.equal_to).clone();
+                self.register_known_objs_in_fn_sets_for_element_body(
+                    &equal_fact.left,
+                    anon.body.clone(),
+                    Some(eq),
+                );
+            }
+        }
+        if let Obj::AnonymousFn(anon) = &equal_fact.left {
+            if !matches!(&equal_fact.right, Obj::AnonymousFn(_)) {
+                let eq = (*anon.equal_to).clone();
+                self.register_known_objs_in_fn_sets_for_element_body(
+                    &equal_fact.right,
+                    anon.body.clone(),
+                    Some(eq),
+                );
+            }
+        }
+        Ok(InferResult::new())
     }
 
     // `0 = u - v` or `u - v = 0` => add `u = v` (non-trivial pair only).

@@ -1,3 +1,4 @@
+use super::known_fn::KnownFnInfo;
 use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt;
@@ -37,7 +38,7 @@ pub struct Environment {
         HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
     pub known_objs_equal_to_normalized_decimal_number: HashMap<ObjString, Number>,
 
-    pub known_objs_in_fn_sets: HashMap<ObjString, FnSet>,
+    pub known_objs_in_fn_sets: HashMap<ObjString, KnownFnInfo>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
@@ -51,7 +52,7 @@ impl Environment {
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
-        known_fn_in_fn_set: HashMap<ObjString, FnSet>,
+        known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
             (AtomicFactKey, bool),
             Vec<AtomicFact>,
@@ -412,7 +413,10 @@ impl Environment {
         }
     }
 
-    pub fn store_exist_fact_by_ref(&mut self, exist_fact: &ExistFactEnum) -> Result<(), RuntimeError> {
+    pub fn store_exist_fact_by_ref(
+        &mut self,
+        exist_fact: &ExistFactEnum,
+    ) -> Result<(), RuntimeError> {
         self.store_exist_fact(exist_fact.clone())
     }
 
@@ -618,7 +622,8 @@ impl Environment {
             }
         }
 
-        if let Some(derived) = super::equality_linear_derive::maybe_derived_linear_equal_fact(equality)
+        if let Some(derived) =
+            super::equality_linear_derive::maybe_derived_linear_equal_fact(equality)
         {
             if derived.left.to_string() != derived.right.to_string() {
                 self.store_equality(&derived)?;

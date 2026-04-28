@@ -5,24 +5,28 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<&FnSet> {
+    pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<&FnSetBody> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_objs_in_fn_sets.get(&key) {
-                return Some(definition);
+            if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
+                if let Some(body) = info.fn_set.as_ref() {
+                    return Some(body);
+                }
             }
         }
 
         None
     }
 
-    pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSet> {
+    pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_objs_in_fn_sets.get(&key) {
-                return Some(definition.clone());
+            if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
+                if let Some(body) = info.fn_set.clone() {
+                    return Some(body);
+                }
             }
         }
 
@@ -77,10 +81,7 @@ impl Runtime {
         None
     }
 
-    pub fn get_finite_seq_set_for_obj_equal_to_seq_list(
-        &self,
-        name: &str,
-    ) -> Option<FiniteSeqSet> {
+    pub fn get_finite_seq_set_for_obj_equal_to_seq_list(&self, name: &str) -> Option<FiniteSeqSet> {
         for env in self.iter_environments_from_top() {
             if let Some((_, member_of, _)) = env.known_objs_equal_to_finite_seq_list.get(name) {
                 return member_of.clone();
