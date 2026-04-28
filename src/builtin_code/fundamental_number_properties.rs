@@ -30,4 +30,13 @@ know:
 
     forall a, b Z:
         range(a, b) = {x Z: a <= x < b}
+
+    forall a, b Z:
+        b != 0
+        a % b = 0
+        =>:
+            exist k Z st {a = k * b}
+
+    forall a, b N_pos:
+        exist k N_pos st {a = k * b}
 "#;

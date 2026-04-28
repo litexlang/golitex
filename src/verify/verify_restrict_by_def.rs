@@ -100,7 +100,8 @@ impl Runtime {
         let forall_params = self.restrict_build_forall_params_from_rhs(&rhs_fn_set.body);
         let forall_dom_facts = self.restrict_build_forall_dom_facts_from_rhs(&rhs_fn_set.body);
 
-        let fn_head = match FnObjHead::from_name_obj(restrict_fact.obj.clone()) {
+        let fn_head = match FnObjHead::given_an_atom_return_a_fn_obj_head(restrict_fact.obj.clone())
+        {
             Some(v) => v,
             None => return Ok(None),
         };

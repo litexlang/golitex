@@ -34,7 +34,7 @@ impl Runtime {
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
-            let head = FnObjHead::from_name_obj(fn_name).ok_or_else(|| {
+            let head = FnObjHead::given_an_atom_return_a_fn_obj_head(fn_name).ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("infix (backtick) expects an identifier or single field-access name for the function"
                         .to_string(), tb.line_file.clone())))
             })?;
