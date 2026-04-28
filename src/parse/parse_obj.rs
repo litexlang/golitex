@@ -6,14 +6,14 @@ impl Runtime {
         self.parse_obj_hierarchy0(tb)
     }
 
-    /// Infix `\` is loosest; then `+-`, `*/%`, `^`, `[]`, `...`, primary.
+    /// Infix `name` (one backtick before the function name) is loosest; then `+-`, `*/%`, `^`, `[]`, `...`, primary.
     fn parse_obj_hierarchy0(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy1(tb)?;
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
         if tb.current_token_is_equal_to(INFIX_FN_NAME_SIGN) {
-            tb.skip()?; // 先吃掉 \，再读中缀函数名
+            tb.skip()?; // consume the infix delimiter, then read the name
             let fn_name = self.parse_identifier_or_identifier_with_mod(tb)?;
             let right = self.parse_obj(tb)?;
 
@@ -34,8 +34,8 @@ impl Runtime {
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
-            let head = FnObjHead::from_name_obj(fn_name).ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("infix `\\` expects an identifier or single field-access name for the function"
+            let head = FnObjHead::given_an_atom_return_a_fn_obj_head(fn_name).ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("infix (backtick) expects an identifier or single field-access name for the function"
                         .to_string(), tb.line_file.clone())))
             })?;
             Ok(FnObj::new(head, body).into())

@@ -279,6 +279,17 @@ by for:
     do_nothing
 ```
 
+# Parameter type `restrictive (fn …)`
+
+In a parameter list (e.g. `forall`, `have`, `let`), **`restrictive (`** … **`)`** takes one **`fn …`** value (same shape as the second argument of **`$restrict_fn_in`**). Binding a name with this type **stores** **`$restrict_fn_in(name, fn …)`** (and inference records the narrowed signature for well-defined checks). It does **not** assert **`name $in fn …`** membership; use a normal **`fn …`** parameter type when you want membership.
+
+Example:
+
+```litex
+forall f restrictive (fn (x R, y Q) R):
+    f(1, 2) = f(1, 2)
+```
+
 # by extension
 
 Purpose:

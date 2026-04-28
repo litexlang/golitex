@@ -9,25 +9,24 @@ prove:
             impossible 1 + 1 = 2
 
 prove:
-
     abstract_prop p(x)
 
     know:
-    forall x R:
-        x > 0
-        =>:
-            $p(x)
-    forall x R:
-        x <= 0
-        =>:
-            $p(x)
+        forall x R:
+            x > 0
+            =>:
+                $p(x)
+        forall x R:
+            x <= 0
+            =>:
+                $p(x)
 
     by cases:
-    prove:
-        forall x R:
-            $p(x)
+        prove:
+            forall x R:
+                $p(x)
 
-    case x > 0:
-        $p(x)
-    case x <= 0:
-        $p(x)
+        case x > 0:
+            $p(x)
+        case x <= 0:
+            $p(x)

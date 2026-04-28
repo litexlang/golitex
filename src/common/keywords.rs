@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 pub const FACT_PREFIX: &str = "$";
-/// Family **use** (member type): `@name(arg1, ...)`; `family` remains the definition keyword.
-pub const FAMILY_OBJ_PREFIX: &str = "@";
+// Family use (member type): `\name(arg1, ...)`; `family` is only the definition keyword.
+pub const FAMILY_OBJ_PREFIX: &str = "\\";
 pub const DOT_AKA_FIELD_ACCESS_SIGN: &str = ".";
 /// Infix closed integer interval: `lo ... hi` (same AST as `closed_range(lo, hi)`).
 pub const DOT_DOT_DOT: &str = "...";
@@ -36,7 +36,8 @@ pub const LEFT_BRACKET: &str = "[";
 pub const RIGHT_BRACKET: &str = "]";
 pub const DOUBLE_QUOTE: &str = "\"";
 pub const COLON: &str = ":";
-pub const INFIX_FN_NAME_SIGN: &str = "\\";
+// Infix operator: one backtick before the name, e.g. A `union B (same role as former A \union B).
+pub const INFIX_FN_NAME_SIGN: &str = "`";
 
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
@@ -98,6 +99,8 @@ pub const CASES: &str = "cases";
 pub const CONTRA: &str = "contra";
 pub const ENUMERATE: &str = "enumerate";
 pub const INDUC: &str = "induc";
+/// Strong (complete) induction on integers: same shape as `by induc`, but the step uses a `forall` band hypothesis.
+pub const STRONG_INDUC: &str = "strong_induc";
 /// 保留名（旧版最后一项 `case` 曾用 `param = param_2 + n`）；当前语法最后一项为 `case >= n:`（n 为特例个数），不再登记此名。
 pub const INDUC_PARAM_2_NAME: &str = "param_2";
 pub const FOR: &str = "for";
@@ -131,7 +134,9 @@ pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const FAMILY: &str = "family";
 pub const STRUCT: &str = "struct";
-pub const RESTRICT: &str = "restrict";
+pub const RESTRICT_FN_IN: &str = "restrict_fn_in";
+/// Parameter type: callable may be used under this `$restrict_fn_in` target signature.
+pub const RESTRICTIVE: &str = "restrictive";
 pub const STRATEGY: &str = "strategy";
 pub const USE_STRATEGY: &str = "use_strategy";
 pub const END_STRATEGY: &str = "end_strategy";
@@ -252,6 +257,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         DO_NOTHING,
         RUN_FILE,
         INDUC,
+        STRONG_INDUC,
         FROM,
         EVAL,
         FOR,
@@ -274,7 +280,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         FAMILY,
         STRUCT,
-        RESTRICT,
+        RESTRICT_FN_IN,
+        RESTRICTIVE,
         STRATEGY,
         USE_STRATEGY,
         END_STRATEGY,
@@ -340,7 +347,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == SUBSET
         || atom_name == SUPERSET
         || atom_name == IN
-        || atom_name == RESTRICT
+        || atom_name == RESTRICT_FN_IN
         || atom_name == FN_EQ_IN
         || atom_name == FN_EQ
 }

@@ -5,12 +5,12 @@ impl Runtime {
     fn build_fn_characterization_facts(
         &mut self,
         function: &Obj,
-        fn_set: &FnSet,
+        fn_body: &FnSetBody,
         line_file: &LineFile,
         stmt_exec: &Stmt,
         context: &str,
     ) -> Result<(Fact, Fact, Fact, Fact), RuntimeError> {
-        let param_names = ParamGroupWithSet::collect_param_names(&fn_set.body.params_def_with_set);
+        let param_names = ParamGroupWithSet::collect_param_names(&fn_body.params_def_with_set);
         if param_names.is_empty() {
             return Err(short_exec_error(
                 stmt_exec.clone(),
@@ -29,9 +29,9 @@ impl Runtime {
         let mut original_param_to_forall_obj: HashMap<String, Obj> =
             HashMap::with_capacity(param_names.len());
         let mut forall_param_defs_with_type: Vec<ParamGroupWithParamType> =
-            Vec::with_capacity(fn_set.body.params_def_with_set.len());
+            Vec::with_capacity(fn_body.params_def_with_set.len());
         let mut flat_index: usize = 0;
-        for param_def_with_set in fn_set.body.params_def_with_set.iter() {
+        for param_def_with_set in fn_body.params_def_with_set.iter() {
             let next_flat_index = flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_forall_param_names[flat_index..next_flat_index].to_vec();
@@ -81,7 +81,7 @@ impl Runtime {
             .collect();
         let forall_ret_set = self
             .inst_obj(
-                fn_set.body.ret_set.as_ref(),
+                fn_body.ret_set.as_ref(),
                 &original_param_to_forall_obj,
                 ParamObjType::FnSet,
             )
@@ -166,8 +166,8 @@ impl Runtime {
                 }),
                 {
                     let mut facts: Vec<OrAndChainAtomicFact> =
-                        Vec::with_capacity(fn_set.body.dom_facts.len() + 1);
-                    for dom_fact in fn_set.body.dom_facts.iter() {
+                        Vec::with_capacity(fn_body.dom_facts.len() + 1);
+                    for dom_fact in fn_body.dom_facts.iter() {
                         facts.push(
                             self.inst_or_and_chain_atomic_fact(
                                 dom_fact,
@@ -209,9 +209,9 @@ impl Runtime {
         let mut original_param_to_exist_obj: HashMap<String, Obj> =
             HashMap::with_capacity(param_names.len());
         let mut exist_param_defs_with_type: Vec<ParamGroupWithParamType> =
-            Vec::with_capacity(fn_set.body.params_def_with_set.len());
+            Vec::with_capacity(fn_body.params_def_with_set.len());
         let mut exist_flat_index: usize = 0;
-        for param_def_with_set in fn_set.body.params_def_with_set.iter() {
+        for param_def_with_set in fn_body.params_def_with_set.iter() {
             let next_flat_index = exist_flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_exist_param_names[exist_flat_index..next_flat_index].to_vec();
@@ -261,7 +261,7 @@ impl Runtime {
             .collect();
         let exist_ret_set = self
             .inst_obj(
-                fn_set.body.ret_set.as_ref(),
+                fn_body.ret_set.as_ref(),
                 &original_param_to_exist_obj,
                 ParamObjType::FnSet,
             )
@@ -304,8 +304,8 @@ impl Runtime {
         let forall_exist = ForallFact::new(
             ParamDefWithType::new(exist_param_defs_with_type),
             {
-                let mut dom_facts: Vec<Fact> = Vec::with_capacity(fn_set.body.dom_facts.len());
-                for dom_fact in fn_set.body.dom_facts.iter() {
+                let mut dom_facts: Vec<Fact> = Vec::with_capacity(fn_body.dom_facts.len());
+                for dom_fact in fn_body.dom_facts.iter() {
                     dom_facts.push(
                         self.inst_or_and_chain_atomic_fact(
                             dom_fact,
@@ -338,8 +338,7 @@ impl Runtime {
             obj_for_bound_param_in_scope(unique_x1_name.clone(), ParamObjType::Forall);
         let unique_x2_obj: Obj =
             obj_for_bound_param_in_scope(unique_x2_name.clone(), ParamObjType::Forall);
-        let unique_param_group_sets: Vec<Obj> = fn_set
-            .body
+        let unique_param_group_sets: Vec<Obj> = fn_body
             .params_def_with_set
             .iter()
             .map(|param_def_with_set| param_def_with_set.set.clone())
@@ -350,7 +349,7 @@ impl Runtime {
             Cart::new(unique_param_group_sets).into()
         };
         let unique_element_cart_set: Obj =
-            Cart::new(vec![unique_arg_dom, fn_set.body.ret_set.as_ref().clone()]).into();
+            Cart::new(vec![unique_arg_dom, fn_body.ret_set.as_ref().clone()]).into();
         // 与手写标准一致：dom 为两元在图集内且首分量相同，then 仅为 x1 = x2
         let forall_unique = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -590,7 +589,7 @@ impl Runtime {
         let (forall_shape, forall_in, forall_exist, forall_unique) = self
             .build_fn_characterization_facts(
                 &stmt.func,
-                &stmt.fn_set,
+                &stmt.fn_set.body,
                 &stmt.line_file,
                 &stmt_exec,
                 "by fn set",

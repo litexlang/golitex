@@ -90,9 +90,11 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
         }
 
-        Ok(
-            (NonFactualStmtSuccess::new(have_exist_obj_stmt.clone().into(), infer_result, vec![]))
-                .into(),
-        )
+        Ok((NonFactualStmtSuccess::new(
+            have_exist_obj_stmt.clone().into(),
+            infer_result,
+            vec![result],
+        ))
+        .into())
     }
 }

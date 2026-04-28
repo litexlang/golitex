@@ -1,0 +1,22 @@
+# Mod: congruence under a common modulus (+, -, *) plus nested mod absorption (see builtin verify rules).
+
+prove:
+    have X Z
+    have Y Z
+    have m Z_nz
+    (X + Y) % m = ((X % m) + (Y % m)) % m
+    (X - Y) % m = ((X % m) - (Y % m)) % m
+    (X * Y) % m = ((X % m) * (Y % m)) % m
+
+prove:
+    have b Z
+    have c Z
+    have d Z_nz
+    (b * c) % d = ((b % d) * (c % d)) % d
+
+prove:
+    have a Z
+    have b Z
+    have c Z
+    have d Z_nz
+    (a + b * c) % d = ((a % d) + ((b % d) * (c % d)) % d) % d

@@ -96,7 +96,7 @@ prove:
 # --- Stmt::Fact — RestrictFact (top-level fact line, not inside `prove:`) ---
 have f fn(x R, y Q) R
 
-$restrict(f, fn(a Q, b Q) R)
+$restrict_fn_in(f, fn(a Q, b Q) R)
 
 # --- AtomicFact — NormalAtomicFact / NotNormalAtomicFact (`$name(args)`) ---
 prove:

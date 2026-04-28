@@ -3,7 +3,7 @@ pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, FamilyName,
     IdentifierName, ObjString, OrFactKey, PropName,
 };
-pub use crate::environment::{Environment, KnownForallFactParamsAndDom};
+pub use crate::environment::{Environment, KnownFnInfo, KnownForallFactParamsAndDom};
 pub use crate::error::short_exec_error;
 pub use crate::error::ArithmeticRuntimeError;
 pub use crate::error::DefineParamsRuntimeError;
@@ -278,6 +278,7 @@ pub use crate::common::keywords::IMPORT;
 pub use crate::common::keywords::IMPOSSIBLE;
 pub use crate::common::keywords::IN;
 pub use crate::common::keywords::INDUC;
+pub use crate::common::keywords::STRONG_INDUC;
 pub use crate::common::keywords::INDUC_PARAM_2_NAME;
 pub use crate::common::keywords::INFIX_FN_NAME_SIGN;
 pub use crate::common::keywords::INTERSECT;
@@ -323,7 +324,8 @@ pub use crate::common::keywords::Q_NZ;
 pub use crate::common::keywords::Q_POS;
 pub use crate::common::keywords::R;
 pub use crate::common::keywords::RANGE;
-pub use crate::common::keywords::RESTRICT;
+pub use crate::common::keywords::RESTRICT_FN_IN;
+pub use crate::common::keywords::RESTRICTIVE;
 pub use crate::common::keywords::FN_EQ;
 pub use crate::common::keywords::FN_EQ_IN;
 pub use crate::common::keywords::RIGHT_ARROW;
