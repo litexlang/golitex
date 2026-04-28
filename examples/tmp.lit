@@ -1,3 +1,5 @@
-have x fn(x Z)Z = 'Z(x){x}
+have f set
+know:
+    $restrict_fn_in(f, fn(x R, y Q) R)
 
-sum(1, 3, x) = sum(1, 3, x)
+f(1, 2) = f(1, 2)
