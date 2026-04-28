@@ -3,7 +3,7 @@ pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, FamilyName,
     IdentifierName, ObjString, OrFactKey, PropName,
 };
-pub use crate::environment::{Environment, KnownForallFactParamsAndDom};
+pub use crate::environment::{Environment, KnownFnInfo, KnownForallFactParamsAndDom};
 pub use crate::error::short_exec_error;
 pub use crate::error::ArithmeticRuntimeError;
 pub use crate::error::DefineParamsRuntimeError;
