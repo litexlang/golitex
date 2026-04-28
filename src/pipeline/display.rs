@@ -241,7 +241,7 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
         .map(|r| stmt_exec_result_json_value(runtime, r))
         .collect();
 
-    JsonValue::Object(vec![
+    let mut fields = vec![
         (
             JSON_KEY_RESULT.to_string(),
             JsonValue::JsonString(JSON_KEY_SUCCESS.to_string()),
@@ -259,11 +259,27 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
             JSON_KEY_INFER_FACTS.to_string(),
             JsonValue::Array(infer_items),
         ),
-        (
-            JSON_KEY_INSIDE_RESULTS.to_string(),
-            JsonValue::Array(inside_items),
-        ),
-    ])
+    ];
+
+    // For `HaveExistObjStmt`, surface explicit exist-proof source(s) at top level.
+    if x.stmt.stmt_type_name() == "HaveExistObjStmt" {
+        let verified_by_items: Vec<JsonValue> = x
+            .inside_results
+            .iter()
+            .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
+            .collect();
+        fields.push((
+            JSON_KEY_VERIFIED_BY.to_string(),
+            JsonValue::Array(verified_by_items),
+        ));
+    }
+
+    fields.push((
+        JSON_KEY_INSIDE_RESULTS.to_string(),
+        JsonValue::Array(inside_items),
+    ));
+
+    JsonValue::Object(fields)
 }
 
 fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
