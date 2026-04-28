@@ -64,8 +64,18 @@ impl Runtime {
         Ok(InferResult::new())
     }
 
-    fn infer_chain_fact(&mut self, _chain_fact: &ChainFact) -> Result<InferResult, RuntimeError> {
-        Ok(InferResult::new())
+    fn infer_chain_fact(&mut self, chain_fact: &ChainFact) -> Result<InferResult, RuntimeError> {
+        let atomic_facts = match chain_fact.facts_with_order_transitive_closure() {
+            Ok(v) => v,
+            Err(_) => return Ok(InferResult::new()),
+        };
+        let mut infer_result = InferResult::new();
+        for atomic_fact in atomic_facts {
+            if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
+                infer_result.new_infer_result_inside(self.infer_equal_fact(&equal_fact)?);
+            }
+        }
+        Ok(infer_result)
     }
 
     // Do not record the whole forall in CLI/JSON `infer_facts`; inner then-clauses are stored as separate facts.

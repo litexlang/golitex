@@ -329,8 +329,14 @@ impl ByInducStmt {
             .map(|f| f.to_latex_string())
             .collect::<Vec<_>>()
             .join(r" \land ");
+        let induc_label = if self.strong {
+            r"\text{\textbf{strong induc} on }"
+        } else {
+            r"\text{\textbf{by induc} on }"
+        };
         let mut rows = vec![format!(
-            r"\text{{\textbf{{by induc}} on }} {} \text{{ from }} {} \texttt{{:}} & {}",
+            r"{} {} \text{{ from }} {} \texttt{{:}} & {}",
+            induc_label,
             latex_local_ident(&self.param),
             self.induc_from.to_latex_string(),
             goals
@@ -700,7 +706,7 @@ impl FamilyObj {
             .collect::<Vec<_>>()
             .join(", ");
         format!(
-            r"@\operatorname{{{}}}\left( {}\right)",
+            r"\operatorname{{{}}}\left( {}\right)",
             head, args
         )
     }
@@ -1435,7 +1441,7 @@ impl NotRestrictFact {
         format!(
             r"\neg \left( {} \mathrel{{\$}} \mathrm{{{}}}\, {} \right)",
             self.obj.to_latex_string(),
-            RESTRICT,
+            RESTRICT_FN_IN,
             self.obj_cannot_restrict_to_fn_set.to_latex_string()
         )
     }
@@ -1515,6 +1521,13 @@ impl ParamType {
             ParamType::Set(_) => format!(r"\mathrm{{{}}}", SET),
             ParamType::NonemptySet(_) => format!(r"\mathrm{{{}}}", NONEMPTY_SET),
             ParamType::FiniteSet(_) => format!(r"\mathrm{{{}}}", FINITE_SET),
+            ParamType::Restrictive(fs) => format!(
+                r"\mathrm{{{}}} {}{}{}",
+                RESTRICTIVE,
+                "(",
+                Obj::FnSet(fs.clone()).to_latex_string(),
+                ")"
+            ),
             ParamType::Obj(o) => o.to_latex_string(),
         }
     }
@@ -1580,7 +1593,7 @@ impl RestrictFact {
         format!(
             r"{} \mathrel{{\$}} \mathrm{{{}}}\, {}",
             self.obj.to_latex_string(),
-            RESTRICT,
+            RESTRICT_FN_IN,
             self.obj_can_restrict_to_fn_set.to_latex_string()
         )
     }

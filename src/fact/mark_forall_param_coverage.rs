@@ -24,6 +24,9 @@ fn mark_forall_param_coverage_in_param_type(
         ParamType::Obj(obj) => {
             mark_forall_param_coverage_in_obj(obj, coverage_by_forall_param);
         }
+        ParamType::Restrictive(fs) => {
+            mark_forall_param_coverage_in_obj(&Obj::FnSet(fs.clone()), coverage_by_forall_param);
+        }
         ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {}
     }
 }

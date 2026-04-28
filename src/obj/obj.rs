@@ -1182,14 +1182,14 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
         return head;
     }
     match head {
-        FnObjHead::Identifier(i) => FnObjHead::from_name_obj(replace_bound_identifier_in_name_obj(
+        FnObjHead::Identifier(i) => FnObjHead::given_an_atom_return_a_fn_obj_head(replace_bound_identifier_in_name_obj(
             Obj::Atom(AtomObj::Identifier(i.clone())),
             from,
             to,
         ))
         .expect("name replace preserves fn head shape"),
         FnObjHead::IdentifierWithMod(m) => {
-            FnObjHead::from_name_obj(replace_bound_identifier_in_name_obj(
+            FnObjHead::given_an_atom_return_a_fn_obj_head(replace_bound_identifier_in_name_obj(
                 Obj::Atom(AtomObj::IdentifierWithMod(m.clone())),
                 from,
                 to,

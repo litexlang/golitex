@@ -507,7 +507,7 @@ impl Runtime {
         ))
     }
 
-    // Built-in subset/superset/restrict definitions first, then user `prop` iff-clauses.
+    // Built-in subset/superset/restrict_fn_in definitions first, then user `prop` iff-clauses.
     fn verify_atomic_fact_using_builtin_or_prop_definition(
         &mut self,
         atomic_fact: &AtomicFact,

@@ -21,6 +21,16 @@ impl FnSetBody {
             ret_set: Box::new(ret_set),
         }
     }
+
+    pub fn get_params(&self) -> Vec<String> {
+        let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
+            &self.params_def_with_set,
+        ));
+        for param_def_with_set in &self.params_def_with_set {
+            ret.extend(param_def_with_set.params.iter().cloned());
+        }
+        ret
+    }
 }
 
 #[derive(Clone)]
@@ -40,13 +50,7 @@ impl FnSet {
     }
 
     pub fn get_params(&self) -> Vec<String> {
-        let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
-            &self.body.params_def_with_set,
-        ));
-        for param_def_with_set in &self.body.params_def_with_set {
-            ret.extend(param_def_with_set.params.iter().cloned());
-        }
-        ret
+        self.body.get_params()
     }
 }
 
@@ -121,10 +125,9 @@ impl FnSetSpace {
     }
 }
 
-impl fmt::Display for FnSet {
+impl fmt::Display for FnSetBody {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let params_with_sets_display: Vec<String> = self
-            .body
             .params_def_with_set
             .iter()
             .map(|g| format!("{} {}", vec_to_string_join_by_comma(&g.params), g.set))
@@ -133,9 +136,15 @@ impl fmt::Display for FnSet {
             f,
             "{} {} {}",
             FN_LOWER_CASE,
-            brace_vec_colon_vec_to_string(&params_with_sets_display, &self.body.dom_facts),
-            self.body.ret_set
+            brace_vec_colon_vec_to_string(&params_with_sets_display, &self.dom_facts),
+            self.ret_set
         )
+    }
+}
+
+impl fmt::Display for FnSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.body)
     }
 }
 

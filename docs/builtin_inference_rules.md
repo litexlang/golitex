@@ -29,7 +29,7 @@ Depends on the shape of `S`:
 | `Z_nz`, `Q_nz`, `R_nz` | **`element != 0`** | nonzero |
 | `N` | **`element >= 0`** (equivalently **`0 <= element`**) | `k $in N` ⇒ `k >= 0` |
 | `Z`, `Q`, `R` | (nothing extra here) | — |
-| `FamilyObj` (`@name(args)`) | Instantiate family to a concrete **member set**, then infer as that `InFact` | type-level family |
+| `FamilyObj` (`\name(args)`) | Instantiate family to a concrete **member set**, then infer as that `InFact` | type-level family |
 | `FiniteSeqSet`, `SeqSet`, `MatrixSet` | Desugar to **`FnSet`**, same as function-space membership, plus stored **`InFact`** into that `FnSet` | — |
 | (other) | No inference on this path | — |
 
@@ -62,6 +62,10 @@ Handled by `infer_numeric_order_sign_from_order_atomic` (see `src/infer/infer_nu
 
 *Examples (infer):* `n < 0` or `n <= 0` may infer **`(-1)*n >= 0`**; `n > 0` or `n >= 0` may infer **`(-1)*n < 0`** / **`(-1)*n <= 0`**.
 
+## `RestrictFact` (`$restrict_fn_in`)
+
+Implemented in `src/infer/infer_in_fact.rs` (`infer_restrict_fact`). When the RHS is a concrete **`fn`** value (`Obj::FnSet`), the **`FnSetBody`** is stored on **`known_objs_in_fn_sets`** for the function **`obj`** as **`KnownFnInfo.restrict_to`**, replacing any previous **`restrict_to`** for that key. **`NotRestrictFact`** still does not infer.
+
 ## Other atomic kinds
 
 Everything **not** listed above hits the `_` arm of `infer_atomic_fact`: **no facts are inferred** on this path.
@@ -69,7 +73,7 @@ Everything **not** listed above hits the `_` arm of `infer_atomic_fact`: **no fa
 Explicit list (all of these return an empty `InferResult` here):
 
 - `IsSetFact`, `IsNonemptySetFact`, `IsFiniteSetFact`, `IsCartFact`, `IsTupleFact`
-- `RestrictFact`, `NotRestrictFact`
+- `NotRestrictFact`
 - `NotNormalAtomicFact`, `NotEqualFact`
 - `NotLessFact`, `NotGreaterFact`, `NotLessEqualFact`, `NotGreaterEqualFact`
 - `NotIsSetFact`, `NotIsNonemptySetFact`, `NotIsFiniteSetFact`, `NotInFact`, `NotIsCartFact`, `NotIsTupleFact`

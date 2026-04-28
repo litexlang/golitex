@@ -36,7 +36,7 @@ impl fmt::Display for FnObjHead {
 
 impl FnObjHead {
     /// If `obj` is a plain name shape, returns the corresponding function head; otherwise `None`.
-    pub fn from_name_obj(obj: Obj) -> Option<FnObjHead> {
+    pub fn given_an_atom_return_a_fn_obj_head(obj: Obj) -> Option<FnObjHead> {
         match obj {
             Obj::Atom(a) => match a {
                 AtomObj::Identifier(x) => Some(FnObjHead::Identifier(x)),

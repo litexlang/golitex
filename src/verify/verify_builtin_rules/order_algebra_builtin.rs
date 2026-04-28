@@ -1,6 +1,9 @@
 // Structural order on R (+, -, *, /) moved from Lit `BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES`.
 // Called from `verify_order_atomic_fact_numeric_builtin_only` before the `0 <=` cone rules.
 //
+// Addition (weak): `a <= b + c` from (`a <= b` and `0 <= c`) or (`a <= c` and `0 <= b`); and
+// `a <= a + b` from `0 <= b`. Strict: `a < b + c` from (`a < b` and `0 <= c`) or (`a < c` and `0 <= b`).
+//
 // Multiplication monotonicity on R: for fixed k, t |-> k*t preserves non-strict order when 0 <= k
 // (a <= b => k*a <= k*b with k on the same side of both products), reverses when k <= 0 (b <= a =>
 // k*a <= k*b). Strict: 0 < k and a < b => k*a < k*b; k < 0 and b < a => k*a < k*b.
@@ -430,6 +433,43 @@ impl Runtime {
                         ),
                     )));
                 }
+            }
+            // a < u + v from a < u and 0 <= v (or symmetric addends).
+            let g_a_left = LessFact::new(
+                f.left.clone(),
+                add.left.as_ref().clone(),
+                lf.clone(),
+            )
+            .into();
+            let g0_right = LessEqualFact::new(z.clone(), add.right.as_ref().clone(), lf.clone()).into();
+            let r1 = self.verify_order_subgoal(g_a_left)?;
+            let r2 = self.verify_order_subgoal(g0_right)?;
+            if r1.is_true() && r2.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a < b + c from a < b and 0 <= c".to_string(),
+                        vec![r1, r2],
+                    ),
+                )));
+            }
+            let g_a_right = LessFact::new(
+                f.left.clone(),
+                add.right.as_ref().clone(),
+                lf.clone(),
+            )
+            .into();
+            let g0_left = LessEqualFact::new(z.clone(), add.left.as_ref().clone(), lf.clone()).into();
+            let r3 = self.verify_order_subgoal(g_a_right)?;
+            let r4 = self.verify_order_subgoal(g0_left)?;
+            if r3.is_true() && r4.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a < b + c from a < c and 0 <= b".to_string(),
+                        vec![r3, r4],
+                    ),
+                )));
             }
         }
 

@@ -48,11 +48,25 @@ impl Runtime {
             NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
             FINITE_SET => self.parse_param_type_finite_set(tb),
             SET => self.parse_param_type_set(tb),
+            RESTRICTIVE => self.parse_param_type_restrictive(tb),
             s if s == FAMILY_OBJ_PREFIX => self
                 .parse_family_obj(tb)
                 .map(|f| ParamType::Obj(Obj::FamilyObj(f))),
             _ => self.parse_param_type_obj(tb),
         }
+    }
+
+    pub fn parse_param_type_restrictive(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamType, RuntimeError> {
+        tb.skip_token(RESTRICTIVE)?;
+        tb.skip_token(LEFT_BRACE)?;
+        // Same shape as the second argument of `$restrict_fn_in`: `fn` + fn-set.
+        tb.skip_token(FN_LOWER_CASE)?;
+        let fn_set = self.parse_fn_set(tb)?;
+        tb.skip_token(RIGHT_BRACE)?;
+        Ok(ParamType::Restrictive(fn_set))
     }
 
     pub fn parse_param_type_nonempty_set(

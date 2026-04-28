@@ -93,6 +93,14 @@ fn parse_level(
         }
 
         if indent > base_indent {
+            // Indented farther than the current block: normally a syntax error, but allow lines that
+            // are only a `# ...` comment (any leading spaces/tabs before `#`). Writers often align
+            // such comments with a surrounding block without attaching them to a sibling item.
+            let trimmed_start = raw.trim_start();
+            if trimmed_start.is_empty() || trimmed_start.starts_with('#') {
+                *i += 1;
+                continue;
+            }
             return Err({
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
                         "unexpected indent at line {} in {}",

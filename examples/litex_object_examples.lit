@@ -1,7 +1,7 @@
 # Object expressions: surface syntax maps to `Obj` in `src/obj/obj.rs`. Independent blocks for copy-paste.
 # IdentifierWithMod / FieldAccessWithMod use `::` between name parts (`MOD_SIGN`); FieldAccess uses a single `.`.
 # Included below: Number, Tuple, Add/Sub/Mul/Div/Mod/Pow, StandardSet (sample), ListSet, SetBuilder,
-# Union/Intersect/SetMinus/SetDiff, infix `\` forms, Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
+# Union/Intersect/SetMinus/SetDiff, infix ` then name (e.g. `union as in lhs `union rhs), Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
 # TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, Choose, FieldAccess, FamilyObj, StructObj, FnObj (via `have fn`).
 # Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
 
@@ -55,18 +55,18 @@ prove:
 prove:
     have u set = set_diff({1, 2}, {3})
 
-# --- infix `\` on Obj::Union, Intersect, Range, ClosedRange (SetMinus infix: same token as `set_minus`) ---
+# --- infix `name` on Obj::Union, Intersect, Range, ClosedRange (SetMinus infix: same token as `set_minus`) ---
 prove:
-    1 $in {1} \union {2}
-    2 $in {1, 2} \intersect {2}
-    have p set = 0 \range 10
-    have q set = 0 \closed_range 1
+    1 $in {1} `union {2}
+    2 $in {1, 2} `intersect {2}
+    have p set = 0 `range 10
+    have q set = 0 `closed_range 1
 
 prove:
-    have v set = {1} \set_minus {2}
+    have v set = {1} `set_minus {2}
 
 prove:
-    cart(R, Q) \proj 1 = R
+    cart(R, Q) `proj 1 = R
 
 # --- Obj::Range, ClosedRange (keyword forms; membership often via `know` / set equality) ---
 prove:
@@ -140,7 +140,7 @@ prove:
 prove:
     family fam(s set) = fn(x N_pos) s
 
-    forall a @fam(R):
+    forall a \fam(R):
         a $in fn(y N_pos) R
         a(1) = a(1)
 

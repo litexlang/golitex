@@ -15,7 +15,7 @@ fn fn_obj_apply_one_arg(func: &Obj, arg: Obj) -> Option<Obj> {
             .into(),
         ),
         o => {
-            let h = FnObjHead::from_name_obj(o.clone())?;
+            let h = FnObjHead::given_an_atom_return_a_fn_obj_head(o.clone())?;
             Some(FnObj::new(h, vec![vec![Box::new(arg)]]).into())
         }
     }
@@ -100,7 +100,8 @@ impl Runtime {
         }
 
         let clause = fn_set_to_fn_set_clause(&left_t);
-        let (param_def, dom_facts, layers) = forall_binders_dom_and_curried_layers_from_fn_set_clause(&clause);
+        let (param_def, dom_facts, layers) =
+            forall_binders_dom_and_curried_layers_from_fn_set_clause(&clause);
         let left_ap = match build_curried_fn_value_apply_for_fn_eq(&f.left, &layers) {
             Some(o) => o,
             None => return Ok(StmtUnknown::new().into()),
@@ -141,6 +142,6 @@ fn fn_set_type_of_function_value(rt: &Runtime, obj: &Obj) -> Option<FnSet> {
             (*af.body.ret_set).clone(),
         )),
         Obj::FnSet(fs) => Some(fs.clone()),
-        o => rt.get_cloned_object_in_fn_set(o),
+        o => rt.get_cloned_object_in_fn_set(o).map(|body| FnSet { body }),
     }
 }

@@ -52,7 +52,26 @@ impl Runtime {
             ParamType::FiniteSet(finite_set) => {
                 self.define_parameter_by_binding_finite_set(name, finite_set, binding_kind)
             }
+            ParamType::Restrictive(fn_set) => {
+                self.define_parameter_by_binding_restrictive(name, fn_set, binding_kind)
+            }
         }
+    }
+
+    fn define_parameter_by_binding_restrictive(
+        &mut self,
+        name: &str,
+        fn_set: &FnSet,
+        binding_kind: ParamObjType,
+    ) -> Result<InferResult, RuntimeError> {
+        let element = param_binding_element_obj_for_store(name.to_string(), binding_kind);
+        let restrict_fact: Fact = RestrictFact::new(
+            element,
+            fn_set.clone().into(),
+            default_line_file(),
+        )
+        .into();
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(restrict_fact)
     }
 
     fn define_parameter_by_binding_family(

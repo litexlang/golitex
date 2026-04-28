@@ -65,7 +65,7 @@ prove:
 prove:
     family self_seq(s set) = fn(x N_pos) s
 
-    forall a @self_seq(R):
+    forall a \self_seq(R):
         a $in fn(y N_pos) R
         a(1) = a(1)
 
@@ -257,11 +257,11 @@ prove:
 prove:
     family pf(a set) = fn(x a) a
 
-    forall a @pf(R):
+    forall a \pf(R):
         a $in fn(y R) R
         a(1) = a(1)
 
-    by family: @pf(R)
+    by family: \pf(R)
 
 # --- Stmt::ByStructStmt — use the defining data of a structure instance ---
 """

@@ -5,28 +5,56 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<&FnSet> {
+    /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restrict_fn_in` targets.
+    pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<&FnSetBody> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_objs_in_fn_sets.get(&key) {
-                return Some(definition);
+            if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
+                if let Some(body) = info.fn_set.as_ref() {
+                    return Some(body);
+                }
             }
         }
 
         None
     }
 
-    pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSet> {
+    /// Like [`get_object_in_fn_set`](Self::get_object_in_fn_set) but falls back to
+    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restrict_fn_in`) for WD/calls.
+    pub fn get_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<&FnSetBody> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
-            if let Some(definition) = env.known_objs_in_fn_sets.get(&key) {
-                return Some(definition.clone());
+            if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
+                if let Some(body) = info.fn_set.as_ref() {
+                    return Some(body);
+                }
+                if let Some(rb) = info.restrict_to.as_ref() {
+                    return Some(rb);
+                }
             }
         }
 
         None
+    }
+
+    pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
+        let key = obj.to_string();
+
+        for env in self.iter_environments_from_top() {
+            if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
+                if let Some(body) = info.fn_set.clone() {
+                    return Some(body);
+                }
+            }
+        }
+
+        None
+    }
+
+    pub fn get_cloned_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
+        self.get_object_in_fn_set_or_restrict(obj).cloned()
     }
 
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
@@ -77,10 +105,7 @@ impl Runtime {
         None
     }
 
-    pub fn get_finite_seq_set_for_obj_equal_to_seq_list(
-        &self,
-        name: &str,
-    ) -> Option<FiniteSeqSet> {
+    pub fn get_finite_seq_set_for_obj_equal_to_seq_list(&self, name: &str) -> Option<FiniteSeqSet> {
         for env in self.iter_environments_from_top() {
             if let Some((_, member_of, _)) = env.known_objs_equal_to_finite_seq_list.get(name) {
                 return member_of.clone();
