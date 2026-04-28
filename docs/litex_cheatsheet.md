@@ -397,7 +397,7 @@ know:
 
 **Meaning.** State a **goal** (one fact after inner `prove:`) and then a linear proof. The goal cannot be an iff-`forall` form.
 
-**Syntax.** `claim` `:` newline; first sub-block is `prove` `:` with exactly one fact; following sub-blocks are proof steps.
+**Syntax.** `claim` `:` newline; first sub-block is `prove` `:` with exactly one fact; following sub-blocks are proof steps. **Shorthand:** `claim` `=>` *fact* `:` on the header line, then indented proof steps (no inner `prove:`).
 
 **Example.**
 
@@ -513,11 +513,13 @@ $is_nonempty_set(s)
 
 **Example.** Each tactic subsection below ends with a full code sketch (same content as the matching `by_*.lit` file in the repo).
 
+> **Same goal, three tactics.** A single arithmetic fact such as `1 = 1` can be proved with **`by cases`** (exhaustive branches), **`by contra`** (assume the negation, then `impossible`), or **`claim`** (state the goal and finish in one step). All three support the **header shorthand** `… => goal:` so the goal sits on the keyword line; see the closing blocks in `examples/by_cases.lit`, `examples/by_contra.lit`, and `examples/claim.lit`.
+
 ### `by cases`
 
 **Meaning.** Prove a goal under each case of a cover (disjunction of case assumptions).
 
-**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof … Each `prove:` fact must not be `forall` (use atomic, exist, or/and combinations, or chains).
+**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof … Each `prove:` fact must not be `forall` (use atomic, exist, or/and combinations, or chains). **Shorthand:** `by cases` `=>` *goal* `:` on the header line, then `case` arms (no inner `prove:`).
 
 **Example.**
 
@@ -545,7 +547,7 @@ Execution:
 
 **Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense.
 
-**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*.
+**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` `=>` *atomic goal* `:` on the header line, then optional proof blocks and closing `impossible`.
 
 **Example.**
 
