@@ -2,6 +2,42 @@ use crate::prelude::*;
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 
 impl Runtime {
+    fn try_parse_number_literal_obj_string_for_not_equal_builtin_rule(
+        &self,
+        obj_string: &str,
+    ) -> Option<Number> {
+        let trimmed = obj_string.trim();
+        if trimmed.is_empty() {
+            return None;
+        }
+        let parsed = Number::new(trimmed.to_string());
+        if parsed.to_string() == trimmed {
+            return Some(parsed);
+        }
+        None
+    }
+
+    fn resolve_obj_to_number_for_not_equal_builtin_rule(&self, obj: &Obj) -> Option<Number> {
+        if let Some(number) = self.resolve_obj_to_number_resolved(obj) {
+            return Some(number);
+        }
+        let all_equal_obj_strings = self.get_all_objs_equal_to_given(&obj.to_string());
+        for equal_obj_string in all_equal_obj_strings {
+            if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&equal_obj_string)
+            {
+                return Some(number);
+            }
+            if let Some(number) =
+                self.try_parse_number_literal_obj_string_for_not_equal_builtin_rule(
+                    &equal_obj_string,
+                )
+            {
+                return Some(number);
+            }
+        }
+        None
+    }
+
     pub fn _verify_not_equal_fact_with_builtin_rules(
         &mut self,
         not_equal_fact: &NotEqualFact,
@@ -11,15 +47,15 @@ impl Runtime {
         let right_obj = &not_equal_fact.right;
 
         match (
-            self.resolve_obj_to_number(left_obj),
-            self.resolve_obj_to_number(right_obj),
+            self.resolve_obj_to_number_for_not_equal_builtin_rule(left_obj),
+            self.resolve_obj_to_number_for_not_equal_builtin_rule(right_obj),
         ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             not_equal_fact.clone().into(),
-                            "calculation".to_string(),
+                            "not_equal_numeric_resolved_or_equal_class_calculation".to_string(),
                             Vec::new(),
                         ))
                         .into(),

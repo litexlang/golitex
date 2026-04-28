@@ -304,6 +304,117 @@ impl Runtime {
         }
     }
 
+    fn iterated_op_func_ret_set(&self, func: &Obj) -> Option<Obj> {
+        match func {
+            Obj::AnonymousFn(anon) => Some((*anon.body.ret_set).clone()),
+            Obj::FnObj(fn_obj) if fn_obj.body.is_empty() => match fn_obj.head.as_ref() {
+                FnObjHead::AnonymousFnLiteral(anon) => Some((*anon.body.ret_set).clone()),
+                _ => {
+                    let function_name_obj: Obj = (*fn_obj.head).clone().into();
+                    self.get_object_in_fn_set_or_restrict(&function_name_obj)
+                        .map(|fn_set_body| (*fn_set_body.ret_set).clone())
+                }
+            },
+            _ => self
+                .get_object_in_fn_set_or_restrict(func)
+                .map(|fn_set_body| (*fn_set_body.ret_set).clone()),
+        }
+    }
+
+    // `sum(start, end, f)` / `product(start, end, f)` in `Z` when the iterand's declared return
+    // set is `Z` or `N_pos` (positive naturals are integers) and the whole iterated object is
+    // well-defined on the integer interval.
+    // Example: `sum(1, n, 'Z(x){x}) $in Z`, `product(1, a, 'N_pos(x){x}) $in Z`.
+    fn verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
+        &mut self,
+        in_fact: &InFact,
+        func: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(ret_set) = self.iterated_op_func_ret_set(func) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let z_obj: Obj = StandardSet::Z.into();
+        let n_pos_obj: Obj = StandardSet::NPos.into();
+        let reason = if verify_equality_by_they_are_the_same(&ret_set, &z_obj) {
+            format!("{op}: iterand return set is Z")
+        } else if verify_equality_by_they_are_the_same(&ret_set, &n_pos_obj) {
+            format!("{op}: iterand return set is N_pos (subset of Z)")
+        } else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        ))
+    }
+
+    // `sum(start, end, f)` / `product(start, end, f)` in `Q` when the iterand's declared return
+    // set is `Q` and the whole iterated object is well-defined on the integer interval.
+    fn verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
+        &mut self,
+        in_fact: &InFact,
+        func: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(ret_set) = self.iterated_op_func_ret_set(func) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let q_obj: Obj = StandardSet::Q.into();
+        if !verify_equality_by_they_are_the_same(&ret_set, &q_obj) {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let reason = format!("{op}: iterand return set is Q");
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        ))
+    }
+
+    // `sum(start, end, f)` / `product(start, end, f)` in `N_pos` when the iterand's declared
+    // return set is `N_pos` and the whole iterated object is well-defined on the integer interval.
+    // Example: `product(1, a, 'N_pos(x){x}) $in N_pos`.
+    fn verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
+        &mut self,
+        in_fact: &InFact,
+        func: &Obj,
+        verify_state: &VerifyState,
+        op: &str,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let Some(ret_set) = self.iterated_op_func_ret_set(func) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let n_pos_obj: Obj = StandardSet::NPos.into();
+        if !verify_equality_by_they_are_the_same(&ret_set, &n_pos_obj) {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let reason = format!("{op}: iterand return set is N_pos");
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        ))
+    }
+
     /// `f(args) $in S` when `S` agrees with the head's typing return set and the application is
     /// well-defined in the current environment (e.g. domain facts already assumed).
     fn verify_in_fact_fn_application_in_typed_return_set(
@@ -390,6 +501,22 @@ impl Runtime {
                     standard_set,
                 ))
             }
+            (Obj::Sum(sum), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
+                    in_fact,
+                    sum.func.as_ref(),
+                    verify_state,
+                    "sum",
+                ),
+            (Obj::Product(product), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
+                    in_fact,
+                    product.func.as_ref(),
+                    verify_state,
+                    "product",
+                ),
+            (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_add_in_n_pos_from_summands_in_n_pos(in_fact, add, verify_state),
             (_, Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
             }
@@ -491,6 +618,34 @@ impl Runtime {
                     in_fact,
                     verify_state,
                     "product: well-defined on an integer range, in R",
+                ),
+            (Obj::Sum(sum), Obj::StandardSet(StandardSet::Z)) => self
+                .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
+                    in_fact,
+                    sum.func.as_ref(),
+                    verify_state,
+                    "sum",
+                ),
+            (Obj::Product(product), Obj::StandardSet(StandardSet::Z)) => self
+                .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
+                    in_fact,
+                    product.func.as_ref(),
+                    verify_state,
+                    "product",
+                ),
+            (Obj::Sum(sum), Obj::StandardSet(StandardSet::Q)) => self
+                .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
+                    in_fact,
+                    sum.func.as_ref(),
+                    verify_state,
+                    "sum",
+                ),
+            (Obj::Product(product), Obj::StandardSet(StandardSet::Q)) => self
+                .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
+                    in_fact,
+                    product.func.as_ref(),
+                    verify_state,
+                    "product",
                 ),
             (Obj::ListSet(list_set), Obj::PowerSet(power_set)) => self
                 .verify_in_fact_list_set_in_power_set_defines_membership(
@@ -645,6 +800,43 @@ impl Runtime {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
         }
+    }
+
+    // `a + b $in N_pos` when `a $in N_pos` and `b $in N_pos` (closure under addition in `Z_{>0}`).
+    fn verify_in_fact_add_in_n_pos_from_summands_in_n_pos(
+        &mut self,
+        in_fact: &InFact,
+        add: &Add,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
+            return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                in_fact,
+                &evaluated_number,
+                &StandardSet::NPos,
+            ));
+        }
+        let n_pos: Obj = StandardSet::NPos.into();
+        let lf = in_fact.line_file.clone();
+        let f_left: AtomicFact =
+            InFact::new(add.left.as_ref().clone(), n_pos.clone(), lf.clone()).into();
+        let f_right: AtomicFact = InFact::new(add.right.as_ref().clone(), n_pos, lf.clone()).into();
+        let r_left = self.verify_non_equational_atomic_fact(&f_left, verify_state, true)?;
+        if !r_left.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let r_right = self.verify_non_equational_atomic_fact(&f_right, verify_state, true)?;
+        if !r_right.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "N_pos: a + b from a in N_pos and b in N_pos".to_string(),
+                vec![r_left, r_right],
+            )
+            .into(),
+        )
     }
 
     // `N_pos` = positive integers: from `0 < x` and (`x $in Z` or `x $in N`).
