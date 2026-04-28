@@ -983,6 +983,13 @@ impl Runtime {
             ParamType::Set(_) => Ok(param_type.clone()),
             ParamType::FiniteSet(_) => Ok(param_type.clone()),
             ParamType::NonemptySet(_) => Ok(param_type.clone()),
+            ParamType::Restrictive(fs) => {
+                let inst_obj = self.inst_fn_set_with_params(fs, param_to_arg_map, param_obj_type)?;
+                match inst_obj {
+                    Obj::FnSet(inner) => Ok(ParamType::Restrictive(inner)),
+                    _ => unreachable!("inst_fn_set_with_params returns Obj::FnSet"),
+                }
+            }
             ParamType::Obj(obj) => Ok(ParamType::Obj(self.inst_obj(
                 obj,
                 param_to_arg_map,

@@ -34,33 +34,40 @@ impl Runtime {
             )))
         })?;
 
-        let original_fn_body = match self.get_cloned_object_in_fn_set(function) {
-            Some(fn_body) => fn_body,
-            None => {
-                return Err(
-                    VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(restrict_fact.clone()).into_stmt()),
-                        String::new(),
-                        restrict_fact.line_file.clone(),
-                        Some(
-                            WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                                None,
-                                format!(
-                                    "function `{}` belongs to what function set is unknown",
-                                    function.to_string()
+        // Prefer declared membership (`fn_set`). If absent (e.g. only `restrictive (...)` or prior
+        // `$restrict_fn_in` without `have f fn ...`), fall back to known restriction target so the
+        // forall check can use the same arity/signature as the stored restrict info.
+        let original_fn_body =
+            match self.get_cloned_object_in_fn_set(function) {
+                Some(fn_body) => fn_body,
+                None => match self.get_cloned_object_in_fn_set_or_restrict(function) {
+                    Some(fn_body) => fn_body,
+                    None => {
+                        return Err(
+                            VerifyRuntimeError(RuntimeErrorStruct::new(
+                                Some(Fact::from(restrict_fact.clone()).into_stmt()),
+                                String::new(),
+                                restrict_fact.line_file.clone(),
+                                Some(
+                                    WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                                        None,
+                                        format!(
+                                            "function `{}` belongs to what function set is unknown",
+                                            function.to_string()
+                                        ),
+                                        default_line_file(),
+                                        None,
+                                        vec![],
+                                    ))
+                                    .into(),
                                 ),
-                                default_line_file(),
-                                None,
                                 vec![],
                             ))
                             .into(),
-                        ),
-                        vec![],
-                    ))
-                    .into(),
-                );
-            }
-        };
+                        );
+                    }
+                },
+            };
 
         self.verify_restrict_to_fn_set_with_params_against_original_with_params(
             restrict_fact,
@@ -270,7 +277,8 @@ impl Runtime {
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 restrict_fact.clone().into(),
-                "restrict_fn_in: forall on narrowed domain; outputs in stated return set".to_string(),
+                "restrict_fn_in: forall on narrowed domain; outputs in stated return set"
+                    .to_string(),
                 Vec::new(),
             ))
             .into(),

@@ -7,6 +7,8 @@ pub enum ParamType {
     Set(Set),
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
+    /// `restrictive (fn …)`: parameter is introduced with this `$restrict_fn_in` target shape (not `f $in fn …`).
+    Restrictive(FnSet),
     Obj(Obj),
 }
 
@@ -170,6 +172,9 @@ impl fmt::Display for ParamType {
             ParamType::Set(set) => write!(f, "{}", set.to_string()),
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
+            ParamType::Restrictive(fn_set) => {
+                write!(f, "{} {}{}{}", RESTRICTIVE, LEFT_BRACE, fn_set, RIGHT_BRACE)
+            }
             ParamType::Obj(obj) => write!(f, "{}", obj),
         }
     }
