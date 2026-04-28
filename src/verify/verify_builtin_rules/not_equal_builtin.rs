@@ -21,7 +21,11 @@ impl Runtime {
         if let Some(number) = self.resolve_obj_to_number_resolved(obj) {
             return Some(number);
         }
-        let all_equal_obj_strings = self.get_all_objs_equal_to_given(&obj.to_string());
+        let obj_key = obj.to_string();
+        if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&obj_key) {
+            return Some(number);
+        }
+        let all_equal_obj_strings = self.get_all_objs_equal_to_given(&obj_key);
         for equal_obj_string in all_equal_obj_strings {
             if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&equal_obj_string)
             {
