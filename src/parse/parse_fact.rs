@@ -374,7 +374,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<OrAndChainAtomicFact, RuntimeError> {
-        let first = self.parse_and_chain_atomic_fact(tb)?;
+        let first = self.parse_and_chain_atomic_fact_allow_leading_not(tb)?;
         let mut list: Vec<AndChainAtomicFact> = vec![first];
         while !tb.exceed_end_of_head() && tb.current()? == OR {
             tb.skip_token(OR)?;
