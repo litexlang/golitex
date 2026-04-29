@@ -149,19 +149,18 @@ impl Runtime {
             }
             _ => {
                 let function_name_obj: Obj = (*fn_obj.head).clone().into();
-                FnSetSpace::Set(FnSet {
-                    body: self
-                        .get_object_in_fn_set_or_restrict(&function_name_obj)
-                        .ok_or_else(|| {
-                            RuntimeError::from(WellDefinedRuntimeError(
-                                RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
-                                    "`{}` is not a defined function",
-                                    fn_obj.head.to_string()
-                                ))),
-                            ))
-                        })?
-                        .clone(),
-                })
+                let body = self
+                    .get_object_in_fn_set_or_restrict(&function_name_obj)
+                    .ok_or_else(|| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_just_msg(todo_error_message(format!(
+                                "`{}` is not a defined function",
+                                fn_obj.head.to_string()
+                            ))),
+                        ))
+                    })?
+                    .clone();
+                FnSetSpace::Set(FnSet::from_body(body))
             }
         };
 

@@ -50,11 +50,11 @@ impl Runtime {
                 }
             }
 
-            let have_obj_equal_stmt = HaveObjEqualStmt {
-                param_def: stmt.exist_fact_in_witness.params_def_with_type().clone(),
-                objs_equal_to: stmt.equal_tos.clone(),
-                line_file: stmt.line_file.clone(),
-            };
+            let have_obj_equal_stmt = HaveObjEqualStmt::new(
+                stmt.exist_fact_in_witness.params_def_with_type().clone(),
+                stmt.equal_tos.clone(),
+                stmt.line_file.clone(),
+            );
 
             match rt.exec_have_obj_equal_stmt(&have_obj_equal_stmt) {
                 Ok(_binding_result) => {}
