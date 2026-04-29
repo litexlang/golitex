@@ -1,6 +1,13 @@
-know:
-    not forall x R:
-        x > 0
+abstract_prop p(x)
+abstract_prop p2(x)
+abstract_prop q(x)
+abstract_prop q2(x)
 
-not forall x R:
-    x > 0
+know not forall x R:
+    $p(x)
+    $p2(x)
+    =>:
+        $q(x)
+        $q2(x)
+
+exist x R st {$p(x), $p2(x), not $q(x) or not $q2(x)}

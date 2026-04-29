@@ -110,10 +110,4 @@ impl Runtime {
         Ok(InferResult::new())
     }
 
-    fn infer_not_forall_fact(
-        &mut self,
-        _not_forall: &NotForallFact,
-    ) -> Result<InferResult, RuntimeError> {
-        Ok(InferResult::new())
-    }
 }

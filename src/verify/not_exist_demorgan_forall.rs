@@ -78,7 +78,7 @@ impl Runtime {
         ))
     }
 
-    fn demorgan_negate_exist_body_conjunct(
+    pub(crate) fn demorgan_negate_exist_body_conjunct(
         conjunct: &OrAndChainAtomicFact,
     ) -> Result<Vec<AndChainAtomicFact>, RuntimeError> {
         let lf = conjunct.line_file();
