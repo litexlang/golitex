@@ -1684,8 +1684,8 @@ impl AtomicFact {
             AtomicFact::IsSetFact(a) => {
                 NotIsSetFact::new(a.set.clone(), a.line_file.clone()).into()
             }
-            AtomicFact::IsNonemptySetFact(a) => AtomicFact::IsNonemptySetFact(
-                IsNonemptySetFact::new(a.set.clone(), a.line_file.clone()),
+            AtomicFact::IsNonemptySetFact(a) => AtomicFact::NotIsNonemptySetFact(
+                NotIsNonemptySetFact::new(a.set.clone(), a.line_file.clone()),
             ),
             AtomicFact::IsFiniteSetFact(a) => AtomicFact::NotIsFiniteSetFact(
                 NotIsFiniteSetFact::new(a.set.clone(), a.line_file.clone()),
