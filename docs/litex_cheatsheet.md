@@ -14,7 +14,7 @@ _– Steve Jobs_
 
 Litex is a **simple, set-theoretic** formal language for mathematics: enough structure for everyday arguments without a long apprenticeship. Each construct is meant to match a **real mathematical idea** and stays as close to natural language as possible.
 
-This quick reference summarizes Litex syntax and meaning alongside minimal examples. More on the project: [Litex](https://litexlang.com), [GitHub](https://github.com/litexlang/golitex).
+This quick reference summarizes Litex syntax and meaning alongside minimal examples.
 
 ---
 
