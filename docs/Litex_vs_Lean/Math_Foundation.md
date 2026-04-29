@@ -2,7 +2,7 @@
 
 Mathematicians disagree about foundations—set theory (Bourbaki), category theory (the Grothendieck school), and so on. For teaching readability, Litex uses a naive, typed set-theoretic surface.
 
-Below we first give **group axioms** as a checkable `prop` shape. Topological and metric spaces appear only as sketches (no proof obligations), in a plain Markdown code block for side-by-side comparison with Lean `structure` / `class`.
+Below we first give **group axioms** as a checkable `prop` shape. Topological and metric spaces appear only as ` ```text` sketches (not executed).
 
 ## Group axioms (runnable)
 

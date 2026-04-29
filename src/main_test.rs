@@ -123,8 +123,7 @@ mod lit_file_runner_tests {
         );
     }
 
-    /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/litex_vs_Lean/foo.lit`;
-    /// mirrors `docs/Litex_vs_lean/` markdown walkthroughs).
+    /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
     /// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
     fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {
         let dir_path = manifest_dir.join(subdir);

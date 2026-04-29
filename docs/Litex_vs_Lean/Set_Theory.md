@@ -1,7 +1,5 @@
 # Litex vs Lean: Set theory
 
-Explanatory text is Markdown; runnable Litex lives in ` ```litex` fences. For Lean, compare with `finset`, `simp`, and similar Mathlib tools.
-
 Top-level goals and multi-line blocks (e.g. `have` / `know` / `prop`) do not need a wrapping `prove:`. Inside `by contra`, `by for`, and `by enumerate finite_set`, the checker still expects a `prove:` sub-block for the proof obligation before `do_nothing` or trailing steps.
 
 ---
