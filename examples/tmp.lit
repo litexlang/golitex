@@ -1,6 +1,8 @@
-abstract_prop p(x)
-abstract_prop q(x, y)
+by for => forall! n range(0, 3): n < 3:
+    ...
 
-know exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
+by for => forall! n closed_range(0, 3): n <= 3:
+    ...
 
-exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
+by enumerate finite_set => forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2, 4)}:
+    ...
