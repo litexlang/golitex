@@ -1,8 +1,13 @@
 abstract_prop p(x, y)
 
-know:
-    forall a R:
-        exist! b R st {$p(a, b)}
+know not exist x R st {$p(x, 1)}
 
-exist b R st {$p(1, b)}
-exist! c R st {$p(1, c)}
+forall x R:
+    not $p(x, 1)
+
+abstract_prop q(x, y)
+
+know not exist x R st {$q(x, 1), $q(x, 2)}
+
+forall x R:
+    not $q(x, 1) or not $q(x, 2)
