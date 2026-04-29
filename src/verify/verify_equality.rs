@@ -159,7 +159,7 @@ impl Runtime {
             FnObjHead::IdentifierWithMod(i) => i.to_string(),
             _ => return Ok(None),
         };
-        let Some((fn_set_body, equal_to_expr)) =
+        let Some((fn_set_body, equal_to_expr, cite_def_line_file)) =
             self.get_known_fn_body_and_equal_to_for_key(key.as_str())
         else {
             return Ok(None);
@@ -193,14 +193,16 @@ impl Runtime {
         )
         .into();
         let msg = format!(
-            "according to user-defined function body `{}` = {}",
-            key,
-            equal_to_expr.to_string()
+            "according to user-defined function `{}` = `{}`",
+            application_side,
+            reduced
         );
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 fact,
                 msg,
+                None,
+                Some(cite_def_line_file.clone()),
                 Vec::new(),
             )
             .into(),

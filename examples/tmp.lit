@@ -1,0 +1,9 @@
+abstract_prop p(x, y)
+
+know:
+    exist_unique a R st {$p(a, 1)}
+    not exist x R st {$p(x, 2)}
+
+exist b R st {$p(b, 1)}
+exist_unique c R st {$p(c, 1)}
+not exist y R st {$p(y, 2)}

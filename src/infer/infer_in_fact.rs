@@ -37,24 +37,24 @@ impl Runtime {
     fn upsert_known_fn_info_for_key(
         map: &mut HashMap<ObjString, KnownFnInfo>,
         key: ObjString,
-        body: Option<FnSetBody>,
-        equal_to: Option<Obj>,
+        body: Option<(FnSetBody, LineFile)>,
+        equal_to: Option<(Obj, LineFile)>,
     ) {
         match map.entry(key) {
             Entry::Occupied(mut o) => {
                 let info = o.get_mut();
-                if let Some(b) = body {
-                    info.fn_set = Some(b);
+                if let Some((b, lf)) = body {
+                    info.fn_set = Some((b, lf));
                 }
-                if let Some(eq) = equal_to {
-                    info.equal_to = Some(eq);
+                if let Some((eq, lf)) = equal_to {
+                    info.equal_to = Some((eq, lf));
                 }
             }
             Entry::Vacant(v) => {
                 if body.is_none() && equal_to.is_none() {
                     return;
                 }
-                v.insert(KnownFnInfo::with_fn_set(body, equal_to));
+                v.insert(KnownFnInfo::merge_fn_set_equal_to(body, equal_to));
             }
         }
     }
@@ -63,14 +63,16 @@ impl Runtime {
         map: &mut HashMap<ObjString, KnownFnInfo>,
         key: ObjString,
         restrict_body: FnSetBody,
+        line_file: LineFile,
     ) {
         match map.entry(key) {
             Entry::Occupied(mut o) => {
-                o.get_mut().update_restrict_to(restrict_body);
+                o.get_mut()
+                    .update_restrict_to(restrict_body, line_file.clone());
             }
             Entry::Vacant(v) => {
                 let mut info = KnownFnInfo::default();
-                info.update_restrict_to(restrict_body);
+                info.update_restrict_to(restrict_body, line_file);
                 v.insert(info);
             }
         }
@@ -81,6 +83,7 @@ impl Runtime {
         &mut self,
         element: &Obj,
         restrict_body: FnSetBody,
+        line_file: LineFile,
     ) {
         if !obj_eligible_for_known_objs_in_fn_sets(element) {
             return;
@@ -91,6 +94,7 @@ impl Runtime {
             &mut env.known_objs_in_fn_sets,
             key.clone(),
             restrict_body.clone(),
+            line_file.clone(),
         );
         for alias in extra_known_fn_set_keys_for_bare_name_lookup(element) {
             if alias != key {
@@ -98,6 +102,7 @@ impl Runtime {
                     &mut env.known_objs_in_fn_sets,
                     alias,
                     restrict_body.clone(),
+                    line_file.clone(),
                 );
             }
         }
@@ -109,7 +114,7 @@ impl Runtime {
             Obj::FnSet(fs) => fs.body.clone(),
             _ => return Ok(InferResult::new()),
         };
-        self.register_known_fn_restrict_to_for_element(&rf.obj, restrict_body);
+        self.register_known_fn_restrict_to_for_element(&rf.obj, restrict_body, rf.line_file.clone());
         Ok(InferResult::new())
     }
 
@@ -120,25 +125,31 @@ impl Runtime {
         element: &Obj,
         body: FnSetBody,
         equal_to: Option<Obj>,
+        fn_signature_line_file: LineFile,
+        defining_expr_line_file: LineFile,
     ) {
         if !obj_eligible_for_known_objs_in_fn_sets(element) {
             return;
         }
         let key = element.to_string();
         let env = self.top_level_env();
+        let body_opt = Some((body.clone(), fn_signature_line_file.clone()));
+        let equal_opt = equal_to
+            .clone()
+            .map(|eq| (eq, defining_expr_line_file.clone()));
         Self::upsert_known_fn_info_for_key(
             &mut env.known_objs_in_fn_sets,
             key.clone(),
-            Some(body.clone()),
-            equal_to.clone(),
+            body_opt,
+            equal_opt.clone(),
         );
         for alias in extra_known_fn_set_keys_for_bare_name_lookup(element) {
             if alias != key {
                 Self::upsert_known_fn_info_for_key(
                     &mut env.known_objs_in_fn_sets,
                     alias,
-                    Some(body.clone()),
-                    equal_to.clone(),
+                    Some((body.clone(), fn_signature_line_file.clone())),
+                    equal_opt.clone(),
                 );
             }
         }
@@ -220,10 +231,13 @@ impl Runtime {
             return Ok(InferResult::new());
         }
 
+        let lf = in_fact.line_file.clone();
         self.register_known_objs_in_fn_sets_for_element_body(
             &in_fact.element,
             fn_set_with_dom.body.clone(),
             None,
+            lf.clone(),
+            lf,
         );
 
         let mut infer_result = InferResult::new();
