@@ -1,7 +1,5 @@
 # Litex vs Lean: Basic Math
 
-Narrative in Markdown; runnable Litex lives in fenced ` ```litex` ` blocks below. Lean comparisons stay in prose (Lean uses Mathlib tactics such as `norm_num`, `field_simp`, …).
-
 ---
 
 ## Example 1 — \(1 + 1 = 2\)
@@ -129,4 +127,4 @@ prove:
 
 ## Summary
 
-Lean’s tactic stack is extremely general. Litex leans on algebraic closure and searchable facts for routine arithmetic.
+Routine steps here are algebraic closure plus fact search in Litex, not bespoke tactic scripts.

@@ -8,7 +8,7 @@ Litex gives you a **lean, set-theoretic** idiom for mathematics—**just enough*
 
 The emphasis is on **how ideas relate**: constructs are **woven together** so you can say what depends on what, in the same spirit as the mathematics itself, rather than as isolated syntax rules. 
 
-**This manual** is a compact reference to **syntax and semantics** across Litex. Go to [Litex](litexlang.com), [Litex Github](https://github.com/litexlang/golitex) for more details.
+**This manual** is a compact reference to **syntax and semantics** across Litex.
 
 # Abstract Proposition
 

@@ -18,52 +18,81 @@ Both snippets follow the same idea: build “product + 1”, take a prime diviso
 
 ## Code
 
-### Lean
+Core proof structure (Litex `claim` … `witness` vs Lean `example … by`):
 
-```lean
-example (N : ℕ) : ∃ p ≥ N, Prime p := by
-  have hN0 : 0 < N ! := by apply factorial_pos
-  have hN2 : 2 ≤ N ! + 1 := by addarith [hN0]
-  -- `N! + 1` has a prime factor, `p`
-  obtain ⟨p, hp, hpN⟩ : ∃ p : ℕ, Prime p ∧ p ∣ N ! + 1 := exists_prime_factor hN2
-  have hp2 : 2 ≤ p
-  · obtain ⟨hp', hp''⟩ := hp
-    apply hp'
-  obtain ⟨k, hk⟩ := hpN
-  match k with
-  | 0 => -- if `k` is zero, contradiction
-    have k_contra :=
-    calc 0 < N ! + 1 := by extra
-      _ = p * 0 := hk
-      _ = 0 := by ring
-    numbers at k_contra
-  | l + 1 => -- so `k = l + 1` for some `l`
-    -- the key fact: `p` is not a factor of `N!`
-    have key : ¬ p ∣ (N !)
-    · apply Nat.not_dvd_of_exists_lt_and_lt (N !)
-      use l
-      constructor
-      · have :=
-        calc p * l + p = p * (l + 1) := by ring
-          _ = N ! + 1 := by rw [hk]
-          _ < N ! + p := by addarith [hp2]
-        addarith [this]
-      · calc N ! < N ! + 1 := by extra
-          _ = p * (l + 1) := by rw [hk]
-    -- so `p` is a prime number greater than or equal to `N`, as we sought
-    use p
-    constructor
-    · obtain h_le | h_gt : p ≤ N ∨ N < p := le_or_lt p N
-      · have : p ∣ (N !)
-        · apply dvd_factorial
-          · extra
-          · addarith [h_le]
-        contradiction
-      · addarith [h_gt]
-    · apply hp
-```
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
+  <tr>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5; vertical-align: top">
+      <code>claim:</code><br>
+      <code>&nbsp;&nbsp;prove:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;forall a N_pos:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 &lt;= a</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=>:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exist k N_pos st {k &gt; a, $prime(k)}</code><br>
+      <code>&nbsp;&nbsp;2 &lt;= a &lt;= product(1, a, 'N_pos(x){x}) &lt;= product(1, a, 'N_pos(x){x}) + 1</code><br>
+      <code>&nbsp;&nbsp;have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k</code><br>
+      <code>&nbsp;&nbsp;by cases:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;prove:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;k &gt; a</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;case k &lt;= a:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;product(1, a, 'N_pos(x){x}) % k = 0</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;case k &gt; a:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;do_nothing</code><br>
+      <code>&nbsp;&nbsp;witness exist k N_pos st {k &gt; a, $prime(k)} from k</code><br>
+    </td>
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5; vertical-align: top">
+      <code>example (N : ℕ) : ∃ p ≥ N, Prime p := by</code><br>
+      <code>&nbsp;&nbsp;have hN0 : 0 &lt; N ! := by apply factorial_pos</code><br>
+      <code>&nbsp;&nbsp;have hN2 : 2 ≤ N ! + 1 := by addarith [hN0]</code><br>
+      <code>&nbsp;&nbsp;-- `N! + 1` has a prime factor, `p`</code><br>
+      <code>&nbsp;&nbsp;obtain ⟨p, hp, hpN⟩ : ∃ p : ℕ, Prime p ∧ p ∣ N ! + 1 := exists_prime_factor hN2</code><br>
+      <code>&nbsp;&nbsp;have hp2 : 2 ≤ p</code><br>
+      <code>&nbsp;&nbsp;· obtain ⟨hp', hp''⟩ := hp</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;apply hp'</code><br>
+      <code>&nbsp;&nbsp;obtain ⟨k, hk⟩ := hpN</code><br>
+      <code>&nbsp;&nbsp;match k with</code><br>
+      <code>&nbsp;&nbsp;| 0 =&gt; -- if `k` is zero, contradiction</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;have k_contra :=</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;calc 0 &lt; N ! + 1 := by extra</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_ = p * 0 := hk</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_ = 0 := by ring</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;numbers at k_contra</code><br>
+      <code>&nbsp;&nbsp;| l + 1 =&gt; -- so `k = l + 1` for some `l`</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;-- the key fact: `p` is not a factor of `N!`</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;have key : ¬ p ∣ (N !)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;· apply Nat.not_dvd_of_exists_lt_and_lt (N !)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;use l</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;constructor</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;· have :=</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;calc p * l + p = p * (l + 1) := by ring</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_ = N ! + 1 := by rw [hk]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_ &lt; N ! + p := by addarith [hp2]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;addarith [this]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;· calc N ! &lt; N ! + 1 := by extra</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_ = p * (l + 1) := by rw [hk]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;-- so `p` is a prime number greater than or equal to `N`, as we sought</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;use p</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;constructor</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;· obtain h_le | h_gt : p ≤ N ∨ N &lt; p := le_or_lt p N</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;· have : p ∣ (N !)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;· apply dvd_factorial</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;· extra</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;· addarith [h_le]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contradiction</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;· addarith [h_gt]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;· apply hp</code><br>
+    </td>
+  </tr>
+</table>
 
-### Litex
+### Full runnable Litex (with `know` lemmas and prelude)
+
 
 ```litex
 prop prime(a N_pos):
