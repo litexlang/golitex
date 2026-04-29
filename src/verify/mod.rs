@@ -17,6 +17,7 @@ mod verify_forall_fact;
 mod verify_forall_fact_with_iff;
 mod verify_helper;
 mod verify_non_equational_atomic_fact;
+mod verify_not_forall_fact;
 pub use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
 mod verify_arg_satisfy_param_def;
 mod verify_number_in_standard_set;

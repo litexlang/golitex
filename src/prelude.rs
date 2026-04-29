@@ -53,6 +53,7 @@ pub use crate::fact::NotIsSetFact;
 pub use crate::fact::NotIsTupleFact;
 pub use crate::fact::NotLessEqualFact;
 pub use crate::fact::NotLessFact;
+pub use crate::fact::NotForallFact;
 pub use crate::fact::NotNormalAtomicFact;
 pub use crate::fact::NotRestrictFact;
 pub use crate::fact::NotSubsetFact;

@@ -874,6 +874,12 @@ impl ForallFactWithIff {
     }
 }
 
+impl NotForallFact {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\neg\, \left( {}\right)", self.forall_fact.to_latex_string())
+    }
+}
+
 impl GreaterEqualFact {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1853,6 +1859,7 @@ impl Fact {
             Fact::ChainFact(x) => x.to_latex_string(),
             Fact::ForallFact(x) => x.to_latex_string(),
             Fact::ForallFactWithIff(x) => x.to_latex_string(),
+            Fact::NotForall(x) => x.to_latex_string(),
         }
     }
 }

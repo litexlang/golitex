@@ -120,7 +120,8 @@ impl Runtime {
             | Fact::OrFact(_)
             | Fact::ExistFact(_)
             | Fact::ForallFact(_)
-            | Fact::ForallFactWithIff(_) => None,
+            | Fact::ForallFactWithIff(_)
+            | Fact::NotForall(_) => None,
         }
     }
 

@@ -18,6 +18,6 @@ pub use matchable_fact_with_atomic_fact_inside::{
 pub use or_and_chain_atomic_fact::OrAndChainAtomicFact;
 pub use or_fact::OrFact;
 
-pub use fact::Fact;
+pub use fact::{Fact, NotForallFact};
 mod fact;
 pub use fact_inside_forall::ExistOrAndChainAtomicFact;

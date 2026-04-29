@@ -1,0 +1,5 @@
+know not forall x R:
+    x > 0
+
+not forall x R:
+    x > 0
