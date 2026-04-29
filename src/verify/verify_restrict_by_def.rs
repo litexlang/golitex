@@ -187,7 +187,7 @@ impl Runtime {
             flow.forall_dom_facts.clone(),
             Vec::new(),
             flow.restrict_fact.line_file.clone(),
-        );
+        )?;
         self.run_in_local_env(|rt| {
             rt.forall_assume_params_and_dom_in_current_env(&stub, verify_state)?;
             rt.verify_obj_well_defined_and_store_cache(&flow.applied_fn_obj, verify_state)
@@ -233,7 +233,7 @@ impl Runtime {
             flow.forall_dom_facts,
             then_facts,
             flow.restrict_fact.line_file.clone(),
-        );
+        )?;
 
         let forall_result = self.verify_forall_fact(&forall, verify_state)?;
         if !forall_result.is_true() {

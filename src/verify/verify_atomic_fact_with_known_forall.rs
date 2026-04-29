@@ -217,7 +217,7 @@ impl Runtime {
             known_forall.dom.clone(),
             vec![atomic_fact_in_known_forall_fact.clone().into()],
             known_forall.line_file.clone(),
-        );
+        )?;
         let fact_verified =
             FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
                 given_atomic_fact.clone().into(),

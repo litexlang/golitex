@@ -115,7 +115,7 @@ impl Runtime {
         forall_fact_with_iff: ForallFactWithIff,
     ) -> Result<InferResult, RuntimeError> {
         let (forall_then_implies_iff, forall_iff_implies_then) =
-            forall_fact_with_iff.to_two_forall_facts();
+            forall_fact_with_iff.to_two_forall_facts()?;
         let mut infer_result = self
             .store_forall_fact_without_well_defined_verified_and_infer(forall_then_implies_iff)?;
         infer_result.new_infer_result_inside(

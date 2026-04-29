@@ -125,7 +125,10 @@ pub(crate) fn build_curried_fn_value_apply_for_fn_eq(
         ));
     }
     if let Obj::AnonymousFn(af) = func {
-        return Some(build_curried_anonymous_fn_from_layers_forall(af, layer_param_names));
+        return Some(build_curried_anonymous_fn_from_layers_forall(
+            af,
+            layer_param_names,
+        ));
     }
     if let Some(head) = FnObjHead::given_an_atom_return_a_fn_obj_head(func.clone()) {
         let mut body_vectors: Vec<Vec<Box<Obj>>> = Vec::with_capacity(layer_param_names.len());

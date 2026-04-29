@@ -121,9 +121,9 @@ impl FnSetSpace {
             Obj::AnonymousFn(a) => Ok(FnSetSpace::Anon(a)),
             _ => Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                        "expect return set of function space to be `fn` or anonymous fn, got {}",
-                        obj
-                    )),
+                    "expect return set of function space to be `fn` or anonymous fn, got {}",
+                    obj
+                )),
             ))),
         }
     }

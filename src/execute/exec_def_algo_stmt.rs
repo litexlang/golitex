@@ -301,7 +301,7 @@ impl Runtime {
                 case_dom_facts,
                 case_then_facts,
                 algo_case.line_file.clone(),
-            )
+            )?
             .into(),
         )
     }
@@ -379,7 +379,7 @@ impl Runtime {
                 .collect(),
             vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
             def_algo_stmt.line_file.clone(),
-        )
+        )?
         .into();
 
         let verify_state = VerifyState::new(0, false);

@@ -120,7 +120,7 @@ impl Runtime {
                 )));
             }
 
-            Ok(ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone()).into())
+            Ok(ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone())?.into())
         })
     }
 
@@ -393,7 +393,7 @@ impl Runtime {
             dom_facts.push(self.parse_fact(block)?);
         }
 
-        let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone());
+        let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone())?;
 
         Ok(ForallFactWithIff::new(forall_fact, iff_facts, tb.line_file.clone()).into())
     }
@@ -420,13 +420,13 @@ impl Runtime {
             for block in last.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone()).into())
+            Ok(ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone())?.into())
         } else {
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(ForallFact::new(param_def, vec![], then_facts, tb.line_file.clone()).into())
+            Ok(ForallFact::new(param_def, vec![], then_facts, tb.line_file.clone())?.into())
         }
     }
 
@@ -509,7 +509,7 @@ impl Runtime {
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
                     let line_file = tb.line_file.clone();
-                    let body = ExistFactBody::new(param_def, facts, line_file);
+                    let body = ExistFactBody::new(param_def, facts, line_file)?;
                     Ok(if is_exist_unique {
                         ExistFactEnum::ExistUniqueFact(body)
                     } else {
@@ -606,7 +606,7 @@ impl Runtime {
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
                 |e: RuntimeError| {
                     let msg = match &e {
-                        RuntimeError::NewAtomicFactError(s) => s.msg.clone(),
+                        RuntimeError::NewFactError(s) => s.msg.clone(),
                         _ => "parse atomic fact".to_string(),
                     };
                     RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone())))
@@ -637,7 +637,7 @@ impl Runtime {
         let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
             |e: RuntimeError| {
                 let msg = match &e {
-                    RuntimeError::NewAtomicFactError(s) => s.msg.clone(),
+                    RuntimeError::NewFactError(s) => s.msg.clone(),
                     _ => "parse atomic fact".to_string(),
                 };
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone())))
@@ -700,7 +700,7 @@ impl Runtime {
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
                 |e: RuntimeError| {
                     let msg = match &e {
-                        RuntimeError::NewAtomicFactError(s) => s.msg.clone(),
+                        RuntimeError::NewFactError(s) => s.msg.clone(),
                         _ => "parse atomic fact".to_string(),
                     };
                     RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone())))
@@ -742,7 +742,7 @@ impl Runtime {
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
                 |e: RuntimeError| {
                     let msg = match &e {
-                        RuntimeError::NewAtomicFactError(s) => s.msg.clone(),
+                        RuntimeError::NewFactError(s) => s.msg.clone(),
                         _ => "parse atomic fact".to_string(),
                     };
                     RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone())))

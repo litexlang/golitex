@@ -4,7 +4,7 @@ use std::fmt;
 #[derive(Debug)]
 pub enum RuntimeError {
     ArithmeticError(RuntimeErrorStruct),
-    NewAtomicFactError(RuntimeErrorStruct),
+    NewFactError(RuntimeErrorStruct),
     StoreFactError(RuntimeErrorStruct),
     ParseError(RuntimeErrorStruct),
     ExecStmtError(RuntimeErrorStruct),
@@ -43,7 +43,7 @@ macro_rules! runtime_error_wrapper {
 
 runtime_error_wrapper! {
     ArithmeticRuntimeError => ArithmeticError,
-    NewAtomicFactRuntimeError => NewAtomicFactError,
+    NewFactRuntimeError => NewFactError,
     StoreFactRuntimeError => StoreFactError,
     ParseRuntimeError => ParseError,
     WellDefinedRuntimeError => WellDefinedError,
@@ -93,14 +93,14 @@ pub fn short_exec_error(
 impl std::error::Error for RuntimeError {}
 
 impl RuntimeError {
-    pub fn wrap_new_atomic_fact_as_store_conflict(e: RuntimeError) -> RuntimeError {
+    pub fn wrap_new_fact_as_store_conflict(e: RuntimeError) -> RuntimeError {
         match e {
-            RuntimeError::NewAtomicFactError(s) => {
-                NewAtomicFactRuntimeError(RuntimeErrorStruct::new(
+            RuntimeError::NewFactError(s) => {
+                NewFactRuntimeError(RuntimeErrorStruct::new(
                     s.statement.clone(),
                     s.msg.clone(),
                     s.line_file.clone(),
-                    Some(NewAtomicFactRuntimeError(s).into()),
+                    Some(NewFactRuntimeError(s).into()),
                     vec![],
                 ))
                 .into()
@@ -112,7 +112,7 @@ impl RuntimeError {
     pub fn line_file(&self) -> LineFile {
         match self {
             RuntimeError::ArithmeticError(e) => e.line_file.clone(),
-            RuntimeError::NewAtomicFactError(e) => e.line_file.clone(),
+            RuntimeError::NewFactError(e) => e.line_file.clone(),
             RuntimeError::StoreFactError(e) => e.line_file.clone(),
             RuntimeError::ParseError(e) => e.line_file.clone(),
             RuntimeError::ExecStmtError(e) => e.line_file.clone(),
@@ -129,7 +129,7 @@ impl RuntimeError {
     pub fn display_label(&self) -> &'static str {
         match self {
             RuntimeError::ArithmeticError(_) => "ArithmeticError",
-            RuntimeError::NewAtomicFactError(_) => "NewAtomicFactError",
+            RuntimeError::NewFactError(_) => "NewFactError",
             RuntimeError::StoreFactError(_) => "StoreFactError",
             RuntimeError::ParseError(_) => "ParseError",
             RuntimeError::ExecStmtError(_) => "ExecStmtError",
