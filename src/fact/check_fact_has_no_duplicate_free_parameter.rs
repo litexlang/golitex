@@ -22,13 +22,28 @@ pub fn check_exist_fact_has_no_duplicate_exist_free_parameter(
     )
 }
 
+pub fn check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter(
+    forall_fact_with_iff: &ForallFactWithIff,
+) -> Result<(), RuntimeError> {
+    let mut params_already_used: Vec<Vec<String>> = Vec::new();
+    check_forall_fact_with_iff_has_no_duplicate_free_parameter(
+        forall_fact_with_iff,
+        ParamObjType::Forall,
+        &mut params_already_used,
+    )
+}
+
 fn check_fact_has_no_duplicate_free_parameter(
     fact: &Fact,
     free_param_type: ParamObjType,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match fact {
-        Fact::AtomicFact(_) => Ok(()),
+        Fact::AtomicFact(atomic_fact) => check_objs_have_no_duplicate_free_parameter(
+            atomic_fact.get_args_from_fact(),
+            free_param_type,
+            params_already_used,
+        ),
         Fact::ExistFact(exist_fact) => check_exist_fact_has_no_duplicate_free_parameter(
             exist_fact,
             free_param_type,
@@ -39,8 +54,16 @@ fn check_fact_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
-        Fact::AndFact(_) => Ok(()),
-        Fact::ChainFact(_) => Ok(()),
+        Fact::AndFact(and_fact) => check_objs_have_no_duplicate_free_parameter(
+            and_fact.get_args_from_fact(),
+            free_param_type,
+            params_already_used,
+        ),
+        Fact::ChainFact(chain_fact) => check_objs_have_no_duplicate_free_parameter(
+            chain_fact.get_args_from_fact(),
+            free_param_type,
+            params_already_used,
+        ),
         Fact::ForallFact(forall_fact) => check_forall_fact_has_no_duplicate_free_parameter(
             forall_fact,
             free_param_type,
@@ -189,9 +212,27 @@ fn check_exist_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match fact {
-        ExistOrAndChainAtomicFact::AtomicFact(_) => Ok(()),
-        ExistOrAndChainAtomicFact::AndFact(_) => Ok(()),
-        ExistOrAndChainAtomicFact::ChainFact(_) => Ok(()),
+        ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+            check_objs_have_no_duplicate_free_parameter(
+                atomic_fact.get_args_from_fact(),
+                free_param_type,
+                params_already_used,
+            )
+        }
+        ExistOrAndChainAtomicFact::AndFact(and_fact) => {
+            check_objs_have_no_duplicate_free_parameter(
+                and_fact.get_args_from_fact(),
+                free_param_type,
+                params_already_used,
+            )
+        }
+        ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+            check_objs_have_no_duplicate_free_parameter(
+                chain_fact.get_args_from_fact(),
+                free_param_type,
+                params_already_used,
+            )
+        }
         ExistOrAndChainAtomicFact::OrFact(or_fact) => {
             check_or_fact_has_no_duplicate_free_parameter(
                 or_fact,
@@ -215,9 +256,23 @@ fn check_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match fact {
-        OrAndChainAtomicFact::AtomicFact(_) => Ok(()),
-        OrAndChainAtomicFact::AndFact(_) => Ok(()),
-        OrAndChainAtomicFact::ChainFact(_) => Ok(()),
+        OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+            check_objs_have_no_duplicate_free_parameter(
+                atomic_fact.get_args_from_fact(),
+                free_param_type,
+                params_already_used,
+            )
+        }
+        OrAndChainAtomicFact::AndFact(and_fact) => check_objs_have_no_duplicate_free_parameter(
+            and_fact.get_args_from_fact(),
+            free_param_type,
+            params_already_used,
+        ),
+        OrAndChainAtomicFact::ChainFact(chain_fact) => check_objs_have_no_duplicate_free_parameter(
+            chain_fact.get_args_from_fact(),
+            free_param_type,
+            params_already_used,
+        ),
         OrAndChainAtomicFact::OrFact(or_fact) => check_or_fact_has_no_duplicate_free_parameter(
             or_fact,
             free_param_type,
@@ -243,14 +298,29 @@ fn check_or_fact_has_no_duplicate_free_parameter(
 
 fn check_and_chain_atomic_fact_has_no_duplicate_free_parameter(
     fact: &AndChainAtomicFact,
-    _free_param_type: ParamObjType,
-    _params_already_used: &mut Vec<Vec<String>>,
+    free_param_type: ParamObjType,
+    params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
-    match fact {
-        AndChainAtomicFact::AtomicFact(_) => Ok(()),
-        AndChainAtomicFact::AndFact(_) => Ok(()),
-        AndChainAtomicFact::ChainFact(_) => Ok(()),
+    check_objs_have_no_duplicate_free_parameter(
+        fact.get_args_from_fact(),
+        free_param_type,
+        params_already_used,
+    )
+}
+
+fn check_objs_have_no_duplicate_free_parameter(
+    objs: Vec<Obj>,
+    free_param_type: ParamObjType,
+    params_already_used: &mut Vec<Vec<String>>,
+) -> Result<(), RuntimeError> {
+    for obj in objs.iter() {
+        check_obj_has_no_duplicate_free_parameter_in_scope(
+            obj,
+            free_param_type,
+            params_already_used,
+        )?;
     }
+    Ok(())
 }
 
 fn push_param_def_scope_or_error(

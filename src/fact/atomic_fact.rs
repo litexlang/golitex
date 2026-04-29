@@ -85,11 +85,7 @@ impl FnEqualFact {
 
 impl fmt::Display for FnEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}({}, {})",
-            FACT_PREFIX, FN_EQ, self.left, self.right
-        )
+        write!(f, "{}{}({}, {})", FACT_PREFIX, FN_EQ, self.left, self.right)
     }
 }
 
@@ -935,12 +931,9 @@ impl AtomicFact {
                 x.line_file,
             )
             .into(),
-            AtomicFact::FnEqualFact(x) => FnEqualFact::new(
-                r(x.left, from, to),
-                r(x.right, from, to),
-                x.line_file,
-            )
-            .into(),
+            AtomicFact::FnEqualFact(x) => {
+                FnEqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
+            }
         }
     }
 }
@@ -1050,9 +1043,9 @@ impl AtomicFact {
             AtomicFact::NotGreaterEqualFact(f) => Some(AtomicFact::NotLessEqualFact(
                 NotLessEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
             )),
-            AtomicFact::FnEqualFact(f) => Some(
-                FnEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into(),
-            ),
+            AtomicFact::FnEqualFact(f) => {
+                Some(FnEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into())
+            }
             AtomicFact::FnEqualInFact(f) => Some(
                 FnEqualInFact::new(
                     f.right.clone(),

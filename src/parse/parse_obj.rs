@@ -254,6 +254,12 @@ impl Runtime {
                         current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                     }
 
+                    this.parsing_free_param_collection.begin_scope(
+                        ParamObjType::FnSet,
+                        &current_params,
+                        tb.line_file.clone(),
+                    )?;
+
                     let set = if tb.current_token_is_equal_to(COLON) {
                         StandardSet::R.into()
                     } else {
@@ -278,11 +284,6 @@ impl Runtime {
                 }
 
                 let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-                this.parsing_free_param_collection.begin_scope(
-                    ParamObjType::FnSet,
-                    &all_fn_names,
-                    tb.line_file.clone(),
-                )?;
 
                 let mut dom_facts = vec![];
                 if tb.current_token_is_equal_to(COLON) {
@@ -350,6 +351,12 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
+                this.parsing_free_param_collection.begin_scope(
+                    ParamObjType::FnSet,
+                    &current_params,
+                    tb.line_file.clone(),
+                )?;
+
                 let set = this.parse_obj(tb)?;
 
                 params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
@@ -372,11 +379,6 @@ impl Runtime {
             }
 
             let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-            this.parsing_free_param_collection.begin_scope(
-                ParamObjType::FnSet,
-                &all_fn_names,
-                tb.line_file.clone(),
-            )?;
 
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
@@ -1401,7 +1403,7 @@ impl Runtime {
                     }
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-                    Ok(SetBuilder::new(a.name.clone(), second_inst, facts_inst).into())
+                    Ok(SetBuilder::new(a.name.clone(), second_inst, facts_inst)?.into())
                 } else {
                     Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(

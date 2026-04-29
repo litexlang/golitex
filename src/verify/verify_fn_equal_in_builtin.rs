@@ -136,12 +136,15 @@ impl Runtime {
 // FnSet “type” for an anonymous fn, a bare FnSet obj, or a name in known_objs_in_fn_sets.
 fn fn_set_type_of_function_value(rt: &Runtime, obj: &Obj) -> Option<FnSet> {
     match obj {
-        Obj::AnonymousFn(af) => Some(FnSet::new(
+        Obj::AnonymousFn(af) => FnSet::new(
             af.body.params_def_with_set.clone(),
             af.body.dom_facts.clone(),
             (*af.body.ret_set).clone(),
-        )),
+        )
+        .ok(),
         Obj::FnSet(fs) => Some(fs.clone()),
-        o => rt.get_cloned_object_in_fn_set(o).map(FnSet::from_body),
+        o => rt
+            .get_cloned_object_in_fn_set(o)
+            .and_then(|body| FnSet::from_body(body).ok()),
     }
 }

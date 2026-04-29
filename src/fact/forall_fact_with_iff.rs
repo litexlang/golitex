@@ -13,12 +13,14 @@ impl ForallFactWithIff {
         forall_fact: ForallFact,
         iff_facts: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
-    ) -> Self {
-        ForallFactWithIff {
+    ) -> Result<Self, RuntimeError> {
+        let forall_fact_with_iff = ForallFactWithIff {
             forall_fact,
             iff_facts,
             line_file,
-        }
+        };
+        check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter(&forall_fact_with_iff)?;
+        Ok(forall_fact_with_iff)
     }
 }
 
@@ -42,7 +44,12 @@ impl ForallFactWithIff {
     pub fn to_two_forall_facts(&self) -> Result<(ForallFact, ForallFact), RuntimeError> {
         let f = &self.forall_fact;
         let mut dom_then = f.dom_facts.clone();
-        dom_then.extend(f.then_facts.iter().cloned().map(ExistOrAndChainAtomicFact::to_fact));
+        dom_then.extend(
+            f.then_facts
+                .iter()
+                .cloned()
+                .map(ExistOrAndChainAtomicFact::to_fact),
+        );
         let forall_then_implies_iff = ForallFact::new(
             f.params_def_with_type.clone(),
             dom_then,
@@ -51,7 +58,12 @@ impl ForallFactWithIff {
         )?;
 
         let mut dom_iff = f.dom_facts.clone();
-        dom_iff.extend(self.iff_facts.iter().cloned().map(ExistOrAndChainAtomicFact::to_fact));
+        dom_iff.extend(
+            self.iff_facts
+                .iter()
+                .cloned()
+                .map(ExistOrAndChainAtomicFact::to_fact),
+        );
         let forall_iff_implies_then = ForallFact::new(
             f.params_def_with_type.clone(),
             dom_iff,

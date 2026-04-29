@@ -76,7 +76,10 @@ fn mark_forall_param_coverage_in_obj(
         }
         Obj::Atom(AtomObj::IdentifierWithMod(_)) => {}
         Obj::FnObj(fn_obj) => {
-            mark_forall_param_coverage_in_fn_obj_head(fn_obj.head.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_fn_obj_head(
+                fn_obj.head.as_ref(),
+                coverage_by_forall_param,
+            );
             for group in fn_obj.body.iter() {
                 for boxed_obj in group.iter() {
                     mark_forall_param_coverage_in_obj(boxed_obj.as_ref(), coverage_by_forall_param);
@@ -198,7 +201,10 @@ fn mark_forall_param_coverage_in_obj(
                     coverage_by_forall_param,
                 );
             }
-            mark_forall_param_coverage_in_obj(fn_set.body.ret_set.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(
+                fn_set.body.ret_set.as_ref(),
+                coverage_by_forall_param,
+            );
         }
         Obj::AnonymousFn(anon) => {
             for param_def_with_set in anon.body.params_def_with_set.iter() {

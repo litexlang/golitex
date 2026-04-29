@@ -160,7 +160,7 @@ impl Runtime {
                         ))
                     })?
                     .clone();
-                FnSetSpace::Set(FnSet::from_body(body))
+                FnSetSpace::Set(FnSet::from_body(body)?)
             }
         };
 
