@@ -57,6 +57,19 @@ impl Runtime {
         self.get_object_in_fn_set_or_restrict(obj).cloned()
     }
 
+    /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
+    /// [`crate::environment::KnownFnInfo`] (inner scopes override outer).
+    pub fn get_known_fn_body_and_equal_to_for_key(&self, key: &str) -> Option<(FnSetBody, Obj)> {
+        for env in self.iter_environments_from_top() {
+            if let Some(info) = env.known_objs_in_fn_sets.get(key) {
+                if let (Some(body), Some(eq)) = (info.fn_set.clone(), info.equal_to.clone()) {
+                    return Some((body, eq));
+                }
+            }
+        }
+        None
+    }
+
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
         for env in self.iter_environments_from_top() {
             if env.cache_well_defined_obj.contains_key(key) {
