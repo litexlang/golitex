@@ -234,6 +234,24 @@ impl Runtime {
                 Ok(ExistOrAndChainAtomicFact::ExistFact(exist_fact))
             }
             NOT => {
+                if tb.token_at_add_index(1) == EXIST {
+                    tb.skip_token(NOT)?;
+                    let exist_fact = self.parse_exist_fact(tb)?;
+                    return Ok(ExistOrAndChainAtomicFact::ExistFact(match exist_fact {
+                        ExistFactEnum::ExistFact(body) => ExistFactEnum::NotExistFact(body),
+                        ExistFactEnum::ExistUniqueFact(_) | ExistFactEnum::NotExistFact(_) => {
+                            unreachable!("`not exist` parse should only produce plain exist body")
+                        }
+                    }));
+                }
+                if tb.token_at_add_index(1) == EXIST_UNIQUE {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!("`{} {}` is not supported", NOT, EXIST_UNIQUE),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
                 tb.skip_token(NOT)?;
                 Ok(self.parse_atomic_fact(tb, false).map(|a| a.into())?)
             }

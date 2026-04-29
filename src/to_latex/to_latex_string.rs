@@ -665,7 +665,9 @@ impl EvalStmt {
 
 impl ExistFactEnum {
     pub fn to_latex_string(&self) -> String {
-        let head = if self.is_exist_unique() {
+        let head = if self.is_not_exist() {
+            r"\nexists"
+        } else if self.is_exist_unique() {
             r"\exists!"
         } else {
             r"\exists"

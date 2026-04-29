@@ -79,10 +79,13 @@ impl Runtime {
                 )
             })?;
 
+        let stmt_lf = have_fn_equal_stmt.line_file.clone();
         self.register_known_objs_in_fn_sets_for_element_body(
             &function_identifier_obj,
             fn_set_stored.body.clone(),
             Some(have_fn_equal_stmt.equal_to.clone()),
+            stmt_lf.clone(),
+            stmt_lf,
         );
 
         let (param_defs_with_type, forall_dom_facts, curried_layers) = self
