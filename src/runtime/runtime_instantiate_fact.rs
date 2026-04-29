@@ -63,6 +63,14 @@ impl Runtime {
                     inst_lf,
                 )?)
             }
+            Fact::NotForall(not_forall) => Fact::NotForall(NotForallFact::new(
+                self.inst_forall_fact(
+                    &not_forall.forall_fact,
+                    param_to_arg_map,
+                    to_inst_param_type,
+                    inst_lf,
+                )?,
+            )),
         })
     }
 

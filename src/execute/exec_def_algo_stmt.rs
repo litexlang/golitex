@@ -234,11 +234,12 @@ impl Runtime {
                 Fact::ChainFact(chain_fact) => chain_fact.clone().into(),
                 Fact::OrFact(or_fact) => or_fact.clone().into(),
                 Fact::ExistFact(exist_fact) => exist_fact.clone().into(),
-                Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
+                Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {
                     return Err(
                         Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                             def_algo_stmt,
-                            "algo verify: requirement fact cannot be forall".to_string(),
+                            "algo verify: requirement fact cannot be forall or not forall"
+                                .to_string(),
                             None,
                         ),
                     );

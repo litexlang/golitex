@@ -45,7 +45,8 @@ impl Runtime {
             | Fact::ExistFact(_)
             | Fact::OrFact(_)
             | Fact::AndFact(_)
-            | Fact::ChainFact(_) => self.store_whole_fact_update_cache_known_fact_and_infer(fact),
+            | Fact::ChainFact(_)
+            | Fact::NotForall(_) => self.store_whole_fact_update_cache_known_fact_and_infer(fact),
             Fact::ForallFact(forall_fact) => {
                 self.store_forall_fact_without_well_defined_verified_and_infer(forall_fact)
             }

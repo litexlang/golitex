@@ -14,6 +14,7 @@ impl Runtime {
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
                 self.infer_forall_fact_with_iff(forall_fact_with_iff)
             }
+            Fact::NotForall(not_forall) => self.infer_not_forall_fact(not_forall),
         }
     }
 
@@ -49,7 +50,8 @@ impl Runtime {
         exist_fact: &ExistFactEnum,
     ) -> Result<InferResult, RuntimeError> {
         let mut out = InferResult::new();
-        if exist_fact.is_exist_unique() && exist_fact.params_def_with_type().number_of_params() > 0 {
+        if exist_fact.is_exist_unique() && exist_fact.params_def_with_type().number_of_params() > 0
+        {
             let uniq = self.build_exist_unique_uniqueness_forall_fact(exist_fact)?;
             out.new_infer_result_inside(
                 self.store_forall_fact_without_well_defined_verified_and_infer(uniq)?,
@@ -104,6 +106,13 @@ impl Runtime {
     fn infer_forall_fact_with_iff(
         &mut self,
         _forall_fact_with_iff: &ForallFactWithIff,
+    ) -> Result<InferResult, RuntimeError> {
+        Ok(InferResult::new())
+    }
+
+    fn infer_not_forall_fact(
+        &mut self,
+        _not_forall: &NotForallFact,
     ) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }

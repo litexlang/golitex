@@ -3,6 +3,20 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, RuntimeError> {
         match tb.current()? {
+            NOT if tb.token_at_add_index(1) == FORALL => {
+                tb.skip_token(NOT)?;
+                let fact = self.parse_forall_or_forall_with_iff(tb)?;
+                match fact {
+                    Fact::ForallFact(forall_fact) => Ok(NotForallFact::new(forall_fact).into()),
+                    Fact::ForallFactWithIff(_) => Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "not forall with <=> is not supported".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    ))),
+                    _ => unreachable!("parse_forall_or_forall_with_iff only returns forall facts"),
+                }
+            }
             FORALL => self.parse_forall_or_forall_with_iff(tb),
             _ => {
                 let or_and_spec_fact = self.parse_exist_or_and_chain_atomic_fact(tb)?;
