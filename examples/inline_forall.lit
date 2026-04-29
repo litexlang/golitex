@@ -1,0 +1,15 @@
+know forall! a R: a > 0 => { a + 1 > 1 }
+
+forall! a R: a > 0 => { a + 1 > 1 }
+
+know forall! a R: forall! b R: b > 0 => { a > b } => { a > 0 }
+
+forall! a R: forall! b R: b > 0 => { a > b } => { a > 0 }
+
+know forall! a R: a > 0 => { a + 1 > 1, a + 2 > 2 }
+
+forall! a R: a > 0 => { a + 1 > 1, a + 2 > 2 }
+
+know forall! a R: { a > 0, a + 1 > 1 }
+
+forall! a R: { a > 0, a + 1 > 1 }
