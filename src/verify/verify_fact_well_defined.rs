@@ -26,6 +26,9 @@ impl Runtime {
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
                 self.verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state)
             }
+            Fact::NotForall(not_forall) => {
+                self.verify_not_forall_fact_well_defined(not_forall, verify_state)
+            }
         }
     }
 
@@ -331,5 +334,13 @@ impl Runtime {
             }
             Ok(())
         })
+    }
+
+    pub fn verify_not_forall_fact_well_defined(
+        &mut self,
+        not_forall: &NotForallFact,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_forall_fact_well_defined(&not_forall.forall_fact, verify_state)
     }
 }

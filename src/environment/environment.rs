@@ -410,6 +410,7 @@ impl Environment {
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
                 self.store_forall_fact_with_iff(forall_fact_with_iff)
             }
+            Fact::NotForall(_) => Ok(()),
         }
     }
 
