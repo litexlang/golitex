@@ -39,7 +39,7 @@ impl ForallFactWithIff {
     // 将 `forall ... iff` 拆成两个等价验证用的 `forall`：
     // 1. `dom ∪ then ⊢ iff`（then 并入 dom）
     // 2. `dom ∪ iff ⊢ then`（iff 并入 dom）
-    pub fn to_two_forall_facts(&self) -> (ForallFact, ForallFact) {
+    pub fn to_two_forall_facts(&self) -> Result<(ForallFact, ForallFact), RuntimeError> {
         let f = &self.forall_fact;
         let mut dom_then = f.dom_facts.clone();
         dom_then.extend(f.then_facts.iter().cloned().map(ExistOrAndChainAtomicFact::to_fact));
@@ -48,7 +48,7 @@ impl ForallFactWithIff {
             dom_then,
             self.iff_facts.clone(),
             self.line_file.clone(),
-        );
+        )?;
 
         let mut dom_iff = f.dom_facts.clone();
         dom_iff.extend(self.iff_facts.iter().cloned().map(ExistOrAndChainAtomicFact::to_fact));
@@ -57,8 +57,8 @@ impl ForallFactWithIff {
             dom_iff,
             f.then_facts.clone(),
             self.line_file.clone(),
-        );
+        )?;
 
-        (forall_then_implies_iff, forall_iff_implies_then)
+        Ok((forall_then_implies_iff, forall_iff_implies_then))
     }
 }

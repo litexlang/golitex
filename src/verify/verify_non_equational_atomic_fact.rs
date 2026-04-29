@@ -457,7 +457,7 @@ impl Runtime {
             )
             .into()],
             subset_fact.line_file.clone(),
-        )
+        )?
         .into();
         let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
@@ -492,7 +492,7 @@ impl Runtime {
             )
             .into()],
             superset_fact.line_file.clone(),
-        )
+        )?
         .into();
         let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {

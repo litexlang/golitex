@@ -1974,7 +1974,7 @@ impl Runtime {
             vec![],
             vec![nonempty_set_fact.into()],
             default_line_file(),
-        )
+        )?
         .into();
 
         self.verify_fact(&forall_x_in_choose_from_x_is_nonempty, _verify_state)?;

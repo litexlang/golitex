@@ -90,7 +90,7 @@ impl Runtime {
                 ],
                 vec![p_y],
                 lf,
-            )
+            )?
             .into(),
         )
     }
@@ -119,7 +119,7 @@ impl Runtime {
             ],
             vec![p_y],
             lf.clone(),
-        )
+        )?
         .into();
 
         let param_plus_one_obj = Add::new(
@@ -147,7 +147,7 @@ impl Runtime {
             ],
             vec![p_n1],
             lf,
-        )
+        )?
         .into())
     }
 
@@ -370,7 +370,7 @@ impl Runtime {
                 .into()],
                 then_facts,
                 stmt.line_file.clone(),
-            )
+            )?
             .into(),
         )
     }
@@ -466,7 +466,7 @@ impl Runtime {
             ],
             vec![next_fact_of_induction_step],
             stmt.line_file.clone(),
-        )
+        )?
         .into();
 
         self.verify_fact_return_err_if_not_true(

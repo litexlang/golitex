@@ -61,7 +61,7 @@ impl Runtime {
                     )
                     .into()],
                     stmt.line_file.clone(),
-                )
+                )?
                 .into();
                 rt.verify_fact_return_err_if_not_true(
                     &left_to_right_forall_fact,
@@ -92,7 +92,7 @@ impl Runtime {
                     )
                     .into()],
                     stmt.line_file.clone(),
-                )
+                )?
                 .into();
                 rt.verify_fact_return_err_if_not_true(
                     &right_to_left_forall_fact,

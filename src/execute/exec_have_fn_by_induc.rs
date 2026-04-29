@@ -355,7 +355,7 @@ impl Runtime {
                     )
                     .into()],
                     stmt.line_file.clone(),
-                );
+                )?;
 
                 let forall_fact = self.inst_have_fn_forall_fact_for_store(forall_fact_raw)
                     .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
@@ -409,7 +409,7 @@ impl Runtime {
                         )
                         .into()],
                         stmt.line_file.clone(),
-                    );
+                    )?;
 
                     let forall_fact = self.inst_have_fn_forall_fact_for_store(forall_fact_raw)
                         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;

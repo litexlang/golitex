@@ -108,7 +108,7 @@ impl Runtime {
             forall_dom_facts,
             vec![function_equals_equal_to_fact.into()],
             have_fn_equal_stmt.line_file.clone(),
-        );
+        )?;
 
         let to_store = self.inst_have_fn_forall_fact_for_store(forall_fact)?;
 

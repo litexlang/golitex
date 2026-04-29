@@ -120,9 +120,7 @@ impl Runtime {
                         }
                     }
                 }
-                if fn_obj.body.len() == 2
-                    && fn_obj.body[0].len() == 1
-                    && fn_obj.body[1].len() == 1
+                if fn_obj.body.len() == 2 && fn_obj.body[0].len() == 1 && fn_obj.body[1].len() == 1
                 {
                     let head_key = fn_obj.head.to_string();
                     if let Some(mat) = self.get_obj_equal_to_matrix_list(&head_key) {
@@ -191,9 +189,7 @@ impl Runtime {
                         self.resolve_obj_to_number_resolved(cr.start.as_ref()),
                         self.resolve_obj_to_number_resolved(cr.end.as_ref()),
                     ) {
-                        if let Some(n) =
-                            count_closed_range_integer_endpoints(&a_num, &b_num)
-                        {
+                        if let Some(n) = count_closed_range_integer_endpoints(&a_num, &b_num) {
                             return n.into();
                         }
                     }
@@ -204,9 +200,7 @@ impl Runtime {
                         self.resolve_obj_to_number_resolved(r.start.as_ref()),
                         self.resolve_obj_to_number_resolved(r.end.as_ref()),
                     ) {
-                        if let Some(n) =
-                            count_half_open_range_integer_endpoints(&a_num, &b_num)
-                        {
+                        if let Some(n) = count_half_open_range_integer_endpoints(&a_num, &b_num) {
                             return n.into();
                         }
                     }
