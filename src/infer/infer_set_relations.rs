@@ -23,7 +23,7 @@ impl Runtime {
             vec![],
             vec![in_fact_for_forall_then],
             subset_fact.line_file.clone(),
-        )
+        )?
         .into();
 
         let mut infer_result = InferResult::new();
@@ -66,7 +66,7 @@ impl Runtime {
             vec![],
             vec![in_fact_for_forall_then],
             superset_fact.line_file.clone(),
-        )
+        )?
         .into();
 
         let mut infer_result = InferResult::new();

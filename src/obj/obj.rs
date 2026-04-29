@@ -1145,8 +1145,7 @@ impl Obj {
             Obj::StandardSet(s) => s.into(),
             Obj::FamilyObj(f) => FamilyObj::new(
                 f.name,
-                f
-                    .params
+                f.params
                     .into_iter()
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
@@ -1186,12 +1185,14 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
         return head;
     }
     match head {
-        FnObjHead::Identifier(i) => FnObjHead::given_an_atom_return_a_fn_obj_head(replace_bound_identifier_in_name_obj(
-            Obj::Atom(AtomObj::Identifier(i.clone())),
-            from,
-            to,
-        ))
-        .expect("name replace preserves fn head shape"),
+        FnObjHead::Identifier(i) => {
+            FnObjHead::given_an_atom_return_a_fn_obj_head(replace_bound_identifier_in_name_obj(
+                Obj::Atom(AtomObj::Identifier(i.clone())),
+                from,
+                to,
+            ))
+            .expect("name replace preserves fn head shape")
+        }
         FnObjHead::IdentifierWithMod(m) => {
             FnObjHead::given_an_atom_return_a_fn_obj_head(replace_bound_identifier_in_name_obj(
                 Obj::Atom(AtomObj::IdentifierWithMod(m.clone())),

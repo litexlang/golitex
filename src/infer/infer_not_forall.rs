@@ -85,7 +85,7 @@ impl Runtime {
             ParamDefWithType::new(exist_groups),
             body_facts,
             forall.line_file.clone(),
-        ))))
+        )?)))
     }
 
     fn fact_to_exist_body_fact(

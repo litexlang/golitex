@@ -9,7 +9,7 @@ impl Runtime {
         not_exist: &ExistFactEnum,
     ) -> Result<ForallFact, RuntimeError> {
         if !not_exist.is_not_exist() {
-            return Err(RuntimeError::from(NewAtomicFactRuntimeError(
+            return Err(RuntimeError::from(NewFactRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(
                     "internal: build_not_exist_demorgan_forall_fact expects NotExistFact"
                         .to_string(),
@@ -17,7 +17,7 @@ impl Runtime {
             )));
         }
         if not_exist.params_def_with_type().number_of_params() == 0 {
-            return Err(RuntimeError::from(NewAtomicFactRuntimeError(
+            return Err(RuntimeError::from(NewFactRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "not exist: cannot derive forall (no parameters)".to_string(),
                     not_exist.line_file(),
@@ -27,7 +27,7 @@ impl Runtime {
 
         let facts = not_exist.facts();
         if facts.is_empty() {
-            return Err(RuntimeError::from(NewAtomicFactRuntimeError(
+            return Err(RuntimeError::from(NewFactRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "not exist: cannot derive forall (empty body)".to_string(),
                     not_exist.line_file(),
@@ -75,7 +75,7 @@ impl Runtime {
             vec![],
             vec![then_fact],
             lf,
-        ))
+        )?)
     }
 
     pub(crate) fn demorgan_negate_exist_body_conjunct(
@@ -88,7 +88,7 @@ impl Runtime {
             )]),
             OrAndChainAtomicFact::AndFact(af) => {
                 if af.facts.is_empty() {
-                    return Err(RuntimeError::from(NewAtomicFactRuntimeError(
+                    return Err(RuntimeError::from(NewFactRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             "not exist: empty `and` in body".to_string(),
                             lf,
@@ -106,9 +106,9 @@ impl Runtime {
             OrAndChainAtomicFact::ChainFact(cf) => {
                 let atomics = cf
                     .facts()
-                    .map_err(RuntimeError::wrap_new_atomic_fact_as_store_conflict)?;
+                    .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?;
                 if atomics.is_empty() {
-                    return Err(RuntimeError::from(NewAtomicFactRuntimeError(
+                    return Err(RuntimeError::from(NewFactRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             "not exist: empty chain in body".to_string(),
                             lf,
@@ -123,7 +123,7 @@ impl Runtime {
                 }
                 Ok(out)
             }
-            OrAndChainAtomicFact::OrFact(_) => Err(RuntimeError::from(NewAtomicFactRuntimeError(
+            OrAndChainAtomicFact::OrFact(_) => Err(RuntimeError::from(NewFactRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "not exist: automatic forall derivation does not support `or` inside a body conjunct"
                         .to_string(),
@@ -136,7 +136,7 @@ impl Runtime {
     fn demorgan_negate_atomic_or_err(a: &AtomicFact) -> Result<AtomicFact, RuntimeError> {
         match a {
             AtomicFact::FnEqualFact(_) | AtomicFact::FnEqualInFact(_) => Err(
-                RuntimeError::from(NewAtomicFactRuntimeError(
+                RuntimeError::from(NewFactRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         "not exist: automatic forall derivation does not support negating $fn_eq / $fn_eq_in here"
                             .to_string(),

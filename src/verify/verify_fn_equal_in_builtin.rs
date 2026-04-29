@@ -47,7 +47,7 @@ impl Runtime {
             vec![],
             vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],
             f.line_file.clone(),
-        );
+        )?;
         let forall_res = self.verify_forall_fact(&forall_f, verify_state)?;
         if !forall_res.is_true() {
             return Ok(forall_res);
@@ -115,7 +115,7 @@ impl Runtime {
             dom_facts,
             vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],
             f.line_file.clone(),
-        );
+        )?;
         let forall_res = self.verify_forall_fact(&forall_f, verify_state)?;
         if !forall_res.is_true() {
             return Ok(forall_res);
@@ -142,8 +142,6 @@ fn fn_set_type_of_function_value(rt: &Runtime, obj: &Obj) -> Option<FnSet> {
             (*af.body.ret_set).clone(),
         )),
         Obj::FnSet(fs) => Some(fs.clone()),
-        o => rt
-            .get_cloned_object_in_fn_set(o)
-            .map(FnSet::from_body),
+        o => rt.get_cloned_object_in_fn_set(o).map(FnSet::from_body),
     }
 }

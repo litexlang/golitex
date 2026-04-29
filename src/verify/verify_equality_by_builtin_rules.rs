@@ -692,7 +692,7 @@ impl Runtime {
             vec![dom_lo, dom_hi],
             vec![then_fact],
             line_file.clone(),
-        )
+        )?
         .into();
 
         let r = self.verify_fact(&forall_fact, verify_state)?;
@@ -1282,7 +1282,7 @@ impl Runtime {
                 vec![dom_lo, dom_hi],
                 vec![then_fact],
                 line_file.clone(),
-            )
+            )?
             .into();
             let r = self.verify_fact(&forall_fact, verify_state)?;
             if r.is_true() {

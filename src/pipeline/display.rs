@@ -494,7 +494,7 @@ fn build_display_error_json_object(
                 &e.statement,
             );
         }
-        RuntimeError::NewAtomicFactError(e) => {
+        RuntimeError::NewFactError(e) => {
             field_lines.push(format!(
                 "{}\"{}\": {}",
                 indent_inner,
@@ -665,7 +665,7 @@ fn get_previous_error_reference<'b>(error: &'b RuntimeError) -> Option<&'b Runti
             Some(previous_error) => Some(previous_error.as_ref()),
             None => None,
         },
-        RuntimeError::NewAtomicFactError(e) => match &e.previous_error {
+        RuntimeError::NewFactError(e) => match &e.previous_error {
             Some(previous_error) => Some(previous_error.as_ref()),
             None => None,
         },

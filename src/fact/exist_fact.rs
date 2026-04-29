@@ -23,12 +23,16 @@ impl ExistFactBody {
         params_def_with_type: ParamDefWithType,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: LineFile,
-    ) -> Self {
-        ExistFactBody {
+    ) -> Result<Self, RuntimeError> {
+        let body = ExistFactBody {
             params_def_with_type,
             facts,
             line_file,
-        }
+        };
+        check_exist_fact_has_no_duplicate_exist_free_parameter(&ExistFactEnum::ExistFact(
+            body.clone(),
+        ))?;
+        Ok(body)
     }
 
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {

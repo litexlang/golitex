@@ -170,7 +170,7 @@ impl Runtime {
             dom_facts,
             then_facts,
             lf,
-        );
+        )?;
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         for group in forall_fact.params_def_with_type.groups.iter() {
@@ -207,7 +207,7 @@ impl Runtime {
             exist_fact.params_def_with_type().clone(),
             exist_fact.facts().clone(),
             exist_fact.line_file(),
-        ));
+        )?);
         let wd_ok = verify_state.make_state_with_req_ok_set_to_true();
         let plain_res = self.verify_exist_fact(&plain, &wd_ok)?;
         if !plain_res.is_true() {

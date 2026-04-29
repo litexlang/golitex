@@ -121,7 +121,7 @@ impl Runtime {
                 forall_dom_facts,
                 vec![function_equals_equal_to_fact.into()],
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
-            );
+            )?;
             let forall_as_fact = self.inst_have_fn_forall_fact_for_store(forall_fact).map_err(
                 |store_inst_error| {
                     short_exec_error(

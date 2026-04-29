@@ -811,7 +811,7 @@ impl Runtime {
             params_def_with_type,
             facts,
             Self::line_file_after_inst(&exist_fact.body().line_file, inst_lf),
-        );
+        )?;
         Ok(match exist_fact {
             ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
             ExistFactEnum::ExistUniqueFact(_) => ExistFactEnum::ExistUniqueFact(body),
@@ -923,7 +923,7 @@ impl Runtime {
             dom_facts,
             then_facts,
             Self::line_file_after_inst(&forall_fact.line_file, inst_lf),
-        ))
+        )?)
     }
 
     pub fn inst_forall_fact_with_iff(
