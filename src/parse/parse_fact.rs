@@ -531,9 +531,9 @@ impl Runtime {
 
                     tb.skip_token(LEFT_CURLY_BRACE)?;
 
-                    let mut facts: Vec<OrAndChainAtomicFact> = vec![];
+                    let mut facts: Vec<ExistBodyFact> = vec![];
                     loop {
-                        facts.push(inner.parse_or_and_chain_atomic_fact(tb)?);
+                        facts.push(inner.parse_exist_body_fact(tb)?);
                         if tb.current()? != RIGHT_CURLY_BRACE {
                             tb.skip_token(COMMA)?;
                         } else {
@@ -556,6 +556,21 @@ impl Runtime {
                 fact_result
             })
         })
+    }
+
+    fn parse_exist_body_fact(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ExistBodyFact, RuntimeError> {
+        if tb.current()? == FORALL && tb.token_at_add_index(1) == "!" {
+            let fact = self.parse_inline_forall_fact(tb, true)?;
+            match fact {
+                Fact::ForallFact(forall_fact) => Ok(ExistBodyFact::InlineForall(forall_fact)),
+                _ => unreachable!("parse_inline_forall_fact only returns ForallFact"),
+            }
+        } else {
+            Ok(self.parse_or_and_chain_atomic_fact(tb)?.into())
+        }
     }
 
     pub fn parse_facts_in_body(&mut self, tb: &mut TokenBlock) -> Result<Vec<Fact>, RuntimeError> {

@@ -181,10 +181,40 @@ impl Runtime {
             }
 
             for fact in exist_fact.facts() {
-                rt.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                    fact.clone(),
-                )?;
+                match fact {
+                    ExistBodyFact::AtomicFact(f) => {
+                        let body_fact = OrAndChainAtomicFact::AtomicFact(f.clone());
+                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
+                    }
+                    ExistBodyFact::AndFact(f) => {
+                        let body_fact = OrAndChainAtomicFact::AndFact(f.clone());
+                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
+                    }
+                    ExistBodyFact::ChainFact(f) => {
+                        let body_fact = OrAndChainAtomicFact::ChainFact(f.clone());
+                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
+                    }
+                    ExistBodyFact::OrFact(f) => {
+                        let body_fact = OrAndChainAtomicFact::OrFact(f.clone());
+                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
+                    }
+                    ExistBodyFact::InlineForall(f) => {
+                        rt.verify_forall_fact_well_defined(f, verify_state)?;
+                        rt.store_forall_fact_without_well_defined_verified_and_infer(f.clone())?;
+                    }
+                }
             }
             Ok(())
         })

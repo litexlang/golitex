@@ -55,12 +55,21 @@ impl Runtime {
 
         let mut disjuncts: Vec<AndChainAtomicFact> = Vec::new();
         for conjunct in facts.iter() {
-            let forall_conjunct = self.inst_or_and_chain_atomic_fact(
+            let forall_conjunct = self.inst_exist_body_fact(
                 conjunct,
                 &param_to_forall_obj,
                 ParamObjType::Exist,
                 None,
             )?;
+            let Some(forall_conjunct) = exist_body_fact_as_or_and_chain_atomic_fact(forall_conjunct)
+            else {
+                return Err(RuntimeError::from(NewFactRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("not exist: `{}` in body cannot be negated here", FORALL_BANG),
+                        conjunct.line_file(),
+                    ),
+                )));
+            };
             let mut part = Self::demorgan_negate_exist_body_conjunct(&forall_conjunct)?;
             disjuncts.append(&mut part);
         }
@@ -146,5 +155,15 @@ impl Runtime {
             ),
             _ => Ok(a.make_reversed()),
         }
+    }
+}
+
+fn exist_body_fact_as_or_and_chain_atomic_fact(fact: ExistBodyFact) -> Option<OrAndChainAtomicFact> {
+    match fact {
+        ExistBodyFact::AtomicFact(f) => Some(OrAndChainAtomicFact::AtomicFact(f)),
+        ExistBodyFact::AndFact(f) => Some(OrAndChainAtomicFact::AndFact(f)),
+        ExistBodyFact::ChainFact(f) => Some(OrAndChainAtomicFact::ChainFact(f)),
+        ExistBodyFact::OrFact(f) => Some(OrAndChainAtomicFact::OrFact(f)),
+        ExistBodyFact::InlineForall(_) => None,
     }
 }
