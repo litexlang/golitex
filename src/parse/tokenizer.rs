@@ -114,6 +114,14 @@ mod tests {
     }
 
     #[test]
+    fn forall_bang_splits_like_exist_bang() {
+        assert_eq!(
+            tokenize_line("forall! x R: x > 0"),
+            vec!["forall", "!", "x", "R", ":", "x", ">", "0"]
+        );
+    }
+
+    #[test]
     fn exist_bang_with_whitespace() {
         assert_eq!(
             tokenize_line("exist ! a R st {}"),

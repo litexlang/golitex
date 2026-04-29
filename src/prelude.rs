@@ -271,6 +271,7 @@ pub use crate::common::keywords::ANONYMOUS_FN_PREFIX;
 pub use crate::common::keywords::FN_LOWER_CASE;
 pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;
+pub use crate::common::keywords::FORALL_BANG;
 pub use crate::common::keywords::FROM;
 pub use crate::common::keywords::GREATER;
 pub use crate::common::keywords::GREATER_EQUAL;
