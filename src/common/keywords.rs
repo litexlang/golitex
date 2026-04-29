@@ -71,7 +71,8 @@ pub const CLOSED_RANGE: &str = "closed_range";
 pub const SUM: &str = "sum";
 pub const PRODUCT: &str = "product";
 pub const EXIST: &str = "exist";
-pub const EXIST_UNIQUE: &str = "exist_unique";
+/// User-facing spelling for unique existence (`exist` + `!` as two tokens in the source).
+pub const EXIST_BANG: &str = "exist!";
 pub const ST: &str = "st";
 pub const FORALL: &str = "forall";
 pub const NOT: &str = "not";
@@ -223,7 +224,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         RANGE,
         CLOSED_RANGE,
         EXIST,
-        EXIST_UNIQUE,
         ST,
         FORALL,
         NOT,

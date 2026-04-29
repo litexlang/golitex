@@ -153,23 +153,24 @@ impl Runtime {
 
     pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFactEnum, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
-            let is_exist_unique = match tb.current()? {
-                EXIST_UNIQUE => {
-                    tb.skip_token(EXIST_UNIQUE)?;
+            let is_exist_unique = if tb.current()? == EXIST {
+                tb.skip_token(EXIST)?;
+                if tb.current()? == "!" {
+                    tb.skip_token("!")?;
                     true
-                }
-                EXIST => {
-                    tb.skip_token(EXIST)?;
+                } else {
                     false
                 }
-                _ => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                                "expected `{}` or `{}` at start of exist fact",
-                                EXIST, EXIST_UNIQUE
-                            ), tb.line_file.clone()),
-                    )));
-                }
+            } else {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "expected `{}` or `{}` at start of exist fact",
+                            EXIST, EXIST_BANG
+                        ),
+                        tb.line_file.clone(),
+                    ),
+                )));
             };
             let mut groups: Vec<ParamGroupWithParamType> = vec![];
             while tb.current()? != ST {
@@ -229,12 +230,20 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
         match tb.current()? {
-            EXIST | EXIST_UNIQUE => {
+            EXIST => {
                 let exist_fact = self.parse_exist_fact(tb)?;
                 Ok(ExistOrAndChainAtomicFact::ExistFact(exist_fact))
             }
             NOT => {
                 if tb.token_at_add_index(1) == EXIST {
+                    if tb.token_at_add_index(2) == "!" {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                format!("`{} {}` is not supported", NOT, EXIST_BANG),
+                                tb.line_file.clone(),
+                            ),
+                        )));
+                    }
                     tb.skip_token(NOT)?;
                     let exist_fact = self.parse_exist_fact(tb)?;
                     return Ok(ExistOrAndChainAtomicFact::ExistFact(match exist_fact {
@@ -243,14 +252,6 @@ impl Runtime {
                             unreachable!("`not exist` parse should only produce plain exist body")
                         }
                     }));
-                }
-                if tb.token_at_add_index(1) == EXIST_UNIQUE {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            format!("`{} {}` is not supported", NOT, EXIST_UNIQUE),
-                            tb.line_file.clone(),
-                        ),
-                    )));
                 }
                 tb.skip_token(NOT)?;
                 Ok(self.parse_atomic_fact(tb, false).map(|a| a.into())?)

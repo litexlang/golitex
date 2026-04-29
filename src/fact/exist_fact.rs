@@ -1,5 +1,5 @@
-// `exist` / `exist_unique` / `not exist`: same [`ExistFactBody`]; the outer variant selects the keyword.
-// For `exist_unique`, verification may also discharge a companion uniqueness `forall`.
+// `exist` / `exist!` / `not exist`: same [`ExistFactBody`]; the outer variant selects the keyword.
+// For `exist!`, verification may also discharge a companion uniqueness `forall`.
 
 use crate::prelude::*;
 use std::fmt;
@@ -78,14 +78,14 @@ impl ExistFactEnum {
         if self.is_not_exist() {
             format!("{} {}", NOT, EXIST)
         } else if self.is_exist_unique() {
-            EXIST_UNIQUE.to_string()
+            EXIST_BANG.to_string()
         } else {
             EXIST.to_string()
         }
     }
 
     /// Whether a stored exist fact can directly verify the `goal`.
-    /// `exist_unique` can verify `exist`, but other cross-variant matches are rejected.
+    /// `exist!` can verify `exist`, but other cross-variant matches are rejected.
     pub fn can_be_used_to_verify_goal(&self, goal: &ExistFactEnum) -> bool {
         match self {
             ExistFactEnum::ExistFact(_) => goal.is_plain_exist(),
