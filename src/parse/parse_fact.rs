@@ -253,8 +253,23 @@ impl Runtime {
                         }
                     }));
                 }
-                tb.skip_token(NOT)?;
-                Ok(self.parse_atomic_fact(tb, false).map(|a| a.into())?)
+                let first = self.parse_and_chain_atomic_fact_allow_leading_not(tb)?;
+                let mut list: Vec<AndChainAtomicFact> = vec![first];
+                while !tb.exceed_end_of_head() && tb.current()? == OR {
+                    tb.skip_token(OR)?;
+                    list.push(self.parse_and_chain_atomic_fact_allow_leading_not(tb)?);
+                }
+                if list.len() == 1 {
+                    return Ok(match list.remove(0) {
+                        AndChainAtomicFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
+                        AndChainAtomicFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
+                        AndChainAtomicFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
+                    });
+                }
+                Ok(ExistOrAndChainAtomicFact::OrFact(OrFact::new(
+                    list,
+                    tb.line_file.clone(),
+                )))
             }
             FORALL => {
                 return Err(RuntimeError::from(ParseRuntimeError(
