@@ -1,28 +1,38 @@
-abstract_prop p(a, b)
-abstract_prop q(a, b)
+prove:
+    abstract_prop p(a, b)
+    abstract_prop q(a, b)
 
-know:
+    know:
+        exist! a, b, c R st {$p(a, b), $q(b, c)}
+        forall a1, b1, c1 R, a2, b2, c2 R:
+            $p(a1, b1)
+            $q(b1, c1)
+            $p(a2, b2)
+            $q(b2, c2)
+            =>:
+                (a1, b1, c1) = (a2, b2, c2)
+
+    # exist can be proved by exist!
     exist a, b, c R st {$p(a, b), $q(b, c)}
-    forall a1, b1, c1 R, a2, b2, c2 R:
-        $p(a1, b1)
-        $q(b1, c1)
-        $p(a2, b2)
-        $q(b2, c2)
-        =>:
-            (a1, b1, c1) = (a2, b2, c2)
+    exist! a, b, c R st {$p(a, b), $q(b, c)}
 
-exist a, b, c R st {$p(a, b), $q(b, c)}
+    abstract_prop t(a)
 
-# exist_unique a, b, c R st {$p(a, b), $q(b, c)}
+    know:
+        exist a R st {$t(a)}
+        forall a1, a2 R:
+            $t(a1)
+            $t(a2)
+            =>:
+                a1 = a2
 
-abstract_prop t(a)
+prove:
+    abstract_prop p(x, y)
 
-know:
-    exist a R st {$t(a)}
-    forall a1, a2 R:
-        $t(a1)
-        $t(a2)
-        =>:
-            a1 = a2
+    know:
+        exist! a R st {$p(a, 1)}
+        not exist x R st {$p(x, 2)}
 
-# exist_unique a R st {$t(a)}
+    exist b R st {$p(b, 1)}
+    exist! c R st {$p(c, 1)}
+    not exist y R st {$p(y, 2)}
