@@ -45,14 +45,14 @@ impl Runtime {
             ));
         }
 
-        let mut body_facts: Vec<OrAndChainAtomicFact> = Vec::new();
+        let mut body_facts: Vec<ExistBodyFact> = Vec::new();
         for dom_fact in forall.dom_facts.iter() {
             let Some(dom_body_fact) =
                 self.fact_to_exist_body_fact(dom_fact, &param_to_exist_obj)?
             else {
                 return Ok(None);
             };
-            body_facts.push(dom_body_fact);
+            body_facts.push(dom_body_fact.into());
         }
 
         let mut negated_then_branches: Vec<AndChainAtomicFact> = Vec::new();
@@ -73,12 +73,13 @@ impl Runtime {
         }
 
         body_facts.push(if negated_then_branches.len() == 1 {
-            and_chain_atomic_to_or_and_chain_atomic(negated_then_branches.remove(0))
+            and_chain_atomic_to_or_and_chain_atomic(negated_then_branches.remove(0)).into()
         } else {
             OrAndChainAtomicFact::OrFact(OrFact::new(
                 negated_then_branches,
                 forall.line_file.clone(),
             ))
+            .into()
         });
 
         Ok(Some(ExistFactEnum::ExistFact(ExistFactBody::new(

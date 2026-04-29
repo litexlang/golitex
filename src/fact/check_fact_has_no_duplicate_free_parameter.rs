@@ -162,7 +162,7 @@ fn check_exist_fact_has_no_duplicate_free_parameter(
         push_exist_scope_if_needed(exist_fact, free_param_type, params_already_used)?;
 
     for fact in exist_fact.facts().iter() {
-        check_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
+        check_exist_body_fact_has_no_duplicate_free_parameter(
             fact,
             free_param_type,
             params_already_used,
@@ -173,6 +173,28 @@ fn check_exist_fact_has_no_duplicate_free_parameter(
         params_already_used.pop();
     }
     Ok(())
+}
+
+fn check_exist_body_fact_has_no_duplicate_free_parameter(
+    fact: &ExistBodyFact,
+    free_param_type: ParamObjType,
+    params_already_used: &mut Vec<Vec<String>>,
+) -> Result<(), RuntimeError> {
+    match fact {
+        ExistBodyFact::AtomicFact(_) => Ok(()),
+        ExistBodyFact::AndFact(_) => Ok(()),
+        ExistBodyFact::ChainFact(_) => Ok(()),
+        ExistBodyFact::OrFact(or_fact) => check_or_fact_has_no_duplicate_free_parameter(
+            or_fact,
+            free_param_type,
+            params_already_used,
+        ),
+        ExistBodyFact::InlineForall(forall_fact) => check_forall_fact_has_no_duplicate_free_parameter(
+            forall_fact,
+            free_param_type,
+            params_already_used,
+        ),
+    }
 }
 
 fn push_exist_scope_if_needed(
@@ -217,23 +239,6 @@ fn check_exist_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
                 params_already_used,
             )
         }
-    }
-}
-
-fn check_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
-    fact: &OrAndChainAtomicFact,
-    free_param_type: ParamObjType,
-    params_already_used: &mut Vec<Vec<String>>,
-) -> Result<(), RuntimeError> {
-    match fact {
-        OrAndChainAtomicFact::AtomicFact(_) => Ok(()),
-        OrAndChainAtomicFact::AndFact(_) => Ok(()),
-        OrAndChainAtomicFact::ChainFact(_) => Ok(()),
-        OrAndChainAtomicFact::OrFact(or_fact) => check_or_fact_has_no_duplicate_free_parameter(
-            or_fact,
-            free_param_type,
-            params_already_used,
-        ),
     }
 }
 
