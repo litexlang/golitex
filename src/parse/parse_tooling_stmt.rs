@@ -41,7 +41,11 @@ impl Runtime {
     }
 
     pub fn parse_do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(DO_NOTHING)?;
+        if tb.current()? == DOT_DOT_DOT {
+            tb.skip_token(DOT_DOT_DOT)?;
+        } else {
+            tb.skip_token(DO_NOTHING)?;
+        }
         Ok(DoNothingStmt::new(tb.line_file.clone()).into())
     }
 
