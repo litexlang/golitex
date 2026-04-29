@@ -1,0 +1,5 @@
+by cases => forall! n range(0, 2): n = 0 or n != 0:
+    case n = 0:
+        n = 0 or n != 0
+    case n != 0:
+        n = 0 or n != 0
