@@ -13,3 +13,16 @@ forall! a R: a > 0 => { a + 1 > 1, a + 2 > 2 }
 know forall! a R: { a > 0, a + 1 > 1 }
 
 forall! a R: { a > 0, a + 1 > 1 }
+
+abstract_prop p(x)
+abstract_prop q(x, y)
+
+know forall x R:
+    forall y R:
+        $p(y)
+        =>:
+            $q(x, y)
+    =>:
+        $p(x)
+
+forall! x R: forall! y R: $p(y) => {$q(x, y)} => {$p(x)}

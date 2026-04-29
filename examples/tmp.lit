@@ -1,12 +1,4 @@
 abstract_prop p(x)
 abstract_prop q(x, y)
 
-know forall x R:
-    forall y R:
-        $p(y)
-        =>:
-            $q(x, y)
-    =>:
-        $p(x)
-
-forall! x R: forall! y R: $p(y) => {$q(x, y)} => {$p(x)}
+exist a R st {forall! b R: $p(b) => {$q(a, b)}, $p(a)}
