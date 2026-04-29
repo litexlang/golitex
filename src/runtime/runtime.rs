@@ -45,7 +45,9 @@ impl Runtime {
         _current_line_file: LineFile,
     ) -> Result<(), RuntimeError> {
         if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(invalid_name_message))
+            return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                invalid_name_message,
+            ))
             .into());
         }
 
@@ -59,8 +61,13 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for name in names {
             if let Err(e) = is_valid_litex_name(name) {
-                return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(e, line_file.clone()))
-                .into());
+                return Err(
+                    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                        e,
+                        line_file.clone(),
+                    ))
+                    .into(),
+                );
             }
         }
         Ok(())
@@ -376,6 +383,7 @@ impl Runtime {
             ],
             (*ms.set).clone(),
         )
+        .expect("generated matrix fn set uses fresh parameters")
     }
 
     pub fn finite_seq_set_to_fn_set(&self, fs: &FiniteSeqSet, line_file: LineFile) -> FnSet {
@@ -393,6 +401,7 @@ impl Runtime {
             .into()],
             (*fs.set).clone(),
         )
+        .expect("generated finite sequence fn set uses a fresh parameter")
     }
 
     pub fn seq_set_to_fn_set(&self, ss: &SeqSet, _line_file: LineFile) -> FnSet {
@@ -405,6 +414,7 @@ impl Runtime {
             vec![],
             (*ss.set).clone(),
         )
+        .expect("generated sequence fn set uses a fresh parameter")
     }
 
     pub fn finite_seq_set_to_fn_set_from_surface_dom_param(
@@ -445,10 +455,15 @@ impl Runtime {
         let empty: HashMap<String, Obj> = HashMap::new();
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
-            dom_stored.push(self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::FnSet, None)?);
+            dom_stored.push(self.inst_or_and_chain_atomic_fact(
+                d,
+                &empty,
+                ParamObjType::FnSet,
+                None,
+            )?);
         }
         let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
-        Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored))
+        Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored)?)
     }
 
     pub fn new_anonymous_fn(
@@ -461,9 +476,12 @@ impl Runtime {
         let empty: HashMap<String, Obj> = HashMap::new();
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
-            dom_stored.push(
-                self.inst_or_and_chain_atomic_fact(d, &empty, ParamObjType::FnSet, None)?,
-            );
+            dom_stored.push(self.inst_or_and_chain_atomic_fact(
+                d,
+                &empty,
+                ParamObjType::FnSet,
+                None,
+            )?);
         }
         let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
         let eq_stored = self.inst_obj(&equal_to, &empty, ParamObjType::FnSet)?;
@@ -472,7 +490,7 @@ impl Runtime {
             dom_stored,
             ret_stored,
             eq_stored,
-        ))
+        )?)
     }
 
     pub fn fn_set_from_fn_set_clause(&self, clause: &FnSetClause) -> Result<FnSet, RuntimeError> {
@@ -492,12 +510,14 @@ impl Runtime {
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let param_names = param_defs.collect_param_names();
         if param_names.len() != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "params_to_arg_map: expected {} argument(s), got {}",
                     param_names.len(),
                     args.len()
                 )))
-            .into());
+                .into(),
+            );
         }
 
         let mut result: HashMap<String, Obj> = HashMap::new();

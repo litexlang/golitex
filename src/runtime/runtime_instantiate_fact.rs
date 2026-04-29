@@ -63,14 +63,14 @@ impl Runtime {
                     inst_lf,
                 )?)
             }
-            Fact::NotForall(not_forall) => Fact::NotForall(NotForallFact::new(
-                self.inst_forall_fact(
+            Fact::NotForall(not_forall) => {
+                Fact::NotForall(NotForallFact::new(self.inst_forall_fact(
                     &not_forall.forall_fact,
                     param_to_arg_map,
                     to_inst_param_type,
                     inst_lf,
-                )?,
-            )),
+                )?))
+            }
         })
     }
 
@@ -952,7 +952,7 @@ impl Runtime {
             forall_fact,
             iff_facts,
             Self::line_file_after_inst(&forall_fact_with_iff.line_file, inst_lf),
-        ))
+        )?)
     }
 
     pub fn inst_restrict_fact(

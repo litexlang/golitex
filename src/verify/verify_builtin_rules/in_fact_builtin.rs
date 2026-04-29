@@ -515,8 +515,9 @@ impl Runtime {
                     verify_state,
                     "product",
                 ),
-            (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => self
-                .verify_in_fact_add_in_n_pos_from_summands_in_n_pos(in_fact, add, verify_state),
+            (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
+                self.verify_in_fact_add_in_n_pos_from_summands_in_n_pos(in_fact, add, verify_state)
+            }
             (_, Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
             }
@@ -1465,7 +1466,7 @@ impl Runtime {
             anon.body.params_def_with_set.clone(),
             anon.body.dom_facts.clone(),
             (*anon.body.ret_set).clone(),
-        );
+        )?;
         if signature_from_anon.to_string() == expected_fn_set.to_string() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

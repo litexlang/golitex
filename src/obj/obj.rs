@@ -507,12 +507,18 @@ impl ListSet {
 }
 
 impl SetBuilder {
-    pub fn new(param: String, param_set: Obj, facts: Vec<OrAndChainAtomicFact>) -> Self {
-        SetBuilder {
-            param: param,
+    pub fn new(
+        param: String,
+        param_set: Obj,
+        facts: Vec<OrAndChainAtomicFact>,
+    ) -> Result<Self, RuntimeError> {
+        let set_builder = SetBuilder {
+            param,
             param_set: Box::new(param_set),
             facts,
-        }
+        };
+        check_set_builder_has_no_duplicate_set_builder_free_parameter(&set_builder)?;
+        Ok(set_builder)
     }
 }
 
@@ -980,7 +986,10 @@ impl Obj {
                     .into_iter()
                     .map(|f| f.replace_bound_identifier(from, to))
                     .collect();
-                Obj::SetBuilder(SetBuilder::new(param, param_set, facts))
+                Obj::SetBuilder(
+                    SetBuilder::new(param, param_set, facts)
+                        .expect("renaming a valid set builder preserves object scope validity"),
+                )
             }
             Obj::FnSet(fs) => {
                 let FnSet { body } = fs;
@@ -1006,7 +1015,9 @@ impl Obj {
                     .map(|f| f.replace_bound_identifier(from, to))
                     .collect();
                 let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
-                FnSet::new(params_def_with_set, dom_facts, ret_set).into()
+                FnSet::new(params_def_with_set, dom_facts, ret_set)
+                    .expect("renaming a valid fn set preserves object scope validity")
+                    .into()
             }
             Obj::AnonymousFn(af) => {
                 let AnonymousFn { body, equal_to } = af;
@@ -1033,7 +1044,9 @@ impl Obj {
                     .collect();
                 let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
                 let equal_to = Obj::replace_bound_identifier(*equal_to, from, to);
-                AnonymousFn::new(params_def_with_set, dom_facts, ret_set, equal_to).into()
+                AnonymousFn::new(params_def_with_set, dom_facts, ret_set, equal_to)
+                    .expect("renaming a valid anonymous fn preserves object scope validity")
+                    .into()
             }
             Obj::Cart(c) => Cart::new(
                 c.args

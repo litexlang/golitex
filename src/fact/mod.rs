@@ -1,6 +1,7 @@
 mod atomic_fact;
 mod chain_fact_order_closure;
 mod check_fact_has_no_duplicate_free_parameter;
+mod check_obj_has_no_duplicate_free_parameter;
 mod exist_fact;
 mod fact_inside_forall;
 mod forall_fact;
@@ -13,6 +14,13 @@ pub use atomic_fact::*;
 pub use check_fact_has_no_duplicate_free_parameter::{
     check_exist_fact_has_no_duplicate_exist_free_parameter,
     check_forall_fact_has_no_duplicate_forall_free_parameter,
+    check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter,
+};
+pub use check_obj_has_no_duplicate_free_parameter::{
+    check_anonymous_fn_has_no_duplicate_fn_set_free_parameter,
+    check_fn_set_has_no_duplicate_fn_set_free_parameter,
+    check_obj_has_no_duplicate_free_parameter_in_scope,
+    check_set_builder_has_no_duplicate_set_builder_free_parameter,
 };
 pub use exist_fact::{ExistFactBody, ExistFactEnum};
 pub use forall_fact::ForallFact;

@@ -542,7 +542,7 @@ impl Runtime {
                 param_obj_type,
             )?,
             facts,
-        )
+        )?
         .into())
     }
 
@@ -585,7 +585,7 @@ impl Runtime {
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
-        )
+        )?
         .into())
     }
 
@@ -631,7 +631,7 @@ impl Runtime {
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
-        )
+        )?
         .into())
     }
 
