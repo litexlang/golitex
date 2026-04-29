@@ -115,6 +115,32 @@ impl Runtime {
         })
     }
 
+    pub fn inst_exist_body_fact(
+        &self,
+        fact: &ExistBodyFact,
+        param_to_arg_map: &HashMap<String, Obj>,
+        to_inst_param_type: ParamObjType,
+        inst_lf: Option<&LineFile>,
+    ) -> Result<ExistBodyFact, RuntimeError> {
+        Ok(match fact {
+            ExistBodyFact::AtomicFact(atomic_fact) => ExistBodyFact::AtomicFact(
+                self.inst_atomic_fact(atomic_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
+            ),
+            ExistBodyFact::AndFact(and_fact) => ExistBodyFact::AndFact(
+                self.inst_and_fact(and_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
+            ),
+            ExistBodyFact::ChainFact(chain_fact) => ExistBodyFact::ChainFact(
+                self.inst_chain_fact(chain_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
+            ),
+            ExistBodyFact::OrFact(or_fact) => ExistBodyFact::OrFact(
+                self.inst_or_fact(or_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
+            ),
+            ExistBodyFact::InlineForall(forall_fact) => ExistBodyFact::InlineForall(
+                self.inst_forall_fact(forall_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
+            ),
+        })
+    }
+
     pub fn inst_or_and_chain_atomic_fact(
         &self,
         fact: &OrAndChainAtomicFact,
@@ -800,7 +826,7 @@ impl Runtime {
         let params_def_with_type = ParamDefWithType::new(groups);
         let mut facts = Vec::with_capacity(exist_fact.facts().len());
         for fact in exist_fact.facts().iter() {
-            facts.push(self.inst_or_and_chain_atomic_fact(
+            facts.push(self.inst_exist_body_fact(
                 fact,
                 param_to_arg_map,
                 to_inst_param_type,

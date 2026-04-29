@@ -124,16 +124,12 @@ impl Runtime {
         // [`ParamObjType::Exist`] substitutes them from `map_a` / `map_b` into the forall copies.
         let mut dom_facts: Vec<Fact> = Vec::new();
         for inner in exist_fact.facts().iter() {
-            let f_a =
-                self.inst_or_and_chain_atomic_fact(inner, &map_a, ParamObjType::Exist, None)?;
-            let o: OrAndChainAtomicFact = f_a;
-            dom_facts.push(o.into());
+            let f_a = self.inst_exist_body_fact(inner, &map_a, ParamObjType::Exist, None)?;
+            dom_facts.push(f_a.to_fact());
         }
         for inner in exist_fact.facts().iter() {
-            let f_b =
-                self.inst_or_and_chain_atomic_fact(inner, &map_b, ParamObjType::Exist, None)?;
-            let o: OrAndChainAtomicFact = f_b;
-            dom_facts.push(o.into());
+            let f_b = self.inst_exist_body_fact(inner, &map_b, ParamObjType::Exist, None)?;
+            dom_facts.push(f_b.to_fact());
         }
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();

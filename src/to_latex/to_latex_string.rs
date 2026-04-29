@@ -686,6 +686,18 @@ impl ExistFactEnum {
     }
 }
 
+impl ExistBodyFact {
+    pub fn to_latex_string(&self) -> String {
+        match self {
+            ExistBodyFact::AtomicFact(x) => x.to_latex_string(),
+            ExistBodyFact::AndFact(x) => x.to_latex_string(),
+            ExistBodyFact::ChainFact(x) => x.to_latex_string(),
+            ExistBodyFact::OrFact(x) => x.to_latex_string(),
+            ExistBodyFact::InlineForall(x) => x.to_latex_string(),
+        }
+    }
+}
+
 impl ExistOrAndChainAtomicFact {
     pub fn to_latex_string(&self) -> String {
         match self {

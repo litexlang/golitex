@@ -205,7 +205,7 @@ impl Runtime {
         }
         for (fact_item, other_item) in fact.facts().iter().zip(other.facts().iter()) {
             let sub_matched_args =
-                match Self::_verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
+                match Self::_verify_exist_body_facts_the_same_type_and_return_matched_args(
                     fact_item, other_item,
                 )? {
                     Some(value) => value,
@@ -217,6 +217,34 @@ impl Runtime {
         }
 
         Ok(Some(matched_args))
+    }
+
+    fn _verify_exist_body_facts_the_same_type_and_return_matched_args(
+        fact: &ExistBodyFact,
+        other: &ExistBodyFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
+        match (fact, other) {
+            (ExistBodyFact::AtomicFact(a), ExistBodyFact::AtomicFact(b)) => {
+                Self::_verify_atomic_fact_the_same_type_and_return_matched_args(a, b)
+            }
+            (ExistBodyFact::AndFact(a), ExistBodyFact::AndFact(b)) => {
+                Self::_verify_and_fact_the_same_type_and_return_matched_args(a, b)
+            }
+            (ExistBodyFact::ChainFact(a), ExistBodyFact::ChainFact(b)) => {
+                Self::_verify_chain_fact_the_same_type_and_return_matched_args(a, b)
+            }
+            (ExistBodyFact::OrFact(a), ExistBodyFact::OrFact(b)) => {
+                Self::_verify_or_fact_the_same_type_and_return_matched_args(a, b)
+            }
+            (ExistBodyFact::InlineForall(a), ExistBodyFact::InlineForall(b)) => {
+                if a.to_string() == b.to_string() {
+                    Ok(Some(vec![]))
+                } else {
+                    Ok(None)
+                }
+            }
+            _ => Ok(None),
+        }
     }
 
     pub fn _verify_atomic_fact_the_same_type_and_return_matched_args(

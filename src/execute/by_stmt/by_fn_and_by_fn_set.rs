@@ -165,7 +165,7 @@ impl Runtime {
                     exist_param_defs
                 }),
                 {
-                    let mut facts: Vec<OrAndChainAtomicFact> =
+                    let mut facts: Vec<ExistBodyFact> =
                         Vec::with_capacity(fn_body.dom_facts.len() + 1);
                     for dom_fact in fn_body.dom_facts.iter() {
                         facts.push(
@@ -185,7 +185,8 @@ impl Runtime {
                                     Some(inst_error),
                                     vec![],
                                 )
-                            })?,
+                            })?
+                            .into(),
                         );
                     }
                     facts.push(

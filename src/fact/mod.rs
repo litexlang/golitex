@@ -21,7 +21,7 @@ pub use check_obj_has_no_duplicate_free_parameter::{
     check_fn_set_has_no_duplicate_fn_set_free_parameter,
     check_set_builder_has_no_duplicate_set_builder_free_parameter,
 };
-pub use exist_fact::{ExistFactBody, ExistFactEnum};
+pub use exist_fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
 pub use forall_fact::ForallFact;
 pub use forall_fact_with_iff::ForallFactWithIff;
 pub use matchable_fact_with_atomic_fact_inside::{

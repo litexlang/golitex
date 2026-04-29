@@ -68,7 +68,7 @@ pub use crate::fact::OrFact;
 pub use crate::fact::RestrictFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
-pub use crate::fact::{ExistFactBody, ExistFactEnum};
+pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
 pub use crate::infer::InferResult;
 pub use crate::module_manager::{ModuleManager, BUILTIN_CODE_PATH};
 pub use crate::obj::obj_for_bound_param_in_scope;
