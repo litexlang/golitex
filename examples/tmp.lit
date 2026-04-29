@@ -1,13 +1,12 @@
 abstract_prop p(x)
-abstract_prop p2(x)
-abstract_prop q(x)
-abstract_prop q2(x)
+abstract_prop q(x, y)
 
-know not forall x R:
-    $p(x)
-    $p2(x)
+know forall x R:
+    forall y R:
+        $p(y)
+        =>:
+            $q(x, y)
     =>:
-        $q(x)
-        $q2(x)
+        $p(x)
 
-exist x R st {$p(x), $p2(x), not $q(x) or not $q2(x)}
+forall! x R: forall! y R: $p(y) => {$q(x, y)} => {$p(x)}

@@ -75,6 +75,8 @@ pub const EXIST: &str = "exist";
 pub const EXIST_BANG: &str = "exist!";
 pub const ST: &str = "st";
 pub const FORALL: &str = "forall";
+/// User-facing spelling for inline universal quantification (`forall` + `!` as two tokens).
+pub const FORALL_BANG: &str = "forall!";
 pub const NOT: &str = "not";
 pub const IS_SET: &str = "is_set";
 pub const IS_NONEMPTY_SET: &str = "is_nonempty_set";
