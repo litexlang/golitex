@@ -807,6 +807,7 @@ impl Runtime {
         Ok(match exist_fact {
             ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
             ExistFactEnum::ExistUniqueFact(_) => ExistFactEnum::ExistUniqueFact(body),
+            ExistFactEnum::NotExistFact(_) => ExistFactEnum::NotExistFact(body),
         })
     }
 

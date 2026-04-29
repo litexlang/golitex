@@ -1,4 +1,4 @@
-// `exist` vs `exist_unique`: same [`ExistFactBody`]; the outer [`ExistFactEnum`] variant selects the keyword.
+// `exist` / `exist_unique` / `not exist`: same [`ExistFactBody`]; the outer variant selects the keyword.
 // For `exist_unique`, verification may also discharge a companion uniqueness `forall`.
 
 use crate::prelude::*;
@@ -8,6 +8,7 @@ use std::fmt;
 pub enum ExistFactEnum {
     ExistFact(ExistFactBody),
     ExistUniqueFact(ExistFactBody),
+    NotExistFact(ExistFactBody),
 }
 
 #[derive(Clone)]
@@ -55,7 +56,9 @@ impl ExistFactBody {
 impl ExistFactEnum {
     pub fn body(&self) -> &ExistFactBody {
         match self {
-            ExistFactEnum::ExistFact(b) | ExistFactEnum::ExistUniqueFact(b) => b,
+            ExistFactEnum::ExistFact(b)
+            | ExistFactEnum::ExistUniqueFact(b)
+            | ExistFactEnum::NotExistFact(b) => b,
         }
     }
 
@@ -63,16 +66,40 @@ impl ExistFactEnum {
         matches!(self, ExistFactEnum::ExistUniqueFact(_))
     }
 
+    pub fn is_not_exist(&self) -> bool {
+        matches!(self, ExistFactEnum::NotExistFact(_))
+    }
+
+    pub fn is_plain_exist(&self) -> bool {
+        matches!(self, ExistFactEnum::ExistFact(_))
+    }
+
+    pub fn keyword_prefix(&self) -> String {
+        if self.is_not_exist() {
+            format!("{} {}", NOT, EXIST)
+        } else if self.is_exist_unique() {
+            EXIST_UNIQUE.to_string()
+        } else {
+            EXIST.to_string()
+        }
+    }
+
+    /// Whether a stored exist fact can directly verify the `goal`.
+    /// `exist_unique` can verify `exist`, but other cross-variant matches are rejected.
+    pub fn can_be_used_to_verify_goal(&self, goal: &ExistFactEnum) -> bool {
+        match self {
+            ExistFactEnum::ExistFact(_) => goal.is_plain_exist(),
+            ExistFactEnum::ExistUniqueFact(_) => goal.is_plain_exist() || goal.is_exist_unique(),
+            ExistFactEnum::NotExistFact(_) => goal.is_not_exist(),
+        }
+    }
+
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {
         self.body().exist_fact_string_without_exist_as_prefix()
     }
 
     pub fn key(&self) -> String {
-        let head = if self.is_exist_unique() {
-            EXIST_UNIQUE
-        } else {
-            EXIST
-        };
+        let head = self.keyword_prefix();
         let b = self.body();
         format!(
             "{} {}{}{}",
@@ -101,11 +128,7 @@ impl ExistFactEnum {
                 .map(|f| f.replace_bound_identifier(name, &ph))
                 .collect();
         }
-        let head = if self.is_exist_unique() {
-            EXIST_UNIQUE
-        } else {
-            EXIST
-        };
+        let head = self.keyword_prefix();
         format!(
             "{} {}{}{}",
             head,
@@ -157,11 +180,7 @@ fn exist_fact_string_without_exist_as_prefix(
 
 impl fmt::Display for ExistFactEnum {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let head = if self.is_exist_unique() {
-            EXIST_UNIQUE
-        } else {
-            EXIST
-        };
+        let head = self.keyword_prefix();
         write!(
             f,
             "{} {}",

@@ -139,7 +139,7 @@ impl Runtime {
         fact: &ExistFactEnum,
         other: &ExistFactEnum,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
-        if fact.is_exist_unique() != other.is_exist_unique() {
+        if fact.is_not_exist() != other.is_not_exist() {
             return Ok(None);
         }
         if fact.params_def_with_type().groups.len() != other.params_def_with_type().groups.len() {

@@ -32,13 +32,7 @@ impl Runtime {
         ),
         RuntimeError,
     > {
-        let key1 = given_exist_fact.alpha_normalized_key();
-        let key2 = given_exist_fact.key();
-        let lookup_keys: Vec<String> = if key1 == key2 {
-            vec![key1]
-        } else {
-            vec![key1, key2]
-        };
+        let lookup_keys = known_exist_lookup_keys_for_forall_bucket(given_exist_fact);
 
         let envs_count = self.environment_stack.len();
         for i in iterate_from_env_index..envs_count {
@@ -73,7 +67,7 @@ impl Runtime {
                         )?;
                     if let Some(arg_map) = match_result {
                         let exist_in_forall = &current_known_forall.0;
-                        if exist_in_forall.is_exist_unique() != given_exist_fact.is_exist_unique() {
+                        if !exist_in_forall.can_be_used_to_verify_goal(given_exist_fact) {
                             continue;
                         }
                         return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
@@ -129,7 +123,7 @@ impl Runtime {
         given_exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
-        if exist_fact_in_known_forall.is_exist_unique() != given_exist_fact.is_exist_unique() {
+        if !exist_fact_in_known_forall.can_be_used_to_verify_goal(given_exist_fact) {
             return Ok(None);
         }
         // exist param matches exist param
@@ -304,4 +298,16 @@ impl Runtime {
             _ => obj.to_string() == name,
         }
     }
+}
+
+fn known_exist_lookup_keys_for_forall_bucket(goal: &ExistFactEnum) -> Vec<String> {
+    let mut keys = vec![goal.alpha_normalized_key(), goal.key()];
+    if let ExistFactEnum::ExistFact(body) = goal {
+        let unique = ExistFactEnum::ExistUniqueFact(body.clone());
+        keys.push(unique.alpha_normalized_key());
+        keys.push(unique.key());
+    }
+    keys.sort();
+    keys.dedup();
+    keys
 }
