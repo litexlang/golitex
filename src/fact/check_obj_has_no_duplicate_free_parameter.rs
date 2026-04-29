@@ -33,14 +33,6 @@ pub fn check_anonymous_fn_has_no_duplicate_fn_set_free_parameter(
     )
 }
 
-pub fn check_obj_has_no_duplicate_free_parameter_in_scope(
-    obj: &Obj,
-    free_param_type: ParamObjType,
-    params_already_used: &mut Vec<Vec<String>>,
-) -> Result<(), RuntimeError> {
-    check_obj_has_no_duplicate_free_parameter(obj, free_param_type, params_already_used)
-}
-
 fn check_obj_has_no_duplicate_free_parameter(
     obj: &Obj,
     free_param_type: ParamObjType,

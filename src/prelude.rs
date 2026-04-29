@@ -23,7 +23,6 @@ pub use crate::fact::check_exist_fact_has_no_duplicate_exist_free_parameter;
 pub use crate::fact::check_fn_set_has_no_duplicate_fn_set_free_parameter;
 pub use crate::fact::check_forall_fact_has_no_duplicate_forall_free_parameter;
 pub use crate::fact::check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter;
-pub use crate::fact::check_obj_has_no_duplicate_free_parameter_in_scope;
 pub use crate::fact::check_set_builder_has_no_duplicate_set_builder_free_parameter;
 pub use crate::fact::AndChainAtomicFact;
 pub use crate::fact::AndFact;

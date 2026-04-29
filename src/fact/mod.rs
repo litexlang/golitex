@@ -19,7 +19,6 @@ pub use check_fact_has_no_duplicate_free_parameter::{
 pub use check_obj_has_no_duplicate_free_parameter::{
     check_anonymous_fn_has_no_duplicate_fn_set_free_parameter,
     check_fn_set_has_no_duplicate_fn_set_free_parameter,
-    check_obj_has_no_duplicate_free_parameter_in_scope,
     check_set_builder_has_no_duplicate_set_builder_free_parameter,
 };
 pub use exist_fact::{ExistFactBody, ExistFactEnum};
