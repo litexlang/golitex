@@ -139,11 +139,7 @@ impl Runtime {
                 for p in family.params.iter() {
                     params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
                 }
-                Ok(FamilyObj {
-                    name: family.name.clone(),
-                    params,
-                }
-                .into())
+                Ok(FamilyObj::new(family.name.clone(), params).into())
             }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {

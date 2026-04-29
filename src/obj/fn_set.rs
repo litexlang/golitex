@@ -49,6 +49,10 @@ impl FnSet {
         }
     }
 
+    pub fn from_body(body: FnSetBody) -> Self {
+        FnSet { body }
+    }
+
     pub fn get_params(&self) -> Vec<String> {
         self.body.get_params()
     }

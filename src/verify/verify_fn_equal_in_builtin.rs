@@ -144,6 +144,6 @@ fn fn_set_type_of_function_value(rt: &Runtime, obj: &Obj) -> Option<FnSet> {
         Obj::FnSet(fs) => Some(fs.clone()),
         o => rt
             .get_cloned_object_in_fn_set(o)
-            .map(|body| FnSet { body }),
+            .map(FnSet::from_body),
     }
 }

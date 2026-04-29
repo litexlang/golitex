@@ -117,6 +117,12 @@ pub struct FamilyObj {
     pub params: Vec<Obj>,
 }
 
+impl FamilyObj {
+    pub fn new(name: AtomicName, params: Vec<Obj>) -> Self {
+        FamilyObj { name, params }
+    }
+}
+
 impl fmt::Display for FamilyObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -968,17 +974,13 @@ impl Obj {
                 } else {
                     sb.param
                 };
-                let param_set = Box::new(Obj::replace_bound_identifier(*sb.param_set, from, to));
+                let param_set = Obj::replace_bound_identifier(*sb.param_set, from, to);
                 let facts = sb
                     .facts
                     .into_iter()
                     .map(|f| f.replace_bound_identifier(from, to))
                     .collect();
-                Obj::SetBuilder(SetBuilder {
-                    param,
-                    param_set,
-                    facts,
-                })
+                Obj::SetBuilder(SetBuilder::new(param, param_set, facts))
             }
             Obj::FnSet(fs) => {
                 let FnSet { body } = fs;
@@ -989,13 +991,14 @@ impl Obj {
                 } = body;
                 let params_def_with_set = params_def_with_set
                     .into_iter()
-                    .map(|pg| ParamGroupWithSet {
-                        params: pg
-                            .params
-                            .into_iter()
-                            .map(|p| if p == from { to.to_string() } else { p })
-                            .collect(),
-                        set: Obj::replace_bound_identifier(pg.set, from, to),
+                    .map(|pg| {
+                        ParamGroupWithSet::new(
+                            pg.params
+                                .into_iter()
+                                .map(|p| if p == from { to.to_string() } else { p })
+                                .collect(),
+                            Obj::replace_bound_identifier(pg.set, from, to),
+                        )
                     })
                     .collect();
                 let dom_facts = dom_facts
@@ -1014,13 +1017,14 @@ impl Obj {
                 } = body;
                 let params_def_with_set = params_def_with_set
                     .into_iter()
-                    .map(|pg| ParamGroupWithSet {
-                        params: pg
-                            .params
-                            .into_iter()
-                            .map(|p| if p == from { to.to_string() } else { p })
-                            .collect(),
-                        set: Obj::replace_bound_identifier(pg.set, from, to),
+                    .map(|pg| {
+                        ParamGroupWithSet::new(
+                            pg.params
+                                .into_iter()
+                                .map(|p| if p == from { to.to_string() } else { p })
+                                .collect(),
+                            Obj::replace_bound_identifier(pg.set, from, to),
+                        )
                     })
                     .collect();
                 let dom_facts = dom_facts
@@ -1139,14 +1143,14 @@ impl Obj {
             )
             .into(),
             Obj::StandardSet(s) => s.into(),
-            Obj::FamilyObj(f) => FamilyObj {
-                name: f.name,
-                params: f
+            Obj::FamilyObj(f) => FamilyObj::new(
+                f.name,
+                f
                     .params
                     .into_iter()
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
-            }
+            )
             .into(),
         }
     }
