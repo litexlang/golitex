@@ -49,7 +49,7 @@ prove:
 
 **Meaning.** “There exist values for the parameters such that every fact in the brace holds (∃).”
 
-**Note.** `exist_unique` uses the **same** header and brace shape; the difference is uniqueness (see **Existential with uniqueness**): proving or storing `exist_unique` also involves the matching **`forall`** uniqueness fact.
+**Note.** `exist!` uses the **same** header and brace shape; the difference is uniqueness (see **Existential with uniqueness**): proving or storing `exist!` also involves the matching **`forall`** uniqueness fact.
 
 **Syntax.** `exist` *parameter groups (names and types / sets)* `st` `{` *facts separated by commas* `}`.
 
@@ -65,11 +65,11 @@ exist x R st {x > 0, x < 1}
 
 ---
 
-### Existential with uniqueness (`exist_unique`)
+### Existential with uniqueness (`exist!`)
 
-**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist_unique` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when an `exist_unique` is recorded in the environment, the runtime **also stores** that generated uniqueness **`forall`**.
+**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist!` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when `exist!` is recorded in the environment, the runtime **also stores** that generated uniqueness **`forall`**.
 
-**Syntax.** `exist_unique` *parameter groups* `st` `{` *facts separated by commas* `}` — same header shape as `exist`, with `exist_unique` instead of `exist`.
+**Syntax.** `exist!` *parameter groups* `st` `{` *facts separated by commas* `}` — the lexer splits this as the keyword `exist` followed by `!` (whitespace optional).
 
 **Example.**
 
@@ -87,7 +87,7 @@ know:
         =>:
             (a1, b1, c1) = (a2, b2, c2)
 
-exist_unique a, b, c R st {$p(a, b), $q(b, c)}
+exist! a, b, c R st {$p(a, b), $q(b, c)}
 
 abstract_prop t(a)
 
@@ -99,7 +99,7 @@ know:
         =>:
             a1 = a2
 
-exist_unique a R st {$t(a)}
+exist! a R st {$t(a)}
 ```
 
 ---
@@ -1073,7 +1073,7 @@ prove:
 | `claim` | Theorem + proof |
 | `prove` | Nested proof block |
 | `witness` | Witness for `exist` or nonempty set |
-| `exist` / `exist_unique` | Existential facts (latter needs uniqueness in context; see **Existential with uniqueness**) |
+| `exist` / `exist!` | Existential facts (latter needs uniqueness in context; see **Existential with uniqueness**) |
 | `by` | Proof tactic (`cases`, `contra`, `enumerate finite_set`, `enumerate` *range* `:`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `finite_seq`, `seq`, `matrix`, `struct`, `tuple`) |
 | `eval` | Run algorithm |
 | `import` | Import module/file |

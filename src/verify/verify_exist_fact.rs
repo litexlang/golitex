@@ -231,7 +231,7 @@ impl Runtime {
         let out = FactualStmtSuccess::new_with_verified_by_known_fact_source(
             exist_fact.clone().into(),
             infers,
-            "exist_unique: witness exist and uniqueness forall verified".to_string(),
+            "exist!: witness exist and uniqueness forall verified".to_string(),
             Some(uniqueness_fact),
             None,
             vec![],

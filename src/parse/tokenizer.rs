@@ -100,3 +100,24 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
     }
     tokens
 }
+
+#[cfg(test)]
+mod tests {
+    use super::tokenize_line;
+
+    #[test]
+    fn exist_bang_splits_into_exist_and_bang() {
+        assert_eq!(
+            tokenize_line("exist! a R st {}"),
+            vec!["exist", "!", "a", "R", "st", "{", "}"]
+        );
+    }
+
+    #[test]
+    fn exist_bang_with_whitespace() {
+        assert_eq!(
+            tokenize_line("exist ! a R st {}"),
+            vec!["exist", "!", "a", "R", "st", "{", "}"]
+        );
+    }
+}
