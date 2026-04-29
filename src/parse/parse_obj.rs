@@ -451,11 +451,11 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            let clause_ok = FnSetClause {
+            let clause_ok = FnSetClause::new(
                 params_def_with_set,
                 dom_facts,
-                ret_set: ret_set_parsed,
-            };
+                ret_set_parsed,
+            );
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::FnSet, &all_fn_names);
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
@@ -1203,7 +1203,7 @@ impl Runtime {
         tb.skip_token(FAMILY_OBJ_PREFIX)?;
         let name = self.parse_atomic_name(tb)?;
         let params = self.parse_braced_objs(tb)?;
-        Ok(FamilyObj { name, params })
+        Ok(FamilyObj::new(name, params))
     }
 
     /// `ident` or `mod::ident` as a predicate/atomic name in parse position.

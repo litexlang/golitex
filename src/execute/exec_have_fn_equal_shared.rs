@@ -2,11 +2,11 @@ use crate::prelude::*;
 
 /// Turn a [`FnSet`] (parser-level function-space type) into a [`FnSetClause`]-shaped bundle.
 pub(crate) fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
-    FnSetClause {
-        params_def_with_set: fs.body.params_def_with_set.clone(),
-        dom_facts: fs.body.dom_facts.clone(),
-        ret_set: (*fs.body.ret_set).clone(),
-    }
+    FnSetClause::new(
+        fs.body.params_def_with_set.clone(),
+        fs.body.dom_facts.clone(),
+        (*fs.body.ret_set).clone(),
+    )
 }
 
 /// Forall parameters, `dom` [`Fact`]s, and curried `(...)(...)` argument layers (one vec per paren

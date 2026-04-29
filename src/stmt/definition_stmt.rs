@@ -65,6 +65,18 @@ pub struct FnSetClause {
 }
 
 impl FnSetClause {
+    pub fn new(
+        params_def_with_set: Vec<ParamGroupWithSet>,
+        dom_facts: Vec<OrAndChainAtomicFact>,
+        ret_set: Obj,
+    ) -> Self {
+        FnSetClause {
+            params_def_with_set,
+            dom_facts,
+            ret_set,
+        }
+    }
+
     /// Outer `{...}` binders first, then each nested function return `fn` layer, in order.
     /// Used when parsing `have fn ... = rhs` so RHS identifiers match nested return fn-set params.
     pub fn collect_all_param_names_including_nested_ret_fn_sets(&self) -> Vec<String> {
@@ -402,12 +414,12 @@ fn merge_two_and_chain_clauses(
 impl HaveFnByInducStmt {
     /// Source-shaped `fn` block (param names + dom + ret); build stored [`FnSet`] via [`Runtime::fn_set_from_fn_set_clause`].
     pub fn fn_user_fn_set_clause(&self) -> FnSetClause {
-        FnSetClause {
-            params_def_with_set: vec![ParamGroupWithSet::new(
+        FnSetClause::new(
+            vec![ParamGroupWithSet::new(
                 vec![self.param.clone()],
                 StandardSet::Z.into(),
             )],
-            dom_facts: vec![OrAndChainAtomicFact::AtomicFact(
+            vec![OrAndChainAtomicFact::AtomicFact(
                 GreaterEqualFact::new(
                     obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::FnSet),
                     self.induc_from.clone(),
@@ -415,8 +427,8 @@ impl HaveFnByInducStmt {
                 )
                 .into(),
             )],
-            ret_set: self.ret_set.clone(),
-        }
+            self.ret_set.clone(),
+        )
     }
 
     /// `forall x Z: ...` 里与 `fn` 定义域一致的那一段：标识符用源码 [`Self::param`]，与 [`Self::fn_user_fn_set_clause`] 的 dom 语义相同。

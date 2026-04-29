@@ -320,11 +320,7 @@ impl Runtime {
             },
             Obj::FamilyObj(f) => {
                 let params: Vec<Obj> = f.params.iter().map(|p| self.resolve_obj(p)).collect();
-                FamilyObj {
-                    name: f.name.clone(),
-                    params,
-                }
-                .into()
+                FamilyObj::new(f.name.clone(), params).into()
             }
             _ => obj.clone(),
         }
