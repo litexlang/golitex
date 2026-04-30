@@ -7,25 +7,6 @@ know:
             a ^ 2 + b ^ 2 = 0
 
 
-    forall a R:
-        a >= 0
-        =>:
-            abs(a) = a
-    
-    forall a R:
-        a <= 0
-        =>:
-            abs(a) = -a
-
-    forall a R:
-        abs(a) >= 0
-        abs(a) = a or abs(a) = -a
-
-    forall a R:
-        abs(a) = 0
-        =>:
-            a = 0
-
     forall a, b R:
         a <= max(a, b)
         b <= max(a, b)
@@ -72,13 +53,6 @@ know:
 
     forall n Z, m N_pos, k N_pos:
         n^m % k = ((n % k)^m) % k
-
-    forall x R:
-        0 <= abs(x)
-        abs(x) = x or abs(x) = -x
-
-    forall x, y R:
-        abs(x * y) = abs(x) * abs(y)
 
     forall a, b N:
         a <= b

@@ -1,0 +1,21 @@
+forall a R:
+    a >= 0
+    =>:
+        abs(a) = a
+
+forall a R:
+    a <= 0
+    =>:
+        abs(a) = -a
+
+forall a R:
+    0 <= abs(a)
+    abs(a) = a or abs(a) = -a
+
+forall a R:
+    abs(a) = 0
+    =>:
+        a = 0
+
+forall x, y R:
+    abs(x * y) = abs(x) * abs(y)
