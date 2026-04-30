@@ -83,9 +83,13 @@ know:
         (a % m) < m
 
     forall a Z, m N_pos, k N:
+        a % m = k
+        =>:
+            exist r Z st {a = m * r + k}
+
+    forall a Z, m N_pos, k N:
+        k < m
+        exist r Z st {a = m * r + k}
         =>:
             a % m = k
-            k < m
-        <=>:
-            exist r Z st {a = m * r + k}
 "#;

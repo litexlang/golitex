@@ -125,7 +125,7 @@ mod lit_file_runner_tests {
 
     #[test]
     fn run_file_from_path() {
-        let path: String = "../The-Mechanics-of-Litex-Proof/chapter_6_Induction.lit".to_string();
+        let path: String = "./examples/chapter_6_induction.lit".to_string();
         let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
         assert!(
             file_path.is_absolute(),
