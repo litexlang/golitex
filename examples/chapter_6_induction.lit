@@ -255,6 +255,7 @@ claim:
 Problem: Show that for all sufficiently large natural numbers n, 2^n >= n^2.
 (The text proves this for all n >= 4.)
 """
+"""
 know:
     forall a Z:
         a >= 3
@@ -294,13 +295,16 @@ claim:
                     (m-1)^2 - 2 > 0
                     2*(m^2)=2*(m^2)-(m+1)^2+(m+1)^2>=0+(m+1)^2=(m+1)^2
                     2*(m^2) >= (m+1)^2
-                    2^(m + 1) >= (m + 1)^2
+                    2^(m + 1) >= 2 * (m^2) >= (m + 1)^2
 
         witness exist N0 Z st { $Eventually_ge_sq(N0) } from 4:
             forall a Z:
                 a >= 4
                 =>:
                     2^a >= a^2
+            $Eventually_ge_sq(4)
+        exist N0 Z st { $Eventually_ge_sq(N0) }
+"""
 # ---------------------------------------------------------------------------
 # 6.2 递推关系：数列在 `claim` 的 `forall … fn …` 中刻画递推与初值（与 6.2.1–6.2.3 同型）。
 # 具名 `have fn factorial` 放在 6.2.6 之后，供 6.2.7 起及后文引用同一递推实例。
@@ -348,7 +352,6 @@ claim:
 Define a sequence (x_n) recursively by x_0 = 5 and x_{n+1} = 2 x_n - 1 for all natural numbers n.
 (Example 6.2.2) Show that for all natural numbers n, x_n is congruent to 1 modulo 4.
 """
-"""
 claim:
     prove:
         forall b fn(x Z: x >= 0) Z, n Z:
@@ -372,12 +375,11 @@ claim:
             $mod_eq(b(m), 1, 4)
             =>:
                 (b(m)-1)%4=0
+                b(m + 1) = 2 * b(m) - 1
                 (b(m + 1) - 1 )%4= (2 * b(m) - 1 - 1 )%4=(2*b(m)-2)%4= (2 * (b(m) - 1 ))%4= ((2 %4)* (b(m) - 1 )%4)%4= (2* 0)%4= 0%4=0 
                 $mod_eq(b(m + 1), 1, 4)
 """
-"""
 (Example 6.2.3) Show that for all natural numbers n, x_n = 2^(n+2) + 1.
-"""
 """
 claim:
     prove:
@@ -400,10 +402,9 @@ claim:
             b(m) = 2^(m + 2) + 1
             =>:
                 b(m + 1) = 2 * b(m) - 1
-                2 * b(m) - 1 = 2 * (2^(m + 2) + 1) - 1 = 2^(m + 3) + 1
+                2 * b(m) - 1 = 2 * (2^(m + 2) + 1) - 1 = 2 * 2^(m + 2) + 2 * 1 - 1 = 2 * 2^(m + 2) + 1 = 2^1 * 2^(m + 2) + 1 = 2^(1 + (m + 2)) + 1 = 2^(m + 3) + 1
                 2^(m + 3) + 1 = 2^((m + 1) + 2) + 1
                 b(m + 1) = 2^((m + 1) + 2) + 1
-"""
 # --- 6.2.4：三角数和 ---
 
 """
@@ -411,15 +412,17 @@ Define a sequence (A_n) recursively by A_0 = 0 and A_{n+1} = A_n + (n + 1) for a
 (Thus A_n is the sum 1 + 2 + ... + n.)
 Show that for all natural numbers n, A_n = n (n + 1) / 2.
 """
-"""
 claim:
     prove:
-        forall a fn(x N) Q, n N:
-            forall y N:
-                a(y + 1) = a(y) + (y + 1)
-                a(0) = 0
+        forall a fn(x Z: x >= 0) Q, n Z:
+            forall y Z:
+                y >= 0
                 =>:
-                    a(n) = n * (n + 1) / 2
+                    a(y + 1) = a(y) + (y + 1)
+            a(0) = 0
+            n >= 0
+            =>:
+                a(n) = n * (n + 1) / 2
     by induc n from 0:
         prove:
             a(n) = n * (n + 1) / 2
@@ -432,108 +435,105 @@ claim:
                 a(m + 1) = a(m) + (m + 1)
                 a(m) + (m + 1) = m * (m + 1) / 2 + (m + 1)
                 m * (m + 1) / 2 + (m + 1) = (m + 1) * (m/2+1)= (m + 1) * ((m + 2) / 2)
+                (m + 1) * ((m + 2) / 2) = (m + 1) * (((m + 1) + 1) / 2)
                 a(m + 1) = (m + 1) * ((m + 1) + 1) / 2
-"""
 # --- 6.2.5–6.2.6：阶乘与整除 ---
 
 """
 Define a function f on natural numbers by f(0) = 1 and f(n+1) = (n+1) * f(n) for all n (the usual factorial).
 (Example 6.2.5) Let n be a natural number. Show that every natural number d with 1 <= d <= n is a factor of f(n).
 """
-"""
-claim:
-    prove:
-        forall f fn(n N) N, n N, d N:
-            f(0) = 1
-            forall k N:
-                f(k + 1) = (k + 1) * f(k)
-            1 <= d
-            d <= n
-            =>:
-                $dvdN(d, f(n))
-    by induc n from 1:
-        prove:
-            forall d N:
-                1 <= d
-                d <= n
-                =>:
-                    $dvdN(d, f(n))
-        claim:
-            prove:
-                forall d N:
-                    1 <= d
-                    d <= 1
-                    =>:
-                        $dvdN(d, f(1))=0
-            f(1)=1*f(0)=1
-            by enumerate 1...1:d
-                1%d=0
-                f(1)%d=0
-                $dvdN(d, f(1))
-        claim:
-            prove:          
-                forall m N, d N:
-                    m >= 1
-                    1 <= d
-                    d <= m
-                    $dvdN(d, f(m))
-                    =>:
-                        forall d N:
-                            1 <= d
-                            d <= m+1
-                            =>:
-                                $dvdN(d, f(m + 1))
-            1<=d<=m or d = m + 1
-            by cases:
-                prove:
-                    $dvdN(d, f(m + 1))
-                case 1<=d <= m:
-                    $dvdN(d, f(m))
-                    f(m)%d=0
-                    f(m + 1)%d = ((m + 1) * f(m))%d = (((m + 1)%d )*(f(m)%d ))%d = (((m+1)%d)*0)%d = 0%d = 0
-                    $dvdN(d, f(m + 1))
-                case d = m + 1:
-                    f(m + 1) %d= ((m + 1) * f(m))%d=(((m+1)%d)*(f(m)%d))%d=((d%d)*(f(m)%d))%d=0%d=0
-                    $dvdN(d, f(m + 1))
-"""
+# claim:
+#     prove:
+#         forall f fn(n N) N, n N, d N:
+#             f(0) = 1
+#             forall k N:
+#                 f(k + 1) = (k + 1) * f(k)
+#             1 <= d
+#             d <= n
+#             =>:
+#                 $dvdN(d, f(n))
+#     by induc n from 1:
+#         prove:
+#             forall d N:
+#                 1 <= d
+#                 d <= n
+#                 =>:
+#                     $dvdN(d, f(n))
+#         claim:
+#             prove:
+#                 forall d N:
+#                     1 <= d
+#                     d <= 1
+#                     =>:
+#                         $dvdN(d, f(1))=0
+#             f(1)=1*f(0)=1
+#             by enumerate 1...1:d
+#                 1%d=0
+#                 f(1)%d=0
+#                 $dvdN(d, f(1))
+#         claim:
+#             prove:
+#                 forall m N, d N:
+#                     m >= 1
+#                     1 <= d
+#                     d <= m
+#                     $dvdN(d, f(m))
+#                     =>:
+#                         forall d N:
+#                             1 <= d
+#                             d <= m+1
+#                             =>:
+#                                 $dvdN(d, f(m + 1))
+#             1<=d<=m or d = m + 1
+#             by cases:
+#                 prove:
+#                     $dvdN(d, f(m + 1))
+#                 case 1<=d <= m:
+#                     $dvdN(d, f(m))
+#                     f(m)%d=0
+#                     f(m + 1)%d = ((m + 1) * f(m))%d = (((m + 1)%d )*(f(m)%d ))%d = (((m+1)%d)*0)%d = 0%d = 0
+#                     $dvdN(d, f(m + 1))
+#                 case d = m + 1:
+#                     f(m + 1) %d= ((m + 1) * f(m))%d=(((m+1)%d)*(f(m)%d))%d=((d%d)*(f(m)%d))%d=0%d=0
+#                     $dvdN(d, f(m + 1))
 """
 (Example 6.2.6) Show that for all natural numbers n, we have f(n+1) >= 2^n, for f as above.
 """
-"""
 claim:
     prove:
-        forall f fn(n N) N, n N:
+        forall f fn(k Z) N, n Z:
             f(0) = 1
-            forall k N:
-                f(k + 1) = (k + 1) * f(k)
+            forall k Z:
+                k >= 0
+                =>:
+                    f(k + 1) = (k + 1) * f(k)
+            n >= 0
             =>:
                 f(n + 1) >= 2^n
-    by induc n from 0:
+    by induc k from 0:
         prove:
-            forall f fn(n N) N:
-                f(0) = 1
-                forall k N:
-                    f(k + 1) = (k + 1) * f(k)
-                =>:
-                    f(n + 1) >= 2^n
+            f(k + 1) >= 2^k
        
            
-            f(0 + 1)=f(1) = 1 * f(0)
-            1 * f(0) = 1*1=1 >= 1=2^0
-            f(0+1)>=2^0
+        f(0 + 1) = (0 + 1) * f(0) = 1 * f(0)
+        f(1) = f(0 + 1) = 1 * f(0)
+        1 * f(0) = 1*1=1 >= 1=2^0
+        f(0+1)>=2^0
 
         
-        forall m N:
-            m >= 0
-            f(m+1) >= 2^m
+        forall k Z:
+            k >= 0
+            f(k+1) >= 2^k
             =>:
-                m+2>=0+2=2
-                f((m + 1) + 1) =f(m + 2) = (m + 2) * f(m + 1)
-                (m + 2) * f(m + 1) >= 2 * f(m + 1)
-                2 * f(m + 1) >= 2 * 2^m
-                2 * 2^m = 2^(m + 1)
-                f((m +1)+1 ) >= 2^(m + 1)
-"""
+                k + 1 >= 0
+                k+2>=0+2=2
+                f((k + 1) + 1) = ((k + 1) + 1) * f(k + 1) = (k + 2) * f(k + 1)
+                (k + 2) * f(k + 1) >= 2 * f(k + 1)
+                2 * f(k + 1) >= 2 * 2^k
+                2 * 2^k = 2^1 * 2^k = 2^(1 + k) = 2^(k + 1)
+                f((k + 1) + 1) = (k + 2) * f(k + 1) >= 2 * f(k + 1) >= 2 * 2^k = 2^(k + 1)
+                f(k + 1 + 1) >= 2^(k + 1)
                 
 
 
@@ -551,144 +551,148 @@ Section 6.3: sequences defined from two previous terms. Each exercise states a f
 Prove that for all natural numbers n, a_n = 2^n + (-1)^n.
 """
 """
-claim:
-    prove:
-        forall a fn(x N) Z, n N:
-            forall y N:
-                a(y + 2) = a(y + 1) + 2 * a(y)
-            a(0) = 2
-            a(1) = 1
-            =>
-                a(n) = 2^n + (-1)^n
-    by induc n from 0:
-        prove:
-            a(n) = 2^n + (-1)^n
-            a(n+1) = 2^(n+1) + (-1)^(n+1)
-    a(0) = 2=1+1=2^0 + (-1)^0
-    a(1) =1=2-1= 2^1 + (-1)^1
-    forall k Z:
-        k >= 0
-        a(k) = 2^k + (-1)^k
-        a(k + 1) = 2^(k + 1) + (-1)^(k + 1)
-        =>:
-            a(k + 1) = 2^(k + 1) + (-1)^(k + 1)
-            a(k + 2) = a(k + 1) + 2 * a(k)=2^(k + 1) + (-1)^(k + 1) + 2 * (2^k + (-1)^k)
-            2^(k + 1) + (-1)^(k + 1) + 2 * (2^k + (-1)^k)=2^(k + 1) + (-1)^(k + 1) + 2 * 2^k + 2 * (-1)^k
-            2^(k + 1) + (-1)^(k + 1) + 2 * 2^k + 2 * (-1)^k=2^(k + 1) + 2^(k + 1) + (-1)^(k + 1) + 2 * (-1)^k=2^(k + 2) + (-1)^k*((-1)+2)
-            2^(k + 2) + (-1)^k*((-1)+2)=2^(k + 2) + (-1)^k*1=2^(k + 2) + (-1)^k*(-1)^2=2^(k + 2) + (-1)^(k + 2)
-            a(k + 2) = 2^(k + 2) + (-1)^(k + 2)
+# claim:
+#     prove:
+#         forall a fn(x N) Z, n N:
+#             forall y N:
+#                 a(y + 2) = a(y + 1) + 2 * a(y)
+#             a(0) = 2
+#             a(1) = 1
+#             =>
+#                 a(n) = 2^n + (-1)^n
+#     by induc n from 0:
+#         prove:
+#             a(n) = 2^n + (-1)^n
+#             a(n+1) = 2^(n+1) + (-1)^(n+1)
+#     a(0) = 2=1+1=2^0 + (-1)^0
+#     a(1) =1=2-1= 2^1 + (-1)^1
+#     forall k Z:
+#         k >= 0
+#         a(k) = 2^k + (-1)^k
+#         a(k + 1) = 2^(k + 1) + (-1)^(k + 1)
+#         =>:
+#             a(k + 1) = 2^(k + 1) + (-1)^(k + 1)
+#             a(k + 2) = a(k + 1) + 2 * a(k)=2^(k + 1) + (-1)^(k + 1) + 2 * (2^k + (-1)^k)
+#             2^(k + 1) + (-1)^(k + 1) + 2 * (2^k + (-1)^k)=2^(k + 1) + (-1)^(k + 1) + 2 * 2^k + 2 * (-1)^k
+#             2^(k + 1) + (-1)^(k + 1) + 2 * 2^k + 2 * (-1)^k=2^(k + 1) + 2^(k + 1) + (-1)^(k + 1) + 2 * (-1)^k=2^(k + 2) + (-1)^k*((-1)+2)
+#             2^(k + 2) + (-1)^k*((-1)+2)=2^(k + 2) + (-1)^k*1=2^(k + 2) + (-1)^k*(-1)^2=2^(k + 2) + (-1)^(k + 2)
+#             a(k + 2) = 2^(k + 2) + (-1)^(k + 2)
 """
 """
 (Example 6.3.2) Prove that for all natural numbers m >= 1, a_m is congruent to either 1 or 5 modulo 6, where (a_n) is the sequence from Example 6.3.1.
 """
 
 """
-claim:
-    prove:
-        forall a fn(x N) Z, m N:
-            forall y N:
-                a(y + 2) = a(y + 1) + 2 * a(y)
-            a(0) = 2
-            a(1) = 1
-            m >= 1
-            =>:
-                $mod_eq(a(m), 1, 6) or $mod_eq(a(m), 5, 6)
-    by induc m from 1:
-        prove:
-            $mod_eq(a(m), 1, 6) and $mod_eq(a(m+1), 5, 6)  or  $mod_eq(a(m), 5, 6) and $mod_eq(a(m+1), 1, 6)
-    a(2)=a(1)+2*a(0)=1+2*2=5
-    a(1)%6=1%6=1
-    a(2)%6=5%6=5
-    $mod_eq(a(1), 1, 6) and $mod_eq(a(2), 5, 6)  or  $mod_eq(a(1), 5, 6) and $mod_eq(a(2), 1, 6)
-    claim:
-        prove:
-            forall k Z:
-                k >= 1
-                $mod_eq(a(k), 1, 6) and $mod_eq(a(k+1), 5, 6)  or  $mod_eq(a(k), 5, 6) and $mod_eq(a(k+1), 1, 6)
-                =>:
-                    $mod_eq(a(k + 2), 1, 6) and $mod_eq(a(k + 3), 5, 6)  or  $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
-        by cases:
-            prove:
-                $mod_eq(a(k + 2), 1, 6) and $mod_eq(a(k + 3), 5, 6)  or  $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
-            case $mod_eq(a(k), 1, 6) and $mod_eq(a(k+1), 5, 6):
-                a(k + 2)%6= (a(k + 1) + 2 * a(k))%6=(a(k + 1)%6 + (2 * a(k))%6)%6=((5 + ((2 %6)* a(k)%6))%6)%6==(5+2*1)%6=(5 + 2)%6=7%6=1
-                a(k + 3)%6= (a(k + 2) + 2 * a(k + 1))%6=(a(k + 2)%6 + (2 * a(k + 1))%6)%6=((1 + ((2 %6)* (a(k + 1)%6)))%6)%6==(1+2*5)%6=(1 + 10)%6=11%6=5
-                $mod_eq(a(k + 2), 1, 6) and $mod_eq(a(k + 3), 5, 6)
-                $mod_eq(a(k + 2), 1, 6) and $mod_eq(a(k + 3), 5, 6)  or  $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
-            case $mod_eq(a(k), 5, 6) and $mod_eq(a(k+1), 1, 6):
-                a(k + 2)%6= (a(k + 1) + 2 * a(k))%6=(a(k + 1)%6 + (2 * a(k))%6)%6=((1 + ((2 %6)* a(k)%6))%6)%6==(1+2*5)%6=(1 + 10)%6=11%6=5
-                a(k + 3)%6= (a(k + 2) + 2 * a(k + 1))%6=(a(k + 2)%6 + (2 * a(k + 1))%6)%6=((5 + ((2 %6)* (a(k + 1)%6)))%6)%6==(5+2*1)%6=(5 + 2)%6=7%6=1
-                $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
-                $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)  or  $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
+# claim:
+#     prove:
+#         forall a fn(x N) Z, m N:
+#             forall y N:
+#                 a(y + 2) = a(y + 1) + 2 * a(y)
+#             a(0) = 2
+#             a(1) = 1
+#             m >= 1
+#             =>:
+#                 $mod_eq(a(m), 1, 6) or $mod_eq(a(m), 5, 6)
+#     by induc m from 1:
+#         prove:
+#             $mod_eq(a(m), 1, 6) and $mod_eq(a(m+1), 5, 6)  or  $mod_eq(a(m), 5, 6) and $mod_eq(a(m+1), 1, 6)
+#     a(2)=a(1)+2*a(0)=1+2*2=5
+#     a(1)%6=1%6=1
+#     a(2)%6=5%6=5
+#     $mod_eq(a(1), 1, 6) and $mod_eq(a(2), 5, 6)  or  $mod_eq(a(1), 5, 6) and $mod_eq(a(2), 1, 6)
+#     claim:
+#         prove:
+#             forall k Z:
+#                 k >= 1
+#                 $mod_eq(a(k), 1, 6) and $mod_eq(a(k+1), 5, 6)  or  $mod_eq(a(k), 5, 6) and $mod_eq(a(k+1), 1, 6)
+#                 =>:
+#                     $mod_eq(a(k + 2), 1, 6) and $mod_eq(a(k + 3), 5, 6)  or  $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
+#         by cases:
+#             prove:
+#                 $mod_eq(a(k + 2), 1, 6) and $mod_eq(a(k + 3), 5, 6)  or  $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
+#             case $mod_eq(a(k), 1, 6) and $mod_eq(a(k+1), 5, 6):
+#                 a(k + 2)%6= (a(k + 1) + 2 * a(k))%6=(a(k + 1)%6 + (2 * a(k))%6)%6=((5 + ((2 %6)* a(k)%6))%6)%6==(5+2*1)%6=(5 + 2)%6=7%6=1
+#                 a(k + 3)%6= (a(k + 2) + 2 * a(k + 1))%6=(a(k + 2)%6 + (2 * a(k + 1))%6)%6=((1 + ((2 %6)* (a(k + 1)%6)))%6)%6==(1+2*5)%6=(1 + 10)%6=11%6=5
+#                 $mod_eq(a(k + 2), 1, 6) and $mod_eq(a(k + 3), 5, 6)
+#                 $mod_eq(a(k + 2), 1, 6) and $mod_eq(a(k + 3), 5, 6)  or  $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
+#             case $mod_eq(a(k), 5, 6) and $mod_eq(a(k+1), 1, 6):
+#                 a(k + 2)%6= (a(k + 1) + 2 * a(k))%6=(a(k + 1)%6 + (2 * a(k))%6)%6=((1 + ((2 %6)* a(k)%6))%6)%6==(1+2*5)%6=(1 + 10)%6=11%6=5
+#                 a(k + 3)%6= (a(k + 2) + 2 * a(k + 1))%6=(a(k + 2)%6 + (2 * a(k + 1))%6)%6=((5 + ((2 %6)* (a(k + 1)%6)))%6)%6==(5+2*1)%6=(5 + 2)%6=7%6=1
+#                 $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
+#                 $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)  or  $mod_eq(a(k + 2), 5, 6) and $mod_eq(a(k + 3), 1, 6)
                    
 """
 """
 (Example 6.3.3) The Fibonacci sequence (F_n) is defined by F_0 = 1, F_1 = 1, and F_{n+2} = F_{n+1} + F_n.
 Show that for all natural numbers n, F_n <= 2^n.
 """
-"""
-claim:
-    prove:
-        forall F fn(x N) Z, n N:
-            forall y N:
-                F(y + 2) = F(y + 1) + F(y)
-            F(0) = 1
-            F(1) = 1
-            =>
-                F(n) <= 2^n
-    by induc n from 0:
-        prove:
-            forall n N:
-                F(n) <= 2^n
-                F(n+1) <= 2^(n+1)
-    F(0) = 1 <=1= 2^0
-    F(1) = 1 <=2= 2^1
-    forall k Z:
-        k >= 0
-        F(k) <= 2^k
-        F(k + 1) <= 2^(k + 1)
-        =>:
-            F(k + 1) <= 2^(k + 1)
-            F(k + 2) = F(k + 1) + F(k)
-            F(k + 1) + F(k) <= 2^(k + 1) + 2^k
-            2^(k + 1) + 2^k =2^k*2+2^k= 3 * 2^k <= 4 * 2^k =2^2 * 2^k =2^(k + 2)
-            F(k + 2) <= 2^(k + 2)
-"""
+# claim:
+#     prove:
+#         forall F fn(x Z: x >= 0) Z, n Z:
+#             forall y Z:
+#                 y >= 0
+#                 =>:
+#                     F(y + 2) = F(y + 1) + F(y)
+#             F(0) = 1
+#             F(1) = 1
+#             n >= 0
+#             =>:
+#                 F(n) <= 2^n
+#     by induc k from 0:
+#         prove:
+#             F(k) <= 2^k
+#             F(k+1) <= 2^(k+1)
+#         F(0) = 1 <=1= 2^0
+#         F(1) = 1 <=2= 2^1
+#         forall k Z:
+#             k >= 0
+#             F(k) <= 2^k
+#             F(k + 1) <= 2^(k + 1)
+#             =>:
+#                 F(k + 1) <= 2^(k + 1)
+#                 F(k + 2) = F(k + 1) + F(k)
+#                 F(k + 1) + F(k) <= 2^(k + 1) + 2^k
+#                 2^(k + 1) = 2^k * 2^1 = 2^k * 2
+#                 2^(k + 1) + 2^k = 2^k * 2 + 2^k = 3 * 2^k
+#                 3 * 2^k <= 4 * 2^k
+#                 4 * 2^k = 2^2 * 2^k = 2^(2 + k) = 2^(k + 2)
+#                 F(k + 2) = F(k + 1) + F(k) <= 2^(k + 1) + 2^k = 3 * 2^k <= 4 * 2^k = 2^(k + 2)
+#                 F(k + 2) <= 2^(k + 2)
 """
 (Example 6.3.4) Show that the Fibonacci sequence (F_n) satisfies: for all natural numbers n,
   F_{n+1}^2 - F_{n+1} F_n - F_n^2 = -(-1)^n.
 """
 """
-claim:
-    prove:
-        forall F fn (x Z: x >= 0) Z, n Z:
-            forall y Z:
-                y >= 0
-                =>:
-                    F(y + 2) = F(y + 1) + F(y)
-            F(0) = 1
-            F(1) = 1
-            n >= 0
-            =>:
-                F(n + 1)^2 - F(n + 1) * F(n) - F(n)^2 = -(-1)^n
-    by induc n from 0:
-        prove:
-            F(n + 1)^2 - F(n + 1) * F(n) - F(n)^2 = -(-1)^n
-        F(0+1)=F(1)
-        F(0 + 1)^2 - F(0 + 1) * F(0) - F(0)^2 = F(1)^2 - F(1) * F(0) - F(0)^2 = 1^2 - 1 * 1 - 1^2 = 1 - 1 - 1 = -1 = -(-1)^0
+# claim:
+#     prove:
+#         forall F fn (x Z: x >= 0) Z, n Z:
+#             forall y Z:
+#                 y >= 0
+#                 =>:
+#                     F(y + 2) = F(y + 1) + F(y)
+#             F(0) = 1
+#             F(1) = 1
+#             n >= 0
+#             =>:
+#                 F(n + 1)^2 - F(n + 1) * F(n) - F(n)^2 = -(-1)^n
+#     by induc n from 0:
+#         prove:
+#             F(n + 1)^2 - F(n + 1) * F(n) - F(n)^2 = -(-1)^n
+#         F(0+1)=F(1)
+#         F(0 + 1)^2 - F(0 + 1) * F(0) - F(0)^2 = F(1)^2 - F(1) * F(0) - F(0)^2 = 1^2 - 1 * 1 - 1^2 = 1 - 1 - 1 = -1 = -(-1)^0
         
-        forall m Z:
-            m >= 0
-            F(m + 1)^2 - F(m + 1) * F(m) - F(m)^2 = -(-1)^m
-            =>:
-                F(m + 2) = F(m + 1) + F(m)
-                F(m + 2)^2 - F(m + 2) * F(m + 1) - F(m + 1)^2 = (F(m + 1) + F(m))^2 - (F(m + 1) + F(m)) * F(m + 1) - F(m + 1)^2
-                (F(m + 1) + F(m))^2 - (F(m + 1) + F(m)) * F(m + 1) - F(m + 1)^2 = F(m)^2 + F(m) * F(m + 1) - F(m + 1)^2
-                F(m)^2 + F(m) * F(m + 1) - F(m + 1)^2 = -(F(m + 1)^2 - F(m + 1) * F(m) - F(m)^2)
-                F(m + 1)^2 - F(m + 1) * F(m) - F(m)^2 = -(-1)^m
-                -(F(m + 1)^2 - F(m + 1) * F(m) - F(m)^2) = -(-(-1)^m)
-                -(-(-1)^m) =-((-1)*(-1)^m) =-(-1)^(m + 1) 
-                F(m + 2)^2 - F(m + 2) * F(m + 1) - F(m + 1)^2 = -(-1)^(m + 1)
+#         forall m Z:
+#             m >= 0
+#             F(m + 1)^2 - F(m + 1) * F(m) - F(m)^2 = -(-1)^m
+#             =>:
+#                 F(m + 2) = F(m + 1) + F(m)
+#                 F(m + 2)^2 - F(m + 2) * F(m + 1) - F(m + 1)^2 = (F(m + 1) + F(m))^2 - (F(m + 1) + F(m)) * F(m + 1) - F(m + 1)^2
+#                 (F(m + 1) + F(m))^2 - (F(m + 1) + F(m)) * F(m + 1) - F(m + 1)^2 = F(m)^2 + F(m) * F(m + 1) - F(m + 1)^2
+#                 F(m)^2 + F(m) * F(m + 1) - F(m + 1)^2 = -(F(m + 1)^2 - F(m + 1) * F(m) - F(m)^2)
+#                 F(m + 1)^2 - F(m + 1) * F(m) - F(m)^2 = -(-1)^m
+#                 -(F(m + 1)^2 - F(m + 1) * F(m) - F(m)^2) = -(-(-1)^m)
+#                 -(-(-1)^m) =-((-1)*(-1)^m) =-(-1)^(m + 1) 
+#                 F(m + 2)^2 - F(m + 2) * F(m + 1) - F(m + 1)^2 = -(-1)^(m + 1)
 """
 """
 (Example 6.3.5) Define (d_n) by d_0 = 3, d_1 = 1, and d_{n+2} = 3 d_{n+1} + 5 d_n.
