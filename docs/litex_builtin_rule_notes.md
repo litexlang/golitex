@@ -71,6 +71,9 @@ forall a R:
 
 forall a R, m, n N_pos:
     a^(m+n) = a^m * a^n
+
+forall a R, m N_pos:
+    a^(m+1) = a^m * a
 ```
 
 Notes:
@@ -78,6 +81,7 @@ Notes:
 1. `a^1 = a` is the first power identity.
 2. The exponent addition rule is restricted to positive natural exponents, so `0^0` is not introduced.
 3. The product side may also appear with the factors swapped.
+4. When one added exponent is `1`, the matching product factor may be written as `a` instead of `a^1`.
 
 Related code:
 
