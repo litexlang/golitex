@@ -67,7 +67,7 @@ impl Runtime {
 
         for fact in exist_fact_in_have_obj_stmt.facts().iter() {
             let instantiated_fact = self
-                .inst_or_and_chain_atomic_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
+                .inst_exist_body_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
                 .map_err(|runtime_error| {
                     short_exec_error(
                         have_exist_obj_stmt.clone().into(),
@@ -78,7 +78,9 @@ impl Runtime {
                 })?
                 .to_fact();
             let fact_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(instantiated_fact)
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    instantiated_fact,
+                )
                 .map_err(|store_fact_error| {
                     short_exec_error(
                         have_exist_obj_stmt.clone().into(),

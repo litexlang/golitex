@@ -13,7 +13,8 @@ impl Runtime {
             return Ok(cached_result);
         }
 
-        let (forall_then_implies_iff, forall_iff_implies_then) = forall_iff.to_two_forall_facts();
+        let (forall_then_implies_iff, forall_iff_implies_then) =
+            forall_iff.to_two_forall_facts()?;
         let verification_steps = [&forall_then_implies_iff, &forall_iff_implies_then];
         for forall_step in verification_steps {
             let result = self.verify_forall_fact(forall_step, verify_state)?;

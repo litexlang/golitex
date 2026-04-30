@@ -26,6 +26,9 @@ impl Runtime {
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
                 self.verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state)
             }
+            Fact::NotForall(not_forall) => {
+                self.verify_not_forall_fact_well_defined(not_forall, verify_state)
+            }
         }
     }
 
@@ -63,12 +66,17 @@ impl Runtime {
             let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                        "fact `{}` expects {} argument(s), but got {}",
-                        name_string,
-                        expected_len,
-                        actual_args.len()
-                    ), atomic_fact.line_file()))
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "fact `{}` expects {} argument(s), but got {}",
+                            name_string,
+                            expected_len,
+                            actual_args.len()
+                        ),
+                        atomic_fact.line_file(),
+                    ),
+                )
                 .into());
             }
         } else {
@@ -81,18 +89,28 @@ impl Runtime {
             {
                 abstract_prop_definition.params.len()
             } else {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!("fact `{}` not defined", name_string), atomic_fact.line_file()))
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("fact `{}` not defined", name_string),
+                        atomic_fact.line_file(),
+                    ),
+                )
                 .into());
             };
 
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                        "fact `{}` expects {} argument(s), but got {}",
-                        name_string,
-                        expected_len,
-                        actual_args.len()
-                    ), atomic_fact.line_file()))
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "fact `{}` expects {} argument(s), but got {}",
+                            name_string,
+                            expected_len,
+                            actual_args.len()
+                        ),
+                        atomic_fact.line_file(),
+                    ),
+                )
                 .into());
             }
         }
@@ -178,10 +196,40 @@ impl Runtime {
             }
 
             for fact in exist_fact.facts() {
-                rt.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                    fact.clone(),
-                )?;
+                match fact {
+                    ExistBodyFact::AtomicFact(f) => {
+                        let body_fact = OrAndChainAtomicFact::AtomicFact(f.clone());
+                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
+                    }
+                    ExistBodyFact::AndFact(f) => {
+                        let body_fact = OrAndChainAtomicFact::AndFact(f.clone());
+                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
+                    }
+                    ExistBodyFact::ChainFact(f) => {
+                        let body_fact = OrAndChainAtomicFact::ChainFact(f.clone());
+                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
+                    }
+                    ExistBodyFact::OrFact(f) => {
+                        let body_fact = OrAndChainAtomicFact::OrFact(f.clone());
+                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
+                    }
+                    ExistBodyFact::InlineForall(f) => {
+                        rt.verify_forall_fact_well_defined(f, verify_state)?;
+                        rt.store_forall_fact_without_well_defined_verified_and_infer(f.clone())?;
+                    }
+                }
             }
             Ok(())
         })
@@ -228,10 +276,9 @@ impl Runtime {
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            if let Err(exec_stmt_error) = self.verify_fact_well_defined_and_store_and_infer(
-                dom_fact.clone(),
-                verify_state,
-            ) {
+            if let Err(exec_stmt_error) =
+                self.verify_fact_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
+            {
                 return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,
                     String::new(),
@@ -331,5 +378,13 @@ impl Runtime {
             }
             Ok(())
         })
+    }
+
+    pub fn verify_not_forall_fact_well_defined(
+        &mut self,
+        not_forall: &NotForallFact,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_forall_fact_well_defined(&not_forall.forall_fact, verify_state)
     }
 }

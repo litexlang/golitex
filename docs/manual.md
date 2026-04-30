@@ -8,7 +8,7 @@ Litex gives you a **lean, set-theoretic** idiom for mathematics—**just enough*
 
 The emphasis is on **how ideas relate**: constructs are **woven together** so you can say what depends on what, in the same spirit as the mathematics itself, rather than as isolated syntax rules. 
 
-**This manual** is a compact reference to **syntax and semantics** across Litex. Go to [Litex](litexlang.com), [Litex Github](https://github.com/litexlang/golitex) for more details.
+**This manual** is a compact reference to **syntax and semantics** across Litex.
 
 # Abstract Proposition
 
@@ -54,6 +54,8 @@ by cases:
         proof_of_case_n
 ```
 
+**Shorthand:** `by cases fact` `:` on one line (goal on the header); the body then starts with `case` arms and omits the inner `prove:` block.
+
 1. fact1 or fact2 or ... or factn must be true.
 2. under each case, proof_of_case_i must be a valid proof of fact i.
 
@@ -96,6 +98,8 @@ by contra:
     impossible impossible_fact
 ```
 
+**Shorthand:** `by contra => atomic_goal` `:` on one line; the body is the same but without the inner `prove:`.
+
 1. The goal is to prove `fact`. In the body, `fact` is handled as if its negation were true; you then derive a contradiction: the fact after `impossible` must be both true and false at once.
 2. `impossible_fact` must be false and true at the same time.
 
@@ -118,6 +122,28 @@ by contra:
     $p(1, 2)
     impossible $q(1,2 )
 ```
+
+# Header shorthand: `by … => <goal>:` and the same goal three ways
+
+For **`by cases`**, **`by contra`**, and **`claim`**, you may put the goal on the **header line** after `=>` instead of opening with an inner `prove:` block. The proof body is otherwise the same: in the `by cases` form, the block starts directly with `case` arms after the header.
+
+**Illustration:** the fact `1 = 1` is deliberately trivial; the point is that **one** outcome can be reached by **case split**, by **contradiction**, or by a **direct claim**—choose the shape that matches the mathematical story you are telling.
+
+```litex
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+
+by contra => 1 = 1:
+    impossible 1 != 1
+
+claim 1 = 1:
+    do_nothing
+```
+
+The same minimal sketches appear at the end of `examples/by_cases.lit`, `examples/by_contra.lit`, and `examples/claim.lit`.
 
 # witness exist … from …
 

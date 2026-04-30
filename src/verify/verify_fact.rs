@@ -15,6 +15,7 @@ impl Runtime {
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
                 self.verify_forall_fact_with_iff(forall_fact_with_iff, verify_state)
             }
+            Fact::NotForall(not_forall) => self.verify_not_forall_fact(not_forall, verify_state),
             Fact::ExistFact(exists_fact) => self.verify_exist_fact(exists_fact, verify_state),
             Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
         }?;

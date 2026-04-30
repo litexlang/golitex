@@ -30,3 +30,9 @@ prove:
             $p(x)
         case x <= 0:
             $p(x)
+
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1

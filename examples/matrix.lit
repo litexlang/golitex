@@ -11,8 +11,6 @@ prove:
     a(2, 1) = 3
     a(2, 2) = 4
 
-    by matrix: matrix(R, 2, 2)
-
 
 # Matrix ++: same shape, cell-wise add
 eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]]

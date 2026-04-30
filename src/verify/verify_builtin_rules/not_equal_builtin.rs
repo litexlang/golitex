@@ -27,14 +27,13 @@ impl Runtime {
         }
         let all_equal_obj_strings = self.get_all_objs_equal_to_given(&obj_key);
         for equal_obj_string in all_equal_obj_strings {
-            if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&equal_obj_string)
+            if let Some(number) =
+                self.get_object_equal_to_normalized_decimal_number(&equal_obj_string)
             {
                 return Some(number);
             }
-            if let Some(number) =
-                self.try_parse_number_literal_obj_string_for_not_equal_builtin_rule(
-                    &equal_obj_string,
-                )
+            if let Some(number) = self
+                .try_parse_number_literal_obj_string_for_not_equal_builtin_rule(&equal_obj_string)
             {
                 return Some(number);
             }

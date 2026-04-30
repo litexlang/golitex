@@ -33,10 +33,15 @@ impl Runtime {
         for (name, fact) in param_def.params.iter().zip(facts.iter()) {
             self.store_free_param_or_identifier_name(name, binding_scope)
                 .map_err(|runtime_error| {
-                    RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
-                            "define params with set: failed to declare parameter `{}`",
-                            name
-                        ), runtime_error)))
+                    RuntimeError::from(DefineParamsRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
+                                "define params with set: failed to declare parameter `{}`",
+                                name
+                            ),
+                            runtime_error,
+                        ),
+                    ))
                 })?;
             let fact_infer_result = self
                 .verify_well_defined_and_store_and_infer_with_default_verify_state(fact.clone())

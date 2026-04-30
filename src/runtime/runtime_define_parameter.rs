@@ -21,7 +21,9 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        type_fact,
+                    )
                 }
                 Obj::SeqSet(ss) => {
                     let fn_set = self.seq_set_to_fn_set(ss, default_line_file());
@@ -31,7 +33,9 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        type_fact,
+                    )
                 }
                 Obj::MatrixSet(ms) => {
                     let fn_set = self.matrix_set_to_fn_set(ms, default_line_file());
@@ -41,7 +45,9 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(type_fact)
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        type_fact,
+                    )
                 }
                 _ => self.define_parameter_by_binding_obj(name, obj, binding_kind),
             },
@@ -65,12 +71,8 @@ impl Runtime {
         binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let element = param_binding_element_obj_for_store(name.to_string(), binding_kind);
-        let restrict_fact: Fact = RestrictFact::new(
-            element,
-            fn_set.clone().into(),
-            default_line_file(),
-        )
-        .into();
+        let restrict_fact: Fact =
+            RestrictFact::new(element, fn_set.clone().into(), default_line_file()).into();
         self.verify_well_defined_and_store_and_infer_with_default_verify_state(restrict_fact)
     }
 
@@ -175,10 +177,15 @@ impl Runtime {
             for name in param_def.params.iter() {
                 self.store_free_param_or_identifier_name(name, binding_kind)
                     .map_err(|runtime_error| {
-                        RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
-                                "define params with type: failed to declare parameter `{}`",
-                                name
-                            ), runtime_error)))
+                        RuntimeError::from(DefineParamsRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!(
+                                    "define params with type: failed to declare parameter `{}`",
+                                    name
+                                ),
+                                runtime_error,
+                            ),
+                        ))
                     })?;
                 let fact_infer_result = self
                     .define_parameter_by_binding_param_type(

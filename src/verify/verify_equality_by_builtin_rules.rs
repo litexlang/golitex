@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use crate::verify::verify_builtin_rules::{
-    compare_normalized_number_str_to_zero, NumberCompareResult,
+    compare_normalized_number_str_to_zero, normalized_decimal_string_is_even_integer,
+    NumberCompareResult,
 };
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 use std::rc::Rc;
@@ -34,12 +35,20 @@ fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Max(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Min(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Union(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::Intersect(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Intersect(b) => {
+            obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
+        }
         Obj::SetMinus(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::SetDiff(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::MatrixAdd(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::MatrixSub(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::MatrixMul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::MatrixAdd(b) => {
+            obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
+        }
+        Obj::MatrixSub(b) => {
+            obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
+        }
+        Obj::MatrixMul(b) => {
+            obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
+        }
         Obj::Pow(p) => {
             obj_expr_mentions_bare_id(p.base.as_ref(), id)
                 || obj_expr_mentions_bare_id(p.exponent.as_ref(), id)
@@ -84,7 +93,9 @@ fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(oi.index.as_ref(), id)
         }
         Obj::Range(r) => obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id),
-        Obj::ClosedRange(r) => obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id),
+        Obj::ClosedRange(r) => {
+            obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id)
+        }
         Obj::Sum(s) => {
             obj_expr_mentions_bare_id(s.start.as_ref(), id)
                 || obj_expr_mentions_bare_id(s.end.as_ref(), id)
@@ -104,10 +115,7 @@ fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id))
         }),
         Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
-        Obj::FamilyObj(fo) => fo
-            .params
-            .iter()
-            .any(|p| obj_expr_mentions_bare_id(p, id)),
+        Obj::FamilyObj(fo) => fo.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
         Obj::FiniteSeqSet(fs) => {
             obj_expr_mentions_bare_id(fs.set.as_ref(), id)
                 || obj_expr_mentions_bare_id(fs.n.as_ref(), id)
@@ -155,6 +163,238 @@ fn factual_equal_success_by_builtin_reason(
 }
 
 impl Runtime {
+    fn literal_zero_obj_for_abs_builtin() -> Obj {
+        Obj::Number(Number::new("0".to_string()))
+    }
+
+    fn obj_is_literal_neg_one_for_abs_builtin(obj: &Obj) -> bool {
+        match obj {
+            Obj::Number(n) => n.normalized_value == "-1",
+            _ => false,
+        }
+    }
+
+    fn obj_is_negation_of_for_abs_builtin(obj: &Obj, expected_arg: &Obj) -> bool {
+        match obj {
+            Obj::Mul(m) => {
+                (Self::obj_is_literal_neg_one_for_abs_builtin(m.left.as_ref())
+                    && objs_equal_by_display_string(m.right.as_ref(), expected_arg))
+                    || (Self::obj_is_literal_neg_one_for_abs_builtin(m.right.as_ref())
+                        && objs_equal_by_display_string(m.left.as_ref(), expected_arg))
+            }
+            _ => false,
+        }
+    }
+
+    fn obj_is_abs_product_for_abs_builtin(obj: &Obj, x: &Obj, y: &Obj) -> bool {
+        let Obj::Mul(m) = obj else {
+            return false;
+        };
+        match (m.left.as_ref(), m.right.as_ref()) {
+            (Obj::Abs(left_abs), Obj::Abs(right_abs)) => {
+                objs_equal_by_display_string(left_abs.arg.as_ref(), x)
+                    && objs_equal_by_display_string(right_abs.arg.as_ref(), y)
+            }
+            _ => false,
+        }
+    }
+
+    fn try_verify_abs_nonnegative_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (arg, other) = match (left, right) {
+            (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
+            (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
+            _ => return Ok(None),
+        };
+        if !objs_equal_by_display_string(arg, other) {
+            return Ok(None);
+        }
+        let nonnegative: AtomicFact = LessEqualFact::new(
+            Self::literal_zero_obj_for_abs_builtin(),
+            arg.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let nonnegative_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&nonnegative, verify_state)?;
+        if !nonnegative_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "abs: abs(x) = x from 0 <= x".to_string(),
+                vec![nonnegative_result],
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_abs_nonpositive_negation(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (arg, other) = match (left, right) {
+            (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
+            (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
+            _ => return Ok(None),
+        };
+        if !Self::obj_is_negation_of_for_abs_builtin(other, arg) {
+            return Ok(None);
+        }
+        let nonpositive: AtomicFact = LessEqualFact::new(
+            arg.clone(),
+            Self::literal_zero_obj_for_abs_builtin(),
+            line_file.clone(),
+        )
+        .into();
+        let nonpositive_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&nonpositive, verify_state)?;
+        if !nonpositive_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "abs: abs(x) = -x from x <= 0".to_string(),
+                vec![nonpositive_result],
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_abs_product(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let matches_abs_product = |abs_side: &Obj, product_side: &Obj| -> bool {
+            let Obj::Abs(abs) = abs_side else {
+                return false;
+            };
+            let Obj::Mul(inner_mul) = abs.arg.as_ref() else {
+                return false;
+            };
+            Self::obj_is_abs_product_for_abs_builtin(
+                product_side,
+                inner_mul.left.as_ref(),
+                inner_mul.right.as_ref(),
+            )
+        };
+
+        if !matches_abs_product(left, right) && !matches_abs_product(right, left) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "abs: abs(x * y) = abs(x) * abs(y)",
+        )))
+    }
+
+    // Even powers ignore sign, so `x^2 = abs(x)^2`.
+    // Example: `forall x R: x ^ 4 = abs(x) ^ 4`.
+    fn try_verify_abs_even_power(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (left, right) else {
+            return Ok(None);
+        };
+        if !objs_equal_by_display_string(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+        let Obj::Number(exp_num) = left_pow.exponent.as_ref() else {
+            return Ok(None);
+        };
+        if !normalized_decimal_string_is_even_integer(&exp_num.normalized_value) {
+            return Ok(None);
+        }
+
+        let bases_match = match (left_pow.base.as_ref(), right_pow.base.as_ref()) {
+            (Obj::Abs(abs), other) => objs_equal_by_display_string(abs.arg.as_ref(), other),
+            (other, Obj::Abs(abs)) => objs_equal_by_display_string(other, abs.arg.as_ref()),
+            _ => false,
+        };
+        if !bases_match {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "abs: x^n = abs(x)^n for even integer n",
+        )))
+    }
+
+    fn try_verify_zero_from_abs_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let zero = Self::literal_zero_obj_for_abs_builtin();
+        let arg = if objs_equal_by_display_string(left, &zero) {
+            right
+        } else if objs_equal_by_display_string(right, &zero) {
+            left
+        } else {
+            return Ok(None);
+        };
+        let abs_arg: Obj = Abs::new(arg.clone()).into();
+        if !self.objs_have_same_known_equality_rc_in_some_env(&abs_arg, &zero) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "abs: x = 0 from abs(x) = 0",
+        )))
+    }
+
+    fn try_verify_abs_equalities(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(done) =
+            self.try_verify_abs_nonnegative_identity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(Some(done));
+        }
+        if let Some(done) =
+            self.try_verify_abs_nonpositive_negation(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_verify_abs_product(left, right, line_file.clone())? {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_verify_abs_even_power(left, right, line_file.clone())? {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_verify_zero_from_abs_zero(left, right, line_file)? {
+            return Ok(Some(done));
+        }
+        Ok(None)
+    }
+
     // Instantiate family `equal_to` on one or both sides, then full `verify_objs_are_equal` on the expanded pair.
     fn try_verify_objs_equal_by_expanding_family(
         &mut self,
@@ -216,6 +456,13 @@ impl Runtime {
                 compare_normalized_number_str_to_zero(&n.normalized_value),
                 NumberCompareResult::Equal
             ),
+            _ => false,
+        }
+    }
+
+    fn obj_is_builtin_literal_one(obj: &Obj) -> bool {
+        match obj {
+            Obj::Number(n) => n.normalized_value == "1",
             _ => false,
         }
     }
@@ -304,6 +551,321 @@ impl Runtime {
             )));
         }
         Ok(None)
+    }
+
+    // Zero is divisible by every non-zero integer modulus: `0 % m = 0`.
+    // Example: `forall m Z: m != 0 =>: 0 % m = 0`.
+    fn try_verify_zero_mod_equals_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let mod_obj = if Self::obj_is_builtin_literal_zero(left) {
+            match right {
+                Obj::Mod(m) => m,
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            match left {
+                Obj::Mod(m) => m,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        if !Self::obj_is_builtin_literal_zero(mod_obj.left.as_ref()) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: 0 % m = 0",
+        )))
+    }
+
+    // First power identity: `a^1 = a`.
+    // Example: `forall a Z: a^1 = a`.
+    fn try_verify_pow_one_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (pow, other) = match (left, right) {
+            (Obj::Pow(p), other) => (p, other),
+            (other, Obj::Pow(p)) => (p, other),
+            _ => return Ok(None),
+        };
+        if !Self::obj_is_builtin_literal_one(pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(pow.base.as_ref(), other, line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: a^1 = a",
+        )))
+    }
+
+    fn power_factor_matches_base_and_exponent(
+        &mut self,
+        factor: &Obj,
+        base: &Obj,
+        exponent: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let Obj::Pow(pow) = factor else {
+            if !Self::obj_is_builtin_literal_one(exponent) {
+                return Ok(false);
+            }
+            return Ok(self
+                .verify_objs_are_equal(base, factor, line_file.clone(), verify_state)?
+                .is_true());
+        };
+        if !self
+            .verify_objs_are_equal(base, pow.base.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(false);
+        }
+        Ok(self
+            .verify_objs_are_equal(
+                exponent,
+                pow.exponent.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true())
+    }
+
+    fn obj_is_verified_in_n_pos(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let in_n_pos: AtomicFact =
+            InFact::new(obj.clone(), StandardSet::NPos.into(), line_file).into();
+        Ok(self
+            .verify_non_equational_known_then_builtin_rules_only(&in_n_pos, verify_state)?
+            .is_true())
+    }
+
+    fn power_addition_exponent_rule_holds_one_direction(
+        &mut self,
+        combined_power: &Pow,
+        product: &Mul,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let Obj::Add(add_exponent) = combined_power.exponent.as_ref() else {
+            return Ok(false);
+        };
+
+        // Power law for positive integer exponents:
+        // `a^(m+n) = a^m * a^n`. Example: `forall a R, m, n N_pos: a^(m+n) = a^m * a^n`.
+        let candidates = [
+            (
+                product.left.as_ref(),
+                product.right.as_ref(),
+                add_exponent.left.as_ref(),
+                add_exponent.right.as_ref(),
+            ),
+            (
+                product.right.as_ref(),
+                product.left.as_ref(),
+                add_exponent.left.as_ref(),
+                add_exponent.right.as_ref(),
+            ),
+        ];
+
+        for (left_factor, right_factor, left_exp, right_exp) in candidates {
+            if !self.power_factor_matches_base_and_exponent(
+                left_factor,
+                combined_power.base.as_ref(),
+                left_exp,
+                line_file.clone(),
+                verify_state,
+            )? {
+                continue;
+            }
+            if !self.power_factor_matches_base_and_exponent(
+                right_factor,
+                combined_power.base.as_ref(),
+                right_exp,
+                line_file.clone(),
+                verify_state,
+            )? {
+                continue;
+            }
+            if !self.obj_is_verified_in_n_pos(left_exp, line_file.clone(), verify_state)? {
+                return Ok(false);
+            }
+            if !self.obj_is_verified_in_n_pos(right_exp, line_file.clone(), verify_state)? {
+                return Ok(false);
+            }
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    fn try_verify_power_addition_exponent_rule(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let holds = match (left, right) {
+            (Obj::Pow(pow), Obj::Mul(product)) => self
+                .power_addition_exponent_rule_holds_one_direction(
+                    pow,
+                    product,
+                    line_file.clone(),
+                    verify_state,
+                )?,
+            (Obj::Mul(product), Obj::Pow(pow)) => self
+                .power_addition_exponent_rule_holds_one_direction(
+                    pow,
+                    product,
+                    line_file.clone(),
+                    verify_state,
+                )?,
+            _ => false,
+        };
+        if holds {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: a^(m+n) = a^m * a^n for m,n in N_pos",
+            )));
+        }
+        Ok(None)
+    }
+
+    fn verify_context_arg_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        Ok(self
+            .verify_objs_are_equal(left, right, line_file, verify_state)?
+            .is_true())
+    }
+
+    // If equal objects appear in the same algebraic context, the whole context is equal.
+    // Example: from `x = y`, infer `x + 1 = y + 1`.
+    fn try_verify_same_algebra_context_by_equal_args(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let args_equal = match (left, right) {
+            (Obj::Add(l), Obj::Add(r)) => {
+                self.verify_context_arg_equality(
+                    l.left.as_ref(),
+                    r.left.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )? && self.verify_context_arg_equality(
+                    l.right.as_ref(),
+                    r.right.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+            }
+            (Obj::Sub(l), Obj::Sub(r)) => {
+                self.verify_context_arg_equality(
+                    l.left.as_ref(),
+                    r.left.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )? && self.verify_context_arg_equality(
+                    l.right.as_ref(),
+                    r.right.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+            }
+            (Obj::Mul(l), Obj::Mul(r)) => {
+                self.verify_context_arg_equality(
+                    l.left.as_ref(),
+                    r.left.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )? && self.verify_context_arg_equality(
+                    l.right.as_ref(),
+                    r.right.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+            }
+            (Obj::Div(l), Obj::Div(r)) => {
+                self.verify_context_arg_equality(
+                    l.left.as_ref(),
+                    r.left.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )? && self.verify_context_arg_equality(
+                    l.right.as_ref(),
+                    r.right.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+            }
+            (Obj::Mod(l), Obj::Mod(r)) => {
+                self.verify_context_arg_equality(
+                    l.left.as_ref(),
+                    r.left.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )? && self.verify_context_arg_equality(
+                    l.right.as_ref(),
+                    r.right.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+            }
+            (Obj::Pow(l), Obj::Pow(r)) => {
+                self.verify_context_arg_equality(
+                    l.base.as_ref(),
+                    r.base.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )? && self.verify_context_arg_equality(
+                    l.exponent.as_ref(),
+                    r.exponent.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+            }
+            _ => return Ok(None),
+        };
+        if !args_equal {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: same algebraic context with equal arguments",
+        )))
     }
 
     // log_a(a^b) = b  (Litex `log(a, a^b) = b`; same base in log and in the power.)
@@ -545,21 +1107,12 @@ impl Runtime {
         if args.len() != n_params {
             return Ok(None);
         }
-        let param_to_arg_map = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
-            param_defs,
-            &args,
-        );
-        let reduced = self.inst_obj(
-            af.equal_to.as_ref(),
-            &param_to_arg_map,
-            ParamObjType::FnSet,
-        )?;
-        let inner = self.verify_objs_are_equal(
-            &reduced,
-            other_side,
-            line_file.clone(),
-            verify_state,
-        )?;
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+        let reduced =
+            self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
+        let inner =
+            self.verify_objs_are_equal(&reduced, other_side, line_file.clone(), verify_state)?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 statement_left,
@@ -664,25 +1217,13 @@ impl Runtime {
             return Ok(None);
         };
 
-        let then_fact: ExistOrAndChainAtomicFact = EqualFact::new(
-            l_inst,
-            Add::new(a_inst, b_inst).into(),
-            line_file.clone(),
-        )
-        .into();
+        let then_fact: ExistOrAndChainAtomicFact =
+            EqualFact::new(l_inst, Add::new(a_inst, b_inst).into(), line_file.clone()).into();
 
-        let dom_lo: Fact = LessEqualFact::new(
-            (*sum_m.start).clone(),
-            x_obj.clone(),
-            line_file.clone(),
-        )
-        .into();
-        let dom_hi: Fact = LessEqualFact::new(
-            x_obj.clone(),
-            (*sum_m.end).clone(),
-            line_file.clone(),
-        )
-        .into();
+        let dom_lo: Fact =
+            LessEqualFact::new((*sum_m.start).clone(), x_obj.clone(), line_file.clone()).into();
+        let dom_hi: Fact =
+            LessEqualFact::new(x_obj.clone(), (*sum_m.end).clone(), line_file.clone()).into();
 
         let forall_fact: Fact = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -692,7 +1233,7 @@ impl Runtime {
             vec![dom_lo, dom_hi],
             vec![then_fact],
             line_file.clone(),
-        )
+        )?
         .into();
 
         let r = self.verify_fact(&forall_fact, verify_state)?;
@@ -732,9 +1273,11 @@ impl Runtime {
         let args = vec![x.clone()];
         let param_to_arg_map =
             ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
-        Ok(Some(
-            self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?,
-        ))
+        Ok(Some(self.inst_obj(
+            af.equal_to.as_ref(),
+            &param_to_arg_map,
+            ParamObjType::FnSet,
+        )?))
     }
 
     /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.
@@ -792,25 +1335,45 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(s1.start.as_ref(), s3.start.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal(
+                s1.start.as_ref(),
+                s3.start.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(s2.end.as_ref(), s3.end.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal(
+                s2.end.as_ref(),
+                s3.end.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(s1.func.as_ref(), s2.func.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal(
+                s1.func.as_ref(),
+                s2.func.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(s1.func.as_ref(), s3.func.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal(
+                s1.func.as_ref(),
+                s3.func.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
@@ -1262,18 +1825,10 @@ impl Runtime {
             };
             let then_fact: ExistOrAndChainAtomicFact =
                 EqualFact::new(at_l, at_r, line_file.clone()).into();
-            let dom_lo: Fact = LessEqualFact::new(
-                (*r_sum.start).clone(),
-                y_obj.clone(),
-                line_file.clone(),
-            )
-            .into();
-            let dom_hi: Fact = LessEqualFact::new(
-                y_obj.clone(),
-                (*r_sum.end).clone(),
-                line_file.clone(),
-            )
-            .into();
+            let dom_lo: Fact =
+                LessEqualFact::new((*r_sum.start).clone(), y_obj.clone(), line_file.clone()).into();
+            let dom_hi: Fact =
+                LessEqualFact::new(y_obj.clone(), (*r_sum.end).clone(), line_file.clone()).into();
             let forall_fact: Fact = ForallFact::new(
                 ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                     vec![y_name],
@@ -1282,7 +1837,7 @@ impl Runtime {
                 vec![dom_lo, dom_hi],
                 vec![then_fact],
                 line_file.clone(),
-            )
+            )?
             .into();
             let r = self.verify_fact(&forall_fact, verify_state)?;
             if r.is_true() {
@@ -1333,11 +1888,8 @@ impl Runtime {
             }
             let c = (*af.equal_to).clone();
             let one: Obj = Number::new("1".to_string()).into();
-            let count: Obj = Add::new(
-                Sub::new((*s.end).clone(), (*s.start).clone()).into(),
-                one,
-            )
-            .into();
+            let count: Obj =
+                Add::new(Sub::new((*s.end).clone(), (*s.start).clone()).into(), one).into();
             let m1: Obj = Mul::new(count.clone(), c.clone()).into();
             let m2: Obj = Mul::new(c, count).into();
             if self
@@ -1576,6 +2128,12 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_abs_equalities(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_zero_equals_subtraction_implies_equal_operands(
             left,
             right,
@@ -1586,6 +2144,30 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_zero_equals_pow_from_base_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_pow_one_identity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_power_addition_exponent_rule(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_same_algebra_context_by_equal_args(
             left,
             right,
             line_file.clone(),
@@ -1672,6 +2254,10 @@ impl Runtime {
             line_file.clone(),
             verify_state,
         )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_zero_mod_equals_zero(left, right, line_file.clone())? {
             return Ok(done);
         }
 

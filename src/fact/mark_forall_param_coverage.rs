@@ -76,7 +76,10 @@ fn mark_forall_param_coverage_in_obj(
         }
         Obj::Atom(AtomObj::IdentifierWithMod(_)) => {}
         Obj::FnObj(fn_obj) => {
-            mark_forall_param_coverage_in_fn_obj_head(fn_obj.head.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_fn_obj_head(
+                fn_obj.head.as_ref(),
+                coverage_by_forall_param,
+            );
             for group in fn_obj.body.iter() {
                 for boxed_obj in group.iter() {
                     mark_forall_param_coverage_in_obj(boxed_obj.as_ref(), coverage_by_forall_param);
@@ -198,7 +201,10 @@ fn mark_forall_param_coverage_in_obj(
                     coverage_by_forall_param,
                 );
             }
-            mark_forall_param_coverage_in_obj(fn_set.body.ret_set.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(
+                fn_set.body.ret_set.as_ref(),
+                coverage_by_forall_param,
+            );
         }
         Obj::AnonymousFn(anon) => {
             for param_def_with_set in anon.body.params_def_with_set.iter() {
@@ -508,6 +514,96 @@ fn mark_forall_param_coverage_in_or_and_chain_atomic_fact(
     }
 }
 
+fn mark_forall_param_coverage_in_exist_body_fact(
+    parent_fact: &ExistBodyFact,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match parent_fact {
+        ExistBodyFact::AtomicFact(atomic_fact) => {
+            mark_forall_param_coverage_in_atomic_fact(atomic_fact, coverage_by_forall_param);
+        }
+        ExistBodyFact::AndFact(and_fact) => {
+            for inner_atomic in and_fact.facts.iter() {
+                mark_forall_param_coverage_in_atomic_fact(inner_atomic, coverage_by_forall_param);
+            }
+        }
+        ExistBodyFact::ChainFact(chain_fact) => {
+            for chain_obj in chain_fact.objs.iter() {
+                mark_forall_param_coverage_in_obj(chain_obj, coverage_by_forall_param);
+            }
+        }
+        ExistBodyFact::OrFact(or_fact) => {
+            for branch in or_fact.facts.iter() {
+                mark_forall_param_coverage_in_and_chain_atomic_fact(
+                    branch,
+                    coverage_by_forall_param,
+                );
+            }
+        }
+        ExistBodyFact::InlineForall(forall_fact) => {
+            for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
+                mark_forall_param_coverage_in_param_type(
+                    &param_def_with_type.param_type,
+                    coverage_by_forall_param,
+                );
+            }
+            for fact in forall_fact.dom_facts.iter() {
+                mark_forall_param_coverage_in_fact(fact, coverage_by_forall_param);
+            }
+            for fact in forall_fact.then_facts.iter() {
+                mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
+                    fact,
+                    coverage_by_forall_param,
+                );
+            }
+        }
+    }
+}
+
+fn mark_forall_param_coverage_in_fact(
+    parent_fact: &Fact,
+    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
+) {
+    match parent_fact {
+        Fact::AtomicFact(atomic_fact) => {
+            mark_forall_param_coverage_in_atomic_fact(atomic_fact, coverage_by_forall_param);
+        }
+        Fact::ExistFact(exist_fact) => {
+            mark_forall_param_coverage_in_exist_fact(exist_fact, coverage_by_forall_param);
+        }
+        Fact::OrFact(or_fact) => {
+            for branch in or_fact.facts.iter() {
+                mark_forall_param_coverage_in_and_chain_atomic_fact(
+                    branch,
+                    coverage_by_forall_param,
+                );
+            }
+        }
+        Fact::AndFact(and_fact) => {
+            for atomic_fact in and_fact.facts.iter() {
+                mark_forall_param_coverage_in_atomic_fact(atomic_fact, coverage_by_forall_param);
+            }
+        }
+        Fact::ChainFact(chain_fact) => {
+            for chain_obj in chain_fact.objs.iter() {
+                mark_forall_param_coverage_in_obj(chain_obj, coverage_by_forall_param);
+            }
+        }
+        Fact::ForallFact(forall_fact) => {
+            for fact in forall_fact.dom_facts.iter() {
+                mark_forall_param_coverage_in_fact(fact, coverage_by_forall_param);
+            }
+            for fact in forall_fact.then_facts.iter() {
+                mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
+                    fact,
+                    coverage_by_forall_param,
+                );
+            }
+        }
+        Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {}
+    }
+}
+
 fn mark_forall_param_coverage_in_exist_fact(
     exist_fact: &ExistFactEnum,
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
@@ -519,10 +615,7 @@ fn mark_forall_param_coverage_in_exist_fact(
         );
     }
     for inner_fact in exist_fact.facts().iter() {
-        mark_forall_param_coverage_in_or_and_chain_atomic_fact(
-            inner_fact,
-            coverage_by_forall_param,
-        );
+        mark_forall_param_coverage_in_exist_body_fact(inner_fact, coverage_by_forall_param);
     }
 }
 

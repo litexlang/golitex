@@ -13,15 +13,15 @@ fn fn_set_equality_verify_error(
     cause: Option<RuntimeError>,
 ) -> RuntimeError {
     {
-                        VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(fn_set_equality_fact(left, right, line_file.clone()).into_stmt()),
-                message,
-                line_file,
-                cause,
-                vec![],
-            ))
-            .into()
-        }
+        VerifyRuntimeError(RuntimeErrorStruct::new(
+            Some(fn_set_equality_fact(left, right, line_file.clone()).into_stmt()),
+            message,
+            line_file,
+            cause,
+            vec![],
+        ))
+        .into()
+    }
 }
 
 fn fn_set_equality_verified_by_builtin_rules_result(
@@ -146,7 +146,11 @@ impl Runtime {
         }
 
         let source_ret_set = self
-            .inst_obj(&source.body.ret_set, &source_param_to_generated_arg_map, ParamObjType::FnSet)
+            .inst_obj(
+                &source.body.ret_set,
+                &source_param_to_generated_arg_map,
+                ParamObjType::FnSet,
+            )
             .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
@@ -157,7 +161,11 @@ impl Runtime {
                 )
             })?;
         let target_ret_set = self
-            .inst_obj(&target.body.ret_set, &target_param_to_generated_arg_map, ParamObjType::FnSet)
+            .inst_obj(
+                &target.body.ret_set,
+                &target_param_to_generated_arg_map,
+                ParamObjType::FnSet,
+            )
             .map_err(|e| {
                 fn_set_equality_verify_error(
                     source,
@@ -220,7 +228,7 @@ impl Runtime {
             new_dom.push(self.inst_or_and_chain_atomic_fact(d, &map, ParamObjType::FnSet, None)?);
         }
         let new_ret = self.inst_obj(fn_set.ret_set.as_ref(), &map, ParamObjType::FnSet)?;
-        Ok(FnSet::new(new_params, new_dom, new_ret).into())
+        Ok(FnSet::new(new_params, new_dom, new_ret)?.into())
     }
 
     fn define_directional_source_fn_set_params_in_local_env(
@@ -239,7 +247,11 @@ impl Runtime {
             let generated_names_for_current_group =
                 generated_param_names[flat_index..next_flat_index].to_vec();
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.set, &source_param_to_generated_arg_map, ParamObjType::FnSet)
+                .inst_obj(
+                    &param_def_with_set.set,
+                    &source_param_to_generated_arg_map,
+                    ParamObjType::FnSet,
+                )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,
@@ -332,7 +344,11 @@ impl Runtime {
     ) -> Result<bool, RuntimeError> {
         for param_def_with_set in target.body.params_def_with_set.iter() {
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.set, target_param_to_generated_arg_map, ParamObjType::FnSet)
+                .inst_obj(
+                    &param_def_with_set.set,
+                    target_param_to_generated_arg_map,
+                    ParamObjType::FnSet,
+                )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
                         source,

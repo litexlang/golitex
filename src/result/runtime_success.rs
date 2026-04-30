@@ -34,7 +34,6 @@ impl FactualStmtSuccess {
         }
     }
 
-    /// 与 [`Self::new_with_verified_by_builtin_rules`] 相同，且 `infers` 为 [`InferResult::from_fact`]`(&stmt)`（空 `inside_results` 时常用）。
     pub fn new_with_verified_by_builtin_rules_recording_stmt(
         stmt: Fact,
         builtin_rule_label: String,
@@ -62,7 +61,6 @@ impl FactualStmtSuccess {
         }
     }
 
-    /// 与 [`Self::new_with_verified_by_known_fact_source`] 相同，且向 `infers` 写入 `stmt` 与（若存在）`verified_by_fact`。
     pub fn new_with_verified_by_known_fact_source_recording_facts(
         stmt: Fact,
         msg: String,
@@ -70,14 +68,9 @@ impl FactualStmtSuccess {
         verified_by_fact_known_line_file: Option<LineFile>,
         inside_results: Vec<StmtResult>,
     ) -> Self {
-        let mut infers = InferResult::new();
-        infers.new_fact(&stmt);
-        if let Some(ref f) = verified_by_fact {
-            infers.new_fact(f);
-        }
         Self::new_with_verified_by_known_fact_source(
             stmt,
-            infers,
+            InferResult::new(),
             msg,
             verified_by_fact,
             verified_by_fact_known_line_file,

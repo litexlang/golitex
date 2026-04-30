@@ -432,6 +432,7 @@ impl Runtime {
             Fact::ForallFactWithIff(forall_iff) => {
                 self.verify_forall_fact_with_iff(forall_iff, verify_state)
             }
+            Fact::NotForall(not_forall) => self.verify_not_forall_fact(not_forall, verify_state),
             Fact::ExistFact(exist_fact) => self.verify_exist_fact(exist_fact, verify_state),
             Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
         }
@@ -456,7 +457,7 @@ impl Runtime {
             )
             .into()],
             subset_fact.line_file.clone(),
-        )
+        )?
         .into();
         let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
@@ -491,7 +492,7 @@ impl Runtime {
             )
             .into()],
             superset_fact.line_file.clone(),
-        )
+        )?
         .into();
         let verify_forall_result = self.verify_fact(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
@@ -592,12 +593,7 @@ impl Runtime {
 
         for iff_fact in definition.iff_facts.iter() {
             let instantiated_iff_fact = self
-                .inst_fact(
-                    iff_fact,
-                    &param_to_arg_map,
-                    ParamObjType::DefHeader,
-                    None,
-                )
+                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader, None)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
