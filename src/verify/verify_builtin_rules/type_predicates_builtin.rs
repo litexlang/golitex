@@ -40,8 +40,10 @@ impl Runtime {
                     closed_range.end.as_ref().clone(),
                     is_nonempty_set_fact.line_file.clone(),
                 );
-                let le_ok =
-                    self.verify_non_equational_known_then_builtin_rules_only(&le.into(), _verify_state)?;
+                let le_ok = self.verify_non_equational_known_then_builtin_rules_only(
+                    &le.into(),
+                    _verify_state,
+                )?;
                 if le_ok.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

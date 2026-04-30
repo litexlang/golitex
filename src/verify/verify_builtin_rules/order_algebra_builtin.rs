@@ -136,31 +136,32 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
-        let mut try_pairing = |x1: &Obj, x2: &Obj, y1: &Obj, y2: &Obj| -> Result<Option<StmtResult>, RuntimeError> {
-            let subgoals: [AtomicFact; 6] = [
-                LessEqualFact::new(z.clone(), x1.clone(), lf.clone()).into(),
-                LessEqualFact::new(z.clone(), x2.clone(), lf.clone()).into(),
-                LessEqualFact::new(z.clone(), y1.clone(), lf.clone()).into(),
-                LessEqualFact::new(z.clone(), y2.clone(), lf.clone()).into(),
-                LessEqualFact::new(x1.clone(), y1.clone(), lf.clone()).into(),
-                LessEqualFact::new(x2.clone(), y2.clone(), lf.clone()).into(),
-            ];
-            let mut rec = Vec::with_capacity(6);
-            for g in subgoals {
-                let r = self.verify_order_subgoal(g)?;
-                if !r.is_true() {
-                    return Ok(None);
+        let mut try_pairing =
+            |x1: &Obj, x2: &Obj, y1: &Obj, y2: &Obj| -> Result<Option<StmtResult>, RuntimeError> {
+                let subgoals: [AtomicFact; 6] = [
+                    LessEqualFact::new(z.clone(), x1.clone(), lf.clone()).into(),
+                    LessEqualFact::new(z.clone(), x2.clone(), lf.clone()).into(),
+                    LessEqualFact::new(z.clone(), y1.clone(), lf.clone()).into(),
+                    LessEqualFact::new(z.clone(), y2.clone(), lf.clone()).into(),
+                    LessEqualFact::new(x1.clone(), y1.clone(), lf.clone()).into(),
+                    LessEqualFact::new(x2.clone(), y2.clone(), lf.clone()).into(),
+                ];
+                let mut rec = Vec::with_capacity(6);
+                for g in subgoals {
+                    let r = self.verify_order_subgoal(g)?;
+                    if !r.is_true() {
+                        return Ok(None);
+                    }
+                    rec.push(r);
                 }
-                rec.push(r);
-            }
-            Ok(Some(StmtResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    atomic_fact.clone().into(),
-                    "x1 * x2 <= y1 * y2 from 0 <= factors and componentwise <=".to_string(),
-                    rec,
-                ),
-            )))
-        };
+                Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "x1 * x2 <= y1 * y2 from 0 <= factors and componentwise <=".to_string(),
+                        rec,
+                    ),
+                )))
+            };
         if let Some(r) = try_pairing(l1, l2, r1, r2)? {
             return Ok(Some(r));
         }
@@ -199,13 +200,10 @@ impl Runtime {
                 }
             }
             // a <= u + v from a <= u and 0 <= v (or symmetric addends).
-            let g_a_left = LessEqualFact::new(
-                f.left.clone(),
-                add.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g0_right = LessEqualFact::new(z.clone(), add.right.as_ref().clone(), lf.clone()).into();
+            let g_a_left =
+                LessEqualFact::new(f.left.clone(), add.left.as_ref().clone(), lf.clone()).into();
+            let g0_right =
+                LessEqualFact::new(z.clone(), add.right.as_ref().clone(), lf.clone()).into();
             let r1 = self.verify_order_subgoal(g_a_left)?;
             let r2 = self.verify_order_subgoal(g0_right)?;
             if r1.is_true() && r2.is_true() {
@@ -217,13 +215,10 @@ impl Runtime {
                     ),
                 )));
             }
-            let g_a_right = LessEqualFact::new(
-                f.left.clone(),
-                add.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g0_left = LessEqualFact::new(z.clone(), add.left.as_ref().clone(), lf.clone()).into();
+            let g_a_right =
+                LessEqualFact::new(f.left.clone(), add.right.as_ref().clone(), lf.clone()).into();
+            let g0_left =
+                LessEqualFact::new(z.clone(), add.left.as_ref().clone(), lf.clone()).into();
             let r3 = self.verify_order_subgoal(g_a_right)?;
             let r4 = self.verify_order_subgoal(g0_left)?;
             if r3.is_true() && r4.is_true() {
@@ -435,13 +430,10 @@ impl Runtime {
                 }
             }
             // a < u + v from a < u and 0 <= v (or symmetric addends).
-            let g_a_left = LessFact::new(
-                f.left.clone(),
-                add.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g0_right = LessEqualFact::new(z.clone(), add.right.as_ref().clone(), lf.clone()).into();
+            let g_a_left =
+                LessFact::new(f.left.clone(), add.left.as_ref().clone(), lf.clone()).into();
+            let g0_right =
+                LessEqualFact::new(z.clone(), add.right.as_ref().clone(), lf.clone()).into();
             let r1 = self.verify_order_subgoal(g_a_left)?;
             let r2 = self.verify_order_subgoal(g0_right)?;
             if r1.is_true() && r2.is_true() {
@@ -453,13 +445,10 @@ impl Runtime {
                     ),
                 )));
             }
-            let g_a_right = LessFact::new(
-                f.left.clone(),
-                add.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g0_left = LessEqualFact::new(z.clone(), add.left.as_ref().clone(), lf.clone()).into();
+            let g_a_right =
+                LessFact::new(f.left.clone(), add.right.as_ref().clone(), lf.clone()).into();
+            let g0_left =
+                LessEqualFact::new(z.clone(), add.left.as_ref().clone(), lf.clone()).into();
             let r3 = self.verify_order_subgoal(g_a_right)?;
             let r4 = self.verify_order_subgoal(g0_left)?;
             if r3.is_true() && r4.is_true() {

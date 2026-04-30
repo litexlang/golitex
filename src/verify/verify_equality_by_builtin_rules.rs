@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use crate::verify::verify_builtin_rules::{
-    compare_normalized_number_str_to_zero, NumberCompareResult,
+    compare_normalized_number_str_to_zero, normalized_decimal_string_is_even_integer,
+    NumberCompareResult,
 };
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 use std::rc::Rc;
@@ -301,6 +302,44 @@ impl Runtime {
         )))
     }
 
+    // Even powers ignore sign, so `x^2 = abs(x)^2`.
+    // Example: `forall x R: x ^ 4 = abs(x) ^ 4`.
+    fn try_verify_abs_even_power(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (left, right) else {
+            return Ok(None);
+        };
+        if !objs_equal_by_display_string(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+        let Obj::Number(exp_num) = left_pow.exponent.as_ref() else {
+            return Ok(None);
+        };
+        if !normalized_decimal_string_is_even_integer(&exp_num.normalized_value) {
+            return Ok(None);
+        }
+
+        let bases_match = match (left_pow.base.as_ref(), right_pow.base.as_ref()) {
+            (Obj::Abs(abs), other) => objs_equal_by_display_string(abs.arg.as_ref(), other),
+            (other, Obj::Abs(abs)) => objs_equal_by_display_string(other, abs.arg.as_ref()),
+            _ => false,
+        };
+        if !bases_match {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "abs: x^n = abs(x)^n for even integer n",
+        )))
+    }
+
     fn try_verify_zero_from_abs_zero(
         &mut self,
         left: &Obj,
@@ -345,6 +384,9 @@ impl Runtime {
             return Ok(Some(done));
         }
         if let Some(done) = self.try_verify_abs_product(left, right, line_file.clone())? {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_verify_abs_even_power(left, right, line_file.clone())? {
             return Ok(Some(done));
         }
         if let Some(done) = self.try_verify_zero_from_abs_zero(left, right, line_file)? {
