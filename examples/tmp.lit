@@ -7,4 +7,8 @@ forall a Z, m, n Z:
     =>:
         a^(m+n) = a^m * a^n
 
+forall a Z:
+    a^1 = a
+
+
 
