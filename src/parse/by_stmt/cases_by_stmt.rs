@@ -8,8 +8,7 @@ impl Runtime {
         let (then_facts, case_body_skip): (Vec<Fact>, usize) = if tb.current()? == RIGHT_ARROW {
             tb.skip_token(RIGHT_ARROW)?;
             let header = &tb.header;
-            if header.len() < tb.parse_index + 2
-                || header.last().map(|t| t.as_str()) != Some(COLON)
+            if header.len() < tb.parse_index + 2 || header.last().map(|t| t.as_str()) != Some(COLON)
             {
                 return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
                     "by cases => ... : expected a goal fact and a trailing `:` on the same line".to_string(),
@@ -19,37 +18,51 @@ impl Runtime {
             let colon_pos = header.len() - 1;
             let fact_tokens = header[tb.parse_index..colon_pos].to_vec();
             if fact_tokens.is_empty() {
-                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by cases => ... : expected a non-empty goal after `=>`".to_string(),
-                    tb.line_file.clone(),
-                ))));
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by cases => ... : expected a non-empty goal after `=>`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
             let mut fact_tb = TokenBlock::new(fact_tokens, vec![], tb.line_file.clone());
             let fact = self.parse_fact(&mut fact_tb)?;
             if !fact_tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by cases => ... : unfinished tokens in goal".to_string(),
-                    tb.line_file.clone(),
-                ))));
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by cases => ... : unfinished tokens in goal".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
             tb.parse_index = colon_pos + 1;
             if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by cases => ... : unexpected tokens after `:`".to_string(),
-                    tb.line_file.clone(),
-                ))));
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by cases => ... : unexpected tokens after `:`".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
             (vec![fact], 0)
         } else {
             tb.skip_token(COLON)?;
             if tb.body.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file("cases: expects at least one body block".to_string(), tb.line_file.clone()),
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "cases: expects at least one body block".to_string(),
+                        tb.line_file.clone(),
+                    ),
                 )));
             }
             let then_facts: Vec<Fact> = {
                 let first = tb.body.get_mut(0).ok_or_else(|| {
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("Expected body".to_string(), tb.line_file.clone())))
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "Expected body".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    ))
                 })?;
                 first.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
                 first
@@ -75,9 +88,12 @@ impl Runtime {
         let (cases, proofs, impossible_facts) = if forall_param_names.is_empty() {
             self.parse_by_cases_case_and_proof_blocks(tb, case_body_skip)?
         } else {
-            self.parse_in_local_free_param_scope(ParamObjType::Forall, &forall_param_names, line_file, |rt| {
-                rt.parse_by_cases_case_and_proof_blocks(tb, case_body_skip)
-            })?
+            self.parse_in_local_free_param_scope(
+                ParamObjType::Forall,
+                &forall_param_names,
+                line_file,
+                |rt| rt.parse_by_cases_case_and_proof_blocks(tb, case_body_skip),
+            )?
         };
         Ok(ByCasesStmt::new(
             cases,
@@ -112,7 +128,10 @@ impl Runtime {
             block.skip_token(COLON)?;
             if !block.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file("case: expected end of head after condition".to_string(), block.line_file.clone()),
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "case: expected end of head after condition".to_string(),
+                        block.line_file.clone(),
+                    ),
                 )));
             }
             cases.push(case);
@@ -129,7 +148,12 @@ impl Runtime {
                         .map(|b| self.parse_stmt(b))
                         .collect::<Result<_, _>>()?;
                     let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("Expected body".to_string(), tb.line_file.clone())))
+                        RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                "Expected body".to_string(),
+                                tb.line_file.clone(),
+                            ),
+                        ))
                     })?;
                     last_block.skip_token(IMPOSSIBLE)?;
                     let imp = self.parse_atomic_fact(last_block, true)?;
