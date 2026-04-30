@@ -66,14 +66,35 @@ src/verify/verify_builtin_rules/number_compare.rs
 These rules describe exponent algebra that is handled directly by builtin verification.
 
 ```litex
+forall a R:
+    a^1 = a
+
 forall a R, m, n N_pos:
     a^(m+n) = a^m * a^n
 ```
 
 Notes:
 
-1. The exponent rule is restricted to positive natural exponents, so `0^0` is not introduced.
-2. The product side may also appear with the factors swapped.
+1. `a^1 = a` is the first power identity.
+2. The exponent addition rule is restricted to positive natural exponents, so `0^0` is not introduced.
+3. The product side may also appear with the factors swapped.
+
+Related code:
+
+```text
+src/verify/verify_equality_by_builtin_rules.rs
+```
+
+## Modulo Rules
+
+These rules describe integer modulo equalities handled directly by builtin verification.
+
+```litex
+forall m Z:
+    m != 0
+    =>:
+        0 % m = 0
+```
 
 Related code:
 

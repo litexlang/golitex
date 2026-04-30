@@ -460,6 +460,13 @@ impl Runtime {
         }
     }
 
+    fn obj_is_builtin_literal_one(obj: &Obj) -> bool {
+        match obj {
+            Obj::Number(n) => n.normalized_value == "1",
+            _ => false,
+        }
+    }
+
     // Literal 0 vs `x - y`: verify the equality if `x = y` holds via the full equality pipeline.
     fn try_verify_zero_equals_subtraction_implies_equal_operands(
         &mut self,
@@ -544,6 +551,69 @@ impl Runtime {
             )));
         }
         Ok(None)
+    }
+
+    // Zero is divisible by every non-zero integer modulus: `0 % m = 0`.
+    // Example: `forall m Z: m != 0 =>: 0 % m = 0`.
+    fn try_verify_zero_mod_equals_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let mod_obj = if Self::obj_is_builtin_literal_zero(left) {
+            match right {
+                Obj::Mod(m) => m,
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            match left {
+                Obj::Mod(m) => m,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        if !Self::obj_is_builtin_literal_zero(mod_obj.left.as_ref()) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: 0 % m = 0",
+        )))
+    }
+
+    // First power identity: `a^1 = a`.
+    // Example: `forall a Z: a^1 = a`.
+    fn try_verify_pow_one_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (pow, other) = match (left, right) {
+            (Obj::Pow(p), other) => (p, other),
+            (other, Obj::Pow(p)) => (p, other),
+            _ => return Ok(None),
+        };
+        if !Self::obj_is_builtin_literal_one(pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+        if !self
+            .verify_objs_are_equal(pow.base.as_ref(), other, line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: a^1 = a",
+        )))
     }
 
     fn power_factor_matches_base_and_exponent(
@@ -1964,6 +2034,12 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_pow_one_identity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_power_addition_exponent_rule(
             left,
             right,
@@ -2051,6 +2127,10 @@ impl Runtime {
             line_file.clone(),
             verify_state,
         )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_zero_mod_equals_zero(left, right, line_file.clone())? {
             return Ok(done);
         }
 

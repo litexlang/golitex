@@ -20,3 +20,8 @@ prove:
     have c Z
     have d Z_nz
     (a + b * c) % d = ((a % d) + ((b % d) * (c % d)) % d) % d
+
+forall m Z:
+    m != 0
+    =>:
+        0 % m = 0
