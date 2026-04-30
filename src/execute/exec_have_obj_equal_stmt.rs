@@ -74,7 +74,11 @@ impl Runtime {
         let mut infer_result = InferResult::new();
 
         let param_infer_result = self
-            .define_params_with_type(&have_obj_equal_stmt.param_def, true, ParamObjType::Identifier)
+            .define_params_with_type(
+                &have_obj_equal_stmt.param_def,
+                true,
+                ParamObjType::Identifier,
+            )
             .map_err(|define_params_error| {
                 short_exec_error(
                     have_obj_equal_stmt.clone().into(),

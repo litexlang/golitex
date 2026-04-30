@@ -126,15 +126,21 @@ impl Runtime {
             ExistBodyFact::AtomicFact(atomic_fact) => ExistBodyFact::AtomicFact(
                 self.inst_atomic_fact(atomic_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
             ),
-            ExistBodyFact::AndFact(and_fact) => ExistBodyFact::AndFact(
-                self.inst_and_fact(and_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
-            ),
+            ExistBodyFact::AndFact(and_fact) => ExistBodyFact::AndFact(self.inst_and_fact(
+                and_fact,
+                param_to_arg_map,
+                to_inst_param_type,
+                inst_lf,
+            )?),
             ExistBodyFact::ChainFact(chain_fact) => ExistBodyFact::ChainFact(
                 self.inst_chain_fact(chain_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
             ),
-            ExistBodyFact::OrFact(or_fact) => ExistBodyFact::OrFact(
-                self.inst_or_fact(or_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
-            ),
+            ExistBodyFact::OrFact(or_fact) => ExistBodyFact::OrFact(self.inst_or_fact(
+                or_fact,
+                param_to_arg_map,
+                to_inst_param_type,
+                inst_lf,
+            )?),
             ExistBodyFact::InlineForall(forall_fact) => ExistBodyFact::InlineForall(
                 self.inst_forall_fact(forall_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
             ),

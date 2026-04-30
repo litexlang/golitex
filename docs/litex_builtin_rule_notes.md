@@ -60,3 +60,23 @@ src/verify/verify_equality_by_builtin_rules.rs
 src/verify/verify_builtin_rules/abs_order_builtin.rs
 src/verify/verify_builtin_rules/number_compare.rs
 ```
+
+## Power Rules
+
+These rules describe exponent algebra that is handled directly by builtin verification.
+
+```litex
+forall a R, m, n N_pos:
+    a^(m+n) = a^m * a^n
+```
+
+Notes:
+
+1. The exponent rule is restricted to positive natural exponents, so `0^0` is not introduced.
+2. The product side may also appear with the factors swapped.
+
+Related code:
+
+```text
+src/verify/verify_equality_by_builtin_rules.rs
+```

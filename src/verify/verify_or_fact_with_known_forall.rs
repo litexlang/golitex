@@ -39,10 +39,7 @@ impl Runtime {
             let stack_idx = envs_count - 1 - i;
             let known_forall_facts_count = {
                 let env = &self.environment_stack[stack_idx];
-                match env
-                    .known_or_facts_in_forall_facts
-                    .get(lookup_key.as_str())
-                {
+                match env.known_or_facts_in_forall_facts.get(lookup_key.as_str()) {
                     Some(v) => v.len(),
                     None => continue,
                 }
@@ -51,13 +48,13 @@ impl Runtime {
                 let entry_idx = known_forall_facts_count - 1 - j;
                 let (fact_args_in_known_forall, given_fact_args, current_known_forall) = {
                     let env = &self.environment_stack[stack_idx];
-                    let Some(known_forall_facts_in_env) = env
-                        .known_or_facts_in_forall_facts
-                        .get(lookup_key.as_str())
+                    let Some(known_forall_facts_in_env) =
+                        env.known_or_facts_in_forall_facts.get(lookup_key.as_str())
                     else {
                         continue;
                     };
-                    let Some(current_known_forall) = known_forall_facts_in_env.get(entry_idx) else {
+                    let Some(current_known_forall) = known_forall_facts_in_env.get(entry_idx)
+                    else {
                         continue;
                     };
                     (
@@ -66,11 +63,10 @@ impl Runtime {
                         current_known_forall.clone(),
                     )
                 };
-                let match_result =
-                    self.match_args_in_fact_in_known_forall_fact_with_given_args(
-                        &fact_args_in_known_forall,
-                        &given_fact_args,
-                    )?;
+                let match_result = self.match_args_in_fact_in_known_forall_fact_with_given_args(
+                    &fact_args_in_known_forall,
+                    &given_fact_args,
+                )?;
                 if let Some(arg_map) = match_result {
                     return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
                 }
@@ -153,14 +149,14 @@ impl Runtime {
             )
             .map_err(|e| {
                 {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_or_fact.clone()).into_stmt()),
-                String::new(),
-                given_or_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            )))
-        }
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(given_or_fact.clone()).into_stmt()),
+                        String::new(),
+                        given_or_fact.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
+                }
             })?;
         if args_param_types.is_unknown() {
             return Ok(None);
@@ -176,35 +172,30 @@ impl Runtime {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = self
-                .inst_fact(
-                    dom_fact,
-                    &param_to_arg_map,
-                    ParamObjType::Forall,
-                    None,
-                )
+                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_or_fact.clone()).into_stmt()),
-                String::new(),
-                given_or_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            )))
-        }
+                            Some(Fact::from(given_or_fact.clone()).into_stmt()),
+                            String::new(),
+                            given_or_fact.line_file.clone(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             let result = self
                 .verify_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|e| {
                     {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(given_or_fact.clone()).into_stmt()),
-                String::new(),
-                given_or_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            )))
-        }
+                            Some(Fact::from(given_or_fact.clone()).into_stmt()),
+                            String::new(),
+                            given_or_fact.line_file.clone(),
+                            Some(e),
+                            vec![],
+                        )))
+                    }
                 })?;
             if result.is_unknown() {
                 return Ok(None);

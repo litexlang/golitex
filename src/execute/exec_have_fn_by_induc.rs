@@ -87,8 +87,10 @@ impl Runtime {
         )
         .into();
 
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(function_in_function_set_fact)
-            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+            function_in_function_set_fact,
+        )
+        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         Ok(())
     }
@@ -309,7 +311,9 @@ impl Runtime {
                 EqualFact::new(fn_obj.clone(), equal_to.clone(), stmt.line_file.clone()).into();
 
             let result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(equal_fact.clone())
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    equal_fact.clone(),
+                )
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
             Self::merge_store_infer_with_fallback_fact(&mut infer_result, result, &equal_fact);
@@ -357,11 +361,14 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )?;
 
-                let forall_fact = self.inst_have_fn_forall_fact_for_store(forall_fact_raw)
+                let forall_fact = self
+                    .inst_have_fn_forall_fact_for_store(forall_fact_raw)
                     .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
                 let result = self
-                    .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_fact.clone())
+                    .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        forall_fact.clone(),
+                    )
                     .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
                 Self::merge_store_infer_with_fallback_fact(&mut infer_result, result, &forall_fact);
             }
@@ -411,11 +418,14 @@ impl Runtime {
                         stmt.line_file.clone(),
                     )?;
 
-                    let forall_fact = self.inst_have_fn_forall_fact_for_store(forall_fact_raw)
+                    let forall_fact = self
+                        .inst_have_fn_forall_fact_for_store(forall_fact_raw)
                         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
                     let result = self
-                        .verify_well_defined_and_store_and_infer_with_default_verify_state(forall_fact.clone())
+                        .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            forall_fact.clone(),
+                        )
                         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
                     Self::merge_store_infer_with_fallback_fact(
                         &mut infer_result,

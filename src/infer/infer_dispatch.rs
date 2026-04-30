@@ -109,5 +109,4 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         Ok(InferResult::new())
     }
-
 }

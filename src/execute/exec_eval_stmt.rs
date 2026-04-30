@@ -81,38 +81,44 @@ impl Runtime {
             ),
             Obj::Add(b) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
-                let r = self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                let r =
+                    self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
                 Ok(Add::new(l, r).into())
             }
             Obj::Sub(b) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
-                let r = self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                let r =
+                    self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
                 Ok(Sub::new(l, r).into())
             }
             Obj::Mul(b) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
-                let r = self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                let r =
+                    self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
                 Ok(Mul::new(l, r).into())
             }
             Obj::Div(b) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj((*b.left).clone(), eval_stmt)?;
-                let r = self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
+                let r =
+                    self.eval_reduce_nested_sum_product_in_obj((*b.right).clone(), eval_stmt)?;
                 Ok(Div::new(l, r).into())
             }
             Obj::Mod(m) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
-                let r = self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                let r =
+                    self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
                 Ok(Mod::new(l, r).into())
             }
             Obj::Pow(p) => {
                 let base =
                     self.eval_reduce_nested_sum_product_in_obj((*p.base).clone(), eval_stmt)?;
-                let exp = self
-                    .eval_reduce_nested_sum_product_in_obj((*p.exponent).clone(), eval_stmt)?;
+                let exp =
+                    self.eval_reduce_nested_sum_product_in_obj((*p.exponent).clone(), eval_stmt)?;
                 Ok(Pow::new(base, exp).into())
             }
             Obj::Abs(a) => {
-                let arg = self.eval_reduce_nested_sum_product_in_obj((*a.arg).clone(), eval_stmt)?;
+                let arg =
+                    self.eval_reduce_nested_sum_product_in_obj((*a.arg).clone(), eval_stmt)?;
                 Ok(Abs::new(arg).into())
             }
             Obj::Log(l) => {
@@ -122,12 +128,14 @@ impl Runtime {
             }
             Obj::Max(m) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
-                let r = self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                let r =
+                    self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
                 Ok(Max::new(l, r).into())
             }
             Obj::Min(m) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj((*m.left).clone(), eval_stmt)?;
-                let r = self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
+                let r =
+                    self.eval_reduce_nested_sum_product_in_obj((*m.right).clone(), eval_stmt)?;
                 Ok(Min::new(l, r).into())
             }
             other => Ok(other),
@@ -225,7 +233,8 @@ impl Runtime {
         for k in ai..=bi {
             let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
             param_to_arg_map.insert(pname.clone(), Number::new(k.to_string()).into());
-            let inst = self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
+            let inst =
+                self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
             let term = self.resolve_obj(&inst);
             let term = self.eval_reduce_nested_sum_product_in_obj(term, eval_stmt)?;
             let Some(n) = term.evaluate_to_normalized_decimal_number() else {
@@ -241,24 +250,28 @@ impl Runtime {
             };
             if is_product {
                 let step: Obj = Mul::new(acc_num.into(), n.into()).into();
-                acc_num = step.evaluate_to_normalized_decimal_number().ok_or_else(|| {
-                    short_exec_error(
-                        eval_stmt.clone().into(),
-                        "eval: product accumulation failed to normalize".to_string(),
-                        None,
-                        vec![],
-                    )
-                })?;
+                acc_num = step
+                    .evaluate_to_normalized_decimal_number()
+                    .ok_or_else(|| {
+                        short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: product accumulation failed to normalize".to_string(),
+                            None,
+                            vec![],
+                        )
+                    })?;
             } else {
                 let step: Obj = Add::new(acc_num.into(), n.into()).into();
-                acc_num = step.evaluate_to_normalized_decimal_number().ok_or_else(|| {
-                    short_exec_error(
-                        eval_stmt.clone().into(),
-                        "eval: sum accumulation failed to normalize".to_string(),
-                        None,
-                        vec![],
-                    )
-                })?;
+                acc_num = step
+                    .evaluate_to_normalized_decimal_number()
+                    .ok_or_else(|| {
+                        short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: sum accumulation failed to normalize".to_string(),
+                            None,
+                            vec![],
+                        )
+                    })?;
             }
         }
         Ok(acc_num.into())
@@ -372,17 +385,9 @@ impl Runtime {
         eval_stmt: &EvalStmt,
     ) -> Result<MatrixListObj, RuntimeError> {
         let r1 = left.rows.len();
-        let c1 = if r1 == 0 {
-            0
-        } else {
-            left.rows[0].len()
-        };
+        let c1 = if r1 == 0 { 0 } else { left.rows[0].len() };
         let r2 = right.rows.len();
-        let c2 = if r2 == 0 {
-            0
-        } else {
-            right.rows[0].len()
-        };
+        let c2 = if r2 == 0 { 0 } else { right.rows[0].len() };
         if c1 != r2 {
             return Err(short_exec_error(
                 eval_stmt.clone().into(),
@@ -397,11 +402,8 @@ impl Runtime {
             for k in 0..c2 {
                 let mut acc_num = Number::new("0".to_string());
                 for j in 0..c1 {
-                    let prod_obj: Obj = Mul::new(
-                        (*left.rows[i][j]).clone(),
-                        (*right.rows[j][k]).clone(),
-                    )
-                    .into();
+                    let prod_obj: Obj =
+                        Mul::new((*left.rows[i][j]).clone(), (*right.rows[j][k]).clone()).into();
                     let Some(p) = prod_obj.evaluate_to_normalized_decimal_number() else {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
@@ -605,7 +607,8 @@ impl Runtime {
                     );
                 }
                 Obj::Pow(pow) => {
-                    let left = self.evaluate_symbol_obj_iterative((*pow.base).clone(), eval_stmt)?;
+                    let left =
+                        self.evaluate_symbol_obj_iterative((*pow.base).clone(), eval_stmt)?;
                     let right =
                         self.evaluate_symbol_obj_iterative((*pow.exponent).clone(), eval_stmt)?;
                     let combined: Obj = Pow::new(left, right).into();
@@ -623,8 +626,7 @@ impl Runtime {
                             }
                             return Err(short_exec_error(
                                 eval_stmt.clone().into(),
-                                "eval: non-numeric power with pending binary operation"
-                                    .to_string(),
+                                "eval: non-numeric power with pending binary operation".to_string(),
                                 None,
                                 vec![],
                             ));
@@ -696,7 +698,8 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done = self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixAdd(ma), eval_stmt)?;
+                    let done =
+                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixAdd(ma), eval_stmt)?;
                     return Ok(done.into());
                 }
                 Obj::MatrixSub(ms) => {
@@ -708,7 +711,8 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done = self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixSub(ms), eval_stmt)?;
+                    let done =
+                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixSub(ms), eval_stmt)?;
                     return Ok(done.into());
                 }
                 Obj::MatrixMul(mm) => {
@@ -720,7 +724,8 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done = self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixMul(mm), eval_stmt)?;
+                    let done =
+                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixMul(mm), eval_stmt)?;
                     return Ok(done.into());
                 }
                 Obj::MatrixScalarMul(m) => {
@@ -745,7 +750,8 @@ impl Runtime {
                             vec![],
                         ));
                     }
-                    let done = self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixPow(mp), eval_stmt)?;
+                    let done =
+                        self.eval_to_matrix_list_for_eval_stmt(Obj::MatrixPow(mp), eval_stmt)?;
                     return Ok(done.into());
                 }
                 _ => {
@@ -863,13 +869,12 @@ impl Runtime {
         }
 
         for algo_case in algo_definition.cases.iter() {
-            let instantiated_case_condition =
-                self.inst_atomic_fact(
-                    &algo_case.condition,
-                    &param_to_arg_map,
-                    ParamObjType::DefAlgo,
-                    None,
-                )?;
+            let instantiated_case_condition = self.inst_atomic_fact(
+                &algo_case.condition,
+                &param_to_arg_map,
+                ParamObjType::DefAlgo,
+                None,
+            )?;
             let verify_result = self
                 .verify_atomic_fact(&instantiated_case_condition, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
@@ -882,7 +887,11 @@ impl Runtime {
                 })?;
 
             if verify_result.is_true() {
-                return self.inst_obj(&algo_case.return_stmt.value, &param_to_arg_map, ParamObjType::DefAlgo);
+                return self.inst_obj(
+                    &algo_case.return_stmt.value,
+                    &param_to_arg_map,
+                    ParamObjType::DefAlgo,
+                );
             }
             if verify_result.is_unknown() {
                 let reversed_case_condition = instantiated_case_condition.make_reversed();
@@ -911,7 +920,11 @@ impl Runtime {
         }
 
         if let Some(default_return_stmt) = &algo_definition.default_return {
-            self.inst_obj(&default_return_stmt.value, &param_to_arg_map, ParamObjType::DefAlgo)
+            self.inst_obj(
+                &default_return_stmt.value,
+                &param_to_arg_map,
+                ParamObjType::DefAlgo,
+            )
         } else {
             Err(short_exec_error(
                 eval_stmt.clone().into(),
@@ -952,7 +965,9 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&evaluated_equal_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(evaluated_equal_fact)?;
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+            evaluated_equal_fact,
+        )?;
 
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }

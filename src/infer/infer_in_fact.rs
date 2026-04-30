@@ -114,7 +114,11 @@ impl Runtime {
             Obj::FnSet(fs) => fs.body.clone(),
             _ => return Ok(InferResult::new()),
         };
-        self.register_known_fn_restrict_to_for_element(&rf.obj, restrict_body, rf.line_file.clone());
+        self.register_known_fn_restrict_to_for_element(
+            &rf.obj,
+            restrict_body,
+            rf.line_file.clone(),
+        );
         Ok(InferResult::new())
     }
 
