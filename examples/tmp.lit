@@ -1,43 +1,33 @@
-forall a R:
-    a >= 0
-    =>:
-        abs(a) = a
+prop prime(a N_pos):
+    2 <= a
+    forall b N_pos:
+        2 <= b < a
+        =>:
+            a % b != 0
 
-forall a R:
-    a <= 0
-    =>:
-        abs(a) = -a
+# can be verified by induction
+know:
+    forall a, k N_pos:
+        k <= a
+        =>:
+            product(1, a, 'N_pos(x){x}) % k = 0
 
-forall a R:
-    0 <= abs(a)
-    abs(a) = a or abs(a) = -a
+    forall a N_pos:
+        2 <= a
+        =>:
+            exist k N_pos st {$prime(k), a % k = 0}
 
-forall a R:
-    abs(a) = 0
-    =>:
-        a = 0
+    forall a N_pos:
+        a <= product(1, a, 'N_pos(x){x})
 
-forall x, y R:
-    abs(x * y) = abs(x) * abs(y)
-
-forall x R:
-    x <= abs(x)
-    -x <= abs(x)
-
-forall x, b R:
-    x <= b
-    -x <= b
-    =>:
-        abs(x) <= b
-
-forall x, y R:
-    abs(x + y) <= abs(x) + abs(y)
-    abs(x - y) <= abs(x) + abs(y)
-
-forall x, y R:
-    abs(x) - abs(y) <= abs(x + y)
-    abs(x) - abs(y) <= abs(x - y)
-
-forall x R:
-    x ^ 2 = abs(x) ^ 2
-    x ^ 4 = abs(x) ^ 4
+claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
+    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
+    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
+    by cases k > a:
+        case k <= a:
+            product(1, a, 'N_pos(x){x}) % k = 0
+            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
+        case k > a:
+            do_nothing
+    witness exist k N_pos st {k > a, $prime(k)} from k

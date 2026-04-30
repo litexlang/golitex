@@ -243,15 +243,7 @@ impl Runtime {
         if tb.current()? == LEFT_CURLY_BRACE {
             return self.parse_inline_forall_braced_then_list(tb);
         }
-        Err(RuntimeError::from(ParseRuntimeError(
-            RuntimeErrorStruct::new_with_msg_and_line_file(
-                format!(
-                    "`{}` requires `{{ ... }}` after `{}`",
-                    FORALL_BANG, RIGHT_ARROW
-                ),
-                tb.line_file.clone(),
-            ),
-        )))
+        Ok(vec![self.parse_exist_or_and_chain_atomic_fact(tb)?])
     }
 
     fn parse_inline_forall_braced_then_list(
