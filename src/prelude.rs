@@ -201,9 +201,6 @@ pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByEnumerateClosedRangeStmt;
-pub use crate::stmt::ByFiniteSeqSetStmt;
-pub use crate::stmt::ByMatrixSetStmt;
-pub use crate::stmt::BySeqSetStmt;
 pub use crate::stmt::Stmt;
 pub use crate::verify::VerifyState;
 

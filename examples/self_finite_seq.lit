@@ -6,6 +6,4 @@ a(1) = 1
 a(2) = 2
 a(3) = 3
 
-by finite_seq: finite_seq(R, 3)
-
-finite_seq(R, 3) = fn(x1 N_pos: x1 <= 3) R
+finite_seq(R, 3) = fn(x N_pos: x <= 3) R

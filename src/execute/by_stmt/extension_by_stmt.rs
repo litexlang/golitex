@@ -8,7 +8,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 short_exec_error(
- stmt.clone().into(),
+                    stmt.clone().into(),
                     format!("by extension: left set `{}` is not well-defined", stmt.left),
                     Some(well_defined_error),
                     vec![],
@@ -17,7 +17,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 short_exec_error(
- stmt.clone().into(),
+                    stmt.clone().into(),
                     format!(
                         "by extension: right set `{}` is not well-defined",
                         stmt.right
@@ -34,14 +34,14 @@ impl Runtime {
                     let one_proof_stmt_exec_result =
                         rt.exec_stmt(proof_stmt).map_err(|stmt_error| {
                             short_exec_error(
- stmt.clone().into(),
-                    format!(
+                                stmt.clone().into(),
+                                format!(
                                     "by extension: failed to execute proof stmt `{}`",
                                     proof_stmt
                                 ),
-                    Some(stmt_error),
-                    vec![],
-                )
+                                Some(stmt_error),
+                                vec![],
+                            )
                         })?;
                     inside_results.push(one_proof_stmt_exec_result);
                 }
@@ -69,14 +69,14 @@ impl Runtime {
                 )
                 .map_err(|verify_error| {
                     short_exec_error(
- stmt.clone().into(),
-                    format!(
+                        stmt.clone().into(),
+                        format!(
                             "by extension: failed to prove left subset right `{}`",
                             left_to_right_forall_fact
                         ),
-                    Some(verify_error),
-                    vec![],
-                )
+                        Some(verify_error),
+                        vec![],
+                    )
                 })?;
 
                 let right_to_left_forall_fact = ForallFact::new(
@@ -100,14 +100,14 @@ impl Runtime {
                 )
                 .map_err(|verify_error| {
                     short_exec_error(
- stmt.clone().into(),
-                    format!(
+                        stmt.clone().into(),
+                        format!(
                             "by extension: failed to prove right subset left `{}`",
                             right_to_left_forall_fact
                         ),
-                    Some(verify_error),
-                    vec![],
-                )
+                        Some(verify_error),
+                        vec![],
+                    )
                 })?;
 
                 Ok::<_, RuntimeError>((
