@@ -15,13 +15,15 @@ impl ForallFact {
         dom_facts: Vec<Fact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
-    ) -> Self {
-        ForallFact {
+    ) -> Result<Self, RuntimeError> {
+        let forall_fact = ForallFact {
             params_def_with_type,
             dom_facts,
             then_facts,
             line_file,
-        }
+        };
+        check_forall_fact_has_no_duplicate_forall_free_parameter(&forall_fact)?;
+        Ok(forall_fact)
     }
 
     pub fn expand_then_facts_with_order_chain_closure(&mut self) -> Result<(), RuntimeError> {

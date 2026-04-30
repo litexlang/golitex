@@ -20,24 +20,10 @@ know:
     forall a N_pos:
         a <= product(1, a, 'N_pos(x){x})
 
-# prove forall positive integer a, there exists a prime number k larger than a
-# Step1: There exists a prime number k that divides factorial(a) + 1
-# Step2: Therefore, k must be greater than a. Prove case by case: k <= a or k > a
-    # By Step1, factorial(a) + 1 is divisible by k
-    # However, (factorial(a) + 1) % k = 1 != 0
-    # So case k <= a is impossible
-# Step3: Therefore, there exists a prime number k that is greater than a
-claim:
-    prove:
-        forall a N_pos:
-            2 <= a
-            =>:
-                exist k N_pos st {k > a, $prime(k)}
+claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
     2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
     have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
-    by cases:
-        prove:
-            k > a
+    by cases k > a:
         case k <= a:
             product(1, a, 'N_pos(x){x}) % k = 0
             (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1

@@ -34,8 +34,7 @@ impl Runtime {
                 // `restrictive (fn …)` is `$restrict_fn_in` shape. Proving the definition often
                 // repeats a `forall` that membership `f $in fn …` already encodes when the type is
                 // exactly this function space; the dedicated proof may still return unknown.
-                let membership =
-                    InFact::new(obj, fs.clone().into(), default_line_file()).into();
+                let membership = InFact::new(obj, fs.clone().into(), default_line_file()).into();
                 self.verify_atomic_fact(&membership, verify_state)
             }
         }

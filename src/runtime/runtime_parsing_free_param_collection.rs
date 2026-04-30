@@ -32,10 +32,13 @@ impl FreeParamCollection {
         let stack = self.params.entry(name.clone()).or_default();
         if stack.iter().any(|b| b.kind == kind) {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(format!(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
                         "free parameter `{}` is already bound as {:?} in an active scope",
                         name, kind
-                    ), line_file),
+                    ),
+                    line_file,
+                ),
             )));
         }
         stack.push(FreeParamTypeAndLineFile { kind, line_file });
@@ -70,7 +73,9 @@ impl FreeParamCollection {
     }
 
     pub fn name_is_in_any_free_param_map(&self, name: &str) -> bool {
-        self.params.get(name).map_or(false, |stack| !stack.is_empty())
+        self.params
+            .get(name)
+            .map_or(false, |stack| !stack.is_empty())
     }
 
     pub fn resolve_identifier_to_free_param_obj(&self, name: &str) -> Obj {

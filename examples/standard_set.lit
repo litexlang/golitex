@@ -37,3 +37,14 @@ c $in Z
 
 3 - 1 $in Q_pos
 1 + 0.5 $in Q_pos
+
+forall a, b N:
+    a + b $in N
+    a * b $in N
+
+forall a N_pos, b N:
+    a + b $in N_pos
+    b + a $in N_pos
+
+forall a, b N_pos:
+    a * b $in N_pos

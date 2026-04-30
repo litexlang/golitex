@@ -38,18 +38,20 @@ impl Runtime {
         } else {
             "by induc: failed to build concluding forall fact"
         };
-        let corresponding_forall_fact = self.by_induc_stmt_stored_forall_fact(stmt).map_err(
-            |runtime_error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    store_err_msg.to_string(),
-                    Some(runtime_error),
-                    vec![],
-                )
-            },
-        )?;
-        let infer_after_store =
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(corresponding_forall_fact)?;
+        let corresponding_forall_fact =
+            self.by_induc_stmt_stored_forall_fact(stmt)
+                .map_err(|runtime_error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        store_err_msg.to_string(),
+                        Some(runtime_error),
+                        vec![],
+                    )
+                })?;
+        let infer_after_store = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                corresponding_forall_fact,
+            )?;
 
         Ok(non_err_after_body.with_infers(infer_after_store))
     }
@@ -77,22 +79,21 @@ impl Runtime {
         let n_induc = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
         // `to_prove` uses the outer param name (e.g. `n` in `$p(n)`); substitute it with the inner `y` object.
         let y_map = HashMap::from([(stmt.param.clone(), y_obj.clone())]);
-        let p_y = self.inst_exist_or_and_chain_atomic_fact(fact, &y_map, ParamObjType::Forall, None)?;
-        Ok(
-            ForallFact::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec![inner],
-                    ParamType::Obj(StandardSet::Z.into()),
-                )]),
-                vec![
-                    GreaterEqualFact::new(y_obj.clone(), stmt.induc_from.clone(), lf.clone()).into(),
-                    LessEqualFact::new(y_obj, n_induc, lf.clone()).into(),
-                ],
-                vec![p_y],
-                lf,
-            )
-            .into(),
-        )
+        let p_y =
+            self.inst_exist_or_and_chain_atomic_fact(fact, &y_map, ParamObjType::Forall, None)?;
+        Ok(ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![inner],
+                ParamType::Obj(StandardSet::Z.into()),
+            )]),
+            vec![
+                GreaterEqualFact::new(y_obj.clone(), stmt.induc_from.clone(), lf.clone()).into(),
+                LessEqualFact::new(y_obj, n_induc, lf.clone()).into(),
+            ],
+            vec![p_y],
+            lf,
+        )?
+        .into())
     }
 
     /// Step obligation for strong induc: `forall n, n >= m, (forall y, m<=y<=n =>: P(y)) =>: P(n+1)`.
@@ -107,7 +108,8 @@ impl Runtime {
         let y_obj = obj_for_bound_param_in_scope(inner.clone(), ParamObjType::Forall);
         // Same as IH: map outer param name in `$p(n)` to the inner `y` binding.
         let y_map = HashMap::from([(stmt.param.clone(), y_obj.clone())]);
-        let p_y = self.inst_exist_or_and_chain_atomic_fact(fact, &y_map, ParamObjType::Forall, None)?;
+        let p_y =
+            self.inst_exist_or_and_chain_atomic_fact(fact, &y_map, ParamObjType::Forall, None)?;
         let inner_forall: Fact = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![inner],
@@ -119,22 +121,15 @@ impl Runtime {
             ],
             vec![p_y],
             lf.clone(),
-        )
+        )?
         .into();
 
-        let param_plus_one_obj = Add::new(
-            n_forall.clone(),
-            Number::new("1".to_string()).into(),
-        )
-        .into();
+        let param_plus_one_obj =
+            Add::new(n_forall.clone(), Number::new("1".to_string()).into()).into();
         let mut n_to_n1: HashMap<String, Obj> = HashMap::new();
         n_to_n1.insert(stmt.param.clone(), param_plus_one_obj);
-        let p_n1 = self.inst_exist_or_and_chain_atomic_fact(
-            fact,
-            &n_to_n1,
-            ParamObjType::Forall,
-            None,
-        )?;
+        let p_n1 =
+            self.inst_exist_or_and_chain_atomic_fact(fact, &n_to_n1, ParamObjType::Forall, None)?;
 
         Ok(ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -147,7 +142,7 @@ impl Runtime {
             ],
             vec![p_n1],
             lf,
-        )
+        )?
         .into())
     }
 
@@ -188,8 +183,8 @@ impl Runtime {
 
         for fact in stmt.to_prove.iter() {
             let ih = self.strong_induc_ih_forall_fact(stmt, fact)?;
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(ih).map_err(
-                |e| {
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(ih)
+                .map_err(|e| {
                     short_exec_error(
                         stmt.clone().into(),
                         "strong_induc: failed to assume strong induction hypothesis in proof"
@@ -197,8 +192,7 @@ impl Runtime {
                         Some(e),
                         vec![],
                     )
-                },
-            )?;
+                })?;
         }
         Ok(())
     }
@@ -314,8 +308,7 @@ impl Runtime {
                 )
             })?;
 
-        let induc_param_obj =
-            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
+        let induc_param_obj = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
         let induc_map: HashMap<String, Obj> =
             HashMap::from([(stmt.param.clone(), induc_param_obj)]);
         for fact in stmt.to_prove.iter() {
@@ -356,23 +349,21 @@ impl Runtime {
                 None,
             )?);
         }
-        Ok(
-            ForallFact::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec![stmt.param.clone()],
-                    ParamType::Obj(StandardSet::Z.into()),
-                )]),
-                vec![GreaterEqualFact::new(
-                    obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Forall),
-                    stmt.induc_from.clone(),
-                    stmt.line_file.clone(),
-                )
-                .into()],
-                then_facts,
+        Ok(ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![stmt.param.clone()],
+                ParamType::Obj(StandardSet::Z.into()),
+            )]),
+            vec![GreaterEqualFact::new(
+                obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Forall),
+                stmt.induc_from.clone(),
                 stmt.line_file.clone(),
             )
-            .into(),
-        )
+            .into()],
+            then_facts,
+            stmt.line_file.clone(),
+        )?
+        .into())
     }
 
     fn exec_by_induc_stmt_for_one_fact(
@@ -466,7 +457,7 @@ impl Runtime {
             ],
             vec![next_fact_of_induction_step],
             stmt.line_file.clone(),
-        )
+        )?
         .into();
 
         self.verify_fact_return_err_if_not_true(

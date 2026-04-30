@@ -15,13 +15,15 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
-                return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                    Some(Fact::from(and_fact.clone()).into_stmt()),
-                    String::new(),
-                    and_fact.line_file(),
-                    Some(e),
-                    vec![],
-                ))));
+                return Err(RuntimeError::from(VerifyRuntimeError(
+                    RuntimeErrorStruct::new(
+                        Some(Fact::from(and_fact.clone()).into_stmt()),
+                        String::new(),
+                        and_fact.line_file(),
+                        Some(e),
+                        vec![],
+                    ),
+                )));
             }
         }
 
@@ -60,13 +62,15 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
-                return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                    Some(Fact::from(chain_fact.clone()).into_stmt()),
-                    String::new(),
-                    chain_fact.line_file(),
-                    Some(e),
-                    vec![],
-                ))));
+                return Err(RuntimeError::from(VerifyRuntimeError(
+                    RuntimeErrorStruct::new(
+                        Some(Fact::from(chain_fact.clone()).into_stmt()),
+                        String::new(),
+                        chain_fact.line_file(),
+                        Some(e),
+                        vec![],
+                    ),
+                )));
             }
         }
 

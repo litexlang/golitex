@@ -93,7 +93,7 @@ impl Runtime {
                 )
             }
             // No infer when literal `0` is on the **left** (e.g. `0 < a` from `a > k`, k>0).
-            // Flipping would store `(-1)*a < 0`, which requires `a $in R` for WD; parameters in a
+            // Flipping would store `(-1)*a < 0`, which requires `a $in R` for well-defined; parameters in a
             // finite list or other scopes may not have that yet.
             _ => None,
         }
@@ -103,14 +103,15 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<InferResult, RuntimeError> {
-        let Some(inferred_atomic) = self.atomic_fact_infer_opposite_mul_minus_one_target(atomic_fact)
+        let Some(inferred_atomic) =
+            self.atomic_fact_infer_opposite_mul_minus_one_target(atomic_fact)
         else {
             return Ok(InferResult::new());
         };
         let fact_to_store: Fact = inferred_atomic.clone().into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
-        // Do not run full `verify_fact_well_defined` here: WD for the flipped atom can re-enter
+        // Do not run full `verify_fact_well_defined` here: well-defined for the flipped atom can re-enter
         // `verify_fn_obj_well_defined` (e.g. intermediate `… $in N`) and this infer path again,
         // causing mutual recursion / stack overflow (see `examples/euler_phi.lit`).
         let inner = self

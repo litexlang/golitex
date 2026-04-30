@@ -5,3 +5,6 @@ have fn g(x R) R = x
 forall x R: 
     f(x) = x = g(x)
 $fn_eq(f, g)
+
+forall x R:
+    (f(x) + g(x)) * g(x) = (g(x) + f(x)) * f(x)

@@ -78,7 +78,9 @@ impl Runtime {
         }
 
         let infer_result_from_stored_forall_fact = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(corresponding_forall_fact.clone())
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                corresponding_forall_fact.clone(),
+            )
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -120,7 +122,8 @@ impl Runtime {
             | Fact::OrFact(_)
             | Fact::ExistFact(_)
             | Fact::ForallFact(_)
-            | Fact::ForallFactWithIff(_) => None,
+            | Fact::ForallFactWithIff(_)
+            | Fact::NotForall(_) => None,
         }
     }
 
@@ -135,21 +138,31 @@ impl Runtime {
             match value {
                 Some(number) => number.normalized_value,
                 _ => {
-                    return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
+                    return Err(UnknownRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!(
                             "by for: range boundary `{}` must be a calculable number expression",
                             number_like_obj
-                        ), line_file))
+                        ),
+                            line_file,
+                        ),
+                    )
                     .into());
                 }
             }
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                    "by for: range boundary `{}` is not an integer number",
-                    number_like_obj
-                ), line_file))
-            .into());
+            return Err(
+                UnknownRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "by for: range boundary `{}` is not an integer number",
+                        number_like_obj
+                    ),
+                    line_file,
+                ))
+                .into(),
+            );
         }
         Ok(calculated_string)
     }
@@ -287,7 +300,9 @@ impl Runtime {
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result = self.verify_fact(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
-                self.verify_well_defined_and_store_and_infer_with_default_verify_state(dom_fact.clone())?;
+                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    dom_fact.clone(),
+                )?;
             } else if verify_dom_result.is_unknown() {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
                     let verify_negation_result =

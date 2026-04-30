@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_curried_function_obj_from_layers, forall_binders_dom_and_curried_layers_from_fn_set_clause,
+    build_curried_function_obj_from_layers,
+    forall_binders_dom_and_curried_layers_from_fn_set_clause,
 };
 
 impl Runtime {
@@ -58,8 +59,7 @@ impl Runtime {
             ParamObjType::Identifier,
         )?;
 
-        let function_identifier_obj: Obj =
-            Identifier::new(have_fn_equal_stmt.name.clone()).into();
+        let function_identifier_obj: Obj = Identifier::new(have_fn_equal_stmt.name.clone()).into();
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj.clone(),
@@ -69,7 +69,9 @@ impl Runtime {
         .into();
 
         let infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(function_in_function_set_fact)
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                function_in_function_set_fact,
+            )
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_stmt.clone().into(),
@@ -79,10 +81,13 @@ impl Runtime {
                 )
             })?;
 
+        let stmt_lf = have_fn_equal_stmt.line_file.clone();
         self.register_known_objs_in_fn_sets_for_element_body(
             &function_identifier_obj,
             fn_set_stored.body.clone(),
             Some(have_fn_equal_stmt.equal_to.clone()),
+            stmt_lf.clone(),
+            stmt_lf,
         );
 
         let (param_defs_with_type, forall_dom_facts, curried_layers) = self
@@ -105,7 +110,7 @@ impl Runtime {
             forall_dom_facts,
             vec![function_equals_equal_to_fact.into()],
             have_fn_equal_stmt.line_file.clone(),
-        );
+        )?;
 
         let to_store = self.inst_have_fn_forall_fact_for_store(forall_fact)?;
 

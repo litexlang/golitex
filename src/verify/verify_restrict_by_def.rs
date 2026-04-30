@@ -187,7 +187,7 @@ impl Runtime {
             flow.forall_dom_facts.clone(),
             Vec::new(),
             flow.restrict_fact.line_file.clone(),
-        );
+        )?;
         self.run_in_local_env(|rt| {
             rt.forall_assume_params_and_dom_in_current_env(&stub, verify_state)?;
             rt.verify_obj_well_defined_and_store_cache(&flow.applied_fn_obj, verify_state)
@@ -206,7 +206,7 @@ impl Runtime {
             return Some(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     flow.restrict_fact.clone().into(),
-                    "restrict_fn_in: WD on narrowed domain; known fn_set already has same return_set"
+                    "restrict_fn_in: well-defined on narrowed domain; known fn_set already has same return_set"
                         .to_string(),
                     Vec::new(),
                 ))
@@ -233,7 +233,7 @@ impl Runtime {
             flow.forall_dom_facts,
             then_facts,
             flow.restrict_fact.line_file.clone(),
-        );
+        )?;
 
         let forall_result = self.verify_forall_fact(&forall, verify_state)?;
         if !forall_result.is_true() {

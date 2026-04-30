@@ -14,18 +14,16 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
-                return Err(
-                    {
-                        VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(fact.clone()).into_stmt()),
-                String::new(),
-                fact.line_file(),
-                Some(e),
-                vec![],
-            ))
-            .into()
-        },
-                );
+                return Err({
+                    VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(fact.clone()).into_stmt()),
+                        String::new(),
+                        fact.line_file(),
+                        Some(e),
+                        vec![],
+                    ))
+                    .into()
+                });
             }
         }
 

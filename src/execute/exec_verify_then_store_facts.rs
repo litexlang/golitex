@@ -20,12 +20,7 @@ impl Runtime {
             fact.clone(),
         )
         .map_err(|store_fact_error| {
-            short_exec_error(
-                stmt_for_fact_errors,
-                "",
-                Some(store_fact_error),
-                vec![],
-            )
+            short_exec_error(stmt_for_fact_errors, "", Some(store_fact_error), vec![])
         })
     }
 
@@ -46,12 +41,7 @@ impl Runtime {
             })?;
         self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact.clone())
             .map_err(|store_fact_error| {
-                short_exec_error(
-                    stmt_for_fact_errors,
-                    "",
-                    Some(store_fact_error),
-                    vec![],
-                )
+                short_exec_error(stmt_for_fact_errors, "", Some(store_fact_error), vec![])
             })
     }
 
@@ -62,13 +52,6 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().into();
         self.verify_well_defined_and_store_and_infer(fact, verify_state)
-            .map_err(|e| {
-                short_exec_error(
-                    stmt_for_fact_errors,
-                    "",
-                    Some(e),
-                    vec![],
-                )
-            })
+            .map_err(|e| short_exec_error(stmt_for_fact_errors, "", Some(e), vec![]))
     }
 }

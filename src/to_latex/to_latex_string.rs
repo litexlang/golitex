@@ -276,16 +276,6 @@ impl ByFamilyStmt {
     }
 }
 
-impl ByFiniteSeqSetStmt {
-    pub fn to_latex_string(&self) -> String {
-        let o: Obj = self.finite_seq_set.clone().into();
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By finite sequence space}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
-            o.to_latex_string()
-        )
-    }
-}
-
 impl ByFnSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -348,26 +338,6 @@ impl ByInducStmt {
         format!(
             "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
             rows.join(" \\\\\n")
-        )
-    }
-}
-
-impl ByMatrixSetStmt {
-    pub fn to_latex_string(&self) -> String {
-        let o: Obj = self.matrix_set.clone().into();
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By matrix space}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
-            o.to_latex_string()
-        )
-    }
-}
-
-impl BySeqSetStmt {
-    pub fn to_latex_string(&self) -> String {
-        let o: Obj = self.seq_set.clone().into();
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By sequence space}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
-            o.to_latex_string()
         )
     }
 }
@@ -665,7 +635,9 @@ impl EvalStmt {
 
 impl ExistFactEnum {
     pub fn to_latex_string(&self) -> String {
-        let head = if self.is_exist_unique() {
+        let head = if self.is_not_exist() {
+            r"\nexists"
+        } else if self.is_exist_unique() {
             r"\exists!"
         } else {
             r"\exists"
@@ -681,6 +653,18 @@ impl ExistFactEnum {
             r"{}\, \left( {}\right)\, \mathrm{{st}}\, \left\{{ {} \right\}}",
             head, params, facts
         )
+    }
+}
+
+impl ExistBodyFact {
+    pub fn to_latex_string(&self) -> String {
+        match self {
+            ExistBodyFact::AtomicFact(x) => x.to_latex_string(),
+            ExistBodyFact::AndFact(x) => x.to_latex_string(),
+            ExistBodyFact::ChainFact(x) => x.to_latex_string(),
+            ExistBodyFact::OrFact(x) => x.to_latex_string(),
+            ExistBodyFact::InlineForall(x) => x.to_latex_string(),
+        }
     }
 }
 
@@ -705,10 +689,7 @@ impl FamilyObj {
             .map(|o| o.to_latex_string())
             .collect::<Vec<_>>()
             .join(", ");
-        format!(
-            r"\operatorname{{{}}}\left( {}\right)",
-            head, args
-        )
+        format!(r"\operatorname{{{}}}\left( {}\right)", head, args)
     }
 }
 
@@ -783,11 +764,7 @@ impl AnonymousFn {
         let sig = if dom.is_empty() {
             format!(r"\left({}\right)", slots.join(r", "))
         } else {
-            format!(
-                r"\left({} \,\middle|\, {}\right)",
-                slots.join(r", "),
-                dom
-            )
+            format!(r"\left({} \,\middle|\, {}\right)", slots.join(r", "), dom)
         };
         format!(
             r"'\, {} \to {} \mapsto \left\{{ {}\right\}}",
@@ -868,6 +845,15 @@ impl ForallFactWithIff {
             r"{}\, \Longleftrightarrow\, \left( {}\right)",
             self.forall_fact.to_latex_string(),
             iff
+        )
+    }
+}
+
+impl NotForallFact {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\neg\, \left( {}\right)",
+            self.forall_fact.to_latex_string()
         )
     }
 }
@@ -1851,6 +1837,7 @@ impl Fact {
             Fact::ChainFact(x) => x.to_latex_string(),
             Fact::ForallFact(x) => x.to_latex_string(),
             Fact::ForallFactWithIff(x) => x.to_latex_string(),
+            Fact::NotForall(x) => x.to_latex_string(),
         }
     }
 }
@@ -2001,9 +1988,6 @@ impl Stmt {
             Stmt::ByFamilyStmt(x) => x.to_latex_string(),
             Stmt::ByTuple(x) => x.to_latex_string(),
             Stmt::ByFnSetStmt(x) => x.to_latex_string(),
-            Stmt::ByFiniteSeqSetStmt(x) => x.to_latex_string(),
-            Stmt::BySeqSetStmt(x) => x.to_latex_string(),
-            Stmt::ByMatrixSetStmt(x) => x.to_latex_string(),
             Stmt::ByEnumerateClosedRangeStmt(x) => x.to_latex_string(),
         }
     }

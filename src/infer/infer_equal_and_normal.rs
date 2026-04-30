@@ -230,20 +230,26 @@ impl Runtime {
         if let Obj::AnonymousFn(anon) = &equal_fact.right {
             if !matches!(&equal_fact.left, Obj::AnonymousFn(_)) {
                 let eq = (*anon.equal_to).clone();
+                let lf = equal_fact.line_file.clone();
                 self.register_known_objs_in_fn_sets_for_element_body(
                     &equal_fact.left,
                     anon.body.clone(),
                     Some(eq),
+                    lf.clone(),
+                    lf,
                 );
             }
         }
         if let Obj::AnonymousFn(anon) = &equal_fact.left {
             if !matches!(&equal_fact.right, Obj::AnonymousFn(_)) {
                 let eq = (*anon.equal_to).clone();
+                let lf = equal_fact.line_file.clone();
                 self.register_known_objs_in_fn_sets_for_element_body(
                     &equal_fact.right,
                     anon.body.clone(),
                     Some(eq),
+                    lf.clone(),
+                    lf,
                 );
             }
         }

@@ -124,16 +124,12 @@ impl Runtime {
         // [`ParamObjType::Exist`] substitutes them from `map_a` / `map_b` into the forall copies.
         let mut dom_facts: Vec<Fact> = Vec::new();
         for inner in exist_fact.facts().iter() {
-            let f_a =
-                self.inst_or_and_chain_atomic_fact(inner, &map_a, ParamObjType::Exist, None)?;
-            let o: OrAndChainAtomicFact = f_a;
-            dom_facts.push(o.into());
+            let f_a = self.inst_exist_body_fact(inner, &map_a, ParamObjType::Exist, None)?;
+            dom_facts.push(f_a.to_fact());
         }
         for inner in exist_fact.facts().iter() {
-            let f_b =
-                self.inst_or_and_chain_atomic_fact(inner, &map_b, ParamObjType::Exist, None)?;
-            let o: OrAndChainAtomicFact = f_b;
-            dom_facts.push(o.into());
+            let f_b = self.inst_exist_body_fact(inner, &map_b, ParamObjType::Exist, None)?;
+            dom_facts.push(f_b.to_fact());
         }
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
@@ -170,7 +166,7 @@ impl Runtime {
             dom_facts,
             then_facts,
             lf,
-        );
+        )?;
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         for group in forall_fact.params_def_with_type.groups.iter() {
@@ -207,7 +203,7 @@ impl Runtime {
             exist_fact.params_def_with_type().clone(),
             exist_fact.facts().clone(),
             exist_fact.line_file(),
-        ));
+        )?);
         let wd_ok = verify_state.make_state_with_req_ok_set_to_true();
         let plain_res = self.verify_exist_fact(&plain, &wd_ok)?;
         if !plain_res.is_true() {
@@ -231,7 +227,7 @@ impl Runtime {
         let out = FactualStmtSuccess::new_with_verified_by_known_fact_source(
             exist_fact.clone().into(),
             infers,
-            "exist_unique: witness exist and uniqueness forall verified".to_string(),
+            "exist!: witness exist and uniqueness forall verified".to_string(),
             Some(uniqueness_fact),
             None,
             vec![],
@@ -265,14 +261,27 @@ impl Runtime {
         exist_fact: &ExistFactEnum,
         known_exist_fact: &ExistFactEnum,
     ) -> Result<StmtResult, RuntimeError> {
-        if exist_fact.is_exist_unique() != known_exist_fact.is_exist_unique() {
-            return Ok((StmtUnknown::new()).into());
-        }
-        if let Some(known_exist_facts) = environment.known_exist_facts.get(&known_exist_fact.key())
-        {
-            let target_string =
-                Self::exist_fact_normalized_string(runtime, exist_fact).map_err(|e| {
-                    {
+        let goal_keys = Self::known_exist_lookup_keys(known_exist_fact);
+        let target_body_string = Self::exist_fact_normalized_body_string(runtime, exist_fact)
+            .map_err(|e| {
+                RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                    Some(Fact::from(exist_fact.clone()).into_stmt()),
+                    String::new(),
+                    exist_fact.line_file(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
+        for key in goal_keys.iter() {
+            let Some(known_exist_facts) = environment.known_exist_facts.get(key) else {
+                continue;
+            };
+            for known_fact in known_exist_facts.iter() {
+                if !known_fact.can_be_used_to_verify_goal(exist_fact) {
+                    continue;
+                }
+                let known_body_string =
+                    Self::exist_fact_normalized_body_string(runtime, known_fact).map_err(|e| {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                             Some(Fact::from(exist_fact.clone()).into_stmt()),
                             String::new(),
@@ -280,32 +289,16 @@ impl Runtime {
                             Some(e),
                             vec![],
                         )))
-                    }
-                })?;
-            for known_fact in known_exist_facts.iter() {
-                if known_fact.is_exist_unique() != exist_fact.is_exist_unique() {
-                    continue;
-                }
-                let known_string = Self::exist_fact_normalized_string(runtime, known_fact)
-                    .map_err(|e| {
-                        {
-                            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                                Some(Fact::from(exist_fact.clone()).into_stmt()),
-                                String::new(),
-                                exist_fact.line_file(),
-                                Some(e),
-                                vec![],
-                            )))
-                        }
                     })?;
-                if target_string == known_string {
+                if target_body_string == known_body_string {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                            exist_fact.clone().into(),
-                            known_fact.to_string(),
-                            Some(known_fact.clone().into()),
-                            None,
-                            Vec::new(),
-                        )).into());
+                        exist_fact.clone().into(),
+                        known_fact.to_string(),
+                        Some(known_fact.clone().into()),
+                        None,
+                        Vec::new(),
+                    ))
+                    .into());
                 }
             }
         }
@@ -313,7 +306,17 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    fn exist_fact_normalized_string(
+    fn known_exist_lookup_keys(goal: &ExistFactEnum) -> Vec<String> {
+        let mut keys = vec![goal.key()];
+        if let ExistFactEnum::ExistFact(body) = goal {
+            keys.push(ExistFactEnum::ExistUniqueFact(body.clone()).key());
+        }
+        keys.sort();
+        keys.dedup();
+        keys
+    }
+
+    fn exist_fact_normalized_body_string(
         runtime: &Runtime,
         exist_fact: &ExistFactEnum,
     ) -> Result<String, RuntimeError> {
@@ -364,13 +367,7 @@ impl Runtime {
         }
         let params_string = params_string_parts.join("; ");
         let facts_string = fact_strings.join("; ");
-        let head = if exist_fact.is_exist_unique() {
-            EXIST_UNIQUE
-        } else {
-            EXIST
-        };
-
-        Ok(format!("{} || {} || {}", head, params_string, facts_string))
+        Ok(format!("{} || {}", params_string, facts_string))
     }
 }
 

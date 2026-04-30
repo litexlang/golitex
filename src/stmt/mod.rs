@@ -12,7 +12,4 @@ pub mod witness_stmt;
 mod stmt;
 mod stmt_type_name;
 pub use stmt::ByEnumerateClosedRangeStmt;
-pub use stmt::ByFiniteSeqSetStmt;
-pub use stmt::ByMatrixSetStmt;
-pub use stmt::BySeqSetStmt;
 pub use stmt::Stmt;

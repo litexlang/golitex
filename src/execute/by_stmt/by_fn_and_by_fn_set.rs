@@ -141,7 +141,7 @@ impl Runtime {
                 .into(),
             ],
             line_file.clone(),
-        )
+        )?
         .into();
         let forall_z_obj = obj_for_bound_param_in_scope(forall_z_name.clone(), ParamObjType::Exist);
         let pair_in_fn = if param_names.len() == 1 {
@@ -165,7 +165,7 @@ impl Runtime {
                     exist_param_defs
                 }),
                 {
-                    let mut facts: Vec<OrAndChainAtomicFact> =
+                    let mut facts: Vec<ExistBodyFact> =
                         Vec::with_capacity(fn_body.dom_facts.len() + 1);
                     for dom_fact in fn_body.dom_facts.iter() {
                         facts.push(
@@ -185,7 +185,8 @@ impl Runtime {
                                     Some(inst_error),
                                     vec![],
                                 )
-                            })?,
+                            })?
+                            .into(),
                         );
                     }
                     facts.push(
@@ -194,10 +195,10 @@ impl Runtime {
                     facts
                 },
                 line_file.clone(),
-            ))
+            )?)
             .into()],
             line_file.clone(),
-        )
+        )?
         .into();
 
         let mut generated_exist_names = self
@@ -300,7 +301,7 @@ impl Runtime {
             ]),
             vec![EqualFact::new(exist_element_obj, exist_pair, line_file.clone()).into()],
             line_file.clone(),
-        ));
+        )?);
         let forall_exist = ForallFact::new(
             ParamDefWithType::new(exist_param_defs_with_type),
             {
@@ -328,7 +329,7 @@ impl Runtime {
             },
             vec![exist_fact.into()],
             line_file.clone(),
-        )
+        )?
         .into();
 
         let unique_names = self.generate_random_unused_names(2);
@@ -380,7 +381,7 @@ impl Runtime {
             ],
             vec![EqualFact::new(unique_x1_obj, unique_x2_obj, line_file.clone()).into()],
             line_file.clone(),
-        )
+        )?
         .into();
 
         Ok((forall_shape, forall_in, forall_exist, forall_unique))

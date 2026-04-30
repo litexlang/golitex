@@ -66,6 +66,11 @@ mod tests {
     }
 
     #[test]
+    fn exist_unique_is_not_reserved_keyword() {
+        assert!(is_valid_litex_name("exist_unique").is_ok());
+    }
+
+    #[test]
     fn self_is_allowed_name() {
         assert!(is_valid_litex_name("self").is_ok());
     }

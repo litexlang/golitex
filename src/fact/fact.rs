@@ -9,6 +9,7 @@ pub enum Fact {
     ChainFact(ChainFact),
     ForallFact(ForallFact),
     ForallFactWithIff(ForallFactWithIff),
+    NotForall(NotForallFact),
 }
 
 impl fmt::Debug for Fact {
@@ -27,6 +28,7 @@ impl Fact {
             Fact::ChainFact(_) => "ChainFact".to_string(),
             Fact::ForallFact(_) => "ForallFact".to_string(),
             Fact::ForallFactWithIff(_) => "ForallFactWithIff".to_string(),
+            Fact::NotForall(_) => "NotForallFact".to_string(),
         }
     }
 }
@@ -41,6 +43,7 @@ impl fmt::Display for Fact {
             Fact::ChainFact(chain_fact) => write!(f, "{}", chain_fact),
             Fact::ForallFact(forall_fact) => write!(f, "{}", forall_fact),
             Fact::ForallFactWithIff(forall_fact_with_iff) => write!(f, "{}", forall_fact_with_iff),
+            Fact::NotForall(not_forall) => write!(f, "{}", not_forall),
         }
     }
 }
@@ -55,11 +58,33 @@ impl Fact {
             Fact::ChainFact(c) => c.line_file(),
             Fact::ForallFact(f) => f.line_file.clone(),
             Fact::ForallFactWithIff(f) => f.line_file.clone(),
+            Fact::NotForall(f) => f.line_file(),
         }
     }
 
     pub fn into_stmt(self) -> Stmt {
         self.into()
+    }
+}
+
+#[derive(Clone)]
+pub struct NotForallFact {
+    pub forall_fact: ForallFact,
+}
+
+impl NotForallFact {
+    pub fn new(forall_fact: ForallFact) -> Self {
+        Self { forall_fact }
+    }
+
+    pub fn line_file(&self) -> LineFile {
+        self.forall_fact.line_file.clone()
+    }
+}
+
+impl fmt::Display for NotForallFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", NOT, self.forall_fact)
     }
 }
 
@@ -123,5 +148,11 @@ impl From<OrAndChainAtomicFact> for Fact {
 impl From<ForallFactWithIff> for Fact {
     fn from(forall_fact_with_iff: ForallFactWithIff) -> Self {
         Fact::ForallFactWithIff(forall_fact_with_iff)
+    }
+}
+
+impl From<NotForallFact> for Fact {
+    fn from(not_forall_fact: NotForallFact) -> Self {
+        Fact::NotForall(not_forall_fact)
     }
 }

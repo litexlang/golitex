@@ -66,7 +66,7 @@ fn normalized_decimal_string_is_integer(number_value: &str) -> bool {
     digits_are_all_zero(&fractional_digits)
 }
 
-fn normalized_decimal_string_is_even_integer(number_value: &str) -> bool {
+pub(crate) fn normalized_decimal_string_is_even_integer(number_value: &str) -> bool {
     if !normalized_decimal_string_is_integer(number_value) {
         return false;
     }
@@ -536,6 +536,9 @@ impl Runtime {
         if let Some(result) = self.verify_zero_le_abs_builtin_rule(atomic_fact)? {
             return Ok(result);
         }
+        if let Some(result) = self.verify_abs_order_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
         if let Some(result) =
             self.verify_zero_order_on_sub_from_two_sided_order_builtin_rule(atomic_fact)?
         {
@@ -655,18 +658,19 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let negated: Option<AtomicFact> = match atomic_fact {
-            AtomicFact::GreaterFact(f) => {
-                Some(NotLessEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into())
-            }
+            AtomicFact::GreaterFact(f) => Some(
+                NotLessEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+            ),
             AtomicFact::LessFact(f) => Some(
-                NotGreaterEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+                NotGreaterEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone())
+                    .into(),
             ),
             AtomicFact::GreaterEqualFact(f) => {
                 Some(NotLessFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into())
             }
-            AtomicFact::LessEqualFact(f) => {
-                Some(NotGreaterFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into())
-            }
+            AtomicFact::LessEqualFact(f) => Some(
+                NotGreaterFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+            ),
             _ => None,
         };
         let Some(neg) = negated else {

@@ -1,0 +1,43 @@
+forall a R:
+    a >= 0
+    =>:
+        abs(a) = a
+
+forall a R:
+    a <= 0
+    =>:
+        abs(a) = -a
+
+forall a R:
+    0 <= abs(a)
+    abs(a) = a or abs(a) = -a
+
+forall a R:
+    abs(a) = 0
+    =>:
+        a = 0
+
+forall x, y R:
+    abs(x * y) = abs(x) * abs(y)
+
+forall x R:
+    x <= abs(x)
+    -x <= abs(x)
+
+forall x, b R:
+    x <= b
+    -x <= b
+    =>:
+        abs(x) <= b
+
+forall x, y R:
+    abs(x + y) <= abs(x) + abs(y)
+    abs(x - y) <= abs(x) + abs(y)
+
+forall x, y R:
+    abs(x) - abs(y) <= abs(x + y)
+    abs(x) - abs(y) <= abs(x - y)
+
+forall x R:
+    x ^ 2 = abs(x) ^ 2
+    x ^ 4 = abs(x) ^ 4

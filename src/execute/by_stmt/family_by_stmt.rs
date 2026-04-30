@@ -8,7 +8,7 @@ impl Runtime {
             Obj::FamilyObj(f) => f,
             _ => {
                 return Err(short_exec_error(
- stmt_exec,
+                    stmt_exec,
                     "by family: expected `\\name(...)` family object".to_string(),
                     None,
                     vec![],
@@ -21,7 +21,7 @@ impl Runtime {
             Some(d) => d,
             None => {
                 return Err(short_exec_error(
- stmt_exec.clone(),
+                    stmt_exec.clone(),
                     format!("by family: family `{}` is not defined", family_name),
                     None,
                     vec![],
@@ -32,16 +32,16 @@ impl Runtime {
         let expected_count = def.params_def_with_type.number_of_params();
         if family_ty.params.len() != expected_count {
             return Err(short_exec_error(
- stmt_exec,
-                    format!(
+                stmt_exec,
+                format!(
                     "by family: family `{}` expects {} type argument(s), got {}",
                     family_name,
                     expected_count,
                     family_ty.params.len()
                 ),
-                    None,
-                    vec![],
-                ));
+                None,
+                vec![],
+            ));
         }
 
         let param_to_arg_map = def
@@ -52,7 +52,7 @@ impl Runtime {
             .inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::DefHeader)
             .map_err(|e| {
                 short_exec_error(
- stmt_exec.clone(),
+                    stmt_exec.clone(),
                     "by family: failed to instantiate family body `equal_to`".to_string(),
                     Some(e),
                     vec![],
@@ -63,7 +63,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&stmt.family_obj, &verify_state)
             .map_err(|e| {
                 short_exec_error(
- stmt_exec.clone(),
+                    stmt_exec.clone(),
                     format!(
                         "by family: left-hand side `{}` is not well-defined",
                         stmt.family_obj
@@ -75,7 +75,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&right, &verify_state)
             .map_err(|e| {
                 short_exec_error(
- stmt_exec.clone(),
+                    stmt_exec.clone(),
                     format!(
                         "by family: instantiated body `{}` is not well-defined",
                         right
