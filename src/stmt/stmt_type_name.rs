@@ -141,24 +141,6 @@ impl ByTupleStmt {
     }
 }
 
-impl ByFiniteSeqSetStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByFiniteSeqSetStmt".to_string()
-    }
-}
-
-impl BySeqSetStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "BySeqSetStmt".to_string()
-    }
-}
-
-impl ByMatrixSetStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByMatrixSetStmt".to_string()
-    }
-}
-
 impl ByEnumerateClosedRangeStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByEnumerateClosedRangeStmt".to_string()
@@ -224,4 +206,3 @@ impl DefFamilyStmt {
         "DefFamilyStmt".to_string()
     }
 }
-

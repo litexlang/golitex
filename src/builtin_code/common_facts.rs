@@ -94,4 +94,13 @@ know:
         $archimedean_property(e)
         exist n N_pos st {1/n < e}
 
+know:
+    forall s set:
+        seq(s) = fn(x N_pos) s
+
+    forall s set, n N_pos:
+        finite_seq(s, n) = fn(x N_pos: x <= n) s
+
+    forall s set, m N_pos, n N_pos:
+        matrix(s, m, n) = fn(x, y N_pos: x <= m, y <= n) s
 "#;

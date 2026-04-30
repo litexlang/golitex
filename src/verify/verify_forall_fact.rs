@@ -10,7 +10,6 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
         if let Err(e) = self.define_params_with_type(
             &forall_fact.params_def_with_type,
             false,
@@ -27,8 +26,7 @@ impl Runtime {
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            let dom_infer_result = self
-                .verify_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
+            self.verify_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
                 .map_err(|e| {
                     let message = "failed to assume dom fact in forall".to_string();
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -47,9 +45,8 @@ impl Runtime {
                         vec![],
                     )))
                 })?;
-            infer_result.new_infer_result_inside(dom_infer_result);
         }
-        Ok(infer_result)
+        Ok(InferResult::new())
     }
 
     /// Verify and store each `then` clause of `forall_fact` in the current environment.

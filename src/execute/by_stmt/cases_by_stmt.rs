@@ -7,11 +7,11 @@ impl Runtime {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|verify_error| {
                     short_exec_error(
- stmt.clone().into(),
-                    format!("by cases: failed to prove `{}`", fact),
-                    Some(verify_error),
-                    vec![],
-                )
+                        stmt.clone().into(),
+                        format!("by cases: failed to prove `{}`", fact),
+                        Some(verify_error),
+                        vec![],
+                    )
                 })?;
         }
 
@@ -63,10 +63,7 @@ impl Runtime {
             .then_facts
             .iter()
             .any(|f| matches!(f, Fact::ForallFact(_)))
-            && stmt
-                .impossible_facts
-                .iter()
-                .any(|o| o.is_some())
+            && stmt.impossible_facts.iter().any(|o| o.is_some())
         {
             return Err(short_exec_error(
                 stmt.clone().into(),
@@ -86,14 +83,16 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for then_fact in stmt.then_facts.iter() {
             let one_then_fact_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(then_fact.clone())
+                .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    then_fact.clone(),
+                )
                 .map_err(|store_fact_error| {
                     short_exec_error(
- stmt.clone().into(),
-                    format!("by cases: failed to release `{}`", then_fact),
-                    Some(store_fact_error),
-                    vec![],
-                )
+                        stmt.clone().into(),
+                        format!("by cases: failed to release `{}`", then_fact),
+                        Some(store_fact_error),
+                        vec![],
+                    )
                 })?;
             infer_result.new_infer_result_inside(one_then_fact_infer_result);
         }
@@ -145,7 +144,7 @@ impl Runtime {
         for then_fact in stmt.then_facts.iter() {
             let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
                 short_exec_error(
- stmt.clone().into(),
+                    stmt.clone().into(),
                     format!(
                         "by cases: failed to prove `{}` under case `{}`",
                         then_fact, stmt.cases[case_index]
@@ -286,23 +285,20 @@ impl Runtime {
                 .verify_atomic_fact(impossible_fact, &verify_state)
                 .map_err(|verify_error| {
                     short_exec_error(
- stmt.clone().into(),
-                    impossible_proof_error_message(
+                        stmt.clone().into(),
+                        impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
                         ),
-                    Some(verify_error),
-                    vec![],
-                )
+                        Some(verify_error),
+                        vec![],
+                    )
                 })?;
 
             if verify_impossible_fact_result.is_unknown() {
                 return Err(short_exec_error(
- stmt.clone().into(),
-                    impossible_proof_error_message(
-                        impossible_fact,
-                        Some(case_fact.to_string()),
-                    ),
+                    stmt.clone().into(),
+                    impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
                     None,
                     vec![],
                 ));
@@ -312,23 +308,20 @@ impl Runtime {
                 .verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)
                 .map_err(|verify_error| {
                     short_exec_error(
- stmt.clone().into(),
-                    impossible_proof_error_message(
+                        stmt.clone().into(),
+                        impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
                         ),
-                    Some(verify_error),
-                    vec![],
-                )
+                        Some(verify_error),
+                        vec![],
+                    )
                 })?;
 
             if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(short_exec_error(
- stmt.clone().into(),
-                    impossible_proof_error_message(
-                        impossible_fact,
-                        Some(case_fact.to_string()),
-                    ),
+                    stmt.clone().into(),
+                    impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
                     None,
                     vec![],
                 ));

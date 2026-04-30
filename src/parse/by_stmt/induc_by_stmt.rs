@@ -79,16 +79,14 @@ impl Runtime {
             },
         )?;
 
-        Ok(
-            ByInducStmt::new(
-                to_prove,
-                param,
-                induc_from,
-                proof,
-                tb.line_file.clone(),
-                strong,
-            )
-            .into(),
+        Ok(ByInducStmt::new(
+            to_prove,
+            param,
+            induc_from,
+            proof,
+            tb.line_file.clone(),
+            strong,
         )
+        .into())
     }
 }
