@@ -4,48 +4,8 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_cases_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CASES)?;
-        // `by cases => goal:` — goal on the header line; body starts with `case` (no `prove:` block).
-        let (then_facts, case_body_skip): (Vec<Fact>, usize) = if tb.current()? == RIGHT_ARROW {
-            tb.skip_token(RIGHT_ARROW)?;
-            let header = &tb.header;
-            if header.len() < tb.parse_index + 2 || header.last().map(|t| t.as_str()) != Some(COLON)
-            {
-                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by cases => ... : expected a goal fact and a trailing `:` on the same line".to_string(),
-                    tb.line_file.clone(),
-                ))));
-            }
-            let colon_pos = header.len() - 1;
-            let fact_tokens = header[tb.parse_index..colon_pos].to_vec();
-            if fact_tokens.is_empty() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by cases => ... : expected a non-empty goal after `=>`".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut fact_tb = TokenBlock::new(fact_tokens, vec![], tb.line_file.clone());
-            let fact = self.parse_fact(&mut fact_tb)?;
-            if !fact_tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by cases => ... : unfinished tokens in goal".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            tb.parse_index = colon_pos + 1;
-            if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by cases => ... : unexpected tokens after `:`".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            (vec![fact], 0)
-        } else {
+        // `by cases goal:` puts the goal on the header line; body starts with `case` arms.
+        let (then_facts, case_body_skip): (Vec<Fact>, usize) = if tb.current()? == COLON {
             tb.skip_token(COLON)?;
             if tb.body.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -72,6 +32,14 @@ impl Runtime {
                     .collect::<Result<_, _>>()?
             };
             (then_facts, 1)
+        } else {
+            let fact = self.parse_header_fact_before_trailing_colon(
+                tb,
+                "by cases",
+                "by cases => <fact>:",
+                "by cases <fact>:",
+            )?;
+            (vec![fact], 0)
         };
 
         let min_body = case_body_skip + 1;
