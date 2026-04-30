@@ -10,5 +10,5 @@ claim:
             a $in R
     a $in R
 
-claim => 1 = 1:
+claim 1 = 1:
     do_nothing

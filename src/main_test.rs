@@ -123,6 +123,49 @@ mod lit_file_runner_tests {
         );
     }
 
+    #[test]
+    fn run_file_from_path() {
+        let path: String = "../The-Mechanics-of-Litex-Proof/chapter_6_Induction.lit".to_string();
+        let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
+        assert!(
+            file_path.is_absolute(),
+            "path must be an absolute path: {:?}",
+            file_path
+        );
+        assert!(
+            file_path.is_file(),
+            "path must point to a file: {:?}",
+            file_path
+        );
+
+        let source_code = match fs::read_to_string(&file_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", file_path, read_error),
+        };
+        let path_str = match file_path.to_str() {
+            Some(path_string) => path_string,
+            None => panic!("{:?} must be valid UTF-8", file_path),
+        };
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path_str);
+        let normalized_source = remove_windows_carriage_return(source_code.as_str());
+
+        let start_time = Instant::now();
+        let (stmt_results, runtime_error) =
+            run_source_code(normalized_source.as_str(), &mut runtime);
+        let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let status_label = if run_succeeded { "OK" } else { "FAILED" };
+        println!(
+            "{}\n=== [{}] {:?} ({:.2} ms user file only) ===\n",
+            run_output, path_str, status_label, duration_ms
+        );
+        assert!(run_succeeded, "Litex file failed: {}", path_str);
+    }
+
     /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
     /// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
     fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {

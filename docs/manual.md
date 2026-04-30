@@ -54,7 +54,7 @@ by cases:
         proof_of_case_n
 ```
 
-**Shorthand:** `by cases => fact` `:` on one line (goal on the header); the body then starts with `case` arms and omits the inner `prove:` block.
+**Shorthand:** `by cases fact` `:` on one line (goal on the header); the body then starts with `case` arms and omits the inner `prove:` block.
 
 1. fact1 or fact2 or ... or factn must be true.
 2. under each case, proof_of_case_i must be a valid proof of fact i.
@@ -130,7 +130,7 @@ For **`by cases`**, **`by contra`**, and **`claim`**, you may put the goal on th
 **Illustration:** the fact `1 = 1` is deliberately trivial; the point is that **one** outcome can be reached by **case split**, by **contradiction**, or by a **direct claim**—choose the shape that matches the mathematical story you are telling.
 
 ```litex
-by cases => 1 = 1:
+by cases 1 = 1:
     case 1 = 1:
         do_nothing
     case 1 != 1:
@@ -139,7 +139,7 @@ by cases => 1 = 1:
 by contra => 1 = 1:
     impossible 1 != 1
 
-claim => 1 = 1:
+claim 1 = 1:
     do_nothing
 ```
 

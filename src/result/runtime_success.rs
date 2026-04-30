@@ -34,7 +34,6 @@ impl FactualStmtSuccess {
         }
     }
 
-    /// 与 [`Self::new_with_verified_by_builtin_rules`] 相同，且 `infers` 为 [`InferResult::from_fact`]`(&stmt)`（空 `inside_results` 时常用）。
     pub fn new_with_verified_by_builtin_rules_recording_stmt(
         stmt: Fact,
         builtin_rule_label: String,

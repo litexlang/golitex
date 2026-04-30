@@ -515,8 +515,17 @@ impl Runtime {
                     verify_state,
                     "product",
                 ),
+            (Obj::Add(add), Obj::StandardSet(StandardSet::N)) => {
+                self.verify_in_fact_add_in_n_from_summands_in_n(in_fact, add, verify_state)
+            }
+            (Obj::Mul(mul), Obj::StandardSet(StandardSet::N)) => {
+                self.verify_in_fact_mul_in_n_from_factors_in_n(in_fact, mul, verify_state)
+            }
             (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
-                self.verify_in_fact_add_in_n_pos_from_summands_in_n_pos(in_fact, add, verify_state)
+                self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, verify_state)
+            }
+            (Obj::Mul(mul), Obj::StandardSet(StandardSet::NPos)) => {
+                self.verify_in_fact_mul_in_n_pos_from_factors_in_n_pos(in_fact, mul, verify_state)
             }
             (_, Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
@@ -803,8 +812,85 @@ impl Runtime {
         }
     }
 
-    // `a + b $in N_pos` when `a $in N_pos` and `b $in N_pos` (closure under addition in `Z_{>0}`).
-    fn verify_in_fact_add_in_n_pos_from_summands_in_n_pos(
+    // `a + b $in N` when `a $in N` and `b $in N` (closure under addition).
+    // Example: `forall a, b N: a + b $in N`.
+    fn verify_in_fact_add_in_n_from_summands_in_n(
+        &mut self,
+        in_fact: &InFact,
+        add: &Add,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
+            return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                in_fact,
+                &evaluated_number,
+                &StandardSet::N,
+            ));
+        }
+        let n: Obj = StandardSet::N.into();
+        let lf = in_fact.line_file.clone();
+        let f_left: AtomicFact =
+            InFact::new(add.left.as_ref().clone(), n.clone(), lf.clone()).into();
+        let f_right: AtomicFact = InFact::new(add.right.as_ref().clone(), n, lf.clone()).into();
+        let r_left = self.verify_non_equational_atomic_fact(&f_left, verify_state, true)?;
+        if !r_left.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let r_right = self.verify_non_equational_atomic_fact(&f_right, verify_state, true)?;
+        if !r_right.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "N: a + b from a in N and b in N".to_string(),
+                vec![r_left, r_right],
+            )
+            .into(),
+        )
+    }
+
+    // `a * b $in N` when `a $in N` and `b $in N` (closure under multiplication).
+    // Example: `forall a, b N: a * b $in N`.
+    fn verify_in_fact_mul_in_n_from_factors_in_n(
+        &mut self,
+        in_fact: &InFact,
+        mul: &Mul,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
+            return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                in_fact,
+                &evaluated_number,
+                &StandardSet::N,
+            ));
+        }
+        let n: Obj = StandardSet::N.into();
+        let lf = in_fact.line_file.clone();
+        let f_left: AtomicFact =
+            InFact::new(mul.left.as_ref().clone(), n.clone(), lf.clone()).into();
+        let f_right: AtomicFact = InFact::new(mul.right.as_ref().clone(), n, lf.clone()).into();
+        let r_left = self.verify_non_equational_atomic_fact(&f_left, verify_state, true)?;
+        if !r_left.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let r_right = self.verify_non_equational_atomic_fact(&f_right, verify_state, true)?;
+        if !r_right.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "N: a * b from a in N and b in N".to_string(),
+                vec![r_left, r_right],
+            )
+            .into(),
+        )
+    }
+
+    // `a + b $in N_pos` when one summand is in `N_pos` and the other is in `N`.
+    // Example: `forall a N_pos, b N: a + b $in N_pos`.
+    fn verify_in_fact_add_in_n_pos_from_n_pos_and_n(
         &mut self,
         in_fact: &InFact,
         add: &Add,
@@ -818,10 +904,72 @@ impl Runtime {
             ));
         }
         let n_pos: Obj = StandardSet::NPos.into();
+        let n: Obj = StandardSet::N.into();
+        let lf = in_fact.line_file.clone();
+
+        let left_n_pos: AtomicFact =
+            InFact::new(add.left.as_ref().clone(), n_pos.clone(), lf.clone()).into();
+        let right_n: AtomicFact =
+            InFact::new(add.right.as_ref().clone(), n.clone(), lf.clone()).into();
+        let r_left_n_pos =
+            self.verify_non_equational_atomic_fact(&left_n_pos, verify_state, true)?;
+        if r_left_n_pos.is_true() {
+            let r_right_n = self.verify_non_equational_atomic_fact(&right_n, verify_state, true)?;
+            if r_right_n.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "N_pos: a + b from a in N_pos and b in N".to_string(),
+                        vec![r_left_n_pos, r_right_n],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        let left_n: AtomicFact =
+            InFact::new(add.left.as_ref().clone(), n.clone(), lf.clone()).into();
+        let right_n_pos: AtomicFact =
+            InFact::new(add.right.as_ref().clone(), n_pos, lf.clone()).into();
+        let r_left_n = self.verify_non_equational_atomic_fact(&left_n, verify_state, true)?;
+        if !r_left_n.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let r_right_n_pos =
+            self.verify_non_equational_atomic_fact(&right_n_pos, verify_state, true)?;
+        if !r_right_n_pos.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "N_pos: a + b from a in N and b in N_pos".to_string(),
+                vec![r_left_n, r_right_n_pos],
+            )
+            .into(),
+        )
+    }
+
+    // `a * b $in N_pos` when `a $in N_pos` and `b $in N_pos` (positive naturals are closed under multiplication).
+    // Example: `forall a, b N_pos: a * b $in N_pos`.
+    fn verify_in_fact_mul_in_n_pos_from_factors_in_n_pos(
+        &mut self,
+        in_fact: &InFact,
+        mul: &Mul,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
+            return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                in_fact,
+                &evaluated_number,
+                &StandardSet::NPos,
+            ));
+        }
+        let n_pos: Obj = StandardSet::NPos.into();
         let lf = in_fact.line_file.clone();
         let f_left: AtomicFact =
-            InFact::new(add.left.as_ref().clone(), n_pos.clone(), lf.clone()).into();
-        let f_right: AtomicFact = InFact::new(add.right.as_ref().clone(), n_pos, lf.clone()).into();
+            InFact::new(mul.left.as_ref().clone(), n_pos.clone(), lf.clone()).into();
+        let f_right: AtomicFact = InFact::new(mul.right.as_ref().clone(), n_pos, lf.clone()).into();
         let r_left = self.verify_non_equational_atomic_fact(&f_left, verify_state, true)?;
         if !r_left.is_true() {
             return Ok((StmtUnknown::new()).into());
@@ -833,7 +981,7 @@ impl Runtime {
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "N_pos: a + b from a in N_pos and b in N_pos".to_string(),
+                "N_pos: a * b from a in N_pos and b in N_pos".to_string(),
                 vec![r_left, r_right],
             )
             .into(),

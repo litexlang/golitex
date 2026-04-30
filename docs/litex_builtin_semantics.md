@@ -1,68 +1,70 @@
 # Litex Builtin Semantics
 
-Litex 的 builtin 不是一堆零散的 shortcut。它们共同组成了语言的“内置语义层”。
+Litex builtins are not a loose collection of shortcuts. They form the language's built-in semantic layer.
 
-这个语义层做三件事：
+This layer has three responsibilities:
 
-1. 定义哪些数学对象是语言的基本概念。
-2. 定义这些基本概念之间有哪些默认关系。
-3. 定义 verifier 可以自动使用哪些机械化证明方法。
+1. It decides which mathematical objects are basic enough to be part of the language.
+2. It records the default relationships between those basic objects.
+3. It gives the verifier a small set of automatic proof mechanisms.
 
-每个概念本身通常很简单，每个关系也通常很简单；复杂性来自组合数量很多。例如：函数、集合、相等、属于、序列、矩阵、order、整数区间，这些概念两两组合后会产生大量基础事实。Litex 把这些基础关系内置起来，让用户可以把注意力放在真正想证明的数学内容上。
+Each concept is usually simple, and each relationship between concepts is also usually simple. The complexity comes from scale: sets, functions, equality, membership, sequences, matrices, order, and integer ranges interact in many combinations. Litex builds these common relationships into the language so users can focus on the mathematical statement they actually want to prove.
+
+This document is the high-level map. Detailed builtin verification rules should live in separate rule-oriented documents.
 
 ## 1. Builtin Concepts
 
-Builtin concepts 是语言认为足够基础，所以直接作为 keyword、object shape、fact shape 或 statement shape 存在的概念。
+Builtin concepts are objects, facts, statements, or keywords that Litex treats as primitive enough to be understood by the parser, runtime, and verifier.
 
-它们不是用户用 `prop` 定义出来的概念，而是 parser、runtime、verifier 都认识的核心对象。
+They are not user-defined `prop`s. They are part of the core mathematical vocabulary of the language.
 
 ### 1.1 Sets and Standard Sets
 
 | name | category | meaning |
 |---|---|---|
-| `set` | parameter type | 任意集合 |
-| `nonempty_set` | parameter type | 非空集合 |
-| `finite_set` | parameter type | 有限集合 |
-| `N` | standard set | 自然数，包含 `0` |
-| `N_pos` | standard set | 正自然数 |
-| `Z` | standard set | 整数 |
-| `Q` | standard set | 有理数 |
-| `R` | standard set | 实数 |
-| `R_pos` / `R_neg` / `R_nz` | standard set | 正实数、负实数、非零实数 |
+| `set` | parameter type | an arbitrary set |
+| `nonempty_set` | parameter type | a nonempty set |
+| `finite_set` | parameter type | a finite set |
+| `N` | standard set | natural numbers, including `0` |
+| `N_pos` | standard set | positive natural numbers |
+| `Z` | standard set | integers |
+| `Q` | standard set | rational numbers |
+| `R` | standard set | real numbers |
+| `R_pos` / `R_neg` / `R_nz` | standard set | positive, negative, and nonzero real numbers |
 
-这些集合不只是名字。比如 `n N` 会给 verifier 提供 `n >= 0` 这样的基础语义；`x R_pos` 会提供 `0 < x` 这样的基础语义。
+These sets are not only names. They carry basic semantic information. For example, `n N` means `n` is a natural number, and `x R_pos` means `x` is a positive real number.
 
 ### 1.2 Function Spaces
 
-`fn` 是 Litex 表达函数空间的基本对象构造器。
+`fn` is the builtin object constructor for function spaces.
 
-```litex
+```text
 fn(x S: P(x)) T
 ```
 
-表示一类函数：输入参数 `x` 来自 `S`，满足可选 domain 条件 `P(x)`，返回值属于 `T`。
+This describes functions whose input `x` belongs to `S`, whose optional domain condition `P(x)` holds, and whose output belongs to `T`.
 
-这个概念连接了：
+This concept connects:
 
-1. 参数集合
-2. domain 条件
-3. 返回集合
-4. 函数对象的 membership
-5. 函数调用的 well-definedness
+1. parameter sets
+2. domain conditions
+3. return sets
+4. function-object membership
+5. well-definedness of function application
 
-例如：
+Example:
 
-```litex
+```text
 f $in fn(x R: x > 0) R
 ```
 
-表示 `f` 是一个能接收正实数输入并返回实数的函数对象。
+This means that `f` is a function object that accepts positive real inputs and returns real outputs.
 
 ### 1.3 Sequence and Matrix Concepts
 
-`seq`、`finite_seq`、`matrix` 是常用数学对象，但在 Litex 内部它们和 `fn` 空间有直接关系。
+`seq`, `finite_seq`, and `matrix` are common mathematical objects. In Litex, they are connected to function spaces.
 
-```litex
+```text
 seq(s) = fn(x N_pos) s
 
 finite_seq(s, n) = fn(x N_pos: x <= n) s
@@ -70,351 +72,227 @@ finite_seq(s, n) = fn(x N_pos: x <= n) s
 matrix(s, m, n) = fn(x, y N_pos: x <= m, y <= n) s
 ```
 
-这些关系说明：
+These relationships say:
 
-1. 序列是从正自然数到 `s` 的函数。
-2. 长度为 `n` 的有限序列是定义域限制为 `x <= n` 的函数。
-3. `m` by `n` 的矩阵是两个正自然数坐标到 `s` 的函数。
+1. A sequence is a function from positive natural numbers to `s`.
+2. A finite sequence of length `n` is a function whose domain is restricted by `x <= n`.
+3. An `m` by `n` matrix is a function from two positive-natural coordinates to `s`.
 
-因此这类对象不需要额外的 `by seq`、`by finite_seq`、`by matrix` 语句。它们可以直接通过 builtin facts 和普通事实验证来使用。
+Because of this bridge, these objects do not need separate `by seq`, `by finite_seq`, or `by matrix` proof statements.
 
 ### 1.4 Logical Concepts
 
 | name | category | meaning |
 |---|---|---|
-| `forall` | logical fact constructor | 建立参数、domain facts、then facts 之间的全称关系 |
-| `forall!` | inline forall | 单行形式的 `forall`，用于局部或简写语法 |
-| `exist` | logical fact constructor | 引入 witness，使 body facts 成立 |
-| `exist!` | logical fact constructor | 唯一存在 |
-| `prop` | user-defined concept | 用已有概念定义新谓词 |
-| `abstract_prop` | abstract concept | 只声明谓词名字和参数，不给定义 |
+| `forall` | logical fact constructor | relates parameters, domain facts, and conclusion facts |
+| `forall!` | inline forall | compact form of `forall` for local or shorthand syntax |
+| `exist` | logical fact constructor | introduces witnesses that make body facts true |
+| `exist!` | logical fact constructor | unique existence |
+| `prop` | user-defined concept | defines a new predicate from existing concepts |
+| `abstract_prop` | abstract concept | declares only the predicate name and parameters |
 
-`forall` 和 `prop` 是用户扩展语言概念的主要方式。Builtin concepts 是语言自带的；用户新定义的概念则通过 `prop` 和 `forall` 接入同一个证明系统。
+`forall` and `prop` are the main ways users extend the language. Builtin concepts are provided by Litex; user-defined concepts are connected back into the same proof system through `prop` and `forall`.
 
 ## 2. Builtin Semantic Bridges
 
-Builtin semantic bridges 是基本概念之间的内置关系。它们回答的问题是：一个概念怎样转化、约束、推出另一个概念？
+Builtin semantic bridges are built-in relationships between basic concepts. They answer: how does one concept constrain, translate to, or imply another?
+
+This section should describe the role of each bridge, not enumerate every verification rule that currently implements it.
 
 ### 2.1 Membership: Object and Set
 
-```litex
+```text
 x $in S
 ```
 
-`$in` 连接对象和集合。
+`$in` connects an object with a set.
 
-它是 Litex 里最核心的关系之一，因为很多“类型信息”本质上都是 membership：
+Many pieces of mathematical type information are memberships. For example:
 
-```litex
+```text
 x R
 ```
 
-可以理解为：
+can be read as:
 
-```litex
+```text
 x $in R
 ```
 
-不同形状的集合会触发不同的语义。例如：
-
-| set shape | semantic effect |
-|---|---|
-| `R_pos` | infer / verify `0 < x` |
-| `N` | infer / verify `x >= 0` |
-| `range(a, b)` | infer `x $in Z`, `a <= x`, `x < b` |
-| `closed_range(a, b)` | infer `x $in Z`, `a <= x`, `x <= b` |
-| `{a, b}` | infer `x = a or x = b` |
-| `fn(...)` | register function-space information |
+Different set shapes carry different semantic information, such as standard-number membership, interval bounds, finite-set alternatives, and function-space typing.
 
 ### 2.2 Equality: Object and Object
 
-```litex
+```text
 a = b
 ```
 
-`=` 连接两个对象，表示它们相同。
+`=` connects two objects and states that they are the same.
 
-在 Litex 中，`=` 同时承担几种基础角色：
+In Litex, equality plays several roles:
 
-1. 普通数学相等。
-2. calculation 的目标。
-3. known fact matching 的核心。
-4. 代数变形的桥梁。
-5. 对象定义和函数定义的结果。
-
-例如：
-
-```litex
-0 = a - b
-```
-
-可以 infer：
-
-```litex
-a = b
-```
+1. ordinary mathematical equality
+2. the target of calculation
+3. known-fact matching
+4. algebraic rewriting and structural comparison
+5. object and function definition results
 
 ### 2.3 Function Equality
 
-`$fn_eq` 和 `$fn_eq_in` 是函数相等的语义桥。
+`$fn_eq` and `$fn_eq_in` are semantic bridges for function equality.
 
-```litex
+```text
 $fn_eq_in(f, g, S)
 ```
 
-表示 `f` 和 `g` 在集合 `S` 上逐点相等。
+This states that `f` and `g` are pointwise equal on `S`.
 
-```litex
+```text
 $fn_eq(f, g)
 ```
 
-表示两个函数在共享定义域上相等，并且 verifier 会同时关心它们的函数空间归属。
+This states that two functions are equal on their shared domain, while the verifier also checks their function-space information.
 
-这类 builtin 的意义是：用户不需要每次手写完整的逐点 `forall`。Litex 可以把函数相等关系转成适合 verifier 处理的 pointwise equality。
+These bridges exist so users do not need to write the full pointwise `forall` every time.
 
 ### 2.4 Implication and Equivalence
 
-```litex
+```text
 A => B
 ```
 
-建立 domain facts 到 then facts 的蕴含关系。
+This connects assumptions to conclusions.
 
-```litex
+```text
 A <=> B
 ```
 
-建立双向可用的等价关系。
+This gives a relationship that can be used in both directions.
 
-在 `forall` 中，`=>` 把条件和结论分开：
+Inside a `forall`, `=>` separates domain facts from conclusion facts:
 
-```litex
+```text
 forall x R:
     x > 0
     =>:
         x * x > 0
 ```
 
-这表示：对所有 `x R`，如果 `x > 0`，那么 `x * x > 0`。
+This says: for every real `x`, if `x > 0`, then `x * x > 0`.
 
 ## 3. Builtin Verification Mechanisms
 
-Builtin verification mechanisms 是 verifier 自动使用的机械化证明方法。它们不是新的数学对象，而是“如何证明”的内置过程。
+Builtin verification mechanisms are automatic proof procedures used by the verifier. They are not new mathematical objects. They are ways to prove facts about the existing objects and relations.
 
 ### 3.1 Calculation
 
-Calculation 处理可计算表达式的相等关系。
+Calculation handles equalities between computable expressions.
 
-```litex
+```text
 1 + 2 = 3
 ```
 
-这类事实不需要用户提供证明过程。Litex 会直接计算两边并比较结果。
+The user does not need to provide a proof script for this kind of fact. Litex can evaluate both sides and compare the results.
 
 ### 3.2 Known Fact Matching
 
-如果一个事实已经被存储，新的相同事实可以直接验证。
+If a fact has already been stored, a later identical fact can be verified from it.
 
-```litex
+```text
 know a = b
 
 a = b
 ```
 
-第二行可以由已知事实验证。
+The second line can be verified by the known fact.
 
 ### 3.3 Forall Instantiation
 
-已知 `forall` 可以推出特例。
+A known `forall` can prove an instance.
 
-```litex
+```text
 know forall x R:
     x = x
 
 1 = 1
 ```
 
-核心机制是匹配和替换：
+The core mechanism is matching and substitution:
 
-1. 把目标事实和 `forall` 的 then facts 匹配。
-2. 解出 forall 参数应该替换成什么对象。
-3. 检查参数类型和 domain facts。
-4. 得到目标事实。
+1. Match the target fact against the conclusion facts of the `forall`.
+2. Solve which objects should replace the forall parameters.
+3. Check parameter sets and domain facts.
+4. Produce the target fact.
 
-### 3.4 Order Algebra
+### 3.4 Algebraic and Order Verification
 
-Order algebra 连接 arithmetic symbols 和 order symbols。
+The verifier has builtin procedures for common algebraic and order reasoning over arithmetic expressions.
 
-处理的符号包括：
+This category connects arithmetic symbols with equality and order symbols:
 
-```litex
-+ - * / < <= > >=
+```text
++ - * / % abs max min < <= > >= =
 ```
 
-例子：
+The detailed list of rules in this category should be maintained outside this overview document.
 
-```litex
-a <= b
-0 <= c
-```
+### 3.5 Number and Set Membership
 
-可以帮助验证：
+Litex can directly verify membership facts for literal numbers, standard sets, intervals, finite sets, and other built-in set shapes.
 
-```litex
-a + c <= b + c
-```
+Example:
 
-这类规则在数学上基础、重复、机械，所以适合内置。
-
-Absolute value 的比较语义也属于这一类 order rule。Litex 可以直接验证：
-
-```litex
-x <= abs(x)
--x <= abs(x)
-abs(x + y) <= abs(x) + abs(y)
-abs(x - y) <= abs(x) + abs(y)
-x ^ 2 = abs(x) ^ 2
-```
-
-这些规则把 `abs` 和 `<=`、偶数次方连接起来，表达绝对值作为大小上界、距离度量，以及“偶数次方忽略符号”的基础语义。
-
-### 3.5 Number in Standard Set
-
-Litex 可以直接判断字面数或可计算数是否属于标准数集。
-
-例如：
-
-```litex
+```text
 1 $in N_pos
 0 $in N
 -1 $in Z
 ```
 
-这些属于基本数系语义。
+This category also includes closure behavior for standard number sets. The rule inventory belongs in a dedicated rule document.
 
 ### 3.6 Function Membership
 
-当已知：
+When Litex knows:
 
-```litex
+```text
 f $in fn(x S: P(x)) T
 ```
 
-Litex 会记录 `f` 的函数空间信息。之后验证函数调用时，可以使用这些信息检查：
+it records function-space information. Later, function application can use this information to check:
 
-1. 输入参数是否满足 `S`
-2. 输入参数是否满足 domain condition `P(x)`
-3. 返回值是否属于 `T`
+1. whether the input belongs to `S`
+2. whether the domain condition `P(x)` holds
+3. whether the returned object belongs to `T`
 
 ### 3.7 Set Membership Expansion
 
-某些集合 membership 会展开成更基础的事实。
+Some membership facts expand into simpler facts.
 
-例如：
-
-```litex
-x $in {1, 2}
-```
-
-可以 infer：
-
-```litex
-x = 1 or x = 2
-```
-
-又比如：
-
-```litex
-x $in closed_range(a, b)
-```
-
-可以 infer：
-
-```litex
-x $in Z
-a <= x
-x <= b
-```
+For example, membership in a finite listed set can produce alternatives, and membership in an integer range can produce integer membership plus bounds.
 
 ### 3.8 Structural Evaluation
 
-Litex 对 list、tuple、matrix 等结构对象有内置求值规则。
+Litex has builtin evaluation rules for structural objects such as lists, tuples, finite sequences, and matrices.
 
-例如：
+These rules connect structural syntax with elementwise computation.
 
-```litex
-[[1, 0], [0, 1]] ++ [[1, 0], [0, 1]]
-```
+## 4. Documentation Structure
 
-可以 eval 到：
+This file should remain a conceptual map. It should answer:
 
-```litex
-[[2, 0], [0, 2]]
-```
+1. What kinds of things are builtin?
+2. Why are they builtin?
+3. Which broad semantic category do they belong to?
 
-这类规则建立的是“结构对象”和“逐元素运算”之间的关系。
+Detailed rule catalogs should live in separate files. A useful split is:
 
-## 4. Entry Format
-
-后续每个 builtin entry 可以按这个格式记录：
-
-```text
-### name
-
-类别：
-    Builtin Concept / Builtin Semantic Bridge / Builtin Verification Mechanism
-
-连接的概念：
-    A
-    B
-
-语法：
-    ...
-
-数学意思：
-    ...
-
-builtin 作用：
-    ...
-
-典型例子：
-    ...
-
-相关代码：
-    ...
-```
-
-例如：
-
-```text
-### finite_seq
-
-类别：
-    Builtin Concept + Builtin Semantic Bridge
-
-连接的概念：
-    finite_seq(s, n)
-    fn(x N_pos: x <= n) s
-
-语法：
-    finite_seq(s, n)
-
-数学意思：
-    长度为 n、元素来自 s 的有限序列。
-
-builtin 作用：
-    Litex 内置 finite_seq 和对应 fn space 的等价关系。
-
-典型例子：
-    finite_seq(R, 3) = fn(x N_pos: x <= 3) R
-
-相关代码：
-    src/builtin_code/common_facts.rs
-```
+1. `docs/litex_builtin_rule_notes.md` for current builtin verification rules.
+2. `docs/builtin_verify_rules.md` for a future complete verifier-rule reference.
+3. `docs/builtin_inference_rules.md` for inference rules.
 
 ## 5. First Batch To Document
 
-第一批可以先整理这些：
+The first batch should focus on the core semantic vocabulary:
 
 1. `set`, `nonempty_set`, `finite_set`
 2. `N`, `N_pos`, `Z`, `Q`, `R`, `R_pos`, `R_nz`
@@ -427,4 +305,4 @@ builtin 作用：
 9. `range`, `closed_range`
 10. `forall`, `exist`, `prop`
 
-这些覆盖了最核心的“对象、关系、验证机制”。结构稳定后，再把 `docs/builtin_verify_rules.md` 和 `docs/builtin_inference_rules.md` 里的机制按这个格式搬进来。
+After this structure is stable, detailed verification and inference rules can be moved into their own dedicated references.

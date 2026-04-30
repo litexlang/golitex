@@ -585,7 +585,7 @@ Execution:
 
 **Meaning.** Prove a `forall` whose parameters range over **finite list sets** `{ … }`. The checker forms the Cartesian product of those lists, assigns each combination to the parameters, and for each tuple runs the same **domain → optional proof → then** flow as **`by for`** (which enumerates integers from `range` / `closed_range` instead of list-set members).
 
-**Syntax.** Same layout as `by for`: header is `by enumerate` `finite_set` `:` (keyword `finite_set` before the colon). The first body block is `prove:` containing **exactly one** nested block, parsed as a single **`forall`** fact. Shorthand: `by enumerate finite_set =>` inline `forall!` `:` with proof steps in the body.
+**Syntax.** Same layout as `by for`: header is `by enumerate` `finite_set` `:` (keyword `finite_set` before the colon). The first body block is `prove:` containing **exactly one** nested block, parsed as a single **`forall`** fact. Shorthand: `by enumerate finite_set` inline `forall!` `:` with proof steps in the body.
 
 - Each `forall` parameter’s type must be a **list set** `{ … }` (the value of each parameter is always one element of that list).
 - The `forall` may use **domain** lines before `=>:` and **then** lines under `=>:`; or omit `=>:` so every line under `forall` is a conclusion (no domain), like ordinary `forall` parsing.
@@ -613,7 +613,7 @@ by enumerate finite_set:
                 a = 2
     do_nothing
 
-by enumerate finite_set => forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2, 4)}:
+by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2, 4)}:
     ...
 ```
 
@@ -734,7 +734,7 @@ claim:
 
 **Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions. For **list sets** `{ … }` instead of ranges, use **`by enumerate finite_set`** (same `prove:` / `forall` shape; see above).
 
-**Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps. Shorthand: `by for =>` inline `forall!` `:` with proof steps in the body.
+**Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps. Shorthand: `by for` inline `forall!` `:` with proof steps in the body.
 
 ```litex
 by for:
@@ -749,7 +749,7 @@ by for:
             n <= 10
     do_nothing
 
-by for => forall! n range(0, 10): n < 10:
+by for forall! n range(0, 10): n < 10:
     ...
 ```
 
