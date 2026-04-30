@@ -34,12 +34,20 @@ fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Max(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Min(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Union(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::Intersect(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Intersect(b) => {
+            obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
+        }
         Obj::SetMinus(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::SetDiff(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::MatrixAdd(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::MatrixSub(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::MatrixMul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::MatrixAdd(b) => {
+            obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
+        }
+        Obj::MatrixSub(b) => {
+            obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
+        }
+        Obj::MatrixMul(b) => {
+            obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
+        }
         Obj::Pow(p) => {
             obj_expr_mentions_bare_id(p.base.as_ref(), id)
                 || obj_expr_mentions_bare_id(p.exponent.as_ref(), id)
@@ -84,7 +92,9 @@ fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(oi.index.as_ref(), id)
         }
         Obj::Range(r) => obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id),
-        Obj::ClosedRange(r) => obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id),
+        Obj::ClosedRange(r) => {
+            obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id)
+        }
         Obj::Sum(s) => {
             obj_expr_mentions_bare_id(s.start.as_ref(), id)
                 || obj_expr_mentions_bare_id(s.end.as_ref(), id)
@@ -104,10 +114,7 @@ fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 .any(|o| obj_expr_mentions_bare_id(o.as_ref(), id))
         }),
         Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
-        Obj::FamilyObj(fo) => fo
-            .params
-            .iter()
-            .any(|p| obj_expr_mentions_bare_id(p, id)),
+        Obj::FamilyObj(fo) => fo.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
         Obj::FiniteSeqSet(fs) => {
             obj_expr_mentions_bare_id(fs.set.as_ref(), id)
                 || obj_expr_mentions_bare_id(fs.n.as_ref(), id)
@@ -155,6 +162,197 @@ fn factual_equal_success_by_builtin_reason(
 }
 
 impl Runtime {
+    fn literal_zero_obj_for_abs_builtin() -> Obj {
+        Obj::Number(Number::new("0".to_string()))
+    }
+
+    fn obj_is_literal_neg_one_for_abs_builtin(obj: &Obj) -> bool {
+        match obj {
+            Obj::Number(n) => n.normalized_value == "-1",
+            _ => false,
+        }
+    }
+
+    fn obj_is_negation_of_for_abs_builtin(obj: &Obj, expected_arg: &Obj) -> bool {
+        match obj {
+            Obj::Mul(m) => {
+                (Self::obj_is_literal_neg_one_for_abs_builtin(m.left.as_ref())
+                    && objs_equal_by_display_string(m.right.as_ref(), expected_arg))
+                    || (Self::obj_is_literal_neg_one_for_abs_builtin(m.right.as_ref())
+                        && objs_equal_by_display_string(m.left.as_ref(), expected_arg))
+            }
+            _ => false,
+        }
+    }
+
+    fn obj_is_abs_product_for_abs_builtin(obj: &Obj, x: &Obj, y: &Obj) -> bool {
+        let Obj::Mul(m) = obj else {
+            return false;
+        };
+        match (m.left.as_ref(), m.right.as_ref()) {
+            (Obj::Abs(left_abs), Obj::Abs(right_abs)) => {
+                objs_equal_by_display_string(left_abs.arg.as_ref(), x)
+                    && objs_equal_by_display_string(right_abs.arg.as_ref(), y)
+            }
+            _ => false,
+        }
+    }
+
+    fn try_verify_abs_nonnegative_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (arg, other) = match (left, right) {
+            (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
+            (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
+            _ => return Ok(None),
+        };
+        if !objs_equal_by_display_string(arg, other) {
+            return Ok(None);
+        }
+        let nonnegative: AtomicFact = LessEqualFact::new(
+            Self::literal_zero_obj_for_abs_builtin(),
+            arg.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let nonnegative_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&nonnegative, verify_state)?;
+        if !nonnegative_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "abs: abs(x) = x from 0 <= x".to_string(),
+                vec![nonnegative_result],
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_abs_nonpositive_negation(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (arg, other) = match (left, right) {
+            (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
+            (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
+            _ => return Ok(None),
+        };
+        if !Self::obj_is_negation_of_for_abs_builtin(other, arg) {
+            return Ok(None);
+        }
+        let nonpositive: AtomicFact = LessEqualFact::new(
+            arg.clone(),
+            Self::literal_zero_obj_for_abs_builtin(),
+            line_file.clone(),
+        )
+        .into();
+        let nonpositive_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&nonpositive, verify_state)?;
+        if !nonpositive_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "abs: abs(x) = -x from x <= 0".to_string(),
+                vec![nonpositive_result],
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_abs_product(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let matches_abs_product = |abs_side: &Obj, product_side: &Obj| -> bool {
+            let Obj::Abs(abs) = abs_side else {
+                return false;
+            };
+            let Obj::Mul(inner_mul) = abs.arg.as_ref() else {
+                return false;
+            };
+            Self::obj_is_abs_product_for_abs_builtin(
+                product_side,
+                inner_mul.left.as_ref(),
+                inner_mul.right.as_ref(),
+            )
+        };
+
+        if !matches_abs_product(left, right) && !matches_abs_product(right, left) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "abs: abs(x * y) = abs(x) * abs(y)",
+        )))
+    }
+
+    fn try_verify_zero_from_abs_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let zero = Self::literal_zero_obj_for_abs_builtin();
+        let arg = if objs_equal_by_display_string(left, &zero) {
+            right
+        } else if objs_equal_by_display_string(right, &zero) {
+            left
+        } else {
+            return Ok(None);
+        };
+        let abs_arg: Obj = Abs::new(arg.clone()).into();
+        if !self.objs_have_same_known_equality_rc_in_some_env(&abs_arg, &zero) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "abs: x = 0 from abs(x) = 0",
+        )))
+    }
+
+    fn try_verify_abs_equalities(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(done) =
+            self.try_verify_abs_nonnegative_identity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(Some(done));
+        }
+        if let Some(done) =
+            self.try_verify_abs_nonpositive_negation(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_verify_abs_product(left, right, line_file.clone())? {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_verify_zero_from_abs_zero(left, right, line_file)? {
+            return Ok(Some(done));
+        }
+        Ok(None)
+    }
+
     // Instantiate family `equal_to` on one or both sides, then full `verify_objs_are_equal` on the expanded pair.
     fn try_verify_objs_equal_by_expanding_family(
         &mut self,
@@ -545,21 +743,12 @@ impl Runtime {
         if args.len() != n_params {
             return Ok(None);
         }
-        let param_to_arg_map = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
-            param_defs,
-            &args,
-        );
-        let reduced = self.inst_obj(
-            af.equal_to.as_ref(),
-            &param_to_arg_map,
-            ParamObjType::FnSet,
-        )?;
-        let inner = self.verify_objs_are_equal(
-            &reduced,
-            other_side,
-            line_file.clone(),
-            verify_state,
-        )?;
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+        let reduced =
+            self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
+        let inner =
+            self.verify_objs_are_equal(&reduced, other_side, line_file.clone(), verify_state)?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 statement_left,
@@ -664,25 +853,13 @@ impl Runtime {
             return Ok(None);
         };
 
-        let then_fact: ExistOrAndChainAtomicFact = EqualFact::new(
-            l_inst,
-            Add::new(a_inst, b_inst).into(),
-            line_file.clone(),
-        )
-        .into();
+        let then_fact: ExistOrAndChainAtomicFact =
+            EqualFact::new(l_inst, Add::new(a_inst, b_inst).into(), line_file.clone()).into();
 
-        let dom_lo: Fact = LessEqualFact::new(
-            (*sum_m.start).clone(),
-            x_obj.clone(),
-            line_file.clone(),
-        )
-        .into();
-        let dom_hi: Fact = LessEqualFact::new(
-            x_obj.clone(),
-            (*sum_m.end).clone(),
-            line_file.clone(),
-        )
-        .into();
+        let dom_lo: Fact =
+            LessEqualFact::new((*sum_m.start).clone(), x_obj.clone(), line_file.clone()).into();
+        let dom_hi: Fact =
+            LessEqualFact::new(x_obj.clone(), (*sum_m.end).clone(), line_file.clone()).into();
 
         let forall_fact: Fact = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -732,9 +909,11 @@ impl Runtime {
         let args = vec![x.clone()];
         let param_to_arg_map =
             ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
-        Ok(Some(
-            self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?,
-        ))
+        Ok(Some(self.inst_obj(
+            af.equal_to.as_ref(),
+            &param_to_arg_map,
+            ParamObjType::FnSet,
+        )?))
     }
 
     /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.
@@ -792,25 +971,45 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(s1.start.as_ref(), s3.start.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal(
+                s1.start.as_ref(),
+                s3.start.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(s2.end.as_ref(), s3.end.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal(
+                s2.end.as_ref(),
+                s3.end.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(s1.func.as_ref(), s2.func.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal(
+                s1.func.as_ref(),
+                s2.func.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(s1.func.as_ref(), s3.func.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal(
+                s1.func.as_ref(),
+                s3.func.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
@@ -1262,18 +1461,10 @@ impl Runtime {
             };
             let then_fact: ExistOrAndChainAtomicFact =
                 EqualFact::new(at_l, at_r, line_file.clone()).into();
-            let dom_lo: Fact = LessEqualFact::new(
-                (*r_sum.start).clone(),
-                y_obj.clone(),
-                line_file.clone(),
-            )
-            .into();
-            let dom_hi: Fact = LessEqualFact::new(
-                y_obj.clone(),
-                (*r_sum.end).clone(),
-                line_file.clone(),
-            )
-            .into();
+            let dom_lo: Fact =
+                LessEqualFact::new((*r_sum.start).clone(), y_obj.clone(), line_file.clone()).into();
+            let dom_hi: Fact =
+                LessEqualFact::new(y_obj.clone(), (*r_sum.end).clone(), line_file.clone()).into();
             let forall_fact: Fact = ForallFact::new(
                 ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                     vec![y_name],
@@ -1333,11 +1524,8 @@ impl Runtime {
             }
             let c = (*af.equal_to).clone();
             let one: Obj = Number::new("1".to_string()).into();
-            let count: Obj = Add::new(
-                Sub::new((*s.end).clone(), (*s.start).clone()).into(),
-                one,
-            )
-            .into();
+            let count: Obj =
+                Add::new(Sub::new((*s.end).clone(), (*s.start).clone()).into(), one).into();
             let m1: Obj = Mul::new(count.clone(), c.clone()).into();
             let m2: Obj = Mul::new(c, count).into();
             if self
@@ -1573,6 +1761,12 @@ impl Runtime {
             line_file.clone(),
             verify_state,
         )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_abs_equalities(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
