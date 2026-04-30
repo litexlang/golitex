@@ -625,7 +625,12 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Pow(pow) = factor else {
-            return Ok(false);
+            if !Self::obj_is_builtin_literal_one(exponent) {
+                return Ok(false);
+            }
+            return Ok(self
+                .verify_objs_are_equal(base, factor, line_file.clone(), verify_state)?
+                .is_true());
         };
         if !self
             .verify_objs_are_equal(base, pow.base.as_ref(), line_file.clone(), verify_state)?
