@@ -41,12 +41,8 @@ pub fn run_cli() {
                 runtime.new_file_path_new_env_new_name_scope("-e");
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
-                let output = render_run_source_code_output(
-                    &runtime,
-                    &stmt_results,
-                    &runtime_error,
-                    true,
-                );
+                let output =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
                 println!("{}", output.1.trim());
                 println!("{}", repl_footer_placeholder());
                 return;

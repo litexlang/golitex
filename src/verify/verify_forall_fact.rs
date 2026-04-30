@@ -151,8 +151,8 @@ impl Runtime {
         }
 
         self.run_in_local_env(|rt| {
-            let mut infer_result = rt
-                .forall_assume_params_and_dom_in_current_env(forall_fact, verify_state)?;
+            let mut infer_result =
+                rt.forall_assume_params_and_dom_in_current_env(forall_fact, verify_state)?;
             rt.forall_verify_then_facts_in_current_env(
                 forall_fact,
                 verify_state,

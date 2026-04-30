@@ -1175,12 +1175,7 @@ impl Runtime {
         if left.body.dom_facts.len() != given.body.dom_facts.len() {
             return Ok(None);
         }
-        for (lf, gf) in left
-            .body
-            .dom_facts
-            .iter()
-            .zip(given.body.dom_facts.iter())
-        {
+        for (lf, gf) in left.body.dom_facts.iter().zip(given.body.dom_facts.iter()) {
             let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
             else {
                 return Ok(None);
@@ -1244,12 +1239,7 @@ impl Runtime {
         if left.body.dom_facts.len() != given.body.dom_facts.len() {
             return Ok(None);
         }
-        for (lf, gf) in left
-            .body
-            .dom_facts
-            .iter()
-            .zip(given.body.dom_facts.iter())
-        {
+        for (lf, gf) in left.body.dom_facts.iter().zip(given.body.dom_facts.iter()) {
             let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
             else {
                 return Ok(None);
@@ -1718,5 +1708,4 @@ impl Runtime {
         let _ = obj_type_name;
         Ok(None)
     }
-
 }

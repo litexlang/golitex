@@ -248,7 +248,11 @@ fn inline_fact_string(fact: &Fact) -> String {
     match fact {
         Fact::ForallFact(forall_fact) => inline_forall_fact_string(forall_fact),
         Fact::NotForall(not_forall) => {
-            format!("{} {}", NOT, inline_forall_fact_string(&not_forall.forall_fact))
+            format!(
+                "{} {}",
+                NOT,
+                inline_forall_fact_string(&not_forall.forall_fact)
+            )
         }
         _ => fact.to_string(),
     }

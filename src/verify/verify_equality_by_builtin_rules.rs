@@ -546,6 +546,140 @@ impl Runtime {
         Ok(None)
     }
 
+    fn power_factor_matches_base_and_exponent(
+        &mut self,
+        factor: &Obj,
+        base: &Obj,
+        exponent: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let Obj::Pow(pow) = factor else {
+            return Ok(false);
+        };
+        if !self
+            .verify_objs_are_equal(base, pow.base.as_ref(), line_file.clone(), verify_state)?
+            .is_true()
+        {
+            return Ok(false);
+        }
+        Ok(self
+            .verify_objs_are_equal(
+                exponent,
+                pow.exponent.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
+            .is_true())
+    }
+
+    fn obj_is_verified_in_n_pos(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let in_n_pos: AtomicFact =
+            InFact::new(obj.clone(), StandardSet::NPos.into(), line_file).into();
+        Ok(self
+            .verify_non_equational_known_then_builtin_rules_only(&in_n_pos, verify_state)?
+            .is_true())
+    }
+
+    fn power_addition_exponent_rule_holds_one_direction(
+        &mut self,
+        combined_power: &Pow,
+        product: &Mul,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let Obj::Add(add_exponent) = combined_power.exponent.as_ref() else {
+            return Ok(false);
+        };
+
+        // Power law for positive integer exponents:
+        // `a^(m+n) = a^m * a^n`. Example: `forall a R, m, n N_pos: a^(m+n) = a^m * a^n`.
+        let candidates = [
+            (
+                product.left.as_ref(),
+                product.right.as_ref(),
+                add_exponent.left.as_ref(),
+                add_exponent.right.as_ref(),
+            ),
+            (
+                product.right.as_ref(),
+                product.left.as_ref(),
+                add_exponent.left.as_ref(),
+                add_exponent.right.as_ref(),
+            ),
+        ];
+
+        for (left_factor, right_factor, left_exp, right_exp) in candidates {
+            if !self.power_factor_matches_base_and_exponent(
+                left_factor,
+                combined_power.base.as_ref(),
+                left_exp,
+                line_file.clone(),
+                verify_state,
+            )? {
+                continue;
+            }
+            if !self.power_factor_matches_base_and_exponent(
+                right_factor,
+                combined_power.base.as_ref(),
+                right_exp,
+                line_file.clone(),
+                verify_state,
+            )? {
+                continue;
+            }
+            if !self.obj_is_verified_in_n_pos(left_exp, line_file.clone(), verify_state)? {
+                return Ok(false);
+            }
+            if !self.obj_is_verified_in_n_pos(right_exp, line_file.clone(), verify_state)? {
+                return Ok(false);
+            }
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    fn try_verify_power_addition_exponent_rule(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let holds = match (left, right) {
+            (Obj::Pow(pow), Obj::Mul(product)) => self
+                .power_addition_exponent_rule_holds_one_direction(
+                    pow,
+                    product,
+                    line_file.clone(),
+                    verify_state,
+                )?,
+            (Obj::Mul(product), Obj::Pow(pow)) => self
+                .power_addition_exponent_rule_holds_one_direction(
+                    pow,
+                    product,
+                    line_file.clone(),
+                    verify_state,
+                )?,
+            _ => false,
+        };
+        if holds {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: a^(m+n) = a^m * a^n for m,n in N_pos",
+            )));
+        }
+        Ok(None)
+    }
+
     // log_a(a^b) = b  (Litex `log(a, a^b) = b`; same base in log and in the power.)
     fn try_verify_log_identity_equalities(
         &mut self,
@@ -1822,6 +1956,15 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_zero_equals_pow_from_base_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_power_addition_exponent_rule(
             left,
             right,
             line_file.clone(),

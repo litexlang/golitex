@@ -20,9 +20,7 @@ impl Runtime {
 
     pub fn exec_clear_stmt(&mut self, stmt: &ClearStmt) -> Result<StmtResult, RuntimeError> {
         self.clear_current_env_and_parse_name_scope();
-        Ok(
-            (NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![])).into(),
-        )
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![])).into())
     }
 
     pub fn exec_run_file_stmt(&mut self, stmt: &RunFileStmt) -> Result<StmtResult, RuntimeError> {

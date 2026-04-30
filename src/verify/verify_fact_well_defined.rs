@@ -66,12 +66,17 @@ impl Runtime {
             let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                        "fact `{}` expects {} argument(s), but got {}",
-                        name_string,
-                        expected_len,
-                        actual_args.len()
-                    ), atomic_fact.line_file()))
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "fact `{}` expects {} argument(s), but got {}",
+                            name_string,
+                            expected_len,
+                            actual_args.len()
+                        ),
+                        atomic_fact.line_file(),
+                    ),
+                )
                 .into());
             }
         } else {
@@ -84,18 +89,28 @@ impl Runtime {
             {
                 abstract_prop_definition.params.len()
             } else {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!("fact `{}` not defined", name_string), atomic_fact.line_file()))
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("fact `{}` not defined", name_string),
+                        atomic_fact.line_file(),
+                    ),
+                )
                 .into());
             };
 
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                        "fact `{}` expects {} argument(s), but got {}",
-                        name_string,
-                        expected_len,
-                        actual_args.len()
-                    ), atomic_fact.line_file()))
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "fact `{}` expects {} argument(s), but got {}",
+                            name_string,
+                            expected_len,
+                            actual_args.len()
+                        ),
+                        atomic_fact.line_file(),
+                    ),
+                )
                 .into());
             }
         }
@@ -261,10 +276,9 @@ impl Runtime {
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            if let Err(exec_stmt_error) = self.verify_fact_well_defined_and_store_and_infer(
-                dom_fact.clone(),
-                verify_state,
-            ) {
+            if let Err(exec_stmt_error) =
+                self.verify_fact_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
+            {
                 return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,
                     String::new(),
