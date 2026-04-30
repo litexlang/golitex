@@ -77,4 +77,15 @@ know:
 
     forall s set, m N_pos, n N_pos:
         matrix(s, m, n) = fn(x, y N_pos: x <= m, y <= n) s
+
+    forall a Z, m N_pos:
+        (a % m) $in N
+        (a % m) < m
+
+    forall a Z, m N_pos, k N:
+        =>:
+            a % m = k
+            k < m
+        <=>:
+            exist r Z st {a = m * r + k}
 "#;
