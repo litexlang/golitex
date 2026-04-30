@@ -102,11 +102,16 @@ fn parse_level(
                 continue;
             }
             return Err({
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                        "unexpected indent at line {} in {}",
-                        line_file.0,
-                        line_file.1.as_ref()
-                    ), line_file)))
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "unexpected indent at line {} in {}",
+                            line_file.0,
+                            line_file.1.as_ref()
+                        ),
+                        line_file,
+                    ),
+                ))
             });
         }
 
@@ -124,11 +129,16 @@ fn parse_level(
             if *i >= lines.len() {
                 return Err({
                     let line_file = (line_no, current_file_path.clone());
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                            "block header missing body at line {} in {}",
-                            line_file.0,
-                            line_file.1.as_ref()
-                        ), line_file)))
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!(
+                                "block header missing body at line {} in {}",
+                                line_file.0,
+                                line_file.1.as_ref()
+                            ),
+                            line_file,
+                        ),
+                    ))
                 });
             }
 
@@ -136,11 +146,16 @@ fn parse_level(
             if next_indent <= indent {
                 return Err({
                     let line_file = (*i + 1, current_file_path.clone());
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                            "expected indent at line {} in {}",
-                            line_file.0,
-                            line_file.1.as_ref()
-                        ), line_file)))
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!(
+                                "expected indent at line {} in {}",
+                                line_file.0,
+                                line_file.1.as_ref()
+                            ),
+                            line_file,
+                        ),
+                    ))
                 });
             }
 
@@ -162,11 +177,16 @@ fn parse_level(
             if indent != expected {
                 return Err({
                     let line_file = (line_no, current_file_path.clone());
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                            "inconsistent indent at line {} in {}",
-                            line_file.0,
-                            line_file.1.as_ref()
-                        ), line_file)))
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!(
+                                "inconsistent indent at line {} in {}",
+                                line_file.0,
+                                line_file.1.as_ref()
+                            ),
+                            line_file,
+                        ),
+                    ))
                 });
             }
         } else {
@@ -184,7 +204,12 @@ impl TokenBlock {
             .get(self.parse_index)
             .map(|s| s.as_str())
             .ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("Unexpected end of tokens".to_string(), self.line_file.clone())))
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "Unexpected end of tokens".to_string(),
+                        self.line_file.clone(),
+                    ),
+                ))
             })
     }
 
@@ -194,7 +219,10 @@ impl TokenBlock {
             Ok(())
         } else {
             Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(format!("Expected token: {}", token), self.line_file.clone()),
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("Expected token: {}", token),
+                    self.line_file.clone(),
+                ),
             )))
         }
     }
@@ -223,7 +251,10 @@ impl TokenBlock {
         self.skip_token(COLON)?;
         if !self.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file("Expected token: at head".to_string(), self.line_file.clone()),
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "Expected token: at head".to_string(),
+                    self.line_file.clone(),
+                ),
             )));
         }
         Ok(())
@@ -231,7 +262,12 @@ impl TokenBlock {
 
     pub fn token_at_index(&self, index: usize) -> Result<&str, RuntimeError> {
         self.header.get(index).map(|s| s.as_str()).ok_or_else(|| {
-            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!("Expected token: at index {}", index), self.line_file.clone())))
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("Expected token: at index {}", index),
+                    self.line_file.clone(),
+                ),
+            ))
         })
     }
 

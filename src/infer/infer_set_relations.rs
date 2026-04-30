@@ -28,19 +28,21 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&inferred_forall_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(inferred_forall_fact)
-            .map_err(|previous_error| {
-                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to store inferred forall fact while inferring `{}`",
-                        subset_fact
-                    ),
-                    subset_fact.line_file.clone(),
-                    Some(previous_error),
-                    vec![],
-                )))
-            })?;
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+            inferred_forall_fact,
+        )
+        .map_err(|previous_error| {
+            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "failed to store inferred forall fact while inferring `{}`",
+                    subset_fact
+                ),
+                subset_fact.line_file.clone(),
+                Some(previous_error),
+                vec![],
+            )))
+        })?;
         Ok(infer_result)
     }
 
@@ -71,19 +73,21 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&inferred_forall_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(inferred_forall_fact)
-            .map_err(|previous_error| {
-                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to store inferred forall fact while inferring `{}`",
-                        superset_fact
-                    ),
-                    superset_fact.line_file.clone(),
-                    Some(previous_error),
-                    vec![],
-                )))
-            })?;
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+            inferred_forall_fact,
+        )
+        .map_err(|previous_error| {
+            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "failed to store inferred forall fact while inferring `{}`",
+                    superset_fact
+                ),
+                superset_fact.line_file.clone(),
+                Some(previous_error),
+                vec![],
+            )))
+        })?;
         Ok(infer_result)
     }
 }

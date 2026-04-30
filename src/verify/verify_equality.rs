@@ -194,8 +194,7 @@ impl Runtime {
         .into();
         let msg = format!(
             "according to user-defined function `{}` = `{}`",
-            application_side,
-            reduced
+            application_side, reduced
         );
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(

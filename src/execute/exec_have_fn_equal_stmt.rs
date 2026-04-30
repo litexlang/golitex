@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_curried_function_obj_from_layers, forall_binders_dom_and_curried_layers_from_fn_set_clause,
+    build_curried_function_obj_from_layers,
+    forall_binders_dom_and_curried_layers_from_fn_set_clause,
 };
 
 impl Runtime {
@@ -58,8 +59,7 @@ impl Runtime {
             ParamObjType::Identifier,
         )?;
 
-        let function_identifier_obj: Obj =
-            Identifier::new(have_fn_equal_stmt.name.clone()).into();
+        let function_identifier_obj: Obj = Identifier::new(have_fn_equal_stmt.name.clone()).into();
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj.clone(),
@@ -69,7 +69,9 @@ impl Runtime {
         .into();
 
         let infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(function_in_function_set_fact)
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                function_in_function_set_fact,
+            )
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_stmt.clone().into(),

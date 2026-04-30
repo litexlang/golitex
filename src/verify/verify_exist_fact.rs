@@ -280,8 +280,8 @@ impl Runtime {
                 if !known_fact.can_be_used_to_verify_goal(exist_fact) {
                     continue;
                 }
-                let known_body_string = Self::exist_fact_normalized_body_string(runtime, known_fact)
-                    .map_err(|e| {
+                let known_body_string =
+                    Self::exist_fact_normalized_body_string(runtime, known_fact).map_err(|e| {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                             Some(Fact::from(exist_fact.clone()).into_stmt()),
                             String::new(),

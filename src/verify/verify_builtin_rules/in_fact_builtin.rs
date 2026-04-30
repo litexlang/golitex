@@ -888,8 +888,9 @@ impl Runtime {
         )
     }
 
-    // `a + b $in N_pos` when one summand is in `N_pos` and the other is in `N`.
-    // Example: `forall a N_pos, b N: a + b $in N_pos`.
+    // `a + b $in N_pos` when both summands are in `N_pos`, or one summand is in
+    // `N_pos` and the other is in `N`.
+    // Example: `forall a, b N_pos: a + b $in N_pos`.
     fn verify_in_fact_add_in_n_pos_from_n_pos_and_n(
         &mut self,
         in_fact: &InFact,
@@ -909,6 +910,25 @@ impl Runtime {
 
         let left_n_pos: AtomicFact =
             InFact::new(add.left.as_ref().clone(), n_pos.clone(), lf.clone()).into();
+        let right_n_pos_for_pair: AtomicFact =
+            InFact::new(add.right.as_ref().clone(), n_pos.clone(), lf.clone()).into();
+        let r_left_n_pos_for_pair =
+            self.verify_non_equational_atomic_fact(&left_n_pos, verify_state, true)?;
+        if r_left_n_pos_for_pair.is_true() {
+            let r_right_n_pos_for_pair =
+                self.verify_non_equational_atomic_fact(&right_n_pos_for_pair, verify_state, true)?;
+            if r_right_n_pos_for_pair.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "N_pos: a + b from a in N_pos and b in N_pos".to_string(),
+                        vec![r_left_n_pos_for_pair, r_right_n_pos_for_pair],
+                    )
+                    .into(),
+                );
+            }
+        }
+
         let right_n: AtomicFact =
             InFact::new(add.right.as_ref().clone(), n.clone(), lf.clone()).into();
         let r_left_n_pos =

@@ -99,9 +99,8 @@ where
             };
 
             output_chunk.push('\n');
-            output_chunk.push_str(
-                display_stmt_exec_result_json(&runtime, &exec_result, true).as_str(),
-            );
+            output_chunk
+                .push_str(display_stmt_exec_result_json(&runtime, &exec_result, true).as_str());
             output_chunk.push('\n');
         }
 

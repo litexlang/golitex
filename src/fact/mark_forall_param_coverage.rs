@@ -615,10 +615,7 @@ fn mark_forall_param_coverage_in_exist_fact(
         );
     }
     for inner_fact in exist_fact.facts().iter() {
-        mark_forall_param_coverage_in_exist_body_fact(
-            inner_fact,
-            coverage_by_forall_param,
-        );
+        mark_forall_param_coverage_in_exist_body_fact(inner_fact, coverage_by_forall_param);
     }
 }
 

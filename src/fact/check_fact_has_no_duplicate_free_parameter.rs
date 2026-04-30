@@ -189,11 +189,13 @@ fn check_exist_body_fact_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
-        ExistBodyFact::InlineForall(forall_fact) => check_forall_fact_has_no_duplicate_free_parameter(
-            forall_fact,
-            free_param_type,
-            params_already_used,
-        ),
+        ExistBodyFact::InlineForall(forall_fact) => {
+            check_forall_fact_has_no_duplicate_free_parameter(
+                forall_fact,
+                free_param_type,
+                params_already_used,
+            )
+        }
     }
 }
 
