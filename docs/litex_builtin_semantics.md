@@ -266,6 +266,18 @@ a + c <= b + c
 
 这类规则在数学上基础、重复、机械，所以适合内置。
 
+Absolute value 的比较语义也属于这一类 order rule。Litex 可以直接验证：
+
+```litex
+x <= abs(x)
+-x <= abs(x)
+abs(x + y) <= abs(x) + abs(y)
+abs(x - y) <= abs(x) + abs(y)
+x ^ 2 = abs(x) ^ 2
+```
+
+这些规则把 `abs` 和 `<=`、偶数次方连接起来，表达绝对值作为大小上界、距离度量，以及“偶数次方忽略符号”的基础语义。
+
 ### 3.5 Number in Standard Set
 
 Litex 可以直接判断字面数或可计算数是否属于标准数集。
