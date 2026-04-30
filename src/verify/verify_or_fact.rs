@@ -27,6 +27,46 @@ fn order_split_or_is_exhaustive_pair(a: &AtomicFact, b: &AtomicFact) -> bool {
     }
 }
 
+fn obj_is_literal_neg_one_for_abs_or_builtin(obj: &Obj) -> bool {
+    match obj {
+        Obj::Number(n) => n.normalized_value == "-1",
+        _ => false,
+    }
+}
+
+fn obj_is_negation_of_for_abs_or_builtin(obj: &Obj, expected_arg: &Obj) -> bool {
+    match obj {
+        Obj::Mul(m) => {
+            (obj_is_literal_neg_one_for_abs_or_builtin(m.left.as_ref())
+                && objs_equal_by_display_string(m.right.as_ref(), expected_arg))
+                || (obj_is_literal_neg_one_for_abs_or_builtin(m.right.as_ref())
+                    && objs_equal_by_display_string(m.left.as_ref(), expected_arg))
+        }
+        _ => false,
+    }
+}
+
+fn abs_sign_split_or_is_exhaustive_pair(a: &AtomicFact, b: &AtomicFact) -> bool {
+    let (AtomicFact::EqualFact(first), AtomicFact::EqualFact(second)) = (a, b) else {
+        return false;
+    };
+    let (arg, first_other) = match (&first.left, &first.right) {
+        (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
+        (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
+        _ => return false,
+    };
+    if !objs_equal_by_display_string(arg, first_other) {
+        return false;
+    }
+    let (second_arg, second_other) = match (&second.left, &second.right) {
+        (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
+        (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
+        _ => return false,
+    };
+    objs_equal_by_display_string(arg, second_arg)
+        && obj_is_negation_of_for_abs_or_builtin(second_other, arg)
+}
+
 impl Runtime {
     pub fn verify_or_fact(
         &mut self,
@@ -41,18 +81,16 @@ impl Runtime {
 
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
-                return Err(
-                    {
-                        VerifyRuntimeError(RuntimeErrorStruct::new(
-                Some(Fact::from(or_fact.clone()).into_stmt()),
-                String::new(),
-                or_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            ))
-            .into()
-        },
-                );
+                return Err({
+                    VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(or_fact.clone()).into_stmt()),
+                        String::new(),
+                        or_fact.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    ))
+                    .into()
+                });
             }
         }
 
@@ -83,6 +121,18 @@ impl Runtime {
                             or_fact.clone().into(),
                             "or: complementary order relations (strict vs non-strict) on the same terms"
                                 .to_string(),
+                            Vec::new(),
+                        ))
+                        .into(),
+                    );
+                }
+                if abs_sign_split_or_is_exhaustive_pair(first_atomic, second_atomic)
+                    || abs_sign_split_or_is_exhaustive_pair(second_atomic, first_atomic)
+                {
+                    return Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            or_fact.clone().into(),
+                            "or: abs(x) is x or -x".to_string(),
                             Vec::new(),
                         ))
                         .into(),

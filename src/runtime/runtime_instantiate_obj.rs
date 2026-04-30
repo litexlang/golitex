@@ -26,54 +26,32 @@ impl Runtime {
             Obj::Atom(AtomObj::IdentifierWithMod(inner)) => {
                 self.inst_identifier_with_mod(inner, param_to_arg_map)
             }
-            Obj::FnObj(inner) => {
-                self.inst_fn_obj(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Number(inner) => {
-                self.inst_number(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::FnObj(inner) => self.inst_fn_obj(inner, param_to_arg_map, param_obj_type),
+            Obj::Number(inner) => self.inst_number(inner, param_to_arg_map, param_obj_type),
             Obj::Add(inner) => self.inst_add(inner, param_to_arg_map, param_obj_type),
             Obj::Sub(inner) => self.inst_sub(inner, param_to_arg_map, param_obj_type),
             Obj::Mul(inner) => self.inst_mul(inner, param_to_arg_map, param_obj_type),
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map, param_obj_type),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map, param_obj_type),
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map, param_obj_type),
-            Obj::MatrixAdd(inner) => {
-                self.inst_matrix_add(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::MatrixSub(inner) => {
-                self.inst_matrix_sub(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::MatrixMul(inner) => {
-                self.inst_matrix_mul(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::MatrixAdd(inner) => self.inst_matrix_add(inner, param_to_arg_map, param_obj_type),
+            Obj::MatrixSub(inner) => self.inst_matrix_sub(inner, param_to_arg_map, param_obj_type),
+            Obj::MatrixMul(inner) => self.inst_matrix_mul(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixScalarMul(inner) => {
                 self.inst_matrix_scalar_mul(inner, param_to_arg_map, param_obj_type)
             }
-            Obj::MatrixPow(inner) => {
-                self.inst_matrix_pow(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map, param_obj_type),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map, param_obj_type),
             Obj::Log(inner) => self.inst_log(inner, param_to_arg_map, param_obj_type),
             Obj::Max(inner) => self.inst_max(inner, param_to_arg_map, param_obj_type),
             Obj::Min(inner) => self.inst_min(inner, param_to_arg_map, param_obj_type),
-            Obj::Union(inner) => {
-                self.inst_union(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Intersect(inner) => {
-                self.inst_intersect(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::SetMinus(inner) => {
-                self.inst_set_minus(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::SetDiff(inner) => {
-                self.inst_set_diff(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::Union(inner) => self.inst_union(inner, param_to_arg_map, param_obj_type),
+            Obj::Intersect(inner) => self.inst_intersect(inner, param_to_arg_map, param_obj_type),
+            Obj::SetMinus(inner) => self.inst_set_minus(inner, param_to_arg_map, param_obj_type),
+            Obj::SetDiff(inner) => self.inst_set_diff(inner, param_to_arg_map, param_obj_type),
             Obj::Cup(inner) => self.inst_cup(inner, param_to_arg_map, param_obj_type),
             Obj::Cap(inner) => self.inst_cap(inner, param_to_arg_map, param_obj_type),
-            Obj::ListSet(inner) => {
-                self.inst_list_set(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::ListSet(inner) => self.inst_list_set(inner, param_to_arg_map, param_obj_type),
             Obj::SetBuilder(inner) => {
                 self.inst_set_builder(inner, param_to_arg_map, param_obj_type)
             }
@@ -85,52 +63,30 @@ impl Runtime {
             }
             Obj::StandardSet(standard_set) => self.inst_standard_set(standard_set),
             Obj::Cart(inner) => self.inst_cart(inner, param_to_arg_map, param_obj_type),
-            Obj::CartDim(inner) => {
-                self.inst_cart_dim(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::CartDim(inner) => self.inst_cart_dim(inner, param_to_arg_map, param_obj_type),
             Obj::Proj(inner) => self.inst_proj(inner, param_to_arg_map, param_obj_type),
-            Obj::TupleDim(inner) => {
-                self.inst_tuple_dim(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Tuple(inner) => {
-                self.inst_tuple(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Count(inner) => {
-                self.inst_count(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Sum(inner) => {
-                self.inst_sum(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Product(inner) => {
-                self.inst_product(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Range(inner) => {
-                self.inst_range(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::TupleDim(inner) => self.inst_tuple_dim(inner, param_to_arg_map, param_obj_type),
+            Obj::Tuple(inner) => self.inst_tuple(inner, param_to_arg_map, param_obj_type),
+            Obj::Count(inner) => self.inst_count(inner, param_to_arg_map, param_obj_type),
+            Obj::Sum(inner) => self.inst_sum(inner, param_to_arg_map, param_obj_type),
+            Obj::Product(inner) => self.inst_product(inner, param_to_arg_map, param_obj_type),
+            Obj::Range(inner) => self.inst_range(inner, param_to_arg_map, param_obj_type),
             Obj::ClosedRange(inner) => {
                 self.inst_closed_range(inner, param_to_arg_map, param_obj_type)
             }
             Obj::FiniteSeqSet(inner) => {
                 self.inst_finite_seq_set(inner, param_to_arg_map, param_obj_type)
             }
-            Obj::SeqSet(inner) => {
-                self.inst_seq_set(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::SeqSet(inner) => self.inst_seq_set(inner, param_to_arg_map, param_obj_type),
             Obj::FiniteSeqListObj(inner) => {
                 self.inst_finite_seq_list_obj(inner, param_to_arg_map, param_obj_type)
             }
-            Obj::MatrixSet(inner) => {
-                self.inst_matrix_set(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::MatrixSet(inner) => self.inst_matrix_set(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixListObj(inner) => {
                 self.inst_matrix_list_obj(inner, param_to_arg_map, param_obj_type)
             }
-            Obj::PowerSet(inner) => {
-                self.inst_power_set(inner, param_to_arg_map, param_obj_type)
-            }
-            Obj::Choose(inner) => {
-                self.inst_choose(inner, param_to_arg_map, param_obj_type)
-            }
+            Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map, param_obj_type),
+            Obj::Choose(inner) => self.inst_choose(inner, param_to_arg_map, param_obj_type),
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
             }
@@ -139,11 +95,7 @@ impl Runtime {
                 for p in family.params.iter() {
                     params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
                 }
-                Ok(FamilyObj {
-                    name: family.name.clone(),
-                    params,
-                }
-                .into())
+                Ok(FamilyObj::new(family.name.clone(), params).into())
             }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {
@@ -193,9 +145,7 @@ impl Runtime {
                 Ok(p.clone().into())
             }
             Obj::Atom(AtomObj::Induc(p)) => {
-                if param_obj_type == ParamObjType::Induc
-                    || param_obj_type == ParamObjType::Forall
-                {
+                if param_obj_type == ParamObjType::Induc || param_obj_type == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
                     }
@@ -208,8 +158,7 @@ impl Runtime {
                 Ok(p.clone().into())
             }
             Obj::Atom(AtomObj::DefAlgo(p)) => {
-                if param_obj_type == ParamObjType::DefAlgo
-                    || param_obj_type == ParamObjType::Forall
+                if param_obj_type == ParamObjType::DefAlgo || param_obj_type == ParamObjType::Forall
                 {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
                         return Ok(obj.clone());
@@ -307,10 +256,8 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let instantiated_left_obj =
-            self.inst_obj(&add.left, param_to_arg_map, param_obj_type)?;
-        let instantiated_right_obj =
-            self.inst_obj(&add.right, param_to_arg_map, param_obj_type)?;
+        let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map, param_obj_type)?;
+        let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map, param_obj_type)?;
         Ok(Add::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
@@ -320,10 +267,8 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let instantiated_left_obj =
-            self.inst_obj(&ma.left, param_to_arg_map, param_obj_type)?;
-        let instantiated_right_obj =
-            self.inst_obj(&ma.right, param_to_arg_map, param_obj_type)?;
+        let instantiated_left_obj = self.inst_obj(&ma.left, param_to_arg_map, param_obj_type)?;
+        let instantiated_right_obj = self.inst_obj(&ma.right, param_to_arg_map, param_obj_type)?;
         Ok(MatrixAdd::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
@@ -377,10 +322,8 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let instantiated_left_obj =
-            self.inst_obj(&sub.left, param_to_arg_map, param_obj_type)?;
-        let instantiated_right_obj =
-            self.inst_obj(&sub.right, param_to_arg_map, param_obj_type)?;
+        let instantiated_left_obj = self.inst_obj(&sub.left, param_to_arg_map, param_obj_type)?;
+        let instantiated_right_obj = self.inst_obj(&sub.right, param_to_arg_map, param_obj_type)?;
         Ok(Sub::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
@@ -390,10 +333,8 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let instantiated_left_obj =
-            self.inst_obj(&mul.left, param_to_arg_map, param_obj_type)?;
-        let instantiated_right_obj =
-            self.inst_obj(&mul.right, param_to_arg_map, param_obj_type)?;
+        let instantiated_left_obj = self.inst_obj(&mul.left, param_to_arg_map, param_obj_type)?;
+        let instantiated_right_obj = self.inst_obj(&mul.right, param_to_arg_map, param_obj_type)?;
         Ok(Mul::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
@@ -429,8 +370,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let instantiated_base_obj =
-            self.inst_obj(&pow.base, param_to_arg_map, param_obj_type)?;
+        let instantiated_base_obj = self.inst_obj(&pow.base, param_to_arg_map, param_obj_type)?;
         let instantiated_exponent_obj =
             self.inst_obj(&pow.exponent, param_to_arg_map, param_obj_type)?;
         Ok(Pow::new(instantiated_base_obj, instantiated_exponent_obj).into())
@@ -504,16 +444,8 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         Ok(Intersect::new(
-            self.inst_obj(
-                &intersect.left,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                &intersect.right,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
+            self.inst_obj(&intersect.left, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&intersect.right, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }
@@ -525,16 +457,8 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         Ok(SetMinus::new(
-            self.inst_obj(
-                &set_minus.left,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                &set_minus.right,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
+            self.inst_obj(&set_minus.left, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&set_minus.right, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }
@@ -547,11 +471,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         Ok(SetDiff::new(
             self.inst_obj(&set_diff.left, param_to_arg_map, param_obj_type)?,
-            self.inst_obj(
-                &set_diff.right,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
+            self.inst_obj(&set_diff.right, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }
@@ -562,10 +482,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(
-            Cup::new(self.inst_obj(&cup.left, param_to_arg_map, param_obj_type)?)
-                .into(),
-        )
+        Ok(Cup::new(self.inst_obj(&cup.left, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_cap(
@@ -574,10 +491,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(
-            Cap::new(self.inst_obj(&cap.left, param_to_arg_map, param_obj_type)?)
-                .into(),
-        )
+        Ok(Cap::new(self.inst_obj(&cap.left, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_power_set(
@@ -586,12 +500,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(PowerSet::new(self.inst_obj(
-            &power_set.set,
-            param_to_arg_map,
-            param_obj_type,
-        )?)
-        .into())
+        Ok(PowerSet::new(self.inst_obj(&power_set.set, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_list_set(
@@ -633,7 +542,7 @@ impl Runtime {
                 param_obj_type,
             )?,
             facts,
-        )
+        )?
         .into())
     }
 
@@ -676,7 +585,7 @@ impl Runtime {
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
-        )
+        )?
         .into())
     }
 
@@ -712,13 +621,17 @@ impl Runtime {
         Ok(AnonymousFn::new(
             params_def_with_set,
             dom_facts,
-            self.inst_obj(af.body.ret_set.as_ref(), &filtered_param_to_arg_map, param_obj_type)?,
+            self.inst_obj(
+                af.body.ret_set.as_ref(),
+                &filtered_param_to_arg_map,
+                param_obj_type,
+            )?,
             self.inst_obj(
                 af.equal_to.as_ref(),
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
-        )
+        )?
         .into())
     }
 
@@ -741,12 +654,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(CartDim::new(self.inst_obj(
-            &cart_dim.set,
-            param_to_arg_map,
-            param_obj_type,
-        )?)
-        .into())
+        Ok(CartDim::new(self.inst_obj(&cart_dim.set, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_proj(
@@ -768,12 +676,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(TupleDim::new(self.inst_obj(
-            &tuple_dim.arg,
-            param_to_arg_map,
-            param_obj_type,
-        )?)
-        .into())
+        Ok(TupleDim::new(self.inst_obj(&tuple_dim.arg, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_tuple(
@@ -795,10 +698,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(
-            Count::new(self.inst_obj(&count.set, param_to_arg_map, param_obj_type)?)
-                .into(),
-        )
+        Ok(Count::new(self.inst_obj(&count.set, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_sum(
@@ -849,16 +749,8 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         Ok(ClosedRange::new(
-            self.inst_obj(
-                &closed_range.start,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                &closed_range.end,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
+            self.inst_obj(&closed_range.start, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&closed_range.end, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }
@@ -882,10 +774,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(
-            SeqSet::new(self.inst_obj(&ss.set, param_to_arg_map, param_obj_type)?)
-                .into(),
-        )
+        Ok(SeqSet::new(self.inst_obj(&ss.set, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_finite_seq_list_obj(
@@ -938,14 +827,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(
-            Choose::new(self.inst_obj(
-                &choose.set,
-                param_to_arg_map,
-                param_obj_type,
-            )?)
-            .into(),
-        )
+        Ok(Choose::new(self.inst_obj(&choose.set, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_obj_at_index(
@@ -955,16 +837,8 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         Ok(ObjAtIndex::new(
-            self.inst_obj(
-                &obj_at_index.obj,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
-            self.inst_obj(
-                &obj_at_index.index,
-                param_to_arg_map,
-                param_obj_type,
-            )?,
+            self.inst_obj(&obj_at_index.obj, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&obj_at_index.index, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }
@@ -984,7 +858,8 @@ impl Runtime {
             ParamType::FiniteSet(_) => Ok(param_type.clone()),
             ParamType::NonemptySet(_) => Ok(param_type.clone()),
             ParamType::Restrictive(fs) => {
-                let inst_obj = self.inst_fn_set_with_params(fs, param_to_arg_map, param_obj_type)?;
+                let inst_obj =
+                    self.inst_fn_set_with_params(fs, param_to_arg_map, param_obj_type)?;
                 match inst_obj {
                     Obj::FnSet(inner) => Ok(ParamType::Restrictive(inner)),
                     _ => unreachable!("inst_fn_set_with_params returns Obj::FnSet"),
@@ -1006,12 +881,14 @@ impl Runtime {
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
         if total_param_count != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
                 )))
-            .into());
+                .into(),
+            );
         }
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
@@ -1042,12 +919,14 @@ impl Runtime {
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
-            return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
+            return Err(
+                InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
                 )))
-            .into());
+                .into(),
+            );
         }
 
         let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);

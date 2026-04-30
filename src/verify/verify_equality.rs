@@ -96,7 +96,116 @@ impl Runtime {
             }
         }
 
+        if let Some(done) = self.try_verify_objs_equal_via_user_defined_fn_definition_substitution(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         Ok((StmtUnknown::new()).into())
+    }
+
+    /// Stored `have fn` body (`KnownFnInfo.equal_to`): unfold one application and compare.
+    fn try_verify_objs_equal_via_user_defined_fn_definition_substitution(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(done) = self.try_one_side_user_defined_fn_app_equals_other_side(
+            left,
+            right,
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_one_side_user_defined_fn_app_equals_other_side(
+            left,
+            right,
+            right,
+            left,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(Some(done));
+        }
+        Ok(None)
+    }
+
+    fn try_one_side_user_defined_fn_app_equals_other_side(
+        &mut self,
+        statement_left: &Obj,
+        statement_right: &Obj,
+        application_side: &Obj,
+        other_side: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::FnObj(fn_obj) = application_side else {
+            return Ok(None);
+        };
+        if fn_obj.body.is_empty() {
+            return Ok(None);
+        }
+        let key = match fn_obj.head.as_ref() {
+            FnObjHead::Identifier(i) => i.to_string(),
+            FnObjHead::IdentifierWithMod(i) => i.to_string(),
+            _ => return Ok(None),
+        };
+        let Some((fn_set_body, equal_to_expr, cite_def_line_file)) =
+            self.get_known_fn_body_and_equal_to_for_key(key.as_str())
+        else {
+            return Ok(None);
+        };
+        let param_defs = &fn_set_body.params_def_with_set;
+        let n_params = ParamGroupWithSet::number_of_params(param_defs);
+        if n_params == 0 {
+            return Ok(None);
+        }
+        let mut args: Vec<Obj> = Vec::new();
+        for g in fn_obj.body.iter() {
+            for b in g.iter() {
+                args.push((**b).clone());
+            }
+        }
+        if args.len() != n_params {
+            return Ok(None);
+        }
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+        let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, ParamObjType::FnSet)?;
+        let inner =
+            self.verify_objs_are_equal(&reduced, other_side, line_file.clone(), verify_state)?;
+        if !inner.is_true() {
+            return Ok(None);
+        }
+        let fact = EqualFact::new(
+            statement_left.clone(),
+            statement_right.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let msg = format!(
+            "according to user-defined function `{}` = `{}`",
+            application_side, reduced
+        );
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                fact,
+                msg,
+                None,
+                Some(cite_def_line_file.clone()),
+                Vec::new(),
+            )
+            .into(),
+        ))
     }
 
     /// Collect (known_left, known_right) from each env in top-to-bottom order (last env first).

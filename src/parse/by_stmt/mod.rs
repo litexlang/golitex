@@ -25,11 +25,8 @@ impl Runtime {
             FN_LOWER_CASE => self.parse_by_fn_stmt(tb),
             FAMILY => self.parse_by_family_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
-            FINITE_SEQ => self.parse_by_finite_seq_set_stmt(tb),
-            SEQ => self.parse_by_seq_set_stmt(tb),
-            MATRIX => self.parse_by_matrix_set_stmt(tb),
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                    "by: expected cases, contra, enumerate (finite_set or range), induc, for, extension, fn, fn set, family, finite_seq, seq, matrix, or tuple after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate (finite_set or range), induc, for, extension, fn, fn set, family, or tuple after `by`, got `{}`",
                     second_keyword
                 ), tb.line_file.clone())))),
         }

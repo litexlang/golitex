@@ -1,0 +1,11 @@
+forall a Z, m, n N_pos:
+    a^(m+n) = a^m * a^n
+
+forall a Z, m, n Z:
+    m >= 1
+    n >= 1
+    =>:
+        a^(m+n) = a^m * a^n
+
+forall a Z:
+    a^1 = a

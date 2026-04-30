@@ -13,8 +13,12 @@ impl Runtime {
                 tb.skip_token(COLON)?;
             } else {
                 if !tb.exceed_end_of_head() {
-                    return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("expect `:` or end of line after `)` in prop statement".to_string(), tb.line_file.clone()))));
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "expect `:` or end of line after `)` in prop statement".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
                 } else {
                     this.parsing_free_param_collection
                         .end_scope(ParamObjType::DefHeader, &def_param_names);
@@ -100,8 +104,12 @@ impl Runtime {
             tb.skip_token(COLON)?;
 
             if !tb.exceed_end_of_head() {
-                return Err(
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("expect end of line after `:` in let statement".to_string(), tb.line_file.clone()))));
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "expect end of line after `:` in let statement".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
             let facts_result = self.parse_facts_in_body(tb);
             self.parsing_free_param_collection
@@ -132,8 +140,12 @@ impl Runtime {
             }
         }
         if param_defs.is_empty() {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have expects at least one param type pair".to_string(), tb.line_file.clone()))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "have expects at least one param type pair".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
         let param_defs = ParamDefWithType::new(param_defs);
         let have_param_names = param_defs.collect_param_names();
@@ -235,8 +247,12 @@ impl Runtime {
         tb.skip_token(LEFT_BRACE)?;
         let param = tb.advance()?;
         if !tb.current_token_is_equal_to(Z) {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: expected `Z` after parameter name".to_string(), tb.line_file.clone()))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "have fn by induc from: expected `Z` after parameter name".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
         tb.skip_token(Z)?;
         tb.skip_token(COLON)?;
@@ -265,15 +281,23 @@ impl Runtime {
         let ret_set = self.parse_obj(tb)?;
 
         if !tb.current_token_is_equal_to(COLON) {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: expected `:` before case blocks".to_string(), tb.line_file.clone()))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "have fn by induc from: expected `:` before case blocks".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
         tb.skip_token(COLON)?;
 
         let num_blocks = tb.body.len();
         if num_blocks <= 1 {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: expected at least two case blocks".to_string(), tb.line_file.clone()))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "have fn by induc from: expected at least two case blocks".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
 
         let num_special = num_blocks - 1;
@@ -461,21 +485,33 @@ impl Runtime {
         let ge = match when {
             AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(ge)) => ge,
             _ => {
-                return Err(
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: dom fact must be a single `>=` fact".to_string(), line_file))));
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "have fn by induc from: dom fact must be a single `>=` fact".to_string(),
+                        line_file,
+                    ),
+                )));
             }
         };
         match &ge.left {
             Obj::Atom(AtomObj::Identifier(id)) if id.name == param_name => {}
             _ => {
-                return Err(
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: `>=` left must be the parameter name".to_string(), line_file))));
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "have fn by induc from: `>=` left must be the parameter name".to_string(),
+                        line_file,
+                    ),
+                )));
             }
         }
         if ge.right.to_string() != induc_from.to_string() {
-            return Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: `>=` right must match the object after `from`"
-                        .to_string(), line_file))));
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "have fn by induc from: `>=` right must match the object after `from`"
+                        .to_string(),
+                    line_file,
+                ),
+            )));
         }
         Ok(())
     }
@@ -576,8 +612,12 @@ impl Runtime {
             let family_def_scope_names = params_def_with_type.collect_param_names();
             let stmt_result = (|| -> Result<Stmt, RuntimeError> {
                 if !tb.current_token_is_equal_to(EQUAL) {
-                    return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("family definition expects `=` after `}`".to_string(), tb.line_file.clone()))));
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "family definition expects `=` after `}`".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
                 }
                 tb.skip_token(EQUAL)?;
                 let equal_to = this.parse_obj(tb)?;
@@ -677,12 +717,12 @@ impl Runtime {
         self.validate_names_and_insert_into_top_parsing_time_name_scope(names, line_file.clone())
             .map_err(|e| {
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
- None,
-                String::new(),
-                line_file,
-                Some(e),
-                vec![],
-            )))
+                    None,
+                    String::new(),
+                    line_file,
+                    Some(e),
+                    vec![],
+                )))
             })
     }
 

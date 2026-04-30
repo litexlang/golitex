@@ -14,7 +14,7 @@ _– Steve Jobs_
 
 Litex is a **simple, set-theoretic** formal language for mathematics: enough structure for everyday arguments without a long apprenticeship. Each construct is meant to match a **real mathematical idea** and stays as close to natural language as possible.
 
-This quick reference summarizes Litex syntax and meaning alongside minimal examples. More on the project: [Litex](https://litexlang.com), [GitHub](https://github.com/litexlang/golitex).
+This quick reference summarizes Litex syntax and meaning alongside minimal examples.
 
 ---
 
@@ -49,7 +49,7 @@ prove:
 
 **Meaning.** “There exist values for the parameters such that every fact in the brace holds (∃).”
 
-**Note.** `exist_unique` uses the **same** header and brace shape; the difference is uniqueness (see **Existential with uniqueness**): proving or storing `exist_unique` also involves the matching **`forall`** uniqueness fact.
+**Note.** `exist!` uses the **same** header and brace shape; the difference is uniqueness (see **Existential with uniqueness**): proving or storing `exist!` also involves the matching **`forall`** uniqueness fact.
 
 **Syntax.** `exist` *parameter groups (names and types / sets)* `st` `{` *facts separated by commas* `}`.
 
@@ -65,11 +65,11 @@ exist x R st {x > 0, x < 1}
 
 ---
 
-### Existential with uniqueness (`exist_unique`)
+### Existential with uniqueness (`exist!`)
 
-**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist_unique` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when an `exist_unique` is recorded in the environment, the runtime **also stores** that generated uniqueness **`forall`**.
+**Meaning.** Same existential (∃) claim as `exist` for the braced facts. **Uniqueness** is enforced by also requiring the companion **`forall`** fact (“any two parameter tuples satisfying the body agree / are equal”). **Verification:** discharging an `exist!` goal needs that uniqueness `forall` proved (or already known), in addition to the usual witness reasoning. **Storage:** when `exist!` is recorded in the environment, the runtime **also stores** that generated uniqueness **`forall`**.
 
-**Syntax.** `exist_unique` *parameter groups* `st` `{` *facts separated by commas* `}` — same header shape as `exist`, with `exist_unique` instead of `exist`.
+**Syntax.** `exist!` *parameter groups* `st` `{` *facts separated by commas* `}` — the lexer splits this as the keyword `exist` followed by `!` (whitespace optional).
 
 **Example.**
 
@@ -87,7 +87,7 @@ know:
         =>:
             (a1, b1, c1) = (a2, b2, c2)
 
-exist_unique a, b, c R st {$p(a, b), $q(b, c)}
+exist! a, b, c R st {$p(a, b), $q(b, c)}
 
 abstract_prop t(a)
 
@@ -99,7 +99,7 @@ know:
         =>:
             a1 = a2
 
-exist_unique a R st {$t(a)}
+exist! a R st {$t(a)}
 ```
 
 ---
@@ -397,7 +397,7 @@ know:
 
 **Meaning.** State a **goal** (one fact after inner `prove:`) and then a linear proof. The goal cannot be an iff-`forall` form.
 
-**Syntax.** `claim` `:` newline; first sub-block is `prove` `:` with exactly one fact; following sub-blocks are proof steps.
+**Syntax.** `claim` `:` newline; first sub-block is `prove` `:` with exactly one fact; following sub-blocks are proof steps. **Shorthand:** `claim` `=>` *fact* `:` on the header line, then indented proof steps (no inner `prove:`).
 
 **Example.**
 
@@ -513,11 +513,13 @@ $is_nonempty_set(s)
 
 **Example.** Each tactic subsection below ends with a full code sketch (same content as the matching `by_*.lit` file in the repo).
 
+> **Same goal, three tactics.** A single arithmetic fact such as `1 = 1` can be proved with **`by cases`** (exhaustive branches), **`by contra`** (assume the negation, then `impossible`), or **`claim`** (state the goal and finish in one step). All three support the **header shorthand** `… => goal:` so the goal sits on the keyword line; see the closing blocks in `examples/by_cases.lit`, `examples/by_contra.lit`, and `examples/claim.lit`.
+
 ### `by cases`
 
 **Meaning.** Prove a goal under each case of a cover (disjunction of case assumptions).
 
-**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof … Each `prove:` fact must not be `forall` (use atomic, exist, or/and combinations, or chains).
+**Syntax.** `by cases` `:` `prove` `:` *goal* newline, then `case` *assumption* `:` proof … Each `prove:` fact must not be `forall` (use atomic, exist, or/and combinations, or chains). **Shorthand:** `by cases` `=>` *goal* `:` on the header line, then `case` arms (no inner `prove:`).
 
 **Example.**
 
@@ -545,7 +547,7 @@ Execution:
 
 **Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense.
 
-**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*.
+**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` `=>` *atomic goal* `:` on the header line, then optional proof blocks and closing `impossible`.
 
 **Example.**
 
@@ -583,7 +585,7 @@ Execution:
 
 **Meaning.** Prove a `forall` whose parameters range over **finite list sets** `{ … }`. The checker forms the Cartesian product of those lists, assigns each combination to the parameters, and for each tuple runs the same **domain → optional proof → then** flow as **`by for`** (which enumerates integers from `range` / `closed_range` instead of list-set members).
 
-**Syntax.** Same layout as `by for`: header is `by enumerate` `finite_set` `:` (keyword `finite_set` before the colon). The first body block is `prove:` containing **exactly one** nested block, parsed as a single **`forall`** fact.
+**Syntax.** Same layout as `by for`: header is `by enumerate` `finite_set` `:` (keyword `finite_set` before the colon). The first body block is `prove:` containing **exactly one** nested block, parsed as a single **`forall`** fact. Shorthand: `by enumerate finite_set` inline `forall!` `:` with proof steps in the body.
 
 - Each `forall` parameter’s type must be a **list set** `{ … }` (the value of each parameter is always one element of that list).
 - The `forall` may use **domain** lines before `=>:` and **then** lines under `=>:`; or omit `=>:` so every line under `forall` is a conclusion (no domain), like ordinary `forall` parsing.
@@ -610,6 +612,9 @@ by enumerate finite_set:
             =>:
                 a = 2
     do_nothing
+
+by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2, 4)}:
+    ...
 ```
 
 Integer **closed_range** membership with literal endpoints uses **`by enumerate` *lo*`...`*hi* `:`** *object* (next section), not list-set enumeration.
@@ -729,7 +734,7 @@ claim:
 
 **Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions. For **list sets** `{ … }` instead of ranges, use **`by enumerate finite_set`** (same `prove:` / `forall` shape; see above).
 
-**Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps.
+**Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps. Shorthand: `by for` inline `forall!` `:` with proof steps in the body.
 
 ```litex
 by for:
@@ -743,6 +748,9 @@ by for:
         forall n closed_range(0, 10):
             n <= 10
     do_nothing
+
+by for forall! n range(0, 10): n < 10:
+    ...
 ```
 
 ---
@@ -846,74 +854,6 @@ forall a \self_seq(R):
 family p(a set) = fn(x a) a
 
 by family: \p(R) # 生成 \p(R) = fn(x R) R。即用实参 R 替换形参 a
-```
-
----
-
-### `by finite_seq`
-
-**Meaning.** Expand a **`finite_seq(S, n)`** set to the corresponding **`fn`**-space form the checker uses internally (definitional expansion).
-
-**Syntax.** `by finite_seq` `:` *object* — *object* must be literally `finite_seq(...)`.
-
-**Example.** From `finite_seq.lit`:
-
-```litex
-family self_finite_seq(s set, n N_pos) = fn(x N_pos: x <= n) s
-
-finite_seq(R, 3) = finite_seq(R, 3)
-
-have a finite_seq(R, 3) = [1, 2, 3]
-
-a $in fn(x N_pos: x <= 3) R
-
-a(1) = 1
-a(2) = 2
-a(3) = 3
-
-by finite_seq: finite_seq(R, 3)
-
-finite_seq(R, 3) = fn(x1 N_pos: x1 <= 3) R
-```
-
----
-
-### `by seq`
-
-**Meaning.** Expand a **`seq(S)`** set to the corresponding **`fn`**-space form.
-
-**Syntax.** `by seq` `:` *object* — *object* must be literally `seq(...)`.
-
-**Example.**
-
-```litex
-by seq: seq(R)
-```
-
----
-
-### `by matrix`
-
-**Meaning.** Expand a **`matrix(S, r, c)`** set to the corresponding **`fn`**-space form.
-
-**Syntax.** `by matrix` `:` *object* — *object* must be literally `matrix(...)`.
-
-**Example.** From `matrix.lit` (opening `by matrix` usage):
-
-```litex
-prove:
-    matrix(R, 2, 2) = matrix(R, 2, 2)
-
-    have a matrix(R, 2, 2) = [[1, 2], [3, 4]]
-
-    a $in fn (x1 N_pos, x2 N_pos: x1 <= 2, x2 <= 2) R
-
-    a(1, 1) = 1
-    a(1, 2) = 2
-    a(2, 1) = 3
-    a(2, 2) = 4
-
-    by matrix: matrix(R, 2, 2)
 ```
 
 ---
@@ -1071,7 +1011,7 @@ prove:
 | `claim` | Theorem + proof |
 | `prove` | Nested proof block |
 | `witness` | Witness for `exist` or nonempty set |
-| `exist` / `exist_unique` | Existential facts (latter needs uniqueness in context; see **Existential with uniqueness**) |
+| `exist` / `exist!` | Existential facts (latter needs uniqueness in context; see **Existential with uniqueness**) |
 | `by` | Proof tactic (`cases`, `contra`, `enumerate finite_set`, `enumerate` *range* `:`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `finite_seq`, `seq`, `matrix`, `struct`, `tuple`) |
 | `eval` | Run algorithm |
 | `import` | Import module/file |

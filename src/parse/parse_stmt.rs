@@ -21,12 +21,16 @@ impl Runtime {
             PROVE => self.parse_prove_stmt(tb),
             IMPORT => self.parse_import_stmt(tb),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
+            DOT_DOT_DOT => self.parse_do_nothing_stmt(tb),
             RUN_FILE => self.parse_run_file_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             FAMILY => self.parse_def_family_stmt(tb),
             STRUCT => Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file("`struct` definitions are not supported in this version".to_string(), tb.line_file.clone()),
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`struct` definitions are not supported in this version".to_string(),
+                    tb.line_file.clone(),
+                ),
             ))),
             ALGO => self.parse_def_algorithm_stmt(tb),
             STRONG_INDUC => self.parse_strong_induc_stmt(tb),

@@ -43,10 +43,18 @@ impl FnSet {
         params_and_their_sets: Vec<ParamGroupWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
-    ) -> Self {
-        FnSet {
+    ) -> Result<Self, RuntimeError> {
+        let fn_set = FnSet {
             body: FnSetBody::new(params_and_their_sets, dom_facts, ret_set),
-        }
+        };
+        check_fn_set_has_no_duplicate_fn_set_free_parameter(&fn_set)?;
+        Ok(fn_set)
+    }
+
+    pub fn from_body(body: FnSetBody) -> Result<Self, RuntimeError> {
+        let fn_set = FnSet { body };
+        check_fn_set_has_no_duplicate_fn_set_free_parameter(&fn_set)?;
+        Ok(fn_set)
     }
 
     pub fn get_params(&self) -> Vec<String> {
@@ -67,11 +75,13 @@ impl AnonymousFn {
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
         equal_to: Obj,
-    ) -> Self {
-        AnonymousFn {
+    ) -> Result<Self, RuntimeError> {
+        let anonymous_fn = AnonymousFn {
             body: FnSetBody::new(params_and_their_sets, dom_facts, ret_set),
             equal_to: Box::new(equal_to),
-        }
+        };
+        check_anonymous_fn_has_no_duplicate_fn_set_free_parameter(&anonymous_fn)?;
+        Ok(anonymous_fn)
     }
 }
 
@@ -117,9 +127,9 @@ impl FnSetSpace {
             Obj::AnonymousFn(a) => Ok(FnSetSpace::Anon(a)),
             _ => Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                        "expect return set of function space to be `fn` or anonymous fn, got {}",
-                        obj
-                    )),
+                    "expect return set of function space to be `fn` or anonymous fn, got {}",
+                    obj
+                )),
             ))),
         }
     }

@@ -12,11 +12,11 @@ impl Runtime {
                     t
                 } else {
                     return Err(short_exec_error(
- stmt_exec,
-                    format!("by tuple: `{}` is not known to denote a tuple", stmt.obj),
-                    None,
-                    vec![],
-                ));
+                        stmt_exec,
+                        format!("by tuple: `{}` is not known to denote a tuple", stmt.obj),
+                        None,
+                        vec![],
+                    ));
                 }
             }
         };
@@ -25,7 +25,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state)
             .map_err(|e| {
                 short_exec_error(
- stmt_exec.clone(),
+                    stmt_exec.clone(),
                     format!("by tuple: `{}` is not well-defined", stmt.obj),
                     Some(e),
                     vec![],
@@ -34,11 +34,11 @@ impl Runtime {
 
         let encoded = kuratowski_encode_tuple_boxes(&tuple_struct.args).map_err(|msg| {
             short_exec_error(
- stmt_exec.clone(),
-                    format!("by tuple: {}", msg),
-                    None,
-                    vec![],
-                )
+                stmt_exec.clone(),
+                format!("by tuple: {}", msg),
+                None,
+                vec![],
+            )
         })?;
 
         let equal_fact = EqualFact::new(stmt.obj.clone(), encoded, stmt.line_file.clone()).into();
@@ -54,11 +54,11 @@ impl Runtime {
                 Ok((NonFactualStmtSuccess::new(stmt_exec, infer_result, vec![])).into())
             }
             Err(store_error) => Err(short_exec_error(
- stmt_exec,
-                    "by tuple: failed to store definitional equality".to_string(),
-                    Some(store_error),
-                    vec![],
-                )),
+                stmt_exec,
+                "by tuple: failed to store definitional equality".to_string(),
+                Some(store_error),
+                vec![],
+            )),
         }
     }
 }

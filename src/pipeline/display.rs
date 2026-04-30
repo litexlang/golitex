@@ -42,10 +42,7 @@ fn json_infer_fact_items_excluding_self_stmt(
 
 /// Apply [`strip_free_param_numeric_tags_in_display`] once on a finished JSON blob (CLI/REPL/file run).
 /// Nested JSON is built with `strip_free_param_tags == false` so a single final strip covers the whole tree.
-fn finalize_display_text_with_optional_strip(
-    text: String,
-    strip_free_param_tags: bool,
-) -> String {
+fn finalize_display_text_with_optional_strip(text: String, strip_free_param_tags: bool) -> String {
     if strip_free_param_tags {
         strip_free_param_numeric_tags_in_display(&text)
     } else {
@@ -93,7 +90,7 @@ fn verified_by_builtin_rule_value(rule: &str) -> JsonValue {
     JsonValue::Object(vec![
         (
             "type".to_string(),
-            JsonValue::JsonString("builtin_rule".to_string()),
+            JsonValue::JsonString("builtin rule".to_string()),
         ),
         ("rule".to_string(), JsonValue::JsonString(rule.to_string())),
     ])
@@ -146,7 +143,10 @@ fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) 
 
 /// JSON for [`Fact::ForallFact`], [`Fact::AndFact`], or [`Fact::ChainFact`] when
 /// `inside_results` holds one entry per sub-fact (then / conjunct / chain step).
-fn composite_factual_with_step_proofs_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+fn composite_factual_with_step_proofs_to_json(
+    runtime: &Runtime,
+    x: &FactualStmtSuccess,
+) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by_items: Vec<JsonValue> = x
@@ -233,7 +233,8 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
         _ => stmt_display_string,
     };
 
-    let infer_items: Vec<JsonValue> = json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_text);
+    let infer_items: Vec<JsonValue> =
+        json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_text);
 
     let inside_items: Vec<JsonValue> = x
         .inside_results
@@ -494,7 +495,7 @@ fn build_display_error_json_object(
                 &e.statement,
             );
         }
-        RuntimeError::NewAtomicFactError(e) => {
+        RuntimeError::NewFactError(e) => {
             field_lines.push(format!(
                 "{}\"{}\": {}",
                 indent_inner,
@@ -544,8 +545,11 @@ fn build_display_error_json_object(
 
             let mut inside_result_elements: Vec<String> = Vec::new();
             for inside_result in e.inside_results.iter() {
-                inside_result_elements
-                    .push(display_stmt_exec_result_json(runtime, inside_result, false));
+                inside_result_elements.push(display_stmt_exec_result_json(
+                    runtime,
+                    inside_result,
+                    false,
+                ));
             }
             field_lines.push(json_array_field_line(
                 indent_inner.as_str(),
@@ -665,7 +669,7 @@ fn get_previous_error_reference<'b>(error: &'b RuntimeError) -> Option<&'b Runti
             Some(previous_error) => Some(previous_error.as_ref()),
             None => None,
         },
-        RuntimeError::NewAtomicFactError(e) => match &e.previous_error {
+        RuntimeError::NewFactError(e) => match &e.previous_error {
             Some(previous_error) => Some(previous_error.as_ref()),
             None => None,
         },

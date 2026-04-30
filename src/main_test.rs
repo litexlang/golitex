@@ -124,49 +124,128 @@ mod lit_file_runner_tests {
     }
 
     #[test]
-    fn run_examples() {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let examples_directory_path = manifest_dir.join("examples");
+    fn run_file_from_path() {
+        let path: String = "./examples/chapter_6_induction.lit".to_string();
+        let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
+        assert!(
+            file_path.is_absolute(),
+            "path must be an absolute path: {:?}",
+            file_path
+        );
+        assert!(
+            file_path.is_file(),
+            "path must point to a file: {:?}",
+            file_path
+        );
 
-        let read_directory = match fs::read_dir(&examples_directory_path) {
-            Ok(entries) => entries,
-            Err(read_error) => panic!(
-                "failed to read {:?}: {}",
-                examples_directory_path, read_error
-            ),
+        let source_code = match fs::read_to_string(&file_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", file_path, read_error),
+        };
+        let path_str = match file_path.to_str() {
+            Some(path_string) => path_string,
+            None => panic!("{:?} must be valid UTF-8", file_path),
         };
 
-        let mut lit_file_paths: Vec<PathBuf> = Vec::new();
-        for directory_entry_result in read_directory {
-            let directory_entry = match directory_entry_result {
-                Ok(entry) => entry,
-                Err(read_error) => panic!("failed to read directory entry: {}", read_error),
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path_str);
+        let normalized_source = remove_windows_carriage_return(source_code.as_str());
+
+        let start_time = Instant::now();
+        let (stmt_results, runtime_error) =
+            run_source_code(normalized_source.as_str(), &mut runtime);
+        let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let status_label = if run_succeeded { "OK" } else { "FAILED" };
+        println!(
+            "{}\n=== [{}] {:?} ({:.2} ms user file only) ===\n",
+            run_output, path_str, status_label, duration_ms
+        );
+        assert!(run_succeeded, "Litex file failed: {}", path_str);
+    }
+
+    /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
+    /// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
+    fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {
+        let dir_path = manifest_dir.join(subdir);
+        if !dir_path.is_dir() {
+            println!("--- {} {:?}: directory missing; skip ---", subdir, dir_path);
+            return Vec::new();
+        }
+        fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+            let read_directory = match fs::read_dir(dir) {
+                Ok(entries) => entries,
+                Err(read_error) => panic!("failed to read {:?}: {}", dir, read_error),
             };
-            let lit_file_path = directory_entry.path();
-            if !lit_file_path.is_file() {
-                continue;
-            }
-            let extension_is_lit = match lit_file_path.extension() {
-                Some(ext) => ext == "lit",
-                None => false,
-            };
-            if extension_is_lit {
-                lit_file_paths.push(lit_file_path);
+            for directory_entry_result in read_directory {
+                let directory_entry = match directory_entry_result {
+                    Ok(entry) => entry,
+                    Err(read_error) => panic!("failed to read directory entry: {}", read_error),
+                };
+                let path = directory_entry.path();
+                let Ok(file_type) = directory_entry.file_type() else {
+                    continue;
+                };
+                if file_type.is_dir() {
+                    walk(&path, out);
+                } else if path.extension().is_some_and(|ext| ext == "lit") {
+                    out.push(path);
+                }
             }
         }
+        let mut lit_file_paths = Vec::new();
+        walk(&dir_path, &mut lit_file_paths);
         lit_file_paths.sort();
+        lit_file_paths
+    }
+
+    /// Single footer: builtin + per-phase sums/walls + `phase timing` line.
+    fn print_run_examples_timing_summary(
+        builtin_duration_ms: f64,
+        examples_ran: bool,
+        example_runs_ms: &[(String, f64)],
+        examples_phase_wall_ms: f64,
+        doc_runs_ms: &[(String, f64)],
+        docs_phase_wall_ms: f64,
+    ) {
+        let examples_sum_ms: f64 = example_runs_ms.iter().map(|(_, ms)| *ms).sum();
+        let docs_sum_ms: f64 = doc_runs_ms.iter().map(|(_, ms)| *ms).sum();
+        println!("--- timing (summary) ---");
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        if examples_ran {
+            println!(
+                "  examples: sum of user-file runs: {:.2} ms  |  wall: {:.2} ms",
+                examples_sum_ms, examples_phase_wall_ms
+            );
+        }
+        println!(
+            "  docs ```litex``` snippets: sum of runs: {:.2} ms  |  wall: {:.2} ms",
+            docs_sum_ms, docs_phase_wall_ms
+        );
+        println!(
+            "--- phase timing: examples {:.2} ms | docs {:.2} ms ---",
+            examples_phase_wall_ms, docs_phase_wall_ms
+        );
+    }
+
+    #[test]
+    fn run_examples() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let lit_file_paths = collect_lit_files_recursive_under(&manifest_dir, "examples");
 
         let builtin_start = Instant::now();
         let mut runtime = Runtime::new_with_builtin_code();
         let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
 
-        let mut file_name_and_duration_ms_list: Vec<(String, f64)> = Vec::new();
+        let mut file_label_and_duration_ms_list: Vec<(String, f64)> = Vec::new();
         let mut every_file_run_ok = true;
         let mut examples_ran = false;
         let mut examples_phase_wall_ms: f64 = 0.0;
 
         if lit_file_paths.is_empty() {
-            println!("--- examples folder: no .lit files ---");
+            println!("--- examples/ (recursive): no .lit files found ---");
         } else {
             examples_ran = true;
             let examples_wall_start = Instant::now();
@@ -182,12 +261,15 @@ mod lit_file_runner_tests {
                     None => panic!("{:?} must be valid UTF-8", lit_file_path),
                 };
 
-                let file_label_for_report = match lit_file_path.file_name() {
-                    Some(os_file_name) => match os_file_name.to_str() {
-                        Some(name_string) => String::from(name_string),
+                let file_label_for_report = match lit_file_path.strip_prefix(&manifest_dir) {
+                    Ok(rel) => rel.display().to_string(),
+                    Err(_) => match lit_file_path.file_name() {
+                        Some(os_file_name) => match os_file_name.to_str() {
+                            Some(name_string) => String::from(name_string),
+                            None => format!("{:?}", lit_file_path),
+                        },
                         None => format!("{:?}", lit_file_path),
                     },
-                    None => format!("{:?}", lit_file_path),
                 };
 
                 if file_index > 0 {
@@ -219,33 +301,22 @@ mod lit_file_runner_tests {
                     break;
                 }
 
-                file_name_and_duration_ms_list
+                file_label_and_duration_ms_list
                     .push((file_label_for_report, duration_ms_for_one_file));
             }
             examples_phase_wall_ms = examples_wall_start.elapsed().as_secs_f64() * 1000.0;
         }
 
         if every_file_run_ok && examples_ran {
-            let number_of_lit_files = file_name_and_duration_ms_list.len();
+            let number_of_lit_files = file_label_and_duration_ms_list.len();
 
             println!(
-                "--- examples folder: {} .lit files, all OK, timing ---",
+                "--- examples/ (recursive): {} .lit files, all OK ---",
                 number_of_lit_files
             );
-            println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
-            let mut sum_of_per_file_duration_ms: f64 = 0.0;
-            for (file_name, duration_ms) in file_name_and_duration_ms_list.iter() {
-                println!("  {}  {:.2} ms", file_name, duration_ms);
-                sum_of_per_file_duration_ms += *duration_ms;
+            for (file_label, duration_ms) in file_label_and_duration_ms_list.iter() {
+                println!("  {}  {:.2} ms", file_label, duration_ms);
             }
-            println!(
-                "  sum of user-file runs: {:.2} ms",
-                sum_of_per_file_duration_ms
-            );
-            println!(
-                "  examples phase (wall): {:.2} ms",
-                examples_phase_wall_ms
-            );
         }
 
         if !every_file_run_ok {
@@ -258,21 +329,27 @@ mod lit_file_runner_tests {
                 "--- docs folder missing at {:?}; skip markdown litex blocks ---",
                 docs_dir
             );
-            println!(
-                "--- phase timing: examples {:.2} ms | docs {:.2} ms (skipped) ---",
-                examples_phase_wall_ms, 0.0_f64
+            print_run_examples_timing_summary(
+                builtin_duration_ms,
+                examples_ran,
+                file_label_and_duration_ms_list.as_slice(),
+                examples_phase_wall_ms,
+                &[],
+                0.0,
             );
             return;
         }
 
         let md_paths = collect_markdown_files_sorted(&docs_dir);
-        let mut doc_snippets: Vec<(String, String)> = Vec::new();
+        // (test report label, fenced litex body, current markdown path string for relative run_file resolution)
+        let mut doc_snippets: Vec<(String, String, String)> = Vec::new();
         for md_path in md_paths.iter() {
             let rel_label = md_path
                 .strip_prefix(&manifest_dir)
                 .unwrap_or(md_path)
                 .display()
                 .to_string();
+            let md_current_path_str = md_path.to_string_lossy().into_owned();
             let md_content = match fs::read_to_string(md_path) {
                 Ok(content) => content,
                 Err(read_error) => panic!("failed to read {:?}: {}", md_path, read_error),
@@ -281,15 +358,23 @@ mod lit_file_runner_tests {
                 .into_iter()
                 .enumerate()
             {
-                doc_snippets.push((format!("{} ```litex```#{}", rel_label, block_index), block));
+                doc_snippets.push((
+                    format!("{} ```litex```#{}", rel_label, block_index),
+                    block,
+                    md_current_path_str.clone(),
+                ));
             }
         }
 
         if doc_snippets.is_empty() {
             println!("--- docs: no ```litex``` fenced blocks ---");
-            println!(
-                "--- phase timing: examples {:.2} ms | docs {:.2} ms (no blocks) ---",
-                examples_phase_wall_ms, 0.0_f64
+            print_run_examples_timing_summary(
+                builtin_duration_ms,
+                examples_ran,
+                file_label_and_duration_ms_list.as_slice(),
+                examples_phase_wall_ms,
+                &[],
+                0.0,
             );
             return;
         }
@@ -306,11 +391,13 @@ mod lit_file_runner_tests {
 
         let docs_wall_start = Instant::now();
         let mut doc_durations_ms: Vec<(String, f64)> = Vec::new();
-        for (snippet_index, (label, source_code)) in doc_snippets.iter().enumerate() {
+        for (snippet_index, (label, source_code, md_path_for_run_file)) in
+            doc_snippets.iter().enumerate()
+        {
             if examples_ran || snippet_index > 0 {
                 runtime.clear_current_env_and_parse_name_scope();
             }
-            runtime.set_current_user_lit_file_path(label.as_str());
+            runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
 
             let normalized_source = remove_windows_carriage_return(source_code);
             let start_snippet = Instant::now();
@@ -332,9 +419,13 @@ mod lit_file_runner_tests {
         for (label, duration_ms) in doc_durations_ms.iter() {
             println!("  OK  {:.2} ms  {}", duration_ms, label);
         }
-        println!(
-            "--- phase timing: examples {:.2} ms | docs {:.2} ms ---",
-            examples_phase_wall_ms, docs_phase_wall_ms
+        print_run_examples_timing_summary(
+            builtin_duration_ms,
+            examples_ran,
+            file_label_and_duration_ms_list.as_slice(),
+            examples_phase_wall_ms,
+            doc_durations_ms.as_slice(),
+            docs_phase_wall_ms,
         );
     }
 }

@@ -324,7 +324,7 @@ impl Environment {
     ) -> Result<(), RuntimeError> {
         for fact in chain_fact
             .facts()
-            .map_err(RuntimeError::wrap_new_atomic_fact_as_store_conflict)?
+            .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?
             .into_iter()
         {
             self.store_atomic_fact_in_forall_fact(fact, forall_params_and_dom.clone())?;
@@ -393,7 +393,7 @@ impl Environment {
         forall_fact_with_iff: ForallFactWithIff,
     ) -> Result<(), RuntimeError> {
         let (forall_then_implies_iff, forall_iff_implies_then) =
-            forall_fact_with_iff.to_two_forall_facts();
+            forall_fact_with_iff.to_two_forall_facts()?;
         self.store_forall_fact(Rc::new(forall_then_implies_iff))?;
         self.store_forall_fact(Rc::new(forall_iff_implies_then))?;
         Ok(())
@@ -410,6 +410,7 @@ impl Environment {
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
                 self.store_forall_fact_with_iff(forall_fact_with_iff)
             }
+            Fact::NotForall(_) => Ok(()),
         }
     }
 
@@ -461,7 +462,7 @@ impl Environment {
     fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeError> {
         let atomic_facts = chain_fact
             .facts_with_order_transitive_closure()
-            .map_err(RuntimeError::wrap_new_atomic_fact_as_store_conflict)?;
+            .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?;
         for atomic_fact in atomic_facts {
             self.store_atomic_fact(atomic_fact)?;
         }

@@ -7,25 +7,6 @@ know:
             a ^ 2 + b ^ 2 = 0
 
 
-    forall a R:
-        a >= 0
-        =>:
-            abs(a) = a
-    
-    forall a R:
-        a <= 0
-        =>:
-            abs(a) = -a
-
-    forall a R:
-        abs(a) >= 0
-        abs(a) = a or abs(a) = -a
-
-    forall a R:
-        abs(a) = 0
-        =>:
-            a = 0
-
     forall a, b R:
         a <= max(a, b)
         b <= max(a, b)
@@ -73,13 +54,6 @@ know:
     forall n Z, m N_pos, k N_pos:
         n^m % k = ((n % k)^m) % k
 
-    forall x R:
-        0 <= abs(x)
-        abs(x) = x or abs(x) = -x
-
-    forall x, y R:
-        abs(x * y) = abs(x) * abs(y)
-
     forall a, b N:
         a <= b
         b != 0
@@ -94,4 +68,28 @@ know:
         $archimedean_property(e)
         exist n N_pos st {1/n < e}
 
+know:
+    forall s set:
+        seq(s) = fn(x N_pos) s
+
+    forall s set, n N_pos:
+        finite_seq(s, n) = fn(x N_pos: x <= n) s
+
+    forall s set, m N_pos, n N_pos:
+        matrix(s, m, n) = fn(x, y N_pos: x <= m, y <= n) s
+
+    forall a Z, m N_pos:
+        (a % m) $in N
+        (a % m) < m
+
+    forall a Z, m N_pos, k N:
+        a % m = k
+        =>:
+            exist r Z st {a = m * r + k}
+
+    forall a Z, m N_pos, k N:
+        k < m
+        exist r Z st {a = m * r + k}
+        =>:
+            a % m = k
 "#;

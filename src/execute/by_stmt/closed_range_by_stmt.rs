@@ -54,7 +54,8 @@ impl Runtime {
                 if b.is_empty() {
                     return Err(short_exec_error(
                         stmt.clone().into(),
-                        "by enumerate closed_range: integer range is empty (end < start)".to_string(),
+                        "by enumerate closed_range: integer range is empty (end < start)"
+                            .to_string(),
                         None,
                         vec![],
                     ));
@@ -80,7 +81,9 @@ impl Runtime {
         let disjunction = OrFact::new(branches, stmt.line_file.clone());
         let disjunction_fact: Fact = disjunction.into();
         let infer_after_store = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(disjunction_fact.clone())
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                disjunction_fact.clone(),
+            )
             .map_err(|e| short_exec_error(stmt.clone().into(), "", Some(e), vec![]))?;
 
         let mut infer_result = InferResult::new();
@@ -93,7 +96,9 @@ impl Runtime {
 
 fn closed_range_endpoint_integer_string(obj: &Obj) -> Result<String, String> {
     let Obj::Number(n) = obj else {
-        return Err("by enumerate closed_range: range endpoints must be integer literals".to_string());
+        return Err(
+            "by enumerate closed_range: range endpoints must be integer literals".to_string(),
+        );
     };
     let s = n.normalized_value.clone();
     if !is_number_string_literally_integer_without_dot(s.clone()) {

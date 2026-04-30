@@ -71,7 +71,7 @@ In the best case, what you write is organized around the problem — not bent to
   </tr>
 </table>
 
-Here is a thorough collection of comparison between Litex and Lean: [Litex vs Lean Set Theory Examples](https://litexlang.com/doc/Litex_vs_Lean/Set_Theory). Visit our [website](https://litexlang.com) for more details. Dataset on [Hugging Face](https://huggingface.co/litexlang) is also available.
+As you can see, Litex is much more concise and readable than Lean. It doesn't require you to memorize and recall known facts and inference rules by hand, making it possible for you to write complex statements with ease at 2-10 times efficiency than Lean. In fact, it even runs 2-10 times faster than Lean.
 
 ## How Litex Works
 
@@ -85,7 +85,7 @@ Among the 4 effects, verification is the most important one. Litex uses `match a
 
 Think of this: when the user inputs a fact with proposition name `intelligent`, Litex will search all known facts with proposition name `intelligent` (including `forall` facts like `forall x human => $intelligent(x)` and specific facts like `$intelligent(Jordan)`) and check if the given fact matches the known fact. If matched, then it is correct. It works like `ctrl+f` in your browser. The reason why Lean cannot do this is that Lean can pass prop as forall parameter, so its search space is the whole memory, instead of the memory of the current proposition.
 
-Even for 10-year-old beginners, Litex is straightforward to learn and use. Visit our [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details.
+Even for 10-year-old beginners, Litex is straightforward to learn and use.
 
 ## Resources And Community
 
@@ -97,13 +97,13 @@ Litex is nothing without its community and technical ecosystem.
 
 Resources for Litex users:
 
-1. Our official [website](https://litexlang.com) contains tutorials, cheat sheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
+1. [Official site](https://litexlang.com)
 2. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
 3. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
 4. Email us [here](mailto:litexlang@outlook.com).
 5. [Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
 6. Our organization's Github is [here](https://github.com/litexlang/). The kernel is [here](https://github.com/litexlang/golitex).
-7. Our dataset on Hugging Face is [here](https://huggingface.co/litexlang).
+7. [Hugging Face dataset](https://huggingface.co/litexlang).
 
 ## References
 

@@ -11,7 +11,7 @@ impl Runtime {
 
         for env in self.iter_environments_from_top() {
             if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
-                if let Some(body) = info.fn_set.as_ref() {
+                if let Some((body, _)) = info.fn_set.as_ref() {
                     return Some(body);
                 }
             }
@@ -21,16 +21,16 @@ impl Runtime {
     }
 
     /// Like [`get_object_in_fn_set`](Self::get_object_in_fn_set) but falls back to
-    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restrict_fn_in`) for WD/calls.
+    /// [`KnownFnInfo.restrict_to`](KnownFnInfo::restrict_to) (e.g. after `$restrict_fn_in`) for well-defined/calls.
     pub fn get_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<&FnSetBody> {
         let key = obj.to_string();
 
         for env in self.iter_environments_from_top() {
             if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
-                if let Some(body) = info.fn_set.as_ref() {
+                if let Some((body, _)) = info.fn_set.as_ref() {
                     return Some(body);
                 }
-                if let Some(rb) = info.restrict_to.as_ref() {
+                if let Some((rb, _)) = info.restrict_to.as_ref() {
                     return Some(rb);
                 }
             }
@@ -44,7 +44,7 @@ impl Runtime {
 
         for env in self.iter_environments_from_top() {
             if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
-                if let Some(body) = info.fn_set.clone() {
+                if let Some((body, _)) = info.fn_set.clone() {
                     return Some(body);
                 }
             }
@@ -55,6 +55,24 @@ impl Runtime {
 
     pub fn get_cloned_object_in_fn_set_or_restrict(&self, obj: &Obj) -> Option<FnSetBody> {
         self.get_object_in_fn_set_or_restrict(obj).cloned()
+    }
+
+    /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
+    /// [`crate::environment::KnownFnInfo`] (inner scopes override outer).
+    pub fn get_known_fn_body_and_equal_to_for_key(
+        &self,
+        key: &str,
+    ) -> Option<(FnSetBody, Obj, LineFile)> {
+        for env in self.iter_environments_from_top() {
+            if let Some(info) = env.known_objs_in_fn_sets.get(key) {
+                if let (Some((body, _lf_body)), Some((eq, eq_line))) =
+                    (info.fn_set.clone(), info.equal_to.clone())
+                {
+                    return Some((body, eq, eq_line));
+                }
+            }
+        }
+        None
     }
 
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {

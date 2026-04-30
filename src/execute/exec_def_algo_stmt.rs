@@ -165,7 +165,11 @@ impl Runtime {
                 }
             }
             let instantiated_param_set = self
-                .inst_obj(&param_def_with_set.set, &fn_set_param_name_to_algo_arg_obj, ParamObjType::Forall)
+                .inst_obj(
+                    &param_def_with_set.set,
+                    &fn_set_param_name_to_algo_arg_obj,
+                    ParamObjType::Forall,
+                )
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                         def_algo_stmt,
@@ -234,11 +238,12 @@ impl Runtime {
                 Fact::ChainFact(chain_fact) => chain_fact.clone().into(),
                 Fact::OrFact(or_fact) => or_fact.clone().into(),
                 Fact::ExistFact(exist_fact) => exist_fact.clone().into(),
-                Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
+                Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {
                     return Err(
                         Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                             def_algo_stmt,
-                            "algo verify: requirement fact cannot be forall".to_string(),
+                            "algo verify: requirement fact cannot be forall or not forall"
+                                .to_string(),
                             None,
                         ),
                     );
@@ -294,15 +299,13 @@ impl Runtime {
         )
         .into()];
 
-        Ok(
-            ForallFact::new(
-                algo_param_defs_with_type.clone(),
-                case_dom_facts,
-                case_then_facts,
-                algo_case.line_file.clone(),
-            )
-            .into(),
-        )
+        Ok(ForallFact::new(
+            algo_param_defs_with_type.clone(),
+            case_dom_facts,
+            case_then_facts,
+            algo_case.line_file.clone(),
+        )?
+        .into())
     }
 
     fn verify_each_def_algo_case_implies_return(
@@ -378,7 +381,7 @@ impl Runtime {
                 .collect(),
             vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
             def_algo_stmt.line_file.clone(),
-        )
+        )?
         .into();
 
         let verify_state = VerifyState::new(0, false);
