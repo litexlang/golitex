@@ -137,6 +137,8 @@ In Litex, equality plays several roles:
 4. algebraic rewriting and structural comparison
 5. object and function definition results
 
+Equality also propagates through common algebraic contexts. If the verifier can prove paired arguments equal, it can prove the surrounding objects equal for contexts such as addition, subtraction, multiplication, division, modulo, and powers. For example, after proving `x = y`, it can verify `x + 1 = y + 1`.
+
 ### 2.3 Function Equality
 
 `$fn_eq` and `$fn_eq_in` are semantic bridges for function equality.

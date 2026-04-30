@@ -1,14 +1,4 @@
-forall a Z, m N_pos:
-    (a % m) $in N
-    (a % m) < m
-
-forall a Z, m N_pos, k N:
-    a % m = k
+forall m Z:
+    m >= 0
     =>:
-        exist r Z st {a = m * r + k}
-
-forall a Z, m N_pos, k N:
-    k < m
-    exist r Z st {a = m * r + k}
-    =>:
-        a % m = k
+        2^1 * 2^(m+2) + 1 = 2^(1 + (m+2)) + 1
