@@ -63,6 +63,23 @@ If needed, fix dependencies:
 sudo apt-get install -f
 ```
 
+### Upgrade Litex on Linux
+
+If you installed from the `.deb` in Releases, upgrade by downloading the latest tag and installing
+it again (this replaces the older version):
+
+```bash
+tag=$(curl -fsSL https://api.github.com/repos/litexlang/golitex/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+wget "https://github.com/litexlang/golitex/releases/download/${tag}/litex_${tag}_amd64.deb"
+sudo dpkg -i "litex_${tag}_amd64.deb"
+```
+
+Then verify:
+
+```bash
+litex -version
+```
+
 ---
 
 ## Windows
@@ -119,7 +136,7 @@ If you want a fixed tag (for example a beta tag), use:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
-$tag = '0.9.73-beta'
+$tag = '0.9.72-beta'
 $repo = 'litexlang/golitex'
 $name = "litex_${tag}_windows_amd64.exe"
 $url = "https://github.com/$repo/releases/download/$tag/$name"
@@ -144,9 +161,38 @@ litex -version
 
 Users can also install with MSI from Releases, for example:
 
-- https://github.com/litexlang/golitex/releases/download/0.9.73-beta/litex_0.9.73-beta_amd64.msi
+- https://github.com/litexlang/golitex/releases/download/0.9.72-beta/litex_0.9.72-beta_amd64.msi
 
 Then run the installer wizard.
+
+### Upgrade Litex on Windows
+
+If you installed by **Option A** (PowerShell one-command install), run the same command again.
+It downloads the newer `litex.exe`, overwrites `%LOCALAPPDATA%\litex\litex.exe`, and keeps your
+existing user `Path` entry:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$repo = 'litexlang/golitex'
+$tag = (Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'litex-install' }).tag_name
+$name = "litex_${tag}_windows_amd64.exe"
+$url = "https://github.com/$repo/releases/download/$tag/$name"
+$dir = Join-Path $env:LOCALAPPDATA 'litex'
+$exe = Join-Path $dir 'litex.exe'
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+Invoke-WebRequest -Uri $url -OutFile $exe
+$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+if (-not $userPath) { $userPath = '' }
+if ($userPath -notlike "*$dir*") {
+    $newPath = if ($userPath) { "$userPath;$dir" } else { $dir }
+    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+}
+$env:Path = "$dir;$env:Path"
+litex -version
+```
+
+If you installed by **MSI**, install a newer MSI from Releases. Windows Installer upgrades the
+existing installation when product/version rules match the package.
 
 ---
 
