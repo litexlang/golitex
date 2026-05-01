@@ -73,6 +73,36 @@ pub fn line_file_source_json_fragment(line_file: &LineFile) -> String {
     render_json_primitive(&line_file_source_json_value(line_file))
 }
 
+fn render_json_array(items: &[JsonValue], depth: usize) -> String {
+    let indent_outer = json_one_level_indent(depth);
+    let indent_inner = json_one_level_indent(depth + 1);
+    if items.is_empty() {
+        return "[]".to_string();
+    }
+
+    let mut output = String::from("[\n");
+    for (i, item) in items.iter().enumerate() {
+        if i > 0 {
+            output.push_str(",\n");
+        }
+        match item {
+            JsonValue::Object(_) => output.push_str(&render_json_value(item, depth + 1)),
+            JsonValue::Array(nested_items) => {
+                output.push_str(&indent_inner);
+                output.push_str(&render_json_array(nested_items, depth + 1));
+            }
+            _ => {
+                output.push_str(&indent_inner);
+                output.push_str(&render_json_primitive(item));
+            }
+        }
+    }
+    output.push('\n');
+    output.push_str(&indent_outer);
+    output.push(']');
+    output
+}
+
 /// `depth` is the indent depth (number of two-space units) of the opening `{` of this object.
 pub fn render_json_value(v: &JsonValue, depth: usize) -> String {
     match v {
@@ -86,25 +116,12 @@ pub fn render_json_value(v: &JsonValue, depth: usize) -> String {
                         if items.is_empty() {
                             format!("{}\"{}\": []", indent_inner, key)
                         } else {
-                            let mut line = format!("{}\"{}\": [\n", indent_inner, key);
-                            for (i, item) in items.iter().enumerate() {
-                                if i > 0 {
-                                    line.push_str(",\n");
-                                }
-                                match item {
-                                    JsonValue::Object(_) => {
-                                        line.push_str(&render_json_value(item, depth + 2));
-                                    }
-                                    _ => {
-                                        line.push_str(&json_one_level_indent(depth + 2));
-                                        line.push_str(&render_json_primitive(item));
-                                    }
-                                }
-                            }
-                            line.push('\n');
-                            line.push_str(&indent_inner);
-                            line.push(']');
-                            line
+                            format!(
+                                "{}\"{}\": {}",
+                                indent_inner,
+                                key,
+                                render_json_array(items, depth + 1)
+                            )
                         }
                     }
                     JsonValue::Object(_) => {
