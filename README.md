@@ -6,7 +6,7 @@
 
 # Litex: A Simple Formal Language Learnable in 2 Hours
 
-**version v0.2-beta (not yet ready for production use)**  
+**version 0.9.73-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
