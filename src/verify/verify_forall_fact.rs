@@ -66,24 +66,21 @@ impl Runtime {
             let result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
             if result.is_unknown() {
                 let then_one_based = then_index + 1;
-                let detail = match by_cases_case_label {
+                let detail_header = match by_cases_case_label {
                     None => format!(
-                        "forall: then-fact {}/{} could not be verified (unknown): `{}`\n{}",
-                        then_one_based,
-                        then_count,
-                        then_fact,
-                        result.body_string()
+                        "forall: then-fact {}/{} could not be verified (unknown): `{}`",
+                        then_one_based, then_count, then_fact
                     ),
                     Some(case_s) => format!(
-                        "by cases: under case `{case_s}`: forall: then-fact {then_one_based}/{then_count} could not be verified (unknown): `{then}`\n{body}",
+                        "by cases: under case `{case_s}`: forall: then-fact {then_one_based}/{then_count} could not be verified (unknown): `{then}`",
                         case_s = case_s,
                         then_one_based = then_one_based,
                         then_count = then_count,
-                        then = then_fact,
-                        body = result.body_string()
+                        then = then_fact
                     ),
                 };
-                return Ok(StmtUnknown::new_with_detail(detail).into());
+                let detail_lines = vec![detail_header, result.body_string()];
+                return Ok(StmtUnknown::new_with_detail_lines(detail_lines).into());
             }
 
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
