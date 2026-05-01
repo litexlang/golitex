@@ -123,7 +123,20 @@ fn factual_success_verified_by_value(runtime: &Runtime, x: &FactualStmtSuccess) 
 /// (forall / and / chain composite facts).
 fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) -> JsonValue {
     match r {
-        StmtResult::FactualStmtSuccess(f) => factual_success_verified_by_value(runtime, f),
+        StmtResult::FactualStmtSuccess(f) => {
+            if matches!(&f.stmt, Fact::ForallFact(_) | Fact::AndFact(_) | Fact::ChainFact(_))
+                && !f.inside_results.is_empty()
+            {
+                let nested_items: Vec<JsonValue> = f
+                    .inside_results
+                    .iter()
+                    .map(|child| stmt_result_to_composite_step_verified_by(runtime, child))
+                    .collect();
+                JsonValue::Array(nested_items)
+            } else {
+                factual_success_verified_by_value(runtime, f)
+            }
+        }
         StmtResult::NonFactualStmtSuccess(n) => JsonValue::Object(vec![
             (
                 "type".to_string(),

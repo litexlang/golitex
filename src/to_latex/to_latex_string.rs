@@ -965,11 +965,16 @@ impl HaveFnEqualCaseByCaseStmt {
 
 impl HaveFnEqualStmt {
     pub fn to_latex_string(&self) -> String {
+        let fn_set_clause = FnSetClause::new(
+            self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
+            self.equal_to_anonymous_fn.body.dom_facts.clone(),
+            (*self.equal_to_anonymous_fn.body.ret_set).clone(),
+        );
         format!(
             r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} {}",
             latex_local_ident(&self.name),
-            fn_set_clause_latex(&self.fn_set_clause),
-            self.equal_to.to_latex_string()
+            fn_set_clause_latex(&fn_set_clause),
+            self.equal_to_anonymous_fn.equal_to.to_latex_string()
         )
     }
 }
