@@ -24,19 +24,19 @@ impl Runtime {
             let fact_owned = fact.clone();
             let line_file = fact_owned.line_file();
             let unknown_detail = if let StmtResult::StmtUnknown(u) = &result {
-                u.detail.clone().unwrap_or_default()
+                u.detail_for_display()
             } else {
                 String::new()
             };
             return Err(RuntimeError::from(VerifyRuntimeError(
                 RuntimeErrorStruct::new(
                     Some(fact_owned.clone().into_stmt()),
-                    unknown_detail.clone(),
+                    "verification failed".to_string(),
                     line_file.clone(),
                     Some(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new(
                             Some(fact_owned.into_stmt()),
-                            String::new(),
+                            unknown_detail,
                             line_file,
                             None,
                             vec![],

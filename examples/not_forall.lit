@@ -16,4 +16,6 @@ know not forall x R:
         $q(x)
         $q2(x)
 
+
+
 exist x R st {$p(x), $p2(x), not $q(x) or not $q2(x)}
