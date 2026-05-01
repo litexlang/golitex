@@ -191,10 +191,24 @@ impl Runtime {
                 default_line_file(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
-                intermediate_atomic_fact,
-            )
-            .map_err(|store_fact_error| {
+            let intermediate_line_file = intermediate_atomic_fact.line_file();
+            let intermediate_fact_string = intermediate_atomic_fact.to_string();
+            self.top_level_env()
+                .store_atomic_fact(intermediate_atomic_fact)
+                .map_err(|store_fact_error| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
+                                "failed to store intermediate fn-obj membership fact while verifying `{}`",
+                                fn_obj.to_string()
+                            ),
+                            store_fact_error,
+                        ),
+                    ))
+                })?;
+            self.top_level_env()
+                .store_fact_to_cache_known_fact(intermediate_fact_string, intermediate_line_file)
+                .map_err(|store_fact_error| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
                         format!(

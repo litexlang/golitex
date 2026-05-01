@@ -104,8 +104,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
 #[derive(Clone)]
 pub struct HaveFnEqualStmt {
     pub name: String,
-    pub fn_set_clause: FnSetClause,
-    pub equal_to: Obj,
+    pub equal_to_anonymous_fn: AnonymousFn,
     pub line_file: LineFile,
 }
 
@@ -292,16 +291,10 @@ impl fmt::Display for HaveByExistStmt {
 }
 
 impl HaveFnEqualStmt {
-    pub fn new(
-        name: String,
-        fn_set_clause: FnSetClause,
-        equal_to: Obj,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(name: String, equal_to_anonymous_fn: AnonymousFn, line_file: LineFile) -> Self {
         HaveFnEqualStmt {
             name,
-            fn_set_clause,
-            equal_to,
+            equal_to_anonymous_fn,
             line_file,
         }
     }
@@ -309,6 +302,11 @@ impl HaveFnEqualStmt {
 
 impl fmt::Display for HaveFnEqualStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let fn_set_clause = FnSetClause::new(
+            self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
+            self.equal_to_anonymous_fn.body.dom_facts.clone(),
+            (*self.equal_to_anonymous_fn.body.ret_set).clone(),
+        );
         write!(
             f,
             "{} {} {}{} {} {}",
@@ -316,11 +314,11 @@ impl fmt::Display for HaveFnEqualStmt {
             FN_LOWER_CASE,
             self.name,
             brace_vec_colon_vec_to_string(
-                &self.fn_set_clause.params_def_with_set,
-                &self.fn_set_clause.dom_facts
+                &fn_set_clause.params_def_with_set,
+                &fn_set_clause.dom_facts
             ),
             EQUAL,
-            self.equal_to
+            self.equal_to_anonymous_fn.equal_to
         )
     }
 }
