@@ -229,7 +229,18 @@ impl Runtime {
                     lf,
                     |this| this.parse_obj(tb),
                 )?;
-                Ok(HaveFnEqualStmt::new(name, fs, equal_to, tb.line_file.clone()).into())
+                let equal_to_anonymous_fn = AnonymousFn::new(
+                    fs.params_def_with_set.clone(),
+                    fs.dom_facts.clone(),
+                    fs.ret_set.clone(),
+                    equal_to,
+                )?;
+                Ok(HaveFnEqualStmt::new(
+                    name,
+                    equal_to_anonymous_fn,
+                    tb.line_file.clone(),
+                )
+                .into())
             }
         }
     }
