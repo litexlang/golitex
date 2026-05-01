@@ -136,7 +136,7 @@ If you want a fixed tag (for example a beta tag), use:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
-$tag = '0.9.72-beta'
+$tag = '0.9.73-beta'
 $repo = 'litexlang/golitex'
 $name = "litex_${tag}_windows_amd64.exe"
 $url = "https://github.com/$repo/releases/download/$tag/$name"
@@ -156,14 +156,6 @@ if ($userPath -notlike "*$dir*") {
 $env:Path = "$dir;$env:Path"
 litex -version
 ```
-
-### Option B: MSI installer
-
-Users can also install with MSI from Releases, for example:
-
-- https://github.com/litexlang/golitex/releases/download/0.9.72-beta/litex_0.9.72-beta_amd64.msi
-
-Then run the installer wizard.
 
 ### Upgrade Litex on Windows
 
@@ -190,9 +182,6 @@ if ($userPath -notlike "*$dir*") {
 $env:Path = "$dir;$env:Path"
 litex -version
 ```
-
-If you installed by **MSI**, install a newer MSI from Releases. Windows Installer upgrades the
-existing installation when product/version rules match the package.
 
 ---
 
