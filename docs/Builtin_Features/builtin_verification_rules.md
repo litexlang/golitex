@@ -346,6 +346,24 @@ forall n N:
     0 <= n
 ```
 
+From `n $in N` and `n != 0`, a nonnegative integer not equal to zero is at least `1` (equivalently `N_pos` as a subset of `N` characterized by `n != 0`).
+
+```litex
+forall x N:
+    x != 0
+    =>:
+        1 <= x
+```
+
+Conversely, from `n $in N` and `1 <= n`, conclude `n != 0`.
+
+```litex
+forall x N:
+    1 <= x
+    =>:
+        x != 0
+```
+
 ### Nonnegative sums (long chains)
 
 From `0 <=` on each summand, close `0 <=` on a left-associated sum (works for more than two terms).
