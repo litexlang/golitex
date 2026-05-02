@@ -40,6 +40,9 @@ know:
     forall a, b N_pos:
         exist k N_pos st {a = k * b}
 
+    # Litex: `1 % 1 = 0`; for `a` in `N_pos` with `a != 1`, remainder is `1`.
     forall a N_pos:
-        1 % a = 1
+        a != 1
+        =>:
+            1 % a = 1
 "#;

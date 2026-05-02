@@ -1,1 +1,4 @@
-not $is_nonempty_set({})
+forall x N_pos:
+    x != 1
+    =>:
+        1 % x = 1
