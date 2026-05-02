@@ -78,7 +78,7 @@ If `x` is nonpositive, `abs(x)` matches `-x`; the right-hand side may normalize 
 forall x R:
     x <= 0
     =>:
-        abs(x) = -1 * x
+        abs(x) = -x
 ```
 
 Product inside the absolute value splits as `abs(x*y) = abs(x)*abs(y)` as an algebraic identity.
@@ -151,45 +151,58 @@ prove:
 ```
 
 ### Logarithm Rules
+
 Inverse of `a^b` at the same base: `log(a, a^b) = b` when the power and `log` are well-defined.
 
 ```litex
-forall a, b R:
-    log(a, a^b) = b
+forall a, b R_pos:
+    a != 1
+    =>:
+        log(a, a^b) = b
 ```
 
 Base raised to a power: change-of-base style step `log(a^b, c)` vs `log(a, c) / b` (subject to log domain constraints).
 
 ```litex
-forall a, b, c R:
-    log(a^b, c) = log(a, c) / b
+forall a, b, c R_pos:
+    a != 1
+    a^b != 1
+    =>:
+        log(a^b, c) = log(a, c) / b
 ```
 
 Argument raised to a power: pull the exponent out as `b * log(a, x)` on the matching side.
 
 ```litex
-forall a, x, b R:
-    log(a, x^b) = b * log(a, x)
+forall a, x, b R_pos:
+    a != 1
+    =>:
+        log(a, x^b) = b * log(a, x)
 ```
 
 Log of a product: split `log(a, x*y)` into the sum of the two logs with the same base.
 
 ```litex
-forall a, x, y R:
-    log(a, x * y) = log(a, x) + log(a, y)
+forall a, x, y R_pos:
+    a != 1
+    =>:
+        log(a, x * y) = log(a, x) + log(a, y)
 ```
 
 Log of a quotient: `log(a, x/y)` becomes the difference of the logs.
 
 ```litex
-forall a, x, y R:
-    log(a, x / y) = log(a, x) - log(a, y)
+forall a, x, y R_pos:
+    a != 1
+    =>:
+        log(a, x / y) = log(a, x) - log(a, y)
 ```
 
-From `a^c = b`, conclude `log(a, b) = c` (log as the inverse of exponentiation, with domain in force).
+From `a^c = b`, conclude `log(a, b) = c` (log as the inverse of exponentiation, with `a`, `b` positive and `a != 1`).
 
 ```litex
-forall a, b, c R:
+forall a, b R_pos, c R:
+    a != 1
     a^c = b
     =>:
         log(a, b) = c
@@ -258,17 +271,18 @@ forall m Z:
 Congruence with sum: matching residue equalities for the summands mod `m` imply the same residue for the sums mod `m`.
 
 ```litex
-forall x1, x2, y1, y2, m Z:
+forall x1, x2, y1, y2 Z, m N_pos:
     x1 % m = x2 % m
     y1 % m = y2 % m
     =>:
-        (x1 + y1) % m = (x2 + y2) % m
+        (x1 + y1) % m = (x1 % m + y1 % m) % m = (x2 % m + y2 % m) % m = (x2 + y2) % m
 ```
 
 Congruence with difference: the same idea applies to differences inside `% m`.
 
 ```litex
 forall x1, x2, y1, y2, m Z:
+    m != 0
     x1 % m = x2 % m
     y1 % m = y2 % m
     =>:
@@ -279,6 +293,7 @@ Congruence with product: same pattern for products inside `% m` on both sides.
 
 ```litex
 forall x1, x2, y1, y2, m Z:
+    m != 0
     x1 % m = x2 % m
     y1 % m = y2 % m
     =>:
