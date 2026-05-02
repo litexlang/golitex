@@ -40,9 +40,9 @@ know:
     forall a, b N_pos:
         exist k N_pos st {a = k * b}
 
-    # Litex: `1 % 1 = 0`; for `a` in `N_pos` with `a != 1`, remainder is `1`.
-    forall a N_pos:
-        a != 1
+    # Litex evaluates `1 % 1 = 0`. For modulus `k` in `N_pos` with `k >= 2`, the remainder of 1 is 1.
+    forall k N_pos:
+        k >= 2 or k != 1
         =>:
-            1 % a = 1
+            1 % k = 1
 "#;
