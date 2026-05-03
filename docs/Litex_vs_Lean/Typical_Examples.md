@@ -1,5 +1,9 @@
 # Typical example: “there are infinitely many primes” (Litex vs Lean)
 
+Online doc: https://litexlang.com/doc/Litex_vs_Lean/Typical_Examples
+Github: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Typical_Examples.md
+
+
 ## Example 1: There are infinitely many primes
 
 Both snippets follow the same idea: build “product + 1”, take a prime divisor, then rule out divisors \(\le\) the bound.
@@ -27,17 +31,10 @@ Core proof structure (Litex `claim` … `witness` vs Lean `example … by`):
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5; vertical-align: top">
-      <code>claim:</code><br>
-      <code>&nbsp;&nbsp;prove:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;forall a N_pos:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 &lt;= a</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=>:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exist k N_pos st {k &gt; a, $prime(k)}</code><br>
+      <code>claim forall! a N_pos: 2 &lt;= a =&gt; exist k N_pos st {k &gt; a, $prime(k)}:</code><br>
       <code>&nbsp;&nbsp;2 &lt;= a &lt;= product(1, a, 'N_pos(x){x}) &lt;= product(1, a, 'N_pos(x){x}) + 1</code><br>
       <code>&nbsp;&nbsp;have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k</code><br>
-      <code>&nbsp;&nbsp;by cases:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;prove:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;k &gt; a</code><br>
+      <code>&nbsp;&nbsp;by cases k &gt; a:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;case k &lt;= a:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;product(1, a, 'N_pos(x){x}) % k = 0</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1</code><br>
@@ -117,24 +114,10 @@ know:
     forall a N_pos:
         a <= product(1, a, 'N_pos(x){x})
 
-# prove forall positive integer a, there exists a prime number k larger than a
-# Step1: There exists a prime number k that divides factorial(a) + 1
-# Step2: Therefore, k must be greater than a. Prove case by case: k <= a or k > a
-    # By Step1, factorial(a) + 1 is divisible by k
-    # However, (factorial(a) + 1) % k = 1 != 0
-    # So case k <= a is impossible
-# Step3: Therefore, there exists a prime number k that is greater than a
-claim:
-    prove:
-        forall a N_pos:
-            2 <= a
-            =>:
-                exist k N_pos st {k > a, $prime(k)}
+claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
     2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
     have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
-    by cases:
-        prove:
-            k > a
+    by cases k > a:
         case k <= a:
             product(1, a, 'N_pos(x){x}) % k = 0
             (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
@@ -142,4 +125,5 @@ claim:
         case k > a:
             do_nothing
     witness exist k N_pos st {k > a, $prime(k)} from k
+
 ```

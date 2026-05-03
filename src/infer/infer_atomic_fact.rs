@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    // Dispatch `infer` for a single atomic fact (see `docs/builtin_inference.md`).
+    // Dispatch `infer` for a single atomic fact (see `docs/Builtin_Features/Builtin_Inference.md`).
     pub fn infer_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
