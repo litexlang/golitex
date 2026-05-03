@@ -317,6 +317,65 @@ impl Runtime {
         Ok(None)
     }
 
+    /// `n >= 1` / `1 <= n` from known `n $in N` and `n != 0` (nonzero naturals are at least 1).
+    /// Example: `forall x N: x != 0 =>: 1 <= x`.
+    fn try_verify_order_one_le_from_membership_in_n_and_nonzero(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (n, line_file) = match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) => {
+                let Some(one) = self.resolve_obj_to_number(&f.right) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_number_strings(&one.normalized_value, "1"),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.left.clone(), f.line_file.clone())
+            }
+            AtomicFact::LessEqualFact(f) => {
+                let Some(one) = self.resolve_obj_to_number(&f.left) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_number_strings(&one.normalized_value, "1"),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.right.clone(), f.line_file.clone())
+            }
+            _ => return Ok(None),
+        };
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let in_n: AtomicFact = InFact::new(n.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let nonzero: AtomicFact =
+            NotEqualFact::new(n, zero_obj, line_file.clone()).into();
+        if !self
+            .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&nonzero)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "1 <= n from n $in N and n != 0".to_string(),
+                Vec::new(),
+            ),
+        )))
+    }
+
     fn verify_zero_le_abs_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -518,6 +577,11 @@ impl Runtime {
         }
         if let Some(result) =
             self.try_verify_order_one_le_from_membership_in_n_pos(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_order_one_le_from_membership_in_n_and_nonzero(atomic_fact, &vs)?
         {
             return Ok(result);
         }

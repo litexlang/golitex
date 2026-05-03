@@ -1,5 +1,9 @@
 # Litex vs Lean: Set theory
 
+Online doc: https://litexlang.com/doc/Litex_vs_Lean/Set_Theory
+Github: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Set_Theory.md
+
+
 Top-level goals and multi-line blocks (e.g. `have` / `know` / `prop`) do not need a wrapping `prove:`. Inside `by contra`, `by for`, and `by enumerate finite_set`, the checker still expects a `prove:` sub-block for the proof obligation before `do_nothing` or trailing steps.
 
 ---

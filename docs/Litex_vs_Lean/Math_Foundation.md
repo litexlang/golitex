@@ -1,5 +1,9 @@
 # Litex vs Lean — Foundations
 
+Online doc: https://litexlang.com/doc/Litex_vs_Lean/Math_Foundation
+Github: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Math_Foundation.md
+
+
 Mathematicians disagree about foundations—set theory (Bourbaki), category theory (the Grothendieck school), and so on. For teaching readability, Litex uses a naive, typed set-theoretic surface.
 
 Below we first give **group axioms** as a checkable `prop` shape. Topological and metric spaces appear only as ` ```text` sketches (not executed).

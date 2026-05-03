@@ -1,5 +1,9 @@
 # Litex Cheatsheet                           
 
+Online doc: https://litexlang.com/doc/Litex_Cheatsheet
+Github: https://github.com/litexlang/golitex/blob/main/docs/Litex_Cheatsheet.md
+
+
 *version: 0.1.0*
 
 _Jiachen Shen and The Litex Team_
