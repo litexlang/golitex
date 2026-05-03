@@ -1,5 +1,9 @@
 # Install Litex
 
+Online doc: https://litexlang.com/doc/Setup
+Github: https://github.com/litexlang/golitex/blob/main/docs/Setup.md
+
+
 ## Run Litex online
 
 To quickly try Litex, use the Playground on the official website:

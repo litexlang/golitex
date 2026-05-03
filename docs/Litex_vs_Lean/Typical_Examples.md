@@ -1,5 +1,9 @@
 # Typical example: “there are infinitely many primes” (Litex vs Lean)
 
+Online doc: https://litexlang.com/doc/Litex_vs_Lean/Typical_Examples
+Github: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Typical_Examples.md
+
+
 ## Example 1: There are infinitely many primes
 
 Both snippets follow the same idea: build “product + 1”, take a prime divisor, then rule out divisors \(\le\) the bound.
