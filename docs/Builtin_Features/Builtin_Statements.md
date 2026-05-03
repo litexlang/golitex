@@ -548,4 +548,4 @@ prove:
 
 ---
 
-For verification shortcuts that close many atomic goals without extra `prove:` structure, see [Builtin verification rules](builtin_verification_rules.md).
+For verification shortcuts that close many atomic goals without extra `prove:` structure, see [Builtin verification rules](Builtin_Verification_Rules.md).
