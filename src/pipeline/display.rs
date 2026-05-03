@@ -64,7 +64,7 @@ pub fn display_runtime_error_json(
     error: &RuntimeError,
     strip_free_param_tags: bool,
 ) -> String {
-    let raw = build_display_error_json_object(runtime, error, 0, true);
+    let raw = build_display_error_json_object(runtime, error, 0, true, None);
     finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
 }
 
@@ -441,11 +441,29 @@ fn push_optional_statement_json_field_lines(
     }
 }
 
+fn error_own_statement(error: &RuntimeError) -> Option<&Stmt> {
+    match error {
+        RuntimeError::DefineParamsError(e) => e.statement.as_ref(),
+        RuntimeError::NameAlreadyUsedError(e) => e.statement.as_ref(),
+        RuntimeError::ArithmeticError(e) => e.statement.as_ref(),
+        RuntimeError::NewFactError(e) => e.statement.as_ref(),
+        RuntimeError::StoreFactError(e) => e.statement.as_ref(),
+        RuntimeError::ParseError(e) => e.statement.as_ref(),
+        RuntimeError::ExecStmtError(e) => e.statement.as_ref(),
+        RuntimeError::WellDefinedError(e) => e.statement.as_ref(),
+        RuntimeError::VerifyError(e) => e.statement.as_ref(),
+        RuntimeError::UnknownError(e) => e.statement.as_ref(),
+        RuntimeError::InferError(e) => e.statement.as_ref(),
+        RuntimeError::InstantiateError(e) => e.statement.as_ref(),
+    }
+}
+
 fn build_display_error_json_object(
     runtime: &Runtime,
     error: &RuntimeError,
     depth: usize,
     include_previous_error: bool,
+    statement_context: Option<&Stmt>,
 ) -> String {
     let indent_outer = json_one_level_indent(depth);
     let indent_inner = json_one_level_indent(depth + 1);
@@ -577,6 +595,16 @@ fn build_display_error_json_object(
                 JSON_KEY_MESSAGE,
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
+            let well_defined_stmt = e
+                .statement
+                .as_ref()
+                .or(statement_context)
+                .cloned();
+            push_optional_statement_json_field_lines(
+                &mut field_lines,
+                indent_inner.as_str(),
+                &well_defined_stmt,
+            );
         }
         RuntimeError::VerifyError(e) => {
             field_lines.push(format!(
@@ -585,6 +613,11 @@ fn build_display_error_json_object(
                 JSON_KEY_MESSAGE,
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
+            push_optional_statement_json_field_lines(
+                &mut field_lines,
+                indent_inner.as_str(),
+                &e.statement,
+            );
         }
         RuntimeError::UnknownError(e) => {
             field_lines.push(format!(
@@ -622,12 +655,14 @@ fn build_display_error_json_object(
         }
     }
 
+    let context_for_child = error_own_statement(error).or(statement_context);
     let previous_error_line = build_previous_error_field_line(
         runtime,
         indent_inner.as_str(),
         error,
         depth + 1,
         include_previous_error,
+        context_for_child,
     );
     field_lines.push(previous_error_line);
 
@@ -645,6 +680,7 @@ fn build_previous_error_field_line(
     error: &RuntimeError,
     previous_error_depth: usize,
     include_previous_error: bool,
+    context_for_child: Option<&Stmt>,
 ) -> String {
     if !include_previous_error {
         return format!("{}\"{}\": null", indent_inner, JSON_KEY_PREVIOUS_ERROR);
@@ -658,6 +694,7 @@ fn build_previous_error_field_line(
                 previous_error,
                 previous_error_depth,
                 true,
+                context_for_child,
             );
             format!(
                 "{}\"{}\":\n{}",

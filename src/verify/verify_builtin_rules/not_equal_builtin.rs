@@ -88,6 +88,12 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_not_equal_zero_from_n_and_one_le(not_equal_fact, verify_state)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_not_equal_pow_from_base_nonzero(not_equal_fact, verify_state)?
         {
             return Ok(verified_result);
@@ -133,6 +139,58 @@ impl Runtime {
                     .into(),
                 ));
             }
+        }
+        Ok(None)
+    }
+
+    /// `n != 0` from `n $in N` and `1 <= n` (or `n >= 1`). Example: `forall x N: 1 <= x =>: x != 0`.
+    fn try_verify_not_equal_zero_from_n_and_one_le(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let one_obj: Obj = Number::new("1".to_string()).into();
+        let x = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (l, r) if self.obj_represents_zero_for_not_equal_builtin_rules(r) => l.clone(),
+            (l, r) if self.obj_represents_zero_for_not_equal_builtin_rules(l) => r.clone(),
+            _ => return Ok(None),
+        };
+        let in_n: AtomicFact = InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
+        if !self
+            .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        let ge: AtomicFact =
+            GreaterEqualFact::new(x.clone(), one_obj.clone(), line_file.clone()).into();
+        if self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&ge)?
+            .is_true()
+        {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    not_equal_fact.clone().into(),
+                    "n != 0 from n $in N and 1 <= n".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ));
+        }
+        let one_le: AtomicFact = LessEqualFact::new(one_obj, x, line_file.clone()).into();
+        if self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&one_le)?
+            .is_true()
+        {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    not_equal_fact.clone().into(),
+                    "n != 0 from n $in N and 1 <= n".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ));
         }
         Ok(None)
     }

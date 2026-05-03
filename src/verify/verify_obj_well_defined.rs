@@ -209,16 +209,16 @@ impl Runtime {
             self.top_level_env()
                 .store_fact_to_cache_known_fact(intermediate_fact_string, intermediate_line_file)
                 .map_err(|store_fact_error| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_cause(
-                        format!(
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
                         "failed to store intermediate fn-obj membership fact while verifying `{}`",
                         fn_obj.to_string()
                     ),
-                        store_fact_error,
-                    ),
-                ))
-            })?;
+                            store_fact_error,
+                        ),
+                    ))
+                })?;
 
             if i == fn_obj.body.len() - 1 {
                 break;

@@ -9,15 +9,18 @@ mod lit_file_runner_tests {
 
     /// Collect ```litex``` bodies. A block is omitted when the last non-empty line before its opening
     /// fence is exactly `<!-- litex:skip-test -->` (for snippets that are illustrative only).
-    fn extract_litex_fenced_blocks(markdown: &str) -> Vec<String> {
+    /// The line number is 1-based: the markdown line where the opening ` ```litex ` fence starts.
+    fn extract_litex_fenced_blocks(markdown: &str) -> Vec<(usize, String)> {
         const SKIP_MARKER: &str = "<!-- litex:skip-test -->";
-        let mut blocks: Vec<String> = Vec::new();
+        let mut blocks: Vec<(usize, String)> = Vec::new();
         let mut in_litex = false;
         let mut skip_this_block = false;
         let mut current = String::new();
         let mut prev_non_empty_outside_block: Option<&str> = None;
+        let mut fence_open_line: usize = 0;
 
-        for line in markdown.lines() {
+        for (line_index_zero, line) in markdown.lines().enumerate() {
+            let line_number_1based = line_index_zero + 1;
             let trimmed_start = line.trim_start();
             if trimmed_start.starts_with("```") {
                 let info = trimmed_start[3..].trim();
@@ -25,7 +28,7 @@ mod lit_file_runner_tests {
                     if !skip_this_block {
                         let trimmed = current.trim();
                         if !trimmed.is_empty() {
-                            blocks.push(trimmed.to_string());
+                            blocks.push((fence_open_line, trimmed.to_string()));
                         }
                     }
                     current.clear();
@@ -34,6 +37,7 @@ mod lit_file_runner_tests {
                     prev_non_empty_outside_block = None;
                 } else if info == "litex" {
                     in_litex = true;
+                    fence_open_line = line_number_1based;
                     skip_this_block = prev_non_empty_outside_block == Some(SKIP_MARKER);
                     current.clear();
                 }
@@ -54,8 +58,11 @@ mod lit_file_runner_tests {
         blocks
     }
 
-    fn collect_markdown_files_sorted(docs_dir: &Path) -> Vec<PathBuf> {
+    fn collect_markdown_files_under_dir_sorted(root: &Path) -> Vec<PathBuf> {
         let mut out: Vec<PathBuf> = Vec::new();
+        if !root.is_dir() {
+            return out;
+        }
         fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
             let read_dir = match fs::read_dir(dir) {
                 Ok(entries) => entries,
@@ -73,8 +80,41 @@ mod lit_file_runner_tests {
                 }
             }
         }
-        walk(docs_dir, &mut out);
+        walk(root, &mut out);
         out.sort();
+        out
+    }
+
+    fn litex_snippets_from_markdown_files(
+        manifest_dir: &Path,
+        md_paths: &[PathBuf],
+    ) -> Vec<(String, String, String)> {
+        let mut out: Vec<(String, String, String)> = Vec::new();
+        for md_path in md_paths {
+            let rel_label = md_path
+                .strip_prefix(manifest_dir)
+                .unwrap_or(md_path)
+                .display()
+                .to_string();
+            let md_current_path_str = md_path.to_string_lossy().into_owned();
+            let md_content = match fs::read_to_string(md_path) {
+                Ok(content) => content,
+                Err(read_error) => panic!("failed to read {:?}: {}", md_path, read_error),
+            };
+            for (block_index, (md_line, block)) in extract_litex_fenced_blocks(&md_content)
+                .into_iter()
+                .enumerate()
+            {
+                out.push((
+                    format!(
+                        "{} ```litex```#{} (md line {})",
+                        rel_label, block_index, md_line
+                    ),
+                    block,
+                    md_current_path_str.clone(),
+                ));
+            }
+        }
         out
     }
 
@@ -216,16 +256,16 @@ mod lit_file_runner_tests {
         println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
         if examples_ran {
             println!(
-                "  examples: sum of user-file runs: {:.2} ms  |  wall: {:.2} ms",
+                "  phase 1 (examples/*.lit + docs/Builtin_Features ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
                 examples_sum_ms, examples_phase_wall_ms
             );
         }
         println!(
-            "  docs ```litex``` snippets: sum of runs: {:.2} ms  |  wall: {:.2} ms",
+            "  docs ```litex``` snippets (excluding docs/Builtin_Features; see phase 1): sum of runs: {:.2} ms  |  wall: {:.2} ms",
             docs_sum_ms, docs_phase_wall_ms
         );
         println!(
-            "--- phase timing: examples {:.2} ms | docs {:.2} ms ---",
+            "--- phase timing: phase1 {:.2} ms | docs {:.2} ms ---",
             examples_phase_wall_ms, docs_phase_wall_ms
         );
     }
@@ -234,6 +274,53 @@ mod lit_file_runner_tests {
     fn run_examples() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let lit_file_paths = collect_lit_files_recursive_under(&manifest_dir, "examples");
+
+        let builtin_features_md_dir = manifest_dir.join("docs").join("Builtin_Features");
+        let builtin_features_md_paths =
+            collect_markdown_files_under_dir_sorted(&builtin_features_md_dir);
+        let builtin_feature_snippets =
+            litex_snippets_from_markdown_files(&manifest_dir, &builtin_features_md_paths);
+
+        #[derive(Clone)]
+        struct Phase1Item {
+            report_label: String,
+            source: String,
+            path_for_runtime: String,
+        }
+
+        let mut phase1_items: Vec<Phase1Item> = Vec::new();
+        for lit_file_path in lit_file_paths.iter() {
+            let lit_file_path_str = match lit_file_path.to_str() {
+                Some(path_string) => path_string,
+                None => panic!("{:?} must be valid UTF-8", lit_file_path),
+            };
+            let file_label_for_report = match lit_file_path.strip_prefix(&manifest_dir) {
+                Ok(rel) => rel.display().to_string(),
+                Err(_) => match lit_file_path.file_name() {
+                    Some(os_file_name) => match os_file_name.to_str() {
+                        Some(name_string) => String::from(name_string),
+                        None => format!("{:?}", lit_file_path),
+                    },
+                    None => format!("{:?}", lit_file_path),
+                },
+            };
+            let source_code = match fs::read_to_string(lit_file_path) {
+                Ok(content) => content,
+                Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
+            };
+            phase1_items.push(Phase1Item {
+                report_label: file_label_for_report,
+                source: source_code,
+                path_for_runtime: lit_file_path_str.to_string(),
+            });
+        }
+        for (label, block, md_path_str) in builtin_feature_snippets.iter() {
+            phase1_items.push(Phase1Item {
+                report_label: label.clone(),
+                source: block.clone(),
+                path_for_runtime: md_path_str.clone(),
+            });
+        }
 
         let builtin_start = Instant::now();
         let mut runtime = Runtime::new_with_builtin_code();
@@ -244,44 +331,23 @@ mod lit_file_runner_tests {
         let mut examples_ran = false;
         let mut examples_phase_wall_ms: f64 = 0.0;
 
-        if lit_file_paths.is_empty() {
-            println!("--- examples/ (recursive): no .lit files found ---");
+        if phase1_items.is_empty() {
+            println!(
+                "--- phase 1: no examples/*.lit and no docs/Builtin_Features ```litex``` snippets ---"
+            );
         } else {
             examples_ran = true;
             let examples_wall_start = Instant::now();
-            let first_lit_path_str = match lit_file_paths[0].to_str() {
-                Some(path_string) => path_string,
-                None => panic!("{:?} must be valid UTF-8", lit_file_paths[0]),
-            };
-            runtime.new_file_path_new_env_new_name_scope(first_lit_path_str);
+            let first_path = phase1_items[0].path_for_runtime.as_str();
+            runtime.new_file_path_new_env_new_name_scope(first_path);
 
-            for (file_index, lit_file_path) in lit_file_paths.iter().enumerate() {
-                let lit_file_path_str = match lit_file_path.to_str() {
-                    Some(path_string) => path_string,
-                    None => panic!("{:?} must be valid UTF-8", lit_file_path),
-                };
-
-                let file_label_for_report = match lit_file_path.strip_prefix(&manifest_dir) {
-                    Ok(rel) => rel.display().to_string(),
-                    Err(_) => match lit_file_path.file_name() {
-                        Some(os_file_name) => match os_file_name.to_str() {
-                            Some(name_string) => String::from(name_string),
-                            None => format!("{:?}", lit_file_path),
-                        },
-                        None => format!("{:?}", lit_file_path),
-                    },
-                };
-
-                if file_index > 0 {
+            for (item_index, item) in phase1_items.iter().enumerate() {
+                if item_index > 0 {
                     runtime.clear_current_env_and_parse_name_scope();
-                    runtime.set_current_user_lit_file_path(lit_file_path_str);
+                    runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
                 }
 
-                let source_code = match fs::read_to_string(lit_file_path) {
-                    Ok(content) => content,
-                    Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
-                };
-                let normalized_source = remove_windows_carriage_return(&source_code);
+                let normalized_source = remove_windows_carriage_return(item.source.as_str());
 
                 let start_time_for_one_file = Instant::now();
                 let (stmt_results, runtime_error) =
@@ -295,24 +361,22 @@ mod lit_file_runner_tests {
                 if !run_succeeded {
                     every_file_run_ok = false;
                     println!(
-                        "=== [{}] {:?} ===\n{}\n",
-                        "FAILED", lit_file_path, run_output
+                        "=== [{}] {} ===\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                        "FAILED", item.report_label, run_output, item.report_label
                     );
                     break;
                 }
 
                 file_label_and_duration_ms_list
-                    .push((file_label_for_report, duration_ms_for_one_file));
+                    .push((item.report_label.clone(), duration_ms_for_one_file));
             }
             examples_phase_wall_ms = examples_wall_start.elapsed().as_secs_f64() * 1000.0;
         }
 
         if every_file_run_ok && examples_ran {
-            let number_of_lit_files = file_label_and_duration_ms_list.len();
-
             println!(
-                "--- examples/ (recursive): {} .lit files, all OK ---",
-                number_of_lit_files
+                "--- phase 1: {} run(s) (examples/*.lit + docs/Builtin_Features ```litex```), all OK ---",
+                file_label_and_duration_ms_list.len()
             );
             for (file_label, duration_ms) in file_label_and_duration_ms_list.iter() {
                 println!("  {}  {:.2} ms", file_label, duration_ms);
@@ -340,7 +404,13 @@ mod lit_file_runner_tests {
             return;
         }
 
-        let md_paths = collect_markdown_files_sorted(&docs_dir);
+        let md_paths_all = collect_markdown_files_under_dir_sorted(&docs_dir);
+        let builtin_features_prefix = manifest_dir.join("docs").join("Builtin_Features");
+        let md_paths: Vec<PathBuf> = md_paths_all
+            .into_iter()
+            .filter(|p| !p.starts_with(&builtin_features_prefix))
+            .collect();
+
         // (test report label, fenced litex body, current markdown path string for relative run_file resolution)
         let mut doc_snippets: Vec<(String, String, String)> = Vec::new();
         for md_path in md_paths.iter() {
@@ -354,12 +424,15 @@ mod lit_file_runner_tests {
                 Ok(content) => content,
                 Err(read_error) => panic!("failed to read {:?}: {}", md_path, read_error),
             };
-            for (block_index, block) in extract_litex_fenced_blocks(&md_content)
+            for (block_index, (md_line, block)) in extract_litex_fenced_blocks(&md_content)
                 .into_iter()
                 .enumerate()
             {
                 doc_snippets.push((
-                    format!("{} ```litex```#{}", rel_label, block_index),
+                    format!(
+                        "{} ```litex```#{} (md line {})",
+                        rel_label, block_index, md_line
+                    ),
                     block,
                     md_current_path_str.clone(),
                 ));
@@ -409,7 +482,10 @@ mod lit_file_runner_tests {
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
             if !run_succeeded {
-                panic!("docs litex snippet FAILED: {}\n{}\n", label, run_output);
+                panic!(
+                    "docs litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                    run_output, label
+                );
             }
 
             doc_durations_ms.push((label.clone(), duration_ms));
