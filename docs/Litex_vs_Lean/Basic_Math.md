@@ -1,7 +1,8 @@
 # Litex vs Lean: Basic Math
 
-Online doc: https://litexlang.com/doc/Litex_vs_Lean/Basic_Math
-Github: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Basic_Math.md
+Try all snippets in browser: https://litexlang.com/doc/Litex_vs_Lean/Basic_Math
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Basic_Math.md
 
 
 ---

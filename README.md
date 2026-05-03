@@ -1,5 +1,5 @@
 <div align="center">
-<img src="assets/logo.PNG" alt="The Litex Logo" width="300">
+<img src="https://publisher.litexlang.org/logo.PNG" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">
@@ -129,12 +129,12 @@ AI references:
 
 ## Special Thanks
 
-_巴黎挺好，未来一定更好。未来没有计划，但一定更好。_
+_未来没有计划，但一定更好。_
 
 _- 樊振东在巴黎奥运会后接受采访时说_
 
 <div align="center">
-  <img src="./assets/Little_Little_O.PNG" alt="The Litex Logo" width="200">
+  <img src="https://publisher.litexlang.org/Little_Little_O.PNG" alt="The Litex Logo" width="200">
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 

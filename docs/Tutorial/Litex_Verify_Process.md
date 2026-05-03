@@ -1,7 +1,8 @@
 # Litex verify process
 
-Online doc: https://litexlang.com/doc/Tutorial/Litex_Verify_Process
-Github: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/Litex_Verify_Process.md
+Try all snippets in browser: https://litexlang.com/doc/Tutorial/Litex_Verify_Process
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/Litex_Verify_Process.md
 
 
 # Atomic Fact

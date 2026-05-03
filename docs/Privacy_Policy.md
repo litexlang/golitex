@@ -1,7 +1,8 @@
 # Privacy Policy
 
-Online doc: https://litexlang.com/doc/Privacy_Policy
-Github: https://github.com/litexlang/golitex/blob/main/docs/Privacy_Policy.md
+Try all snippets in browser: https://litexlang.com/doc/Privacy_Policy
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Privacy_Policy.md
 
 Effective date: 2025-10-15
 Last updated: 2025-10-15

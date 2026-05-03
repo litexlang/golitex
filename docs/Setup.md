@@ -1,7 +1,8 @@
 # Install Litex
 
-Online doc: https://litexlang.com/doc/Setup
-Github: https://github.com/litexlang/golitex/blob/main/docs/Setup.md
+Try all snippets in browser: https://litexlang.com/doc/Setup
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Setup.md
 
 
 ## Run Litex online
