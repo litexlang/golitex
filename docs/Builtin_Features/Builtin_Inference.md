@@ -1,5 +1,8 @@
 # Builtin Inference
 
+Online doc: https://litexlang.com/doc/Builtin_Features/Builtin_Inference
+Github: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Builtin_Inference.md
+
 After a fact is **verified** or **known** in the environment, the system **stores** it and may run **inference**. Inference can **add further facts** (still true in the same context) or remember side information used later. That is separate from **builtin verification rules**, which are the built-in steps that **close proof goals** during checking.
 
 Below, each item gives the **mathematical meaning**, then a **`forall … =>:`** pattern: the premise is the fact that triggers inference; the conclusion lists typical consequences (what becomes available in the same way as after storing the premise).
