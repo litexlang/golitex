@@ -1,7 +1,8 @@
 # Litex Cheatsheet                           
 
-Online doc: https://litexlang.com/doc/Litex_Cheatsheet
-Github: https://github.com/litexlang/golitex/blob/main/docs/Litex_Cheatsheet.md
+Try all snippets in browser: https://litexlang.com/doc/Litex_Cheatsheet
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_Cheatsheet.md
 
 
 *version: 0.1.0*

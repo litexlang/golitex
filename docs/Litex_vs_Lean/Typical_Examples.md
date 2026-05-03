@@ -1,7 +1,8 @@
 # Typical example: “there are infinitely many primes” (Litex vs Lean)
 
-Online doc: https://litexlang.com/doc/Litex_vs_Lean/Typical_Examples
-Github: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Typical_Examples.md
+Try all snippets in browser: https://litexlang.com/doc/Litex_vs_Lean/Typical_Examples
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Typical_Examples.md
 
 
 ## Example 1: There are infinitely many primes

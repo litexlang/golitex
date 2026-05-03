@@ -1,7 +1,8 @@
 # Tutorial Introduction
 
-Online doc: https://litexlang.com/doc/Tutorial/Introduction
-Github: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/Introduction.md
+Try all snippets in browser: https://litexlang.com/doc/Tutorial/Introduction
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/Introduction.md
 
 
 Jiachen Shen and The Litex Team

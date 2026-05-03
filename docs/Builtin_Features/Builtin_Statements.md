@@ -1,7 +1,8 @@
 # Builtin statements
 
-Online doc: https://litexlang.com/doc/Builtin_Features/Builtin_Statements
-Github: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Builtin_Statements.md
+Try all snippets in browser: https://litexlang.com/doc/Builtin_Features/Builtin_Statements
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Builtin_Statements.md
 
 
 A **statement** is one top-level or nested step Litex reads and executes: introducing names, asserting facts, opening proofs, or dispatching proof tactics. This page matches the statement forms the language supports.
