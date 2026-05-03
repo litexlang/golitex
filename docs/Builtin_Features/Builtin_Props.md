@@ -202,4 +202,4 @@ prove:
     1 = 1 and 2 < 3
 ```
 
-For verification shortcuts on equalities, comparisons, membership, and many `$…` predicates without user `prove` blocks, see [Builtin verification rules](builtin_verification_rules.md).
+For verification shortcuts on equalities, comparisons, membership, and many `$…` predicates without user `prove` blocks, see [Builtin verification rules](Builtin_Verification_Rules.md).

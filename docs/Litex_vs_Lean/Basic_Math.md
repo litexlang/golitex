@@ -112,7 +112,7 @@ prove:
 
 ## Example 8 — `by for` over integer ranges
 
-Older surface syntax used top-level `for …` / `prove_for` spellings; use `by for` with a `forall` over `range` / `closed_range` today. Parity (`% 2`) inside enumerators needs attention to integer typing—see the cheatsheet.
+Older surface syntax used top-level `for …` / `prove_for` spellings; use `by for` with a `forall` over `range` / `closed_range` today. Parity (`% 2`) inside enumerators needs attention to integer typing—see [Litex_Cheatsheet.md](../Litex_Cheatsheet.md).
 
 ```litex
 prove:
