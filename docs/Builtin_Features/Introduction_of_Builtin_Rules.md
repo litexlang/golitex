@@ -1,5 +1,9 @@
 # Introduction to Litex Builtin Features
 
+Online doc: https://litexlang.com/doc/Builtin_Features/Introduction_of_Builtin_Rules
+Github: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Introduction_of_Builtin_Rules.md
+
+
 **Builtin features** are the parts of Litex that come with the system: a **shared semantic layer** that names ordinary mathematical objects, spells out what you can **write** in a file, decides which goals the **checker** can close on its own, extends the context after facts are **stored**, and lists the **atomic proposition forms** (`$…` and friends) the surface language treats as single steps.
 
 They are not a grab bag of tricks. They answer four coupled questions:

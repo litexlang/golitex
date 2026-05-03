@@ -1,5 +1,9 @@
 # Litex command-line interface (Rust kernel)
 
+Online doc: https://litexlang.com/doc/CLI
+Github: https://github.com/litexlang/golitex/blob/main/docs/CLI.md
+
+
 This document matches the entry behavior in `src/cli.rs` and explains how to invoke the `litex` binary from a terminal.
 
 ## Basic usage

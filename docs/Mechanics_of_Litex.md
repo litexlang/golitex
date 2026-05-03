@@ -1,5 +1,9 @@
 # Mechanics of Litex
 
+Online doc: https://litexlang.com/doc/Mechanics_of_Litex
+Github: https://github.com/litexlang/golitex/blob/main/docs/Mechanics_of_Litex.md
+
+
 This note is a **single map** of how Litex works for readers who already think in terms of **math as facts**. It is **not** a complete syntax reference or a full catalog of builtins. Other write-ups cover the builtin overview, statement inventory, verification rules, inference rules, and a short tutorial in the same docs tree.
 
 **Suggested reading order (narrative spine):**
