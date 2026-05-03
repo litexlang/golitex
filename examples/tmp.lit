@@ -1,9 +1,0 @@
-prove:
-    forall x N:
-        x != 0
-        =>:
-            1 <= x
-    forall x N:
-        1 <= x
-        =>:
-            x != 0
