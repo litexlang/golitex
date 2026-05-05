@@ -23,30 +23,37 @@ In mathematics there are different **kinds** of factual statements: each shape h
 | **Universal with equivalence** | Same `forall` header, but you also give an `iff` block (`<=>:`). | `x > y` iff `y < x` under the same prefix |
 | **Negated universal** | “It is not true that for all …” | `not forall x R: x > 0` |
 
-### Atomic fact
+### Verify Atomic Factual Statements
 
-An **atomic** fact is one **indivisible** judgment at this level: one relation (or negation of one) between terms. Picture it as a single sentence with one **verb** (equals, less-than, “is in set”, …) and its **arguments**—no outer `and`, `or`, or quantifier left to peel off.
+An **atomic** fact is one **indivisible** judgment at this level: one relation (or negation of one) between terms. Picture it as a single sentence with one **predicate** (equals, less-than, “is in set”, …) and its **arguments**.
 
-Chains like `a < b < c` are **not** atomic; they are **chain** facts (abbreviations for several atomics).
+Atomic facts are the smallest building blocks of factual statements. They are the ones that are not further decomposable into smaller statements. Since other factual statements are built from atomic facts, we need to know how to verify them first.
 
-**Syntax:** One unit. **Relations** you would write on paper—equality and order—use ordinary tokens with **no** `$`: `=`, `!=`, `<`, `>`, `<=`, `>=`, and negations like `not t1 < t2`. Everything else is a **prop** (predicate): spell it with a leading **`$`**. Builtin props include verbs such as `$in` and `$is_set`; you can also declare **custom** props. If a prop takes **exactly two** arguments, you may use **infix** form `arg1 $name arg2`; otherwise use **prefix** form `$name(arg1, arg2, …)`. Joining several atomics with `or` / `and` changes the shape (see below).
+> The user can define custom predicates using the `prop` keyword.
+
+> Chains like `a < b < c` are **not** atomic; they are **chain** facts (abbreviations for several atomics).
+
+> In practice, once you understand how **atomic** facts are verified, the verification of the other fact shapes is easy to follow: they are mostly the extensions of atomic checks, organized by conjunction, disjunction, chains, quantifiers, and familiar structure.
+
+Examples of atomic facts:
 
 ```litex
-1 = 1
-2 != 3
-0 < 1
-not 1 < 0
+1 = 1 # predicate: =, arguments: 1, 1
+2 != 3 # predicate: !=, arguments: 2, 3
+0 < 1 # predicate: <, arguments: 0, 1
+not 1 < 0 # predicate: negation of <, arguments: 1, 0
 
-# binary prop: infix `arg1 $in arg2`
+# predicate: $in, arguments: 1, {1, 2}
 1 $in {1, 2}
 
-# prop with other arity: prefix `$is_set(…)`
+# predicate: $is_set, arguments: {1, 2}
 $is_set({1, 2})
 
-# define custom prop:
+# define custom predicate: is_odd(n) is equivalent to n $in Z and n % 2 = 1
 prop is_odd(n Z):
     n % 2 = 1
 
+# predicate: $is_odd, arguments: 1
 $is_odd(1)
 ```
 
