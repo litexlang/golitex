@@ -7,13 +7,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.store_def_abstract_prop(def_abstract_prop_stmt)
             .map_err(|e| {
-                short_exec_error(def_abstract_prop_stmt.clone().into(), "", Some(e), vec![])
+                exec_stmt_error_with_stmt_and_cause(def_abstract_prop_stmt.clone().into(), e)
             })?;
-        Ok((NonFactualStmtSuccess::new(
-            def_abstract_prop_stmt.clone().into(),
-            InferResult::new(),
-            vec![],
-        ))
-        .into())
+        Ok(NonFactualStmtSuccess::new_with_stmt(def_abstract_prop_stmt.clone().into()).into())
     }
 }

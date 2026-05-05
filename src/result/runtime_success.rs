@@ -101,4 +101,8 @@ impl NonFactualStmtSuccess {
             inside_results,
         }
     }
+
+    pub fn new_with_stmt(stmt: Stmt) -> Self {
+        Self::new(stmt, InferResult::new(), vec![])
+    }
 }
