@@ -679,14 +679,12 @@ impl Runtime {
             )
             .into();
             let strict_key = strict_fact.to_string();
-            let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&strict_key);
+            let (cache_ok, _) = self.cache_known_facts_contains(&strict_key);
             if cache_ok {
                 return Ok(StmtResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                    FactualStmtSuccess::new_with_verified_by_known_fact(
                         less_equal_fact.clone().into(),
-                        strict_key,
-                        Some(strict_fact),
-                        Some(cache_line_file),
+                        VerifiedByResult::Fact(strict_fact, strict_key),
                         Vec::new(),
                     ),
                 ));
@@ -743,7 +741,7 @@ impl Runtime {
         let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&neg)?;
         if sub.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                     atomic_fact.clone().into(),
                     InferResult::new(),
                     "order_from_known_negated_complement".to_string(),
@@ -795,7 +793,7 @@ impl Runtime {
             let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
             if sub.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                         atomic_fact.clone().into(),
                         InferResult::new(),
                         "negated_order_from_known_equivalent_order".to_string(),

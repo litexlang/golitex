@@ -68,7 +68,7 @@ impl StmtResult {
                     SUCCESS_COLON,
                     x.stmt,
                     VERIFIED_BY,
-                    x.msg,
+                    x.verification_display_line(),
                     Self::infer_block_string(&x.infers)
                 )
             }

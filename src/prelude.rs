@@ -150,6 +150,7 @@ pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 pub use crate::result::FactualStmtSuccess;
 pub use crate::result::NonFactualStmtSuccess;
+pub use crate::result::VerifiedByResult;
 pub use crate::result::StmtResult;
 pub use crate::result::StmtUnknown;
 pub use crate::runtime::FreeParamCollection;

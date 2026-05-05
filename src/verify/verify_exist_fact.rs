@@ -224,12 +224,13 @@ impl Runtime {
         infers.new_infer_result_inside(stmt_result_infers(&uniq_res));
         infers.new_fact(&uniqueness_fact);
 
-        let out = FactualStmtSuccess::new_with_verified_by_known_fact_source(
+        let out = FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
             exist_fact.clone().into(),
             infers,
-            "exist!: witness exist and uniqueness forall verified".to_string(),
-            Some(uniqueness_fact),
-            None,
+            VerifiedByResult::Fact(
+                uniqueness_fact.clone(),
+                "exist!: witness exist and uniqueness forall verified".to_string(),
+            ),
             vec![],
         );
         Ok(Some(out.into()))
@@ -291,11 +292,12 @@ impl Runtime {
                         )))
                     })?;
                 if target_body_string == known_body_string {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         exist_fact.clone().into(),
-                        known_fact.to_string(),
-                        Some(known_fact.clone().into()),
-                        None,
+                        VerifiedByResult::Fact(
+                            known_fact.clone().into(),
+                            known_fact.to_string(),
+                        ),
                         Vec::new(),
                     ))
                     .into());
