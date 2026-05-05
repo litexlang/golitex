@@ -29,6 +29,8 @@ An **atomic** fact is one **indivisible** judgment at this level: one relation (
 
 Atomic facts are the smallest building blocks of factual statements. They are the ones that are not further decomposable into smaller statements. Since other factual statements are built from atomic facts, we need to know how to verify them first.
 
+> Builtin predicates include verbs such as `$in` and `$is_set` and `=`, `!=`, `<`, `>`, `<=`, `>=`.
+
 > The user can define custom predicates using the `prop` keyword.
 
 > Chains like `a < b < c` are **not** atomic; they are **chain** facts (abbreviations for several atomics).
