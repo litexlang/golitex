@@ -9,18 +9,16 @@ impl Runtime {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
-                short_exec_error(
+                exec_stmt_error_with_stmt_and_cause(
                     stmt_for_fact_errors.clone(),
-                    "",
-                    Some(well_defined_error),
-                    vec![],
+                    well_defined_error,
                 )
             })?;
         self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
             fact.clone(),
         )
         .map_err(|store_fact_error| {
-            short_exec_error(stmt_for_fact_errors, "", Some(store_fact_error), vec![])
+            exec_stmt_error_with_stmt_and_cause(stmt_for_fact_errors, store_fact_error)
         })
     }
 
@@ -32,16 +30,14 @@ impl Runtime {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
-                short_exec_error(
+                exec_stmt_error_with_stmt_and_cause(
                     stmt_for_fact_errors.clone(),
-                    "",
-                    Some(well_defined_error),
-                    vec![],
+                    well_defined_error,
                 )
             })?;
         self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact.clone())
             .map_err(|store_fact_error| {
-                short_exec_error(stmt_for_fact_errors, "", Some(store_fact_error), vec![])
+                exec_stmt_error_with_stmt_and_cause(stmt_for_fact_errors, store_fact_error)
             })
     }
 
@@ -52,6 +48,6 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().into();
         self.verify_well_defined_and_store_and_infer(fact, verify_state)
-            .map_err(|e| short_exec_error(stmt_for_fact_errors, "", Some(e), vec![]))
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt_for_fact_errors, e))
     }
 }

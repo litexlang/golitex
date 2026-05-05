@@ -30,11 +30,7 @@ impl Runtime {
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
-        RuntimeError::ExecStmtError({
-            let st: Stmt = stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeErrorStruct::new(Some(st), String::new(), lf, Some(cause), vec![])
-        })
+        exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), cause)
     }
 
     // have fn by induc from 0: f(x Z: x >= 0) R: case 0: … case 1: …

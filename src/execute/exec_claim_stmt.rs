@@ -22,11 +22,10 @@ impl Runtime {
                         ParamObjType::Forall,
                     )
                         .map_err(|define_params_error| {
-                            RuntimeError::ExecStmtError({
-            let st: Stmt = stmt.clone().into();
-            let lf = st.line_file();
-            RuntimeErrorStruct::new(Some(st), "".to_string(), lf, Some(define_params_error), vec![])
-        })
+                            exec_stmt_error_with_stmt_and_cause(
+                                stmt.clone().into(),
+                                define_params_error,
+                            )
                         })?;
 
                     for dom_fact in forall_fact.dom_facts.iter() {
