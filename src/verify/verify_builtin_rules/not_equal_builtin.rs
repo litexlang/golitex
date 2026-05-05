@@ -130,7 +130,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
             if sub.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_known_strict_order".to_string(),
@@ -224,7 +224,7 @@ impl Runtime {
         }
         if result.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                     not_equal_fact.clone().into(),
                     InferResult::new(),
                     "not_equal_pow_from_base_nonzero".to_string(),
