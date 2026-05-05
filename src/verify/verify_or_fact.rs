@@ -145,11 +145,12 @@ impl Runtime {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                    (FactualStmtSuccess::new_with_verified_by_known_fact(
                         or_fact.clone().into(),
-                        fact.to_string(),
-                        None,
-                        Some(fact.line_file()),
+                        VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+                            fact.clone().into(),
+                            fact.to_string(),
+                        )]),
                         Vec::new(),
                     ))
                     .into(),
@@ -225,13 +226,15 @@ impl Runtime {
                 }
 
                 if all_args_match {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                             or_fact.clone().into(),
-                            known_or_fact.to_string(),
-                            Some(known_or_fact.clone().into()),
-                            None,
+                            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+                                known_or_fact.clone().into(),
+                                known_or_fact.to_string(),
+                            )]),
                             Vec::new(),
-                        )).into());
+                        ))
+                        .into());
                 }
             }
         }

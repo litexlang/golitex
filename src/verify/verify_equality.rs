@@ -159,7 +159,7 @@ impl Runtime {
             FnObjHead::IdentifierWithMod(i) => i.to_string(),
             _ => return Ok(None),
         };
-        let Some((fn_set_body, equal_to_expr, cite_def_line_file)) =
+        let Some((fn_set_body, equal_to_expr, _)) =
             self.get_known_fn_body_and_equal_to_for_key(key.as_str())
         else {
             return Ok(None);
@@ -186,7 +186,7 @@ impl Runtime {
         if !inner.is_true() {
             return Ok(None);
         }
-        let fact = EqualFact::new(
+        let fact: Fact = EqualFact::new(
             statement_left.clone(),
             statement_right.clone(),
             line_file.clone(),
@@ -196,12 +196,11 @@ impl Runtime {
             "according to user-defined function `{}` = `{}`",
             application_side, reduced
         );
+        let cited = fact.clone();
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+            FactualStmtSuccess::new_with_verified_by_known_fact(
                 fact,
-                msg,
-                None,
-                Some(cite_def_line_file.clone()),
+                VerifiedByResult::Fact(cited, msg),
                 Vec::new(),
             )
             .into(),

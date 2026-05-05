@@ -218,14 +218,14 @@ impl Runtime {
             vec![atomic_fact_in_known_forall_fact.clone().into()],
             known_forall.line_file.clone(),
         )?;
-        let fact_verified =
-            FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                given_atomic_fact.clone().into(),
+        let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
+            given_atomic_fact.clone().into(),
+            VerifiedByResult::Fact(
+                verified_by_known_forall_fact.clone().into(),
                 verified_by_known_forall_fact.to_string(),
-                Some(verified_by_known_forall_fact.clone().into()),
-                None,
-                Vec::new(),
-            );
+            ),
+            Vec::new(),
+        );
         Ok(Some(fact_verified))
     }
 
