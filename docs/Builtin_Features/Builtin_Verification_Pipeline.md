@@ -1,10 +1,14 @@
-# Factual Statements
+# Builtin Verification Pipeline
 
-In Litex you often start from a **factual statement** (also called a **logical statement**): one claim the checker should respect—like “this equation holds” or “for every number in this range, that inequality holds.” Litex does not guess; it only follows the language’s rules. If the rules justify the claim, the result is **true**. If the evidence is not there, you get **unknown**—which is preferable to a silent “yes.”
+Try all snippets in browser: https://litexlang.com/doc/Manual/Factual_Statements
 
-Proofs work the same way as on paper: you have some facts, apply allowed steps, and obtain new facts. Factual statements are the sentences that enter that game.
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Factual_Statements.md
 
-## Shapes of a fact (overview)
+**Litex** and **LaTeX** are both notations for writing mathematics, and the surface syntax often feels similar (quantifiers, relations, set braces, subscripts, and so on). LaTeX’s job is typesetting; **Litex**’s job is **correctness**: the checker inspects each step so that factual statements can be accepted as true only when they are well-defined and justified under the language rules—then they become known facts you may reuse later. On paper you would do the same proof sketch; in Litex the machine helps ensure you do not slip.
+
+> The result of a factual statement is either true or unknown. Unknown means the statement is either false, or the checker cannot determine whether it is true or false because of the lack of information.
+
+## Shapes of a factual statement (overview)
 
 Below is a **road map**. Each row is a different *shape* a fact can take. The sections after the table explain them in order—from the smallest building blocks upward.
 
@@ -132,6 +136,33 @@ forall x, y R:
 **Syntax:** `not forall` (no `!`), then the same header as the positive universal, then the indented body. In some inner positions only a full block is legal; the checker’s message tells you when to lift the statement.
 
 ```litex
+abstract_prop p(x)
+know:
+    not forall x R:
+        $p(x)
+
 not forall x R:
-    x > 0
+    $p(x)
 ```
+
+## Verify Well-Definedness of Facts
+
+## Verify Atomic Facts
+
+### Verify Non-Equational Atomic Facts
+
+### Verify Equational Atomic Facts
+
+### Verify Existential Facts
+
+### Verify Disjunction Facts
+
+### Verify Conjunction Facts
+
+### Verify Chain Facts
+
+### Verify Universal Facts
+
+### Verify Universal with Equivalence Facts
+
+### Verify Negated Universal Facts
