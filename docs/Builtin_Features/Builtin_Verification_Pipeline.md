@@ -6,11 +6,11 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Fact
 
 **Litex** and **LaTeX** are both notations for writing mathematics, and the surface syntax often feels similar (quantifiers, relations, set braces, subscripts, and so on). LaTeX’s job is typesetting; **Litex**’s job is **correctness**: the checker inspects each step so that factual statements can be accepted as true only when they are well-defined and justified under the language rules—then they become known facts you may reuse later. On paper you would do the same proof sketch; in Litex the machine helps ensure you do not slip.
 
-> The result of a factual statement is either true or unknown. Unknown means the statement is either false, or the checker cannot determine whether it is true or false because of the lack of information.
+> The result of a *factual statement* —or, in more mathematical terms, a **logical statement**—is either true or unknown. Unknown means the statement is either false, or the checker cannot determine whether it is true or false because of the lack of information.
 
 ## Shapes of a factual statement (overview)
 
-Below is a **road map**. Each row is a different *shape* a fact can take. The sections after the table explain them in order—from the smallest building blocks upward.
+In mathematics there are different **kinds** of factual statements: each shape has its own way of being written and its own pattern of verification in the checker. The shapes are not isolated—**they fit together** (for example, chains expand to conjunctions of atomics, and `or`/`and` combine the same atomic building blocks). Here is a overview of the shapes:
 
 | Shape | What it means (in one line) | Typical look |
 |-------|-----------------------------|----------------|
