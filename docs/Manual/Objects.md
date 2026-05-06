@@ -1,11 +1,11 @@
-# Builtin Concepts
+# Objects
 
-Try all snippets in browser: https://litexlang.com/doc/Manual/Builtin_Objects
+Try all snippets in browser: https://litexlang.com/doc/Manual/Objects
 
-Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Builtin_Objects.md
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Objects.md
 
 
-# Objects(Sets)
+## Objects as sets
 
 Everything you write in a formula is built from a fixed menu of expression forms: numbers, identifiers, sets, functions, tuples, sums, and so on. We call these objects (they are not variables because in math anything is constant). And since Litex is set-based, all objects are sets.
 
