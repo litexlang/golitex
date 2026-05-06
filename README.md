@@ -6,11 +6,7 @@
 
 # Litex: A Simple Formal Language Learnable in 2 Hours
 
-**version 0.9.73-beta**
-
-**Beta notice:** Litex is still an experimental project for testing ideas about formalizing everyday mathematics. It is not ready for production or mission-critical proof work yet. We hope more people will look at Litex, try it and discuss the mathematical philosophy behind it.
-
-*Jiachen Shen and The Litex Team*
+*by Jiachen Shen and The Litex Team, version 0.9.73-beta*
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
@@ -18,6 +14,8 @@
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/litexlang/golitex)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
+
+**Beta notice:** Litex is still an experimental project for testing ideas about formalizing everyday mathematics. It is not ready for production or mission-critical proof work yet. **We hope more people will look at Litex, try it and discuss the mathematical philosophy behind it.**
 
 </div>
 
@@ -93,7 +91,7 @@ When thinking in Litex, start with three blocks: **objects**, **facts**, and **s
 - **Facts** are claims about objects, such as `x = 2`, `x $in R`, or `0 <= x`.
 - **Statements** are actions in the proof script: define an object, introduce a fact, prove a fact, or store known information.
 
-For a deeper explanation, read the [Manual](https://litexlang.com/doc/Manual/Manual_Introduction), especially the [Proof Process](https://litexlang.com/doc/Manual/Proof_Process).
+For a deeper explanation, read the [Manual](https://litexlang.com/doc/Manual#manual-introduction), especially the [Proof Process](https://litexlang.com/doc/Manual#proof-process).
 
 ## Proofs Explain Themselves
 
@@ -130,7 +128,7 @@ This output says that `$p(2)` was proved by reusing the known `forall` fact. Lit
 ## Start Here
 
 1. [Official site](https://litexlang.com)
-2. [Manual](https://litexlang.com/doc/Manual/Manual_Introduction)
+2. [Manual](https://litexlang.com/doc/Manual#manual-introduction)
 3. [Tutorial](https://litexlang.com/doc/Tutorial/Introduction)
 4. [Open Source Language Implementation](https://github.com/litexlang/golitex)
 5. [Related Textbooks, Examples, Implementation Notes, and Experimental Materials](https://github.com/litexlang/golitex)
