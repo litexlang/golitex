@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Inference
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Inference.md
 
+_The more I think about language, the more it amazes me that people ever understand each other at all._
+
+_- Kurt Gödel_
+
 Verification answers the question: **can this fact be proved now?**
 
 Inference happens after that. Once a fact is verified or introduced by `know`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.

@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Proof_Process
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Proof_Process.md
 
+_Beware of bugs in the above code; I have only proved it correct, not tried it._
+
+_- Donald Knuth_
+
 A Litex proof is built from facts you claim one after another. After a fact is proved, it becomes known information for proving the next facts.
 
 This page explains how one fact gets proved. The process is designed to stay close to ordinary mathematical thinking: first check that expressions make sense, then try direct mathematical rules, reuse known facts, and instantiate known universal facts when their shape matches the goal.

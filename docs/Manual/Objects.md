@@ -6,6 +6,9 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Objects
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Objects.md
 
+_The whole is greater than the sum of its parts._
+
+_— Aristotle_
 
 ## Objects as sets
 
