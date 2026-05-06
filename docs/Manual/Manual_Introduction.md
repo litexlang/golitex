@@ -4,6 +4,8 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Manual_Introductio
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Manual_Introduction.md
 
+> **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion about the mathematical philosophy behind it.
+
 This manual explains how Litex reads and checks mathematical proof scripts. The main idea is simple: a piece of Litex code introduces mathematical objects, states facts about them, checks those facts, and stores the successful facts for later use.
 
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the language so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
