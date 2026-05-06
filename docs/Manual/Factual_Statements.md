@@ -17,7 +17,7 @@ Once a factual statement is verified, it becomes a **known fact** in the current
 
 This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `know`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual/Statements).
 
-For a step-by-step view of how a statement becomes atomic goals, how those goals are verified, and what happens after a fact is stored, see [Proof Process](Proof_Process.md).
+This page mainly lists the **types of facts** Litex can read and how they are shaped. For how those facts are actually proved by the checker, read [Proof Process](https://litexlang.com/doc/Manual/Proof_Process) and [Builtin Verification Rules](https://litexlang.com/doc/Manual/Builtin_Verification_Rules).
 
 ---
 
@@ -67,7 +67,16 @@ Different fact shapes are verified in different ways, but they all reduce to the
 
 ## Atomic facts
 
-An **atomic fact** is one indivisible mathematical claim. It has one main relation(predicate like equality, order, membership, etc.), plus its arguments.
+An **atomic fact** is one indivisible mathematical claim. It is made from a **predicate** and its **arguments**. The predicate is the judgment being made; the arguments are the objects being judged. Some predicates are built into Litex because they correspond to basic mathematical ideas, such as equality `=`, order `>`, membership `$in`, subset `$subset`, and set predicates like `$is_set`.
+
+If [Objects](https://litexlang.com/doc/Manual/Objects) are the mathematical things you talk about, predicates are the basic ways to make judgments about them. In ordinary mathematical language, they are the verbs of small facts:
+
+```text
+1 + 1       // an object
+1 + 1 = 2   // a fact
+2           // an object
+2 $in N     // a fact
+```
 
 Common atomic facts:
 
