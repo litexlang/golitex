@@ -1,5 +1,7 @@
 # Litex vs Lean: Basic Math
 
+Jiachen Shen and The Litex Team, 2026-05-06. Email: litexlang@outlook.com
+
 Try all snippets in browser: https://litexlang.com/doc/Litex_vs_Lean/Basic_Math
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean/Basic_Math.md
