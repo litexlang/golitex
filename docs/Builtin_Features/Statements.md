@@ -168,7 +168,19 @@ Use **`case`** branches when the formula for a function depends on conditions.
 have fn g(z R) R :
     case z = 2: 3
     case z != 2: 4
-do_nothing
+
+forall z R:
+    g(z) $in R
+
+forall z R:
+    z = 2
+    =>:
+        g(z) = 3
+
+forall z R:
+    z != 2
+    =>:
+        g(z) = 4
 ```
 
 > Hint: the cases should cover the domain you intend to use.
@@ -226,21 +238,29 @@ have fn by induc from 0: h(x Z: x >= 0) R:
 
 ---
 
-## Local definition (`let`)
+## Object definition without  (`let`)
 
-Use **`let`** to introduce local names together with assumptions or definitions about them. The names are local to the surrounding proof or block.
+Use **`let`** to introduce names together with assumptions or definitions about them. The names are local to the surrounding proof or block.
 
 ```litex
 let a R:
     a = 1
 a = 1
+
+let b, c R: b < c
+
+b < c
 ```
+
+> Hint: `let` and `know` both introduce new facts without verification. Litex allows this and warns you because these statements are useful when you intentionally add axioms or temporary assumptions, but abusing them can make the system unsound. In most cases, do not use them; use `have`, a bare fact, or `claim` when you want Litex to verify the reasoning.
 
 ---
 
 ## Parametric family (`family`)
 
 **`family name(params) = …`** defines a parameterized set or function space; instantiate it with **`\pf(R)`**-style syntax (backslash then the family name and arguments).
+
+A `family` is different from a function introduced by `have fn`. A function is an object that takes input values. A `family` is a template for building an object, usually a set or a function space. Because it is only a template, its parameters can use forms such as `s set`. Each time you write `\self_seq(R)`, Litex substitutes `R` for `s` in the right-hand side of the family definition and uses the resulting object.
 
 ```litex
 family self_seq(s set) = fn(x N_pos) s
@@ -255,6 +275,10 @@ forall a \self_seq(R):
 ## Algorithm and evaluation (`algo` / `eval`)
 
 **`algo m(x):`** gives an executable presentation of a function (often parallel to **`have fn`**). **`eval m(…)`** runs that algorithm on concrete inputs to simplify results.
+
+An `algo` is not the same as a function in a programming language such as Python. When you define an `algo`, Litex checks that the case flow really matches the function facts you have given. In the example below, the two cases must agree with the definition of `m`.
+
+`algo` also does not compute by floating-point approximation. It works with exact symbolic arithmetic, so the current evaluator only supports operations such as `+`, `-`, `*`, and integer powers.
 
 ```litex
 have fn m(x N_pos) R:
@@ -292,11 +316,15 @@ eval g(3)
 g(3) = 3
 ```
 
+> Hint: Like algorithms in ordinary programming languages, an `algo` can still run forever during evaluation if its recursive calls do not terminate.
+
 ---
 
 ## Claim (`claim`)
 
 **`claim:`** states a goal and bundles a sub-proof (and optional lemmas) that establishes it.
+
+The point of `claim` is that the proof process does not enter the main environment. The temporary facts used inside the proof stay inside the claim; only the final fact you wanted to prove is added to the surrounding context.
 
 ```litex
 claim:
@@ -316,9 +344,20 @@ claim:
 
 **`know:`** (or **`know`** with a block) adds lemmas or axioms to the current environment without proving them in this snippet.
 
+> Hint: `know` is an axiom-like statement. Litex allows it and warns you, but in most ordinary proofs you should prefer facts that Litex verifies directly, or use `claim` to prove a fact in a sub-proof before adding it to the context.
+
 ```litex
+# three primitive terms:
+have point nonempty_set
+have line nonempty_set
+have plane nonempty_set
+
+# All elements on a line or a plane are points (power_set: the set of all subsets of a set)
 know:
-    1 = 1
+    forall l line:
+        l $in power_set(point)
+    forall pl plane:
+        pl $in power_set(point)
 ```
 
 ---
@@ -327,6 +366,8 @@ know:
 
 **`prove:`** opens a lemma or sub-proof: a nested list of statements closed before the parent continues.
 
+It does not affect the outside environment at all. You can think of it as a scratch space for checking a piece of reasoning: facts introduced or proved inside the `prove` block disappear when the block ends.
+
 ```litex
 prove:
     2 = 2
@@ -334,18 +375,23 @@ prove:
 
 ---
 
-## Import and run file
+## run file
 
-**`import "path.lit"`** pulls another file into scope. **`run_file "path.lit"`** runs a file as a separate episode. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects.
+**`run_file "path.lit"`** runs a file as a separate episode. Paths and project layout decide what works in your setup; use the same quoting style your toolchain expects.
+
+```text
+run_file "local_path_to_file.lit"
+```
 
 ---
 
 ## No-op (`do_nothing`)
 
-A trivial proof step (placeholder or explicit skip).
+A trivial proof step (placeholder or explicit skip). Write `do_nothing` or `...` to skip a proof step.
 
 ```litex
 do_nothing
+...
 ```
 
 ---
@@ -373,7 +419,9 @@ a = 2
 Besides algorithms, **`eval expr`** can reduce closed expressions according to evaluation rules.
 
 ```litex
-eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]]
+eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
+
+eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})}) # sum of a sum
 ```
 
 ---
@@ -382,11 +430,16 @@ eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]]
 
 **`witness exist … from …:`** supplies explicit values and a sub-proof that they satisfy the existential body, concluding **`exist …`**.
 
+Existence proofs are often used together with `have by exist`: first prove that some object exists, then name the witness so later lines can use an object with the stated properties.
+
 ```litex
 witness exist x, y R st {x > y} from 1, 0:
     1 > 0
 
 exist a, b R st {a > b}
+
+have by exist x, y R st {x > y}: w
+w > 0
 ```
 
 ---
@@ -396,10 +449,8 @@ exist a, b R st {a > b}
 Shows a set is nonempty by naming a member and proving membership.
 
 ```litex
-have s set
-
-witness $is_nonempty_set(s) from 1:
-    know 1 $in s
+witness $is_nonempty_set({1, 2, 3}) from 1:
+    1 $in {1, 2, 3}
 
 $is_nonempty_set(s)
 ```
@@ -535,82 +586,6 @@ by extension:
 {1, 2} = {2, 1}
 ```
 
----
-
-## Function membership (`by fn`)
-
-Uses the graph-style characterization of a function value in a function space.
-
-```litex
-have fn f(x R) R = 1
-
-by fn: f
-```
-
----
-
-## Instantiate a family (`by family`)
-
-Introduces a **`family`** instance after checking the defining **`forall`** pattern.
-
-```litex
-family pf(a set) = fn(x a) a
-
-forall a \pf(R):
-    a $in fn(y R) R
-    a(1) = a(1)
-
-by family: \pf(R)
-```
-
----
-
-## Tuple reasoning (`by tuple`)
-
-Structured reasoning on a tuple (components, product typing).
-
-```litex
-let u set:
-    u = (2, 3)
-
-by tuple: u
-```
-
----
-
-## Function-set membership (`by fn set`)
-
-Proves that a value lives in a **`fn(… ) …`** function set by exhibiting the graph-style axioms (domain, existence of witnesses, uniqueness).
-
-```litex
-let s set
-
-know:
-    forall u s:
-        u $in cart(R, Q, Z)
-        tuple_dim(u) = 3
-
-    forall u s:
-        exist x R, y Q, z Z st {x > y, x > 2, u = (x, y, z)}
-
-    forall x R, y Q:
-        x > y
-        x > 2
-        =>:
-            exist u s, z Z st {u = (x, y, z)}
-
-    forall u, v s:
-        u $in cart(R, Q, Z)
-        v $in cart(R, Q, Z)
-        u[1] = v[1]
-        u[2] = v[2]
-        =>:
-            u = v
-
-by fn set: s $in fn(x R, y Q: x > y, x > 2) Z
-
-s(100, 99) = s(100, 99)
-```
 
 ---
 
@@ -630,6 +605,21 @@ have x closed_range(a, a + 10)
 
 by enumerate a...a + 10: x
 ```
+
+---
+
+## Set-theoretic bridge tactics (`by fn`, `by family`, `by tuple`, `by fn set`)
+
+These statements are usually not the most useful things to write in ordinary proofs. They exist mainly so every object that appears in Litex has a definite set-theoretic meaning. For example, a function is represented by graph-style facts, a tuple by its components and product typing, and a `family` instance by substituting arguments into its template.
+
+| Statement | What it connects to |
+|-----------|---------------------|
+| `by fn: f` | The graph-style facts behind a known function `f` |
+| `by family: \pf(R)` | The object obtained by substituting `R` into a `family` template |
+| `by tuple: u` | The set-theoretic structure of a tuple object |
+| `by fn set: s $in fn(...) ...` | The graph-style conditions that make a set behave as a function |
+
+> Hint: Most users do not need these statements at first. They are mainly semantic bridge tools: useful when you need to expose the set-theoretic object behind a Litex surface form.
 
 ---
 
@@ -663,13 +653,10 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by cases` | Prove a goal by splitting into cases |
 | `by contra` | Prove by contradiction |
 | `by enumerate finite_set` | Check a finite list of cases |
-| `by enumerate lo...hi` | Check a finite integer interval |
+| `by enumerate n...m` | Check a finite integer interval `n <= x <= m` |
 | `by induc` | Prove a statement by induction |
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
-| `by fn` | Use the graph facts of a known function |
-| `by fn set` | Prove membership in a function set |
-| `by family` | Use a parameterized family instance |
-| `by tuple` | Use tuple structure and components |
+| `by fn` / `by fn set` / `by family` / `by tuple` | Expose the set-theoretic meaning behind function, family, and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
