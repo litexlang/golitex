@@ -74,5 +74,5 @@ If you are reading the manual to understand how Litex works, start with the thin
 **How Litex executes code**
 
 1. [Statements](https://litexlang.com/doc/Manual/Statements): what each statement does when it is executed.
-2. [Builtin Inference](https://litexlang.com/doc/Manual/Builtin_Inference): the extra execution step for accepted facts, adding consequences so later statements can use a richer context.
+2. [Inference](https://litexlang.com/doc/Manual/Inference): the extra execution step for accepted facts, adding consequences so later statements can use a richer context.
 

@@ -4,129 +4,60 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Builtin_Verificati
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Builtin_Verification_Rules.md
 
+Builtin verification rules are the mathematical patterns Litex can use to close a goal while checking a fact. They are part of the verification phase, before a fact is stored.
 
-The checker can close some **atomic** goals without a user `prove` step, using built-in algebraic and logical steps. **Equalities** are handled mainly by evaluation, normalization, and laws in the sections below. **Comparisons** (`<`, `<=`, `>`, `>=`, and related negations), **membership** in standard number sets, **subset** claims, **non-equality**, and several **type** predicates are handled by a different style of reasoning: facts about signs and nonnegative expressions, monotonicity of `+`, `-`, `*`, `/` under the usual side conditions for real variables, properties of `abs`, and—when both sides are explicit fractions with nonzero denominators—clearing denominators to compare numerators.
+The main idea is simple: if a goal uses builtin predicates and builtin objects, and it matches a mathematical pattern Litex knows, Litex can close it without asking the user to write a separate theorem.
 
-These rules run while Litex is proving the current goal. They are separate from [Builtin Inference](Builtin_Inference.md), which runs after a fact has already been accepted. For the full flow around atomic goals, see [Proof Process](Proof_Process.md).
+For the full flow around goals, storage, and inference, see [Proof Process](https://litexlang.com/doc/Manual/Proof_Process).
 
-## Equalities
+---
 
-### Must-Know
-Pure numeric goal: reduce both sides with `+ - * / ^` (natural exponents) and compare; no free variables needed.
+## How To Read This Page
+
+This page is not something to memorize. It is a map of common builtin patterns, and you can read it casually when you want to know what Litex can close automatically.
+
+Most examples are real `litex` snippets. They are meant to show the shape of facts Litex can verify automatically. The checker may use several smaller rules internally, but the user-facing experience is that the fact just closes.
+
+There are many entries here because basic mathematical concepts have many simple pairwise relationships. Each relationship is usually easy, but the total number of combinations is large. One of Litex's main design choices is to build in many of these simple-but-numerous relationships. The result is that user code can stay closer to everyday mathematical writing without giving up runtime speed.
+
+When a rule does not apply, the usual fix is to write an intermediate fact that makes the goal look more like one of these patterns.
+
+---
+
+## Equality Rules
+
+Equality goals are mainly handled by evaluation, normalization, structural matching, and standard algebraic identities.
+
+### Numeric Evaluation
+
+Pure numeric goals are reduced and compared.
 
 ```litex
 2 + 3 * 4 = 14
 ```
 
-Integer remainder: when `%` has concrete integer operands, evaluation follows ordinary integer remainder.
+Integer remainder with concrete operands is evaluated directly.
 
 ```litex
 4 % 2 = 0
 ```
 
-Symbolic polynomial identity: normalize equivalent ring expressions (here over `R`) until both sides match.
+Rational equalities can close by the rational pipeline, which is morally cross-multiplication under valid denominators.
+
+```litex
+2 / 3 = 4 / 6
+```
+
+### Algebraic Normalization
+
+Equivalent polynomial expressions over ordinary number domains can normalize to the same form.
 
 ```litex
 forall a, b R:
     (a + b)^2 = a^2 + a*b + b^2 + b*a
 ```
 
-Rational equality: with valid denominators, prove `a/b = c/d` via cross-multiplication `a*d = b*c` through the rational pipeline.
-
-```litex
-2 / 3 = 4 / 6
-```
-
-Numeric substitution: after `have ... = k`, the same name may be replaced by `k` when closing an equality.
-
-```litex
-have a R = 2
-a ^ 2 = 4
-```
-
-Named function application: with `have fn`, the checker instantiates the body at the given arguments and compares to the other side.
-
-```litex
-have fn f(x R) R = x + 1
-f(2) = 3
-```
-
-### Parametric families (`family`)
-
-A parameterized `family`…`=` definition expands to the corresponding `fn(...)` function space when you instantiate it (for example with `\name(R)`). Equalities between an instantiated family and that expanded `fn` can be closed once parameters match.
-
-```litex
-prove:
-    family p(a set) = fn(x a) a
-    \p(R) = fn(x R) R
-```
-
-### Anonymous function application
-
-Applying an anonymous function head substitutes the actual arguments into its body; the result is compared like any other equality.
-
-```litex
-'R(x){x + 1}(2) = 3
-```
-
-### Absolute Value Rules
-If `x` is nonnegative, the checker can justify `abs(x) = x` after checking `0 <= x`.
-
-```litex
-forall x R:
-    0 <= x
-    =>:
-        abs(x) = x
-```
-
-If `x` is nonpositive, `abs(x)` matches `-x`; the right-hand side may normalize to `-1 * x` (and similar shapes are accepted).
-
-```litex
-forall x R:
-    x <= 0
-    =>:
-        abs(x) = -x
-```
-
-Product inside the absolute value splits as `abs(x*y) = abs(x)*abs(y)` as an algebraic identity.
-
-```litex
-forall x, y R:
-    abs(x * y) = abs(x) * abs(y)
-```
-
-For the same even integer exponent on both sides, `x` and `abs(x)` give the same power.
-
-```litex
-forall x R:
-    x^4 = abs(x)^4
-```
-
-From a known equality `abs(x) = 0`, the checker concludes `x = 0`.
-
-```litex
-forall x R:
-    abs(x) = 0
-    =>:
-        x = 0
-```
-
-### Power and Algebraic Context Rules
-Exponent one: rewrite `a^1` to `a` once the power is well-formed.
-
-```litex
-forall a R:
-    a^1 = a
-```
-
-Exponent addition: for positive-integer exponents `m, n` in `N_pos`, merge `a^(m+n)` with `a^m * a^n` when the law applies.
-
-```litex
-forall a R, m, n N_pos:
-    a^(m + n) = a^m * a^n
-```
-
-Same outer operation on both sides: if each matching argument pair is provably equal (here from `x = y`), the whole expressions are equal.
+Same-head expressions can be proved equal when their corresponding arguments are equal.
 
 ```litex
 forall x, y R:
@@ -135,19 +66,98 @@ forall x, y R:
         (x + 1) * (x + 1) = (y + 1) * (y + 1)
 ```
 
-**Structural equality:** the same “matching head, equal arguments” principle extends to other composite heads (matrices, `max` / `min`, binary set operators, etc.) whenever both sides are the same kind of expression and corresponding sub-expressions are equal.
+The same structural idea applies to many composite objects: matrices, `max`, `min`, set operations, tuples, and other builtin object heads.
 
-### Zero from subtraction and from powers
+### Known Numeric Values
 
-A literal `0` opposite a difference `x - y` closes when `x` and `y` are known equal (either side may carry the subtraction).
+After a name is known to equal a concrete number, Litex can resolve that name when checking later equalities.
+
+```litex
+have a R = 2
+a ^ 2 = 4
+```
+
+This is why facts like `x = 2` are so useful: they make later expressions involving `x` calculable.
+
+### Functions And Families
+
+For a named function introduced by `have fn`, Litex can instantiate the function body at the given arguments.
+
+```litex
+have fn f(x R) R = x + 1
+f(2) = 3
+```
+
+Anonymous functions behave the same way: applying the function substitutes the argument into the body.
+
+```litex
+'R(x){x + 1}(2) = 3
+```
+
+A parameterized `family` expands to the object it defines when instantiated.
 
 ```litex
 prove:
-    have x R = 5
-    x - x = 0
+    family p(a set) = fn(x a) a
+    \p(R) = fn(x R) R
 ```
 
-If one side is `0` and the other is `a^n`, with **`n` a positive integer literal** and `a` in question, the goal reduces to `a = 0`.
+### Absolute Value
+
+Litex knows the usual absolute-value cases.
+
+```litex
+forall x R:
+    0 <= x
+    =>:
+        abs(x) = x
+```
+
+```litex
+forall x R:
+    x <= 0
+    =>:
+        abs(x) = -x
+```
+
+It also knows common algebraic identities involving `abs`.
+
+```litex
+forall x, y R:
+    abs(x * y) = abs(x) * abs(y)
+```
+
+```litex
+forall x R:
+    x^4 = abs(x)^4
+```
+
+If `abs(x) = 0` is known, Litex can conclude `x = 0`.
+
+```litex
+forall x R:
+    abs(x) = 0
+    =>:
+        x = 0
+```
+
+### Powers
+
+Exponent one simplifies to the base.
+
+```litex
+forall a R:
+    a^1 = a
+```
+
+Positive integer exponents can use the usual exponent-addition law.
+
+```litex
+forall a R, m, n N_pos:
+    a^(m + n) = a^m * a^n
+```
+
+If a positive literal power is zero, Litex can reduce the goal to the base being zero.
 
 ```litex
 prove:
@@ -157,9 +167,17 @@ prove:
             a ^ 3 = 0
 ```
 
-### Logarithm Rules
+A difference against literal zero can close when the two sides are known equal.
 
-Inverse of `a^b` at the same base: `log(a, a^b) = b` when the power and `log` are well-defined.
+```litex
+prove:
+    have x R = 5
+    x - x = 0
+```
+
+### Logarithms
+
+Logarithm rules follow the standard inverse and algebra laws, with well-definedness and domain conditions checked first.
 
 ```litex
 forall a, b R_pos:
@@ -167,8 +185,6 @@ forall a, b R_pos:
     =>:
         log(a, a^b) = b
 ```
-
-Base raised to a power: change-of-base style step `log(a^b, c)` vs `log(a, c) / b` (subject to log domain constraints).
 
 ```litex
 forall a, b, c R_pos:
@@ -178,16 +194,12 @@ forall a, b, c R_pos:
         log(a^b, c) = log(a, c) / b
 ```
 
-Argument raised to a power: pull the exponent out as `b * log(a, x)` on the matching side.
-
 ```litex
 forall a, x, b R_pos:
     a != 1
     =>:
         log(a, x^b) = b * log(a, x)
 ```
-
-Log of a product: split `log(a, x*y)` into the sum of the two logs with the same base.
 
 ```litex
 forall a, x, y R_pos:
@@ -196,16 +208,12 @@ forall a, x, y R_pos:
         log(a, x * y) = log(a, x) + log(a, y)
 ```
 
-Log of a quotient: `log(a, x/y)` becomes the difference of the logs.
-
 ```litex
 forall a, x, y R_pos:
     a != 1
     =>:
         log(a, x / y) = log(a, x) - log(a, y)
 ```
-
-From `a^c = b`, conclude `log(a, b) = c` (log as the inverse of exponentiation, with `a`, `b` positive and `a != 1`).
 
 ```litex
 forall a, b R_pos, c R:
@@ -215,58 +223,46 @@ forall a, b R_pos, c R:
         log(a, b) = c
 ```
 
-### Sum and Product Rules
-Sum of sums: if over the same index range the summand splits pointwise (`f = g + h`), the outer `sum` splits into a sum of two `sum`s.
+### Finite Sums And Products
+
+Litex has builtin rules for common finite `sum` and `product` shapes: splitting summands, concatenating adjacent ranges, peeling the last term, tiling a range, reindexing by a constant shift, and summing a constant body.
 
 ```litex
 sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
 ```
 
-Concatenate ranges: `sum(a..b) + sum((b+1)..c)` with the same unary summand equals `sum(a..c)` when endpoints line up.
-
 ```litex
 sum(1, 3, '(x Z) Z {x + x}) + sum(4, 6, '(x Z) Z {x + x}) = sum(1, 6, '(x Z) Z {x + x})
 ```
-
-Peel last index off a sum: `sum(s..e,f)` equals `sum(s..e-1,f)` plus the summand at `e` (same unary `f`).
 
 ```litex
 sum(1, 3, '(x Z) Z {x}) = sum(1, 2, '(x Z) Z {x}) + '(x Z) Z {x}(3)
 ```
 
-Same peeling rule for finite products, with `*` and the last factor at `e`.
-
 ```litex
 product(1, 3, '(x Z) Z {x}) = product(1, 2, '(x Z) Z {x}) * '(x Z) Z {x}(3)
 ```
-
-Partition a closed range: sum over `[start,end]` equals a left-associated chain of shorter sums that tile the interval with gaps `end_i + 1 = start_{i+1}`, same `f` on each piece.
 
 ```litex
 sum(1, 10, '(x Z) Z {x}) = sum(1, 3, '(x Z) Z {x}) + sum(4, 8, '(x Z) Z {x}) + sum(9, 10, '(x Z) Z {x})
 ```
 
-The same “tiling” step exists for **products**: multiply the `product` over each sub-interval, with the same unary factor on each piece.
-
 ```litex
 product(1, 10, '(x Z) Z {x}) = product(1, 3, '(x Z) Z {x}) * product(4, 8, '(x Z) Z {x}) * product(9, 10, '(x Z) Z {x})
 ```
 
-Reindex by a constant shift: if both bounds move by the same `k`, reduce to pointwise equality of the summands on the right-hand index interval.
-
 ```litex
 sum(1, 3, '(x Z) Z {x}) = sum(2, 4, '(x Z) Z {x - 1})
 ```
-
-Constant summand: if the body does not use the index, the sum over `[s,e]` is `(e-s+1)` times that constant (here laid out arithmetically).
 
 ```litex
 have c Z
 sum(1, 3, '(x Z) Z {c}) = ((3 - 1) + 1) * c
 ```
 
-### Mod Congruence Rules
-Zero remainder: for nonzero modulus `m`, `0 % m` is `0` (this also agrees with purely numeric evaluation of `%`).
+### Modular Arithmetic
+
+Concrete `%` expressions are evaluated when possible. Litex also knows common congruence patterns.
 
 ```litex
 forall m Z:
@@ -275,8 +271,6 @@ forall m Z:
         0 % m = 0
 ```
 
-Congruence with sum: matching residue equalities for the summands mod `m` imply the same residue for the sums mod `m`.
-
 ```litex
 forall x1, x2, y1, y2 Z, m N_pos:
     x1 % m = x2 % m
@@ -284,8 +278,6 @@ forall x1, x2, y1, y2 Z, m N_pos:
     =>:
         (x1 + y1) % m = (x1 % m + y1 % m) % m = (x2 % m + y2 % m) % m = (x2 + y2) % m
 ```
-
-Congruence with difference: the same idea applies to differences inside `% m`.
 
 ```litex
 forall x1, x2, y1, y2, m Z:
@@ -296,8 +288,6 @@ forall x1, x2, y1, y2, m Z:
         (x1 - y1) % m = (x2 - y2) % m
 ```
 
-Congruence with product: same pattern for products inside `% m` on both sides.
-
 ```litex
 forall x1, x2, y1, y2, m Z:
     m != 0
@@ -307,22 +297,22 @@ forall x1, x2, y1, y2, m Z:
         (x1 * y1) % m = (x2 * y2) % m
 ```
 
-Nested modulus with the **same** `m`: taking `% m` twice is redundant; `(x % m) % m` matches `x % m`.
+Taking `% m` twice with the same `m` is redundant.
 
 ```litex
 prove:
     (5 % 7) % 7 = 5 % 7
 ```
 
-When one side has an extra outer `% m` on part of the other (after associating nested remainders), the checker may **peel** that outer layer and reduce to a simpler residue equality (often so the sum/product congruence rules apply).
+---
 
-## Order and comparison
+## Order And Comparison Rules
 
-Ordering goals (`<`, `<=`, `>`, `>=`, and related `not` forms) are **not** handled by the same steps as equalities above.
+Order goals use sign reasoning, monotonicity, standard number-set facts, and fraction comparison.
 
-### Literals and reflexivity
+### Numeric Comparisons
 
-Concrete numeric inequalities after evaluation, and reflexivity `a <= a`.
+Concrete numeric inequalities are evaluated directly.
 
 ```litex
 1 < 2
@@ -332,16 +322,16 @@ Concrete numeric inequalities after evaluation, and reflexivity `a <= a`.
 2 <= 2
 ```
 
-### Fractions (clearing denominators)
-
-When both sides are written as fractions with **nonzero** evaluated denominators, the checker may compare by cross-multiplying numerators (equivalent to a common denominator), in line with the usual order of rationals.
+When both sides are explicit fractions with nonzero denominators, Litex may compare by clearing denominators.
 
 ```litex
 prove:
     1 / 2 < 3 / 4
 ```
 
-### Bounds from `N` and `N_pos`
+### Bounds From Number Sets
+
+Litex knows basic order facts about `N` and `N_pos`.
 
 ```litex
 forall n N_pos:
@@ -353,16 +343,12 @@ forall n N:
     0 <= n
 ```
 
-From `n $in N` and `n != 0`, a nonnegative integer not equal to zero is at least `1` (equivalently `N_pos` as a subset of `N` characterized by `n != 0`).
-
 ```litex
 forall x N:
     x != 0
     =>:
         1 <= x
 ```
-
-Conversely, from `n $in N` and `1 <= n`, conclude `n != 0`.
 
 ```litex
 forall x N:
@@ -371,9 +357,9 @@ forall x N:
         x != 0
 ```
 
-### Nonnegative sums (long chains)
+### Sums, Products, Quotients, And Powers
 
-From `0 <=` on each summand, close `0 <=` on a left-associated sum (works for more than two terms).
+Nonnegative or positive parts can make a larger expression nonnegative or positive.
 
 ```litex
 forall a, b R:
@@ -392,8 +378,6 @@ let a, b, c R:
 0 <= a + b + c
 ```
 
-### Positive / strict addition
-
 ```litex
 forall a, b R:
     0 < a
@@ -409,10 +393,6 @@ forall a, b, c R:
     =>:
         a < b + c
 ```
-
-### Nonnegative products, quotients, and powers
-
-Typical `0 <= …` / `0 < …` steps for `*`, `/`, and `^` when variables range over `R`, assuming the expressions are well-defined and the usual sign constraints hold (nonnegative factors where required, positive denominator for strict order through division, etc.).
 
 ```litex
 0 <= 3 * 2
@@ -435,7 +415,9 @@ forall a R:
 0 < 2 ^ 3
 ```
 
-### Weak order: combine inequalities (algebra)
+### Combining Inequalities
+
+Litex knows standard monotonicity patterns for addition, subtraction, multiplication by a nonnegative value, and division by a positive value.
 
 ```litex
 forall a, b, c, d R:
@@ -481,7 +463,9 @@ prove:
     a / c < b / c
 ```
 
-### Sign flips with `(-1) *`
+### Sign Flips And Absolute Value
+
+Multiplying by `-1` flips the sign in the usual way.
 
 ```litex
 forall x R:
@@ -490,7 +474,7 @@ forall x R:
         0 <= -1 * x
 ```
 
-### Absolute value versus order
+Litex also knows the standard order properties of `abs`.
 
 ```litex
 forall x R:
@@ -525,9 +509,23 @@ forall x, y R:
     abs(x) - abs(y) <= abs(x + y)
 ```
 
-## Membership (standard number sets)
+### Disequality
 
-Literals (and many arithmetic combinations of literals) can be checked against `R`, `Q`, `N`, `N_pos`, and related standard sets.
+Disequalities such as `!=` can close when numeric or ordering information rules out equality.
+
+```litex
+2 != 3
+```
+
+---
+
+## Membership Rules
+
+Membership goals are checked by evaluating the object and recognizing standard set shapes.
+
+### Standard Number Sets
+
+Concrete literals and many arithmetic combinations of literals can be checked against standard number sets.
 
 ```litex
 1 $in N_pos
@@ -537,62 +535,54 @@ Literals (and many arithmetic combinations of literals) can be checked against `
 1 + 1 $in N
 ```
 
-### Non-membership
-
-Negated membership `not x $in S` for a standard set `S` is checked for concrete numeric `x` by comparing membership in the same way, when evaluation resolves `x` to a normalized decimal.
+Negated membership in a standard set can close for concrete numeric values.
 
 ```litex
 prove:
     not (-1) $in N
 ```
 
-### `max` / `min` in a cone
+### Numeric Cones And `max` / `min`
 
-If `max(a,b)` or `min(a,b)` is asserted inside a standard **one-sided** number cone (`R_pos`, `R_neg`, `N`, `N_pos`, etc.), the checker may close the goal when **both** operands are already known to lie in that same cone.
+If `max(a,b)` or `min(a,b)` is asserted inside a standard one-sided number cone, Litex may close the goal when both operands are already known to lie in that same cone.
 
 ```litex
 prove:
     max(2, 3) $in R_pos
 ```
 
-### Finite `sum` / `product` in `R`
+### Finite Sums And Products
 
-A finite `sum` or `product` over an integer range is treated as a real once the indexed expression is well-defined under the usual rules.
+A finite `sum` or `product` over an integer range is treated as a real once the indexed expression is well-defined.
 
 ```litex
 prove:
     sum(1, 3, '(x Z) Z {x}) $in R
 ```
 
-## Inequality (not equal)
+---
 
-Disequalities such as `!=` can close when ordering or numeric facts already rule out equality.
+## Set Inclusion Rules
 
-```litex
-2 != 3
-```
-
-## Set inclusion
-
-Subset goals are equivalent to universal membership: every element of the left set lies in the right set.
+Subset goals are treated as universal membership: every element of the left set must lie in the right set.
 
 ```litex
 {1} $subset {1, 2}
 ```
 
-Claims involving superset and negated subset/superset can be related the same way; when a direct subset statement is clumsy, spell out the universal membership as in a manual proof.
+Superset and negated subset or superset claims are related to the same membership idea. When a direct subset statement is clumsy, write the universal membership fact explicitly as in an ordinary proof.
 
-## Other type predicates
+---
 
-The checker treats syntactic set forms as sets.
+## Type Predicate Rules
+
+Type predicates recognize standard object shapes.
 
 ```litex
 $is_set({1, 2})
 ```
 
-### Non-emptiness
-
-Nonempty **enumerated** sets, **standard** sets (such as `R`), integer **closed ranges** when the endpoints satisfy `start <= end`, **Cartesian products** when every factor is nonempty, nonempty **function spaces** `fn(...)` when the declared value set is nonempty, and similar shapes.
+Nonempty enumerated sets, standard sets such as `R`, integer closed ranges with valid endpoints, Cartesian products with nonempty factors, nonempty function spaces, and similar shapes can be recognized as nonempty.
 
 ```litex
 $is_nonempty_set({1})
@@ -608,14 +598,14 @@ prove:
     $is_nonempty_set(cart(R_pos, R_pos))
 ```
 
-A **negated** non-emptiness claim can be discharged for an **empty** enumeration `{}`.
+An empty enumeration proves negated non-emptiness.
 
 ```litex
 prove:
     not $is_nonempty_set({})
 ```
 
-Standard finite-set syntax.
+Finite-set syntax is recognized directly.
 
 ```litex
 $is_finite_set({1, 2})
@@ -631,9 +621,15 @@ $is_tuple((2, 3))
 $is_cart(cart(R, Q))
 ```
 
-## Function equality on a set (`$fn_eq_in`)
+---
 
-Pointwise equality on a domain: `$fn_eq_in(f, g, S)` means `forall x in S, f(x) = g(x)`. The checker reduces this to that quantified statement; you often expose the pointwise equalities first (including by unfolding `have fn` definitions).
+## Function Equality Rules
+
+Function equality rules reduce function equality to pointwise equality.
+
+### Equality On A Set
+
+`$fn_eq_in(f, g, S)` means that `f` and `g` agree on every input in `S`. The checker reduces the goal to the corresponding pointwise facts.
 
 ```litex
 have fn f(x R) R = x
@@ -645,15 +641,15 @@ forall x R:
 $fn_eq_in(f, g, R)
 ```
 
-Anonymous heads can be compared the same way when they denote the same map on `S`.
+Anonymous function heads can be compared the same way when they denote the same map on the set.
 
 ```litex
 $fn_eq_in('R(x){x}, 'R(y){y}, R)
 ```
 
-## Function equality from the function type (`$fn_eq`)
+### Equality From Function Type
 
-`$fn_eq(f, g)` is for values whose **function type** is given by the same `fn(...)` / `have fn` specification on both sides. After checking that the type data matches in both directions (parameters, domain conditions, declared value set), the goal is reduced to a parameterized `forall` proof that `f` and `g` agree on every argument tuple—similar in spirit to `$fn_eq_in`, but driven by the declared `fn` type rather than an explicit set `S`.
+`$fn_eq(f, g)` is for values whose function type is given by the same `fn(...)` or `have fn` specification on both sides. After checking that the type data matches, the goal reduces to a parameterized proof that `f` and `g` agree on every argument tuple.
 
 ```litex
 $fn_eq('R(x){x}, 'R(y){y})
@@ -667,4 +663,12 @@ forall x R:
 $fn_eq(f, g)
 ```
 
-Two **function-set** values written with the same `fn`…parameter list and body-shaped data can be proved equal when each side implies the other as a type (matching parameters, domain facts, and value set).
+Two function-set values written with the same `fn` parameter list and body-shaped data can be proved equal when each side implies the other as a type.
+
+---
+
+## Practical Advice
+
+Builtin verification works best when your goal is written in a familiar shape. If a mathematically true statement does not close, try adding a smaller intermediate fact: an equality, a sign condition, a membership fact, a nonzero denominator, or a pointwise fact for function equality.
+
+Also read the output message. It often tells you whether a fact was closed by builtin rules, a known fact, or a known `forall`.
