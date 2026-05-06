@@ -108,6 +108,13 @@ pub struct HaveFnEqualStmt {
     pub line_file: LineFile,
 }
 
+#[derive(Clone)]
+pub struct HaveFnByForallExistUniqueStmt {
+    pub fn_name: String,
+    pub forall: ForallFact,
+    pub line_file: LineFile,
+}
+
 // have by exist a R st {$p(a)}: a
 #[derive(Clone)]
 pub struct HaveByExistStmt {
@@ -320,6 +327,23 @@ impl fmt::Display for HaveFnEqualStmt {
             EQUAL,
             self.equal_to_anonymous_fn.equal_to
         )
+    }
+}
+
+impl HaveFnByForallExistUniqueStmt {
+    pub fn new(fn_name: String, forall: ForallFact, line_file: LineFile) -> Self {
+        HaveFnByForallExistUniqueStmt {
+            fn_name,
+            forall,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for HaveFnByForallExistUniqueStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {} {}", HAVE, FN_LOWER_CASE, self.fn_name, BY)?;
+        write!(f, " {}", self.forall)
     }
 }
 

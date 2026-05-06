@@ -182,6 +182,31 @@ impl Runtime {
             self.parse_have_fn_by_induc_stmt(tb)
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+            if tb.current_token_is_equal_to(BY) {
+                tb.skip_token(BY)?;
+                let lf = tb.line_file.clone();
+                let fact = self.parse_fact(tb)?;
+                let forall = match fact {
+                    Fact::ForallFact(ff) => ff,
+                    _ => {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                "have fn <name> by ... expects a `forall` fact".to_string(),
+                                lf,
+                            ),
+                        )));
+                    }
+                };
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "unexpected token after `have fn` `by` `forall` fact".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                return Ok(HaveFnByForallExistUniqueStmt::new(name, forall, lf).into());
+            }
 
             let fs = self.parse_fn_set_clause(tb)?;
             let fn_param_names = fs.collect_all_param_names_including_nested_ret_fn_sets();
@@ -235,12 +260,7 @@ impl Runtime {
                     fs.ret_set.clone(),
                     equal_to,
                 )?;
-                Ok(HaveFnEqualStmt::new(
-                    name,
-                    equal_to_anonymous_fn,
-                    tb.line_file.clone(),
-                )
-                .into())
+                Ok(HaveFnEqualStmt::new(name, equal_to_anonymous_fn, tb.line_file.clone()).into())
             }
         }
     }

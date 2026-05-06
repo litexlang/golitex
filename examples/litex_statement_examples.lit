@@ -291,22 +291,23 @@ prove:
 
     know:
         forall u s:
-            u $in cart(cart(R, Q), Z)
-            tuple_dim(u) = 2
+            u $in cart(R, Q, Z)
+            tuple_dim(u) = 3
 
         forall u s:
-            exist x R, y Q, z Z st {x > y, x > 2, u = ((x, y), z)}
+            exist x R, y Q, z Z st {x > y, x > 2, u = (x, y, z)}
 
         forall x R, y Q:
             x > y
             x > 2
             =>:
-                exist u s, z Z st {u = ((x, y), z)}
+                exist u s, z Z st {u = (x, y, z)}
 
         forall u, v s:
-            u $in cart(cart(R, Q), Z)
-            v $in cart(cart(R, Q), Z)
+            u $in cart(R, Q, Z)
+            v $in cart(R, Q, Z)
             u[1] = v[1]
+            u[2] = v[2]
             =>:
                 u = v
 

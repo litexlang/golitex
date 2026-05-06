@@ -1,0 +1,279 @@
+use crate::prelude::*;
+use std::collections::HashMap;
+
+use super::exec_have_fn_equal_shared::build_function_obj_with_param_names;
+
+struct HaveFnByForallExistUniqueShape {
+    fn_set_clause: FnSetClause,
+    witness_name: String,
+    exist_body_facts: Vec<ExistBodyFact>,
+}
+
+impl Runtime {
+    pub fn exec_have_fn_by_forall_exist_unique_stmt(
+        &mut self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
+        let forall_fact: Fact = stmt.forall.clone().into();
+        self.verify_fact_return_err_if_not_true(&forall_fact, &VerifyState::new(0, false))
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+
+        let infer_result = self.exec_have_fn_by_forall_exist_unique_store_process(stmt, shape)?;
+
+        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
+    }
+
+    fn exec_have_fn_by_forall_exist_unique_store_process(
+        &mut self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+        shape: HaveFnByForallExistUniqueShape,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        let fn_set = self
+            .fn_set_from_fn_set_clause(&shape.fn_set_clause)
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+
+        self.store_free_param_or_identifier_name(&stmt.fn_name, ParamObjType::Identifier)
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+
+        let bind_infer = self
+            .define_parameter_by_binding_param_type(
+                &stmt.fn_name,
+                &ParamType::Obj(fn_set.clone().into()),
+                ParamObjType::Identifier,
+            )
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        let bind_fact: Fact = InFact::new(
+            Identifier::new(stmt.fn_name.clone()).into(),
+            fn_set.clone().into(),
+            stmt.line_file.clone(),
+        )
+        .into();
+        Self::merge_have_fn_by_forall_exist_unique_infer(&mut infer_result, bind_infer, &bind_fact);
+
+        let property_forall = self.have_fn_by_forall_exist_unique_property_forall(stmt, &shape)?;
+        let property_fact = self
+            .inst_have_fn_forall_fact_for_store(property_forall)
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        let property_infer = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                property_fact.clone(),
+            )
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        Self::merge_have_fn_by_forall_exist_unique_infer(
+            &mut infer_result,
+            property_infer,
+            &property_fact,
+        );
+
+        Ok(infer_result)
+    }
+
+    fn have_fn_by_forall_exist_unique_shape(
+        &self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Result<HaveFnByForallExistUniqueShape, RuntimeError> {
+        // Preconditions: the source forall must already be true; every forall parameter type must
+        // be an Obj; the forall must have exactly one then fact; that then fact must be an exist!;
+        // and the exist! must bind exactly one Obj-typed witness. Effect: define f as a set-theoretic
+        // function and store that f satisfies the witness body for each input.
+        let params_def_with_set = Self::param_groups_with_set_from_obj_param_defs(
+            stmt,
+            &stmt.forall.params_def_with_type,
+        )?;
+        if stmt.forall.then_facts.len() != 1 {
+            return Err(Self::have_fn_by_forall_exist_unique_msg(
+                stmt,
+                "forall must have exactly one then fact".to_string(),
+            ));
+        }
+
+        let exist_body = match &stmt.forall.then_facts[0] {
+            ExistOrAndChainAtomicFact::ExistFact(ExistFactEnum::ExistUniqueFact(body)) => body,
+            _ => {
+                return Err(Self::have_fn_by_forall_exist_unique_msg(
+                    stmt,
+                    "the only then fact must be an exist! fact".to_string(),
+                ));
+            }
+        };
+
+        if exist_body.params_def_with_type.number_of_params() != 1 {
+            return Err(Self::have_fn_by_forall_exist_unique_msg(
+                stmt,
+                "exist! must bind exactly one witness".to_string(),
+            ));
+        }
+
+        let mut witness_name = String::new();
+        let mut ret_set: Option<Obj> = None;
+        for group in exist_body.params_def_with_type.groups.iter() {
+            match &group.param_type {
+                ParamType::Obj(obj) => {
+                    if !group.params.is_empty() {
+                        witness_name = group.params[0].clone();
+                        ret_set = Some(obj.clone());
+                    }
+                }
+                _ => {
+                    return Err(Self::have_fn_by_forall_exist_unique_msg(
+                        stmt,
+                        "exist! witness type must be Obj".to_string(),
+                    ));
+                }
+            }
+        }
+
+        let ret_set = match ret_set {
+            Some(obj) => obj,
+            None => {
+                return Err(Self::have_fn_by_forall_exist_unique_msg(
+                    stmt,
+                    "exist! must bind exactly one witness".to_string(),
+                ));
+            }
+        };
+
+        let mut dom_facts = Vec::with_capacity(stmt.forall.dom_facts.len());
+        for dom_fact in stmt.forall.dom_facts.iter() {
+            dom_facts.push(Self::fn_set_dom_fact_from_fact(stmt, dom_fact)?);
+        }
+
+        for body_fact in exist_body.facts.iter() {
+            if matches!(body_fact, ExistBodyFact::InlineForall(_)) {
+                return Err(Self::have_fn_by_forall_exist_unique_msg(
+                    stmt,
+                    "exist! body cannot contain inline forall when defining a function".to_string(),
+                ));
+            }
+        }
+
+        Ok(HaveFnByForallExistUniqueShape {
+            fn_set_clause: FnSetClause::new(params_def_with_set, dom_facts, ret_set),
+            witness_name,
+            exist_body_facts: exist_body.facts.clone(),
+        })
+    }
+
+    fn have_fn_by_forall_exist_unique_property_forall(
+        &self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+        shape: &HaveFnByForallExistUniqueShape,
+    ) -> Result<ForallFact, RuntimeError> {
+        let forall_param_names = stmt.forall.params_def_with_type.collect_param_names();
+        let function_obj = build_function_obj_with_param_names(&stmt.fn_name, &forall_param_names);
+        let mut witness_map = HashMap::new();
+        witness_map.insert(shape.witness_name.clone(), function_obj);
+
+        let mut then_facts = Vec::with_capacity(shape.exist_body_facts.len());
+        for body_fact in shape.exist_body_facts.iter() {
+            let inst_body_fact = self
+                .inst_exist_body_fact(
+                    body_fact,
+                    &witness_map,
+                    ParamObjType::Exist,
+                    Some(&stmt.line_file),
+                )
+                .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+            then_facts.push(Self::then_fact_from_exist_body_fact(stmt, inst_body_fact)?);
+        }
+
+        ForallFact::new(
+            stmt.forall.params_def_with_type.clone(),
+            stmt.forall.dom_facts.clone(),
+            then_facts,
+            stmt.line_file.clone(),
+        )
+        .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))
+    }
+
+    fn param_groups_with_set_from_obj_param_defs(
+        stmt: &HaveFnByForallExistUniqueStmt,
+        param_defs: &ParamDefWithType,
+    ) -> Result<Vec<ParamGroupWithSet>, RuntimeError> {
+        let mut result = Vec::with_capacity(param_defs.groups.len());
+        for group in param_defs.groups.iter() {
+            match &group.param_type {
+                ParamType::Obj(obj) => {
+                    result.push(ParamGroupWithSet::new(group.params.clone(), obj.clone()));
+                }
+                _ => {
+                    return Err(Self::have_fn_by_forall_exist_unique_msg(
+                        stmt,
+                        "forall parameter types must all be Obj".to_string(),
+                    ));
+                }
+            }
+        }
+        Ok(result)
+    }
+
+    fn fn_set_dom_fact_from_fact(
+        stmt: &HaveFnByForallExistUniqueStmt,
+        fact: &Fact,
+    ) -> Result<OrAndChainAtomicFact, RuntimeError> {
+        match fact {
+            Fact::AtomicFact(a) => Ok(OrAndChainAtomicFact::AtomicFact(a.clone())),
+            Fact::AndFact(a) => Ok(OrAndChainAtomicFact::AndFact(a.clone())),
+            Fact::ChainFact(c) => Ok(OrAndChainAtomicFact::ChainFact(c.clone())),
+            Fact::OrFact(o) => Ok(OrAndChainAtomicFact::OrFact(o.clone())),
+            _ => Err(Self::have_fn_by_forall_exist_unique_msg(
+                stmt,
+                "forall domain facts must be usable as fn domain facts".to_string(),
+            )),
+        }
+    }
+
+    fn then_fact_from_exist_body_fact(
+        stmt: &HaveFnByForallExistUniqueStmt,
+        fact: ExistBodyFact,
+    ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
+        match fact {
+            ExistBodyFact::AtomicFact(a) => Ok(ExistOrAndChainAtomicFact::AtomicFact(a)),
+            ExistBodyFact::AndFact(a) => Ok(ExistOrAndChainAtomicFact::AndFact(a)),
+            ExistBodyFact::ChainFact(c) => Ok(ExistOrAndChainAtomicFact::ChainFact(c)),
+            ExistBodyFact::OrFact(o) => Ok(ExistOrAndChainAtomicFact::OrFact(o)),
+            ExistBodyFact::InlineForall(_) => Err(Self::have_fn_by_forall_exist_unique_msg(
+                stmt,
+                "exist! body cannot contain inline forall when defining a function".to_string(),
+            )),
+        }
+    }
+
+    fn merge_have_fn_by_forall_exist_unique_infer(
+        infer_result: &mut InferResult,
+        store_infer: InferResult,
+        fallback_fact: &Fact,
+    ) {
+        let empty = store_infer.is_empty();
+        infer_result.new_infer_result_inside(store_infer);
+        if empty {
+            infer_result.new_fact(fallback_fact);
+        }
+    }
+
+    fn have_fn_by_forall_exist_unique_msg(
+        stmt: &HaveFnByForallExistUniqueStmt,
+        msg: String,
+    ) -> RuntimeError {
+        short_exec_error(
+            stmt.clone().into(),
+            format!("have_fn_by_forall_exist_unique: {}", msg),
+            None,
+            vec![],
+        )
+    }
+
+    fn have_fn_by_forall_exist_unique_err(
+        stmt: &HaveFnByForallExistUniqueStmt,
+        cause: RuntimeError,
+    ) -> RuntimeError {
+        short_exec_error(
+            stmt.clone().into(),
+            "have_fn_by_forall_exist_unique failed".to_string(),
+            Some(cause),
+            vec![],
+        )
+    }
+}
