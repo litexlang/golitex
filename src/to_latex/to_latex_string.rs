@@ -979,6 +979,16 @@ impl HaveFnEqualStmt {
     }
 }
 
+impl HaveFnByForallExistUniqueStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \mathrm{{by}}\ {}",
+            latex_local_ident(&self.fn_name),
+            self.forall.to_latex_string()
+        )
+    }
+}
+
 impl HaveObjEqualStmt {
     pub fn to_latex_string(&self) -> String {
         let rhs = self
@@ -1512,13 +1522,6 @@ impl ParamType {
             ParamType::Set(_) => format!(r"\mathrm{{{}}}", SET),
             ParamType::NonemptySet(_) => format!(r"\mathrm{{{}}}", NONEMPTY_SET),
             ParamType::FiniteSet(_) => format!(r"\mathrm{{{}}}", FINITE_SET),
-            ParamType::Restrictive(fs) => format!(
-                r"\mathrm{{{}}} {}{}{}",
-                RESTRICTIVE,
-                "(",
-                Obj::FnSet(fs.clone()).to_latex_string(),
-                ")"
-            ),
             ParamType::Obj(o) => o.to_latex_string(),
         }
     }
@@ -1971,6 +1974,7 @@ impl Stmt {
             Stmt::HaveFnEqualStmt(x) => x.to_latex_string(),
             Stmt::HaveFnEqualCaseByCaseStmt(x) => x.to_latex_string(),
             Stmt::HaveFnByInducStmt(x) => x.to_latex_string(),
+            Stmt::HaveFnByForallExistUniqueStmt(x) => x.to_latex_string(),
             Stmt::DefFamilyStmt(x) => x.to_latex_string(),
             Stmt::DefAlgoStmt(x) => x.to_latex_string(),
             Stmt::ClaimStmt(x) => x.to_latex_string(),

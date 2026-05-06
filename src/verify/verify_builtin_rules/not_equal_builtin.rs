@@ -130,7 +130,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
             if sub.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_known_strict_order".to_string(),
@@ -156,7 +156,8 @@ impl Runtime {
             (l, r) if self.obj_represents_zero_for_not_equal_builtin_rules(l) => r.clone(),
             _ => return Ok(None),
         };
-        let in_n: AtomicFact = InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let in_n: AtomicFact =
+            InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
         if !self
             .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
             .is_true()
@@ -224,7 +225,7 @@ impl Runtime {
         }
         if result.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                     not_equal_fact.clone().into(),
                     InferResult::new(),
                     "not_equal_pow_from_base_nonzero".to_string(),

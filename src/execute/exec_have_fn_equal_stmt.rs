@@ -82,7 +82,9 @@ impl Runtime {
         )
         .into();
         let _ = self
-            .store_atomic_fact_without_well_defined_verified_and_infer(function_equals_anonymous_fn_fact)
+            .store_atomic_fact_without_well_defined_verified_and_infer(
+                function_equals_anonymous_fn_fact,
+            )
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_stmt.clone().into(),
@@ -116,14 +118,14 @@ impl Runtime {
             &have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
             &verify_state,
         )
-            .map_err(|well_defined_error| {
-                short_exec_error(
-                    have_fn_equal_stmt.clone().into(),
-                    "",
-                    Some(well_defined_error),
-                    vec![],
-                )
-            })?;
+        .map_err(|well_defined_error| {
+            short_exec_error(
+                have_fn_equal_stmt.clone().into(),
+                "",
+                Some(well_defined_error),
+                vec![],
+            )
+        })?;
 
         let function_set_obj = fn_set_stored.clone().into();
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state)
@@ -138,15 +140,24 @@ impl Runtime {
 
         let verify_result = self
             .run_in_local_env(|rt| {
-                for param_def_with_set in
-                    have_fn_equal_stmt.equal_to_anonymous_fn.body.params_def_with_set.iter()
+                for param_def_with_set in have_fn_equal_stmt
+                    .equal_to_anonymous_fn
+                    .body
+                    .params_def_with_set
+                    .iter()
                 {
                     rt.define_params_with_set(param_def_with_set)?;
                 }
-                for dom_fact in have_fn_equal_stmt.equal_to_anonymous_fn.body.dom_facts.iter() {
-                    let _ = rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                        dom_fact.clone(),
-                    )?;
+                for dom_fact in have_fn_equal_stmt
+                    .equal_to_anonymous_fn
+                    .body
+                    .dom_facts
+                    .iter()
+                {
+                    let _ = rt
+                        .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            dom_fact.clone(),
+                        )?;
                 }
                 let equal_to_in_ret_set_atomic_fact = InFact::new(
                     (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
