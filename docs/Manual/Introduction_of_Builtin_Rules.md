@@ -5,30 +5,44 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Introduction_of_Bu
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Introduction_of_Builtin_Rules.md
 
 
-**Builtin features** are the parts of Litex that come with the system: a **shared semantic layer** that names ordinary mathematical objects, spells out what you can **write** in a file, decides which goals the **checker** can close on its own, extends the context after facts are **stored**, and lists the **atomic proposition forms** (`$…` and friends) the surface language treats as single steps.
+**Builtin features** are the shared mathematical background that comes with Litex. They tell the checker what mathematical objects exist, what atomic facts can be written about them, which goals can be proved automatically, and what consequences are added after a fact is stored.
 
-They are not a grab bag of tricks. They answer four coupled questions:
+The core loop is:
 
-1. **What can you talk about?** — Standard sorts and constructors (numbers, sets, tuples, products, function spaces, sequences, matrices, families, …) and how they are meant to behave.  
-2. **What can you write at top level?** — Definitions, declarations, proof blocks, imports, and tactic-shaped phrases that organize checks.  
-3. **What can the verifier do automatically while checking?** — Builtin **verification rules** that discharge goals matching fixed patterns (algebra, order, sets, logic glue users should not have to re-prove by hand).  
-4. **What is added after a fact is accepted?** — Builtin **inference**: extra facts or bookkeeping derived from what you just proved or asserted, so later lines can see typical consequences (membership unfoldings, subset consequences, small order facts, …).
+```text
+write a statement
+check the factual statement inside it
+reduce complex facts to atomic goals
+prove atomic goals from context, definitions, and builtin verification rules
+store accepted facts
+run builtin inference so later statements see standard consequences
+```
 
-Each builtin rule or definition is usually **easy to read in isolation**. The real size comes from **how many combinations** arise once equality, membership, products, `fn`, ranges, positivity cones, and so on all meet in real proofs. Builtin features exist so that bulk stays in the **language**, not on every user’s TODO list.
+The important distinction is not syntax versus magic. It is the separation between **objects**, **facts**, **verification**, **inference**, and **statements**:
 
-The best way to understand the proof process is to read the message printed out after a statement is executed: it helps you know how a statement is executed and effects it has on the context.
+- **Objects** are the mathematical things a proof talks about, such as numbers, sets, functions, tuples, products, and sequences.
+- **Facts** are judgments about objects, such as `x = 2`, `x $in N`, `0 <= x`, or `$is_set(A)`.
+- **Verification** is the process of proving the current goal.
+- **Inference** runs after a fact is accepted and adds standard consequences to the context.
+- **Statements** are the surface forms users write to introduce objects, define predicates, organize proof blocks, and assert facts.
+
+Each builtin rule is usually easy to read in isolation. The real size comes from combinations: equality, membership, products, `fn`, ranges, positivity, finite sets, tuples, and order facts constantly meet in ordinary proofs. Builtin features exist so that this basic mathematical bookkeeping stays in the language instead of being repeated in every user proof.
+
+For the full proof-flow explanation, start with [Proof Process](Proof_Process.md). The best way to understand a concrete proof is also to read the message printed after a statement is executed, because it shows how the statement affects the context.
 
 ---
 
 ## How this folder is organized
 
-| Topic | Document |
-|--------|-----------|
-| Mathematical sorts, literals, and builtin objects | [Builtin_Objects.md](Builtin_Objects.md) |
-| Surface forms: statements you can use in scripts | [Statements.md](Statements.md) |
-| Atomic proposition shapes (`$is_set`, `$in`, comparisons, …) | [Builtin_Props.md](Builtin_Props.md) |
-| Goals closed **during** verification | [Builtin_Verification_Rules.md](Builtin_Verification_Rules.md) |
-| Facts and side information added **after** storage | [Builtin_Inference.md](Builtin_Inference.md) |
+Read the pages in this order if you want the design story:
 
-Together, these describe **what Litex already knows** before your own `prop`s and `forall` theorems enlarge the theory. For how that builtin world fits into the bigger proof story (user definitions, `forall`, traces), see [Mechanics of Litex](../Mechanics_of_Litex.md).
+1. [Proof Process](Proof_Process.md): the full loop from statement to fact checking, storage, and inference.
+2. [Builtin Objects](Builtin_Objects.md): what mathematical terms and data-like structures Litex can talk about.
+3. [Builtin Props](Builtin_Props.md): the atomic proposition forms built into the surface language.
+4. [Factual Statements](Factual_Statements.md): how atomic facts combine into chains, conjunctions, disjunctions, `exist`, and `forall`.
+5. [Builtin Verification Rules](Builtin_Verification_Rules.md): goals the checker can close during verification.
+6. [Builtin Inference](Builtin_Inference.md): facts and side information added after storage.
+7. [Builtin statements](Statements.md): the statement forms that organize definitions, declarations, proof blocks, and context changes.
+
+Together, these describe **what Litex already knows** before your own `prop`s and `forall` theorems enlarge the theory. For how that builtin world fits into the bigger proof story with user definitions, `forall`, and traces, see [Mechanics of Litex](../Mechanics_of_Litex.md).
 
