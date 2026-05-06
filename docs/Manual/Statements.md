@@ -8,6 +8,8 @@ A **statement** is a basic line or block of Litex code. You use statements to do
 
 This page is a practical reference. Read each section as: **what the statement means**, **when to use it**, and **what shape the code usually has**.
 
+Statements are the outer actions in a Litex file. Some statements contain [Factual Statements](Factual_Statements.md), which are checked through the flow described in [Proof Process](Proof_Process.md).
+
 ---
 
 ## Assert a fact

@@ -8,6 +8,8 @@ After a fact is **verified** or **known** in the environment, the system **store
 
 Below, each item gives the **mathematical meaning**, then a **`forall … =>:`** pattern: the premise is the fact that triggers inference; the conclusion lists typical consequences (what becomes available in the same way as after storing the premise).
 
+For the full loop from statement checking to storage and inference, see [Proof Process](Proof_Process.md).
+
 ---
 
 ## Shapes of facts: what inference does

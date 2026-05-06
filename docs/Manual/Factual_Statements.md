@@ -17,6 +17,8 @@ Once a factual statement is verified, it becomes a **known fact** in the current
 
 This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `know`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual/Statements).
 
+For a step-by-step view of how a statement becomes atomic goals, how those goals are verified, and what happens after a fact is stored, see [Proof Process](Proof_Process.md).
+
 ---
 
 ## Quick mental model
