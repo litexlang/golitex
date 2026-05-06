@@ -413,10 +413,7 @@ impl Runtime {
                 if all_args_match {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        VerifiedByResult::Fact(
-                            known_fact.clone().into(),
-                            known_fact.to_string(),
-                        ),
+                        VerifiedByResult::Fact(known_fact.clone().into(), known_fact.to_string()),
                         Vec::new(),
                     ))
                     .into());
@@ -705,14 +702,12 @@ impl Runtime {
                     infers: _,
                     stmt: _,
                 } = inner_success;
-                Ok(
-                    FactualStmtSuccess::new_with_verified_by_known_fact(
-                        atomic_fact.clone().into(),
-                        verified_by,
-                        Vec::new(),
-                    )
-                    .into(),
+                Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
+                    atomic_fact.clone().into(),
+                    verified_by,
+                    Vec::new(),
                 )
+                .into())
             }
             other if other.is_true() => Ok(other),
             _ => Ok(result),

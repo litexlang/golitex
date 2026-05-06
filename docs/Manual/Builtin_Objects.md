@@ -1,8 +1,8 @@
 # Builtin Concepts
 
-Try all snippets in browser: https://litexlang.com/doc/Builtin_Features/Builtin_Objects
+Try all snippets in browser: https://litexlang.com/doc/Manual/Builtin_Objects
 
-Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Builtin_Objects.md
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Builtin_Objects.md
 
 
 # Objects(Sets)
