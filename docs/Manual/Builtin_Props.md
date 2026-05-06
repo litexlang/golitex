@@ -9,7 +9,7 @@ An **atomic** proposition is a single goal the checker may treat as one step: no
 
 Many forms use a leading `$` on a fixed predicate name (membership, set typing, function comparison, …). You can also introduce your own atomic predicates with `abstract_prop` and reuse them as `$name(…)`.
 
-Atomic propositions connect [Builtin Objects](Builtin_Objects.md) to the checker. To see how atomic facts sit inside the larger proof flow, see [Proof Process](Proof_Process.md).
+Atomic propositions connect [Objects](Objects.md) to the checker. To see how atomic facts sit inside the larger proof flow, see [Proof Process](Proof_Process.md).
 
 ---
 

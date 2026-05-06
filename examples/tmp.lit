@@ -1,9 +1,5 @@
-have x R
-
-by cases:
-    prove:
-        x = 0 or x != 0
-    case x = 0:
-        ...
-    case x != 0:
-        ...
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+        x^2 = 4

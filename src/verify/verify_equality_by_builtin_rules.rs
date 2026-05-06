@@ -2152,6 +2152,16 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if verify_equality_by_they_are_the_same(left, right) {
+            return Ok(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "they are the same",
+            )
+            .into());
+        }
+
         if let Some(done) = self.try_verify_objs_equal_by_expanding_family(
             left,
             right,
