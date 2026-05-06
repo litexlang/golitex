@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Factual_Statements
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Factual_Statements.md
 
+_I think, therefore I am._
+
+_— René Descartes_
+
 A **factual statement** is a Litex statement that claims a mathematical fact. It may be as small as `1 = 1`, or as structured as a `forall`, `exist`, `or`, or chain of inequalities.
 
 The result of checking a factual statement is either **true** or **unknown**.

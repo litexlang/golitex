@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Builtin_Predicates
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Builtin_Predicates.md
 
+_Geometry, like arithmetic, requires for its logical development only a small number of simple, fundamental principles._
+
+_- David Hilbert_
+
 This page lists the **builtin predicates** that Litex recognizes as atomic facts. It follows the atomic fact forms handled by the kernel.
 
 For the general idea of atomic facts, including the idea that a fact is made from a predicate and its arguments, read [Factual Statements](https://litexlang.com/doc/Manual/Factual_Statements). For how these predicates are proved automatically, read [Builtin Verification Rules](https://litexlang.com/doc/Manual/Builtin_Verification_Rules).

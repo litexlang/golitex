@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Builtin_Verificati
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Builtin_Verification_Rules.md
 
+_There is nothing more deceptive than an obvious fact._
+
+_– Sherlock Holmes_
+
 Builtin verification rules are the mathematical patterns Litex can use to close a goal while checking a fact. They are part of the verification phase, before a fact is stored.
 
 The main idea is simple: if a goal uses builtin predicates and builtin objects, and it matches a mathematical pattern Litex knows, Litex can close it without asking the user to write a separate theorem.

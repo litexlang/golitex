@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Statements
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Statements.md
 
+_If you can't explain it to a six year old, you don't understand it yourself._
+
+_- Albert Einstein_
+
 A **statement** is a basic line or block of Litex code. You use statements to do mathematical reasoning, make definitions such as `prop`, functions, and sets, and prove facts from known facts or axioms.
 
 This page is a practical reference. Read each section as: **what the statement means**, **when to use it**, and **what shape the code usually has**.

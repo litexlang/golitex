@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Manual/Manual_Introductio
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Manual_Introduction.md
 
+_In science, you can say things that seem crazy, but in the long run, they can turn out to be right. We can get really good evidence, and in the end, the community will come around._
+
+_- Jeff Hinton_
+
 > **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion about the mathematical philosophy behind it.
 
 This manual explains how Litex reads and checks mathematical proof scripts. The main idea is simple: a piece of Litex code introduces mathematical objects, states facts about them, checks those facts, and stores the successful facts for later use.
