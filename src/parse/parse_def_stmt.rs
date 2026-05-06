@@ -103,18 +103,47 @@ impl Runtime {
         let facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
 
-            if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "expect end of line after `:` in let statement".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
+            let facts_result: Result<Vec<Fact>, RuntimeError> = if tb.exceed_end_of_head() {
+                self.parse_facts_in_body(tb)
+            } else {
+                let mut facts = Vec::new();
+                let parse_result = (|| {
+                    loop {
+                        facts.push(self.parse_fact(tb)?);
+                        if tb.exceed_end_of_head() {
+                            break;
+                        }
+                        tb.skip_token(COMMA)?;
+                        if tb.exceed_end_of_head() {
+                            return Err(RuntimeError::from(ParseRuntimeError(
+                                RuntimeErrorStruct::new_with_msg_and_line_file(
+                                    "expected fact after comma in inline let statement".to_string(),
+                                    tb.line_file.clone(),
+                                ),
+                            )));
+                        }
+                    }
+                    if !tb.body.is_empty() {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                "inline let statement cannot also have an indented body"
+                                    .to_string(),
+                                tb.line_file.clone(),
+                            ),
+                        )));
+                    }
+                    Ok(())
+                })();
+                parse_result.map(|_| facts)
+            };
+            if facts_result.is_err() && !all_param_names.is_empty() {
+                self.parsing_free_param_collection
+                    .end_scope(ParamObjType::Identifier, &all_param_names);
             }
-            let facts_result = self.parse_facts_in_body(tb);
+            let facts = facts_result?;
             self.parsing_free_param_collection
                 .end_scope(ParamObjType::Identifier, &all_param_names);
-            facts_result?
+            facts
         } else {
             if !all_param_names.is_empty() {
                 self.parsing_free_param_collection
@@ -182,6 +211,31 @@ impl Runtime {
             self.parse_have_fn_by_induc_stmt(tb)
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+            if tb.current_token_is_equal_to(BY) {
+                tb.skip_token(BY)?;
+                let lf = tb.line_file.clone();
+                let fact = self.parse_fact(tb)?;
+                let forall = match fact {
+                    Fact::ForallFact(ff) => ff,
+                    _ => {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                "have fn <name> by ... expects a `forall` fact".to_string(),
+                                lf,
+                            ),
+                        )));
+                    }
+                };
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "unexpected token after `have fn` `by` `forall` fact".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                return Ok(HaveFnByForallExistUniqueStmt::new(name, forall, lf).into());
+            }
 
             let fs = self.parse_fn_set_clause(tb)?;
             let fn_param_names = fs.collect_all_param_names_including_nested_ret_fn_sets();
@@ -235,12 +289,7 @@ impl Runtime {
                     fs.ret_set.clone(),
                     equal_to,
                 )?;
-                Ok(HaveFnEqualStmt::new(
-                    name,
-                    equal_to_anonymous_fn,
-                    tb.line_file.clone(),
-                )
-                .into())
+                Ok(HaveFnEqualStmt::new(name, equal_to_anonymous_fn, tb.line_file.clone()).into())
             }
         }
     }

@@ -1427,9 +1427,10 @@ impl Runtime {
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
             stmt,
             infer_result,
-            "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
-                .to_string(),
-            Vec::new(),
+            VerifiedByResult::BuiltinRules(
+                "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
+                    .to_string(),
+            ),
         ))
         .into())
     }
@@ -1469,8 +1470,9 @@ impl Runtime {
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
             stmt,
             infer_result,
-            "list_set in power_set: each element is in the base set".to_string(),
-            Vec::new(),
+            VerifiedByResult::BuiltinRules(
+                "list_set in power_set: each element is in the base set".to_string(),
+            ),
         ))
         .into())
     }

@@ -256,14 +256,14 @@ mod lit_file_runner_tests {
         println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
         if examples_ran {
             println!(
-                "  phase 1 (examples/*.lit + docs/Builtin_Features ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
+                "  phase 1 (examples/*.lit + docs/Manual ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
                 examples_sum_ms, examples_phase_wall_ms
             );
         }
-        println!(
-            "  docs ```litex``` snippets (excluding docs/Builtin_Features; see phase 1): sum of runs: {:.2} ms  |  wall: {:.2} ms",
-            docs_sum_ms, docs_phase_wall_ms
-        );
+            println!(
+                "  remaining markdown ```litex``` snippets (README + docs excluding docs/Manual; see phase 1): sum of runs: {:.2} ms  |  wall: {:.2} ms",
+                docs_sum_ms, docs_phase_wall_ms
+            );
         println!(
             "--- phase timing: phase1 {:.2} ms | docs {:.2} ms ---",
             examples_phase_wall_ms, docs_phase_wall_ms
@@ -275,11 +275,9 @@ mod lit_file_runner_tests {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let lit_file_paths = collect_lit_files_recursive_under(&manifest_dir, "examples");
 
-        let builtin_features_md_dir = manifest_dir.join("docs").join("Builtin_Features");
-        let builtin_features_md_paths =
-            collect_markdown_files_under_dir_sorted(&builtin_features_md_dir);
-        let builtin_feature_snippets =
-            litex_snippets_from_markdown_files(&manifest_dir, &builtin_features_md_paths);
+        let manual_md_dir = manifest_dir.join("docs").join("Manual");
+        let manual_md_paths = collect_markdown_files_under_dir_sorted(&manual_md_dir);
+        let manual_snippets = litex_snippets_from_markdown_files(&manifest_dir, &manual_md_paths);
 
         #[derive(Clone)]
         struct Phase1Item {
@@ -314,7 +312,7 @@ mod lit_file_runner_tests {
                 path_for_runtime: lit_file_path_str.to_string(),
             });
         }
-        for (label, block, md_path_str) in builtin_feature_snippets.iter() {
+        for (label, block, md_path_str) in manual_snippets.iter() {
             phase1_items.push(Phase1Item {
                 report_label: label.clone(),
                 source: block.clone(),
@@ -332,9 +330,7 @@ mod lit_file_runner_tests {
         let mut examples_phase_wall_ms: f64 = 0.0;
 
         if phase1_items.is_empty() {
-            println!(
-                "--- phase 1: no examples/*.lit and no docs/Builtin_Features ```litex``` snippets ---"
-            );
+            println!("--- phase 1: no examples/*.lit and no docs/Manual ```litex``` snippets ---");
         } else {
             examples_ran = true;
             let examples_wall_start = Instant::now();
@@ -375,7 +371,7 @@ mod lit_file_runner_tests {
 
         if every_file_run_ok && examples_ran {
             println!(
-                "--- phase 1: {} run(s) (examples/*.lit + docs/Builtin_Features ```litex```), all OK ---",
+                "--- phase 1: {} run(s) (examples/*.lit + docs/Manual ```litex```), all OK ---",
                 file_label_and_duration_ms_list.len()
             );
             for (file_label, duration_ms) in file_label_and_duration_ms_list.iter() {
@@ -383,9 +379,10 @@ mod lit_file_runner_tests {
             }
         }
 
-        if !every_file_run_ok {
-            return;
-        }
+        assert!(
+            every_file_run_ok,
+            "examples or docs/Manual litex snippet failed; see output above"
+        );
 
         let docs_dir = manifest_dir.join("docs");
         if !docs_dir.is_dir() {
@@ -404,11 +401,17 @@ mod lit_file_runner_tests {
             return;
         }
 
-        let md_paths_all = collect_markdown_files_under_dir_sorted(&docs_dir);
-        let builtin_features_prefix = manifest_dir.join("docs").join("Builtin_Features");
+        let mut md_paths_all: Vec<PathBuf> = Vec::new();
+        let readme_path = manifest_dir.join("README.md");
+        if readme_path.is_file() {
+            md_paths_all.push(readme_path);
+        }
+        md_paths_all.extend(collect_markdown_files_under_dir_sorted(&docs_dir));
+        md_paths_all.sort();
+        let manual_prefix = manifest_dir.join("docs").join("Manual");
         let md_paths: Vec<PathBuf> = md_paths_all
             .into_iter()
-            .filter(|p| !p.starts_with(&builtin_features_prefix))
+            .filter(|p| !p.starts_with(&manual_prefix))
             .collect();
 
         // (test report label, fenced litex body, current markdown path string for relative run_file resolution)
@@ -440,7 +443,7 @@ mod lit_file_runner_tests {
         }
 
         if doc_snippets.is_empty() {
-            println!("--- docs: no ```litex``` fenced blocks ---");
+            println!("--- remaining markdown: no ```litex``` fenced blocks ---");
             print_run_examples_timing_summary(
                 builtin_duration_ms,
                 examples_ran,
@@ -453,11 +456,11 @@ mod lit_file_runner_tests {
         }
 
         if !examples_ran {
-            runtime.new_file_path_new_env_new_name_scope("docs/```litex``` snippets");
+            runtime.new_file_path_new_env_new_name_scope("remaining markdown ```litex``` snippets");
         }
 
         println!(
-            "--- docs: {} ```litex``` block(s) in {} markdown file(s) ---",
+            "--- remaining markdown: {} ```litex``` block(s) in {} markdown file(s) ---",
             doc_snippets.len(),
             md_paths.len()
         );

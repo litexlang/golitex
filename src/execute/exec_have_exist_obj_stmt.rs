@@ -11,11 +11,9 @@ impl Runtime {
         let result = self
             .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
             .map_err(|verify_error| {
-                short_exec_error(
+                exec_stmt_error_with_stmt_and_cause(
                     have_exist_obj_stmt.clone().into(),
-                    "",
-                    Some(verify_error),
-                    vec![],
+                    verify_error,
                 )
             })?;
         if result.is_unknown() {
@@ -58,7 +56,7 @@ impl Runtime {
                 ParamObjType::Exist,
             )
             .map_err(|e| {
-                short_exec_error(have_exist_obj_stmt.clone().into(), "", Some(e), vec![])
+                exec_stmt_error_with_stmt_and_cause(have_exist_obj_stmt.clone().into(), e)
             })?;
 
         let param_to_obj_map = exist_fact_in_have_obj_stmt
@@ -69,11 +67,9 @@ impl Runtime {
             let instantiated_fact = self
                 .inst_exist_body_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
                 .map_err(|runtime_error| {
-                    short_exec_error(
+                    exec_stmt_error_with_stmt_and_cause(
                         have_exist_obj_stmt.clone().into(),
-                        "",
-                        Some(runtime_error),
-                        vec![],
+                        runtime_error,
                     )
                 })?
                 .to_fact();
@@ -82,11 +78,9 @@ impl Runtime {
                     instantiated_fact,
                 )
                 .map_err(|store_fact_error| {
-                    short_exec_error(
+                    exec_stmt_error_with_stmt_and_cause(
                         have_exist_obj_stmt.clone().into(),
-                        "",
-                        Some(store_fact_error),
-                        vec![],
+                        store_fact_error,
                     )
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);

@@ -93,8 +93,8 @@ impl Runtime {
                         all_then_facts_are_verified_by_builtin_rules = false;
                     }
                     // Do not merge then-fact verification `infers` into `infer_result` (e.g. instantiated
-                    // `min(a,b) <= a` from a known forall). Each then proof is listed in
-                    // `FactualStmtSuccess::inside_results` for JSON/CLI.
+                    // `min(a,b) <= a` from a known forall). Each then proof is attached as Steps under
+                    // `verified_by` for JSON/CLI.
                 }
                 StmtResult::NonFactualStmtSuccess(non_factual_success) => {
                     all_then_facts_are_verified_by_builtin_rules = false;
@@ -109,26 +109,31 @@ impl Runtime {
 
         if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
             let forall_infers = InferResult::from_fact(&forall_fact.clone().into());
-            return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-                forall_fact.clone().into(),
-                forall_infers,
-                "forall: then-facts by builtin rules".to_string(),
-                then_verification_results,
-            ))
-            .into());
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    forall_fact.clone().into(),
+                    forall_infers,
+                    "forall: then-facts by builtin rules".to_string(),
+                    then_verification_results,
+                )
+                .into(),
+            );
         }
 
         infer_result.new_fact(&forall_fact.clone().into());
         let infer_for_success = std::mem::replace(infer_result, InferResult::new());
-        Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source(
-            forall_fact.clone().into(),
-            infer_for_success,
-            "".to_string(),
-            None,
-            Some(forall_fact.line_file.clone()),
-            then_verification_results,
-        ))
-        .into())
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
+                forall_fact.clone().into(),
+                infer_for_success,
+                VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+                    forall_fact.clone().into(),
+                    String::new(),
+                )]),
+                then_verification_results,
+            ))
+            .into(),
+        )
     }
 
     /// Declare params, assume dom facts hold, then verify each then_fact.

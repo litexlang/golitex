@@ -14,6 +14,9 @@ impl Runtime {
             Stmt::HaveFnEqualStmt(d) => self.exec_have_fn_equal_stmt(d),
             Stmt::HaveFnEqualCaseByCaseStmt(d) => self.exec_have_fn_equal_case_by_case_stmt(d),
             Stmt::HaveFnByInducStmt(d) => self.exec_have_fn_by_induc_stmt(d),
+            Stmt::HaveFnByForallExistUniqueStmt(d) => {
+                self.exec_have_fn_by_forall_exist_unique_stmt(d)
+            }
             Stmt::DefFamilyStmt(d) => self.exec_def_family_stmt(d),
             Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d),
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt),

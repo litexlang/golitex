@@ -585,6 +585,39 @@ impl Runtime {
         )))
     }
 
+    // Every integer is congruent to zero modulo one: `x % 1 = 0`.
+    // This is the m = 1 version of the complete residue rule; no `or` is needed.
+    // Example: `forall x Z: x % 1 = 0`.
+    fn try_verify_mod_one_equals_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let mod_obj = if Self::obj_is_builtin_literal_zero(left) {
+            match right {
+                Obj::Mod(m) => m,
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            match left {
+                Obj::Mod(m) => m,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        if !Self::obj_is_builtin_literal_one(mod_obj.right.as_ref()) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: x % 1 = 0",
+        )))
+    }
+
     // First power identity: `a^1 = a`.
     // Example: `forall a Z: a^1 = a`.
     fn try_verify_pow_one_identity(
@@ -2119,6 +2152,16 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if verify_equality_by_they_are_the_same(left, right) {
+            return Ok(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "they are the same",
+            )
+            .into());
+        }
+
         if let Some(done) = self.try_verify_objs_equal_by_expanding_family(
             left,
             right,
@@ -2258,6 +2301,10 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_zero_mod_equals_zero(left, right, line_file.clone())? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_mod_one_equals_zero(left, right, line_file.clone())? {
             return Ok(done);
         }
 

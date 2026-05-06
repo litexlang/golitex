@@ -8,7 +8,7 @@ impl Runtime {
         let infer_result = self
             .define_params_with_type(&stmt.param_def, true, ParamObjType::Identifier)
             .map_err(|define_params_error| {
-                short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
+                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
             })?;
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
     }

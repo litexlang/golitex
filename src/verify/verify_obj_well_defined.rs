@@ -2109,9 +2109,6 @@ impl Runtime {
             ParamType::Set(_) => Ok(()),
             ParamType::NonemptySet(_) => Ok(()),
             ParamType::FiniteSet(_) => Ok(()),
-            ParamType::Restrictive(fs) => {
-                self.verify_obj_well_defined_and_store_cache(&Obj::FnSet(fs.clone()), verify_state)
-            }
             ParamType::Obj(obj) => match obj {
                 Obj::FamilyObj(family) => {
                     self.verify_param_type_family_well_defined(family, verify_state)

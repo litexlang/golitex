@@ -1,0 +1,4 @@
+abstract_prop p(x)
+know forall x R:
+    $p(x)
+$p(2)

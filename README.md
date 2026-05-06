@@ -6,7 +6,10 @@
 
 # Litex: A Simple Formal Language Learnable in 2 Hours
 
-**version 0.9.73-beta (not yet ready for production use)**  
+**version 0.9.73-beta**
+
+**Beta notice:** Litex is still an experimental project for testing ideas about formalizing everyday mathematics. It is not ready for production or mission-critical proof work yet. We hope more people will look at Litex, try it and discuss the mathematical philosophy behind it.
+
 *Jiachen Shen and The Litex Team*
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
@@ -24,9 +27,15 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is a simple and intuitive open-source computer language for mathematical proofs. It encodes a philosophy of everyday mathematical thinking — the non-expert’s angle — where the problem leads and notation follows.
+Litex is an open-source language for writing mathematical proofs as code.
 
-In the best case, what you write is organized around the problem — not bent to satisfy the formal language you happen to be using. Litex is an attempt to move practice closer to that ideal. Here is an example of how Litex code looks like:
+The goal is simple: if a piece of mathematics is easy to say on paper, it should also be easy to write in a computer-checkable form.
+
+You can think of Litex as a strict mathematical notebook. You write objects such as numbers, sets, tuples, and functions. You state facts such as `x = 2` or `x $in R`. Litex checks whether those facts follow from what is already known.
+
+This makes Litex feel close to daily mathematical writing. You write facts in the order you want the checker to understand them.
+
+Here is the intended feel:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -35,97 +44,98 @@ In the best case, what you write is organized around the problem — not bent to
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-    <code>forall x R, y R:</code><br>
-    <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
-    <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br>
+    <code>forall x R:</code><br>
+    <code>&nbsp;&nbsp;x = 2</code><br>
     <code>&nbsp;&nbsp;=>:</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;y = (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 = 6</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * 6 = 10</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 18 - 18 = 10 - 18 = -8</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;x = (2 * x) / 2 = -8 / 2 = -4</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;x + 1 = 3</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;x^2 = 4</code><br>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>import Mathlib.Tactic</code><br><br>
-      <code>example (x y : ℝ) (h₁ : 2 * x + 3 * y = 10) (h₂ : 4 * x + 5 * y = 14) : x = -4 ∧ y = 6 := by</code><br>
-      <code>&nbsp;&nbsp;have h₃ : 2 * (2 * x + 3 * y) = 2 * 10 := by rw [h₁]</code><br>
-      <code>&nbsp;&nbsp;have h₄ : 4 * x + 6 * y = 20 := by linear_combination 2 * h₁</code><br>
-      <code>&nbsp;&nbsp;have h₅ : (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 := by</code><br>
-      <code>&nbsp;&nbsp;rw [h₄, h₂]</code><br>
-      <code>&nbsp;&nbsp;have h₆ : (4 * x + 6 * y) - (4 * x + 5 * y) = y := by</code><br>
-      <code>&nbsp;&nbsp;ring</code><br>
-      <code>&nbsp;&nbsp;have h₇ : 20 - 14 = 6 := by norm_num</code><br>
-      <code>&nbsp;&nbsp;have h₈ : y = 6 := by</code><br>
-      <code>&nbsp;&nbsp;rw [←h₆, h₅, h₇]</code><br>
-      <code>&nbsp;&nbsp;have h₉ : 2 * x + 3 * 6 = 10 := by rw [h₈, h₁]</code><br>
-      <code>&nbsp;&nbsp;have h₁₀ : 2 * x + 18 = 10 := by</code><br>
-      <code>&nbsp;&nbsp;rw [mul_add] at h₉</code><br>
-      <code>&nbsp;&nbsp;simp at h₉</code><br>
-      <code>&nbsp;&nbsp;exact h₉</code><br>
-      <code>&nbsp;&nbsp;have h₁₁ : 2 * x = -8 := by</code><br>
-      <code>&nbsp;&nbsp;linear_combination h₁₀ - 18</code><br>
-      <code>&nbsp;&nbsp;have h₁₂ : x = -4 := by</code><br>
-      <code>&nbsp;&nbsp;linear_combination h₁₁ / 2</code><br>
-      <code>&nbsp;&nbsp;exact ⟨h₁₂, h₈⟩</code>
+      <code>example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by</code><br>
+      <code>&nbsp;&nbsp;have h_add : x + 1 = 3 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;norm_num</code><br>
+      <code>&nbsp;&nbsp;have h_square : x ^ 2 = 4 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;norm_num</code><br>
+      <code>&nbsp;&nbsp;exact ⟨h_add, h_square⟩</code>
     </td>
   </tr>
 </table>
 
-As you can see, Litex is much more concise and readable than Lean. It doesn't require you to memorize and recall known facts and inference rules by hand, making it possible for you to write complex statements with ease at 2-10 times efficiency than Lean. In fact, it even runs 2-10 times faster than Lean.
+This small example shows the intended feel: Litex code looks close to the mathematical steps, while the checker handles routine rewriting, arithmetic, and reuse of known facts.
 
-## How Litex Works
+## Why It Stays Simple
 
-_Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
+Litex stays simple in three ways.
 
-_— David Hilbert_
+1. **Set theory and basic mathematics.** Litex starts from familiar things: sets, elements, numbers, functions, tuples, relations, and facts.
+2. **Many basic relationships are built in.** Litex knows many small links between equality, order, membership, functions, sets, tuples, and arithmetic.
+3. **Matching and substitution reduce naming.** Litex finds known facts and known `forall` facts by shape, then substitutes the matching objects.
 
-Litex achieves its simplicity by imitating how people reason and how mathematics works. Litex is based on set theory. It searches for known facts mechanically and effectively to prove new facts for you. The user no longer has to memorize and recall known facts and inference rules by hand. Each Litex statement has and only has some of the following 4 effects: define, verify, memorize and infer, which is printed out in the output, making the user easy to know how the proof process works.
+For example, in Litex:
 
-Among the 4 effects, verification is the most important one. Litex uses `match and substitution` to use `forall` facts to verify the correctness of the statements. It's impossible to explain how it works in a few words. So we put an example here. When `forall x human => $intelligent(x)` is already stored in memory and `Jordan $in human` is also stored in memory, when the users type `$intelligent(Jordan)`, Litex will substitute `Jordan` with `x` in the statement `forall x human => $intelligent(x)` and check if the statement is true. If it is, the statement is verified.
+```litex
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+```
 
-Think of this: when the user inputs a fact with proposition name `intelligent`, Litex will search all known facts with proposition name `intelligent` (including `forall` facts like `forall x human => $intelligent(x)` and specific facts like `$intelligent(Jordan)`) and check if the given fact matches the known fact. If matched, then it is correct. It works like `ctrl+f` in your browser. The reason why Lean cannot do this is that Lean can pass prop as forall parameter, so its search space is the whole memory, instead of the memory of the current proposition.
+The assumption `x = 2` becomes known inside the local proof context. Litex can find it by matching the goal, substitute `2` for `x`, and let builtin arithmetic close `x + 1 = 3`.
 
-Even for 10-year-old beginners, Litex is straightforward to learn and use.
+This is also why `forall` is central in Litex. A known `forall` theorem is like knowing infinitely many concrete facts at once: whenever the arguments match and the assumptions hold, Litex can substitute concrete objects and use the result.
 
-## Resources And Community
+When thinking in Litex, start with three blocks: **objects**, **facts**, and **statements**.
 
-_The best way to predict future is to create it._
+- **Objects** are the mathematical things being discussed, such as `2`, `R`, `(x, y)`, or a function.
+- **Facts** are claims about objects, such as `x = 2`, `x $in R`, or `0 <= x`.
+- **Statements** are actions in the proof script: define an object, introduce a fact, prove a fact, or store known information.
 
-_-- Alan Kay_
+For a deeper explanation, read the [Manual](https://litexlang.com/doc/Manual/Manual_Introduction), especially the [Proof Process](https://litexlang.com/doc/Manual/Proof_Process).
 
-Litex is nothing without its community and technical ecosystem.
+## Proofs Explain Themselves
 
-Resources for Litex users:
+Litex does not only say whether a fact passed. Its output tells you how the fact was proved.
+
+```litex
+abstract_prop p(x)
+know forall x R:
+    $p(x)
+$p(2)
+```
+
+The output message is like this:
+
+```json
+{
+  "result": "success",
+  "type": "Fact",
+  "line": 4,
+  "stmt": "$p(2)",
+  "verified_by":   {
+    "type": "known_fact",
+    "line": 2,
+    "source": "entry",
+    "cited_fact": "forall x R:\n    $p(x)"
+  },
+  "infer_facts": [],
+  "inside_results": []
+}
+```
+
+This output says that `$p(2)` was proved by reusing the known `forall` fact. Litex matched `x` with `2`, substituted it into `$p(x)`, and closed the goal. This makes the proof process learnable: you can see whether a fact closed by a builtin rule, a known fact, a known `forall`, or an inferred consequence.
+
+## Start Here
 
 1. [Official site](https://litexlang.com)
-2. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
-3. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
-4. Email us [here](mailto:litexlang@outlook.com).
-5. [Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
-6. Our organization's Github is [here](https://github.com/litexlang/). The kernel is [here](https://github.com/litexlang/golitex).
-7. [Hugging Face dataset](https://huggingface.co/litexlang).
-
-## References
-
-_If I have seen further [than others], it is by standing on the shoulders of giants._
-
-_- Isaac Newton_
-
-Although Litex is a very pragmatic language which contains and only contains the proof methods, axioms, keywords, etc. that people need in their daily mathematical work—things that are often so taken for granted that people usually don't even notice them —- it is equally important to note that Litex indeed has gained great conceptual inspiration from the masters.
-
-Mathematics references:
-
-1. Avigad Jeremy: Foundations https://arxiv.org/abs/2009.09541
-2. Terence Tao: Analysis I Fourth edition, 2022. https://terrytao.wordpress.com/books/analysis-i/
-3. Weyl Hermann: Philosophy of Mathematics and Natural Science https://www.jstor.org/stable/j.ctv1t1kftd
-4. Bertrand Russell: Introduction to Mathematical Philosophy https://people.umass.edu/klement/imp/imp.pdf
-5. David Hilbert: Foundations of Geometry https://math.berkeley.edu/~wodzicki/160/Hilbert.pdf
-
-AI references:
-
-1. DeepSeek-R1: Boosting Reasoning Capability in LLMs via Reinforcement Learning
-2. AlphaGeometry: An Olympiad-level AI system for geometry 
-3. Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving
+2. [Manual](https://litexlang.com/doc/Manual/Manual_Introduction)
+3. [Tutorial](https://litexlang.com/doc/Tutorial/Introduction)
+4. [Open Source Language Implementation](https://github.com/litexlang/golitex)
+5. [Related Textbooks, Examples, Implementation Notes, and Experimental Materials](https://github.com/litexlang/golitex)
+6. [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+7. [Email](mailto:litexlang@outlook.com)
 
 ## Special Thanks
 
@@ -138,6 +148,4 @@ _- 樊振东在巴黎奥运会后接受采访时说_
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 
-Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
-
-I am deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Lei Bai, Xiuyuan Lu, Yunwen Guo for their emotional support and insightful advice. I am certain this list of special thanks will only grow longer in the future.
+Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Siqi Sun, Wei Lin, Zeyu Zheng, Siqi Guo, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Xiuyuan Lu, Yunwen Guo for their emotional support and insightful advice. I am certain this list of special thanks will only grow longer in the future.

@@ -195,12 +195,6 @@ impl Runtime {
                     ParamType::FiniteSet(_) => {}
                     _ => return Ok(None),
                 },
-                ParamType::Restrictive(a) => match &other_param_def.param_type {
-                    ParamType::Restrictive(b) => {
-                        matched_args.push((a.clone().into(), b.clone().into()));
-                    }
-                    _ => return Ok(None),
-                },
             }
         }
         for (fact_item, other_item) in fact.facts().iter().zip(other.facts().iter()) {

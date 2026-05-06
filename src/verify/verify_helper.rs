@@ -4,14 +4,12 @@ impl Runtime {
     /// If the fact string is in the known-facts cache, return the cached verification result.
     pub fn verify_fact_from_cache_using_display_string(&self, fact: &Fact) -> Option<StmtResult> {
         let key = fact.to_string();
-        let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&key);
+        let (cache_ok, _) = self.cache_known_facts_contains(&key);
         if cache_ok {
             Some(
-                (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+                (FactualStmtSuccess::new_with_verified_by_known_fact(
                     fact.clone(),
-                    key,
-                    None,
-                    Some(cache_line_file),
+                    VerifiedByResult::Fact(fact.clone(), key),
                     Vec::new(),
                 ))
                 .into(),
@@ -32,18 +30,6 @@ impl Runtime {
         }
         match param_type {
             ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
-            ParamType::Restrictive(fn_set) => {
-                let ret_nonempty = IsNonemptySetFact::new(
-                    fn_set.body.ret_set.as_ref().clone(),
-                    default_line_file(),
-                )
-                .into();
-                self.verify_fact_well_defined_and_store_and_infer(
-                    ret_nonempty,
-                    &VerifyState::new(2, false),
-                )?;
-                Ok(())
-            }
             ParamType::Obj(param_set) => match param_set {
                 Obj::FnSet(fn_set) => {
                     let ret_nonempty = IsNonemptySetFact::new(

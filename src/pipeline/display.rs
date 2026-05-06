@@ -96,19 +96,30 @@ fn verified_by_builtin_rule_value(rule: &str) -> JsonValue {
     ])
 }
 
+fn factual_has_composite_step_proofs(x: &FactualStmtSuccess) -> bool {
+    matches!(
+        &x.stmt,
+        Fact::ForallFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
+    ) && !VerifiedByResult::composite_step_stmt_results_in_order(&x.verified_by).is_empty()
+}
+
+fn factual_inside_result_json_items(runtime: &Runtime, x: &FactualStmtSuccess) -> Vec<JsonValue> {
+    VerifiedByResult::composite_step_stmt_results_in_order(&x.verified_by)
+        .into_iter()
+        .map(|r| stmt_exec_result_json_value(runtime, r))
+        .collect()
+}
+
 /// `verified_by` field for one [`FactualStmtSuccess`] (builtin rule or known fact).
 fn factual_success_verified_by_value(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     if x.is_verified_by_builtin_rules_only() {
-        return verified_by_builtin_rule_value(x.msg.as_str());
+        if let Some(rule) = x.verified_by.first_builtin_rule_label() {
+            return verified_by_builtin_rule_value(rule);
+        }
     }
     let known_fact_line_file = x.line_file_for_verified_by_known_fact_in_json();
-    let cited_fact_text = x
-        .verified_by_fact
-        .as_ref()
-        .map(|f| f.to_string())
-        .unwrap_or_else(|| x.msg.clone());
-    let cited_fact_text = user_visible_stmt_or_msg_text(&cited_fact_text);
-    let msg_for_display = user_visible_stmt_or_msg_text(x.msg.as_str());
+    let cited_fact_text = user_visible_stmt_or_msg_text(&x.verified_by.display_line());
+    let msg_for_display = cited_fact_text.clone();
     let cited_fact_json = JsonValue::JsonString(cited_fact_text.clone());
     verified_by_known_fact_object(
         runtime,
@@ -124,14 +135,12 @@ fn factual_success_verified_by_value(runtime: &Runtime, x: &FactualStmtSuccess) 
 fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) -> JsonValue {
     match r {
         StmtResult::FactualStmtSuccess(f) => {
-            if matches!(&f.stmt, Fact::ForallFact(_) | Fact::AndFact(_) | Fact::ChainFact(_))
-                && !f.inside_results.is_empty()
-            {
-                let nested_items: Vec<JsonValue> = f
-                    .inside_results
-                    .iter()
-                    .map(|child| stmt_result_to_composite_step_verified_by(runtime, child))
-                    .collect();
+            if factual_has_composite_step_proofs(f) {
+                let nested_items: Vec<JsonValue> =
+                    VerifiedByResult::composite_step_stmt_results_in_order(&f.verified_by)
+                        .into_iter()
+                        .map(|child| stmt_result_to_composite_step_verified_by(runtime, child))
+                        .collect();
                 JsonValue::Array(nested_items)
             } else {
                 factual_success_verified_by_value(runtime, f)
@@ -155,18 +164,18 @@ fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) 
 }
 
 /// JSON for [`Fact::ForallFact`], [`Fact::AndFact`], or [`Fact::ChainFact`] when
-/// `inside_results` holds one entry per sub-fact (then / conjunct / chain step).
+/// `verified_by` holds one [`VerifiedByResult::Step`] per sub-proof.
 fn composite_factual_with_step_proofs_to_json(
     runtime: &Runtime,
     x: &FactualStmtSuccess,
 ) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
-    let verified_by_items: Vec<JsonValue> = x
-        .inside_results
-        .iter()
-        .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
-        .collect();
+    let verified_by_items: Vec<JsonValue> =
+        VerifiedByResult::composite_step_stmt_results_in_order(&x.verified_by)
+            .into_iter()
+            .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
+            .collect();
 
     let infer_items: Vec<JsonValue> =
         json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
@@ -297,11 +306,7 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
 }
 
 fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
-    if matches!(
-        &x.stmt,
-        Fact::ForallFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
-    ) && !x.inside_results.is_empty()
-    {
+    if factual_has_composite_step_proofs(x) {
         return composite_factual_with_step_proofs_to_json(runtime, x);
     }
     if x.is_verified_by_builtin_rules_only() {
@@ -319,11 +324,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
     let infer_items: Vec<JsonValue> =
         json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
 
-    let inside_items: Vec<JsonValue> = x
-        .inside_results
-        .iter()
-        .map(|r| stmt_exec_result_json_value(runtime, r))
-        .collect();
+    let inside_items = factual_inside_result_json_items(runtime, x);
 
     JsonValue::Object(vec![
         (
@@ -359,11 +360,7 @@ fn factual_known_fact_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> Json
     let infer_items: Vec<JsonValue> =
         json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
 
-    let inside_items: Vec<JsonValue> = x
-        .inside_results
-        .iter()
-        .map(|r| stmt_exec_result_json_value(runtime, r))
-        .collect();
+    let inside_items = factual_inside_result_json_items(runtime, x);
 
     JsonValue::Object(vec![
         (
@@ -595,11 +592,7 @@ fn build_display_error_json_object(
                 JSON_KEY_MESSAGE,
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
-            let well_defined_stmt = e
-                .statement
-                .as_ref()
-                .or(statement_context)
-                .cloned();
+            let well_defined_stmt = e.statement.as_ref().or(statement_context).cloned();
             push_optional_statement_json_field_lines(
                 &mut field_lines,
                 indent_inner.as_str(),

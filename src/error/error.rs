@@ -26,33 +26,103 @@ pub struct RuntimeErrorStruct {
     pub inside_results: Vec<StmtResult>,
 }
 
-macro_rules! runtime_error_wrapper {
-    ($($wrapper:ident => $variant:ident),* $(,)?) => {
-        $(
-            #[derive(Debug)]
-            pub struct $wrapper(pub RuntimeErrorStruct);
+#[derive(Debug)]
+pub struct ArithmeticRuntimeError(pub RuntimeErrorStruct);
 
-            impl From<$wrapper> for RuntimeError {
-                fn from(w: $wrapper) -> Self {
-                    RuntimeError::$variant(w.0)
-                }
-            }
-        )*
-    };
+impl From<ArithmeticRuntimeError> for RuntimeError {
+    fn from(w: ArithmeticRuntimeError) -> Self {
+        RuntimeError::ArithmeticError(w.0)
+    }
 }
 
-runtime_error_wrapper! {
-    ArithmeticRuntimeError => ArithmeticError,
-    NewFactRuntimeError => NewFactError,
-    StoreFactRuntimeError => StoreFactError,
-    ParseRuntimeError => ParseError,
-    WellDefinedRuntimeError => WellDefinedError,
-    VerifyRuntimeError => VerifyError,
-    UnknownRuntimeError => UnknownError,
-    InferRuntimeError => InferError,
-    NameAlreadyUsedRuntimeError => NameAlreadyUsedError,
-    DefineParamsRuntimeError => DefineParamsError,
-    InstantiateRuntimeError => InstantiateError,
+#[derive(Debug)]
+pub struct NewFactRuntimeError(pub RuntimeErrorStruct);
+
+impl From<NewFactRuntimeError> for RuntimeError {
+    fn from(w: NewFactRuntimeError) -> Self {
+        RuntimeError::NewFactError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct StoreFactRuntimeError(pub RuntimeErrorStruct);
+
+impl From<StoreFactRuntimeError> for RuntimeError {
+    fn from(w: StoreFactRuntimeError) -> Self {
+        RuntimeError::StoreFactError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct ParseRuntimeError(pub RuntimeErrorStruct);
+
+impl From<ParseRuntimeError> for RuntimeError {
+    fn from(w: ParseRuntimeError) -> Self {
+        RuntimeError::ParseError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct WellDefinedRuntimeError(pub RuntimeErrorStruct);
+
+impl From<WellDefinedRuntimeError> for RuntimeError {
+    fn from(w: WellDefinedRuntimeError) -> Self {
+        RuntimeError::WellDefinedError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct VerifyRuntimeError(pub RuntimeErrorStruct);
+
+impl From<VerifyRuntimeError> for RuntimeError {
+    fn from(w: VerifyRuntimeError) -> Self {
+        RuntimeError::VerifyError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct UnknownRuntimeError(pub RuntimeErrorStruct);
+
+impl From<UnknownRuntimeError> for RuntimeError {
+    fn from(w: UnknownRuntimeError) -> Self {
+        RuntimeError::UnknownError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct InferRuntimeError(pub RuntimeErrorStruct);
+
+impl From<InferRuntimeError> for RuntimeError {
+    fn from(w: InferRuntimeError) -> Self {
+        RuntimeError::InferError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct NameAlreadyUsedRuntimeError(pub RuntimeErrorStruct);
+
+impl From<NameAlreadyUsedRuntimeError> for RuntimeError {
+    fn from(w: NameAlreadyUsedRuntimeError) -> Self {
+        RuntimeError::NameAlreadyUsedError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct DefineParamsRuntimeError(pub RuntimeErrorStruct);
+
+impl From<DefineParamsRuntimeError> for RuntimeError {
+    fn from(w: DefineParamsRuntimeError) -> Self {
+        RuntimeError::DefineParamsError(w.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct InstantiateRuntimeError(pub RuntimeErrorStruct);
+
+impl From<InstantiateRuntimeError> for RuntimeError {
+    fn from(w: InstantiateRuntimeError) -> Self {
+        RuntimeError::InstantiateError(w.0)
+    }
 }
 
 impl RuntimeErrorStruct {
@@ -87,6 +157,16 @@ pub fn short_exec_error(
         line_file.clone(),
         cause,
         inside_results,
+    ))
+}
+
+pub fn exec_stmt_error_with_stmt_and_cause(stmt: Stmt, cause: RuntimeError) -> RuntimeError {
+    RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
+        Some(stmt.clone()),
+        String::new(),
+        stmt.line_file(),
+        Some(cause),
+        vec![],
     ))
 }
 
