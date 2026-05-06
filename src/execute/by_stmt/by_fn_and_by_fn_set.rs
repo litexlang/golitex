@@ -104,22 +104,19 @@ impl Runtime {
             .collect();
         let forall_element_obj: Obj =
             obj_for_bound_param_in_scope(forall_element_name.clone(), ParamObjType::Forall);
-        let arg_domain_factors: Vec<Obj> = forall_param_defs_with_type
-            .iter()
-            .map(
-                |param_def_with_type| match &param_def_with_type.param_type {
-                    ParamType::Obj(obj) => obj.clone(),
-                    _ => unreachable!(),
-                },
-            )
-            .collect();
-        let forall_arg_dom = if param_names.len() == 1 {
-            arg_domain_factors[0].clone()
-        } else {
-            Cart::new(arg_domain_factors).into()
-        };
-        let forall_element_cart_set =
-            Cart::new(vec![forall_arg_dom, forall_ret_set.clone()]).into();
+        let mut forall_element_cart_factors: Vec<Obj> = Vec::with_capacity(param_names.len() + 1);
+        for param_def_with_type in forall_param_defs_with_type.iter() {
+            match &param_def_with_type.param_type {
+                ParamType::Obj(obj) => {
+                    for _ in param_def_with_type.params.iter() {
+                        forall_element_cart_factors.push(obj.clone());
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+        forall_element_cart_factors.push(forall_ret_set.clone());
+        let forall_element_cart_set = Cart::new(forall_element_cart_factors).into();
         let forall_shape = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![forall_element_name.clone()],
@@ -135,7 +132,7 @@ impl Runtime {
                 .into(),
                 EqualFact::new(
                     TupleDim::new(forall_element_obj.clone()).into(),
-                    Number::new("2".to_string()).into(),
+                    Number::new((param_names.len() + 1).to_string()).into(),
                     line_file.clone(),
                 )
                 .into(),
@@ -144,11 +141,9 @@ impl Runtime {
         )?
         .into();
         let forall_z_obj = obj_for_bound_param_in_scope(forall_z_name.clone(), ParamObjType::Exist);
-        let pair_in_fn = if param_names.len() == 1 {
-            Tuple::new(vec![forall_args_exist[0].clone(), forall_z_obj]).into()
-        } else {
-            Tuple::new(vec![Tuple::new(forall_args_exist).into(), forall_z_obj]).into()
-        };
+        let mut tuple_in_fn = forall_args_exist;
+        tuple_in_fn.push(forall_z_obj);
+        let tuple_in_fn = Tuple::new(tuple_in_fn).into();
         let forall_in = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![forall_element_name],
@@ -190,7 +185,7 @@ impl Runtime {
                         );
                     }
                     facts.push(
-                        EqualFact::new(forall_element_obj, pair_in_fn, line_file.clone()).into(),
+                        EqualFact::new(forall_element_obj, tuple_in_fn, line_file.clone()).into(),
                     );
                     facts
                 },
@@ -286,11 +281,9 @@ impl Runtime {
         let exist_element_obj =
             obj_for_bound_param_in_scope(exist_element_name.clone(), ParamObjType::Exist);
         let exist_z_obj = obj_for_bound_param_in_scope(exist_z_name.clone(), ParamObjType::Exist);
-        let exist_pair = if param_names.len() == 1 {
-            Tuple::new(vec![exist_args_for_pair[0].clone(), exist_z_obj]).into()
-        } else {
-            Tuple::new(vec![Tuple::new(exist_args_for_pair).into(), exist_z_obj]).into()
-        };
+        let mut exist_tuple = exist_args_for_pair;
+        exist_tuple.push(exist_z_obj);
+        let exist_tuple = Tuple::new(exist_tuple).into();
         let exist_fact = ExistFactEnum::ExistFact(ExistFactBody::new(
             ParamDefWithType::new(vec![
                 ParamGroupWithParamType::new(
@@ -299,7 +292,7 @@ impl Runtime {
                 ),
                 ParamGroupWithParamType::new(vec![exist_z_name], ParamType::Obj(exist_ret_set)),
             ]),
-            vec![EqualFact::new(exist_element_obj, exist_pair, line_file.clone()).into()],
+            vec![EqualFact::new(exist_element_obj, exist_tuple, line_file.clone()).into()],
             line_file.clone(),
         )?);
         let forall_exist = ForallFact::new(
@@ -339,46 +332,49 @@ impl Runtime {
             obj_for_bound_param_in_scope(unique_x1_name.clone(), ParamObjType::Forall);
         let unique_x2_obj: Obj =
             obj_for_bound_param_in_scope(unique_x2_name.clone(), ParamObjType::Forall);
-        let unique_param_group_sets: Vec<Obj> = fn_body
-            .params_def_with_set
-            .iter()
-            .map(|param_def_with_set| param_def_with_set.set.clone())
-            .collect();
-        let unique_arg_dom = if param_names.len() == 1 {
-            unique_param_group_sets[0].clone()
-        } else {
-            Cart::new(unique_param_group_sets).into()
-        };
-        let unique_element_cart_set: Obj =
-            Cart::new(vec![unique_arg_dom, fn_body.ret_set.as_ref().clone()]).into();
-        // 与手写标准一致：dom 为两元在图集内且首分量相同，then 仅为 x1 = x2
+        let mut unique_element_cart_factors: Vec<Obj> = Vec::with_capacity(param_names.len() + 1);
+        for param_def_with_set in fn_body.params_def_with_set.iter() {
+            for _ in param_def_with_set.params.iter() {
+                unique_element_cart_factors.push(param_def_with_set.set.clone());
+            }
+        }
+        unique_element_cart_factors.push(fn_body.ret_set.as_ref().clone());
+        let unique_element_cart_set: Obj = Cart::new(unique_element_cart_factors).into();
+        let mut unique_dom_facts: Vec<Fact> = Vec::with_capacity(param_names.len() + 2);
+        unique_dom_facts.push(
+            InFact::new(
+                unique_x1_obj.clone(),
+                unique_element_cart_set.clone(),
+                line_file.clone(),
+            )
+            .into(),
+        );
+        unique_dom_facts.push(
+            InFact::new(
+                unique_x2_obj.clone(),
+                unique_element_cart_set.clone(),
+                line_file.clone(),
+            )
+            .into(),
+        );
+        for index in 1..=param_names.len() {
+            unique_dom_facts.push(
+                EqualFact::new(
+                    ObjAtIndex::new(unique_x1_obj.clone(), Number::new(index.to_string()).into())
+                        .into(),
+                    ObjAtIndex::new(unique_x2_obj.clone(), Number::new(index.to_string()).into())
+                        .into(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+        }
         let forall_unique = ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![unique_x1_name, unique_x2_name],
                 ParamType::Obj(function.clone()),
             )]),
-            vec![
-                InFact::new(
-                    unique_x1_obj.clone(),
-                    unique_element_cart_set.clone(),
-                    line_file.clone(),
-                )
-                .into(),
-                InFact::new(
-                    unique_x2_obj.clone(),
-                    unique_element_cart_set.clone(),
-                    line_file.clone(),
-                )
-                .into(),
-                EqualFact::new(
-                    ObjAtIndex::new(unique_x1_obj.clone(), Number::new("1".to_string()).into())
-                        .into(),
-                    ObjAtIndex::new(unique_x2_obj.clone(), Number::new("1".to_string()).into())
-                        .into(),
-                    line_file.clone(),
-                )
-                .into(),
-            ],
+            unique_dom_facts,
             vec![EqualFact::new(unique_x1_obj, unique_x2_obj, line_file.clone()).into()],
             line_file.clone(),
         )?
