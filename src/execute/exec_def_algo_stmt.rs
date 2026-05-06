@@ -8,10 +8,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process(def_algo_stmt))?;
         self.store_def_algo(def_algo_stmt)?;
-        Ok(
-            (NonFactualStmtSuccess::new(def_algo_stmt.clone().into(), InferResult::new(), vec![]))
-                .into(),
-        )
+        Ok(NonFactualStmtSuccess::new_with_stmt(def_algo_stmt.clone().into()).into())
     }
 
     fn exec_def_algo_stmt_verify_process(
@@ -53,10 +50,7 @@ impl Runtime {
             &requirement_dom_facts,
         )?;
 
-        Ok(
-            (NonFactualStmtSuccess::new(def_algo_stmt.clone().into(), InferResult::new(), vec![]))
-                .into(),
-        )
+        Ok(NonFactualStmtSuccess::new_with_stmt(def_algo_stmt.clone().into()).into())
     }
 
     fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> RuntimeError {

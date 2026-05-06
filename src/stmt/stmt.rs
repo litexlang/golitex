@@ -4,7 +4,6 @@ use std::fmt;
 #[derive(Clone)]
 pub enum Stmt {
     Fact(Fact),
-    DefLetStmt(DefLetStmt),
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
@@ -13,6 +12,8 @@ pub enum Stmt {
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
+    HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
+    DefLetStmt(DefLetStmt),
     DefFamilyStmt(DefFamilyStmt),
     DefAlgoStmt(DefAlgoStmt),
     ClaimStmt(ClaimStmt),
@@ -93,6 +94,7 @@ impl fmt::Display for Stmt {
             Stmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
+            Stmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
             Stmt::DefFamilyStmt(x) => write!(f, "{}", x),
             Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
             Stmt::ClaimStmt(x) => write!(f, "{}", x),
@@ -133,6 +135,7 @@ impl Stmt {
             Stmt::HaveFnEqualStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
+            Stmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefFamilyStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClaimStmt(stmt) => stmt.line_file.clone(),
@@ -171,6 +174,7 @@ impl Stmt {
             Stmt::HaveFnEqualStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefFamilyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
@@ -255,6 +259,12 @@ impl From<HaveFnEqualCaseByCaseStmt> for Stmt {
 impl From<HaveFnByInducStmt> for Stmt {
     fn from(v: HaveFnByInducStmt) -> Self {
         Stmt::HaveFnByInducStmt(v)
+    }
+}
+
+impl From<HaveFnByForallExistUniqueStmt> for Stmt {
+    fn from(v: HaveFnByForallExistUniqueStmt) -> Self {
+        Stmt::HaveFnByForallExistUniqueStmt(v)
     }
 }
 

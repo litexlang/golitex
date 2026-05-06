@@ -13,14 +13,12 @@ impl Runtime {
         &mut self,
         stmt: &DoNothingStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        return Ok(
-            (NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![])).into(),
-        );
+        return Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into());
     }
 
     pub fn exec_clear_stmt(&mut self, stmt: &ClearStmt) -> Result<StmtResult, RuntimeError> {
         self.clear_current_env_and_parse_name_scope();
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![])).into())
+        Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
     }
 
     pub fn exec_run_file_stmt(&mut self, stmt: &RunFileStmt) -> Result<StmtResult, RuntimeError> {

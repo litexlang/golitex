@@ -84,7 +84,7 @@ impl Runtime {
             .verify_well_defined_and_store_and_infer_with_default_verify_state(
                 disjunction_fact.clone(),
             )
-            .map_err(|e| short_exec_error(stmt.clone().into(), "", Some(e), vec![]))?;
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&disjunction_fact);

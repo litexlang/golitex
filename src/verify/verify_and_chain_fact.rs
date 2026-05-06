@@ -37,16 +37,15 @@ impl Runtime {
             }
             child_results.push(result);
         }
-        Ok(
-            (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+        Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+            and_fact.clone().into(),
+            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
                 and_fact.clone().into(),
                 "and: each conjunct verified in order".to_string(),
-                None,
-                Some(and_fact.line_file()),
-                child_results,
-            ))
-            .into(),
-        )
+            )]),
+            child_results,
+        ))
+        .into())
     }
 
     pub fn verify_chain_fact(
@@ -98,15 +97,14 @@ impl Runtime {
 
             child_results.push(result);
         }
-        Ok(
-            (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+        Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+            chain_fact.clone().into(),
+            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
                 chain_fact.clone().into(),
                 "chain: each step verified in order".to_string(),
-                None,
-                Some(chain_fact.line_file()),
-                child_results,
-            ))
-            .into(),
-        )
+            )]),
+            child_results,
+        ))
+        .into())
     }
 }

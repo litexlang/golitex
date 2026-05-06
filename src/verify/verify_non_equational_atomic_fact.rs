@@ -292,13 +292,15 @@ impl Runtime {
         {
             for obj in all_objs_equal_to_arg.iter() {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                            atomic_fact.clone().into(),
+                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                        atomic_fact.clone().into(),
+                        VerifiedByResult::Fact(
+                            known_atomic_fact.clone().into(),
                             known_atomic_fact.to_string(),
-                            Some(known_atomic_fact.clone().into()),
-                            None,
-                            Vec::new(),
-                        )).into());
+                        ),
+                        Vec::new(),
+                    ))
+                    .into());
                 }
             }
         }
@@ -321,13 +323,15 @@ impl Runtime {
                     if let Some(known_atomic_fact) =
                         known_facts_map.get(&(obj0.clone(), obj1.clone()))
                     {
-                        return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                                atomic_fact.clone().into(),
+                        return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                            atomic_fact.clone().into(),
+                            VerifiedByResult::Fact(
+                                known_atomic_fact.clone().into(),
                                 known_atomic_fact.to_string(),
-                                Some(known_atomic_fact.clone().into()),
-                                None,
-                                Vec::new(),
-                            )).into());
+                            ),
+                            Vec::new(),
+                        ))
+                        .into());
                     }
                 }
             }
@@ -344,13 +348,15 @@ impl Runtime {
                         if let Some(known_atomic_fact) =
                             known_facts_map.get(&(obj0.clone(), obj1.clone()))
                         {
-                            return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                                    atomic_fact.clone().into(),
+                            return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                                atomic_fact.clone().into(),
+                                VerifiedByResult::Fact(
+                                    known_atomic_fact.clone().into(),
                                     known_atomic_fact.to_string(),
-                                    Some(known_atomic_fact.clone().into()),
-                                    None,
-                                    Vec::new(),
-                                )).into());
+                                ),
+                                Vec::new(),
+                            ))
+                            .into());
                         }
                     }
                 }
@@ -405,13 +411,12 @@ impl Runtime {
                     }
                 }
                 if all_args_match {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                            atomic_fact.clone().into(),
-                            known_fact.to_string(),
-                            Some(known_fact.clone().into()),
-                            None,
-                            Vec::new(),
-                        )).into());
+                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                        atomic_fact.clone().into(),
+                        VerifiedByResult::Fact(known_fact.clone().into(), known_fact.to_string()),
+                        Vec::new(),
+                    ))
+                    .into());
                 }
             }
         }
@@ -613,7 +618,8 @@ impl Runtime {
             match &iff_clause_verify_result {
                 StmtResult::FactualStmtSuccess(factual_success) => {
                     infer_result.new_infer_result_inside(factual_success.infers.clone());
-                    definition_clause_descriptions.push(factual_success.msg.clone());
+                    definition_clause_descriptions
+                        .push(factual_success.verification_display_line());
                 }
                 StmtResult::NonFactualStmtSuccess(non_factual_success) => {
                     infer_result.new_infer_result_inside(non_factual_success.infers.clone());
@@ -629,12 +635,10 @@ impl Runtime {
         );
         infer_result.new_fact(&normal_atomic_fact.clone().into());
         Ok(Some(
-            (FactualStmtSuccess::new_with_verified_by_known_fact_source(
+            (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),
                 infer_result,
-                verified_by_text,
-                None,
-                Some(normal_atomic_fact.line_file.clone()),
+                VerifiedByResult::Fact(normal_atomic_fact.clone().into(), verified_by_text),
                 Vec::new(),
             ))
             .into(),
@@ -692,16 +696,19 @@ impl Runtime {
         let transposed_result =
             self.verify_non_equational_atomic_fact(&transposed_fact, verify_state, false)?;
         match transposed_result {
-            StmtResult::FactualStmtSuccess(inner_success) => Ok(
-                (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
+            StmtResult::FactualStmtSuccess(inner_success) => {
+                let FactualStmtSuccess {
+                    verified_by,
+                    infers: _,
+                    stmt: _,
+                } = inner_success;
+                Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
                     atomic_fact.clone().into(),
-                    inner_success.msg,
-                    inner_success.verified_by_fact,
-                    inner_success.verified_by_fact_known_line_file,
-                    inner_success.inside_results,
-                ))
-                .into(),
-            ),
+                    verified_by,
+                    Vec::new(),
+                )
+                .into())
+            }
             other if other.is_true() => Ok(other),
             _ => Ok(result),
         }

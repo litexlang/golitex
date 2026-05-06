@@ -24,19 +24,6 @@ impl Runtime {
                 let fact = IsFiniteSetFact::new(obj, default_line_file()).into();
                 self.verify_atomic_fact(&fact, verify_state)
             }
-            ParamType::Restrictive(fs) => {
-                let restrict_fact =
-                    RestrictFact::new(obj.clone(), fs.clone().into(), default_line_file()).into();
-                let restrict_res = self.verify_atomic_fact(&restrict_fact, verify_state)?;
-                if restrict_res.is_true() {
-                    return Ok(restrict_res);
-                }
-                // `restrictive (fn …)` is `$restrict_fn_in` shape. Proving the definition often
-                // repeats a `forall` that membership `f $in fn …` already encodes when the type is
-                // exactly this function space; the dedicated proof may still return unknown.
-                let membership = InFact::new(obj, fs.clone().into(), default_line_file()).into();
-                self.verify_atomic_fact(&membership, verify_state)
-            }
         }
     }
 

@@ -1,15 +1,22 @@
-# Builtin Concepts
+# Objects
 
-Try all snippets in browser: https://litexlang.com/doc/Builtin_Features/Builtin_Objects
+Jiachen Shen and The Litex Team, 2026-05-06. Email: litexlang@outlook.com
 
-Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Builtin_Objects.md
+Try all snippets in browser: https://litexlang.com/doc/Manual/Objects
 
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Objects.md
 
-# Objects(Sets)
+_The whole is greater than the sum of its parts._
+
+_— Aristotle_
+
+## Objects as sets
 
 Everything you write in a formula is built from a fixed menu of expression forms: numbers, identifiers, sets, functions, tuples, sums, and so on. We call these objects (they are not variables because in math anything is constant). And since Litex is set-based, all objects are sets.
 
 The subsections below name each form in ordinary mathematical language and show typical Litex spelling.
+
+Objects are the material that facts talk about. For the full path from objects to atomic facts, verification, storage, and inference, see [Proof Process](Proof_Process.md).
 
 ### Names and parameters
 

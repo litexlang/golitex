@@ -9,7 +9,11 @@ impl Runtime {
         if let Some(number) = obj.evaluate_to_normalized_decimal_number() {
             return Some(number);
         }
-        self.get_object_equal_to_normalized_decimal_number(&obj.to_string())
+        let obj_key = obj.to_string();
+        if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&obj_key) {
+            return Some(number);
+        }
+        None
     }
 
     pub fn resolve_obj_to_number_resolved(&self, obj: &Obj) -> Option<Number> {
@@ -30,6 +34,9 @@ impl Runtime {
     }
 
     pub fn resolve_obj(&self, obj: &Obj) -> Obj {
+        if let Some(number) = self.resolve_obj_to_number(obj) {
+            return number.into();
+        }
         match obj {
             Obj::Number(number) => number.clone().into(),
             Obj::Add(add) => {

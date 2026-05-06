@@ -67,6 +67,124 @@ fn abs_sign_split_or_is_exhaustive_pair(a: &AtomicFact, b: &AtomicFact) -> bool 
         && obj_is_negation_of_for_abs_or_builtin(second_other, arg)
 }
 
+fn positive_integer_number_to_usize_for_mod_or_builtin(number: &Number) -> Option<usize> {
+    let value = normalized_nonnegative_integer_number_to_usize_for_mod_or_builtin(number)?;
+    if value == 0 {
+        return None;
+    }
+    Some(value)
+}
+
+fn nonnegative_integer_number_to_usize_for_mod_or_builtin(number: &Number) -> Option<usize> {
+    normalized_nonnegative_integer_number_to_usize_for_mod_or_builtin(number)
+}
+
+fn normalized_nonnegative_integer_number_to_usize_for_mod_or_builtin(
+    number: &Number,
+) -> Option<usize> {
+    let value = number.normalized_value.trim();
+    if value.starts_with('-') {
+        return None;
+    }
+    let unsigned = value.trim_start_matches('+');
+    let integer_part = match unsigned.find('.') {
+        Some(index) => {
+            let fractional_part = &unsigned[index + 1..];
+            if !fractional_part.chars().all(|c| c == '0') {
+                return None;
+            }
+            &unsigned[..index]
+        }
+        None => unsigned,
+    };
+    integer_part.parse::<usize>().ok()
+}
+
+fn mod_obj_and_residue_from_atomic_equal_for_mod_or_builtin(
+    atomic_fact: &AtomicFact,
+) -> Option<(&Obj, &Number, &Number)> {
+    let AtomicFact::EqualFact(eq) = atomic_fact else {
+        return None;
+    };
+    match (&eq.left, &eq.right) {
+        (Obj::Mod(m), Obj::Number(residue)) => match m.right.as_ref() {
+            Obj::Number(modulus) => Some((m.left.as_ref(), modulus, residue)),
+            _ => None,
+        },
+        (Obj::Number(residue), Obj::Mod(m)) => match m.right.as_ref() {
+            Obj::Number(modulus) => Some((m.left.as_ref(), modulus, residue)),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+// Remainder by a positive integer covers exactly one residue class.
+// If m > 1, `x % m = 0 or x % m = 1 or ... or x % m = m - 1` is exhaustive.
+// Example: `forall x Z: x % 2 = 0 or x % 2 = 1`.
+fn mod_positive_integer_residue_or_is_exhaustive(or_fact: &OrFact) -> bool {
+    if or_fact.facts.is_empty() {
+        return false;
+    }
+
+    let first_atomic = match &or_fact.facts[0] {
+        AndChainAtomicFact::AtomicFact(atomic) => atomic,
+        _ => return false,
+    };
+    let Some((first_obj, first_modulus, first_residue)) =
+        mod_obj_and_residue_from_atomic_equal_for_mod_or_builtin(first_atomic)
+    else {
+        return false;
+    };
+    let Some(modulus_value) = positive_integer_number_to_usize_for_mod_or_builtin(first_modulus)
+    else {
+        return false;
+    };
+    if modulus_value <= 1 || modulus_value != or_fact.facts.len() {
+        return false;
+    }
+
+    let mut seen_residues = vec![false; modulus_value];
+    let Some(first_residue_value) =
+        nonnegative_integer_number_to_usize_for_mod_or_builtin(first_residue)
+    else {
+        return false;
+    };
+    if first_residue_value >= modulus_value {
+        return false;
+    }
+    seen_residues[first_residue_value] = true;
+
+    for fact in or_fact.facts.iter().skip(1) {
+        let AndChainAtomicFact::AtomicFact(atomic) = fact else {
+            return false;
+        };
+        let Some((obj, modulus, residue)) =
+            mod_obj_and_residue_from_atomic_equal_for_mod_or_builtin(atomic)
+        else {
+            return false;
+        };
+        if !objs_equal_by_display_string(obj, first_obj)
+            || !objs_equal_by_display_string(
+                &Obj::Number(modulus.clone()),
+                &Obj::Number(first_modulus.clone()),
+            )
+        {
+            return false;
+        }
+        let Some(residue_value) = nonnegative_integer_number_to_usize_for_mod_or_builtin(residue)
+        else {
+            return false;
+        };
+        if residue_value >= modulus_value || seen_residues[residue_value] {
+            return false;
+        }
+        seen_residues[residue_value] = true;
+    }
+
+    seen_residues.iter().all(|seen| *seen)
+}
+
 impl Runtime {
     pub fn verify_or_fact(
         &mut self,
@@ -141,19 +259,29 @@ impl Runtime {
             }
         }
 
+        if mod_positive_integer_residue_or_is_exhaustive(or_fact) {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    or_fact.clone().into(),
+                    "or: complete residue classes modulo a positive integer".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
         for fact in or_fact.facts.iter() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
-                return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                        or_fact.clone().into(),
+                return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                    or_fact.clone().into(),
+                    VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+                        fact.clone().into(),
                         fact.to_string(),
-                        None,
-                        Some(fact.line_file()),
-                        Vec::new(),
-                    ))
-                    .into(),
-                );
+                    )]),
+                    Vec::new(),
+                ))
+                .into());
             }
         }
 
@@ -225,13 +353,15 @@ impl Runtime {
                 }
 
                 if all_args_match {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact_source_recording_facts(
-                            or_fact.clone().into(),
+                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                        or_fact.clone().into(),
+                        VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+                            known_or_fact.clone().into(),
                             known_or_fact.to_string(),
-                            Some(known_or_fact.clone().into()),
-                            None,
-                            Vec::new(),
-                        )).into());
+                        )]),
+                        Vec::new(),
+                    ))
+                    .into());
                 }
             }
         }
