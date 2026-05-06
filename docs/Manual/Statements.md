@@ -554,6 +554,10 @@ forall m Z:
         $r0(m)
 ```
 
+> Hint: Many `by ...` statements are not random proof commands. They match the logical shape of the factual statement you are trying to prove or use. For example, `by cases` matches an `or` fact, `by contra` matches negation, and `by induc` matches an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to specific object structures: `by for` works with bounded ranges, `by enumerate` works with finite objects, and `by extension` works with set equality.
+
+
+
 ---
 
 ## Bounded iteration shell (`by for`)

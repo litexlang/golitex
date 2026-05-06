@@ -61,71 +61,41 @@ Different fact shapes are verified in different ways, but they all reduce to the
 | **Universal with equivalence** | A universal fact with an equivalent reformulation. | block `forall ...` with `<=>:` |
 | **Negated universal** | A universal claim is false. | `not forall x R: x > 0` |
 
-> Hint: If you are new to Litex, start by writing one simple fact per line. Use compound forms only when they make the proof easier to read.
-
-Some fact shapes have both **inline** and **multiline** forms. Inline forms are convenient for short facts; multiline forms are easier when the body has several facts or when you need `=>:` / `<=>:`.
-
-Existential facts are usually inline. The keyword tells you which kind of existence is being claimed:
-
-```litex
-exist x R st { x = 1 }
-exist! x R st { x = 0 }
-not exist x R st { x != x }
-```
-
-When the body has several requirements, keep them inside the braces:
-
-```litex
-exist x R st { x > 0, x < 1 }
-```
-
-Universal facts can be inline with `forall!`:
-
-```litex
-forall! x R: x = x
-forall! x R: 0 < x => { x != 0 }
-```
-
-The multiline form uses ordinary `forall`:
-
-```litex
-forall x R:
-    x = x
-
-forall x R:
-    0 < x
-    =>:
-        x != 0
-```
-
-Universal facts with equivalence are normally written in multiline form:
-
-```litex
-forall x, y R:
-    =>:
-        x > y
-    <=>:
-        y < x
-```
-
-> Hint: Use inline syntax only when the whole fact is easy to read on one line. If the fact has multiple assumptions, multiple conclusions, or `<=>:`, use multiline syntax.
-
 ---
 
 ## Atomic facts
 
-An **atomic fact** is one indivisible mathematical claim. It has one main relation or predicate, plus its arguments.
+An **atomic fact** is one indivisible mathematical claim. It has one main relation(predicate like equality, order, membership, etc.), plus its arguments.
 
 Common atomic facts:
 
 ```litex
-1 = 1
+1 + 1 = 2
+```
+
+Here `=` is the main relation(predicate), and `1 + 1` and `2` are the arguments. This factual statement is true by calculation.
+
+> Note: In Litex, expressions such as `1 + 1`, `x - y`, or `f(x)` are usually treated as **objects** or **terms**. They name values. They are not facts by themselves, so they are not true or false.
+
+> Note: The **verb** of a factual statement is the part that makes a judgment: `=`, `!=`, `<`, `$in`, `$is_set(...)`, or a custom predicate such as `$is_one(...)`. For example, `1 + 1` has no truth value, but `1 + 1 = 2` does.
+
+> Hint: When reading an atomic fact, first find the verb that is being checked. The remaining pieces are the objects the verb talks about.
+
+More examples with builtin predicates:
+
+```litex
 2 != 3
 0 < 1
 not 1 < 0
 1 $in {1, 2}
 $is_set({1, 2})
 ```
+
+> Note: Builtin predicates and builtin objects are connected by many builtin verification rules. These predicates and rules are the common concepts and rules from basic mathematics, not advanced hidden machinery. Each single rule is usually intuitive: for example, `1 $in {1, 2}`, `2 < 3`, `2 != 3`, or `$is_set({1, 2})`. The surprising part is the total size of the background knowledge. Basic mathematics has many small relationships, and Litex has hundreds of them built in for standard numbers, sets, functions, tuples, comparisons, equality, and membership.
+
+> Note: Because of this, using builtin predicates and builtin objects is often much more convenient than rebuilding the same ideas with custom predicates. When you write facts with standard forms such as `$in`, `$is_set`, `=`, `<`, `R`, `Z`, or `{1, 2}`, Litex can often use hundreds of built-in relationships behind the scenes.
+
+> Hint: Prefer builtin predicates and builtin objects when they express what you mean. Use custom `prop` definitions when you need a new mathematical idea that is not already covered by the builtin vocabulary.
 
 Custom predicates defined by `prop` are also atomic when you call them:
 
@@ -193,7 +163,11 @@ Chains are not a new kind of mathematical logic. They are shorthand for smaller 
 0 < 2
 ```
 
+When several comparisons belong to the same ordered path, prefer a chain such as `a < b < c` instead of writing separate facts such as `a < b` and `b < c`. The chain is shorter, shows the structure more clearly, and gives Litex a direct shape for applying builtin order support.
+
 > Hint: If a chain is hard to debug, split it into its adjacent pieces first.
+
+> Hint: Try to use `<` consistently instead of switching back and forth between `<` and `>`. For example, prefer `a < b < c` over `c > b > a` when either form would say the same thing. A consistent direction makes proof steps easier to read and easier for builtin order rules to match.
 
 ---
 
@@ -209,7 +183,23 @@ Litex can verify this because the second branch is true.
 
 A branch is usually an atomic fact, a conjunction of atomic facts, or a chain.
 
-> Hint: To prove `A or B`, it is enough for Litex to prove one side. If both sides are `unknown`, state more facts before the disjunction or prove one branch inside a `claim:`.
+> Hint: To prove `A or B`, it is enough for Litex to prove one side.
+
+Disjunctions also work together with the `by cases` statement. After Litex knows `A or B`, `by cases` can split the proof into one branch where `A` is assumed and another branch where `B` is assumed.
+
+```litex
+have x R
+
+by cases:
+    prove:
+        x = 0 or x != 0
+    case x = 0:
+        ...
+    case x != 0:
+        ...
+```
+
+> Hint: Think of `or` as the factual statement shape, and `by cases` as the proof statement that uses that shape.
 
 ---
 
@@ -217,7 +207,7 @@ A branch is usually an atomic fact, a conjunction of atomic facts, or a chain.
 
 An **existential fact** says that there is a witness satisfying some conditions.
 
-```litex
+```text
 exist x R st { x = 1 }
 ```
 
@@ -225,13 +215,13 @@ Read this as: there exists an `x` in `R` such that `x = 1`.
 
 You can also state uniqueness:
 
-```litex
+```text
 exist! x R st { x = 0 }
 ```
 
 And non-existence:
 
-```litex
+```text
 not exist x R st { x != x }
 ```
 
@@ -281,7 +271,8 @@ The lines before `=>:` are the **domain assumptions** or **hypotheses**. The lin
 Compact `forall!` syntax is also available for short facts:
 
 ```litex
-forall! x R: x = x
+forall! x R => {x = x}
+forall! x R: x > 0 => {x != 0}
 ```
 
 For beginners, block form is often clearer.
@@ -326,97 +317,3 @@ not forall x R:
 
 > Hint: `not forall` is different from putting `not` inside the conclusion. If you want to say there is a counterexample to a universal claim, use `not forall`.
 
----
-
-## How Litex verifies a fact
-
-The exact builtin rules are listed in [Builtin Verification Rules](https://litexlang.com/doc/Manual/Builtin_Verification_Rules), but the basic flow is simple:
-
-1. **Check well-definedness.** Litex first checks that the names, terms, sets, function calls, and predicate calls make sense in the current context.
-2. **Recognize the fact shape.** Atomic, `and`, chain, `or`, `exist`, `forall`, and `not forall` are handled differently.
-3. **Break compound facts into smaller goals.** For example, `A and B` requires both `A` and `B`; a chain becomes adjacent atomic comparisons.
-4. **Use the current context.** Litex uses facts already proved, facts introduced by `know`, function definitions, `prop` definitions, and facts inferred from earlier statements.
-5. **Try builtin rules.** Arithmetic, equality normalization, order comparison, membership, set facts, tuple facts, and other standard rules may close the goal.
-6. **Return true or unknown.** If all required pieces are verified, the whole fact is true. Otherwise it is unknown.
-
-> Hint: Do not read `unknown` as a final mathematical judgment. Read it as: "Litex cannot see the proof from here."
-
----
-
-## Writing proof-friendly facts
-
-Prefer small, explicit steps:
-
-```litex
-have x R = 2
-x = 2
-x + 1 = 3
-```
-
-State domain facts before using rules that need them:
-
-```litex
-have x R
-know x > 0
-x != 0
-```
-
-Use `claim:` when you want to prove a fact in a small local block:
-
-```litex
-claim:
-    1 + 1 = 2
-```
-
-Use `know` for facts you want to add as assumptions or already accepted background knowledge:
-
-```litex
-know forall x R:
-    x = x
-```
-
-> Hint: A good Litex proof often looks more detailed than a paper proof. That is normal: you are writing down the steps that a human reader might silently fill in.
-
----
-
-## Common beginner mistakes
-
-Writing a fact before introducing its variables:
-
-```litex
-# x has not been introduced yet
-x = x
-```
-
-Introduce the variable first:
-
-```litex
-have x R
-x = x
-```
-
-Using `=>:` when there are no assumptions:
-
-```litex
-# Prefer the simpler form
-forall x R:
-    =>:
-        x = x
-```
-
-Write:
-
-```litex
-forall x R:
-    x = x
-```
-
-Expecting a disjunction to prove both branches:
-
-```litex
-1 = 1 or 1 = 2
-```
-
-This proves only that at least one branch holds. It does not make `1 = 2` known.
-
-> Hint: When in doubt, ask: "What exact fact do I want to be available on the next line?" Then write that fact directly if possible.

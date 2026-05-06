@@ -20,6 +20,7 @@ Note: This document is a template and not legal advice. Please consult your coun
 - Project: Litexlang
 - Website: https://litexlang.com and any related webpage(s)
 - Contact: litexlang@outlook.com
+- Contact: malloc_realloc_free@outlook.com
 - Maintainer: Jiachen Shen
 
 ## Scope
