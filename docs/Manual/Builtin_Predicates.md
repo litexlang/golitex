@@ -1,114 +1,94 @@
-# Builtin predicates
+# Builtin Predicates
 
-**Builtin predicates** are the fixed relation and `$…` predicate names that Litex treats as special atomic facts—equality and comparisons need **no** leading `$`; most others use **`$`** and either **infix** (two arguments) or **prefix** `$name(…)`.
+Try all snippets in browser: https://litexlang.com/doc/Manual/Builtin_Predicates
 
-User-defined facts like `$my_prop(…)` from `prop` / `abstract_prop` are **not** builtins: the checker resolves them from **your** definitions, not from the fixed list below.
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Builtin_Predicates.md
 
-Negation, when allowed, is written with **`not`** in front of the same atomic spelling (for example `not 0 $in {1}`). The two function-equality builtins **`$fn_eq`** and **`$fn_eq_in`** do **not** support `not` in the checker.
+This page lists the **builtin predicates** that Litex recognizes as atomic facts. It follows the atomic fact forms handled by the kernel.
 
----
-
-## Equality and numeric order (no `$`)
-
-| Meaning | Example |
-|--------|---------|
-| Equality | `1 = 1` |
-| Inequality | `1 != 0` |
-| Less than | `0 < 1` |
-| Greater than | `2 > 1` |
-| Less or equal | `1 <= 2` |
-| Greater or equal | `3 >= 2` |
-| Negated equality | `not 1 = 2` |
-| Negated strict inequality | `not 0 < -1` |
-| Negated `<=` / `>=` | `not 2 <= 1`, `not 1 >= 3` |
+For the general idea of atomic facts, including the idea that a fact is made from a predicate and its arguments, read [Factual Statements](https://litexlang.com/doc/Manual/Factual_Statements). For how these predicates are proved automatically, read [Builtin Verification Rules](https://litexlang.com/doc/Manual/Builtin_Verification_Rules).
 
 ---
 
-## Membership **`$in`** (two arguments; usually infix)
+## Equality and Order
 
-| Meaning | Example |
-|--------|---------|
-| Element of a set | `1 $in {1, 2}` |
-| Membership in a typed domain (when valid in context) | `0.5 $in Q` |
-| Not in | `not 0 $in {1, 2}` |
+These predicates compare two objects, usually numeric expressions.
 
----
-
-## Set “sort” predicates (one argument, prefix **`$is_…(…)`**)
-
-| Predicate | Meaning | Example |
-|-----------|---------|---------|
-| **`$is_set`** | The value is a set | `$is_set({1, 2})` |
-| **`$is_nonempty_set`** | The set has at least one element | `$is_nonempty_set({1})` |
-| **`$is_finite_set`** | The set is finite | `$is_finite_set({1, 2})` |
-| **`not $is_set`** | … is not a set | *(when context supplies a non-set-like object)* |
-| **`not $is_nonempty_set`** | Empty or not nonempty | `not $is_nonempty_set({})` |
-| **`not $is_finite_set`** | Not finite | *(in proofs where the checker can refute finiteness)* |
+| Predicate | Negated form | Meaning |
+|-----------|--------------|---------|
+| `a = b` | `a != b` | `a` and `b` denote the same value. |
+| `a < b` | `not a < b` | `a` is strictly less than `b`. |
+| `a > b` | `not a > b` | `a` is strictly greater than `b`. |
+| `a <= b` | `not a <= b` | `a` is less than or equal to `b`. |
+| `a >= b` | `not a >= b` | `a` is greater than or equal to `b`. |
 
 ---
 
-## Cartesian product and tuple shape (one argument)
+## Set Predicates
 
-| Predicate | Meaning | Example |
-|-----------|---------|---------|
-| **`$is_cart`** | Object is a Cartesian-product set (built with `cart`) | `have c set = cart(R, Q)`<br>`$is_cart(c)` |
-| **`$is_tuple`** | Object is an n-tuple value | `have u set = (1, 2)`<br>`$is_tuple(u)` |
-| **`not $is_cart`**, **`not $is_tuple`** | Deny those shapes | *(same pattern as other `not $…` facts)* |
+These predicates say what kind of set-like object Litex is seeing.
 
----
-
-## Subset and superset (infix **`$subset`**, **`$superset`**)
-
-| Meaning | Example |
-|--------|---------|
-| Subset | `let a, b set:`<br>&nbsp;&nbsp;&nbsp;&nbsp;`a $subset b` |
-| Superset | `b $superset a` means `a $subset b` |
-| Not a subset | `let a, b set:`<br>&nbsp;&nbsp;&nbsp;&nbsp;`not a $subset b` |
-| Not a superset | `not b $superset a` |
+| Predicate | Negated form | Meaning |
+|-----------|--------------|---------|
+| `$is_set(A)` | `not $is_set(A)` | `A` is treated as a set object. |
+| `$is_nonempty_set(A)` | `not $is_nonempty_set(A)` | `A` has at least one element. |
+| `$is_finite_set(A)` | `not $is_finite_set(A)` | `A` is finite in the sense Litex uses for standard finite objects. |
 
 ---
 
-## Function restriction **`$restrict_fn_in`** (two arguments)
+## Membership
 
-Means: the first callable **can be restricted** to the arity / domain pattern of the second (a `fn(…) …` “target signature” object).
+Membership is the set-theoretic version of a type assertion.
 
-```litex
-have f fn(x R, y Q) R
-
-$restrict_fn_in(f, fn(a Q, b Q) R)
-```
-
-Negation: `not f $restrict_fn_in(target)` when you refute restrictability.
+| Predicate | Negated form | Meaning |
+|-----------|--------------|---------|
+| `x $in A` | `not x $in A` | `x` is an element of `A`. |
 
 ---
 
-## Function equality **`$fn_eq`** and **`$fn_eq_in`**
+## Shape Predicates
 
-| Predicate | Meaning | Example |
-|-----------|---------|---------|
-| **`$fn_eq(f, g)`** | `f` and `g` are the same function (typing + pointwise equality on the shared domain) | `have fn f(x R) R = x`<br>`have fn g(x R) R = x`<br>`forall x R:`<br>&nbsp;&nbsp;&nbsp;&nbsp;`f(x) = x = g(x)`<br>`$fn_eq(f, g)` |
-| | | `$fn_eq('R(x){x}, 'R(y){y})` |
-| **`$fn_eq_in(f, g, S)`** | `f` and `g` agree **on every point of set `S`** | `have fn f(x R) R = x`<br>`have fn g(x R) R = x`<br>`forall x R:`<br>&nbsp;&nbsp;&nbsp;&nbsp;`f(x) = x = g(x)`<br>`$fn_eq_in(f, g, R)` |
-| | | `$fn_eq_in('R(x){x}, 'R(y){y}, R)` |
+These predicates recognize common data shapes.
 
-Neither accepts `not` in the builtin builder; to state inequality, use other facts (for example disprove pointwise equality on some input).
+| Predicate | Negated form | Meaning |
+|-----------|--------------|---------|
+| `$is_cart(C)` | `not $is_cart(C)` | `C` is a Cartesian product. |
+| `$is_tuple(t)` | `not $is_tuple(t)` | `t` is a tuple value. |
 
 ---
 
-## Other `$…` atoms: **not** builtins
+## Set Inclusion
 
-Any other **`$name(…)`** (including `not $name(…)`) that you declare with `prop` or `abstract_prop` is **not** a builtin; the checker uses **your** definition to validate it.
+These predicates express inclusion between sets.
 
-```litex
-prove:
-    abstract_prop ok(x)
-    know $ok(0)
-    $ok(0)
-```
+| Predicate | Negated form | Meaning |
+|-----------|--------------|---------|
+| `A $subset B` | `not A $subset B` | Every element of `A` belongs to `B`. |
+| `A $superset B` | `not A $superset B` | Every element of `B` belongs to `A`. |
 
-```litex
-prove:
-    abstract_prop bad(x)
-    know not $bad(1)
-    not $bad(1)
-```
+---
+
+## Function Restriction
+
+This predicate says whether a function can be viewed as having a smaller or more constrained function type.
+
+| Predicate | Negated form | Meaning |
+|-----------|--------------|---------|
+| `f $restrict_fn_in T` | `not f $restrict_fn_in T` | `f` can be restricted to the function space `T`. |
+
+---
+
+## Function Equality
+
+These predicates express equality of functions.
+
+| Predicate | Meaning |
+|-----------|---------|
+| `$fn_eq_in(f, g, S)` | `f` and `g` agree at every argument in `S`. |
+| `$fn_eq(f, g)` | `f` and `g` are globally equal as function values. |
+
+---
+
+## Not Builtin: User Predicates
+
+Calls such as `$p(x)` are also atomic facts, but they are not builtin predicates. They come from user declarations such as `prop p(...)` or `abstract_prop p(...)`, and Litex verifies them from the user's definition or known facts.

@@ -31,7 +31,7 @@ In one sentence:
 This page explains the flow. The reference pages give the full vocabulary:
 
 - [Objects](Objects.md): the terms and mathematical objects a fact can talk about.
-- [Builtin Props](Builtin_Props.md): the atomic proposition forms, such as `=`, `<`, `$in`, and `$is_set`.
+- [Builtin Predicates](Builtin_Predicates.md): the builtin predicates used to make atomic facts, such as `=`, `<`, `$in`, and `$is_set`.
 - [Factual Statements](Factual_Statements.md): the shapes of facts, from atomic facts to `forall`, `exist`, `and`, `or`, and chains.
 - [Builtin Verification Rules](Builtin_Verification_Rules.md): what the checker can close while proving a goal.
 - [Builtin Inference](Builtin_Inference.md): what is added after a fact has been accepted.
