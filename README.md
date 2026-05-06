@@ -24,9 +24,15 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is a simple and intuitive open-source computer language for mathematical proofs. It encodes a philosophy of everyday mathematical thinking — the non-expert’s angle — where the problem leads and notation follows.
+Litex is a simple and intuitive open-source computer language for mathematical proofs. It is built around a practical idea: everyday mathematics should be easy to write down as code, checked rigorously by a computer, and still scale to larger proofs.
 
-In the best case, what you write is organized around the problem — not bent to satisfy the formal language you happen to be using. Litex is an attempt to move practice closer to that ideal. Here is an example of how Litex code looks like:
+Litex is designed to feel friendly for a few reasons:
+
+1. **It starts from set theory.** Litex uses the mathematical foundation most people already meet in ordinary mathematics: sets, elements, functions, tuples, numbers, and relations. You do not need to start by thinking in an abstract type-theory style.
+2. **Its basic pieces are easy to read.** A statement says what action you are taking, an object is the mathematical thing you are talking about, and a fact is a claim such as `x = 2` or `x $in R`. Each piece is simple on its own. The hard part is that basic mathematics has many small relationships between these pieces, and Litex builds those relationships in for you.
+3. **Verification is based on matching and substitution.** Litex searches known facts and applies them mechanically. You often do not need to name every intermediate fact just so you can mention it later; the checker can remember and reuse facts in the background.
+
+The result is a different style of formal proof: daily mathematical reasoning, written as code, made strict, and made scalable. Here is a small example:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -35,43 +41,27 @@ In the best case, what you write is organized around the problem — not bent to
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-    <code>forall x R, y R:</code><br>
-    <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
-    <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br>
+    <code>forall x R:</code><br>
+    <code>&nbsp;&nbsp;x = 2</code><br>
     <code>&nbsp;&nbsp;=>:</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;y = (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 = 6</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * 6 = 10</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 18 - 18 = 10 - 18 = -8</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;x = (2 * x) / 2 = -8 / 2 = -4</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;x + 1 = 3</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;x^2 = 4</code><br>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>import Mathlib.Tactic</code><br><br>
-      <code>example (x y : ℝ) (h₁ : 2 * x + 3 * y = 10) (h₂ : 4 * x + 5 * y = 14) : x = -4 ∧ y = 6 := by</code><br>
-      <code>&nbsp;&nbsp;have h₃ : 2 * (2 * x + 3 * y) = 2 * 10 := by rw [h₁]</code><br>
-      <code>&nbsp;&nbsp;have h₄ : 4 * x + 6 * y = 20 := by linear_combination 2 * h₁</code><br>
-      <code>&nbsp;&nbsp;have h₅ : (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 := by</code><br>
-      <code>&nbsp;&nbsp;rw [h₄, h₂]</code><br>
-      <code>&nbsp;&nbsp;have h₆ : (4 * x + 6 * y) - (4 * x + 5 * y) = y := by</code><br>
-      <code>&nbsp;&nbsp;ring</code><br>
-      <code>&nbsp;&nbsp;have h₇ : 20 - 14 = 6 := by norm_num</code><br>
-      <code>&nbsp;&nbsp;have h₈ : y = 6 := by</code><br>
-      <code>&nbsp;&nbsp;rw [←h₆, h₅, h₇]</code><br>
-      <code>&nbsp;&nbsp;have h₉ : 2 * x + 3 * 6 = 10 := by rw [h₈, h₁]</code><br>
-      <code>&nbsp;&nbsp;have h₁₀ : 2 * x + 18 = 10 := by</code><br>
-      <code>&nbsp;&nbsp;rw [mul_add] at h₉</code><br>
-      <code>&nbsp;&nbsp;simp at h₉</code><br>
-      <code>&nbsp;&nbsp;exact h₉</code><br>
-      <code>&nbsp;&nbsp;have h₁₁ : 2 * x = -8 := by</code><br>
-      <code>&nbsp;&nbsp;linear_combination h₁₀ - 18</code><br>
-      <code>&nbsp;&nbsp;have h₁₂ : x = -4 := by</code><br>
-      <code>&nbsp;&nbsp;linear_combination h₁₁ / 2</code><br>
-      <code>&nbsp;&nbsp;exact ⟨h₁₂, h₈⟩</code>
+      <code>example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by</code><br>
+      <code>&nbsp;&nbsp;have h_add : x + 1 = 3 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;norm_num</code><br>
+      <code>&nbsp;&nbsp;have h_square : x ^ 2 = 4 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h]</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;norm_num</code><br>
+      <code>&nbsp;&nbsp;exact ⟨h_add, h_square⟩</code>
     </td>
   </tr>
 </table>
 
-As you can see, Litex is much more concise and readable than Lean. It doesn't require you to memorize and recall known facts and inference rules by hand, making it possible for you to write complex statements with ease at 2-10 times efficiency than Lean. In fact, it even runs 2-10 times faster than Lean.
+This small example shows the intended feel: Litex code looks close to the mathematical steps, while the checker handles routine rewriting, arithmetic, and reuse of known facts.
 
 ## How Litex Works
 
