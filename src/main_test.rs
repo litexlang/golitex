@@ -260,10 +260,10 @@ mod lit_file_runner_tests {
                 examples_sum_ms, examples_phase_wall_ms
             );
         }
-        println!(
-            "  docs ```litex``` snippets (excluding docs/Manual; see phase 1): sum of runs: {:.2} ms  |  wall: {:.2} ms",
-            docs_sum_ms, docs_phase_wall_ms
-        );
+            println!(
+                "  remaining markdown ```litex``` snippets (README + docs excluding docs/Manual; see phase 1): sum of runs: {:.2} ms  |  wall: {:.2} ms",
+                docs_sum_ms, docs_phase_wall_ms
+            );
         println!(
             "--- phase timing: phase1 {:.2} ms | docs {:.2} ms ---",
             examples_phase_wall_ms, docs_phase_wall_ms
@@ -401,7 +401,13 @@ mod lit_file_runner_tests {
             return;
         }
 
-        let md_paths_all = collect_markdown_files_under_dir_sorted(&docs_dir);
+        let mut md_paths_all: Vec<PathBuf> = Vec::new();
+        let readme_path = manifest_dir.join("README.md");
+        if readme_path.is_file() {
+            md_paths_all.push(readme_path);
+        }
+        md_paths_all.extend(collect_markdown_files_under_dir_sorted(&docs_dir));
+        md_paths_all.sort();
         let manual_prefix = manifest_dir.join("docs").join("Manual");
         let md_paths: Vec<PathBuf> = md_paths_all
             .into_iter()
@@ -437,7 +443,7 @@ mod lit_file_runner_tests {
         }
 
         if doc_snippets.is_empty() {
-            println!("--- docs: no ```litex``` fenced blocks ---");
+            println!("--- remaining markdown: no ```litex``` fenced blocks ---");
             print_run_examples_timing_summary(
                 builtin_duration_ms,
                 examples_ran,
@@ -450,11 +456,11 @@ mod lit_file_runner_tests {
         }
 
         if !examples_ran {
-            runtime.new_file_path_new_env_new_name_scope("docs/```litex``` snippets");
+            runtime.new_file_path_new_env_new_name_scope("remaining markdown ```litex``` snippets");
         }
 
         println!(
-            "--- docs: {} ```litex``` block(s) in {} markdown file(s) ---",
+            "--- remaining markdown: {} ```litex``` block(s) in {} markdown file(s) ---",
             doc_snippets.len(),
             md_paths.len()
         );
