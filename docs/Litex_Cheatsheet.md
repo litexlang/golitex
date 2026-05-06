@@ -815,22 +815,23 @@ let f set
 
 know:
     forall x1 f:
-        x1 $in cart(cart(R, Q), Z)
-        tuple_dim(x1) = 2
+        x1 $in cart(R, Q, Z)
+        tuple_dim(x1) = 3
 
     forall x1 f:
-        exist x2 R, x3 Q, z Z st {x2 > x3, x2 > 2, x1 = ((x2, x3), z)}
+        exist x2 R, x3 Q, z Z st {x2 > x3, x2 > 2, x1 = (x2, x3, z)}
 
     forall x2 R, x3 Q:
         x2 > x3
         x2 > 2
         =>:
-            exist x1 f, z Z st {x1 = ((x2, x3), z)}
+            exist x1 f, z Z st {x1 = (x2, x3, z)}
 
     forall x1, x2 f:
-        x1 $in cart(cart(R, Q), Z)
-        x2 $in cart(cart(R, Q), Z)
+        x1 $in cart(R, Q, Z)
+        x2 $in cart(R, Q, Z)
         x1[1] = x2[1]
+        x1[2] = x2[2]
         =>:
             x1 = x2
 
