@@ -1,5 +1,7 @@
 # Manual Introduction
 
+Jiachen Shen and The Litex Team, 2026-05-06. Email: litexlang@outlook.com
+
 Try all snippets in browser: https://litexlang.com/doc/Manual/Manual_Introduction
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Manual_Introduction.md
