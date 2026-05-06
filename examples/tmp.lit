@@ -1,0 +1,5 @@
+let a, x R:
+    a = 0 or a > 0
+    x = a
+
+x = 0 or x > 0
