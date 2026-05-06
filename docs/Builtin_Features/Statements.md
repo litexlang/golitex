@@ -1,9 +1,8 @@
 # Builtin statements
 
-Try all snippets in browser: https://litexlang.com/doc/Builtin_Features/Builtin_Statements
+Try all snippets in browser: https://litexlang.com/doc/Builtin_Features/Statements
 
-Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Builtin_Statements.md
-
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Statements.md
 
 A **statement** is a basic line or block of Litex code. You use statements to do mathematical reasoning, make definitions such as `prop`, functions, and sets, and prove facts from known facts or axioms.
 
@@ -19,8 +18,25 @@ Write a fact directly when you want Litex to verify it from what is already know
 1 + 1 = 2
 ```
 
-Hint: a bare fact is a claim that should already follow from the current context. If you need to build a proof first, use `claim:` or another proof tactic.
+> Hint: A bare fact should already follow from the current context. If you want to prove a fact in a sub-proof and add only the final fact back to the current context, use `claim:`.
 
+Common fact types:
+
+| Kind | Fact type | Example |
+|------|-----------|---------|
+| Atomic fact | Equality | `1 + 1 = 2` |
+| Atomic fact | Inequality / order | `2 < 3`, `3 <= 3` |
+| Atomic fact | Membership | `2 $in R` |
+| Atomic fact | Predicate fact | `$prime(17)` |
+| Atomic fact | Atomic negation | `2 != 3`, `not 1.1 $in Z` |
+| Compound fact | Conjunction | `1 < 2 and 2 < 3` |
+| Compound fact | Disjunction | `1 < 2 or 1 >= 2` |
+| Compound fact | Chain | `1 <= 2 = 2 < 3` |
+| Quantified fact | Existence | `exist x R st {x > 0}` |
+| Quantified fact | Unique existence | `exist! x R st {x = 0}` |
+| Quantified fact | Universal fact | `forall! x R: x = x` |
+
+For a fuller explanation, see [Factual Statements](https://litexlang.com/doc/Manual/Factual_Statements).
 
 ---
 
@@ -28,30 +44,41 @@ Hint: a bare fact is a claim that should already follow from the current context
 
 Use **`prop`** to name a mathematical property. The body says what the property means.
 
+After a `prop` is defined, Litex can verify later predicate facts by using that definition. In the example below, `$p(1)` holds because `1 $in R` and `1 = 1`.
+
 ```litex
 prop p(x R):
     x = x
+
+$p(1)
 ```
 
-Example: if you define `prop increasing(f): ...`, later you can write `$increasing(f)` instead of repeating the full definition each time.
+> Example: after defining `prop p(x R): ...`, you can write `$p(1)` instead of repeating the definition each time.
 
 ---
 
 ## Abstract predicate symbol (`abstract_prop`)
 
-Use **`abstract_prop`** when you want a predicate symbol but do not want to define it yet. You can later assume, prove, or use facts such as `$q(a)`.
+Use **`abstract_prop`** when you want a predicate symbol but do not want to define it yet. It only declares the name; it does not give the predicate any mathematical property by itself.
+
+If you want an abstract predicate to have a property, introduce that property with `know`.
 
 ```litex
-abstract_prop q(a)
+abstract_prop p(x)
+
+know forall x R:
+    $p(x)
+
+$p(1)
 ```
 
-Hint: `abstract_prop` is useful for examples, axiomatized theories, and temporary placeholders while developing a proof.
+> Hint: `abstract_prop` is useful for examples, axiomatized theories, and temporary placeholders while developing a proof.
 
 ---
 
 ## Typed parameters (`have`)
 
-Use **`have x S`** to introduce a new object `x` of type or set `S`.
+Use **`have x S`** to introduce a new object `x` of `set` or `nonempty_set` or `finite_set` or set like `R`(real numbers), `Z`(integers), `{1, 2, 3}`(enumerated set), `cart(R, Z)`(Cartesian product), etc. We say `x` has *type* `S`.
 
 ```litex
 have x R, y Z
@@ -59,18 +86,49 @@ have x R, y Z
 
 This records that `x` belongs to `R` and `y` belongs to `Z`, so later facts can use them.
 
+> Hint: `have x S` is not a free way to create an element of any set. Litex must be able to verify that `S` is nonempty, for example by knowing `$is_nonempty_set(S)`, before it can introduce a new object `x` with `x $in S`.
+
+## What "type" means in Litex?
+
+The word **type** in Litex does not mean a type in type theory. Litex is based on set theory. A parameter type is one of a few surface forms:
+
+```litex
+have x R
+have A set
+have B nonempty_set
+have C finite_set
+```
+
+`have x R` means `x $in R`: the "type" `R` is a set that contains `x`.
+
+`set`, `nonempty_set`, and `finite_set` are closer to actions than ordinary object types. They introduce a new name and record facts about it:
+
+```litex
+have A set
+have B nonempty_set
+have C finite_set
+
+$is_set(A)
+$is_nonempty_set(B)
+$is_finite_set(C)
+```
+
+Since Litex follows the set-theoretic view, every object you introduce is an object in the set-theoretic universe. In this sense, `$is_set(x)` holds for any introduced object `x`.
+
+The same parameter-type idea also appears in `forall`, `exist`, `prop`: you can write parameters such as `forall x R, y set:` or `exist A set st { ... }`. Function signatures are more restrictive. When defining a function, each input position must use an object as its domain, such as `fn(x R) Z`; you cannot use action-like forms such as `set`, `nonempty_set`, or `finite_set` as a function input requirement.
+
 ---
 
 ## Defined constant (`have … = …`)
 
-Use **`have a S = expr`** to introduce a name and fix its value.
+Use **`have a S = expr`** to introduce a name and fix its value. For example, `have a R = 1` introduces a constant `a` with value `1` and in set `R`.
 
 ```litex
 have a R = 1
 a = 1
 ```
 
-Hint: use this for constants. A function should normally be introduced with `have fn`.
+> Hint: use this for constants. A function should normally be introduced with `have fn`.
 
 ---
 
@@ -92,10 +150,13 @@ Use **`have fn f(x S) T = body`** when the value of the function is given by one
 
 ```litex
 have fn f(x R) R = x + 1
-do_nothing
+
+forall x R:
+    f(x) $in R
+    f(x) = x + 1
 ```
 
-Example: this says that for each `x R`, the value `f(x)` is `x + 1`.
+> Example: this says that for each `x R`, the value `f(x)` satisfies `f(x) $in R` and `f(x) = x + 1`.
 
 ---
 
@@ -110,7 +171,7 @@ have fn g(z R) R :
 do_nothing
 ```
 
-Hint: the cases should cover the domain you intend to use.
+> Hint: the cases should cover the domain you intend to use.
 
 ---
 
@@ -140,9 +201,9 @@ forall x A:
         $F(x, f(x))
 ```
 
-Meaning: the unique witness `y` is now named by the function value `f(x)`.
+> Meaning: the unique witness `y` is now named by the function value `f(x)`.
 
-Hint: the `forall` after `by` must already be known. Its conclusion must be exactly one `exist!` fact with one output parameter.
+> Hint: the `forall` after `by` must already be known. Its conclusion must be exactly one `exist!` fact with one output parameter.
 
 ---
 
@@ -611,4 +672,4 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by family` | Use a parameterized family instance |
 | `by tuple` | Use tuple structure and components |
 
-Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
+> Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.

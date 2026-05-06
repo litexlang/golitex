@@ -21,9 +21,6 @@ impl Runtime {
                 ParamType::FiniteSet(_) => {
                     IsFiniteSetFact::new(arg.clone(), _line_file.clone()).into()
                 }
-                ParamType::Restrictive(fs) => {
-                    RestrictFact::new(arg.clone(), fs.clone().into(), _line_file.clone()).into()
-                }
                 ParamType::Obj(obj) => {
                     InFact::new(arg.clone(), obj.clone(), _line_file.clone()).into()
                 }

@@ -138,8 +138,6 @@ pub const R_NZ: &str = "R_nz";
 pub const FAMILY: &str = "family";
 pub const STRUCT: &str = "struct";
 pub const RESTRICT_FN_IN: &str = "restrict_fn_in";
-/// Parameter type: callable may be used under this `$restrict_fn_in` target signature.
-pub const RESTRICTIVE: &str = "restrictive";
 pub const STRATEGY: &str = "strategy";
 pub const USE_STRATEGY: &str = "use_strategy";
 pub const END_STRATEGY: &str = "end_strategy";
@@ -283,7 +281,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         FAMILY,
         STRUCT,
         RESTRICT_FN_IN,
-        RESTRICTIVE,
         STRATEGY,
         USE_STRATEGY,
         END_STRATEGY,
