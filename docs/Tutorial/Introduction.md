@@ -20,11 +20,11 @@ This tutorial section is still young. In the future, it will contain more math-o
 
 For now, the best place to learn Litex is the manual:
 
-1. [Manual Introduction](https://litexlang.com/doc/Manual/Manual_Introduction)
-2. [Proof Process](https://litexlang.com/doc/Manual/Proof_Process)
-3. [Objects](https://litexlang.com/doc/Manual/Objects)
-4. [Factual Statements](https://litexlang.com/doc/Manual/Factual_Statements)
-5. [Builtin Verification Rules](https://litexlang.com/doc/Manual/Builtin_Verification_Rules)
-6. [Inference](https://litexlang.com/doc/Manual/Inference)
+1. [Manual Introduction](https://litexlang.com/doc/Manual#manual-introduction)
+2. [Proof Process](https://litexlang.com/doc/Manual#proof-process)
+3. [Objects](https://litexlang.com/doc/Manual#objects)
+4. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements)
+5. [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules)
+6. [Inference](https://litexlang.com/doc/Manual#inference)
 
 The manual explains the main mental model: Litex code is built from mathematical objects, facts about those objects, and statements that define, verify, store, and infer information.
