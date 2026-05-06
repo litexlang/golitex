@@ -1,0 +1,9 @@
+have x R
+
+by cases:
+    prove:
+        x = 0 or x != 0
+    case x = 0:
+        ...
+    case x != 0:
+        ...
