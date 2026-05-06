@@ -379,9 +379,10 @@ mod lit_file_runner_tests {
             }
         }
 
-        if !every_file_run_ok {
-            return;
-        }
+        assert!(
+            every_file_run_ok,
+            "examples or docs/Manual litex snippet failed; see output above"
+        );
 
         let docs_dir = manifest_dir.join("docs");
         if !docs_dir.is_dir() {

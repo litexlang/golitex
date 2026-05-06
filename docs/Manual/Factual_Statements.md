@@ -237,7 +237,7 @@ Example:
 know exist u R st { u = 1 }
 
 have by exist v R st { v = 1 }: h
-v = 1
+h = 1
 ```
 
 ---
@@ -301,19 +301,12 @@ Read this as: under the same variables and assumptions, `x > y` is equivalent to
 
 A **negated universal** says that a universal claim is not true.
 
-```litex
+```text
 not forall x R:
     x > 0
 ```
 
 Read this as: it is not true that every real number is greater than `0`.
-
-This usually corresponds to a counterexample.
-
-```litex
-not forall x R:
-    x != x
-```
 
 > Hint: `not forall` is different from putting `not` inside the conclusion. If you want to say there is a counterexample to a universal claim, use `not forall`.
 
