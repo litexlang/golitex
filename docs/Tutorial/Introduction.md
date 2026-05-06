@@ -4,8 +4,9 @@ Try all snippets in browser: https://litexlang.com/doc/Tutorial/Introduction
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/Introduction.md
 
-
 Jiachen Shen and The Litex Team
+
+> **Beta notice:** Litex is still experimental. This tutorial is a good way to explore its ideas, but Litex should not be used for production or mission-critical proof work yet. The project is still testing a philosophy of making everyday mathematics precise, checkable, and scalable.
 
 ## What is Litex?
 
