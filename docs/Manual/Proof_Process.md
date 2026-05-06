@@ -36,10 +36,9 @@ Here Litex does not need a previous lemma. It evaluates the arithmetic expressio
 Some facts are true because the current context already contains the same fact.
 
 ```litex
-prove:
-    abstract_prop ok(x)
-    know $ok(0)
-    $ok(0)
+abstract_prop ok(x)
+know $ok(0)
+$ok(0)
 ```
 
 The last line is accepted because `$ok(0)` is already known in the proof context. This is the simplest form of reuse: a fact proved or introduced earlier can be used later.
@@ -49,11 +48,10 @@ The last line is accepted because `$ok(0)` is already known in the proof context
 Known universal facts are also reusable. Litex can match the current goal against a known `forall` statement and substitute the right argument.
 
 ```litex
-prove:
-    abstract_prop p(x)
-    know forall x R:
-        $p(x)
-    $p(2)
+abstract_prop p(x)
+know forall x R:
+    $p(x)
+$p(2)
 ```
 
 The known fact says that every real number satisfies `$p`. When the goal is `$p(2)`, Litex matches `x` with `2` and checks the instantiated conclusion.
@@ -433,3 +431,53 @@ $is_set(R)
 The size comes from combinations. A proof about a function may need arithmetic on its output, membership in its domain, tuple projections, set inclusion, and equality substitution. If every one of those steps had to be rebuilt as a user theorem, proofs would be dominated by bookkeeping.
 
 The builtin layer is Litex's shared mathematical background. User-defined `prop`s and `forall` theorems add domain-specific ideas on top of that background, while the language handles the common low-level facts of basic mathematics.
+
+---
+
+## Read The Output Message
+
+When Litex verifies a file, read the output message. It tells you how each fact was proved.
+
+For example, a successful fact result may show:
+
+```litex
+let a, x R:
+    a = 0 or a > 0
+    x = a
+
+x = 0 or x > 0
+```
+
+```text
+
+{
+  "result": "success",
+  "type": "DefLetStmt",
+  "line": 1,
+  "stmt": "let a, x R:\n    a = 0 or a > 0\n    x = a",
+  "infer_facts": [
+    "a $in R",
+    "x $in R",
+    "a = 0 or a > 0",
+    "x = a"
+  ],
+  "inside_results": []
+}
+
+{
+  "result": "success",
+  "type": "Fact",
+  "line": 5,
+  "stmt": "x = 0 or x > 0",
+  "verified_by":   {
+    "type": "known_fact",
+    "line": 2,
+    "source": "entry",
+    "cited_fact": "a = 0 or a > 0"
+  },
+  "infer_facts": [],
+  "inside_results": []
+}
+```
+
+This means the goal `x = 0 or x > 0` was not proved by a fresh builtin calculation. It was proved by matching a known fact, namely `a = 0 or a > 0`. These messages are useful for learning Litex's proof process: they show whether a fact closed by builtin rules, by a known fact, by a known `forall`, or by another recorded verification route.
