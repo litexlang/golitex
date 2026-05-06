@@ -34,7 +34,7 @@ impl Runtime {
     }
 
     // have fn by induc from 0: f(x Z: x >= 0) R: case 0: … case 1: …
-    // Registers stmt.name in a new FnSet whose domain matches special-case indices.
+    // In the induction step, recursive calls may use any already defined value: from <= arg < x.
     fn have_fn_by_induc_verify_last_case_register_fn(
         &mut self,
         stmt: &HaveFnByInducStmt,
@@ -46,16 +46,10 @@ impl Runtime {
 
         let induc_outer_param =
             obj_for_bound_param_in_scope(param_name.to_string(), ParamObjType::Induc);
-        let param_minus_n: Obj = Sub::new(
-            induc_outer_param.clone(),
-            stmt.special_cases_equal_tos.len().into(),
-        )
-        .into();
-
         let dom_facts: Vec<OrAndChainAtomicFact> = vec![
             GreaterEqualFact::new(
                 obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::FnSet),
-                param_minus_n,
+                stmt.induc_from.clone(),
                 stmt.line_file.clone(),
             )
             .into(),

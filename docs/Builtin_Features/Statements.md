@@ -223,6 +223,8 @@ forall x A:
 
 Use **`have fn by induc`** to define a function on an inductive domain, such as nonnegative integers. Base cases and the recursive step are written as `case` branches.
 
+In the final recursive case, the right-hand side may use values of the same function that are already defined by induction: from the starting value up to the current parameter minus one. It may not use the current value or any larger value.
+
 ```litex
 know forall x Z:
     x % 2 = 0 or x % 2 = 1
@@ -231,7 +233,7 @@ have fn by induc from 0: h(x Z: x >= 0) R:
     case x = 0: 1
     case x = 1: 1
     case x >= 2:
-        case x % 2 = 0: h(x - 2) + h(x - 1)
+        case x % 2 = 0: h(0) + h(x - 1)
         case x % 2 = 1: h(x - 2) + h(x - 1)
 ```
 
@@ -438,8 +440,8 @@ witness exist x, y R st {x > y} from 1, 0:
 
 exist a, b R st {a > b}
 
-have by exist x, y R st {x > y}: w
-w > 0
+have by exist x, y R st {x > y}: w, z
+w > z
 ```
 
 ---
@@ -452,7 +454,7 @@ Shows a set is nonempty by naming a member and proving membership.
 witness $is_nonempty_set({1, 2, 3}) from 1:
     1 $in {1, 2, 3}
 
-$is_nonempty_set(s)
+$is_nonempty_set({1, 2, 3})
 ```
 
 ---
