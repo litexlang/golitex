@@ -208,15 +208,14 @@ impl Runtime {
             vec![or_fact_in_known_forall.clone().into()],
             known_forall.line_file.clone(),
         )?;
-        let fact_verified =
-            FactualStmtSuccess::new_with_verified_by_known_fact(
-                given_or_fact.clone().into(),
-                VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
-                    verified_by_known_forall_fact.clone().into(),
-                    verified_by_known_forall_fact.to_string(),
-                )]),
-                Vec::new(),
-            );
+        let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
+            given_or_fact.clone().into(),
+            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+                verified_by_known_forall_fact.clone().into(),
+                verified_by_known_forall_fact.to_string(),
+            )]),
+            Vec::new(),
+        );
         Ok(Some(fact_verified))
     }
 }

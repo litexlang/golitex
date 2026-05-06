@@ -126,7 +126,8 @@ impl Runtime {
                     if !tb.body.is_empty() {
                         return Err(RuntimeError::from(ParseRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "inline let statement cannot also have an indented body".to_string(),
+                                "inline let statement cannot also have an indented body"
+                                    .to_string(),
                                 tb.line_file.clone(),
                             ),
                         )));

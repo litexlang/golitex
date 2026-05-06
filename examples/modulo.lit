@@ -25,3 +25,9 @@ forall m Z:
     m != 0
     =>:
         0 % m = 0
+
+forall x Z:
+    x % 2 = 0 or x % 2 = 1
+
+forall x Z:
+    x % 1 = 0

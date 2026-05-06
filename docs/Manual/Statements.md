@@ -1,8 +1,8 @@
 # Builtin statements
 
-Try all snippets in browser: https://litexlang.com/doc/Builtin_Features/Statements
+Try all snippets in browser: https://litexlang.com/doc/Manual/Statements
 
-Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Statements.md
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Statements.md
 
 A **statement** is a basic line or block of Litex code. You use statements to do mathematical reasoning, make definitions such as `prop`, functions, and sets, and prove facts from known facts or axioms.
 
@@ -223,7 +223,9 @@ forall x A:
 
 Use **`have fn by induc`** to define a function on an inductive domain, such as nonnegative integers. Base cases and the recursive step are written as `case` branches.
 
-In the final recursive case, the right-hand side may use values of the same function that are already defined by induction: from the starting value up to the current parameter minus one. It may not use the current value or any larger value.
+The intended meaning is close to strong induction for defining a function. The first `case` lines give the starting values. The final `case x >= ...:` is the recursive step: when defining `h(x)`, the right-hand side may use values of the same function that are already defined, from the starting value up to `x - 1`. It may not use `h(x)` itself or any later value such as `h(x + 1)`.
+
+If the final recursive step has nested `case` branches, those branches should cover all possible situations for the current `x`. They should also behave like a real case split: overlapping branches must not give conflicting values. If two branches can both apply, their right-hand sides should be provably equal under the overlap.
 
 ```litex
 know forall x Z:

@@ -156,7 +156,8 @@ impl Runtime {
             (l, r) if self.obj_represents_zero_for_not_equal_builtin_rules(l) => r.clone(),
             _ => return Ok(None),
         };
-        let in_n: AtomicFact = InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let in_n: AtomicFact =
+            InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
         if !self
             .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
             .is_true()

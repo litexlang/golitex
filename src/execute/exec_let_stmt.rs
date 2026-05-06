@@ -12,7 +12,10 @@ impl Runtime {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|inner_exec_error| {
-                    exec_stmt_error_with_stmt_and_cause(def_let_stmt.clone().into(), inner_exec_error)
+                    exec_stmt_error_with_stmt_and_cause(
+                        def_let_stmt.clone().into(),
+                        inner_exec_error,
+                    )
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
             // Body facts are not added by infer() for chain/and/or/exist; record them for JSON / CLI.
