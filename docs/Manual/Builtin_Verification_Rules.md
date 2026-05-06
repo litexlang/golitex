@@ -7,6 +7,8 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Buil
 
 The checker can close some **atomic** goals without a user `prove` step, using built-in algebraic and logical steps. **Equalities** are handled mainly by evaluation, normalization, and laws in the sections below. **Comparisons** (`<`, `<=`, `>`, `>=`, and related negations), **membership** in standard number sets, **subset** claims, **non-equality**, and several **type** predicates are handled by a different style of reasoning: facts about signs and nonnegative expressions, monotonicity of `+`, `-`, `*`, `/` under the usual side conditions for real variables, properties of `abs`, and—when both sides are explicit fractions with nonzero denominators—clearing denominators to compare numerators.
 
+These rules run while Litex is proving the current goal. They are separate from [Builtin Inference](Builtin_Inference.md), which runs after a fact has already been accepted. For the full flow around atomic goals, see [Proof Process](Proof_Process.md).
+
 ## Equalities
 
 ### Must-Know

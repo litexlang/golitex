@@ -11,6 +11,8 @@ Everything you write in a formula is built from a fixed menu of expression forms
 
 The subsections below name each form in ordinary mathematical language and show typical Litex spelling.
 
+Objects are the material that facts talk about. For the full path from objects to atomic facts, verification, storage, and inference, see [Proof Process](Proof_Process.md).
+
 ### Names and parameters
 
 Objects introduced by `forall`, `have`, `let`, and function parameters are atomic pieces of syntax—not built from smaller operators inside Litex.
