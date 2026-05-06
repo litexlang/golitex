@@ -5,9 +5,9 @@ have fn by induc from 0: f(x Z: x >= 0) R:
         case x % 2 = 0: f(x - 2) + f(x - 1)
         case x % 2 = 1: f(x - 2) + f(x - 1) + 100
 
-have fn by induc from 0: f(x Z: x >= 0) R:
+have fn by induc from 0: g(x Z: x >= 0) R:
     case x = 0: 1
     case x = 1: 1
     case x >= 2:
-        case x % 2 = 0: f(0) + f(x - 1)
-        case x % 2 = 1: f(x - 2) + f(x - 1)
+        case x % 2 = 0: g(0) + g(x - 1)
+        case x % 2 = 1: g(x - 2) + g(x - 1)

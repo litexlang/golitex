@@ -1,8 +1,8 @@
 # Builtin Verification Rules
 
-Try all snippets in browser: https://litexlang.com/doc/Builtin_Features/Builtin_Verification_Rules
+Try all snippets in browser: https://litexlang.com/doc/Manual/Builtin_Verification_Rules
 
-Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Builtin_Verification_Rules.md
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Builtin_Verification_Rules.md
 
 
 The checker can close some **atomic** goals without a user `prove` step, using built-in algebraic and logical steps. **Equalities** are handled mainly by evaluation, normalization, and laws in the sections below. **Comparisons** (`<`, `<=`, `>`, `>=`, and related negations), **membership** in standard number sets, **subset** claims, **non-equality**, and several **type** predicates are handled by a different style of reasoning: facts about signs and nonnegative expressions, monotonicity of `+`, `-`, `*`, `/` under the usual side conditions for real variables, properties of `abs`, and—when both sides are explicit fractions with nonzero denominators—clearing denominators to compare numerators.

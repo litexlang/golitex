@@ -23,16 +23,14 @@ impl Runtime {
             }
         }
 
-        Ok(
-            (FactualStmtSuccess::new_with_verified_by_known_fact(
+        Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+            forall_iff.clone().into(),
+            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
                 forall_iff.clone().into(),
-                VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
-                    forall_iff.clone().into(),
-                    "forall iff: then=>iff and iff=>then verified".to_string(),
-                )]),
-                Vec::new(),
-            ))
-            .into(),
-        )
+                "forall iff: then=>iff and iff=>then verified".to_string(),
+            )]),
+            Vec::new(),
+        ))
+        .into())
     }
 }

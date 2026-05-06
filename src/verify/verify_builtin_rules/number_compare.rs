@@ -352,9 +352,9 @@ impl Runtime {
             _ => return Ok(None),
         };
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let in_n: AtomicFact = InFact::new(n.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let nonzero: AtomicFact =
-            NotEqualFact::new(n, zero_obj, line_file.clone()).into();
+        let in_n: AtomicFact =
+            InFact::new(n.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let nonzero: AtomicFact = NotEqualFact::new(n, zero_obj, line_file.clone()).into();
         if !self
             .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
             .is_true()

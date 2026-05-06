@@ -1,8 +1,8 @@
 # Builtin props
 
-Try all snippets in browser: https://litexlang.com/doc/Builtin_Features/Builtin_Props
+Try all snippets in browser: https://litexlang.com/doc/Manual/Builtin_Props
 
-Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Builtin_Features/Builtin_Props.md
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual/Builtin_Props.md
 
 
 An **atomic** proposition is a single goal the checker may treat as one step: no top-level `and` / `or` inside it. This page lists the atomic forms built into Litex’s surface syntax: what each one means in ordinary mathematical language, and how to write it.

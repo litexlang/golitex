@@ -136,10 +136,11 @@ fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) 
     match r {
         StmtResult::FactualStmtSuccess(f) => {
             if factual_has_composite_step_proofs(f) {
-                let nested_items: Vec<JsonValue> = VerifiedByResult::composite_step_stmt_results_in_order(&f.verified_by)
-                    .into_iter()
-                    .map(|child| stmt_result_to_composite_step_verified_by(runtime, child))
-                    .collect();
+                let nested_items: Vec<JsonValue> =
+                    VerifiedByResult::composite_step_stmt_results_in_order(&f.verified_by)
+                        .into_iter()
+                        .map(|child| stmt_result_to_composite_step_verified_by(runtime, child))
+                        .collect();
                 JsonValue::Array(nested_items)
             } else {
                 factual_success_verified_by_value(runtime, f)
@@ -170,10 +171,11 @@ fn composite_factual_with_step_proofs_to_json(
 ) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
-    let verified_by_items: Vec<JsonValue> = VerifiedByResult::composite_step_stmt_results_in_order(&x.verified_by)
-        .into_iter()
-        .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
-        .collect();
+    let verified_by_items: Vec<JsonValue> =
+        VerifiedByResult::composite_step_stmt_results_in_order(&x.verified_by)
+            .into_iter()
+            .map(|r| stmt_result_to_composite_step_verified_by(runtime, r))
+            .collect();
 
     let infer_items: Vec<JsonValue> =
         json_infer_fact_items_excluding_self_stmt(&x.infers, &stmt_user_visible);
