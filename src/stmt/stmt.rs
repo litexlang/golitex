@@ -4,7 +4,6 @@ use std::fmt;
 #[derive(Clone)]
 pub enum Stmt {
     Fact(Fact),
-    DefLetStmt(DefLetStmt),
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
@@ -14,6 +13,7 @@ pub enum Stmt {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
+    DefLetStmt(DefLetStmt),
     DefFamilyStmt(DefFamilyStmt),
     DefAlgoStmt(DefAlgoStmt),
     ClaimStmt(ClaimStmt),
