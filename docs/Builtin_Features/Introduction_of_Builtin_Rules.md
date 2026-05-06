@@ -25,7 +25,7 @@ The best way to understand the proof process is to read the message printed out 
 | Topic | Document |
 |--------|-----------|
 | Mathematical sorts, literals, and builtin objects | [Builtin_Objects.md](Builtin_Objects.md) |
-| Surface forms: statements you can use in scripts | [Builtin_Statements.md](Builtin_Statements.md) |
+| Surface forms: statements you can use in scripts | [Statements.md](Statements.md) |
 | Atomic proposition shapes (`$is_set`, `$in`, comparisons, …) | [Builtin_Props.md](Builtin_Props.md) |
 | Goals closed **during** verification | [Builtin_Verification_Rules.md](Builtin_Verification_Rules.md) |
 | Facts and side information added **after** storage | [Builtin_Inference.md](Builtin_Inference.md) |
