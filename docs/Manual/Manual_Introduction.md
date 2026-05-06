@@ -62,7 +62,7 @@ If you are reading the manual to understand how Litex works, start with the thin
 **What Litex works with**
 
 1. [Objects](https://litexlang.com/doc/Manual/Objects): the mathematical terms and data-like structures Litex can talk about.
-2. [Builtin Props](https://litexlang.com/doc/Manual/Builtin_Props): the common atomic proposition forms, such as `=`, `<`, `$in`, `$subset`, and `$is_set`.
+2. [Builtin Predicates](https://litexlang.com/doc/Manual/Builtin_Predicates): the common builtin predicates used to make atomic facts, such as `=`, `<`, `$in`, `$subset`, and `$is_set`.
 3. [Factual Statements](https://litexlang.com/doc/Manual/Factual_Statements): how atomic facts combine into chains, conjunctions, disjunctions, `exist`, and `forall`.
 4. [Statements](https://litexlang.com/doc/Manual/Statements): the statement forms used to introduce definitions, context, and proof blocks.
 
