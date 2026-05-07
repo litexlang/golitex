@@ -8,10 +8,29 @@ pub struct NonFactualStmtSuccess {
 }
 
 #[derive(Debug)]
+pub struct VerifiedByBuiltinRuleResult {
+    pub msg: String,
+    pub verify_what: Fact,
+}
+
+#[derive(Debug)]
+pub struct VerifiedByFactResult {
+    pub msg: Option<String>,
+    pub verify_what: Fact,
+    pub cite_what: Fact,
+}
+
+#[derive(Debug)]
+pub struct VerifiedByVerifiedBysResult {
+    pub verify_what: Fact,
+    pub cite_what: Vec<Box<VerifiedByResult>>,
+}
+
+#[derive(Debug)]
 pub enum VerifiedByResult {
-    BuiltinRules(String),
-    Fact(Fact, String),
-    VerifiedBys(Vec<Box<VerifiedByResult>>),
+    BuiltinRule(VerifiedByBuiltinRuleResult),
+    Fact(VerifiedByFactResult),
+    VerifiedBys(VerifiedByVerifiedBysResult),
 }
 
 #[derive(Debug)]
@@ -45,7 +64,8 @@ impl FactualStmtSuccess {
     ) -> Self {
         let infers = InferResult::from_fact(&stmt);
         let verified_by = merge_verified_by_with_steps(
-            VerifiedByResult::BuiltinRules(builtin_rule_label),
+            stmt.clone(),
+            VerifiedByResult::builtin_rule(builtin_rule_label, stmt.clone()),
             step_results,
         );
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
@@ -58,7 +78,8 @@ impl FactualStmtSuccess {
         step_results: Vec<StmtResult>,
     ) -> Self {
         let verified_by = merge_verified_by_with_steps(
-            VerifiedByResult::BuiltinRules(builtin_rule_label),
+            stmt.clone(),
+            VerifiedByResult::builtin_rule(builtin_rule_label, stmt.clone()),
             step_results,
         );
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
@@ -70,7 +91,7 @@ impl FactualStmtSuccess {
         verified_by: VerifiedByResult,
         step_results: Vec<StmtResult>,
     ) -> Self {
-        let verified_by = merge_verified_by_with_steps(verified_by, step_results);
+        let verified_by = merge_verified_by_with_steps(stmt.clone(), verified_by, step_results);
         FactualStmtSuccess {
             stmt,
             infers,
@@ -103,50 +124,88 @@ impl FactualStmtSuccess {
 }
 
 impl VerifiedByResult {
+    pub fn builtin_rule(msg: impl Into<String>, verify_what: Fact) -> Self {
+        Self::BuiltinRule(VerifiedByBuiltinRuleResult {
+            msg: msg.into(),
+            verify_what,
+        })
+    }
+
+    /// Goal `verify_what` justified by citing `cite_what`.
+    pub fn cited_fact(verify_what: Fact, cite_what: Fact, msg: Option<String>) -> Self {
+        Self::Fact(VerifiedByFactResult {
+            msg,
+            verify_what,
+            cite_what,
+        })
+    }
+
+    /// Same statement as goal and citation; optional human note in `msg`.
+    pub fn fact_with_note(verify_what: Fact, msg: Option<String>) -> Self {
+        let cite_what = verify_what.clone();
+        Self::cited_fact(verify_what, cite_what, msg)
+    }
+
+    pub fn wrap_bys(verify_what: Fact, children: Vec<VerifiedByResult>) -> Self {
+        Self::VerifiedBys(VerifiedByVerifiedBysResult {
+            verify_what,
+            cite_what: children.into_iter().map(Box::new).collect(),
+        })
+    }
+
+    fn primary_verify_what(&self) -> &Fact {
+        match self {
+            VerifiedByResult::BuiltinRule(r) => &r.verify_what,
+            VerifiedByResult::Fact(r) => &r.verify_what,
+            VerifiedByResult::VerifiedBys(r) => &r.verify_what,
+        }
+    }
+
     pub fn tree_is_builtin_rules_only(&self) -> bool {
         match self {
-            VerifiedByResult::BuiltinRules(s) => !s.is_empty(),
-            VerifiedByResult::Fact(_, _) => false,
-            VerifiedByResult::VerifiedBys(items) => {
-                !items.is_empty() && items.iter().all(|b| b.tree_is_builtin_rules_only())
+            VerifiedByResult::BuiltinRule(r) => !r.msg.is_empty(),
+            VerifiedByResult::Fact(_) => false,
+            VerifiedByResult::VerifiedBys(w) => {
+                !w.cite_what.is_empty()
+                    && w.cite_what.iter().all(|b| b.tree_is_builtin_rules_only())
             }
         }
     }
 
     pub fn first_builtin_rule_label(&self) -> Option<&str> {
         match self {
-            VerifiedByResult::BuiltinRules(s) => {
-                if s.is_empty() {
+            VerifiedByResult::BuiltinRule(r) => {
+                if r.msg.is_empty() {
                     None
                 } else {
-                    Some(s.as_str())
+                    Some(r.msg.as_str())
                 }
             }
-            VerifiedByResult::VerifiedBys(items) => {
-                for b in items.iter() {
-                    if let VerifiedByResult::BuiltinRules(s) = &**b {
-                        if !s.is_empty() {
-                            return Some(s.as_str());
+            VerifiedByResult::VerifiedBys(w) => {
+                for b in w.cite_what.iter() {
+                    if let VerifiedByResult::BuiltinRule(r) = &**b {
+                        if !r.msg.is_empty() {
+                            return Some(r.msg.as_str());
                         }
                     }
                 }
-                for b in items.iter() {
+                for b in w.cite_what.iter() {
                     if let Some(l) = b.first_builtin_rule_label() {
                         return Some(l);
                     }
                 }
                 None
             }
-            VerifiedByResult::Fact(_, _) => None,
+            VerifiedByResult::Fact(_) => None,
         }
     }
 
     fn first_cited_fact_line_file(&self) -> Option<LineFile> {
         match self {
-            VerifiedByResult::BuiltinRules(_) => None,
-            VerifiedByResult::Fact(f, _) => Some(f.line_file()),
-            VerifiedByResult::VerifiedBys(items) => {
-                for b in items {
+            VerifiedByResult::BuiltinRule(_) => None,
+            VerifiedByResult::Fact(r) => Some(r.cite_what.line_file()),
+            VerifiedByResult::VerifiedBys(w) => {
+                for b in &w.cite_what {
                     if let Some(lf) = b.first_cited_fact_line_file() {
                         return Some(lf);
                     }
@@ -160,29 +219,26 @@ impl VerifiedByResult {
 impl VerifiedByResult {
     pub fn display_line(&self) -> String {
         match self {
-            VerifiedByResult::BuiltinRules(s) => s.clone(),
-            VerifiedByResult::Fact(f, detail) => {
-                if !detail.is_empty() {
-                    detail.clone()
-                } else {
-                    f.to_string()
+            VerifiedByResult::BuiltinRule(r) => r.msg.clone(),
+            VerifiedByResult::Fact(r) => {
+                if let Some(d) = &r.msg {
+                    if !d.is_empty() {
+                        return d.clone();
+                    }
                 }
+                r.cite_what.to_string()
             }
-            VerifiedByResult::VerifiedBys(items) => {
-                if items.is_empty() {
+            VerifiedByResult::VerifiedBys(w) => {
+                if w.cite_what.is_empty() {
                     return String::new();
                 }
-                items
+                w.cite_what
                     .iter()
                     .map(|b| b.display_line())
                     .collect::<Vec<_>>()
                     .join("; ")
             }
         }
-    }
-
-    pub fn wrap_bys(children: Vec<VerifiedByResult>) -> Self {
-        VerifiedByResult::VerifiedBys(children.into_iter().map(Box::new).collect())
     }
 }
 
@@ -200,26 +256,44 @@ impl NonFactualStmtSuccess {
     }
 }
 
+fn patch_verify_what_root(outer: Fact, v: VerifiedByResult) -> VerifiedByResult {
+    match v {
+        VerifiedByResult::BuiltinRule(mut r) => {
+            r.verify_what = outer;
+            VerifiedByResult::BuiltinRule(r)
+        }
+        VerifiedByResult::Fact(mut r) => {
+            r.verify_what = outer;
+            VerifiedByResult::Fact(r)
+        }
+        VerifiedByResult::VerifiedBys(mut w) => {
+            w.verify_what = outer;
+            VerifiedByResult::VerifiedBys(w)
+        }
+    }
+}
+
 fn merge_verified_by_with_steps(
+    verify_what: Fact,
     verified_by: VerifiedByResult,
     step_results: Vec<StmtResult>,
 ) -> VerifiedByResult {
     if step_results.is_empty() {
-        return verified_by;
+        return patch_verify_what_root(verify_what, verified_by);
     }
     let mut items: Vec<VerifiedByResult> = match verified_by {
-        VerifiedByResult::VerifiedBys(inner) => inner.into_iter().map(|b| *b).collect(),
+        VerifiedByResult::VerifiedBys(w) => w.cite_what.into_iter().map(|b| *b).collect(),
         other => vec![other],
     };
     for r in step_results {
-        if let Some(verified_by) = verified_by_from_stmt_result(r) {
-            items.push(verified_by);
+        if let Some(vb) = verified_by_from_stmt_result(r) {
+            items.push(vb);
         }
     }
-    VerifiedByResult::wrap_bys(items)
+    VerifiedByResult::wrap_bys(verify_what, items)
 }
 
-fn verified_by_from_stmt_result(result: StmtResult) -> Option<VerifiedByResult> {
+pub(crate) fn verified_by_from_stmt_result(result: StmtResult) -> Option<VerifiedByResult> {
     match result {
         StmtResult::FactualStmtSuccess(f) => Some(f.verified_by),
         StmtResult::NonFactualStmtSuccess(n) => {
@@ -230,8 +304,11 @@ fn verified_by_from_stmt_result(result: StmtResult) -> Option<VerifiedByResult> 
                 .collect::<Vec<_>>();
             if items.is_empty() {
                 None
+            } else if items.len() == 1 {
+                Some(items.into_iter().next().unwrap())
             } else {
-                Some(VerifiedByResult::wrap_bys(items))
+                let verify_what = items[0].primary_verify_what().clone();
+                Some(VerifiedByResult::wrap_bys(verify_what, items))
             }
         }
         StmtResult::StmtUnknown(_) => None,

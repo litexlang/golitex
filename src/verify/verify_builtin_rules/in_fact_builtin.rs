@@ -1428,11 +1428,12 @@ impl Runtime {
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-            stmt,
+            stmt.clone(),
             infer_result,
-            VerifiedByResult::BuiltinRules(
+            VerifiedByResult::builtin_rule(
                 "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
                     .to_string(),
+                stmt,
             ),
         ))
         .into())
@@ -1471,10 +1472,11 @@ impl Runtime {
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-            stmt,
+            stmt.clone(),
             infer_result,
-            VerifiedByResult::BuiltinRules(
+            VerifiedByResult::builtin_rule(
                 "list_set in power_set: each element is in the base set".to_string(),
+                stmt,
             ),
         ))
         .into())

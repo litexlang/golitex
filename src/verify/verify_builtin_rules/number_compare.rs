@@ -135,7 +135,11 @@ impl Runtime {
                 return Ok(StmtResult::FactualStmtSuccess(
                     FactualStmtSuccess::new_with_verified_by_known_fact(
                         less_equal_fact.clone().into(),
-                        VerifiedByResult::Fact(strict_fact, strict_key),
+                        VerifiedByResult::cited_fact(
+                            less_equal_fact.clone().into(),
+                            strict_fact,
+                            None,
+                        ),
                         Vec::new(),
                     ),
                 ));
