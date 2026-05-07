@@ -36,7 +36,7 @@ Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on th
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
     x = 2
-    =&gt;:
+    =>:
         x + 1 = 3
         x^2 = 4</code></pre>
     </td>
@@ -134,14 +134,14 @@ These examples belong together because they involve objects whose validity depen
   </tr>
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>forall x {y R: y &gt; 0}:
-    x &gt; 0</code></pre>
+<pre style="margin: 0; white-space: pre-wrap"><code>forall x {y R: y > 0}:
+    x > 0</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
 
 
-example (x : {y : ℝ // y &gt; 0}) : (x : ℝ) &gt; 0 := by
+example (x : {y : ℝ // y > 0}) : (x : ℝ) > 0 := by
   exact x.property</code></pre>
     </td>
   </tr>
@@ -161,7 +161,7 @@ forall x {y R: y > 0}:
   </tr>
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>have fn g(x R: x &gt; 0) R = x + 1
+<pre style="margin: 0; white-space: pre-wrap"><code>have fn g(x R: x > 0) R = x + 1
 
 
 g(1) = 2</code></pre>
@@ -170,7 +170,7 @@ g(1) = 2</code></pre>
 <pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
 
 
-def g (x : {x : ℝ // x &gt; 0}) : ℝ := x.val + 1
+def g (x : {x : ℝ // x > 0}) : ℝ := x.val + 1
 
 
 example : g ⟨1, by norm_num⟩ = 2 := by
@@ -239,11 +239,11 @@ h(2) = 3
 have x R
 
 
-by cases k(x) &gt; 2:
+by cases k(x) > 2:
     case x = 2:
-        k(x) = 3 &gt; 2
+        k(x) = 3 > 2
     case x != 2:
-        k(x) = 4 &gt; 2</code></pre>
+        k(x) = 4 > 2</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
@@ -252,7 +252,7 @@ by cases k(x) &gt; 2:
 noncomputable def k (z : ℝ) : ℝ := if z = 2 then 3 else 4
 
 
-example (x : ℝ) : k x &gt; 2 := by
+example (x : ℝ) : k x > 2 := by
   by_cases h : x = 2
   · simp [k, h]
   · simp [k, h]</code></pre>
@@ -276,6 +276,68 @@ by cases k(x) > 2:
         k(x) = 4 > 2
 ```
 
+### Anonymous Functions Can Be Passed Directly
+
+Litex treats anonymous functions as ordinary objects. You can pass them directly into `sum`, `product`, or another higher-level mathematical object without first giving the function a separate name. This is useful for nested sums and products, where naming every temporary function would distract from the formula.
+
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
+  <tr>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>eval sum(1, 3, 'Z(x){sum(1, x, 'Z(y){x + y})})</code></pre>
+    </td>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>def inner (x : ℤ) : ℤ :=
+  Finset.sum (Finset.Icc 1 x) (fun y => x + y)
+
+def total : ℤ :=
+  Finset.sum (Finset.Icc 1 3) inner</code></pre>
+    </td>
+  </tr>
+</table>
+
+**What differs.** Litex can pass an anonymous function object directly to a repeated sum or product. Lean can do the same mathematics, but users often introduce `fun` expressions, named definitions, ranges, coercions, or library conventions around finite sums.
+
+```litex
+eval sum(1, 3, 'Z(x){sum(1, x, 'Z(y){x + y})})
+```
+
+### Set Expressions Are Ordinary Objects
+
+Because Litex is set-theoretic, set expressions are also ordinary objects. A set-builder or a finite set can appear where an object appears, just like `1`, `R`, or a function object. You do not need to define an extra named set first when the expression itself is clear.
+
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
+  <tr>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>{x R: x > 0} = {x R: x > 0}
+{1, 2} = {1, 2}</code></pre>
+    </td>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+example : ({x : ℝ | x > 0} : Set ℝ) = {x : ℝ | x > 0} := by
+  rfl
+
+example : ({1, 2} : Finset ℕ) = {1, 2} := by
+  rfl</code></pre>
+    </td>
+  </tr>
+</table>
+
+**What differs.** Litex's set expressions are objects that can be passed around and compared directly without first naming them. Lean also has sets, but the surrounding type (`Set ℝ`, `Finset ℕ`, subtype, and so on) is usually explicit.
+
+```litex
+{x R: x > 0} = {x R: x > 0}
+{1, 2} = {1, 2}
+```
+
 ---
 
 ## Facts: How Claims Are Written
@@ -296,7 +358,7 @@ Lean also proves propositions. The surface difference is that Lean code usually 
 <pre style="margin: 0; white-space: pre-wrap"><code>forall x, y R:
     2 * x + 3 * y = 10
     4 * x + 5 * y = 14
-    =&gt;:
+    =>:
         y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
         x = ((2 * x + 3 * y) - 3 * y) / 2 = -4</code></pre>
     </td>
@@ -359,7 +421,7 @@ Lean also has structured proof commands and tactics. The difference is that Lite
 
 
 example : ∃ a b c d : ℕ,
-    a &gt; 0 ∧ b &gt; 0 ∧ c &gt; 0 ∧ d &gt; 0 ∧
+    a > 0 ∧ b > 0 ∧ c > 0 ∧ d > 0 ∧
     a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4 := by
   refine ⟨95800, 217519, 414560, 422481, ?_⟩
   norm_num</code></pre>
@@ -388,7 +450,7 @@ abstract_prop q0(x, y)
 
 know forall a, b R:
     $p0(a, b)
-    =&gt;:
+    =>:
         $q0(a, b)
 
 
@@ -457,7 +519,7 @@ Litex also reports what happened. Its message output shows each statement, the f
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
     x = 2
-    =&gt;:
+    =>:
         x + 1 = 3</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
@@ -500,7 +562,7 @@ forall a, b, a2, b2 set:
     a = a2
     b = b2
     $p(a, b)
-    =&gt;:
+    =>:
         $p(a2, b2)</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
@@ -765,48 +827,48 @@ Both systems can express the classic proof that there are infinitely many primes
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>prop prime(a N_pos):
-    2 &lt;= a
+    2 <= a
     forall b N_pos:
-        2 &lt;= b &lt; a
-        =&gt;:
+        2 <= b < a
+        =>:
             a % b != 0
 
 
 know:
     forall a, k N_pos:
-        k &lt;= a
-        =&gt;:
+        k <= a
+        =>:
             product(1, a, 'N_pos(x){x}) % k = 0
 
 
     forall a N_pos:
-        2 &lt;= a
-        =&gt;:
+        2 <= a
+        =>:
             exist k N_pos st {$prime(k), a % k = 0}
 
 
     forall a N_pos:
-        a &lt;= product(1, a, 'N_pos(x){x})
+        a <= product(1, a, 'N_pos(x){x})
 
 
-claim forall! a N_pos: 2 &lt;= a =&gt; exist k N_pos st {k &gt; a, $prime(k)}:
-    2 &lt;= a &lt;= product(1, a, 'N_pos(x){x}) &lt;= product(1, a, 'N_pos(x){x}) + 1
+claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
+    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
     have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
-    by cases k &gt; a:
-        case k &lt;= a:
+    by cases k > a:
+        case k <= a:
             product(1, a, 'N_pos(x){x}) % k = 0
             (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
-        case k &gt; a:
+        case k > a:
             do_nothing
-    witness exist k N_pos st {k &gt; a, $prime(k)} from k</code></pre>
+    witness exist k N_pos st {k > a, $prime(k)} from k</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
 
 
 example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
-  have hN0 : 0 &lt; N ! := by exact Nat.factorial_pos N
+  have hN0 : 0 < N ! := by exact Nat.factorial_pos N
   have hN2 : 2 ≤ N ! + 1 := by omega
   obtain ⟨p, hp, hpN⟩ : ∃ p : ℕ, Nat.Prime p ∧ p ∣ N ! + 1 :=
     Nat.exists_prime_and_dvd hN2
@@ -884,14 +946,14 @@ Litex keeps objects and facts separate. A `prop` defines a predicate form. Apply
 
 
 know forall x R:
-    x &gt; 0
-    =&gt;:
+    x > 0
+    =>:
         $positive(x)
 
 
 forall x R:
-    x &gt; 0
-    =&gt;:
+    x > 0
+    =>:
         $positive(x)
 
 
