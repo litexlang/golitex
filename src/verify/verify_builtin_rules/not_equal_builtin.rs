@@ -2,45 +2,6 @@ use crate::prelude::*;
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 
 impl Runtime {
-    fn try_parse_number_literal_obj_string_for_not_equal_builtin_rule(
-        &self,
-        obj_string: &str,
-    ) -> Option<Number> {
-        let trimmed = obj_string.trim();
-        if trimmed.is_empty() {
-            return None;
-        }
-        let parsed = Number::new(trimmed.to_string());
-        if parsed.to_string() == trimmed {
-            return Some(parsed);
-        }
-        None
-    }
-
-    fn resolve_obj_to_number_for_not_equal_builtin_rule(&self, obj: &Obj) -> Option<Number> {
-        if let Some(number) = self.resolve_obj_to_number_resolved(obj) {
-            return Some(number);
-        }
-        let obj_key = obj.to_string();
-        if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&obj_key) {
-            return Some(number);
-        }
-        let all_equal_obj_strings = self.get_all_objs_equal_to_given(&obj_key);
-        for equal_obj_string in all_equal_obj_strings {
-            if let Some(number) =
-                self.get_object_equal_to_normalized_decimal_number(&equal_obj_string)
-            {
-                return Some(number);
-            }
-            if let Some(number) = self
-                .try_parse_number_literal_obj_string_for_not_equal_builtin_rule(&equal_obj_string)
-            {
-                return Some(number);
-            }
-        }
-        None
-    }
-
     pub fn _verify_not_equal_fact_with_builtin_rules(
         &mut self,
         not_equal_fact: &NotEqualFact,
@@ -109,6 +70,47 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+}
+
+impl Runtime {
+    fn try_parse_number_literal_obj_string_for_not_equal_builtin_rule(
+        &self,
+        obj_string: &str,
+    ) -> Option<Number> {
+        let trimmed = obj_string.trim();
+        if trimmed.is_empty() {
+            return None;
+        }
+        let parsed = Number::new(trimmed.to_string());
+        if parsed.to_string() == trimmed {
+            return Some(parsed);
+        }
+        None
+    }
+
+    fn resolve_obj_to_number_for_not_equal_builtin_rule(&self, obj: &Obj) -> Option<Number> {
+        if let Some(number) = self.resolve_obj_to_number_resolved(obj) {
+            return Some(number);
+        }
+        let obj_key = obj.to_string();
+        if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&obj_key) {
+            return Some(number);
+        }
+        let all_equal_obj_strings = self.get_all_objs_equal_to_given(&obj_key);
+        for equal_obj_string in all_equal_obj_strings {
+            if let Some(number) =
+                self.get_object_equal_to_normalized_decimal_number(&equal_obj_string)
+            {
+                return Some(number);
+            }
+            if let Some(number) = self
+                .try_parse_number_literal_obj_string_for_not_equal_builtin_rule(&equal_obj_string)
+            {
+                return Some(number);
+            }
+        }
+        None
     }
 
     // x < y or x > y (including y < x / y > x spellings) in known facts implies x != y.

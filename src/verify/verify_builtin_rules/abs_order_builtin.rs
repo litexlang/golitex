@@ -1,6 +1,33 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
+impl Runtime {
+    pub(crate) fn verify_abs_order_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let AtomicFact::LessEqualFact(f) = &norm else {
+            return Ok(None);
+        };
+        if let Some(result) = self.try_verify_abs_basic_lower_bound(f, atomic_fact)? {
+            return Ok(Some(result));
+        }
+        if let Some(result) = self.try_verify_abs_triangle(f, atomic_fact)? {
+            return Ok(Some(result));
+        }
+        if let Some(result) = self.try_verify_abs_reverse_triangle(f, atomic_fact)? {
+            return Ok(Some(result));
+        }
+        if let Some(result) = self.try_verify_abs_upper_bound(f, atomic_fact)? {
+            return Ok(Some(result));
+        }
+        Ok(None)
+    }
+}
+
 fn literal_neg_one_obj() -> Obj {
     Obj::Number(Number::new("-1".to_string()))
 }
@@ -184,30 +211,5 @@ impl Runtime {
                 Vec::new(),
             ),
         )))
-    }
-
-    pub(crate) fn verify_abs_order_builtin_rule(
-        &mut self,
-        atomic_fact: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
-            return Ok(None);
-        };
-        let AtomicFact::LessEqualFact(f) = &norm else {
-            return Ok(None);
-        };
-        if let Some(result) = self.try_verify_abs_basic_lower_bound(f, atomic_fact)? {
-            return Ok(Some(result));
-        }
-        if let Some(result) = self.try_verify_abs_triangle(f, atomic_fact)? {
-            return Ok(Some(result));
-        }
-        if let Some(result) = self.try_verify_abs_reverse_triangle(f, atomic_fact)? {
-            return Ok(Some(result));
-        }
-        if let Some(result) = self.try_verify_abs_upper_bound(f, atomic_fact)? {
-            return Ok(Some(result));
-        }
-        Ok(None)
     }
 }
