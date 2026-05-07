@@ -8,22 +8,26 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Le
 
 ## Two styles of formal mathematics
 
-Litex and Lean are both attempts to make mathematical reasoning checkable by a computer. They are not trying to be the same language.
+Litex and Lean both make mathematical reasoning checkable by a computer. They are not trying to be the same language.
 
-Lean is a mature theorem prover with a powerful type-theoretic foundation, a large ecosystem, and Mathlib, one of the most impressive formal mathematics libraries in the world. Litex is much younger and more experimental. Its goal is narrower: make many everyday mathematical arguments look close to the way people write them on paper, while still checking them strictly.
+Lean is a mature theorem prover with a powerful type-theoretic foundation, a large ecosystem, and Mathlib, one of the most impressive formal mathematics libraries in the world. 
 
-So this page is not a ranking. It is a comparison of style.
+Litex is younger and more experimental. Its goal is narrower: make many everyday mathematical arguments look close to the way people write them on paper, while still checking them strictly.
+
+This page is not a ranking. It compares expression style and proof interaction.
 
 - Lean exposes a very general proof engine. The user works with theorem statements, hypotheses, terms, proof states, tactics, and library lemmas.
-- Litex exposes a more mathematical surface. The user writes objects, facts, and statements, and the checker tries builtin rules, known facts, and known `forall` facts by matching and substitution.
+- Litex exposes a mathematical surface built from objects, facts, and statements. The checker then tries builtin rules, known facts, and known `forall` facts by matching and substitution.
 
 The trade-off is real. Lean is stronger for large formal developments and advanced abstractions. Litex aims to be easier to read and easier to start using for ordinary mathematics.
 
 ---
 
-## The main difference
+## First examples
 
-The smallest useful comparison is this:
+Before the larger structure, here are the examples that show the intended feel.
+
+### Main README example
 
 **Litex**
 
@@ -50,20 +54,184 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   exact ⟨h_add, h_square⟩
 ```
 
-**What differs.** Lean can prove this very well, and often very shortly. The difference is the level of interaction. In Lean, the user names the hypothesis `h`, creates intermediate facts, rewrites with `rw [h]`, and asks `norm_num` to finish numeric goals. In Litex, the user writes the facts directly. The checker remembers `x = 2`, substitutes it when a later goal matches, and closes the arithmetic goals.
+**What differs.** Litex writes the desired facts directly. The checker remembers `x = 2`, substitutes it into later goals, and closes the arithmetic. Lean names the hypothesis and guides rewriting explicitly.
 
-This difference appears again and again:
+### Arithmetic
 
-- **Foundation.** Litex presents a set-theoretic surface: sets, elements, functions, tuples, relations, and facts. Lean is based on dependent type theory and exposes more type-level structure.
-- **Surface language.** Litex statements are close to ordinary math prose: `forall`, `exist`, `have`, `claim`, `witness`, `by cases`. Lean has a precise theorem-and-proof-state workflow.
-- **Less proof-engine instruction.** Litex uses matching, substitution, and builtin relationships among basic mathematical concepts to find routine proof paths. In many everyday steps, the user does not need to tell the checker exactly which lemma or tactic proves the goal.
-- **Less dependence on a standard library for basic steps.** Litex builds many elementary relationships into the language layer. This can matter in areas where the needed background mathematics is not yet easy to express or package naturally in a type-theoretic library.
+**Litex**
+
+```litex
+1 + 1 = 2
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : 1 + 1 = 2 := by
+  norm_num
+```
+
+**What differs.** Litex writes arithmetic as a fact. Lean usually calls `norm_num`.
+
+### Membership
+
+**Litex**
+
+```litex
+1 $in {1, 2}
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : 1 ∈ ({1, 2} : Finset ℕ) := by
+  simp
+```
+
+**What differs.** Litex uses the finite display directly. Lean chooses `Finset ℕ` and simplifies.
+
+These examples are deliberately small. They are not the whole comparison; they are a quick entry point before the Manual-style structure below.
 
 ---
 
-## Calculation and rewriting
+## The manual mental model
 
-### Visible calculation chains
+The main Litex model is:
+
+1. **Objects** are the mathematical things being discussed.
+2. **Facts** are claims about those objects.
+3. **Statements** are proof-script actions that define objects, assert facts, open local proofs, split cases, or provide witnesses.
+4. **The proof process** checks each fact using well-definedness, builtin rules, known facts, and known `forall` facts.
+5. **The builtin mathematical background** contains many small relationships among basic mathematical concepts.
+
+This is the best way to compare Litex and Lean. The difference is not one isolated syntax trick. It is where the system puts mathematical structure and how much proof-engine instruction the user writes.
+
+---
+
+## Objects: what mathematical things look like
+
+Litex presents many everyday mathematical objects directly: numbers, sets, tuples, functions, set-builder expressions, Cartesian products, finite displays, sums, products, and matrices.
+
+Lean can express these ideas too, often with more precision and more generality. But the user usually meets type-level encodings earlier: `Set`, `Finset`, subtypes, coercions, and theorem-library conventions.
+
+### Set-builder domains and functions
+
+These examples belong together because they all involve objects whose validity depends on a domain condition or a function definition.
+
+**Set-builder domain in Litex**
+
+**Litex**
+
+```litex
+forall x {y R: y > 0}:
+    x > 0
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example (x : {y : ℝ // y > 0}) : (x : ℝ) > 0 := by
+  exact x.property
+```
+
+**What differs.** Litex keeps the domain condition in the parameter. Lean usually packages the value and proof as a subtype.
+
+**Restricted function in Litex**
+
+**Litex**
+
+```litex
+have fn g(x R: x > 0) R = x + 1
+
+g(1) = 2
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+def g (x : {x : ℝ // x > 0}) : ℝ := x.val + 1
+
+example : g ⟨1, by norm_num⟩ = 2 := by
+  norm_num [g]
+```
+
+**What differs.** Litex checks `1 > 0` as background mathematics. Lean passes a subtype value containing both `1` and its proof.
+
+**Piecewise function in Litex**
+
+**Litex**
+
+```litex
+have fn h(x R) R :
+    case x = 2: 3
+    case x != 2: 4
+
+h(2) = 3
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+noncomputable def h (x : ℝ) : ℝ := if x = 2 then 3 else 4
+
+example : h 2 = 3 := by
+  simp [h]
+```
+
+**What differs.** Litex's `case` form reads like a piecewise definition. Lean uses `if` and unfolds it with simplification.
+
+**Case analysis around a function**
+
+**Litex**
+
+```litex
+have fn k(z R) R :
+    case z = 2: 3
+    case z != 2: 4
+
+have x R
+
+by cases k(x) > 2:
+    case x = 2:
+        k(x) = 3 > 2
+    case x != 2:
+        k(x) = 4 > 2
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+noncomputable def k (z : ℝ) : ℝ := if z = 2 then 3 else 4
+
+example (x : ℝ) : k x > 2 := by
+  by_cases h : x = 2
+  · simp [k, h]
+  · simp [k, h]
+```
+
+**What differs.** Litex keeps the cases and the function use close together. Lean introduces a named case assumption and feeds it to `simp`.
+
+---
+
+## Facts: how claims are written
+
+Litex proof scripts are built from facts. A fact may be atomic, such as equality or membership, or structured, such as a chain, an existential fact, a universal fact, a disjunction, or a conjunction.
+
+Lean also proves propositions, of course. The surface difference is that Lean code usually starts from a theorem goal and then constructs a proof of that goal, while Litex lets many facts appear directly as proof-script lines.
+
+### Calculation chains
 
 **Litex**
 
@@ -100,199 +268,17 @@ example (x y : ℝ)
   · exact hx
 ```
 
-**What differs.** Both languages can either show the intermediate algebra or delegate it to automation. Lean can solve the original goals with `linarith`, and Litex could also package a similar linear-arithmetic pattern as a builtin rule or user theorem. Litex is also less dependent on importing a broad standard library for this kind of basic algebra: many routine arithmetic and equality relationships are already part of its builtin background. The comparison here is about the visible style: Litex's calculation chain is a direct factual statement, while Lean's explicit version writes the same path through named intermediate goals, `calc`, rewrites, and tactics.
-
-### Routine arithmetic
-
-**Litex**
-
-```litex
-1 + 1 = 2
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-example : 1 + 1 = 2 := by
-  norm_num
-```
-
-**What differs.** In Litex, basic arithmetic is part of the checker background. In Lean, the same result is usually discharged by a tactic. The mathematical fact is the same; the proof interface is different.
+**What differs.** Litex's calculation chain is one factual statement. Lean's explicit version uses named goals, `calc`, rewrites, and tactics.
 
 ---
 
-## Functions and domains
+## Statements: how a proof script moves
 
-### Mixed-domain functions
+Litex statements are proof-script actions: `have`, `know`, `claim`, `witness`, `by cases`, `by contra`, `by enumerate`, `by induc`, and so on.
 
-**Litex**
+Lean also has structured proof commands and tactics. The difference is that Litex statements are meant to look like common mathematical proof moves, while Lean tactics operate a very general proof state.
 
-```litex
-have fn f(x R, y Z) R = x * y
-
-f(1, 2) = 1 * 2 = 2
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-def f (x : ℝ) (y : ℤ) : ℝ := x * (y : ℝ)
-
-example : f 1 2 = 2 := by
-  norm_num [f]
-```
-
-**What differs.** Litex writes the mixed-domain function in the same line as its formula. Lean makes the types and coercion explicit, which is more general and precise, but less like a blackboard definition.
-
-### Restricted domains
-
-**Litex**
-
-```litex
-have fn g(x R: x > 0) R = x + 1
-
-g $in fn(x R: x > 0) R
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-def g (x : {x : ℝ // x > 0}) : ℝ := x.val + 1
-
-example : g ⟨1, by norm_num⟩ = 2 := by
-  norm_num [g]
-```
-
-**What differs.** In Litex, the domain condition stays next to the variable. In Lean, one natural encoding is a subtype, which is very expressive but introduces another abstraction for the user to learn.
-
-### Piecewise definitions
-
-**Litex**
-
-```litex
-have fn h(x R) R :
-    case x = 2: 3
-    case x != 2: 4
-
-h(2) = 3
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-noncomputable def h (x : ℝ) : ℝ := if x = 2 then 3 else 4
-
-example : h 2 = 3 := by
-  simp [h]
-```
-
-**What differs.** Litex's `case` form is close to a piecewise mathematical definition. Lean's `if` form is compact and powerful, but the proof normally asks the simplifier to unfold the definition.
-
----
-
-## Sets and membership
-
-### Finite set membership
-
-**Litex**
-
-```litex
-1 $in {1, 2}
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-example : 1 ∈ ({1, 2} : Finset ℕ) := by
-  simp
-```
-
-**What differs.** Litex treats finite display sets as ordinary mathematical objects in the surface language. Lean distinguishes the relevant set-like type, such as `Finset`, and then uses library simplification.
-
-### Sets whose elements are sets
-
-**Litex**
-
-```litex
-{1, 2} $in {{}, {1, 2}}
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-example : ({1, 2} : Set ℕ) ∈ ({∅, {1, 2}} : Set (Set ℕ)) := by
-  simp
-```
-
-**What differs.** Litex's set-theoretic surface makes nested sets feel direct. Lean is explicit about the type of each set expression, which prevents ambiguity and supports large developments.
-
-### Set-builder membership
-
-**Litex**
-
-```litex
-forall x {y R: y > 0}:
-    x > 0
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-example (x : {y : ℝ // y > 0}) : (x : ℝ) > 0 := by
-  exact x.property
-```
-
-**What differs.** Litex lets a set-builder expression appear directly as a parameter domain. Lean often represents the same idea with a subtype, making the witness value and its proof field explicit.
-
-### Inclusion through known universal facts
-
-**Litex**
-
-```litex
-have a nonempty_set, b nonempty_set, c nonempty_set
-
-know forall x a:
-    x $in b
-
-know forall x b:
-    x $in c
-
-have x a
-x $in b
-x $in c
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-example {A B C : Set α} (hab : A ⊆ B) (hbc : B ⊆ C) (x : A) :
-    (x : α) ∈ C := by
-  exact hbc (hab x.property)
-```
-
-**What differs.** Litex records membership consequences and reuses them as facts in the local context. Lean expresses the same reasoning through subset functions and proof terms.
-
----
-
-## Witnesses and existence
-
-### A simple witness
+### Witness statements
 
 **Litex**
 
@@ -310,15 +296,14 @@ example : ∃ x : ℝ, x = 2 := by
   use 2
 ```
 
-**What differs.** Litex puts the witness, the existential shape, and the verification block in one visible structure. Lean's `use` tactic is short, but the user is still operating the proof state.
+**What differs.** Litex shows the witness and its check together. Lean uses `use` inside the proof state.
 
-### A concrete counterexample
+The same style scales to a larger concrete witness:
 
 **Litex**
 
 ```litex
-witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481:
-    95800 ^ 4 + 217519 ^ 4 + 414560 ^ 4 = 422481 ^ 4
+witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
 ```
 
 **Lean**
@@ -333,33 +318,7 @@ example : ∃ a b c d : ℕ,
   norm_num
 ```
 
-**What differs.** Litex highlights the mathematical witnesses first. Lean packages the witnesses and proof obligations through constructors, which is more general but less like the written phrase "take these values."
-
----
-
-## Proof structure
-
-### Claims and local proofs
-
-**Litex**
-
-```litex
-claim:
-    prove:
-        1 + 1 = 2
-    1 + 1 = 2
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-example : 1 + 1 = 2 := by
-  norm_num
-```
-
-**What differs.** Litex separates a local proof block from the fact that is exported back to the surrounding context. Lean normally starts from a target theorem and transforms the proof state until the target is solved.
+**What differs.** Litex checks the exist fact by replacing the objects in the existential fact with the concrete values. Lean packages values and obligations through constructors.
 
 ### Contradiction
 
@@ -376,9 +335,7 @@ know forall a, b R:
 
 know not $q0(1, 2)
 
-by contra:
-    prove:
-        not $p0(1, 2)
+by contra not $p0(1, 2):
     $p0(1, 2)
     impossible $q0(1, 2)
 ```
@@ -396,162 +353,201 @@ example (p q : ℝ → ℝ → Prop)
   exact hnq (h 1 2 hp)
 ```
 
-**What differs.** Litex exposes the contradiction as an ordinary mathematical line: assume the positive form, derive an impossible fact. Lean expresses the same argument as a function from the assumed proof to contradiction.
-
-### Case splits
-
-**Litex**
-
-```litex
-have fn k(z R) R :
-    case z = 2: 3
-    case z != 2: 4
-
-have x R
-x = 2 or x != 2
-
-by cases:
-    prove:
-        k(x) > 2
-    case x = 2:
-        k(x) = 3
-        k(x) > 2
-    case x != 2:
-        k(x) = 4
-        k(x) > 2
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-noncomputable def k (z : ℝ) : ℝ := if z = 2 then 3 else 4
-
-example (x : ℝ) : k x > 2 := by
-  by_cases h : x = 2
-  · simp [k, h]
-  · simp [k, h]
-```
-
-**What differs.** Litex keeps the proof split close to the displayed disjunction. Lean's `by_cases` is concise, but it introduces named case assumptions that the user then feeds to simplification.
+**What differs.** Litex writes the contradiction as a proof move. Lean expresses it as a function from an assumption to contradiction.
 
 ---
 
-## Finite enumeration and small algorithms
+## Proof process: why Litex needs less instruction
 
-### Finite enumeration
+When Litex checks a fact, the usual loop is:
+
+1. Check that the objects are well-defined.
+2. Try builtin mathematical rules.
+3. Try matching known facts.
+4. Try matching known `forall` facts.
+
+In Lean, the user often chooses the step explicitly: rewrite with this hypothesis, simplify this definition, apply this theorem, run this tactic. This gives very fine control and scales to deep formal developments. Litex chooses a different default for ordinary mathematics: many routine proof paths are tried by the checker.
+
+### Known facts by matching
 
 **Litex**
 
 ```litex
-by enumerate finite_set:
-    prove:
-        forall x {2, 4}:
-            x = 2 or x = 4
-    do_nothing
+abstract_prop p(x, y)
+forall a, b, a2, b2 set:
+    a = a2
+    b = b2
+    $p(a, b)
+    =>:
+        $p(a2, b2)
 ```
 
 **Lean**
 
 ```lean
-import Mathlib
-
-example (x : Fin 2) : x = 0 ∨ x = 1 := by
-  fin_cases x <;> simp
+example (p : α → β → Prop)
+    {a a2 : α} {b b2 : β}
+    (ha : a = a2) (hb : b = b2) (hp : p a b) :
+    p a2 b2 := by
+  subst a2
+  subst b2
+  exact hp
 ```
 
-**What differs.** Litex has a direct surface form for checking a finite list of cases. Lean has strong enumeration tools too, but the exact tool depends on the type being enumerated.
+**What differs.** Litex reuses known facts by equality-compatible matching. Lean usually transports the fact explicitly.
 
-### Bounded integer ranges
+### Known `forall` facts
 
 **Litex**
 
 ```litex
-by for:
-    prove:
-        forall i range(0, 10):
-            i < 10
-    do_nothing
+abstract_prop p(x)
+
+know forall x R:
+    $p(x)
+
+$p(2)
 ```
 
 **Lean**
 
 ```lean
-import Mathlib
-
-example (i : ℤ) (hi : i ∈ Finset.range 10) : i < 10 := by
-  exact_mod_cast Finset.mem_range.mp hi
+example (p : ℝ → Prop) (h : ∀ x : ℝ, p x) : p 2 := by
+  exact h 2
 ```
 
-**What differs.** Litex's `by for` presents the bounded walk as a proof shell over a range. Lean can encode the same idea precisely, but the encoding follows the library representation of finite ranges.
-
-### Small algorithms
-
-**Litex**
-
-```litex
-have fn m(x N_pos) R:
-    case x = 1: 1
-    case x != 1: 0
-
-algo m(x):
-    case x = 1: 1
-    case x != 1: 0
-
-eval m(1)
-m(1) = 1
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-def m (x : ℕ) : ℕ := if x = 1 then 1 else 0
-
-example : m 1 = 1 := by
-  simp [m]
-```
-
-**What differs.** Litex can keep a small algorithm, an evaluation, and the resulting fact in the same proof script. Lean's function definitions and computation are more general and integrate with the theorem prover's reduction and simplification machinery.
+**What differs.** Litex matches the goal against known `forall` facts. Lean applies the universal hypothesis explicitly.
 
 ---
 
-## Induction and large developments
+## Builtin mathematical background
+
+Ordinary mathematics uses many small background relationships: equality, order, membership, set predicates, function application, tuple projection, finite enumeration, arithmetic normalization, and so on. Each relationship is usually simple. The total number of interactions is large.
+
+Litex builds many of these elementary relationships into the language layer. This makes short mathematical scripts less dependent on a separate standard library for basic steps. It can matter especially in areas where the needed background mathematics is not yet easy to express or package naturally in a type-theoretic library.
+
+Lean's strength is different. Mathlib is a broad, mature, community-built mathematical library. For large formalization projects, advanced abstractions, and deep theorem reuse, that ecosystem is a major advantage.
+
+The design difference is where routine mathematical background lives:
+
+- In Litex, many basic relationships are part of the checker background.
+- In Lean, much of the power comes from the library, tactics, and explicit proof terms that users can compose.
+
+---
+
+## Set theory as a larger example
+
+Set theory is a good place to see Litex's design. Litex's surface language treats sets, membership, finite set displays, set-builder domains, power sets, subsets, and cardinality-style facts as basic mathematical material. Lean can express all of these, but the user more often chooses a concrete encoding such as `Set`, `Finset`, subtype, decidable membership, coercions, and library lemmas.
+
+**Nested finite sets**
 
 **Litex**
 
 ```litex
-abstract_prop p(n)
-
-know:
-    $p(0)
-    forall n Z:
-        n >= 0
-        $p(n)
-        =>:
-            $p(n + 1)
-
-by induc n from 0:
-    prove:
-        $p(n)
+{1, 2} $in {{}, {1, 2}}
 ```
 
 **Lean**
 
 ```lean
-example (p : ℕ → Prop)
-    (h0 : p 0)
-    (hs : ∀ n, p n → p (n + 1)) :
-    ∀ n, p n := by
-  intro n
-  induction n with
-  | zero => exact h0
-  | succ n ih => exact hs n ih
+import Mathlib
+
+example : ({1, 2} : Set ℕ) ∈ ({∅, {1, 2}} : Set (Set ℕ)) := by
+  simp
 ```
 
-**What differs.** Litex can display a simple textbook induction skeleton. Lean is stronger for advanced induction, dependent induction, custom eliminators, and large proofs that rely on a mature library. Litex should be read as lighter for simple induction patterns, not as a replacement for Lean's full induction machinery.
+**What differs.** Litex writes nested set membership directly. Lean makes the outer element type explicit: `Set (Set ℕ)`.
+
+**Finite enumeration**
+
+**Litex**
+
+```litex
+forall i {1, 2}:
+    i = 1 or i = 2
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example {i : ℕ} (hi : i ∈ ({1, 2} : Finset ℕ)) : i = 1 ∨ i = 2 := by
+  simpa using hi
+```
+
+**What differs.** Litex unfolds the finite display as possible values. Lean uses `Finset ℕ` and simplification.
+
+**Power set membership**
+
+**Litex**
+
+```litex
+{1, 2} $in power_set({1, 2, 3})
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
+  intro x hx
+  simp at hx
+  simp [hx]
+```
+
+**What differs.** Litex writes power-set membership directly. Lean often proves the underlying subset relation.
+
+**Subset facts produce membership facts**
+
+**Litex**
+
+```litex
+prove:
+    let A, B set:
+        A $subset B
+    forall x A:
+        x $in B
+```
+
+**Lean**
+
+```lean
+example {α : Type} {A B : Set α} (hAB : A ⊆ B) {x : α} (hx : x ∈ A) : x ∈ B := by
+  exact hAB hx
+```
+
+**What differs.** Litex infers membership consequences from `A $subset B`. Lean applies the subset hypothesis as a function.
+
+**Unequal cardinalities rule out equality**
+
+**Litex**
+
+```litex
+by contra:
+    prove:
+        {1, 2, 3} != {1, 2}
+    count({1, 2, 3}) = 3
+    count({1, 2}) = 2
+    count({1, 2, 3}) = count({1, 2})
+    impossible 3 = 2
+```
+
+**Lean**
+
+```lean
+import Mathlib
+
+example : ({1, 2, 3} : Finset ℕ) ≠ ({1, 2} : Finset ℕ) := by
+  intro h
+  have hcard := congrArg Finset.card h
+  norm_num at hcard
+```
+
+**What differs.** Litex follows the count contradiction directly. Lean uses `Finset.card`, `congrArg`, and simplification.
+
+These examples are intentionally larger than `1 + 1 = 2` but still much smaller than the prime-number case study. They show why set theory is a natural foundation for Litex: many common mathematical objects are already first-class enough that the proof can stay close to the sentence a mathematician would write.
 
 ---
 
@@ -566,39 +562,112 @@ Both systems can express the classic proof that there are infinitely many primes
 5. If `k <= a`, then `k` divides the product, so `product + 1` has remainder `1` modulo `k`, contradicting that `k` divides it.
 6. Therefore `k > a`.
 
-In Litex, the main proof spine can be written as a claim with known background lemmas stated up front:
+In Litex, the main proof spine can be written as a `claim` with known background lemmas stated up front:
 
-```text
+```litex
+prop prime(a N_pos):
+    2 <= a
+    forall b N_pos:
+        2 <= b < a
+        =>:
+            a % b != 0
+
 know:
-    every k <= a divides product(1, a, ...)
-    every number >= 2 has a prime divisor
-    a <= product(1, a, ...)
+    forall a, k N_pos:
+        k <= a
+        =>:
+            product(1, a, 'N_pos(x){x}) % k = 0
+
+    forall a N_pos:
+        2 <= a
+        =>:
+            exist k N_pos st {$prime(k), a % k = 0}
+
+    forall a N_pos:
+        a <= product(1, a, 'N_pos(x){x})
 
 claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
-    build product(1, a, ...) + 1
-    take a prime divisor k
+    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
+    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
     by cases k > a:
         case k <= a:
-            derive remainder 1
-            impossible divisor remainder 0
+            product(1, a, 'N_pos(x){x}) % k = 0
+            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
         case k > a:
-            done
-    witness k
+            do_nothing
+    witness exist k N_pos st {k > a, $prime(k)} from k
 ```
+
+The `prop` and `know` blocks are the background mathematics. The part that actually performs the proof is the `claim`, and that main proof is only a little more than ten lines. Each line is a direct mathematical move: build the number, take a prime divisor, split on `k > a`, derive the contradiction, and return the witness.
 
 In Lean, the same mathematical idea often appears as a tactic proof that interleaves the background facts with the proof state:
 
-```text
-example (N : Nat) : exists p >= N, Prime p := by
-  prove product + 1 is at least 2
-  obtain a prime divisor p of product + 1
-  split cases on the divisor witness
-  prove p cannot divide the product
+```lean
+import Mathlib
+
+example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
+  have hN0 : 0 < N ! := by exact Nat.factorial_pos N
+  have hN2 : 2 ≤ N ! + 1 := by omega
+  obtain ⟨p, hp, hpN⟩ : ∃ p : ℕ, Nat.Prime p ∧ p ∣ N ! + 1 :=
+    Nat.exists_prime_and_dvd hN2
+  obtain ⟨k, hk⟩ := hpN
   use p
-  finish the inequality and primality goals
+  constructor
+  · by_contra hlt
+    have hp_dvd_factorial : p ∣ N ! := Nat.Prime.dvd_factorial hp (Nat.le_of_not_gt hlt)
+    have hp_dvd_one : p ∣ 1 := by
+      have hp_dvd_sum : p ∣ (N ! + 1) - N ! := Nat.dvd_sub hpN hp_dvd_factorial
+      simpa using hp_dvd_sum
+    exact Nat.Prime.not_dvd_one hp hp_dvd_one
+  · exact hp
 ```
 
-**What differs.** Litex's `know` is not "cheating." It is the same lemma burden that Lean carries through `have`, `obtain`, `apply`, `calc`, case splits, and library lemmas. Litex tends to separate the lemma block from the main argument block, like a paper proof outline. Lean tends to interleave the lemmas with proof-state transformations. Lean's approach scales well with a large library; Litex's approach aims to make the proof spine easy to read.
+**What differs.** Litex separates background lemmas from the `claim` spine. Lean often interleaves lemmas with proof-state transformations. Both carry real proof burden; they organize it differently.
+
+---
+
+## More technical differences
+
+This section is for readers who already care about theorem-prover foundations. These differences are not the first thing a beginner needs, but they explain why Litex and Lean feel different at a deeper level.
+
+### Facts are not objects
+
+Litex keeps objects and facts separate. A `prop` defines a predicate form. Applying that predicate to objects creates a fact.
+
+**Litex**
+
+```litex
+abstract_prop positive(x)
+
+know forall x R:
+    x > 0
+    =>:
+        $positive(x)
+
+forall x R:
+    x > 0
+    =>:
+        $positive(x)
+```
+
+But Litex does not treat propositions as objects that can be passed through the parameter list:
+
+```text
+This is not Litex:
+
+forall P Prop:
+    ...
+```
+
+**Lean**
+
+```lean
+example (P Q : Prop) (hP : P) (hPQ : P → Q) : Q := by
+  exact hPQ hP
+```
+
+**What differs.** Lean can quantify over `P : Prop` and treat proofs as terms. Litex does not make facts ordinary objects, keeping the object/fact split explicit.
 
 ---
 
@@ -615,8 +684,9 @@ Use Lean when you need:
 Use Litex when you want:
 
 - a set-theoretic surface close to ordinary mathematics;
-- short proof scripts for teaching and everyday arguments;
+- direct mathematical objects such as sets, functions, tuples, and set-builders;
 - direct facts rather than many named proof terms;
+- proof statements that look like common mathematical moves;
 - builtin relationships among basic mathematical objects;
 - matching and substitution that reduce proof-engine bookkeeping.
 
