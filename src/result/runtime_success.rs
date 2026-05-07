@@ -11,7 +11,6 @@ pub struct NonFactualStmtSuccess {
 pub enum VerifiedByResult {
     BuiltinRules(String),
     Fact(Fact, String),
-    Step(Box<StmtResult>),
     VerifiedBys(Vec<Box<VerifiedByResult>>),
 }
 
@@ -108,10 +107,6 @@ impl VerifiedByResult {
         match self {
             VerifiedByResult::BuiltinRules(s) => !s.is_empty(),
             VerifiedByResult::Fact(_, _) => false,
-            VerifiedByResult::Step(r) => match r.as_ref() {
-                StmtResult::FactualStmtSuccess(f) => f.is_verified_by_builtin_rules_only(),
-                StmtResult::NonFactualStmtSuccess(_) | StmtResult::StmtUnknown(_) => false,
-            },
             VerifiedByResult::VerifiedBys(items) => {
                 !items.is_empty() && items.iter().all(|b| b.tree_is_builtin_rules_only())
             }
@@ -142,29 +137,7 @@ impl VerifiedByResult {
                 }
                 None
             }
-            VerifiedByResult::Step(r) => match r.as_ref() {
-                StmtResult::FactualStmtSuccess(f) => f.verified_by.first_builtin_rule_label(),
-                StmtResult::NonFactualStmtSuccess(_) | StmtResult::StmtUnknown(_) => None,
-            },
             VerifiedByResult::Fact(_, _) => None,
-        }
-    }
-
-    pub fn composite_step_stmt_results_in_order(v: &VerifiedByResult) -> Vec<&StmtResult> {
-        let mut out = Vec::new();
-        Self::collect_steps(v, &mut out);
-        out
-    }
-
-    fn collect_steps<'a>(v: &'a VerifiedByResult, out: &mut Vec<&'a StmtResult>) {
-        match v {
-            VerifiedByResult::Step(r) => out.push(r),
-            VerifiedByResult::VerifiedBys(items) => {
-                for b in items {
-                    Self::collect_steps(b, out);
-                }
-            }
-            VerifiedByResult::BuiltinRules(_) | VerifiedByResult::Fact(_, _) => {}
         }
     }
 
@@ -172,13 +145,6 @@ impl VerifiedByResult {
         match self {
             VerifiedByResult::BuiltinRules(_) => None,
             VerifiedByResult::Fact(f, _) => Some(f.line_file()),
-            VerifiedByResult::Step(r) => match r.as_ref() {
-                StmtResult::FactualStmtSuccess(f) => {
-                    Some(f.line_file_for_verified_by_known_fact_in_json())
-                }
-                StmtResult::NonFactualStmtSuccess(n) => Some(n.stmt.line_file()),
-                StmtResult::StmtUnknown(_) => None,
-            },
             VerifiedByResult::VerifiedBys(items) => {
                 for b in items {
                     if let Some(lf) = b.first_cited_fact_line_file() {
@@ -202,11 +168,6 @@ impl VerifiedByResult {
                     f.to_string()
                 }
             }
-            VerifiedByResult::Step(r) => match r.as_ref() {
-                StmtResult::FactualStmtSuccess(f) => f.verification_display_line(),
-                StmtResult::NonFactualStmtSuccess(n) => n.stmt.to_string(),
-                StmtResult::StmtUnknown(u) => u.to_string(),
-            },
             VerifiedByResult::VerifiedBys(items) => {
                 if items.is_empty() {
                     return String::new();
@@ -251,7 +212,28 @@ fn merge_verified_by_with_steps(
         other => vec![other],
     };
     for r in step_results {
-        items.push(VerifiedByResult::Step(Box::new(r)));
+        if let Some(verified_by) = verified_by_from_stmt_result(r) {
+            items.push(verified_by);
+        }
     }
     VerifiedByResult::wrap_bys(items)
+}
+
+fn verified_by_from_stmt_result(result: StmtResult) -> Option<VerifiedByResult> {
+    match result {
+        StmtResult::FactualStmtSuccess(f) => Some(f.verified_by),
+        StmtResult::NonFactualStmtSuccess(n) => {
+            let items = n
+                .inside_results
+                .into_iter()
+                .filter_map(verified_by_from_stmt_result)
+                .collect::<Vec<_>>();
+            if items.is_empty() {
+                None
+            } else {
+                Some(VerifiedByResult::wrap_bys(items))
+            }
+        }
+        StmtResult::StmtUnknown(_) => None,
+    }
 }
