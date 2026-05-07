@@ -35,7 +35,6 @@ This is the main usability advantage of Litex: proof code can stay close to the 
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib.Tactic
-
 example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   have h_add : x + 1 = 3 := by
     rw [h]
