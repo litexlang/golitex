@@ -1,1 +1,4 @@
-witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
