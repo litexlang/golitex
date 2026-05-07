@@ -79,6 +79,7 @@ forall x R:
     x = 2
     =>:
         x + 1 = 3
+        x^2 = 4
 ```
 
 The assumption `x = 2` becomes known inside the local proof context. Litex can find it by matching the goal, substitute `2` for `x`, and let builtin arithmetic close `x + 1 = 3`.
@@ -87,8 +88,8 @@ This is also why `forall` is central in Litex. A known `forall` theorem is like 
 
 When thinking in Litex, start with three blocks: **objects**, **facts**, and **statements**.
 
-- **Objects** are the mathematical things being discussed, such as `2`, `R`, `(x, y)`, or a function.
-- **Facts** are claims about objects, such as `x = 2`, `x $in R`, or `0 <= x`.
+- **Objects** are the mathematical things being discussed, such as number `2`, real number set`R`,anonymous function `'R(z){z}`, list set `{1, 2, 3}`, or a function object `1 + 2`.
+- **Facts** are claims about objects, such as `x = 2`, `x $in R`, `0 <= x`, `forall! x set => {x = x}`, `exist x R st {x ^ 2 = 4}`.
 - **Statements** are actions in the proof script: define an object, introduce a fact, prove a fact, or store known information.
 
 For a deeper explanation, read the [Manual](https://litexlang.com/doc/Manual#manual-introduction), especially the [Proof Process](https://litexlang.com/doc/Manual#proof-process).
