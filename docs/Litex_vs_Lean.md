@@ -33,24 +33,25 @@ Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on th
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>forall&nbsp;x&nbsp;R:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;=&nbsp;2</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;+&nbsp;1&nbsp;=&nbsp;3</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x^2&nbsp;=&nbsp;4</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
+    x = 2
+    =&gt;:
+        x + 1 = 3
+        x^2 = 4</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib.Tactic</code><br>
-<br>
-<code>example&nbsp;(x&nbsp;:&nbsp;ℝ)&nbsp;(h&nbsp;:&nbsp;x&nbsp;=&nbsp;2)&nbsp;:&nbsp;x&nbsp;+&nbsp;1&nbsp;=&nbsp;3&nbsp;∧&nbsp;x&nbsp;^&nbsp;2&nbsp;=&nbsp;4&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;have&nbsp;h_add&nbsp;:&nbsp;x&nbsp;+&nbsp;1&nbsp;=&nbsp;3&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;rw&nbsp;[h]</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;norm_num</code><br>
-<code>&nbsp;&nbsp;have&nbsp;h_square&nbsp;:&nbsp;x&nbsp;^&nbsp;2&nbsp;=&nbsp;4&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;rw&nbsp;[h]</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;norm_num</code><br>
-<code>&nbsp;&nbsp;exact&nbsp;⟨h_add,&nbsp;h_square⟩</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib.Tactic
+
+
+example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
+  have h_add : x + 1 = 3 := by
+    rw [h]
+    norm_num
+  have h_square : x ^ 2 = 4 := by
+    rw [h]
+    norm_num
+  exact ⟨h_add, h_square⟩</code></pre>
     </td>
   </tr>
 </table>
@@ -73,19 +74,22 @@ forall x R:
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>1&nbsp;+&nbsp;1&nbsp;=&nbsp;2</code><br>
-<br>
-<code>1&nbsp;$in&nbsp;{1,&nbsp;2}</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>1 + 1 = 2
+
+
+1 $in {1, 2}</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;:&nbsp;1&nbsp;+&nbsp;1&nbsp;=&nbsp;2&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;norm_num</code><br>
-<br>
-<code>example&nbsp;:&nbsp;1&nbsp;∈&nbsp;({1,&nbsp;2}&nbsp;:&nbsp;Finset&nbsp;ℕ)&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;simp</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example : 1 + 1 = 2 := by
+  norm_num
+
+
+example : 1 ∈ ({1, 2} : Finset ℕ) := by
+  simp</code></pre>
     </td>
   </tr>
 </table>
@@ -129,15 +133,16 @@ These examples belong together because they involve objects whose validity depen
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>forall&nbsp;x&nbsp;{y&nbsp;R:&nbsp;y&nbsp;&gt;&nbsp;0}:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;&gt;&nbsp;0</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>forall x {y R: y &gt; 0}:
+    x &gt; 0</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;(x&nbsp;:&nbsp;{y&nbsp;:&nbsp;ℝ&nbsp;//&nbsp;y&nbsp;&gt;&nbsp;0})&nbsp;:&nbsp;(x&nbsp;:&nbsp;ℝ)&nbsp;&gt;&nbsp;0&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;exact&nbsp;x.property</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example (x : {y : ℝ // y &gt; 0}) : (x : ℝ) &gt; 0 := by
+  exact x.property</code></pre>
     </td>
   </tr>
 </table>
@@ -155,18 +160,21 @@ forall x {y R: y > 0}:
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>have&nbsp;fn&nbsp;g(x&nbsp;R:&nbsp;x&nbsp;&gt;&nbsp;0)&nbsp;R&nbsp;=&nbsp;x&nbsp;+&nbsp;1</code><br>
-<br>
-<code>g(1)&nbsp;=&nbsp;2</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>have fn g(x R: x &gt; 0) R = x + 1
+
+
+g(1) = 2</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>def&nbsp;g&nbsp;(x&nbsp;:&nbsp;{x&nbsp;:&nbsp;ℝ&nbsp;//&nbsp;x&nbsp;&gt;&nbsp;0})&nbsp;:&nbsp;ℝ&nbsp;:=&nbsp;x.val&nbsp;+&nbsp;1</code><br>
-<br>
-<code>example&nbsp;:&nbsp;g&nbsp;⟨1,&nbsp;by&nbsp;norm_num⟩&nbsp;=&nbsp;2&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;norm_num&nbsp;[g]</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+def g (x : {x : ℝ // x &gt; 0}) : ℝ := x.val + 1
+
+
+example : g ⟨1, by norm_num⟩ = 2 := by
+  norm_num [g]</code></pre>
     </td>
   </tr>
 </table>
@@ -185,20 +193,23 @@ g(1) = 2
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>have&nbsp;fn&nbsp;h(x&nbsp;R)&nbsp;R&nbsp;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;x&nbsp;=&nbsp;2:&nbsp;3</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;x&nbsp;!=&nbsp;2:&nbsp;4</code><br>
-<br>
-<code>h(2)&nbsp;=&nbsp;3</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>have fn h(x R) R :
+    case x = 2: 3
+    case x != 2: 4
+
+
+h(2) = 3</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>noncomputable&nbsp;def&nbsp;h&nbsp;(x&nbsp;:&nbsp;ℝ)&nbsp;:&nbsp;ℝ&nbsp;:=&nbsp;if&nbsp;x&nbsp;=&nbsp;2&nbsp;then&nbsp;3&nbsp;else&nbsp;4</code><br>
-<br>
-<code>example&nbsp;:&nbsp;h&nbsp;2&nbsp;=&nbsp;3&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;simp&nbsp;[h]</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+noncomputable def h (x : ℝ) : ℝ := if x = 2 then 3 else 4
+
+
+example : h 2 = 3 := by
+  simp [h]</code></pre>
     </td>
   </tr>
 </table>
@@ -219,28 +230,32 @@ h(2) = 3
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>have&nbsp;fn&nbsp;k(z&nbsp;R)&nbsp;R&nbsp;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;z&nbsp;=&nbsp;2:&nbsp;3</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;z&nbsp;!=&nbsp;2:&nbsp;4</code><br>
-<br>
-<code>have&nbsp;x&nbsp;R</code><br>
-<br>
-<code>by&nbsp;cases&nbsp;k(x)&nbsp;&gt;&nbsp;2:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;x&nbsp;=&nbsp;2:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;k(x)&nbsp;=&nbsp;3&nbsp;&gt;&nbsp;2</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;x&nbsp;!=&nbsp;2:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;k(x)&nbsp;=&nbsp;4&nbsp;&gt;&nbsp;2</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>have fn k(z R) R :
+    case z = 2: 3
+    case z != 2: 4
+
+
+have x R
+
+
+by cases k(x) &gt; 2:
+    case x = 2:
+        k(x) = 3 &gt; 2
+    case x != 2:
+        k(x) = 4 &gt; 2</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>noncomputable&nbsp;def&nbsp;k&nbsp;(z&nbsp;:&nbsp;ℝ)&nbsp;:&nbsp;ℝ&nbsp;:=&nbsp;if&nbsp;z&nbsp;=&nbsp;2&nbsp;then&nbsp;3&nbsp;else&nbsp;4</code><br>
-<br>
-<code>example&nbsp;(x&nbsp;:&nbsp;ℝ)&nbsp;:&nbsp;k&nbsp;x&nbsp;&gt;&nbsp;2&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;by_cases&nbsp;h&nbsp;:&nbsp;x&nbsp;=&nbsp;2</code><br>
-<code>&nbsp;&nbsp;·&nbsp;simp&nbsp;[k,&nbsp;h]</code><br>
-<code>&nbsp;&nbsp;·&nbsp;simp&nbsp;[k,&nbsp;h]</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+noncomputable def k (z : ℝ) : ℝ := if z = 2 then 3 else 4
+
+
+example (x : ℝ) : k x &gt; 2 := by
+  by_cases h : x = 2
+  · simp [k, h]
+  · simp [k, h]</code></pre>
     </td>
   </tr>
 </table>
@@ -277,34 +292,35 @@ Lean also proves propositions. The surface difference is that Lean code usually 
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>forall&nbsp;x,&nbsp;y&nbsp;R:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;*&nbsp;x&nbsp;+&nbsp;3&nbsp;*&nbsp;y&nbsp;=&nbsp;10</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;4&nbsp;*&nbsp;x&nbsp;+&nbsp;5&nbsp;*&nbsp;y&nbsp;=&nbsp;14</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y&nbsp;=&nbsp;2&nbsp;*&nbsp;(2&nbsp;*&nbsp;x&nbsp;+&nbsp;3&nbsp;*&nbsp;y)&nbsp;-&nbsp;(4&nbsp;*&nbsp;x&nbsp;+&nbsp;5&nbsp;*&nbsp;y)&nbsp;=&nbsp;6</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;=&nbsp;((2&nbsp;*&nbsp;x&nbsp;+&nbsp;3&nbsp;*&nbsp;y)&nbsp;-&nbsp;3&nbsp;*&nbsp;y)&nbsp;/&nbsp;2&nbsp;=&nbsp;-4</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>forall x, y R:
+    2 * x + 3 * y = 10
+    4 * x + 5 * y = 14
+    =&gt;:
+        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
+        x = ((2 * x + 3 * y) - 3 * y) / 2 = -4</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;(x&nbsp;y&nbsp;:&nbsp;ℝ)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;(h1&nbsp;:&nbsp;2&nbsp;*&nbsp;x&nbsp;+&nbsp;3&nbsp;*&nbsp;y&nbsp;=&nbsp;10)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;(h2&nbsp;:&nbsp;4&nbsp;*&nbsp;x&nbsp;+&nbsp;5&nbsp;*&nbsp;y&nbsp;=&nbsp;14)&nbsp;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;y&nbsp;=&nbsp;6&nbsp;∧&nbsp;x&nbsp;=&nbsp;-4&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;have&nbsp;hy&nbsp;:&nbsp;y&nbsp;=&nbsp;6&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;calc</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y&nbsp;=&nbsp;2&nbsp;*&nbsp;(2&nbsp;*&nbsp;x&nbsp;+&nbsp;3&nbsp;*&nbsp;y)&nbsp;-&nbsp;(4&nbsp;*&nbsp;x&nbsp;+&nbsp;5&nbsp;*&nbsp;y)&nbsp;:=&nbsp;by&nbsp;linarith</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_&nbsp;=&nbsp;2&nbsp;*&nbsp;10&nbsp;-&nbsp;14&nbsp;:=&nbsp;by&nbsp;rw&nbsp;[h1,&nbsp;h2]</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_&nbsp;=&nbsp;6&nbsp;:=&nbsp;by&nbsp;norm_num</code><br>
-<code>&nbsp;&nbsp;have&nbsp;hx&nbsp;:&nbsp;x&nbsp;=&nbsp;-4&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;calc</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;=&nbsp;((2&nbsp;*&nbsp;x&nbsp;+&nbsp;3&nbsp;*&nbsp;y)&nbsp;-&nbsp;3&nbsp;*&nbsp;y)&nbsp;/&nbsp;2&nbsp;:=&nbsp;by&nbsp;ring</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_&nbsp;=&nbsp;(10&nbsp;-&nbsp;3&nbsp;*&nbsp;6)&nbsp;/&nbsp;2&nbsp;:=&nbsp;by&nbsp;rw&nbsp;[h1,&nbsp;hy]</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_&nbsp;=&nbsp;-4&nbsp;:=&nbsp;by&nbsp;norm_num</code><br>
-<code>&nbsp;&nbsp;constructor</code><br>
-<code>&nbsp;&nbsp;·&nbsp;exact&nbsp;hy</code><br>
-<code>&nbsp;&nbsp;·&nbsp;exact&nbsp;hx</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example (x y : ℝ)
+    (h1 : 2 * x + 3 * y = 10)
+    (h2 : 4 * x + 5 * y = 14) :
+    y = 6 ∧ x = -4 := by
+  have hy : y = 6 := by
+    calc
+      y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) := by linarith
+      _ = 2 * 10 - 14 := by rw [h1, h2]
+      _ = 6 := by norm_num
+  have hx : x = -4 := by
+    calc
+      x = ((2 * x + 3 * y) - 3 * y) / 2 := by ring
+      _ = (10 - 3 * 6) / 2 := by rw [h1, hy]
+      _ = -4 := by norm_num
+  constructor
+  · exact hy
+  · exact hx</code></pre>
     </td>
   </tr>
 </table>
@@ -329,51 +345,24 @@ Litex statements are proof-script actions: `have`, `know`, `claim`, `witness`, `
 Lean also has structured proof commands and tactics. The difference is that Litex statements are meant to look like common mathematical proof moves, while Lean tactics operate a very general proof state.
 
 ### Witness Statements
-
 <table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>witness&nbsp;exist&nbsp;x&nbsp;R&nbsp;st&nbsp;{x&nbsp;=&nbsp;2}&nbsp;from&nbsp;2:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;=&nbsp;2</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;:&nbsp;∃&nbsp;x&nbsp;:&nbsp;ℝ,&nbsp;x&nbsp;=&nbsp;2&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;use&nbsp;2</code>
-    </td>
-  </tr>
-</table>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
 
-**What differs.** Litex shows the witness and its check together. Lean uses `use` inside the proof state.
 
-```litex
-witness exist x R st {x = 2} from 2:
-    2 = 2
-```
-
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>witness&nbsp;exist&nbsp;a,&nbsp;b,&nbsp;c,&nbsp;d&nbsp;N_pos&nbsp;st&nbsp;{a&nbsp;^&nbsp;4&nbsp;+&nbsp;b&nbsp;^&nbsp;4&nbsp;+&nbsp;c&nbsp;^&nbsp;4&nbsp;=&nbsp;d&nbsp;^&nbsp;4}&nbsp;from&nbsp;95800,&nbsp;217519,&nbsp;414560,&nbsp;422481:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;95800&nbsp;^&nbsp;4&nbsp;+&nbsp;217519&nbsp;^&nbsp;4&nbsp;+&nbsp;414560&nbsp;^&nbsp;4&nbsp;=&nbsp;422481&nbsp;^&nbsp;4</code>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;:&nbsp;∃&nbsp;a&nbsp;b&nbsp;c&nbsp;d&nbsp;:&nbsp;ℕ,</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;&gt;&nbsp;0&nbsp;∧&nbsp;b&nbsp;&gt;&nbsp;0&nbsp;∧&nbsp;c&nbsp;&gt;&nbsp;0&nbsp;∧&nbsp;d&nbsp;&gt;&nbsp;0&nbsp;∧</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;^&nbsp;4&nbsp;+&nbsp;b&nbsp;^&nbsp;4&nbsp;+&nbsp;c&nbsp;^&nbsp;4&nbsp;=&nbsp;d&nbsp;^&nbsp;4&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;refine&nbsp;⟨95800,&nbsp;217519,&nbsp;414560,&nbsp;422481,&nbsp;?_⟩</code><br>
-<code>&nbsp;&nbsp;norm_num</code>
+example : ∃ a b c d : ℕ,
+    a &gt; 0 ∧ b &gt; 0 ∧ c &gt; 0 ∧ d &gt; 0 ∧
+    a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4 := by
+  refine ⟨95800, 217519, 414560, 422481, ?_⟩
+  norm_num</code></pre>
     </td>
   </tr>
 </table>
@@ -381,8 +370,7 @@ witness exist x R st {x = 2} from 2:
 **What differs.** Litex puts the concrete values first. Lean packages values and obligations through constructors.
 
 ```litex
-witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481:
-    95800 ^ 4 + 217519 ^ 4 + 414560 ^ 4 = 422481 ^ 4
+witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
 ```
 
 ### Contradiction
@@ -393,30 +381,34 @@ witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 21
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>abstract_prop&nbsp;p0(x,&nbsp;y)</code><br>
-<code>abstract_prop&nbsp;q0(x,&nbsp;y)</code><br>
-<br>
-<code>know&nbsp;forall&nbsp;a,&nbsp;b&nbsp;R:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;$p0(a,&nbsp;b)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$q0(a,&nbsp;b)</code><br>
-<br>
-<code>know&nbsp;not&nbsp;$q0(1,&nbsp;2)</code><br>
-<br>
-<code>by&nbsp;contra&nbsp;not&nbsp;$p0(1,&nbsp;2):</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;$p0(1,&nbsp;2)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;impossible&nbsp;$q0(1,&nbsp;2)</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p0(x, y)
+abstract_prop q0(x, y)
+
+
+know forall a, b R:
+    $p0(a, b)
+    =&gt;:
+        $q0(a, b)
+
+
+know not $q0(1, 2)
+
+
+by contra not $p0(1, 2):
+    $p0(1, 2)
+    impossible $q0(1, 2)</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;(p&nbsp;q&nbsp;:&nbsp;ℝ&nbsp;→&nbsp;ℝ&nbsp;→&nbsp;Prop)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;(h&nbsp;:&nbsp;∀&nbsp;a&nbsp;b,&nbsp;p&nbsp;a&nbsp;b&nbsp;→&nbsp;q&nbsp;a&nbsp;b)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;(hnq&nbsp;:&nbsp;¬&nbsp;q&nbsp;1&nbsp;2)&nbsp;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;¬&nbsp;p&nbsp;1&nbsp;2&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;intro&nbsp;hp</code><br>
-<code>&nbsp;&nbsp;exact&nbsp;hnq&nbsp;(h&nbsp;1&nbsp;2&nbsp;hp)</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example (p q : ℝ → ℝ → Prop)
+    (h : ∀ a b, p a b → q a b)
+    (hnq : ¬ q 1 2) :
+    ¬ p 1 2 := by
+  intro hp
+  exact hnq (h 1 2 hp)</code></pre>
     </td>
   </tr>
 </table>
@@ -462,23 +454,25 @@ Litex also reports what happened. Its message output shows each statement, the f
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>forall&nbsp;x&nbsp;R:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;=&nbsp;2</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;+&nbsp;1&nbsp;=&nbsp;3</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
+    x = 2
+    =&gt;:
+        x + 1 = 3</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>known&nbsp;fact:</code><br>
-<code>&nbsp;&nbsp;x&nbsp;=&nbsp;2</code><br>
-<br>
-<code>goal:</code><br>
-<code>&nbsp;&nbsp;x&nbsp;+&nbsp;1&nbsp;=&nbsp;3</code><br>
-<br>
-<code>proof:</code><br>
-<code>&nbsp;&nbsp;resolve&nbsp;x&nbsp;by&nbsp;x&nbsp;=&nbsp;2</code><br>
-<code>&nbsp;&nbsp;reduce&nbsp;2&nbsp;+&nbsp;1&nbsp;by&nbsp;builtin&nbsp;arithmetic</code><br>
-<code>&nbsp;&nbsp;conclude&nbsp;x&nbsp;+&nbsp;1&nbsp;=&nbsp;3</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>known fact:
+  x = 2
+
+
+goal:
+  x + 1 = 3
+
+
+proof:
+  resolve x by x = 2
+  reduce 2 + 1 by builtin arithmetic
+  conclude x + 1 = 3</code></pre>
     </td>
   </tr>
 </table>
@@ -500,23 +494,23 @@ forall x R:
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>abstract_prop&nbsp;p(x,&nbsp;y)</code><br>
-<code>forall&nbsp;a,&nbsp;b,&nbsp;a2,&nbsp;b2&nbsp;set:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;=&nbsp;a2</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;b&nbsp;=&nbsp;b2</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;$p(a,&nbsp;b)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$p(a2,&nbsp;b2)</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x, y)
+forall a, b, a2, b2 set:
+    a = a2
+    b = b2
+    $p(a, b)
+    =&gt;:
+        $p(a2, b2)</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>example&nbsp;(p&nbsp;:&nbsp;α&nbsp;→&nbsp;β&nbsp;→&nbsp;Prop)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;{a&nbsp;a2&nbsp;:&nbsp;α}&nbsp;{b&nbsp;b2&nbsp;:&nbsp;β}</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;(ha&nbsp;:&nbsp;a&nbsp;=&nbsp;a2)&nbsp;(hb&nbsp;:&nbsp;b&nbsp;=&nbsp;b2)&nbsp;(hp&nbsp;:&nbsp;p&nbsp;a&nbsp;b)&nbsp;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;p&nbsp;a2&nbsp;b2&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;subst&nbsp;a2</code><br>
-<code>&nbsp;&nbsp;subst&nbsp;b2</code><br>
-<code>&nbsp;&nbsp;exact&nbsp;hp</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>example (p : α → β → Prop)
+    {a a2 : α} {b b2 : β}
+    (ha : a = a2) (hb : b = b2) (hp : p a b) :
+    p a2 b2 := by
+  subst a2
+  subst b2
+  exact hp</code></pre>
     </td>
   </tr>
 </table>
@@ -541,17 +535,19 @@ forall a, b, a2, b2 set:
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>abstract_prop&nbsp;p(x)</code><br>
-<br>
-<code>know&nbsp;forall&nbsp;x&nbsp;R:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;$p(x)</code><br>
-<br>
-<code>$p(2)</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop p(x)
+
+
+know forall x R:
+    $p(x)
+
+
+$p(2)</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>example&nbsp;(p&nbsp;:&nbsp;ℝ&nbsp;→&nbsp;Prop)&nbsp;(h&nbsp;:&nbsp;∀&nbsp;x&nbsp;:&nbsp;ℝ,&nbsp;p&nbsp;x)&nbsp;:&nbsp;p&nbsp;2&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;exact&nbsp;h&nbsp;2</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>example (p : ℝ → Prop) (h : ∀ x : ℝ, p x) : p 2 := by
+  exact h 2</code></pre>
     </td>
   </tr>
 </table>
@@ -596,14 +592,15 @@ Set theory is a good place to see Litex's design. Litex's surface language treat
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>{1,&nbsp;2}&nbsp;$in&nbsp;{{},&nbsp;{1,&nbsp;2}}</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>{1, 2} $in {{}, {1, 2}}</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;:&nbsp;({1,&nbsp;2}&nbsp;:&nbsp;Set&nbsp;ℕ)&nbsp;∈&nbsp;({∅,&nbsp;{1,&nbsp;2}}&nbsp;:&nbsp;Set&nbsp;(Set&nbsp;ℕ))&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;simp</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example : ({1, 2} : Set ℕ) ∈ ({∅, {1, 2}} : Set (Set ℕ)) := by
+  simp</code></pre>
     </td>
   </tr>
 </table>
@@ -622,15 +619,16 @@ Set theory is a good place to see Litex's design. Litex's surface language treat
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>forall&nbsp;i&nbsp;{1,&nbsp;2}:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;i&nbsp;=&nbsp;1&nbsp;or&nbsp;i&nbsp;=&nbsp;2</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>forall i {1, 2}:
+    i = 1 or i = 2</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;{i&nbsp;:&nbsp;ℕ}&nbsp;(hi&nbsp;:&nbsp;i&nbsp;∈&nbsp;({1,&nbsp;2}&nbsp;:&nbsp;Finset&nbsp;ℕ))&nbsp;:&nbsp;i&nbsp;=&nbsp;1&nbsp;∨&nbsp;i&nbsp;=&nbsp;2&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;simpa&nbsp;using&nbsp;hi</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example {i : ℕ} (hi : i ∈ ({1, 2} : Finset ℕ)) : i = 1 ∨ i = 2 := by
+  simpa using hi</code></pre>
     </td>
   </tr>
 </table>
@@ -650,16 +648,17 @@ forall i {1, 2}:
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>{1,&nbsp;2}&nbsp;$in&nbsp;power_set({1,&nbsp;2,&nbsp;3})</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>{1, 2} $in power_set({1, 2, 3})</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;:&nbsp;({1,&nbsp;2}&nbsp;:&nbsp;Set&nbsp;ℕ)&nbsp;⊆&nbsp;({1,&nbsp;2,&nbsp;3}&nbsp;:&nbsp;Set&nbsp;ℕ)&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;intro&nbsp;x&nbsp;hx</code><br>
-<code>&nbsp;&nbsp;simp&nbsp;at&nbsp;hx</code><br>
-<code>&nbsp;&nbsp;simp&nbsp;[hx]</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
+  intro x hx
+  simp at hx
+  simp [hx]</code></pre>
     </td>
   </tr>
 </table>
@@ -678,16 +677,16 @@ forall i {1, 2}:
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>prove:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;let&nbsp;A,&nbsp;B&nbsp;set:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;$subset&nbsp;B</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;forall&nbsp;x&nbsp;A:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;$in&nbsp;B</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>prove:
+    let A, B set:
+        A $subset B
+    forall x A:
+        x $in B</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>example&nbsp;{α&nbsp;:&nbsp;Type}&nbsp;{A&nbsp;B&nbsp;:&nbsp;Set&nbsp;α}&nbsp;(hAB&nbsp;:&nbsp;A&nbsp;⊆&nbsp;B)&nbsp;{x&nbsp;:&nbsp;α}&nbsp;(hx&nbsp;:&nbsp;x&nbsp;∈&nbsp;A)&nbsp;:&nbsp;x&nbsp;∈&nbsp;B&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;exact&nbsp;hAB&nbsp;hx</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>example {α : Type} {A B : Set α} (hAB : A ⊆ B) {x : α} (hx : x ∈ A) : x ∈ B := by
+  exact hAB hx</code></pre>
     </td>
   </tr>
 </table>
@@ -710,22 +709,23 @@ prove:
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>by&nbsp;contra:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;prove:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{1,&nbsp;2,&nbsp;3}&nbsp;!=&nbsp;{1,&nbsp;2}</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;count({1,&nbsp;2,&nbsp;3})&nbsp;=&nbsp;3</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;count({1,&nbsp;2})&nbsp;=&nbsp;2</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;count({1,&nbsp;2,&nbsp;3})&nbsp;=&nbsp;count({1,&nbsp;2})</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;impossible&nbsp;3&nbsp;=&nbsp;2</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>by contra:
+    prove:
+        {1, 2, 3} != {1, 2}
+    count({1, 2, 3}) = 3
+    count({1, 2}) = 2
+    count({1, 2, 3}) = count({1, 2})
+    impossible 3 = 2</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;:&nbsp;({1,&nbsp;2,&nbsp;3}&nbsp;:&nbsp;Finset&nbsp;ℕ)&nbsp;≠&nbsp;({1,&nbsp;2}&nbsp;:&nbsp;Finset&nbsp;ℕ)&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;intro&nbsp;h</code><br>
-<code>&nbsp;&nbsp;have&nbsp;hcard&nbsp;:=&nbsp;congrArg&nbsp;Finset.card&nbsp;h</code><br>
-<code>&nbsp;&nbsp;norm_num&nbsp;at&nbsp;hcard</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example : ({1, 2, 3} : Finset ℕ) ≠ ({1, 2} : Finset ℕ) := by
+  intro h
+  have hcard := congrArg Finset.card h
+  norm_num at hcard</code></pre>
     </td>
   </tr>
 </table>
@@ -763,58 +763,63 @@ Both systems can express the classic proof that there are infinitely many primes
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>prop&nbsp;prime(a&nbsp;N_pos):</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&lt;=&nbsp;a</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;forall&nbsp;b&nbsp;N_pos:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&lt;=&nbsp;b&nbsp;&lt;&nbsp;a</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;%&nbsp;b&nbsp;!=&nbsp;0</code><br>
-<br>
-<code>know:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;forall&nbsp;a,&nbsp;k&nbsp;N_pos:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;k&nbsp;&lt;=&nbsp;a</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;product(1,&nbsp;a,&nbsp;'N_pos(x){x})&nbsp;%&nbsp;k&nbsp;=&nbsp;0</code><br>
-<br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;forall&nbsp;a&nbsp;N_pos:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&lt;=&nbsp;a</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exist&nbsp;k&nbsp;N_pos&nbsp;st&nbsp;{$prime(k),&nbsp;a&nbsp;%&nbsp;k&nbsp;=&nbsp;0}</code><br>
-<br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;forall&nbsp;a&nbsp;N_pos:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;&lt;=&nbsp;product(1,&nbsp;a,&nbsp;'N_pos(x){x})</code><br>
-<br>
-<code>claim&nbsp;forall!&nbsp;a&nbsp;N_pos:&nbsp;2&nbsp;&lt;=&nbsp;a&nbsp;=&gt;&nbsp;exist&nbsp;k&nbsp;N_pos&nbsp;st&nbsp;{k&nbsp;&gt;&nbsp;a,&nbsp;$prime(k)}:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&lt;=&nbsp;a&nbsp;&lt;=&nbsp;product(1,&nbsp;a,&nbsp;'N_pos(x){x})&nbsp;&lt;=&nbsp;product(1,&nbsp;a,&nbsp;'N_pos(x){x})&nbsp;+&nbsp;1</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;have&nbsp;by&nbsp;exist&nbsp;k&nbsp;N_pos&nbsp;st&nbsp;{$prime(k),&nbsp;(product(1,&nbsp;a,&nbsp;'N_pos(x){x})&nbsp;+&nbsp;1)&nbsp;%&nbsp;k&nbsp;=&nbsp;0}:&nbsp;k</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;cases&nbsp;k&nbsp;&gt;&nbsp;a:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;k&nbsp;&lt;=&nbsp;a:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;product(1,&nbsp;a,&nbsp;'N_pos(x){x})&nbsp;%&nbsp;k&nbsp;=&nbsp;0</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(product(1,&nbsp;a,&nbsp;'N_pos(x){x})&nbsp;+&nbsp;1)&nbsp;%&nbsp;k&nbsp;=&nbsp;(product(1,&nbsp;a,&nbsp;'N_pos(x){x})&nbsp;%&nbsp;k&nbsp;+&nbsp;1&nbsp;%&nbsp;k)&nbsp;%&nbsp;k&nbsp;=&nbsp;(0&nbsp;+&nbsp;1)&nbsp;%&nbsp;k&nbsp;=&nbsp;1</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;impossible&nbsp;(product(1,&nbsp;a,&nbsp;'N_pos(x){x})&nbsp;+&nbsp;1)&nbsp;%&nbsp;k&nbsp;=&nbsp;0</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;k&nbsp;&gt;&nbsp;a:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;do_nothing</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;witness&nbsp;exist&nbsp;k&nbsp;N_pos&nbsp;st&nbsp;{k&nbsp;&gt;&nbsp;a,&nbsp;$prime(k)}&nbsp;from&nbsp;k</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>prop prime(a N_pos):
+    2 &lt;= a
+    forall b N_pos:
+        2 &lt;= b &lt; a
+        =&gt;:
+            a % b != 0
+
+
+know:
+    forall a, k N_pos:
+        k &lt;= a
+        =&gt;:
+            product(1, a, 'N_pos(x){x}) % k = 0
+
+
+    forall a N_pos:
+        2 &lt;= a
+        =&gt;:
+            exist k N_pos st {$prime(k), a % k = 0}
+
+
+    forall a N_pos:
+        a &lt;= product(1, a, 'N_pos(x){x})
+
+
+claim forall! a N_pos: 2 &lt;= a =&gt; exist k N_pos st {k &gt; a, $prime(k)}:
+    2 &lt;= a &lt;= product(1, a, 'N_pos(x){x}) &lt;= product(1, a, 'N_pos(x){x}) + 1
+    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
+    by cases k &gt; a:
+        case k &lt;= a:
+            product(1, a, 'N_pos(x){x}) % k = 0
+            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
+        case k &gt; a:
+            do_nothing
+    witness exist k N_pos st {k &gt; a, $prime(k)} from k</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>import&nbsp;Mathlib</code><br>
-<br>
-<code>example&nbsp;(N&nbsp;:&nbsp;ℕ)&nbsp;:&nbsp;∃&nbsp;p&nbsp;≥&nbsp;N,&nbsp;Nat.Prime&nbsp;p&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;have&nbsp;hN0&nbsp;:&nbsp;0&nbsp;&lt;&nbsp;N&nbsp;!&nbsp;:=&nbsp;by&nbsp;exact&nbsp;Nat.factorial_pos&nbsp;N</code><br>
-<code>&nbsp;&nbsp;have&nbsp;hN2&nbsp;:&nbsp;2&nbsp;≤&nbsp;N&nbsp;!&nbsp;+&nbsp;1&nbsp;:=&nbsp;by&nbsp;omega</code><br>
-<code>&nbsp;&nbsp;obtain&nbsp;⟨p,&nbsp;hp,&nbsp;hpN⟩&nbsp;:&nbsp;∃&nbsp;p&nbsp;:&nbsp;ℕ,&nbsp;Nat.Prime&nbsp;p&nbsp;∧&nbsp;p&nbsp;∣&nbsp;N&nbsp;!&nbsp;+&nbsp;1&nbsp;:=</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;Nat.exists_prime_and_dvd&nbsp;hN2</code><br>
-<code>&nbsp;&nbsp;obtain&nbsp;⟨k,&nbsp;hk⟩&nbsp;:=&nbsp;hpN</code><br>
-<code>&nbsp;&nbsp;use&nbsp;p</code><br>
-<code>&nbsp;&nbsp;constructor</code><br>
-<code>&nbsp;&nbsp;·&nbsp;by_contra&nbsp;hlt</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;have&nbsp;hp_dvd_factorial&nbsp;:&nbsp;p&nbsp;∣&nbsp;N&nbsp;!&nbsp;:=&nbsp;Nat.Prime.dvd_factorial&nbsp;hp&nbsp;(Nat.le_of_not_gt&nbsp;hlt)</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;have&nbsp;hp_dvd_one&nbsp;:&nbsp;p&nbsp;∣&nbsp;1&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;have&nbsp;hp_dvd_sum&nbsp;:&nbsp;p&nbsp;∣&nbsp;(N&nbsp;!&nbsp;+&nbsp;1)&nbsp;-&nbsp;N&nbsp;!&nbsp;:=&nbsp;Nat.dvd_sub&nbsp;hpN&nbsp;hp_dvd_factorial</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;simpa&nbsp;using&nbsp;hp_dvd_sum</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;exact&nbsp;Nat.Prime.not_dvd_one&nbsp;hp&nbsp;hp_dvd_one</code><br>
-<code>&nbsp;&nbsp;·&nbsp;exact&nbsp;hp</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+
+
+example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
+  have hN0 : 0 &lt; N ! := by exact Nat.factorial_pos N
+  have hN2 : 2 ≤ N ! + 1 := by omega
+  obtain ⟨p, hp, hpN⟩ : ∃ p : ℕ, Nat.Prime p ∧ p ∣ N ! + 1 :=
+    Nat.exists_prime_and_dvd hN2
+  obtain ⟨k, hk⟩ := hpN
+  use p
+  constructor
+  · by_contra hlt
+    have hp_dvd_factorial : p ∣ N ! := Nat.Prime.dvd_factorial hp (Nat.le_of_not_gt hlt)
+    have hp_dvd_one : p ∣ 1 := by
+      have hp_dvd_sum : p ∣ (N ! + 1) - N ! := Nat.dvd_sub hpN hp_dvd_factorial
+      simpa using hp_dvd_sum
+    exact Nat.Prime.not_dvd_one hp hp_dvd_one
+  · exact hp</code></pre>
     </td>
   </tr>
 </table>
@@ -874,27 +879,31 @@ Litex keeps objects and facts separate. A `prop` defines a predicate form. Apply
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>abstract_prop&nbsp;positive(x)</code><br>
-<br>
-<code>know&nbsp;forall&nbsp;x&nbsp;R:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;&gt;&nbsp;0</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$positive(x)</code><br>
-<br>
-<code>forall&nbsp;x&nbsp;R:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;&gt;&nbsp;0</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;=&gt;:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$positive(x)</code><br>
-<br>
-<code>This&nbsp;is&nbsp;not&nbsp;Litex:</code><br>
-<br>
-<code>forall&nbsp;P&nbsp;Prop:</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;...</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop positive(x)
+
+
+know forall x R:
+    x &gt; 0
+    =&gt;:
+        $positive(x)
+
+
+forall x R:
+    x &gt; 0
+    =&gt;:
+        $positive(x)
+
+
+This is not Litex:
+
+
+forall P Prop:
+    ...</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>example&nbsp;(P&nbsp;Q&nbsp;:&nbsp;Prop)&nbsp;(hP&nbsp;:&nbsp;P)&nbsp;(hPQ&nbsp;:&nbsp;P&nbsp;→&nbsp;Q)&nbsp;:&nbsp;Q&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;exact&nbsp;hPQ&nbsp;hP</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>example (P Q : Prop) (hP : P) (hPQ : P → Q) : Q := by
+  exact hPQ hP</code></pre>
     </td>
   </tr>
 </table>
@@ -925,17 +934,19 @@ This difference goes further than `P : Prop`. In Lean, propositions and proofs l
     <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
   </tr>
   <tr>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>x&nbsp;=&nbsp;2</code><br>
-<br>
-<code>This&nbsp;is&nbsp;not&nbsp;Litex:</code><br>
-<br>
-<code>have&nbsp;h&nbsp;=&nbsp;(x&nbsp;=&nbsp;2)</code><br>
-<code>some_statement(h)</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>x = 2
+
+
+This is not Litex:
+
+
+have h = (x = 2)
+some_statement(h)</code></pre>
     </td>
-    <td style="border: 1px solid black; padding: 4px; line-height: 1.45; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<code>example&nbsp;(P&nbsp;Q&nbsp;:&nbsp;Prop)&nbsp;(hP&nbsp;:&nbsp;P)&nbsp;(h&nbsp;:&nbsp;P&nbsp;→&nbsp;Q)&nbsp;:&nbsp;Q&nbsp;:=&nbsp;by</code><br>
-<code>&nbsp;&nbsp;exact&nbsp;h&nbsp;hP</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>example (P Q : Prop) (hP : P) (h : P → Q) : Q := by
+  exact h hP</code></pre>
     </td>
   </tr>
 </table>
