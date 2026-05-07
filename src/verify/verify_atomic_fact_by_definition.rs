@@ -196,7 +196,11 @@ impl Runtime {
             (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),
                 infer_result,
-                VerifiedByResult::Fact(normal_atomic_fact.clone().into(), verified_by_text),
+                VerifiedByResult::cited_fact(
+                    normal_atomic_fact.clone().into(),
+                    normal_atomic_fact.clone().into(),
+                    Some(verified_by_text),
+                ),
                 Vec::new(),
             ))
             .into(),

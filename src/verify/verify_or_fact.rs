@@ -275,10 +275,14 @@ impl Runtime {
             if result.is_true() {
                 return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                     or_fact.clone().into(),
-                    VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
-                        fact.clone().into(),
-                        fact.to_string(),
-                    )]),
+                    VerifiedByResult::wrap_bys(
+                        or_fact.clone().into(),
+                        vec![VerifiedByResult::cited_fact(
+                            or_fact.clone().into(),
+                            fact.clone().into(),
+                            None,
+                        )],
+                    ),
                     Vec::new(),
                 ))
                 .into());
@@ -355,10 +359,14 @@ impl Runtime {
                 if all_args_match {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         or_fact.clone().into(),
-                        VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
-                            known_or_fact.clone().into(),
-                            known_or_fact.to_string(),
-                        )]),
+                        VerifiedByResult::wrap_bys(
+                            or_fact.clone().into(),
+                            vec![VerifiedByResult::cited_fact(
+                                or_fact.clone().into(),
+                                known_or_fact.clone().into(),
+                                None,
+                            )],
+                        ),
                         Vec::new(),
                     ))
                     .into());

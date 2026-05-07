@@ -197,13 +197,10 @@ impl Runtime {
             application_side, reduced
         );
         let cited = fact.clone();
+        let verified_by = VerifiedByResult::cited_fact(fact.clone(), cited, Some(msg));
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_known_fact(
-                fact,
-                VerifiedByResult::Fact(cited, msg),
-                Vec::new(),
-            )
-            .into(),
+            FactualStmtSuccess::new_with_verified_by_known_fact(fact, verified_by, Vec::new())
+                .into(),
         ))
     }
 
