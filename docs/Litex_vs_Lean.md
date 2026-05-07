@@ -280,25 +280,6 @@ Lean also has structured proof commands and tactics. The difference is that Lite
 
 ### Witness statements
 
-**Litex**
-
-```litex
-witness exist x R st {x = 2} from 2:
-    2 = 2
-```
-
-**Lean**
-
-```lean
-import Mathlib
-
-example : ∃ x : ℝ, x = 2 := by
-  use 2
-```
-
-**What differs.** Litex shows the witness and its check together. Lean uses `use` inside the proof state.
-
-The same style scales to a larger concrete witness:
 
 **Litex**
 
@@ -367,6 +348,41 @@ When Litex checks a fact, the usual loop is:
 4. Try matching known `forall` facts.
 
 In Lean, the user often chooses the step explicitly: rewrite with this hypothesis, simplify this definition, apply this theorem, run this tactic. This gives very fine control and scales to deep formal developments. Litex chooses a different default for ordinary mathematics: many routine proof paths are tried by the checker.
+
+### Message output explains each step
+
+Litex also reports what happened. Its message output shows each statement, the facts inferred from it, and often where each proved fact came from. **This is useful because you can see how every step was obtained**, not only that the final result passed. It helps users trust successful proofs, debug failed proofs, and learn how Litex is using builtin rules, known facts, matching, and substitution.
+
+For example, this proof is short:
+
+```litex
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+```
+
+The output looks like this:
+
+```text
+{
+  "result": "success",
+  "type": "Fact",
+  "line": 1,
+  "stmt": "forall x R:\n    x = 2\n    =>:\n        x + 1 = 3",
+  "verified_by": [
+    {
+      "type": "builtin rule",
+      "rule": "calculation"
+    }
+  ],
+  "infer_facts": [],
+  "inside_results": []
+}
+
+```
+
+This is useful when a proof succeeds, because you can see why. It is even more useful when a proof fails, because the message points to the exact fact Litex could not justify.
 
 ### Known facts by matching
 
@@ -669,6 +685,28 @@ example (P Q : Prop) (hP : P) (hPQ : P → Q) : Q := by
 
 **What differs.** Lean can quantify over `P : Prop` and treat proofs as terms. Litex does not make facts ordinary objects, keeping the object/fact split explicit.
 
+### Statements and proofs as values
+
+This difference goes further than `P : Prop`. In Lean, propositions and proofs live inside the same type-theoretic world as other terms. A previous theorem, a proof of a proposition, or a function from one proof to another can be passed as an argument to a later theorem.
+
+```lean
+example (P Q : Prop) (hP : P) (h : P → Q) : Q := by
+  exact h hP
+```
+
+Here `hP` is not just remembered background. It is a proof object passed to `h`.
+
+Litex is intentionally different. A statement such as `x = 2` can become a known fact in the proof context, and later facts can use it by matching and substitution. But the previous statement itself is not an object that can be passed as a parameter to another statement.
+
+```text
+This is not Litex:
+
+have h = (x = 2)
+some_statement(h)
+```
+
+**What differs.** Lean supports higher-order proof programming: propositions, proofs, and theorem arguments can be manipulated as terms. Litex keeps statements as proof actions and facts as context information, not as first-class objects. This makes Litex less abstract, but closer to ordinary mathematical writing.
+
 ---
 
 ## Fair trade-offs
@@ -690,4 +728,4 @@ Use Litex when you want:
 - builtin relationships among basic mathematical objects;
 - matching and substitution that reduce proof-engine bookkeeping.
 
-Both systems require mathematics. Litex is not a way to avoid proving things. It changes where many routine steps live: more basic relationships are built into the language, and more reuse happens through fact matching and substitution. Lean gives the user a much more general engine; Litex tries to make common mathematical reasoning feel direct.
+Both systems require mathematics. Litex is not a way to avoid proving things. It changes where many routine steps live: more basic relationships are built into the language, and more reuse happens through fact matching and substitution.
