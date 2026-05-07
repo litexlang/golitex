@@ -35,29 +35,30 @@ This makes Litex feel close to daily mathematical writing. You write facts in th
 
 Here is the intended feel:
 
-<table style="border-collapse: collapse; width: 100%; font-size: 12px">
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
-    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
   <tr>
-    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-    <code>forall x R:</code><br>
-    <code>&nbsp;&nbsp;x = 2</code><br>
-    <code>&nbsp;&nbsp;=>:</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;x + 1 = 3</code><br>
-    <code>&nbsp;&nbsp;&nbsp;&nbsp;x^2 = 4</code><br>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+        x^2 = 4</code></pre>
     </td>
-    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>import Mathlib.Tactic</code><br><br>
-      <code>example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by</code><br>
-      <code>&nbsp;&nbsp;have h_add : x + 1 = 3 := by</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h]</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;norm_num</code><br>
-      <code>&nbsp;&nbsp;have h_square : x ^ 2 = 4 := by</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h]</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;norm_num</code><br>
-      <code>&nbsp;&nbsp;exact ⟨h_add, h_square⟩</code>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib.Tactic
+
+example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
+  have h_add : x + 1 = 3 := by
+    rw [h]
+    norm_num
+  have h_square : x ^ 2 = 4 := by
+    rw [h]
+    norm_num
+  exact ⟨h_add, h_square⟩</code></pre>
     </td>
   </tr>
 </table>
