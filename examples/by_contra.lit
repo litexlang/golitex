@@ -14,5 +14,5 @@ by contra:
         not $p(c + b)
     impossible $p(c)
 
-by contra => 1 = 1:
+by contra 1 = 1:
     impossible 1 != 1

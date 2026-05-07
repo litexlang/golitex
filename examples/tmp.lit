@@ -1,4 +1,4 @@
-abstract_prop p(x)
-know forall x R:
-    $p(x)
-$p(2)
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
