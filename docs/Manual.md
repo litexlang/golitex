@@ -20,19 +20,21 @@ Litex has many builtin concepts because ordinary mathematics has many small back
 
 This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper. For example, using a known value can be written as direct algebraic steps:
 
-```litex
-forall x R:
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
+  <tr>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>forall x R:
     x = 2
     =>:
         x + 1 = 3
-        x^2 = 4
-```
-
-The corresponding Lean 4 proof has to expose more proof-engine details:
-
-```lean
-import Mathlib.Tactic
-
+        x^2 = 4</code></pre>
+    </td>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib.Tactic
 example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   have h_add : x + 1 = 3 := by
     rw [h]
@@ -40,8 +42,10 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   have h_square : x ^ 2 = 4 := by
     rw [h]
     norm_num
-  exact ⟨h_add, h_square⟩
-```
+  exact ⟨h_add, h_square⟩</code></pre>
+    </td>
+  </tr>
+</table>
 
 Litex's checker is designed to remember known facts, use builtin arithmetic and substitution, and infer routine consequences automatically. The result is usually shorter code, fewer proof-engine details, and a lower learning burden for everyday mathematical proofs.
 
