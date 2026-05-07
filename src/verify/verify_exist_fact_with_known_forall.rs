@@ -264,9 +264,10 @@ impl Runtime {
         )?;
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
             given_exist_fact.clone().into(),
-            VerifiedByResult::Fact(
+            VerifiedByResult::cited_fact(
+                given_exist_fact.clone().into(),
                 verified_by_known_forall_fact.clone().into(),
-                verified_by_known_forall_fact.to_string(),
+                None,
             ),
             Vec::new(),
         );

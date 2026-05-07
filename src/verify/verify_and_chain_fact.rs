@@ -39,10 +39,13 @@ impl Runtime {
         }
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
             and_fact.clone().into(),
-            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+            VerifiedByResult::wrap_bys(
                 and_fact.clone().into(),
-                "and: each conjunct verified in order".to_string(),
-            )]),
+                vec![VerifiedByResult::fact_with_note(
+                    and_fact.clone().into(),
+                    Some("and: each conjunct verified in order".to_string()),
+                )],
+            ),
             child_results,
         ))
         .into())
@@ -99,10 +102,13 @@ impl Runtime {
         }
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
-            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+            VerifiedByResult::wrap_bys(
                 chain_fact.clone().into(),
-                "chain: each step verified in order".to_string(),
-            )]),
+                vec![VerifiedByResult::fact_with_note(
+                    chain_fact.clone().into(),
+                    Some("chain: each step verified in order".to_string()),
+                )],
+            ),
             child_results,
         ))
         .into())

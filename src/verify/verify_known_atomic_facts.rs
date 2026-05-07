@@ -250,9 +250,10 @@ impl Runtime {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        VerifiedByResult::Fact(
+                        VerifiedByResult::cited_fact(
+                            atomic_fact.clone().into(),
                             known_atomic_fact.clone().into(),
-                            known_atomic_fact.to_string(),
+                            None,
                         ),
                         Vec::new(),
                     ))
@@ -281,9 +282,10 @@ impl Runtime {
                     {
                         return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                             atomic_fact.clone().into(),
-                            VerifiedByResult::Fact(
+                            VerifiedByResult::cited_fact(
+                                atomic_fact.clone().into(),
                                 known_atomic_fact.clone().into(),
-                                known_atomic_fact.to_string(),
+                                None,
                             ),
                             Vec::new(),
                         ))
@@ -306,9 +308,10 @@ impl Runtime {
                         {
                             return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                                 atomic_fact.clone().into(),
-                                VerifiedByResult::Fact(
+                                VerifiedByResult::cited_fact(
+                                    atomic_fact.clone().into(),
                                     known_atomic_fact.clone().into(),
-                                    known_atomic_fact.to_string(),
+                                    None,
                                 ),
                                 Vec::new(),
                             ))
@@ -369,7 +372,11 @@ impl Runtime {
                 if all_args_match {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        VerifiedByResult::Fact(known_fact.clone().into(), known_fact.to_string()),
+                        VerifiedByResult::cited_fact(
+                            atomic_fact.clone().into(),
+                            known_fact.clone().into(),
+                            None,
+                        ),
                         Vec::new(),
                     ))
                     .into());

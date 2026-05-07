@@ -9,7 +9,7 @@ impl Runtime {
             Some(
                 (FactualStmtSuccess::new_with_verified_by_known_fact(
                     fact.clone(),
-                    VerifiedByResult::Fact(fact.clone(), key),
+                    VerifiedByResult::fact_with_note(fact.clone(), None),
                     Vec::new(),
                 ))
                 .into(),

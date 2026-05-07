@@ -25,10 +25,13 @@ impl Runtime {
 
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
             forall_iff.clone().into(),
-            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+            VerifiedByResult::wrap_bys(
                 forall_iff.clone().into(),
-                "forall iff: then=>iff and iff=>then verified".to_string(),
-            )]),
+                vec![VerifiedByResult::fact_with_note(
+                    forall_iff.clone().into(),
+                    Some("forall iff: then=>iff and iff=>then verified".to_string()),
+                )],
+            ),
             Vec::new(),
         ))
         .into())
