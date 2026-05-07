@@ -47,6 +47,8 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean/Typical_Examples).
 
+> You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
+
 ---
 
 ### Mental model
@@ -151,7 +153,7 @@ forall x R:
 
 #### Union, intersection, set difference
 
-Set operations \(A \cup B\), \(A \cap B\), and differences such as `set_minus` / `set_diff`. Keyword and infix forms are interchangeable.
+Set operations `A union B` and `A intersect B` (that is, union and intersection), and differences such as `set_minus` / `set_diff`. Keyword and infix forms are interchangeable.
 
 ```litex
 2 $in union({1, 2}, {2, 3})
@@ -169,7 +171,7 @@ Union and intersection over a **family** of sets (often written with an index); 
 
 #### Power set
 
-\(\mathcal{P}(X)\): all subsets of \(X\), for the finite-style uses Litex supports here.
+`power_set(X)` (often written as `P(X)`): all subsets of `X`, for the finite-style uses Litex supports here.
 
 ```litex
 {1, 2} $in power_set({1, 2, 3})
@@ -177,7 +179,7 @@ Union and intersection over a **family** of sets (often written with an index); 
 
 #### Enumerated sets
 
-Finite sets written \(\{a, b, \ldots\}\).
+Finite sets written as `{a, b, ...}`.
 
 ```litex
 1 $in {1, 2, 3}
@@ -185,7 +187,7 @@ Finite sets written \(\{a, b, \ldots\}\).
 
 #### Set comprehension
 
-\(\{\, z \in T \mid \text{condition on } z \,\}\).
+Set-builder form: `{ z in T | condition on z }`.
 
 ```litex
 have s set = { z N : z > 5 }
@@ -193,7 +195,7 @@ have s set = { z N : z > 5 }
 
 #### Function types and anonymous functions
 
-A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'…(…){…}` head and applied directly.
+A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly.
 
 ```litex
 have g set = fn(x R) R
@@ -205,7 +207,7 @@ have g set = fn(x R) R
 
 #### Cartesian product and dimension
 
-\(A \times B \times \cdots\); `cart_dim` gives the number of factors when the value is recognized as a product.
+`A cross B cross ...`; `cart_dim` gives the number of factors when the value is recognized as a product.
 
 ```litex
 let d set:
@@ -224,7 +226,7 @@ proj(cart(R, Q), 1) = R
 
 #### Tuples and length
 
-Ordered tuples \((a_1,\ldots,a_n)\) and their length.
+Ordered tuples `(a1, ..., an)` and their length.
 
 ```litex
 (1, 2) = (1, 2)
@@ -354,7 +356,7 @@ eval m ** m
 eval 2 *. m
 ```
 
-**Indexed definition (`family` + `have fn`).** You can define the space of all \(m\times n\) matrices over `S` as a binary-indexed function set, then give one `case` per index pair—useful for proofs that branch on \((i,j)\):
+**Indexed definition (`family` + `have fn`).** You can define the space of all `m x n` matrices over `S` as a binary-indexed function set, then give one `case` per index pair, useful for proofs that branch on `(i, j)`:
 
 ```litex
 family self_matrix(s set, m, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
