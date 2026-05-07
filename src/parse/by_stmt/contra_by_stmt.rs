@@ -3,17 +3,25 @@ use crate::prelude::*;
 impl Runtime {
     /// `by contra:` then `prove:` block with exactly one atomic fact, optional proof statements, then `impossible` atomic fact.
     ///
-    /// Shorthand: `by contra => atomic_goal:` embeds the goal on the header line; body is optional proof
+    /// Shorthand: `by contra atomic_goal:` embeds the goal on the header line; body is optional proof
     /// statement blocks followed by `impossible ...` as the last block.
     pub fn parse_by_contra_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CONTRA)?;
-        let (to_prove, inline_arrow): (AtomicFact, bool) = if tb.current()? == RIGHT_ARROW {
-            tb.skip_token(RIGHT_ARROW)?;
+        if tb.current()? == RIGHT_ARROW {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "by contra: use `by contra <atomic goal>:` instead of `by contra => <atomic goal>:`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let (to_prove, inline_goal): (AtomicFact, bool) = if tb.current()? != COLON {
             let header = &tb.header;
             if header.len() < tb.parse_index + 2 || header.last().map(|t| t.as_str()) != Some(COLON)
             {
                 return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by contra => ... : expected one atomic goal and a trailing `:` on the same line".to_string(),
+                    "by contra ... : expected one atomic goal and a trailing `:` on the same line".to_string(),
                     tb.line_file.clone(),
                 ))));
             }
@@ -22,7 +30,7 @@ impl Runtime {
             if fact_tokens.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra => ... : expected a non-empty goal after `=>`".to_string(),
+                        "by contra ... : expected a non-empty goal after `by contra`".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -32,7 +40,7 @@ impl Runtime {
             if !fact_tb.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra => ... : unfinished tokens in goal".to_string(),
+                        "by contra ... : unfinished tokens in goal".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -41,7 +49,7 @@ impl Runtime {
             if !tb.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra => ... : unexpected tokens after `:`".to_string(),
+                        "by contra ... : unexpected tokens after `:`".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -97,11 +105,11 @@ impl Runtime {
         };
 
         let n = tb.body.len();
-        if inline_arrow {
+        if inline_goal {
             if n < 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra => ... : expects a final `impossible ...` block in the body"
+                        "by contra ... : expects a final `impossible ...` block in the body"
                             .to_string(),
                         tb.line_file.clone(),
                     ),
@@ -117,7 +125,7 @@ impl Runtime {
         }
 
         let proof_hi = n.saturating_sub(1);
-        let proof_lo = if inline_arrow { 0 } else { 1 };
+        let proof_lo = if inline_goal { 0 } else { 1 };
         let mut proof = Vec::new();
         if proof_lo < proof_hi {
             for block in tb.body[proof_lo..proof_hi].iter_mut() {

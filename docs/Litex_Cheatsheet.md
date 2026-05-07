@@ -518,7 +518,7 @@ $is_nonempty_set(s)
 
 **Example.** Each tactic subsection below ends with a full code sketch (same content as the matching `by_*.lit` file in the repo).
 
-> **Same goal, three tactics.** A single arithmetic fact such as `1 = 1` can be proved with **`by cases`** (exhaustive branches), **`by contra`** (assume the negation, then `impossible`), or **`claim`** (state the goal and finish in one step). All three support the **header shorthand** `… => goal:` so the goal sits on the keyword line; see the closing blocks in `examples/by_cases.lit`, `examples/by_contra.lit`, and `examples/claim.lit`.
+> **Same goal, three tactics.** A single arithmetic fact such as `1 = 1` can be proved with **`by cases`** (exhaustive branches), **`by contra`** (assume the negation, then `impossible`), or **`claim`** (state the goal and finish in one step). `by cases` and `claim` support the **header shorthand** `… => goal:`. `by contra` writes the goal directly after `by contra`, as in `by contra 1 = 1:`.
 
 ### `by cases`
 
@@ -552,7 +552,7 @@ Execution:
 
 **Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense.
 
-**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` `=>` *atomic goal* `:` on the header line, then optional proof blocks and closing `impossible`.
+**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` *atomic goal* `:` on the header line, then optional proof blocks and closing `impossible`.
 
 **Example.**
 
@@ -574,6 +574,9 @@ by contra:
     prove:
         not $p(c + b)
     impossible $p(c)
+
+by contra 1 = 1:
+    impossible 1 != 1
 ```
 
 Execution:
