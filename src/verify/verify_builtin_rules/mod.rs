@@ -1,6 +1,10 @@
 // Built-in verification for non-equational atomic facts, split by topic.
 
 mod abs_order_builtin;
+mod equality_dispatch;
+mod equality_function;
+mod equality_numeric;
+mod equality_structural;
 mod in_fact_builtin;
 mod non_equational_dispatch;
 mod not_equal_builtin;
