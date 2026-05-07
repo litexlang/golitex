@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Litex_vs_Lean
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean.md
 
+_You can check out any time you like. But you can never leave._
+
+_— Hotel California_
+
 ## Two Styles Of Formal Mathematics
 
 Litex and Lean both make mathematical reasoning checkable by a computer. They are not trying to be the same language.
