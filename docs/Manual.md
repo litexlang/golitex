@@ -1166,6 +1166,13 @@ claim:
     prove:
         2 = 2
     2 = 2
+
+# inline claim: put the goal on the header line
+claim 3 = 3:
+    3 = 3
+
+claim forall! x R => {x = x}:
+    x = x
 ```
 
 ---
@@ -1309,6 +1316,13 @@ by cases:
     case x != 2:
         k(x) = 4
         k(x) > 2
+
+# inline by cases: put the goal on the header line
+by cases 1 = 1:
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
 ```
 
 ---
@@ -1333,6 +1347,11 @@ by contra:
         not $p0(1, 2)
     $p0(1, 2)
     impossible $q0(1, 2)
+
+# inline example
+by contra not $p0(1, 2):
+    $p0(1, 2)
+    impossible $q0(1, 2)
 ```
 
 ---
@@ -1351,6 +1370,10 @@ by enumerate finite_set:
     prove:
         forall a2 {1, 2, 3}:
             a2 < 4
+
+# inline by enumerate finite_set: put the forall goal on the header line
+by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
+    ...
 ```
 
 ---
@@ -1395,6 +1418,10 @@ by for:
     prove:
         forall i range(0, 10):
             i < 10
+    do_nothing
+
+# inline by for: put the forall goal on the header line
+by for forall! i range(0, 10) => {i < 10}:
     do_nothing
 ```
 
