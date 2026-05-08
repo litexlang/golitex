@@ -468,7 +468,7 @@ Define a function f on natural numbers by f(0) = 1 and f(n+1) = (n+1) * f(n) for
 #                     =>:
 #                         $dvdN(d, f(1))=0
 #             f(1)=1*f(0)=1
-#             by enumerate 1...1:d
+#             by closed_range as cases: d $in 1...1
 #                 1%d=0
 #                 f(1)%d=0
 #                 $dvdN(d, f(1))

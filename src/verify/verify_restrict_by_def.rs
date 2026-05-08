@@ -263,9 +263,15 @@ impl Runtime {
     fn restrict_build_forall_params_from_rhs(&self, rhs_body: &FnSetBody) -> ParamDefWithType {
         let mut groups: Vec<ParamGroupWithParamType> = Vec::new();
         for param_def_with_set in &rhs_body.params_def_with_set {
+            let param_type = match &param_def_with_set.param_type {
+                ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(set.clone()),
+                ParamGroupWithSetTypeEnum::Struct(struct_ty) => {
+                    ParamType::Struct(struct_ty.clone())
+                }
+            };
             groups.push(ParamGroupWithParamType::new(
                 param_def_with_set.params.clone(),
-                ParamType::Obj(param_def_with_set.set.clone()),
+                param_type,
             ));
         }
         ParamDefWithType::new(groups)

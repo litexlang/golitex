@@ -28,6 +28,15 @@ impl Runtime {
             return Ok(result);
         }
 
+        if let Some(done) = self.try_verify_name_equal_struct_instance_from_field_equalities(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         result = self.verify_equality_with_known_equalities(
             left,
             right,
@@ -197,13 +206,10 @@ impl Runtime {
             application_side, reduced
         );
         let cited = fact.clone();
+        let verified_by = VerifiedByResult::cited_fact(fact.clone(), cited, Some(msg));
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_known_fact(
-                fact,
-                VerifiedByResult::Fact(cited, msg),
-                Vec::new(),
-            )
-            .into(),
+            FactualStmtSuccess::new_with_verified_by_known_fact(fact, verified_by, Vec::new())
+                .into(),
         ))
     }
 
@@ -777,8 +783,120 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::StructInstance(left_instance), Obj::StructInstance(right_instance)) => {
+                if left_instance.name.struct_name() != right_instance.name.struct_name() {
+                    return Ok(false);
+                }
+                if !self.verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
+                    &left_instance.name.args,
+                    &right_instance.name.args,
+                    verify_state,
+                    equality_line_file.clone(),
+                )? {
+                    return Ok(false);
+                }
+                self.verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
+                    &left_instance.fields_equal_to_what,
+                    &right_instance.fields_equal_to_what,
+                    verify_state,
+                    equality_line_file,
+                )
+            }
             _ => Ok(false),
         }
+    }
+
+    fn try_verify_name_equal_struct_instance_from_field_equalities(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Obj::StructInstance(instance) = right {
+            if let Some(result) = self
+                .try_verify_one_name_equal_struct_instance_from_field_equalities(
+                    left,
+                    instance,
+                    left,
+                    right,
+                    line_file.clone(),
+                    verify_state,
+                )?
+            {
+                return Ok(Some(result));
+            }
+        }
+        if let Obj::StructInstance(instance) = left {
+            if let Some(result) = self
+                .try_verify_one_name_equal_struct_instance_from_field_equalities(
+                    right,
+                    instance,
+                    left,
+                    right,
+                    line_file,
+                    verify_state,
+                )?
+            {
+                return Ok(Some(result));
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_one_name_equal_struct_instance_from_field_equalities(
+        &mut self,
+        name_obj: &Obj,
+        instance: &StructInstance,
+        original_left: &Obj,
+        original_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(name) = obj_name_for_struct_instance_equality(name_obj) else {
+            return Ok(None);
+        };
+        let struct_name = instance.name.struct_name();
+        let has_struct_identity = self.iter_environments_from_top().any(|env| {
+            env.known_name_belong_to_struct
+                .get(&name)
+                .map(|known_struct_name| known_struct_name == &struct_name)
+                .unwrap_or(false)
+        });
+        if !has_struct_identity {
+            return Ok(None);
+        }
+
+        let Some(def) = self.get_struct_definition_by_name(&struct_name).cloned() else {
+            return Ok(None);
+        };
+        if def.fields.len() != instance.fields_equal_to_what.len() {
+            return Ok(None);
+        }
+
+        for ((field_name, _), field_obj) in
+            def.fields.iter().zip(instance.fields_equal_to_what.iter())
+        {
+            let field_access: Obj = FieldAccess::new(name.clone(), field_name.clone()).into();
+            let result = self.verify_objs_are_equal(
+                &field_access,
+                field_obj,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if result.is_unknown() {
+                return Ok(None);
+            }
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(original_left.clone(), original_right.clone(), line_file).into(),
+                "struct instance fields are equal".to_string(),
+                Vec::new(),
+            )
+            .into(),
+        ))
     }
 
     fn verify_two_objs_equal_by_builtin_rules_and_known_equalities(
@@ -864,5 +982,20 @@ fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {
                 .to_string()
         }
         _ => "the corresponding builtin-object arguments are equal one by one".to_string(),
+    }
+}
+
+fn obj_name_for_struct_instance_equality(obj: &Obj) -> Option<String> {
+    match obj {
+        Obj::Atom(AtomObj::Identifier(identifier)) => Some(identifier.name.clone()),
+        Obj::Atom(AtomObj::Forall(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::Def(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::Exist(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::Induc(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::DefStructField(p)) => Some(p.name.clone()),
+        _ => None,
     }
 }

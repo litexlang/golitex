@@ -129,6 +129,15 @@ know:
             $in_cup_via_member_set(z, F, Y)
 
     forall A, B finite_set:
+        $is_finite_set(union(A, B))
+        $is_finite_set(intersect(A, B))
+        $is_finite_set(set_minus(A, B))
+        $is_finite_set(set_diff(A, B))
+
+    forall A finite_set:
+        count(A) $in N
+
+    forall A, B finite_set:
         A $subset B
         =>:
             count(A) <= count(B)
@@ -137,4 +146,11 @@ know:
         A $superset B
         =>:
             count(A) >= count(B)
+
+    forall A, B finite_set:
+        count(intersect(A, B)) <= count(A)
+        count(intersect(A, B)) <= count(B)
+        count(set_minus(A, B)) <= count(A)
+        count(union(A, B)) <= count(A) + count(B)
+        count(set_diff(A, B)) <= count(A) + count(B)
 "#;

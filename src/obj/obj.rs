@@ -53,6 +53,78 @@ pub enum Obj {
     MatrixMul(MatrixMul),
     MatrixScalarMul(MatrixScalarMul),
     MatrixPow(MatrixPow),
+    FieldAccess(FieldAccess),
+    StructInstance(Box<StructInstance>),
+}
+
+#[derive(Clone)]
+pub struct StructInstance {
+    pub name: StructAsParamType,
+    pub fields_equal_to_what: Vec<Box<Obj>>,
+}
+
+impl StructInstance {
+    pub fn new(name: StructAsParamType, fields_equal_to_what: Vec<Obj>) -> Self {
+        let fields_equal_to_what = fields_equal_to_what.into_iter().map(Box::new).collect();
+        StructInstance {
+            name,
+            fields_equal_to_what,
+        }
+    }
+
+    pub fn new_with_boxed_fields(
+        name: StructAsParamType,
+        fields_equal_to_what: Vec<Box<Obj>>,
+    ) -> Self {
+        StructInstance {
+            name,
+            fields_equal_to_what,
+        }
+    }
+}
+
+impl fmt::Display for StructInstance {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", STRUCT_INSTANCE_PREFIX, self.name.struct_name())?;
+        if !self.name.args.is_empty() {
+            write!(
+                f,
+                "{}{}{}",
+                LEFT_BRACE,
+                vec_to_string_join_by_comma(&self.name.args),
+                RIGHT_BRACE
+            )?;
+        }
+        write!(
+            f,
+            "{}{}{}",
+            LEFT_BRACE,
+            vec_to_string_join_by_comma(&self.fields_equal_to_what),
+            RIGHT_BRACE
+        )
+    }
+}
+
+#[derive(Clone)]
+pub struct FieldAccess {
+    pub left: String,
+    pub right: String,
+}
+
+impl FieldAccess {
+    pub fn new(left: String, right: String) -> Self {
+        FieldAccess { left, right }
+    }
+}
+
+impl fmt::Display for FieldAccess {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}{}",
+            self.left, DOT_AKA_FIELD_ACCESS_SIGN, self.right
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -868,6 +940,8 @@ impl Obj {
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
+            Obj::FieldAccess(x) => write!(f, "{}", x)?,
+            Obj::StructInstance(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1001,13 +1075,32 @@ impl Obj {
                 let params_def_with_set = params_def_with_set
                     .into_iter()
                     .map(|pg| {
-                        ParamGroupWithSet::new(
-                            pg.params
-                                .into_iter()
-                                .map(|p| if p == from { to.to_string() } else { p })
-                                .collect(),
-                            Obj::replace_bound_identifier(pg.set, from, to),
-                        )
+                        let params = pg
+                            .params
+                            .into_iter()
+                            .map(|p| if p == from { to.to_string() } else { p })
+                            .collect();
+                        match pg.param_type {
+                            ParamGroupWithSetTypeEnum::Struct(struct_ty) => {
+                                ParamGroupWithSet::new_struct(
+                                    params,
+                                    StructAsParamType::new(
+                                        struct_ty.name,
+                                        struct_ty
+                                            .args
+                                            .into_iter()
+                                            .map(|arg| {
+                                                Obj::replace_bound_identifier(*arg, from, to)
+                                            })
+                                            .collect(),
+                                    ),
+                                )
+                            }
+                            ParamGroupWithSetTypeEnum::Set(set) => ParamGroupWithSet::new(
+                                params,
+                                Obj::replace_bound_identifier(set, from, to),
+                            ),
+                        }
                     })
                     .collect();
                 let dom_facts = dom_facts
@@ -1029,13 +1122,32 @@ impl Obj {
                 let params_def_with_set = params_def_with_set
                     .into_iter()
                     .map(|pg| {
-                        ParamGroupWithSet::new(
-                            pg.params
-                                .into_iter()
-                                .map(|p| if p == from { to.to_string() } else { p })
-                                .collect(),
-                            Obj::replace_bound_identifier(pg.set, from, to),
-                        )
+                        let params = pg
+                            .params
+                            .into_iter()
+                            .map(|p| if p == from { to.to_string() } else { p })
+                            .collect();
+                        match pg.param_type {
+                            ParamGroupWithSetTypeEnum::Struct(struct_ty) => {
+                                ParamGroupWithSet::new_struct(
+                                    params,
+                                    StructAsParamType::new(
+                                        struct_ty.name,
+                                        struct_ty
+                                            .args
+                                            .into_iter()
+                                            .map(|arg| {
+                                                Obj::replace_bound_identifier(*arg, from, to)
+                                            })
+                                            .collect(),
+                                    ),
+                                )
+                            }
+                            ParamGroupWithSetTypeEnum::Set(set) => ParamGroupWithSet::new(
+                                params,
+                                Obj::replace_bound_identifier(set, from, to),
+                            ),
+                        }
                     })
                     .collect();
                 let dom_facts = dom_facts
@@ -1164,6 +1276,32 @@ impl Obj {
                     .collect(),
             )
             .into(),
+            Obj::FieldAccess(field_access) => {
+                let left = if field_access.left == from {
+                    to.to_string()
+                } else {
+                    field_access.left
+                };
+                FieldAccess::new(left, field_access.right).into()
+            }
+            Obj::StructInstance(instance) => {
+                let instance = *instance;
+                let name = StructAsParamType::new(
+                    instance.name.name,
+                    instance
+                        .name
+                        .args
+                        .into_iter()
+                        .map(|arg| Obj::replace_bound_identifier(*arg, from, to))
+                        .collect(),
+                );
+                let fields_equal_to_what = instance
+                    .fields_equal_to_what
+                    .into_iter()
+                    .map(|field| Obj::replace_bound_identifier(*field, from, to))
+                    .collect();
+                StructInstance::new(name, fields_equal_to_what).into()
+            }
         }
     }
 }
@@ -1991,6 +2129,18 @@ impl From<IdentifierWithMod> for Obj {
 impl From<FamilyObj> for Obj {
     fn from(f: FamilyObj) -> Self {
         Obj::FamilyObj(f)
+    }
+}
+
+impl From<FieldAccess> for Obj {
+    fn from(f: FieldAccess) -> Self {
+        Obj::FieldAccess(f)
+    }
+}
+
+impl From<StructInstance> for Obj {
+    fn from(s: StructInstance) -> Self {
+        Obj::StructInstance(Box::new(s))
     }
 }
 

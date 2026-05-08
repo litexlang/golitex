@@ -1,6 +1,7 @@
 mod not_exist_demorgan_forall;
 mod verify_and_chain_fact;
 mod verify_atomic_fact;
+mod verify_atomic_fact_by_definition;
 mod verify_atomic_fact_with_known_forall;
 mod verify_builtin_rules;
 mod verify_by_syntax;
@@ -16,6 +17,7 @@ mod verify_fn_set_equality_builtin_rule;
 mod verify_forall_fact;
 mod verify_forall_fact_with_iff;
 mod verify_helper;
+mod verify_known_atomic_facts;
 mod verify_non_equational_atomic_fact;
 mod verify_not_forall_fact;
 pub use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};

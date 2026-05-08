@@ -6,6 +6,430 @@ use crate::verify::{
     number_is_in_z_nz, verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same,
     verify_number_in_standard_set::is_integer_after_simplification, VerifyState,
 };
+
+impl Runtime {
+    pub fn verify_not_in_fact_with_builtin_rules(
+        &mut self,
+        not_in_fact: &NotInFact,
+        _verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Obj::StandardSet(standard_set) = &not_in_fact.set {
+            if !matches!(&not_in_fact.element, Obj::Number(_)) {
+                if let Some(evaluated_number) =
+                    not_in_fact.element.evaluate_to_normalized_decimal_number()
+                {
+                    return Ok(
+                        builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+                            not_in_fact,
+                            &evaluated_number,
+                            standard_set,
+                        ),
+                    );
+                }
+            }
+        }
+        match (&not_in_fact.element, &not_in_fact.set) {
+            (Obj::Number(num), Obj::StandardSet(standard_set)) => Ok(
+                builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+                    not_in_fact,
+                    num,
+                    standard_set,
+                ),
+            ),
+            _ => Ok((StmtUnknown::new()).into()),
+        }
+    }
+
+    pub fn verify_in_fact_with_builtin_rules(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Obj::StandardSet(standard_set) = &in_fact.set {
+            if !matches!(&in_fact.element, Obj::Number(_)) {
+                if let Some(evaluated_number) =
+                    in_fact.element.evaluate_to_normalized_decimal_number()
+                {
+                    let evaluation_membership_result =
+                        builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                            in_fact,
+                            &evaluated_number,
+                            standard_set,
+                        );
+                    return Ok(evaluation_membership_result);
+                }
+            }
+        }
+        if let Some(result) =
+            self.maybe_verify_in_fact_max_min_pair_closed_standard_set(in_fact, verify_state)?
+        {
+            return Ok(result);
+        }
+        match (&in_fact.element, &in_fact.set) {
+            (Obj::Tuple(tuple), Obj::Cart(cart)) => {
+                return self.verify_in_fact_by_left_is_tuple_right_is_cart(
+                    in_fact,
+                    tuple,
+                    cart,
+                    verify_state,
+                );
+            }
+            (Obj::Number(num), Obj::StandardSet(standard_set)) => {
+                Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                    in_fact,
+                    num,
+                    standard_set,
+                ))
+            }
+            (Obj::Sum(sum), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
+                    in_fact,
+                    sum.func.as_ref(),
+                    verify_state,
+                    "sum",
+                ),
+            (Obj::Product(product), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
+                    in_fact,
+                    product.func.as_ref(),
+                    verify_state,
+                    "product",
+                ),
+            (Obj::Add(add), Obj::StandardSet(StandardSet::N)) => {
+                self.verify_in_fact_add_in_n_from_summands_in_n(in_fact, add, verify_state)
+            }
+            (Obj::Mul(mul), Obj::StandardSet(StandardSet::N)) => {
+                self.verify_in_fact_mul_in_n_from_factors_in_n(in_fact, mul, verify_state)
+            }
+            (Obj::Count(count), Obj::StandardSet(StandardSet::N))
+            | (Obj::Count(count), Obj::StandardSet(StandardSet::Z))
+            | (Obj::Count(count), Obj::StandardSet(StandardSet::Q))
+            | (Obj::Count(count), Obj::StandardSet(StandardSet::R)) => {
+                self.verify_count_in_standard_number_set(in_fact, count, verify_state)
+            }
+            (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
+                self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, verify_state)
+            }
+            (Obj::Mul(mul), Obj::StandardSet(StandardSet::NPos)) => {
+                self.verify_in_fact_mul_in_n_pos_from_factors_in_n_pos(in_fact, mul, verify_state)
+            }
+            (_, Obj::StandardSet(StandardSet::NPos)) => {
+                self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
+            }
+            (_, Obj::ClosedRange(closed_range)) => self
+                .verify_in_fact_closed_range_by_order_bounds(in_fact, closed_range, verify_state),
+            (_, Obj::Range(range)) => {
+                self.verify_in_fact_open_range_by_order_bounds(in_fact, range, verify_state)
+            }
+            (
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_)
+                | Obj::Abs(_),
+                Obj::StandardSet(StandardSet::Z),
+            ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, verify_state),
+            (
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_)
+                | Obj::Abs(_),
+                Obj::StandardSet(StandardSet::Q),
+            ) => self.verify_in_fact_arithmetic_expression_in_q(in_fact, verify_state),
+            (
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_),
+                Obj::StandardSet(StandardSet::RNeg),
+            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
+                in_fact,
+                verify_state,
+                StandardSet::RNeg,
+            ),
+            (
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_),
+                Obj::StandardSet(StandardSet::QNeg),
+            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
+                in_fact,
+                verify_state,
+                StandardSet::QNeg,
+            ),
+            (
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_),
+                Obj::StandardSet(StandardSet::ZNeg),
+            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
+                in_fact,
+                verify_state,
+                StandardSet::ZNeg,
+            ),
+            (
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Max(_)
+                | Obj::Min(_)
+                | Obj::Abs(_)
+                | Obj::Log(_),
+                Obj::StandardSet(StandardSet::R),
+            ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
+                in_fact,
+            )),
+            (Obj::Sum(_), Obj::StandardSet(StandardSet::R)) => self
+                .verify_in_fact_sum_or_product_in_r(
+                    in_fact,
+                    verify_state,
+                    "sum: well-defined on an integer range, in R",
+                ),
+            (Obj::Product(_), Obj::StandardSet(StandardSet::R)) => self
+                .verify_in_fact_sum_or_product_in_r(
+                    in_fact,
+                    verify_state,
+                    "product: well-defined on an integer range, in R",
+                ),
+            (Obj::Sum(sum), Obj::StandardSet(StandardSet::Z)) => self
+                .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
+                    in_fact,
+                    sum.func.as_ref(),
+                    verify_state,
+                    "sum",
+                ),
+            (Obj::Product(product), Obj::StandardSet(StandardSet::Z)) => self
+                .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
+                    in_fact,
+                    product.func.as_ref(),
+                    verify_state,
+                    "product",
+                ),
+            (Obj::Sum(sum), Obj::StandardSet(StandardSet::Q)) => self
+                .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
+                    in_fact,
+                    sum.func.as_ref(),
+                    verify_state,
+                    "sum",
+                ),
+            (Obj::Product(product), Obj::StandardSet(StandardSet::Q)) => self
+                .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
+                    in_fact,
+                    product.func.as_ref(),
+                    verify_state,
+                    "product",
+                ),
+            (Obj::ListSet(list_set), Obj::PowerSet(power_set)) => self
+                .verify_in_fact_list_set_in_power_set_defines_membership(
+                    in_fact,
+                    list_set,
+                    power_set,
+                    verify_state,
+                ),
+            (Obj::SetBuilder(set_builder), Obj::PowerSet(power_set)) => self
+                .verify_in_fact_set_builder_in_power_set_via_param_subset(
+                    in_fact,
+                    set_builder,
+                    power_set,
+                    verify_state,
+                ),
+            (Obj::Choose(choose), where_is_obj) => {
+                let choose_from = choose.set.clone();
+                let equal_fact = EqualFact::new(
+                    *choose_from,
+                    where_is_obj.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
+                let equal_fact_verify_result =
+                    self.verify_atomic_fact(&equal_fact, verify_state)?;
+                if equal_fact_verify_result.is_true() {
+                    return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            in_fact.clone().into(),
+                            "By ZFC, we can choose an element from a nonempty set whose elements are all nonempty.".to_string(),
+                            Vec::new(),
+                        )).into());
+                } else {
+                    return Ok((StmtUnknown::new()).into());
+                }
+            }
+            (_, Obj::ListSet(list_set)) => self.verify_in_fact_by_equal_to_one_element_in_list_set(
+                in_fact,
+                list_set,
+                verify_state,
+            ),
+            (Obj::AnonymousFn(anon), Obj::FnSet(expected_fn_set)) => self
+                .verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                    anon,
+                    expected_fn_set,
+                    in_fact,
+                    verify_state,
+                ),
+            (element, Obj::FnSet(expected_fn_set))
+                if obj_eligible_for_known_objs_in_fn_sets(element) =>
+            {
+                self.verify_in_fact_element_in_fn_set_by_stored_definition(
+                    element,
+                    expected_fn_set,
+                    in_fact,
+                )
+            }
+            (Obj::StructInstance(instance), Obj::Atom(AtomObj::Identifier(identifier)))
+                if instance.name.struct_name() == identifier.name =>
+            {
+                self.verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)?;
+                Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "struct instance belongs to its struct",
+                ))
+            }
+            (_, Obj::FamilyObj(family_ty)) => {
+                self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
+            }
+            (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
+                let lf = in_fact.line_file.clone();
+                let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
+                let len_eq_n: AtomicFact =
+                    EqualFact::new(len_obj, (*fs.n).clone(), lf.clone()).into();
+                if !self.verify_atomic_fact(&len_eq_n, verify_state)?.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                for o in list.objs.iter() {
+                    let f: AtomicFact =
+                        InFact::new((**o).clone(), (*fs.set).clone(), lf.clone()).into();
+                    if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                        &f,
+                        verify_state,
+                    )? {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                }
+                Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "finite_seq list: length equals n and each entry in co-domain",
+                ))
+            }
+            (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
+                let lf = in_fact.line_file.clone();
+                let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
+                let row_eq: AtomicFact =
+                    EqualFact::new(n_rows_obj, (*ms.row_len).clone(), lf.clone()).into();
+                if !self.verify_atomic_fact(&row_eq, verify_state)?.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                for row in list.rows.iter() {
+                    let n_col_obj: Obj = Number::new(row.len().to_string()).into();
+                    let col_eq: AtomicFact =
+                        EqualFact::new(n_col_obj, (*ms.col_len).clone(), lf.clone()).into();
+                    if !self.verify_atomic_fact(&col_eq, verify_state)?.is_true() {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                    for o in row.iter() {
+                        let f: AtomicFact =
+                            InFact::new((**o).clone(), (*ms.set).clone(), lf.clone()).into();
+                        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                            &f,
+                            verify_state,
+                        )? {
+                            return Ok((StmtUnknown::new()).into());
+                        }
+                    }
+                }
+                Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "matrix literal: shape matches matrix(...) and each entry in co-domain",
+                ))
+            }
+            (_, Obj::FiniteSeqSet(fs)) => {
+                let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
+                let expanded = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                );
+                self.verify_atomic_fact(&expanded.into(), verify_state)
+            }
+            (_, Obj::SeqSet(ss)) => {
+                let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
+                let expanded = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                );
+                self.verify_atomic_fact(&expanded.into(), verify_state)
+            }
+            (_, Obj::MatrixSet(ms)) => {
+                let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
+                let expanded = InFact::new(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                );
+                self.verify_atomic_fact(&expanded.into(), verify_state)
+            }
+            (_, target_set_obj) => {
+                if let Obj::FnObj(fn_obj) = &in_fact.element {
+                    let fn_try = self.verify_in_fact_fn_application_in_typed_return_set(
+                        fn_obj,
+                        in_fact,
+                        verify_state,
+                    )?;
+                    if fn_try.is_true() {
+                        return Ok(fn_try);
+                    }
+                }
+                self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
+            }
+        }
+    }
+}
+
+impl Runtime {
+    // The cardinality of a finite set is a natural number, hence also an integer, rational, and real.
+    // Example: if `A finite_set`, then `count(A) $in N` and `count(A) $in R`.
+    fn verify_count_in_standard_number_set(
+        &mut self,
+        in_fact: &InFact,
+        count: &Count,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let finite_fact = IsFiniteSetFact::new((*count.set).clone(), in_fact.line_file.clone());
+        let finite_result =
+            self.verify_non_equational_atomic_fact(&finite_fact.into(), verify_state, true)?;
+        if finite_result.is_true() {
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "count of a finite set is a natural number",
+            ));
+        }
+        Ok((StmtUnknown::new()).into())
+    }
+}
+
 fn number_in_set_verified_by_builtin_rules_result(in_fact: &InFact, reason: &str) -> StmtResult {
     StmtResult::FactualStmtSuccess(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -215,38 +639,6 @@ fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
 }
 
 impl Runtime {
-    pub fn verify_not_in_fact_with_builtin_rules(
-        &mut self,
-        not_in_fact: &NotInFact,
-        _verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        if let Obj::StandardSet(standard_set) = &not_in_fact.set {
-            if !matches!(&not_in_fact.element, Obj::Number(_)) {
-                if let Some(evaluated_number) =
-                    not_in_fact.element.evaluate_to_normalized_decimal_number()
-                {
-                    return Ok(
-                        builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
-                            not_in_fact,
-                            &evaluated_number,
-                            standard_set,
-                        ),
-                    );
-                }
-            }
-        }
-        match (&not_in_fact.element, &not_in_fact.set) {
-            (Obj::Number(num), Obj::StandardSet(standard_set)) => Ok(
-                builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
-                    not_in_fact,
-                    num,
-                    standard_set,
-                ),
-            ),
-            _ => Ok((StmtUnknown::new()).into()),
-        }
-    }
-
     fn maybe_verify_in_fact_max_min_pair_closed_standard_set(
         &mut self,
         in_fact: &InFact,
@@ -458,358 +850,6 @@ impl Runtime {
             )
             .into(),
         )
-    }
-
-    pub fn verify_in_fact_with_builtin_rules(
-        &mut self,
-        in_fact: &InFact,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        if let Obj::StandardSet(standard_set) = &in_fact.set {
-            if !matches!(&in_fact.element, Obj::Number(_)) {
-                if let Some(evaluated_number) =
-                    in_fact.element.evaluate_to_normalized_decimal_number()
-                {
-                    let evaluation_membership_result =
-                        builtin_in_fact_result_for_evaluated_number_in_standard_set(
-                            in_fact,
-                            &evaluated_number,
-                            standard_set,
-                        );
-                    return Ok(evaluation_membership_result);
-                }
-            }
-        }
-        if let Some(result) =
-            self.maybe_verify_in_fact_max_min_pair_closed_standard_set(in_fact, verify_state)?
-        {
-            return Ok(result);
-        }
-        match (&in_fact.element, &in_fact.set) {
-            (Obj::Tuple(tuple), Obj::Cart(cart)) => {
-                return self.verify_in_fact_by_left_is_tuple_right_is_cart(
-                    in_fact,
-                    tuple,
-                    cart,
-                    verify_state,
-                );
-            }
-            (Obj::Number(num), Obj::StandardSet(standard_set)) => {
-                Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
-                    in_fact,
-                    num,
-                    standard_set,
-                ))
-            }
-            (Obj::Sum(sum), Obj::StandardSet(StandardSet::NPos)) => self
-                .verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
-                    in_fact,
-                    sum.func.as_ref(),
-                    verify_state,
-                    "sum",
-                ),
-            (Obj::Product(product), Obj::StandardSet(StandardSet::NPos)) => self
-                .verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
-                    in_fact,
-                    product.func.as_ref(),
-                    verify_state,
-                    "product",
-                ),
-            (Obj::Add(add), Obj::StandardSet(StandardSet::N)) => {
-                self.verify_in_fact_add_in_n_from_summands_in_n(in_fact, add, verify_state)
-            }
-            (Obj::Mul(mul), Obj::StandardSet(StandardSet::N)) => {
-                self.verify_in_fact_mul_in_n_from_factors_in_n(in_fact, mul, verify_state)
-            }
-            (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
-                self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, verify_state)
-            }
-            (Obj::Mul(mul), Obj::StandardSet(StandardSet::NPos)) => {
-                self.verify_in_fact_mul_in_n_pos_from_factors_in_n_pos(in_fact, mul, verify_state)
-            }
-            (_, Obj::StandardSet(StandardSet::NPos)) => {
-                self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
-            }
-            (_, Obj::ClosedRange(closed_range)) => self
-                .verify_in_fact_closed_range_by_order_bounds(in_fact, closed_range, verify_state),
-            (_, Obj::Range(range)) => {
-                self.verify_in_fact_open_range_by_order_bounds(in_fact, range, verify_state)
-            }
-            (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Mod(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_)
-                | Obj::Abs(_),
-                Obj::StandardSet(StandardSet::Z),
-            ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, verify_state),
-            (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_)
-                | Obj::Abs(_),
-                Obj::StandardSet(StandardSet::Q),
-            ) => self.verify_in_fact_arithmetic_expression_in_q(in_fact, verify_state),
-            (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Mod(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_),
-                Obj::StandardSet(StandardSet::RNeg),
-            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
-                in_fact,
-                verify_state,
-                StandardSet::RNeg,
-            ),
-            (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Mod(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_),
-                Obj::StandardSet(StandardSet::QNeg),
-            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
-                in_fact,
-                verify_state,
-                StandardSet::QNeg,
-            ),
-            (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Mod(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_),
-                Obj::StandardSet(StandardSet::ZNeg),
-            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
-                in_fact,
-                verify_state,
-                StandardSet::ZNeg,
-            ),
-            (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Mod(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_)
-                | Obj::Abs(_)
-                | Obj::Log(_),
-                Obj::StandardSet(StandardSet::R),
-            ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
-                in_fact,
-            )),
-            (Obj::Sum(_), Obj::StandardSet(StandardSet::R)) => self
-                .verify_in_fact_sum_or_product_in_r(
-                    in_fact,
-                    verify_state,
-                    "sum: well-defined on an integer range, in R",
-                ),
-            (Obj::Product(_), Obj::StandardSet(StandardSet::R)) => self
-                .verify_in_fact_sum_or_product_in_r(
-                    in_fact,
-                    verify_state,
-                    "product: well-defined on an integer range, in R",
-                ),
-            (Obj::Sum(sum), Obj::StandardSet(StandardSet::Z)) => self
-                .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
-                    in_fact,
-                    sum.func.as_ref(),
-                    verify_state,
-                    "sum",
-                ),
-            (Obj::Product(product), Obj::StandardSet(StandardSet::Z)) => self
-                .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
-                    in_fact,
-                    product.func.as_ref(),
-                    verify_state,
-                    "product",
-                ),
-            (Obj::Sum(sum), Obj::StandardSet(StandardSet::Q)) => self
-                .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
-                    in_fact,
-                    sum.func.as_ref(),
-                    verify_state,
-                    "sum",
-                ),
-            (Obj::Product(product), Obj::StandardSet(StandardSet::Q)) => self
-                .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
-                    in_fact,
-                    product.func.as_ref(),
-                    verify_state,
-                    "product",
-                ),
-            (Obj::ListSet(list_set), Obj::PowerSet(power_set)) => self
-                .verify_in_fact_list_set_in_power_set_defines_membership(
-                    in_fact,
-                    list_set,
-                    power_set,
-                    verify_state,
-                ),
-            (Obj::SetBuilder(set_builder), Obj::PowerSet(power_set)) => self
-                .verify_in_fact_set_builder_in_power_set_via_param_subset(
-                    in_fact,
-                    set_builder,
-                    power_set,
-                    verify_state,
-                ),
-            (Obj::Choose(choose), where_is_obj) => {
-                let choose_from = choose.set.clone();
-                let equal_fact = EqualFact::new(
-                    *choose_from,
-                    where_is_obj.clone(),
-                    in_fact.line_file.clone(),
-                )
-                .into();
-                let equal_fact_verify_result =
-                    self.verify_atomic_fact(&equal_fact, verify_state)?;
-                if equal_fact_verify_result.is_true() {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            in_fact.clone().into(),
-                            "By ZFC, we can choose an element from a nonempty set whose elements are all nonempty.".to_string(),
-                            Vec::new(),
-                        )).into());
-                } else {
-                    return Ok((StmtUnknown::new()).into());
-                }
-            }
-            (_, Obj::ListSet(list_set)) => self.verify_in_fact_by_equal_to_one_element_in_list_set(
-                in_fact,
-                list_set,
-                verify_state,
-            ),
-            (Obj::AnonymousFn(anon), Obj::FnSet(expected_fn_set)) => self
-                .verify_in_fact_anonymous_fn_signature_matches_fn_set(
-                    anon,
-                    expected_fn_set,
-                    in_fact,
-                    verify_state,
-                ),
-            (element, Obj::FnSet(expected_fn_set))
-                if obj_eligible_for_known_objs_in_fn_sets(element) =>
-            {
-                self.verify_in_fact_element_in_fn_set_by_stored_definition(
-                    element,
-                    expected_fn_set,
-                    in_fact,
-                )
-            }
-            (_, Obj::FamilyObj(family_ty)) => {
-                self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
-            }
-            (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
-                let lf = in_fact.line_file.clone();
-                let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
-                let len_eq_n: AtomicFact =
-                    EqualFact::new(len_obj, (*fs.n).clone(), lf.clone()).into();
-                if !self.verify_atomic_fact(&len_eq_n, verify_state)?.is_true() {
-                    return Ok((StmtUnknown::new()).into());
-                }
-                for o in list.objs.iter() {
-                    let f: AtomicFact =
-                        InFact::new((**o).clone(), (*fs.set).clone(), lf.clone()).into();
-                    if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
-                        &f,
-                        verify_state,
-                    )? {
-                        return Ok((StmtUnknown::new()).into());
-                    }
-                }
-                Ok(number_in_set_verified_by_builtin_rules_result(
-                    in_fact,
-                    "finite_seq list: length equals n and each entry in co-domain",
-                ))
-            }
-            (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
-                let lf = in_fact.line_file.clone();
-                let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
-                let row_eq: AtomicFact =
-                    EqualFact::new(n_rows_obj, (*ms.row_len).clone(), lf.clone()).into();
-                if !self.verify_atomic_fact(&row_eq, verify_state)?.is_true() {
-                    return Ok((StmtUnknown::new()).into());
-                }
-                for row in list.rows.iter() {
-                    let n_col_obj: Obj = Number::new(row.len().to_string()).into();
-                    let col_eq: AtomicFact =
-                        EqualFact::new(n_col_obj, (*ms.col_len).clone(), lf.clone()).into();
-                    if !self.verify_atomic_fact(&col_eq, verify_state)?.is_true() {
-                        return Ok((StmtUnknown::new()).into());
-                    }
-                    for o in row.iter() {
-                        let f: AtomicFact =
-                            InFact::new((**o).clone(), (*ms.set).clone(), lf.clone()).into();
-                        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
-                            &f,
-                            verify_state,
-                        )? {
-                            return Ok((StmtUnknown::new()).into());
-                        }
-                    }
-                }
-                Ok(number_in_set_verified_by_builtin_rules_result(
-                    in_fact,
-                    "matrix literal: shape matches matrix(...) and each entry in co-domain",
-                ))
-            }
-            (_, Obj::FiniteSeqSet(fs)) => {
-                let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
-                let expanded = InFact::new(
-                    in_fact.element.clone(),
-                    fn_set.into(),
-                    in_fact.line_file.clone(),
-                );
-                self.verify_atomic_fact(&expanded.into(), verify_state)
-            }
-            (_, Obj::SeqSet(ss)) => {
-                let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
-                let expanded = InFact::new(
-                    in_fact.element.clone(),
-                    fn_set.into(),
-                    in_fact.line_file.clone(),
-                );
-                self.verify_atomic_fact(&expanded.into(), verify_state)
-            }
-            (_, Obj::MatrixSet(ms)) => {
-                let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
-                let expanded = InFact::new(
-                    in_fact.element.clone(),
-                    fn_set.into(),
-                    in_fact.line_file.clone(),
-                );
-                self.verify_atomic_fact(&expanded.into(), verify_state)
-            }
-            (_, target_set_obj) => {
-                if let Obj::FnObj(fn_obj) = &in_fact.element {
-                    let fn_try = self.verify_in_fact_fn_application_in_typed_return_set(
-                        fn_obj,
-                        in_fact,
-                        verify_state,
-                    )?;
-                    if fn_try.is_true() {
-                        return Ok(fn_try);
-                    }
-                }
-                self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
-            }
-        }
     }
 
     // `a + b $in N` when `a $in N` and `b $in N` (closure under addition).
@@ -1425,11 +1465,12 @@ impl Runtime {
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-            stmt,
+            stmt.clone(),
             infer_result,
-            VerifiedByResult::BuiltinRules(
+            VerifiedByResult::builtin_rule(
                 "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
                     .to_string(),
+                stmt,
             ),
         ))
         .into())
@@ -1468,10 +1509,11 @@ impl Runtime {
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-            stmt,
+            stmt.clone(),
             infer_result,
-            VerifiedByResult::BuiltinRules(
+            VerifiedByResult::builtin_rule(
                 "list_set in power_set: each element is in the base set".to_string(),
+                stmt,
             ),
         ))
         .into())

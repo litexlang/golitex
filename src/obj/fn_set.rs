@@ -140,7 +140,7 @@ impl fmt::Display for FnSetBody {
         let params_with_sets_display: Vec<String> = self
             .params_def_with_set
             .iter()
-            .map(|g| format!("{} {}", vec_to_string_join_by_comma(&g.params), g.set))
+            .map(|g| g.to_string())
             .collect();
         write!(
             f,
@@ -164,7 +164,7 @@ impl fmt::Display for AnonymousFn {
             .body
             .params_def_with_set
             .iter()
-            .map(|g| format!("{} {}", vec_to_string_join_by_comma(&g.params), g.set))
+            .map(|g| g.to_string())
             .collect();
         write!(
             f,

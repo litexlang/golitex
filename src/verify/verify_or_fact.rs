@@ -185,6 +185,51 @@ fn mod_positive_integer_residue_or_is_exhaustive(or_fact: &OrFact) -> bool {
     seen_residues.iter().all(|seen| *seen)
 }
 
+fn obj_is_literal_zero_for_or_builtin(obj: &Obj) -> bool {
+    match obj {
+        Obj::Number(n) => n.normalized_value == "0",
+        _ => false,
+    }
+}
+
+fn nonzero_operand_from_atomic_fact_for_square_sum_or_builtin(atomic: &AtomicFact) -> Option<Obj> {
+    let AtomicFact::NotEqualFact(not_equal) = atomic else {
+        return None;
+    };
+    if obj_is_literal_zero_for_or_builtin(&not_equal.right) {
+        return Some(not_equal.left.clone());
+    }
+    if obj_is_literal_zero_for_or_builtin(&not_equal.left) {
+        return Some(not_equal.right.clone());
+    }
+    None
+}
+
+fn square_pow_sum_not_equal_zero_fact_for_or_builtin(
+    left_base: Obj,
+    right_base: Obj,
+    line_file: LineFile,
+) -> AtomicFact {
+    let two_obj: Obj = Number::new("2".to_string()).into();
+    let zero_obj: Obj = Number::new("0".to_string()).into();
+    let left_square: Obj = Pow::new(left_base, two_obj.clone()).into();
+    let right_square: Obj = Pow::new(right_base, two_obj).into();
+    let square_sum: Obj = Add::new(left_square, right_square).into();
+    NotEqualFact::new(square_sum, zero_obj, line_file).into()
+}
+
+fn square_mul_sum_not_equal_zero_fact_for_or_builtin(
+    left_base: Obj,
+    right_base: Obj,
+    line_file: LineFile,
+) -> AtomicFact {
+    let zero_obj: Obj = Number::new("0".to_string()).into();
+    let left_square: Obj = Mul::new(left_base.clone(), left_base).into();
+    let right_square: Obj = Mul::new(right_base.clone(), right_base).into();
+    let square_sum: Obj = Add::new(left_square, right_square).into();
+    NotEqualFact::new(square_sum, zero_obj, line_file).into()
+}
+
 impl Runtime {
     pub fn verify_or_fact(
         &mut self,
@@ -270,14 +315,21 @@ impl Runtime {
             );
         }
 
+        if let Some(result) =
+            self.try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(or_fact)?
+        {
+            return Ok(result);
+        }
+
         for fact in or_fact.facts.iter() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
                 return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                     or_fact.clone().into(),
-                    VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+                    VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::cited_fact(
+                        or_fact.clone().into(),
                         fact.clone().into(),
-                        fact.to_string(),
+                        None,
                     )]),
                     Vec::new(),
                 ))
@@ -296,6 +348,69 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(
+        &mut self,
+        or_fact: &OrFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if or_fact.facts.len() != 2 {
+            return Ok(None);
+        }
+        let (
+            AndChainAtomicFact::AtomicFact(first_atomic),
+            AndChainAtomicFact::AtomicFact(second_atomic),
+        ) = (&or_fact.facts[0], &or_fact.facts[1])
+        else {
+            return Ok(None);
+        };
+        let Some(first_base) =
+            nonzero_operand_from_atomic_fact_for_square_sum_or_builtin(first_atomic)
+        else {
+            return Ok(None);
+        };
+        let Some(second_base) =
+            nonzero_operand_from_atomic_fact_for_square_sum_or_builtin(second_atomic)
+        else {
+            return Ok(None);
+        };
+
+        let line_file = or_fact.line_file.clone();
+        let candidates = vec![
+            square_pow_sum_not_equal_zero_fact_for_or_builtin(
+                first_base.clone(),
+                second_base.clone(),
+                line_file.clone(),
+            ),
+            square_pow_sum_not_equal_zero_fact_for_or_builtin(
+                second_base.clone(),
+                first_base.clone(),
+                line_file.clone(),
+            ),
+            square_mul_sum_not_equal_zero_fact_for_or_builtin(
+                first_base.clone(),
+                second_base.clone(),
+                line_file.clone(),
+            ),
+            square_mul_sum_not_equal_zero_fact_for_or_builtin(second_base, first_base, line_file),
+        ];
+
+        for candidate in candidates {
+            let result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            if result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        or_fact.clone().into(),
+                        InferResult::new(),
+                        "or: square sum nonzero implies one component nonzero".to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+        Ok(None)
     }
 
     pub fn verify_or_fact_with_known_or_facts(
@@ -355,9 +470,10 @@ impl Runtime {
                 if all_args_match {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         or_fact.clone().into(),
-                        VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+                        VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::cited_fact(
+                            or_fact.clone().into(),
                             known_or_fact.clone().into(),
-                            known_or_fact.to_string(),
+                            None,
                         )]),
                         Vec::new(),
                     ))

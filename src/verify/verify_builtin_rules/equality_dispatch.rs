@@ -1,0 +1,267 @@
+use crate::prelude::*;
+use crate::verify::verify_equality_by_builtin_rules::{
+    factual_equal_success_by_builtin_reason, verify_equality_by_they_are_the_same,
+};
+
+impl Runtime {
+    pub fn verify_equality_by_builtin_rules(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if verify_equality_by_they_are_the_same(left, right) {
+            return Ok(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "they are the same",
+            )
+            .into());
+        }
+
+        if let Some(done) = self.try_verify_objs_equal_by_expanding_family(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_abs_equalities(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_zero_equals_subtraction_implies_equal_operands(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_zero_equals_pow_from_base_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_pow_one_identity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_power_addition_exponent_rule(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_same_algebra_context_by_equal_args(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_log_identity_equalities(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_log_algebra_identities(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_log_equals_by_pow_inverse(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_additivity(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_merge_adjacent_ranges(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_split_last_term(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_product_split_last_term(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_sum_partition_adjacent_ranges(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_product_partition_adjacent_ranges(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_reindex_shift(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_constant_summand(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_mod_nested_same_modulus_absorption(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_zero_mod_equals_zero(left, right, line_file.clone())? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_mod_one_equals_zero(left, right, line_file.clone())? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_mod_congruence_from_inner_binary(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        let (result, calculated_left, calculated_right) = self
+            .verify_equality_by_they_are_the_same_and_calculation(
+                left,
+                right,
+                line_file.clone(),
+                verify_state,
+            )?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
+        if objs_equal_by_rational_expression_evaluation(&left, &right) {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "calculation and rational expression simplification".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
+        if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "calculation and rational expression simplification".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
+        if let Some(done) = self.try_verify_anonymous_fn_application_equals_other_side(
+            left,
+            right,
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+        if let Some(done) = self.try_verify_anonymous_fn_application_equals_other_side(
+            left,
+            right,
+            right,
+            left,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let (Obj::FnSet(left_fn_set), Obj::FnSet(right_fn_set)) = (left, right) {
+            return self.verify_fn_set_with_params_equality_by_builtin_rules(
+                left_fn_set,
+                right_fn_set,
+                line_file,
+                verify_state,
+            );
+        }
+
+        if let (Obj::AnonymousFn(l), Obj::AnonymousFn(r)) = (left, right) {
+            if l.to_string() == r.to_string() {
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                        "anonymous fn: identical surface syntax (params, dom, ret, body)"
+                            .to_string(),
+                        Vec::new(),
+                    ))
+                    .into(),
+                );
+            }
+        }
+
+        Ok((StmtUnknown::new()).into())
+    }
+}
