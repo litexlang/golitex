@@ -584,14 +584,28 @@ impl Runtime {
         let mut params_def_with_set =
             Vec::with_capacity(fn_set_with_params.body.params_def_with_set.len());
         for param_def_with_set in fn_set_with_params.body.params_def_with_set.iter() {
-            params_def_with_set.push(ParamGroupWithSet::new(
-                param_def_with_set.params.clone(),
-                self.inst_obj(
-                    &param_def_with_set.set,
+            if let Some(struct_ty) = param_def_with_set.struct_ty() {
+                let inst_ty = self.inst_param_type(
+                    &ParamType::Struct(struct_ty.clone()),
                     &filtered_param_to_arg_map,
                     param_obj_type,
-                )?,
-            ));
+                )?;
+                match inst_ty {
+                    ParamType::Struct(s) => params_def_with_set.push(
+                        ParamGroupWithSet::new_struct(param_def_with_set.params.clone(), s),
+                    ),
+                    _ => unreachable!(),
+                }
+            } else {
+                params_def_with_set.push(ParamGroupWithSet::new(
+                    param_def_with_set.params.clone(),
+                    self.inst_obj(
+                        param_def_with_set.set_obj().unwrap(),
+                        &filtered_param_to_arg_map,
+                        param_obj_type,
+                    )?,
+                ));
+            }
         }
         let mut dom_facts = Vec::with_capacity(fn_set_with_params.body.dom_facts.len());
         for dom_fact in fn_set_with_params.body.dom_facts.iter() {
@@ -625,14 +639,28 @@ impl Runtime {
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
         let mut params_def_with_set = Vec::with_capacity(af.body.params_def_with_set.len());
         for param_def_with_set in af.body.params_def_with_set.iter() {
-            params_def_with_set.push(ParamGroupWithSet::new(
-                param_def_with_set.params.clone(),
-                self.inst_obj(
-                    &param_def_with_set.set,
+            if let Some(struct_ty) = param_def_with_set.struct_ty() {
+                let inst_ty = self.inst_param_type(
+                    &ParamType::Struct(struct_ty.clone()),
                     &filtered_param_to_arg_map,
                     param_obj_type,
-                )?,
-            ));
+                )?;
+                match inst_ty {
+                    ParamType::Struct(s) => params_def_with_set.push(
+                        ParamGroupWithSet::new_struct(param_def_with_set.params.clone(), s),
+                    ),
+                    _ => unreachable!(),
+                }
+            } else {
+                params_def_with_set.push(ParamGroupWithSet::new(
+                    param_def_with_set.params.clone(),
+                    self.inst_obj(
+                        param_def_with_set.set_obj().unwrap(),
+                        &filtered_param_to_arg_map,
+                        param_obj_type,
+                    )?,
+                ));
+            }
         }
         let mut dom_facts = Vec::with_capacity(af.body.dom_facts.len());
         for dom_fact in af.body.dom_facts.iter() {
@@ -922,10 +950,21 @@ impl Runtime {
         let mut arg_index: usize = 0;
         let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
+            if param_def.struct_ty().is_some() {
+                return Err(RuntimeError::from(InstantiateRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(
+                        "struct fn parameter type cannot be instantiated as a set".to_string(),
+                    ),
+                )));
+            }
             let instantiated_param_set = if arg_index != 0 {
-                self.inst_obj(&param_def.set, &param_to_arg_map, param_obj_type)?
+                self.inst_obj(
+                    param_def.set_obj().unwrap(),
+                    &param_to_arg_map,
+                    param_obj_type,
+                )?
             } else {
-                param_def.set.clone()
+                param_def.set_obj().unwrap().clone()
             };
             instantiated_param_sets.push(instantiated_param_set);
 

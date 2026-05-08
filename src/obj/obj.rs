@@ -1025,13 +1025,30 @@ impl Obj {
                 let params_def_with_set = params_def_with_set
                     .into_iter()
                     .map(|pg| {
-                        ParamGroupWithSet::new(
-                            pg.params
-                                .into_iter()
-                                .map(|p| if p == from { to.to_string() } else { p })
-                                .collect(),
-                            Obj::replace_bound_identifier(pg.set, from, to),
-                        )
+                        let params = pg
+                            .params
+                            .into_iter()
+                            .map(|p| if p == from { to.to_string() } else { p })
+                            .collect();
+                        match pg.param_type {
+                            ParamGroupWithSetTypeEnum::Struct(struct_ty) => {
+                                ParamGroupWithSet::new_struct(
+                                    params,
+                                    StructAsParamType::new(
+                                        struct_ty.name,
+                                        struct_ty
+                                            .args
+                                            .into_iter()
+                                            .map(|arg| Obj::replace_bound_identifier(arg, from, to))
+                                            .collect(),
+                                    ),
+                                )
+                            }
+                            ParamGroupWithSetTypeEnum::Set(set) => ParamGroupWithSet::new(
+                                params,
+                                Obj::replace_bound_identifier(set, from, to),
+                            ),
+                        }
                     })
                     .collect();
                 let dom_facts = dom_facts
@@ -1053,13 +1070,30 @@ impl Obj {
                 let params_def_with_set = params_def_with_set
                     .into_iter()
                     .map(|pg| {
-                        ParamGroupWithSet::new(
-                            pg.params
-                                .into_iter()
-                                .map(|p| if p == from { to.to_string() } else { p })
-                                .collect(),
-                            Obj::replace_bound_identifier(pg.set, from, to),
-                        )
+                        let params = pg
+                            .params
+                            .into_iter()
+                            .map(|p| if p == from { to.to_string() } else { p })
+                            .collect();
+                        match pg.param_type {
+                            ParamGroupWithSetTypeEnum::Struct(struct_ty) => {
+                                ParamGroupWithSet::new_struct(
+                                    params,
+                                    StructAsParamType::new(
+                                        struct_ty.name,
+                                        struct_ty
+                                            .args
+                                            .into_iter()
+                                            .map(|arg| Obj::replace_bound_identifier(arg, from, to))
+                                            .collect(),
+                                    ),
+                                )
+                            }
+                            ParamGroupWithSetTypeEnum::Set(set) => ParamGroupWithSet::new(
+                                params,
+                                Obj::replace_bound_identifier(set, from, to),
+                            ),
+                        }
                     })
                     .collect();
                 let dom_facts = dom_facts
