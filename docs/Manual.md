@@ -8,7 +8,7 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual.md
 
 ## Manual Introduction
 
-_In science, you can say things that seem crazy, but in the long run, they can turn out to be right. We can get really good evidence, and in the end, the community will come around._
+_In science, you can say things that seem crazy, but in the long run, they can turn out to be right._
 
 _- Jeff Hinton_
 
@@ -51,7 +51,11 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
+> Some experimental syntax, including `struct`, field access, struct parameters, and `by struct`, is documented separately in [Preview Features](https://litexlang.com/doc/Preview_Features).
+
 > You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
+
+> If you are reading this manual online, it usually helps to run the examples and inspect the output. Some examples are intentionally more explicit than the Litex kernel strictly needs: the checker can often close shorter versions automatically, but the longer form is easier to read while learning.
 
 ---
 
@@ -246,10 +250,12 @@ e[1] = 2
 
 #### Counting members
 
-Size of a finite enumerated set.
+Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; it also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
 
 ```litex
 count({1, 2, 3}) = 3
+$is_finite_set(union({1, 2}, {2, 3}))
+count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
 ```
 
 #### Finite `sum` and `product`
@@ -656,6 +662,23 @@ know exist u R st { u = 1 }
 have by exist v R st { v = 1 }: h
 h = 1
 ```
+
+Warning: an `exist` witness is local to the existential fact. A known `forall` may be used only with an argument that is meaningful outside that local witness scope.
+
+For example, this known fact says that every real number can be copied as some witness:
+
+```text
+know forall x R:
+    exist y R st {y = x}
+```
+
+It does **not** imply the following:
+
+```text
+exist z R st {z = z + 1}
+```
+
+The object used for the `forall` parameter would have to be the local witness itself, or an expression depending on it. That is not a valid instantiation: after leaving the `exist` body, the witness name no longer denotes an object. The same issue can appear through larger expressions that mention local free parameters, such as set-builder bodies, function-set bodies, definition-header parameters, induction parameters, algorithm parameters, or struct-field parameters.
 
 ---
 
@@ -1454,35 +1477,94 @@ by extension:
 
 ---
 
-### Enumerate a closed integer interval (`by enumerate ……`)
+### Register a transitive predicate (`by transitive_prop`)
 
-For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by enumerate lo...hi: x`** runs the finite enumeration tactic on that interval.
+Use **`by transitive_prop:`** to prove that a binary `abstract_prop` is transitive. The `prove:` block must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
+
+After the proof succeeds, Litex records that predicate as transitive in the current environment. Later, when Litex stores a chain whose links all use the same predicate, such as `a $p b $p c`, it looks through the current environment stack for that transitive registration and stores `$p(a, c)` automatically.
+
+```litex
+abstract_prop p(x, y)
+
+by transitive_prop:
+    prove:
+        forall x, y, z set:
+            $p(x, y)
+            $p(y, z)
+            =>:
+                $p(x, z)
+    know $p(x, z)
+
+have a, b, c set
+
+claim:
+    prove:
+        $p(a, c)
+    know a $p b $p c
+```
+
+For a longer same-predicate chain, Litex stores all non-adjacent consequences, such as `$p(a, c)`, `$p(b, d)`, and `$p(a, d)` from `a $p b $p c $p d`.
+
+---
+
+### Register a commutative predicate (`by commutative_prop`)
+
+Use **`by commutative_prop:`** to prove that an `abstract_prop` is **commutative in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
+
+After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
+
+See `examples/by_commutative_prop.lit` (binary) and `examples/tmp.lit` (four arguments).
+
+```litex
+abstract_prop p(x, y)
+
+by commutative_prop:
+    prove:
+        forall x, y set:
+            $p(x, y)
+            =>:
+                $p(y, x)
+    know $p(y, x)
+
+have a, b set
+
+claim:
+    prove:
+        $p(a, b)
+    know $p(b, a)
+```
+
+---
+
+### Closed range as cases (`by closed_range as cases`)
+
+For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
 
 ```litex
 have x closed_range(0, 10)
 
-by enumerate 0...10: x
+by closed_range as cases: x $in 0...10
 ```
 
 ```litex
 have a Z
 have x closed_range(a, a + 10)
 
-by enumerate a...a + 10: x
+by closed_range as cases: x $in a...a + 10
 ```
 
 ---
 
-### Set-theoretic bridge tactics (`by fn`, `by family`, `by tuple`, `by fn set`)
+### Set-theoretic bridge tactics (`by fn as set`, `by family as set`, `by tuple as set`, `by fn set as set`)
 
 These statements are usually not the most useful things to write in ordinary proofs. They exist mainly so every object that appears in Litex has a definite set-theoretic meaning. For example, a function is represented by graph-style facts, a tuple by its components and product typing, and a `family` instance by substituting arguments into its template.
 
 | Statement | What it connects to |
 |-----------|---------------------|
-| `by fn: f` | The graph-style facts behind a known function `f` |
-| `by family: \pf(R)` | The object obtained by substituting `R` into a `family` template |
-| `by tuple: u` | The set-theoretic structure of a tuple object |
-| `by fn set: s $in fn(...) ...` | The graph-style conditions that make a set behave as a function |
+| `by fn as set: f` | The graph-style facts behind a known function `f` |
+| `by family as set: \pf(R)` | The object obtained by substituting `R` into a `family` template |
+| `by tuple as set: u` | The set-theoretic structure of a tuple object |
+| `by fn set as set: s $in fn(...) ...` | The graph-style conditions that make a set behave as a function |
 
 > Hint: Most users do not need these statements at first. They are mainly semantic bridge tools: useful when you need to expose the set-theoretic object behind a Litex surface form.
 
@@ -1518,11 +1600,13 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by cases` | Prove a goal by splitting into cases |
 | `by contra` | Prove by contradiction |
 | `by enumerate finite_set` | Check a finite list of cases |
-| `by enumerate n...m` | Check a finite integer interval `n <= x <= m` |
+| `by closed_range as cases` | Expand closed integer interval membership into finite equality cases |
 | `by induc` | Prove a statement by induction |
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
-| `by fn` / `by fn set` / `by family` / `by tuple` | Expose the set-theoretic meaning behind function, family, and tuple objects |
+| `by transitive_prop` | Register a binary abstract predicate as transitive |
+| `by commutative_prop` | Register argument permutations for an `abstract_prop`; verification may try reordered positive instances |
+| `by fn as set` / `by fn set as set` / `by family as set` / `by tuple as set` | Expose the set-theoretic meaning behind function, family, and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
 
@@ -2425,6 +2509,15 @@ forall a, b, c R:
 ```litex
 forall a R:
     0 <= a ^ 2
+```
+
+If at least one component is nonzero, a sum of two squares is nonzero.
+
+```litex
+forall x, y R:
+    x != 0 or y != 0
+    =>:
+        x^2 + y^2 != 0
 ```
 
 ```litex

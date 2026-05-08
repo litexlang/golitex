@@ -1,15 +1,18 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// `by family: \p(R)` — stores the instantiated `\p(R) =` body (`equal_to` with `R` for the type param).
-    pub fn exec_by_family_stmt(&mut self, stmt: &ByFamilyStmt) -> Result<StmtResult, RuntimeError> {
+    // `by family as set: \p(R)` stores the instantiated `\p(R) =` body.
+    pub fn exec_by_family_stmt(
+        &mut self,
+        stmt: &ByFamilyAsSetStmt,
+    ) -> Result<StmtResult, RuntimeError> {
         let stmt_exec: Stmt = stmt.clone().into();
         let family_ty = match &stmt.family_obj {
             Obj::FamilyObj(f) => f,
             _ => {
                 return Err(short_exec_error(
                     stmt_exec,
-                    "by family: expected `\\name(...)` family object".to_string(),
+                    "by family as set: expected `\\name(...)` family object".to_string(),
                     None,
                     vec![],
                 ));
@@ -22,7 +25,7 @@ impl Runtime {
             None => {
                 return Err(short_exec_error(
                     stmt_exec.clone(),
-                    format!("by family: family `{}` is not defined", family_name),
+                    format!("by family as set: family `{}` is not defined", family_name),
                     None,
                     vec![],
                 ));
@@ -34,7 +37,7 @@ impl Runtime {
             return Err(short_exec_error(
                 stmt_exec,
                 format!(
-                    "by family: family `{}` expects {} type argument(s), got {}",
+                    "by family as set: family `{}` expects {} type argument(s), got {}",
                     family_name,
                     expected_count,
                     family_ty.params.len()
@@ -53,7 +56,7 @@ impl Runtime {
             .map_err(|e| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by family: failed to instantiate family body `equal_to`".to_string(),
+                    "by family as set: failed to instantiate family body `equal_to`".to_string(),
                     Some(e),
                     vec![],
                 )
@@ -65,7 +68,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by family: left-hand side `{}` is not well-defined",
+                        "by family as set: left-hand side `{}` is not well-defined",
                         stmt.family_obj
                     ),
                     Some(e),
@@ -77,7 +80,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by family: instantiated body `{}` is not well-defined",
+                        "by family as set: instantiated body `{}` is not well-defined",
                         right
                     ),
                     Some(e),
@@ -88,7 +91,7 @@ impl Runtime {
         let equal_fact =
             EqualFact::new(stmt.family_obj.clone(), right, stmt.line_file.clone()).into();
 
-        // 与 `by_enumerate` 一致：先把本语句直接生成的事实写进 `infer_facts`，再追加 store+infer 链上的结果。
+        // Keep the directly generated fact before appending store+infer results.
         let mut infer_result = InferResult::new();
         infer_result.push_atomic_fact(&equal_fact);
         infer_result.new_infer_result_inside(

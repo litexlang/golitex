@@ -48,6 +48,7 @@ impl FnObjHead {
                 AtomObj::FnSet(p) => Some(FnObjHead::FnSet(p)),
                 AtomObj::Induc(p) => Some(FnObjHead::Induc(p)),
                 AtomObj::DefAlgo(p) => Some(FnObjHead::DefAlgo(p)),
+                AtomObj::DefStructField(_) => None,
             },
             _ => None,
         }

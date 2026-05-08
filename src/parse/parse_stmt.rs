@@ -26,12 +26,7 @@ impl Runtime {
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             FAMILY => self.parse_def_family_stmt(tb),
-            STRUCT => Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "`struct` definitions are not supported in this version".to_string(),
-                    tb.line_file.clone(),
-                ),
-            ))),
+            STRUCT => self.parse_def_struct_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
             STRONG_INDUC => self.parse_strong_induc_stmt(tb),
             BY => self.parse_by_prefixed_stmt(tb),

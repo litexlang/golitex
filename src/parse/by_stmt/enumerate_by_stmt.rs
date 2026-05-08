@@ -64,11 +64,13 @@ impl Runtime {
             tb.skip_token(COLON)?;
             return self.parse_by_enumerate_finite_set_stmt_forall_in_prove(tb);
         }
-        if tb.current_token_is_equal_to(COLON) {
-            return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate: expected `finite_set` before `:` (use `by enumerate finite_set:`)"
-                    .to_string(), tb.line_file.clone()))));
-        }
-        self.parse_by_enumerate_closed_range_stmt(tb)
+        Err(RuntimeError::from(ParseRuntimeError(
+            RuntimeErrorStruct::new_with_msg_and_line_file(
+                "by enumerate: expected `finite_set` after `enumerate`; use `by closed_range as cases: x $in a...b` for closed ranges"
+                    .to_string(),
+                tb.line_file.clone(),
+            ),
+        )))
     }
 
     /// `by enumerate finite_set:` then `prove:` with a single `forall` (list-set parameters, optional dom / `=>:`).

@@ -2,7 +2,10 @@ use super::kuratowski_by_stmt::kuratowski_encode_tuple_boxes;
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_tuple_stmt(&mut self, stmt: &ByTupleStmt) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_by_tuple_stmt(
+        &mut self,
+        stmt: &ByTupleAsSetStmt,
+    ) -> Result<StmtResult, RuntimeError> {
         let stmt_exec: Stmt = stmt.clone().into();
 
         let tuple_struct = match &stmt.obj {
@@ -13,7 +16,10 @@ impl Runtime {
                 } else {
                     return Err(short_exec_error(
                         stmt_exec,
-                        format!("by tuple: `{}` is not known to denote a tuple", stmt.obj),
+                        format!(
+                            "by tuple as set: `{}` is not known to denote a tuple",
+                            stmt.obj
+                        ),
                         None,
                         vec![],
                     ));
@@ -26,7 +32,7 @@ impl Runtime {
             .map_err(|e| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    format!("by tuple: `{}` is not well-defined", stmt.obj),
+                    format!("by tuple as set: `{}` is not well-defined", stmt.obj),
                     Some(e),
                     vec![],
                 )
@@ -35,7 +41,7 @@ impl Runtime {
         let encoded = kuratowski_encode_tuple_boxes(&tuple_struct.args).map_err(|msg| {
             short_exec_error(
                 stmt_exec.clone(),
-                format!("by tuple: {}", msg),
+                format!("by tuple as set: {}", msg),
                 None,
                 vec![],
             )
@@ -55,7 +61,7 @@ impl Runtime {
             }
             Err(store_error) => Err(short_exec_error(
                 stmt_exec,
-                "by tuple: failed to store definitional equality".to_string(),
+                "by tuple as set: failed to store definitional equality".to_string(),
                 Some(store_error),
                 vec![],
             )),

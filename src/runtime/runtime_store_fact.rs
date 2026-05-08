@@ -133,7 +133,12 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let transitive_chain_facts = match &fact {
+            Fact::ChainFact(chain_fact) => self.transitive_prop_chain_closure_facts(chain_fact)?,
+            _ => Vec::new(),
+        };
         self.top_level_env().store_fact(fact)?;
+        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
@@ -148,7 +153,14 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer: Fact = fact.clone().into();
+        let transitive_chain_facts = match &fact {
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                self.transitive_prop_chain_closure_facts(chain_fact)?
+            }
+            _ => Vec::new(),
+        };
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
+        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
@@ -178,8 +190,15 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let transitive_chain_facts = match &fact {
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.transitive_prop_chain_closure_facts(chain_fact)?
+            }
+            _ => Vec::new(),
+        };
         self.top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
+        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
@@ -194,12 +213,72 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let transitive_chain_facts = match &fact {
+            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.transitive_prop_chain_closure_facts(chain_fact)?
+            }
+            _ => Vec::new(),
+        };
         self.top_level_env().store_or_and_chain_atomic_fact(fact)?;
+        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
             .store_fact_to_cache_known_fact(fact_string, line_file)?;
 
         Ok(self.infer_or_and_chain_atomic_fact(&fact_for_infer)?)
+    }
+
+    fn store_transitive_prop_chain_atomic_facts(
+        &mut self,
+        facts: Vec<AtomicFact>,
+    ) -> Result<(), RuntimeError> {
+        for atomic_fact in facts {
+            self.top_level_env().store_atomic_fact(atomic_fact)?;
+        }
+        Ok(())
+    }
+
+    fn transitive_prop_chain_closure_facts(
+        &self,
+        chain_fact: &ChainFact,
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
+        if chain_fact.prop_names.is_empty() || chain_fact.objs.len() < 3 {
+            return Ok(Vec::new());
+        }
+
+        let prop_name = chain_fact.prop_names[0].to_string();
+        for name in chain_fact.prop_names.iter() {
+            if name.to_string() != prop_name {
+                return Ok(Vec::new());
+            }
+        }
+        if !self.is_transitive_prop_name_known(&prop_name) {
+            return Ok(Vec::new());
+        }
+
+        let mut facts = Vec::new();
+        for i in 0..chain_fact.objs.len() {
+            for j in i + 2..chain_fact.objs.len() {
+                facts.push(
+                    NormalAtomicFact::new(
+                        chain_fact.prop_names[0].clone(),
+                        vec![chain_fact.objs[i].clone(), chain_fact.objs[j].clone()],
+                        chain_fact.line_file.clone(),
+                    )
+                    .into(),
+                );
+            }
+        }
+        Ok(facts)
+    }
+
+    fn is_transitive_prop_name_known(&self, prop_name: &str) -> bool {
+        for env in self.iter_environments_from_top() {
+            if env.known_transitive_props.contains_key(prop_name) {
+                return true;
+            }
+        }
+        false
     }
 }
 fn forall_fact_coverage_warn_after_drop_then(

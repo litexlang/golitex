@@ -260,7 +260,7 @@ mod lit_file_runner_tests {
                 examples_sum_ms, examples_phase_wall_ms
             );
         }
-            println!(
+        println!(
                 "  remaining markdown ```litex``` snippets (README + docs excluding docs/Manual; see phase 1): sum of runs: {:.2} ms  |  wall: {:.2} ms",
                 docs_sum_ms, docs_phase_wall_ms
             );

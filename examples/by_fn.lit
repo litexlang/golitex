@@ -1,4 +1,4 @@
 have f fn(x R)R
 
-by fn : f
+by fn as set: f
 

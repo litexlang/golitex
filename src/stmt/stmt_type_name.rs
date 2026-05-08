@@ -117,33 +117,51 @@ impl ByExtensionStmt {
     }
 }
 
-impl ByFnStmt {
+impl ByFnAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByFnStmt".to_string()
+        "ByFnAsSetStmt".to_string()
     }
 }
 
-impl ByFnSetStmt {
+impl ByFnSetAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByFnSetStmt".to_string()
+        "ByFnSetAsSetStmt".to_string()
     }
 }
 
-impl ByFamilyStmt {
+impl ByFamilyAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByFamilyStmt".to_string()
+        "ByFamilyAsSetStmt".to_string()
     }
 }
 
-impl ByTupleStmt {
+impl ByTupleAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByTupleStmt".to_string()
+        "ByTupleAsSetStmt".to_string()
     }
 }
 
-impl ByEnumerateClosedRangeStmt {
+impl ByStructStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByEnumerateClosedRangeStmt".to_string()
+        "ByStructStmt".to_string()
+    }
+}
+
+impl ByClosedRangeAsCasesStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByClosedRangeAsCasesStmt".to_string()
+    }
+}
+
+impl ByTransitivePropStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByTransitivePropStmt".to_string()
+    }
+}
+
+impl ByCommutativePropStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByCommutativePropStmt".to_string()
     }
 }
 

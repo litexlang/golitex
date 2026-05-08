@@ -227,9 +227,10 @@ impl Runtime {
         let out = FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
             exist_fact.clone().into(),
             infers,
-            VerifiedByResult::Fact(
+            VerifiedByResult::cited_fact(
+                exist_fact.clone().into(),
                 uniqueness_fact.clone(),
-                "exist!: witness exist and uniqueness forall verified".to_string(),
+                Some("exist!: witness exist and uniqueness forall verified".to_string()),
             ),
             vec![],
         );
@@ -294,7 +295,11 @@ impl Runtime {
                 if target_body_string == known_body_string {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         exist_fact.clone().into(),
-                        VerifiedByResult::Fact(known_fact.clone().into(), known_fact.to_string()),
+                        VerifiedByResult::cited_fact(
+                            exist_fact.clone().into(),
+                            known_fact.clone().into(),
+                            None,
+                        ),
                         Vec::new(),
                     ))
                     .into());

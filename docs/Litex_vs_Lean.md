@@ -6,6 +6,10 @@ Try all snippets in browser: https://litexlang.com/doc/Litex_vs_Lean
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean.md
 
+_You can check out any time you like. But you can never leave._
+
+_— Hotel California_
+
 ## Two Styles Of Formal Mathematics
 
 Litex and Lean both make mathematical reasoning checkable by a computer. They are not trying to be the same language.
@@ -864,80 +868,25 @@ This section is for readers who already care about theorem-prover foundations. T
 
 Litex keeps objects and facts separate. A `prop` defines a predicate form. Applying that predicate to objects creates a fact.
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>abstract_prop positive(x)
-know forall x R:
-    x > 0
-    =>:
-        &#36;positive(x)
-forall x R:
-    x > 0
-    =>:
-        &#36;positive(x)
 This is not Litex:
+```text
 forall P Prop:
-    ...</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>example (P Q : Prop) (hP : P) (hPQ : P → Q) : Q := by
-  exact hPQ hP</code></pre>
-    </td>
-  </tr>
-</table>
+    ...
+```
 
 **What differs.** Lean can quantify over `P : Prop` and treat proofs as terms. Litex does not make facts ordinary objects, keeping the object/fact split explicit.
 
-```litex
-abstract_prop positive(x)
-
-know forall x R:
-    x > 0
-    =>:
-        $positive(x)
-
-forall x R:
-    x > 0
-    =>:
-        $positive(x)
-```
-
-### Statements And Proofs As Values
+### Statements And Proofs As Values is not Litex
 
 This difference goes further than `P : Prop`. In Lean, propositions and proofs live inside the same type-theoretic world as other terms. A previous theorem, a proof of a proposition, or a function from one proof to another can be passed as an argument to a later theorem.
 
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>x = 2
 This is not Litex:
+```text
 have h = (x = 2)
-some_statement(h)</code></pre>
-    </td>
-    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>example (P Q : Prop) (hP : P) (h : P → Q) : Q := by
-  exact h hP</code></pre>
-    </td>
-  </tr>
-</table>
+some_statement(h)
+```
 
 **What differs.** Lean supports higher-order proof programming: propositions, proofs, and theorem arguments can be manipulated as terms. Litex keeps statements as proof actions and facts as context information, not as first-class objects.
-
-```litex
-forall x R:
-    x = 2
-    =>:
-        x = 2
-```
 
 ---
 

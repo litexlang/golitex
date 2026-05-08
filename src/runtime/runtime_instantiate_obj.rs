@@ -97,6 +97,38 @@ impl Runtime {
                 }
                 Ok(FamilyObj::new(family.name.clone(), params).into())
             }
+            Obj::FieldAccess(field_access) => {
+                if let Some(obj) = param_to_arg_map.get(&field_access.to_string()) {
+                    return Ok(obj.clone());
+                }
+                if let Some(Obj::StructInstance(instance)) =
+                    param_to_arg_map.get(&field_access.left)
+                {
+                    if let Some(field_obj) =
+                        self.field_obj_from_struct_instance(instance, &field_access.right)?
+                    {
+                        return Ok(field_obj);
+                    }
+                }
+                let left = match param_to_arg_map.get(&field_access.left) {
+                    Some(obj) => Self::obj_name_for_instantiated_field_access_left(obj)
+                        .unwrap_or_else(|| field_access.left.clone()),
+                    _ => field_access.left.clone(),
+                };
+                Ok(FieldAccess::new(left, field_access.right.clone()).into())
+            }
+            Obj::StructInstance(instance) => {
+                let name = StructAsParamType::new_with_boxed_args(
+                    instance.name.name.clone(),
+                    self.inst_boxed_objs(&instance.name.args, param_to_arg_map, param_obj_type)?,
+                );
+                let fields_equal_to_what = self.inst_boxed_objs(
+                    &instance.fields_equal_to_what,
+                    param_to_arg_map,
+                    param_obj_type,
+                )?;
+                Ok(StructInstance::new_with_boxed_fields(name, fields_equal_to_what).into())
+            }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
@@ -166,7 +198,54 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
+            Obj::Atom(AtomObj::DefStructField(p)) => {
+                if param_obj_type == ParamObjType::DefStructField {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
+                    }
+                }
+                Ok(p.clone().into())
+            }
         }
+    }
+
+    fn field_obj_from_struct_instance(
+        &self,
+        instance: &StructInstance,
+        field_name: &str,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let struct_name = instance.name.struct_name();
+        let Some(def) = self.get_struct_definition_by_name(&struct_name) else {
+            return Ok(None);
+        };
+        let Some(index) = def
+            .fields
+            .iter()
+            .position(|(defined_field_name, _)| defined_field_name == field_name)
+        else {
+            return Ok(None);
+        };
+        Ok(instance
+            .fields_equal_to_what
+            .get(index)
+            .map(|field| (**field).clone()))
+    }
+
+    fn inst_boxed_objs(
+        &self,
+        objs: &[Box<Obj>],
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Vec<Box<Obj>>, RuntimeError> {
+        let mut result = Vec::with_capacity(objs.len());
+        for obj in objs.iter() {
+            result.push(Box::new(self.inst_obj(
+                obj,
+                param_to_arg_map,
+                param_obj_type,
+            )?));
+        }
+        Ok(result)
     }
 
     pub fn inst_identifier(
@@ -224,6 +303,13 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::DefStructField(_)) => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(
+                        "struct field cannot be used as a function head".to_string(),
+                    ),
+                )));
+            }
             Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
@@ -559,14 +645,28 @@ impl Runtime {
         let mut params_def_with_set =
             Vec::with_capacity(fn_set_with_params.body.params_def_with_set.len());
         for param_def_with_set in fn_set_with_params.body.params_def_with_set.iter() {
-            params_def_with_set.push(ParamGroupWithSet::new(
-                param_def_with_set.params.clone(),
-                self.inst_obj(
-                    &param_def_with_set.set,
+            if let Some(struct_ty) = param_def_with_set.struct_ty() {
+                let inst_ty = self.inst_param_type(
+                    &ParamType::Struct(struct_ty.clone()),
                     &filtered_param_to_arg_map,
                     param_obj_type,
-                )?,
-            ));
+                )?;
+                match inst_ty {
+                    ParamType::Struct(s) => params_def_with_set.push(
+                        ParamGroupWithSet::new_struct(param_def_with_set.params.clone(), s),
+                    ),
+                    _ => unreachable!(),
+                }
+            } else {
+                params_def_with_set.push(ParamGroupWithSet::new(
+                    param_def_with_set.params.clone(),
+                    self.inst_obj(
+                        param_def_with_set.set_obj().unwrap(),
+                        &filtered_param_to_arg_map,
+                        param_obj_type,
+                    )?,
+                ));
+            }
         }
         let mut dom_facts = Vec::with_capacity(fn_set_with_params.body.dom_facts.len());
         for dom_fact in fn_set_with_params.body.dom_facts.iter() {
@@ -600,14 +700,28 @@ impl Runtime {
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
         let mut params_def_with_set = Vec::with_capacity(af.body.params_def_with_set.len());
         for param_def_with_set in af.body.params_def_with_set.iter() {
-            params_def_with_set.push(ParamGroupWithSet::new(
-                param_def_with_set.params.clone(),
-                self.inst_obj(
-                    &param_def_with_set.set,
+            if let Some(struct_ty) = param_def_with_set.struct_ty() {
+                let inst_ty = self.inst_param_type(
+                    &ParamType::Struct(struct_ty.clone()),
                     &filtered_param_to_arg_map,
                     param_obj_type,
-                )?,
-            ));
+                )?;
+                match inst_ty {
+                    ParamType::Struct(s) => params_def_with_set.push(
+                        ParamGroupWithSet::new_struct(param_def_with_set.params.clone(), s),
+                    ),
+                    _ => unreachable!(),
+                }
+            } else {
+                params_def_with_set.push(ParamGroupWithSet::new(
+                    param_def_with_set.params.clone(),
+                    self.inst_obj(
+                        param_def_with_set.set_obj().unwrap(),
+                        &filtered_param_to_arg_map,
+                        param_obj_type,
+                    )?,
+                ));
+            }
         }
         let mut dom_facts = Vec::with_capacity(af.body.dom_facts.len());
         for dom_fact in af.body.dom_facts.iter() {
@@ -862,6 +976,31 @@ impl Runtime {
                 param_to_arg_map,
                 param_obj_type,
             )?)),
+            ParamType::Struct(struct_ty) => {
+                let mut args = Vec::with_capacity(struct_ty.args.len());
+                for arg in struct_ty.args.iter() {
+                    args.push(self.inst_obj(arg, param_to_arg_map, param_obj_type)?);
+                }
+                Ok(ParamType::Struct(StructAsParamType::new(
+                    struct_ty.name.clone(),
+                    args,
+                )))
+            }
+        }
+    }
+
+    fn obj_name_for_instantiated_field_access_left(obj: &Obj) -> Option<String> {
+        match obj {
+            Obj::Atom(AtomObj::Identifier(identifier)) => Some(identifier.name.clone()),
+            Obj::Atom(AtomObj::Forall(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::Def(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::Exist(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::Induc(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::DefStructField(p)) => Some(p.name.clone()),
+            _ => None,
         }
     }
 
@@ -887,10 +1026,21 @@ impl Runtime {
         let mut arg_index: usize = 0;
         let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
+            if param_def.struct_ty().is_some() {
+                return Err(RuntimeError::from(InstantiateRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(
+                        "struct fn parameter type cannot be instantiated as a set".to_string(),
+                    ),
+                )));
+            }
             let instantiated_param_set = if arg_index != 0 {
-                self.inst_obj(&param_def.set, &param_to_arg_map, param_obj_type)?
+                self.inst_obj(
+                    param_def.set_obj().unwrap(),
+                    &param_to_arg_map,
+                    param_obj_type,
+                )?
             } else {
-                param_def.set.clone()
+                param_def.set_obj().unwrap().clone()
             };
             instantiated_param_sets.push(instantiated_param_set);
 

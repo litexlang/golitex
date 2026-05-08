@@ -1,6 +1,222 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
+impl Runtime {
+    // Lit `know` facts for the nonnegative / positive cone under field operations used to live in
+    // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
+    // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
+    // goals (possibly after `normalize_positive_order_atomic_fact`):
+    // - Chained `+`: `0 <= a + b + …` from `0 <=` on each peeled summand; `0 < a + b + …` from
+    //   `(0 < a ∧ 0 <= b) ∨ (0 <= a ∧ 0 < b)` at each binary `+`.
+    // - Powers: literal even integer exponent ⇒ `0 <= base^n`; literal integer exponent and `0 <= base`
+    //   (or `0 < base` if exponent < 0) ⇒ `0 <= base^n`; `a * a` with equal factors; `0 < base^exp`
+    //   from `0 < base` and `exp in R`.
+    // - Products and quotients: `0 <= a * b`, `0 < a * b`, `0 <= a / b` (denominator strictly
+    //   positive), `0 < a / b`, each with recursive sub-goals on operands.
+    // The Lit environment still records order via differences (`a <= b` iff `0 <= b - a`, etc.) and
+    // `a != 0 ⇒ 0 < a^2` (strict square). This path also bridges `0 <= u - v` / `0 < u - v` to `v <= u` / `v < u`.
+    // Algebraic closure (+, -, *, /) on general `a <= b` / `a < b` is in `order_algebra_builtin.rs`.
+    pub fn verify_order_atomic_fact_numeric_builtin_only(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let vs = VerifyState::new(0, true);
+        if let Some(result) =
+            self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_order_one_le_from_membership_in_n_pos(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_order_one_le_from_membership_in_n_and_nonzero(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_order_from_known_negated_complement(atomic_fact)? {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_negated_order_from_known_equivalent_order(atomic_fact)? {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_order_algebra_structural_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_zero_le_abs_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_abs_order_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_order_on_sub_from_two_sided_order_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_le_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_lt_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_le_pow_integer_exponent_from_nonneg_base_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_le_mul_from_known_atomic_facts_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_lt_mul_from_known_atomic_facts_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_le_div_from_known_atomic_facts_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_lt_div_from_known_atomic_facts_builtin_rule(atomic_fact)?
+        {
+            return Ok(result);
+        }
+
+        if let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact {
+            if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
+                return Ok(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        less_equal_fact.clone().into(),
+                        "less_equal_fact_equal".to_string(),
+                        Vec::new(),
+                    ),
+                ));
+            }
+            let strict_fact: Fact = LessFact::new(
+                less_equal_fact.left.clone(),
+                less_equal_fact.right.clone(),
+                less_equal_fact.line_file.clone(),
+            )
+            .into();
+            let strict_key = strict_fact.to_string();
+            let (cache_ok, _) = self.cache_known_facts_contains(&strict_key);
+            if cache_ok {
+                return Ok(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                        less_equal_fact.clone().into(),
+                        VerifiedByResult::cited_fact(
+                            less_equal_fact.clone().into(),
+                            strict_fact,
+                            None,
+                        ),
+                        Vec::new(),
+                    ),
+                ));
+            }
+        }
+        if let AtomicFact::GreaterEqualFact(greater_equal_fact) = atomic_fact {
+            if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
+                return Ok(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        greater_equal_fact.clone().into(),
+                        "greater_equal_fact_equal".to_string(),
+                        Vec::new(),
+                    ),
+                ));
+            }
+        }
+        if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
+            Ok(StmtResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "number comparison".to_string(),
+                    Vec::new(),
+                ),
+            ))
+        } else {
+            Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
+        }
+    }
+
+    pub fn verify_number_comparison_builtin_rule(&self, atomic_fact: &AtomicFact) -> Option<bool> {
+        let normalized = normalize_positive_order_atomic_fact(atomic_fact)?;
+        match normalized {
+            AtomicFact::LessFact(less_fact) => {
+                if let Some(calculated_number_string_pair) =
+                    self.calculate_obj_pair_to_number_strings(&less_fact.left, &less_fact.right)
+                {
+                    return Some(matches!(
+                        compare_number_strings(
+                            &calculated_number_string_pair.0,
+                            &calculated_number_string_pair.1
+                        ),
+                        NumberCompareResult::Less
+                    ));
+                }
+                self.try_verify_numeric_order_via_div_elimination(
+                    &less_fact.left,
+                    &less_fact.right,
+                    false,
+                )
+            }
+            AtomicFact::LessEqualFact(less_equal_fact) => {
+                if let Some(calculated_number_string_pair) = self
+                    .calculate_obj_pair_to_number_strings(
+                        &less_equal_fact.left,
+                        &less_equal_fact.right,
+                    )
+                {
+                    let compare_result = compare_number_strings(
+                        &calculated_number_string_pair.0,
+                        &calculated_number_string_pair.1,
+                    );
+                    return Some(matches!(
+                        compare_result,
+                        NumberCompareResult::Less | NumberCompareResult::Equal
+                    ));
+                }
+                self.try_verify_numeric_order_via_div_elimination(
+                    &less_equal_fact.left,
+                    &less_equal_fact.right,
+                    true,
+                )
+            }
+            _ => None,
+        }
+    }
+}
+
 pub enum NumberCompareResult {
     Less,
     Equal,
@@ -548,169 +764,6 @@ impl Runtime {
                 Ok(None)
             }
             _ => Ok(None),
-        }
-    }
-
-    // Lit `know` facts for the nonnegative / positive cone under field operations used to live in
-    // `BUILTIN_ENV_CODE_FOR_FUNDAMENTAL_COMPARISON` (`fundamental_comparison.rs`). Those fragments
-    // were removed as redundant; the same mathematics is checked here on normalized `0 <=` / `0 <`
-    // goals (possibly after `normalize_positive_order_atomic_fact`):
-    // - Chained `+`: `0 <= a + b + …` from `0 <=` on each peeled summand; `0 < a + b + …` from
-    //   `(0 < a ∧ 0 <= b) ∨ (0 <= a ∧ 0 < b)` at each binary `+`.
-    // - Powers: literal even integer exponent ⇒ `0 <= base^n`; literal integer exponent and `0 <= base`
-    //   (or `0 < base` if exponent < 0) ⇒ `0 <= base^n`; `a * a` with equal factors; `0 < base^exp`
-    //   from `0 < base` and `exp in R`.
-    // - Products and quotients: `0 <= a * b`, `0 < a * b`, `0 <= a / b` (denominator strictly
-    //   positive), `0 < a / b`, each with recursive sub-goals on operands.
-    // The Lit environment still records order via differences (`a <= b` iff `0 <= b - a`, etc.) and
-    // `a != 0 ⇒ 0 < a^2` (strict square). This path also bridges `0 <= u - v` / `0 < u - v` to `v <= u` / `v < u`.
-    // Algebraic closure (+, -, *, /) on general `a <= b` / `a < b` is in `order_algebra_builtin.rs`.
-    pub fn verify_order_atomic_fact_numeric_builtin_only(
-        &mut self,
-        atomic_fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
-        let vs = VerifyState::new(0, true);
-        if let Some(result) =
-            self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, &vs)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.try_verify_order_one_le_from_membership_in_n_pos(atomic_fact, &vs)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.try_verify_order_one_le_from_membership_in_n_and_nonzero(atomic_fact, &vs)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_order_from_known_negated_complement(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_negated_order_from_known_equivalent_order(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_order_algebra_structural_builtin_rule(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_zero_le_abs_builtin_rule(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_abs_order_builtin_rule(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_order_on_sub_from_two_sided_order_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_pow_integer_exponent_from_nonneg_base_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_mul_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_mul_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_div_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_div_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-
-        if let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact {
-            if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
-                return Ok(StmtResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        less_equal_fact.clone().into(),
-                        "less_equal_fact_equal".to_string(),
-                        Vec::new(),
-                    ),
-                ));
-            }
-            let strict_fact: Fact = LessFact::new(
-                less_equal_fact.left.clone(),
-                less_equal_fact.right.clone(),
-                less_equal_fact.line_file.clone(),
-            )
-            .into();
-            let strict_key = strict_fact.to_string();
-            let (cache_ok, _) = self.cache_known_facts_contains(&strict_key);
-            if cache_ok {
-                return Ok(StmtResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_known_fact(
-                        less_equal_fact.clone().into(),
-                        VerifiedByResult::Fact(strict_fact, strict_key),
-                        Vec::new(),
-                    ),
-                ));
-            }
-        }
-        if let AtomicFact::GreaterEqualFact(greater_equal_fact) = atomic_fact {
-            if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
-                return Ok(StmtResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        greater_equal_fact.clone().into(),
-                        "greater_equal_fact_equal".to_string(),
-                        Vec::new(),
-                    ),
-                ));
-            }
-        }
-        if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
-            Ok(StmtResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    atomic_fact.clone().into(),
-                    "number comparison".to_string(),
-                    Vec::new(),
-                ),
-            ))
-        } else {
-            Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
         }
     }
 
@@ -1365,53 +1418,6 @@ impl Runtime {
                 vec![numer_result, denom_result],
             ),
         )))
-    }
-
-    pub fn verify_number_comparison_builtin_rule(&self, atomic_fact: &AtomicFact) -> Option<bool> {
-        let normalized = normalize_positive_order_atomic_fact(atomic_fact)?;
-        match normalized {
-            AtomicFact::LessFact(less_fact) => {
-                if let Some(calculated_number_string_pair) =
-                    self.calculate_obj_pair_to_number_strings(&less_fact.left, &less_fact.right)
-                {
-                    return Some(matches!(
-                        compare_number_strings(
-                            &calculated_number_string_pair.0,
-                            &calculated_number_string_pair.1
-                        ),
-                        NumberCompareResult::Less
-                    ));
-                }
-                self.try_verify_numeric_order_via_div_elimination(
-                    &less_fact.left,
-                    &less_fact.right,
-                    false,
-                )
-            }
-            AtomicFact::LessEqualFact(less_equal_fact) => {
-                if let Some(calculated_number_string_pair) = self
-                    .calculate_obj_pair_to_number_strings(
-                        &less_equal_fact.left,
-                        &less_equal_fact.right,
-                    )
-                {
-                    let compare_result = compare_number_strings(
-                        &calculated_number_string_pair.0,
-                        &calculated_number_string_pair.1,
-                    );
-                    return Some(matches!(
-                        compare_result,
-                        NumberCompareResult::Less | NumberCompareResult::Equal
-                    ));
-                }
-                self.try_verify_numeric_order_via_div_elimination(
-                    &less_equal_fact.left,
-                    &less_equal_fact.right,
-                    true,
-                )
-            }
-            _ => None,
-        }
     }
 
     fn calculate_obj_pair_to_number_strings(

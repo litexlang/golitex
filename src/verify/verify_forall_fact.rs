@@ -109,15 +109,17 @@ impl Runtime {
 
         if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
             let forall_infers = InferResult::from_fact(&forall_fact.clone().into());
-            return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
-                    forall_fact.clone().into(),
-                    forall_infers,
-                    "forall: then-facts by builtin rules".to_string(),
-                    then_verification_results,
-                )
-                .into(),
-            );
+            let cite_items: Vec<VerifiedBysEnum> = then_verification_results
+                .into_iter()
+                .flat_map(crate::result::verified_by_items_from_stmt_result)
+                .collect();
+            let verified_by = VerifiedByResult::wrap_bys(cite_items);
+            return Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                forall_fact.clone().into(),
+                forall_infers,
+                verified_by,
+            )
+            .into());
         }
 
         infer_result.new_fact(&forall_fact.clone().into());
@@ -126,10 +128,7 @@ impl Runtime {
             (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 forall_fact.clone().into(),
                 infer_for_success,
-                VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
-                    forall_fact.clone().into(),
-                    String::new(),
-                )]),
+                VerifiedByResult::wrap_bys(Vec::new()),
                 then_verification_results,
             ))
             .into(),

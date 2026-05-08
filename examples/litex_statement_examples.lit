@@ -190,7 +190,7 @@ prove:
         $p0(1, 2)
         impossible $q0(1, 2)
 
-# --- Stmt::ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall; integer intervals use `by enumerate lo ... hi:`.
+# --- Stmt::ByEnumerateFiniteSetStmt — Cartesian product over list-set forall params (like by for; see docs/quick_reference.md). Use `by enumerate finite_set:` then `prove:` with one forall; integer intervals use `by closed_range as cases: x $in lo...hi`.
 prove:
     let a R:
         a $in {1, 2}
@@ -247,13 +247,13 @@ prove:
 
     {1, 2} = {2, 1}
 
-# --- Stmt::ByFnStmt — use the graph characterization of a function in a function space ---
+# --- Stmt::ByFnAsSetStmt — use the graph characterization of a function in a function space ---
 prove:
     have fn f(x R) R = 1
 
-    by fn: f
+    by fn as set: f
 
-# --- Stmt::ByFamilyStmt — instantiate a parametric family at given arguments ---
+# --- Stmt::ByFamilyAsSetStmt — instantiate a parametric family at given arguments ---
 prove:
     family pf(a set) = fn(x a) a
 
@@ -261,7 +261,7 @@ prove:
         a $in fn(y R) R
         a(1) = a(1)
 
-    by family: \pf(R)
+    by family as set: \pf(R)
 
 # --- Stmt::ByStructStmt — use the defining data of a structure instance ---
 """
@@ -278,14 +278,14 @@ prove:
     by struct: struct sq(R)
 """
 
-# --- Stmt::ByTupleStmt — tuple / product-space reasoning on an object ---
+# --- Stmt::ByTupleAsSetStmt — tuple / product-space reasoning on an object ---
 prove:
     let u set:
         u = (2, 3)
 
-    by tuple: u
+    by tuple as set: u
 
-# --- Stmt::ByFnSetStmt — membership of a function in a function set (graph axioms) ---
+# --- Stmt::ByFnSetAsSetStmt — membership of a function in a function set (graph axioms) ---
 prove:
     let s set
 
@@ -311,6 +311,6 @@ prove:
             =>:
                 u = v
 
-    by fn set: s $in fn(x R, y Q: x > y, x > 2) Z
+    by fn set as set: s $in fn(x R, y Q: x > y, x > 2) Z
 
     s(100, 99) = s(100, 99)

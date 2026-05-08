@@ -1,3 +1,4 @@
+use super::free_param_obj::DefStructFieldFreeParamObj;
 use crate::prelude::*;
 use std::fmt;
 
@@ -13,6 +14,7 @@ pub enum AtomObj {
     FnSet(FnSetFreeParamObj),
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
+    DefStructField(DefStructFieldFreeParamObj),
 }
 
 impl fmt::Display for AtomObj {
@@ -27,6 +29,7 @@ impl fmt::Display for AtomObj {
             AtomObj::FnSet(x) => write!(f, "{}", x),
             AtomObj::Induc(x) => write!(f, "{}", x),
             AtomObj::DefAlgo(x) => write!(f, "{}", x),
+            AtomObj::DefStructField(x) => write!(f, "{}", x),
         }
     }
 }
@@ -107,6 +110,14 @@ impl AtomObj {
                     p.name
                 };
                 AtomObj::DefAlgo(DefAlgoFreeParamObj::new(name))
+            }
+            AtomObj::DefStructField(p) => {
+                let name = if p.name == from {
+                    to.to_string()
+                } else {
+                    p.name
+                };
+                AtomObj::DefStructField(DefStructFieldFreeParamObj::new(name))
             }
         }
     }

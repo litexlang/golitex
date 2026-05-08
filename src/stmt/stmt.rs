@@ -32,42 +32,94 @@ pub enum Stmt {
     ByInducStmt(ByInducStmt),
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),
-    ByFnStmt(ByFnStmt),
-    ByFamilyStmt(ByFamilyStmt),
-    ByTuple(ByTupleStmt),
-    ByFnSetStmt(ByFnSetStmt),
-    ByEnumerateClosedRangeStmt(ByEnumerateClosedRangeStmt),
+    ByFnAsSetStmt(ByFnAsSetStmt),
+    ByFamilyAsSetStmt(ByFamilyAsSetStmt),
+    ByTupleAsSetStmt(ByTupleAsSetStmt),
+    ByFnSetAsSetStmt(ByFnSetAsSetStmt),
+    ByStructStmt(ByStructStmt),
+    ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
+    ByTransitivePropStmt(ByTransitivePropStmt),
+    ByCommutativePropStmt(ByCommutativePropStmt),
+    DefStructStmt(DefStructStmt),
 }
 
 #[derive(Clone)]
-pub struct ByEnumerateClosedRangeStmt {
+pub struct DefStructStmt {
+    pub name: String,
+    pub param_def_with_dom: Option<(ParamDefWithType, Vec<OrAndChainAtomicFact>)>,
+    pub fields: Vec<(String, Obj)>,
+    pub equivalent_facts: Vec<Fact>,
+    pub line_file: LineFile,
+}
+
+impl DefStructStmt {
+    pub fn new(
+        name: String,
+        param_def_with_dom: Option<(ParamDefWithType, Vec<OrAndChainAtomicFact>)>,
+        fields: Vec<(String, Obj)>,
+        equivalent_facts: Vec<Fact>,
+        line_file: LineFile,
+    ) -> Self {
+        DefStructStmt {
+            name,
+            param_def_with_dom,
+            fields,
+            equivalent_facts,
+            line_file,
+        }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DefStructStmt".to_string()
+    }
+}
+
+impl fmt::Display for DefStructStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let params = match &self.param_def_with_dom {
+            Some((param_def, _)) => format!("{}", param_def),
+            None => String::new(),
+        };
+        if params.is_empty() {
+            write!(f, "{} {}{}", STRUCT, self.name, COLON)
+        } else {
+            write!(
+                f,
+                "{} {}{}{}{}{}",
+                STRUCT, self.name, LEFT_BRACE, params, RIGHT_BRACE, COLON
+            )
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct ByClosedRangeAsCasesStmt {
     pub element: Obj,
     pub closed_range: ClosedRange,
     pub line_file: LineFile,
 }
 
-impl fmt::Display for ByEnumerateClosedRangeStmt {
+impl fmt::Display for ByClosedRangeAsCasesStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {}{}{}{}, {}{}{}: {}",
+            "{} {} {} {}{} {} {}{} {}",
             BY,
-            ENUMERATE,
             CLOSED_RANGE,
-            LEFT_BRACE,
-            self.closed_range.start,
-            COMMA,
-            self.closed_range.end,
-            RIGHT_BRACE,
+            AS,
+            CASES,
             COLON,
-            self.element
+            self.element,
+            FACT_PREFIX,
+            IN,
+            Obj::ClosedRange(self.closed_range.clone())
         )
     }
 }
 
-impl ByEnumerateClosedRangeStmt {
+impl ByClosedRangeAsCasesStmt {
     pub fn new(element: Obj, closed_range: ClosedRange, line_file: LineFile) -> Self {
-        ByEnumerateClosedRangeStmt {
+        ByClosedRangeAsCasesStmt {
             element,
             closed_range,
             line_file,
@@ -113,11 +165,15 @@ impl fmt::Display for Stmt {
             Stmt::ByInducStmt(x) => write!(f, "{}", x),
             Stmt::ByForStmt(x) => write!(f, "{}", x),
             Stmt::ByExtensionStmt(x) => write!(f, "{}", x),
-            Stmt::ByFnStmt(x) => write!(f, "{}", x),
-            Stmt::ByFamilyStmt(x) => write!(f, "{}", x),
-            Stmt::ByTuple(x) => write!(f, "{}", x),
-            Stmt::ByFnSetStmt(x) => write!(f, "{}", x),
-            Stmt::ByEnumerateClosedRangeStmt(x) => write!(f, "{}", x),
+            Stmt::ByFnAsSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByFamilyAsSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByTupleAsSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByStructStmt(x) => write!(f, "{}", x),
+            Stmt::ByFnSetAsSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByClosedRangeAsCasesStmt(x) => write!(f, "{}", x),
+            Stmt::ByTransitivePropStmt(x) => write!(f, "{}", x),
+            Stmt::ByCommutativePropStmt(x) => write!(f, "{}", x),
+            Stmt::DefStructStmt(x) => write!(f, "{}", x),
         }
     }
 }
@@ -154,11 +210,15 @@ impl Stmt {
             Stmt::ByInducStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByForStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByExtensionStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByFnStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByFamilyStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByTuple(stmt) => stmt.line_file.clone(),
-            Stmt::ByFnSetStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByFnAsSetStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByFamilyAsSetStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByTupleAsSetStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByStructStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByFnSetAsSetStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByTransitivePropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByCommutativePropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -193,11 +253,15 @@ impl Stmt {
             Stmt::ByInducStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByForStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByExtensionStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByFnStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByFamilyStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
-            Stmt::ByFnSetStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByFnAsSetStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByFamilyAsSetStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByTupleAsSetStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByStructStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByFnSetAsSetStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByTransitivePropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByCommutativePropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 }
@@ -376,32 +440,56 @@ impl From<ByExtensionStmt> for Stmt {
     }
 }
 
-impl From<ByFnStmt> for Stmt {
-    fn from(v: ByFnStmt) -> Self {
-        Stmt::ByFnStmt(v)
+impl From<ByFnAsSetStmt> for Stmt {
+    fn from(v: ByFnAsSetStmt) -> Self {
+        Stmt::ByFnAsSetStmt(v)
     }
 }
 
-impl From<ByFamilyStmt> for Stmt {
-    fn from(v: ByFamilyStmt) -> Self {
-        Stmt::ByFamilyStmt(v)
+impl From<ByFamilyAsSetStmt> for Stmt {
+    fn from(v: ByFamilyAsSetStmt) -> Self {
+        Stmt::ByFamilyAsSetStmt(v)
     }
 }
 
-impl From<ByTupleStmt> for Stmt {
-    fn from(v: ByTupleStmt) -> Self {
-        Stmt::ByTuple(v)
+impl From<ByTupleAsSetStmt> for Stmt {
+    fn from(v: ByTupleAsSetStmt) -> Self {
+        Stmt::ByTupleAsSetStmt(v)
     }
 }
 
-impl From<ByFnSetStmt> for Stmt {
-    fn from(v: ByFnSetStmt) -> Self {
-        Stmt::ByFnSetStmt(v)
+impl From<ByStructStmt> for Stmt {
+    fn from(v: ByStructStmt) -> Self {
+        Stmt::ByStructStmt(v)
     }
 }
 
-impl From<ByEnumerateClosedRangeStmt> for Stmt {
-    fn from(v: ByEnumerateClosedRangeStmt) -> Self {
-        Stmt::ByEnumerateClosedRangeStmt(v)
+impl From<ByFnSetAsSetStmt> for Stmt {
+    fn from(v: ByFnSetAsSetStmt) -> Self {
+        Stmt::ByFnSetAsSetStmt(v)
+    }
+}
+
+impl From<ByClosedRangeAsCasesStmt> for Stmt {
+    fn from(v: ByClosedRangeAsCasesStmt) -> Self {
+        Stmt::ByClosedRangeAsCasesStmt(v)
+    }
+}
+
+impl From<ByTransitivePropStmt> for Stmt {
+    fn from(v: ByTransitivePropStmt) -> Self {
+        Stmt::ByTransitivePropStmt(v)
+    }
+}
+
+impl From<ByCommutativePropStmt> for Stmt {
+    fn from(v: ByCommutativePropStmt) -> Self {
+        Stmt::ByCommutativePropStmt(v)
+    }
+}
+
+impl From<DefStructStmt> for Stmt {
+    fn from(v: DefStructStmt) -> Self {
+        Stmt::DefStructStmt(v)
     }
 }

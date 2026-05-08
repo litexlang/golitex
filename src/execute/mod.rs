@@ -3,6 +3,7 @@ mod exec_claim_stmt;
 mod exec_def_abstract_prop_stmt;
 mod exec_def_algo_stmt;
 mod exec_def_prop_stmt;
+mod exec_def_struct_stmt;
 mod exec_define_params_with_set;
 mod exec_eval_stmt;
 mod exec_fact_stmt;

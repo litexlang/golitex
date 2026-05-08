@@ -50,7 +50,7 @@ fn latex_texttt_escape(s: &str) -> String {
 fn fn_set_clause_latex(clause: &FnSetClause) -> String {
     let mut slots: Vec<String> = Vec::new();
     for g in &clause.params_def_with_set {
-        let set = g.set.to_latex_string();
+        let set = fn_param_group_type_to_latex(g);
         for p in &g.params {
             slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
         }
@@ -75,6 +75,13 @@ fn fn_set_clause_latex(clause: &FnSetClause) -> String {
             dom,
             ret
         )
+    }
+}
+
+fn fn_param_group_type_to_latex(g: &ParamGroupWithSet) -> String {
+    match g.struct_ty() {
+        Some(struct_ty) => latex_texttt_escape(&struct_ty.to_string()),
+        None => g.set_obj().unwrap().to_latex_string(),
     }
 }
 
@@ -212,13 +219,13 @@ impl ByContraStmt {
     }
 }
 
-impl ByEnumerateClosedRangeStmt {
+impl ByClosedRangeAsCasesStmt {
     pub fn to_latex_string(&self) -> String {
         let a = self.closed_range.start.to_latex_string();
         let b = self.closed_range.end.to_latex_string();
         let x = self.element.to_latex_string();
         let row1 = format!(
-            r"&\text{{\textbf{{By enumeration}} on the closed integer interval }} [\![ {0},{1}]\!]\text{{.}}",
+            r"&\text{{\textbf{{By closed range as cases}} on }} [\![ {0},{1}]\!]\text{{.}}",
             a, b
         );
         let row2 = format!(
@@ -267,29 +274,29 @@ impl ByExtensionStmt {
     }
 }
 
-impl ByFamilyStmt {
+impl ByFamilyAsSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By family}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
+            "\\begin{{aligned}}\n\\text{{\\textbf{{By family as set}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
             self.family_obj.to_latex_string()
         )
     }
 }
 
-impl ByFnSetStmt {
+impl ByFnSetAsSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn set}}:}} & {} \\in {}\\\\\n& \\quad \\text{{Unfold this membership via the set-theoretic definition of the function space; obtain the corresponding facts.}}\n\\end{{aligned}}",
+            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn set as set}}:}} & {} \\in {}\\\\\n& \\quad \\text{{Unfold this membership via the set-theoretic definition of the function space; obtain the corresponding facts.}}\n\\end{{aligned}}",
             self.func.to_latex_string(),
             self.fn_set.to_latex_string()
         )
     }
 }
 
-impl ByFnStmt {
+impl ByFnAsSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn}}:}} & \\text{{Use the graph / function definition of }} {}\\text{{.}}\n\\end{{aligned}}",
+            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn as set}}:}} & \\text{{Use the graph / function definition of }} {}\\text{{.}}\n\\end{{aligned}}",
             self.function.to_latex_string()
         )
     }
@@ -299,6 +306,38 @@ impl ByForStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
             r"\text{{\textbf{{by for}}:}} & {}",
+            self.forall_fact.to_latex_string()
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
+impl ByTransitivePropStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by transitive_prop}}:}} & {}",
+            self.forall_fact.to_latex_string()
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
+impl ByCommutativePropStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by commutative_prop}}:}} & {}",
             self.forall_fact.to_latex_string()
         )];
         for st in &self.proof {
@@ -342,12 +381,18 @@ impl ByInducStmt {
     }
 }
 
-impl ByTupleStmt {
+impl ByTupleAsSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By tuple}}:}} & \\text{{Use the set-theoretic ordered-pair / tuple encoding for }} {}\\text{{; obtain the corresponding set-theoretic facts.}}\n\\end{{aligned}}",
+            "\\begin{{aligned}}\n\\text{{\\textbf{{By tuple as set}}:}} & \\text{{Use the set-theoretic ordered-pair / tuple encoding for }} {}\\text{{; obtain the corresponding set-theoretic facts.}}\n\\end{{aligned}}",
             self.obj.to_latex_string()
         )
+    }
+}
+
+impl ByStructStmt {
+    pub fn to_latex_string(&self) -> String {
+        latex_texttt_escape(&self.to_string())
     }
 }
 
@@ -747,7 +792,7 @@ impl AnonymousFn {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
         for g in &self.body.params_def_with_set {
-            let set = g.set.to_latex_string();
+            let set = fn_param_group_type_to_latex(g);
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
             }
@@ -777,7 +822,7 @@ impl FnSet {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
         for g in &self.body.params_def_with_set {
-            let set = g.set.to_latex_string();
+            let set = fn_param_group_type_to_latex(g);
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
             }
@@ -1523,6 +1568,7 @@ impl ParamType {
             ParamType::NonemptySet(_) => format!(r"\mathrm{{{}}}", NONEMPTY_SET),
             ParamType::FiniteSet(_) => format!(r"\mathrm{{{}}}", FINITE_SET),
             ParamType::Obj(o) => o.to_latex_string(),
+            ParamType::Struct(struct_ty) => latex_texttt_escape(&struct_ty.to_string()),
         }
     }
 }
@@ -1943,6 +1989,8 @@ impl Obj {
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
+            Obj::FieldAccess(x) => latex_local_ident(&x.to_string()),
+            Obj::StructInstance(x) => latex_texttt_escape(&x.to_string()),
             Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
@@ -1950,6 +1998,7 @@ impl Obj {
             Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::DefStructField(x)) => latex_local_ident(&x.name),
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),
@@ -1993,11 +2042,15 @@ impl Stmt {
             Stmt::ByInducStmt(x) => x.to_latex_string(),
             Stmt::ByForStmt(x) => x.to_latex_string(),
             Stmt::ByExtensionStmt(x) => x.to_latex_string(),
-            Stmt::ByFnStmt(x) => x.to_latex_string(),
-            Stmt::ByFamilyStmt(x) => x.to_latex_string(),
-            Stmt::ByTuple(x) => x.to_latex_string(),
-            Stmt::ByFnSetStmt(x) => x.to_latex_string(),
-            Stmt::ByEnumerateClosedRangeStmt(x) => x.to_latex_string(),
+            Stmt::ByFnAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByFamilyAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByTupleAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByStructStmt(x) => x.to_latex_string(),
+            Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
+            Stmt::ByTransitivePropStmt(x) => x.to_latex_string(),
+            Stmt::ByCommutativePropStmt(x) => x.to_latex_string(),
+            Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }
 }

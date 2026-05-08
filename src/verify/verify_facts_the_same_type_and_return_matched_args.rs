@@ -195,6 +195,22 @@ impl Runtime {
                     ParamType::FiniteSet(_) => {}
                     _ => return Ok(None),
                 },
+                ParamType::Struct(struct_ty) => match &other_param_def.param_type {
+                    ParamType::Struct(other_struct_ty) => {
+                        if struct_ty.struct_name() != other_struct_ty.struct_name() {
+                            return Ok(None);
+                        }
+                        if struct_ty.args.len() != other_struct_ty.args.len() {
+                            return Ok(None);
+                        }
+                        for (arg, other_arg) in
+                            struct_ty.args.iter().zip(other_struct_ty.args.iter())
+                        {
+                            matched_args.push(((**arg).clone(), (**other_arg).clone()));
+                        }
+                    }
+                    _ => return Ok(None),
+                },
             }
         }
         for (fact_item, other_item) in fact.facts().iter().zip(other.facts().iter()) {
