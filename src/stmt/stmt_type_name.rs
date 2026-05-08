@@ -159,6 +159,12 @@ impl ByTransitivePropStmt {
     }
 }
 
+impl ByCommutativePropStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByCommutativePropStmt".to_string()
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAbstractPropStmt".to_string()

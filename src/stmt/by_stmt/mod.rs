@@ -1,5 +1,6 @@
 //! Surface syntax for `by …` proof statements (one submodule per form).
 mod cases;
+mod commutative_prop;
 mod contra;
 mod enumerate;
 mod extension;
@@ -10,6 +11,7 @@ mod induc;
 mod struct_stmt;
 mod transitive_prop;
 pub use cases::ByCasesStmt;
+pub use commutative_prop::ByCommutativePropStmt;
 pub use contra::ByContraStmt;
 pub use enumerate::ByEnumerateFiniteSetStmt;
 pub use extension::ByExtensionStmt;

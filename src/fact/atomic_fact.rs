@@ -1058,6 +1058,21 @@ impl AtomicFact {
             _ => None,
         }
     }
+
+    // Swap the two arguments of a positive binary abstract_prop application (for known commutative props).
+    pub fn commutative_swapped_binary_args(&self) -> Option<Self> {
+        match self {
+            AtomicFact::NormalAtomicFact(f) if f.body.len() == 2 => Some(
+                NormalAtomicFact::new(
+                    f.predicate.clone(),
+                    vec![f.body[1].clone(), f.body[0].clone()],
+                    f.line_file.clone(),
+                )
+                .into(),
+            ),
+            _ => None,
+        }
+    }
 }
 
 impl AtomicFact {

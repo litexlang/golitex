@@ -1,19 +1,16 @@
 abstract_prop p(x, y)
 
-by transitive_prop:
+by commutative_prop:
     prove:
-        forall x, y, z set:
+        forall x, y set:
             $p(x, y)
-            $p(y, z)
             =>:
-                $p(x, z)
-    know $p(x, z)
+                $p(y, x)
+    know $p(y, x)
 
-have a, b, c set
+have a, b set
 
 claim:
     prove:
-        $p(a, c)
-    know a $p b $p c
-
-# After p is registered as transitive, a $p b $p c stores $p(a, c).
+        $p(a, b)
+    know $p(b, a)

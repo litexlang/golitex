@@ -1,0 +1,20 @@
+
+abstract_prop p(x, y)
+
+by transitive_prop:
+    prove:
+        forall x, y, z set:
+            $p(x, y)
+            $p(y, z)
+            =>:
+                $p(x, z)
+    know $p(x, z)
+
+have a, b, c set
+
+claim:
+    prove:
+        $p(a, c)
+    know a $p b $p c
+
+# After p is registered as transitive, a $p b $p c stores $p(a, c).
