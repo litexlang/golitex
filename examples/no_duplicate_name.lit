@@ -1,0 +1,10 @@
+let x R: x = 4
+x = 4
+
+forall x R_pos:
+    x = 2
+    =>:
+        x^2 = 4
+        x = 2
+
+x = 4

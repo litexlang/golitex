@@ -250,10 +250,12 @@ e[1] = 2
 
 #### Counting members
 
-Size of a finite enumerated set.
+Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; it also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
 
 ```litex
 count({1, 2, 3}) = 3
+$is_finite_set(union({1, 2}, {2, 3}))
+count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
 ```
 
 #### Finite `sum` and `product`

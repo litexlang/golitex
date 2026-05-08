@@ -101,6 +101,12 @@ impl Runtime {
             (Obj::Mul(mul), Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_mul_in_n_from_factors_in_n(in_fact, mul, verify_state)
             }
+            (Obj::Count(count), Obj::StandardSet(StandardSet::N))
+            | (Obj::Count(count), Obj::StandardSet(StandardSet::Z))
+            | (Obj::Count(count), Obj::StandardSet(StandardSet::Q))
+            | (Obj::Count(count), Obj::StandardSet(StandardSet::R)) => {
+                self.verify_count_in_standard_number_set(in_fact, count, verify_state)
+            }
             (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, verify_state)
             }
@@ -399,6 +405,28 @@ impl Runtime {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
         }
+    }
+}
+
+impl Runtime {
+    // The cardinality of a finite set is a natural number, hence also an integer, rational, and real.
+    // Example: if `A finite_set`, then `count(A) $in N` and `count(A) $in R`.
+    fn verify_count_in_standard_number_set(
+        &mut self,
+        in_fact: &InFact,
+        count: &Count,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let finite_fact = IsFiniteSetFact::new((*count.set).clone(), in_fact.line_file.clone());
+        let finite_result =
+            self.verify_non_equational_atomic_fact(&finite_fact.into(), verify_state, true)?;
+        if finite_result.is_true() {
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "count of a finite set is a natural number",
+            ));
+        }
+        Ok((StmtUnknown::new()).into())
     }
 }
 
