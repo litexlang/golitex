@@ -8,7 +8,7 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Manual.md
 
 ## Manual Introduction
 
-_In science, you can say things that seem crazy, but in the long run, they can turn out to be right. We can get really good evidence, and in the end, the community will come around._
+_In science, you can say things that seem crazy, but in the long run, they can turn out to be right._
 
 _- Jeff Hinton_
 
@@ -54,6 +54,8 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 > Some experimental syntax, including `struct`, field access, struct parameters, and `by struct`, is documented separately in [Preview Features](https://litexlang.com/doc/Preview_Features).
 
 > You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
+
+> If you are reading this manual online, it usually helps to run the examples and inspect the output. Some examples are intentionally more explicit than the Litex kernel strictly needs: the checker can often close shorter versions automatically, but the longer form is easier to read while learning.
 
 ---
 
@@ -1456,35 +1458,35 @@ by extension:
 
 ---
 
-### Enumerate a closed integer interval (`by enumerate ……`)
+### Closed range as cases (`by closed_range as cases`)
 
-For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by enumerate lo...hi: x`** runs the finite enumeration tactic on that interval.
+For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
 
 ```litex
 have x closed_range(0, 10)
 
-by enumerate 0...10: x
+by closed_range as cases: x $in 0...10
 ```
 
 ```litex
 have a Z
 have x closed_range(a, a + 10)
 
-by enumerate a...a + 10: x
+by closed_range as cases: x $in a...a + 10
 ```
 
 ---
 
-### Set-theoretic bridge tactics (`by fn`, `by family`, `by tuple`, `by fn set`)
+### Set-theoretic bridge tactics (`by fn as set`, `by family as set`, `by tuple as set`, `by fn set as set`)
 
 These statements are usually not the most useful things to write in ordinary proofs. They exist mainly so every object that appears in Litex has a definite set-theoretic meaning. For example, a function is represented by graph-style facts, a tuple by its components and product typing, and a `family` instance by substituting arguments into its template.
 
 | Statement | What it connects to |
 |-----------|---------------------|
-| `by fn: f` | The graph-style facts behind a known function `f` |
-| `by family: \pf(R)` | The object obtained by substituting `R` into a `family` template |
-| `by tuple: u` | The set-theoretic structure of a tuple object |
-| `by fn set: s $in fn(...) ...` | The graph-style conditions that make a set behave as a function |
+| `by fn as set: f` | The graph-style facts behind a known function `f` |
+| `by family as set: \pf(R)` | The object obtained by substituting `R` into a `family` template |
+| `by tuple as set: u` | The set-theoretic structure of a tuple object |
+| `by fn set as set: s $in fn(...) ...` | The graph-style conditions that make a set behave as a function |
 
 > Hint: Most users do not need these statements at first. They are mainly semantic bridge tools: useful when you need to expose the set-theoretic object behind a Litex surface form.
 
@@ -1520,11 +1522,11 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by cases` | Prove a goal by splitting into cases |
 | `by contra` | Prove by contradiction |
 | `by enumerate finite_set` | Check a finite list of cases |
-| `by enumerate n...m` | Check a finite integer interval `n <= x <= m` |
+| `by closed_range as cases` | Expand closed integer interval membership into finite equality cases |
 | `by induc` | Prove a statement by induction |
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
-| `by fn` / `by fn set` / `by family` / `by tuple` | Expose the set-theoretic meaning behind function, family, and tuple objects |
+| `by fn as set` / `by fn set as set` / `by family as set` / `by tuple as set` | Expose the set-theoretic meaning behind function, family, and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
 

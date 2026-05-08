@@ -22,6 +22,6 @@ know:
         =>:
             x1 = x2
 
-by fn set: f $in fn(x1 R, y1 Q: x1 > y1, x1 > 2) Z
+by fn set as set: f $in fn(x1 R, y1 Q: x1 > y1, x1 > 2) Z
 
 f(100,99) = f(100,99)

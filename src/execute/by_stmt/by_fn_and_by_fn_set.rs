@@ -372,7 +372,7 @@ impl Runtime {
             let Some(set) = param_def_with_set.set_obj() else {
                 return Err(short_exec_error(
                     stmt_exec.clone(),
-                    "by fn set: struct parameters cannot be unfolded as cartesian graph factors yet".to_string(),
+                    "by fn set as set: struct parameters cannot be unfolded as cartesian graph factors yet".to_string(),
                     None,
                     vec![],
                 ));
@@ -426,7 +426,7 @@ impl Runtime {
         Ok((forall_shape, forall_in, forall_exist, forall_unique))
     }
 
-    /// `by fn`：在本地环境中占位（不另从知识库证明），刻画事实在主环境登记。
+    // `by fn as set` stores the characterization facts in the main environment.
     fn exec_by_fn_stmt_verify_process(&mut self) -> Result<(), RuntimeError> {
         Ok(())
     }
@@ -447,7 +447,8 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn: failed to store cart/tuple shape characterization fact".to_string(),
+                    "by fn as set: failed to store cart/tuple shape characterization fact"
+                        .to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -458,7 +459,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn: failed to store graph-element characterization fact".to_string(),
+                    "by fn as set: failed to store graph-element characterization fact".to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -470,7 +471,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn: failed to store element characterization fact".to_string(),
+                    "by fn as set: failed to store element characterization fact".to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -482,7 +483,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn: failed to store uniqueness characterization fact".to_string(),
+                    "by fn as set: failed to store uniqueness characterization fact".to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -492,7 +493,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnAsSetStmt) -> Result<StmtResult, RuntimeError> {
         let stmt_exec: Stmt = stmt.clone().into();
 
         let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
@@ -501,7 +502,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt_exec,
                     format!(
-                        "by fn: `{}` is not known to belong to a fn set",
+                        "by fn as set: `{}` is not known to belong to a fn set",
                         stmt.function
                     ),
                     None,
@@ -516,7 +517,7 @@ impl Runtime {
                 &fn_set,
                 &stmt.line_file,
                 &stmt_exec,
-                "by fn",
+                "by fn as set",
             )?;
 
         self.run_in_local_env(|rt| rt.exec_by_fn_stmt_verify_process())?;
@@ -547,7 +548,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by fn set: failed to prove cart/tuple shape characterization `{}`",
+                        "by fn set as set: failed to prove cart/tuple shape characterization `{}`",
                         forall_shape
                     ),
                     Some(verify_error),
@@ -560,7 +561,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by fn set: failed to prove graph-element characterization `{}`",
+                        "by fn set as set: failed to prove graph-element characterization `{}`",
                         forall_in
                     ),
                     Some(verify_error),
@@ -573,7 +574,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by fn set: failed to prove graph-coverage characterization `{}`",
+                        "by fn set as set: failed to prove graph-coverage characterization `{}`",
                         forall_exist
                     ),
                     Some(verify_error),
@@ -586,7 +587,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by fn set: failed to prove graph-uniqueness characterization `{}`",
+                        "by fn set as set: failed to prove graph-uniqueness characterization `{}`",
                         forall_unique
                     ),
                     Some(verify_error),
@@ -604,7 +605,7 @@ impl Runtime {
 
     fn exec_by_fn_set_stmt_store_process(
         &mut self,
-        stmt: &ByFnSetStmt,
+        stmt: &ByFnSetAsSetStmt,
         stmt_exec: &Stmt,
     ) -> Result<InferResult, RuntimeError> {
         let membership_fact = InFact::new(
@@ -617,14 +618,17 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn set: failed to store membership fact".to_string(),
+                    "by fn set as set: failed to store membership fact".to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
             })
     }
 
-    pub fn exec_by_fn_set_stmt(&mut self, stmt: &ByFnSetStmt) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_by_fn_set_stmt(
+        &mut self,
+        stmt: &ByFnSetAsSetStmt,
+    ) -> Result<StmtResult, RuntimeError> {
         let stmt_exec: Stmt = stmt.clone().into();
         let (forall_shape, forall_in, forall_exist, forall_unique) = self
             .build_fn_characterization_facts(
@@ -632,7 +636,7 @@ impl Runtime {
                 &stmt.fn_set.body,
                 &stmt.line_file,
                 &stmt_exec,
-                "by fn set",
+                "by fn set as set",
             )?;
 
         let verify_inside_results = self.run_in_local_env(|rt| {
