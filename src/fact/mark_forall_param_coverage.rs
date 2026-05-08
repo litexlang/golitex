@@ -24,6 +24,11 @@ fn mark_forall_param_coverage_in_param_type(
         ParamType::Obj(obj) => {
             mark_forall_param_coverage_in_obj(obj, coverage_by_forall_param);
         }
+        ParamType::Struct(struct_ty) => {
+            for arg in struct_ty.args.iter() {
+                mark_forall_param_coverage_in_obj(arg, coverage_by_forall_param);
+            }
+        }
         ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {}
     }
 }

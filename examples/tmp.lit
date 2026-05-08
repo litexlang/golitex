@@ -11,3 +11,6 @@ struct Group(s set):
     <=>:
         $group_property(s, zero, add,inv)
 
+forall G struct Group(R):
+    G.zero $in R
+    $group_property(R, G.zero, G.add, G.inv)

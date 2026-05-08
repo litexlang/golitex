@@ -8,6 +8,68 @@ pub enum ParamType {
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
     Obj(Obj),
+    Struct(StructAsParamType),
+}
+
+#[derive(Clone)]
+pub struct StructAsParamType {
+    pub name: NameOrNameWithMod,
+    pub args: Vec<Obj>,
+}
+
+#[derive(Clone)]
+pub enum NameOrNameWithMod {
+    Name(String),
+    NameWithMod(String, String),
+}
+
+impl StructAsParamType {
+    pub fn new(name: NameOrNameWithMod, args: Vec<Obj>) -> Self {
+        StructAsParamType { name, args }
+    }
+
+    pub fn struct_name(&self) -> String {
+        self.name.to_string()
+    }
+}
+
+impl NameOrNameWithMod {
+    pub fn new_name(name: String) -> Self {
+        NameOrNameWithMod::Name(name)
+    }
+
+    pub fn new_name_with_mod(mod_name: String, name: String) -> Self {
+        NameOrNameWithMod::NameWithMod(mod_name, name)
+    }
+}
+
+impl fmt::Display for StructAsParamType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.args.is_empty() {
+            write!(f, "{} {}", STRUCT, self.name)
+        } else {
+            write!(
+                f,
+                "{} {}{}{}{}",
+                STRUCT,
+                self.name,
+                LEFT_BRACE,
+                vec_to_string_join_by_comma(&self.args),
+                RIGHT_BRACE
+            )
+        }
+    }
+}
+
+impl fmt::Display for NameOrNameWithMod {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            NameOrNameWithMod::Name(name) => write!(f, "{}", name),
+            NameOrNameWithMod::NameWithMod(mod_name, name) => {
+                write!(f, "{}{}{}", mod_name, MOD_SIGN, name)
+            }
+        }
+    }
 }
 
 /// Full parameter list with types, e.g. `a, b T, c E` as a sequence of [`ParamGroupWithParamType`].
@@ -171,6 +233,7 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
+            ParamType::Struct(struct_ty) => write!(f, "{}", struct_ty),
         }
     }
 }
