@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
@@ -42,17 +43,19 @@ impl ByCommutativePropStmt {
         }
     }
 
-    pub fn commutative_prop_name(&self) -> Result<String, String> {
-        commutative_prop_name_from_forall(&self.forall_fact)
+    pub fn commutative_prop_registration(&self) -> Result<(String, Vec<usize>), String> {
+        commutative_prop_shape_from_forall(&self.forall_fact)
     }
 }
 
-fn commutative_prop_name_from_forall(forall_fact: &ForallFact) -> Result<String, String> {
+fn commutative_prop_shape_from_forall(
+    forall_fact: &ForallFact,
+) -> Result<(String, Vec<usize>), String> {
     let params = forall_fact
         .params_def_with_type
         .collect_param_names_with_types();
-    if params.len() != 2 {
-        return Err("by commutative_prop: forall must declare exactly two parameters".to_string());
+    if params.len() < 2 {
+        return Err("by commutative_prop: forall must declare at least two parameters".to_string());
     }
     for (_, param_type) in params.iter() {
         match param_type {
@@ -72,8 +75,7 @@ fn commutative_prop_name_from_forall(forall_fact: &ForallFact) -> Result<String,
         return Err("by commutative_prop: forall then must contain exactly one fact".to_string());
     }
 
-    let x = &params[0].0;
-    let y = &params[1].0;
+    let n = params.len();
     let dom_f = normal_atomic_from_dom_fact_comm(&forall_fact.dom_facts[0])?;
     let then_f = normal_atomic_from_then_fact_comm(&forall_fact.then_facts[0])?;
 
@@ -82,11 +84,71 @@ fn commutative_prop_name_from_forall(forall_fact: &ForallFact) -> Result<String,
         return Err("by commutative_prop: dom and then must use the same prop".to_string());
     }
 
-    if !normal_atomic_has_args_comm(dom_f, x, y) || !normal_atomic_has_args_comm(then_f, y, x) {
-        return Err("by commutative_prop: expected $p(x, y) => $p(y, x)".to_string());
+    if dom_f.body.len() != n || then_f.body.len() != n {
+        return Err(format!(
+            "by commutative_prop: dom and then must each have {} arguments",
+            n
+        ));
     }
 
-    Ok(prop_name)
+    let dom_names = forall_param_names_in_order(dom_f)?;
+    let then_names = forall_param_names_in_order(then_f)?;
+
+    let mut param_sorted: Vec<String> = params.iter().map(|(name, _)| name.clone()).collect();
+    param_sorted.sort();
+
+    let mut dom_sorted = dom_names.clone();
+    dom_sorted.sort();
+    if dom_sorted != param_sorted {
+        return Err(
+            "by commutative_prop: dom fact must use each forall parameter exactly once".to_string(),
+        );
+    }
+
+    let mut then_sorted = then_names.clone();
+    then_sorted.sort();
+    if then_sorted != param_sorted {
+        return Err(
+            "by commutative_prop: then fact must use each forall parameter exactly once"
+                .to_string(),
+        );
+    }
+
+    let mut name_to_dom_ix: HashMap<String, usize> = HashMap::new();
+    for (i, name) in dom_names.iter().enumerate() {
+        if name_to_dom_ix.insert(name.clone(), i).is_some() {
+            return Err("by commutative_prop: duplicate parameter in dom arguments".to_string());
+        }
+    }
+
+    let mut gather = Vec::with_capacity(n);
+    for name in &then_names {
+        let Some(&i) = name_to_dom_ix.get(name) else {
+            return Err("by commutative_prop: then argument is not a forall parameter".to_string());
+        };
+        gather.push(i);
+    }
+
+    if gather.iter().enumerate().all(|(k, &g)| g == k) {
+        return Err("by commutative_prop: dom and then argument order are identical".to_string());
+    }
+
+    Ok((prop_name, gather))
+}
+
+fn forall_param_names_in_order(fact: &NormalAtomicFact) -> Result<Vec<String>, String> {
+    let mut v = Vec::new();
+    for obj in fact.body.iter() {
+        match obj {
+            Obj::Atom(AtomObj::Forall(p)) => v.push(p.name.clone()),
+            _ => {
+                return Err(
+                    "by commutative_prop: each argument must be a forall parameter".to_string(),
+                );
+            }
+        }
+    }
+    Ok(v)
 }
 
 fn normal_atomic_from_dom_fact_comm(fact: &Fact) -> Result<&NormalAtomicFact, String> {
@@ -102,19 +164,5 @@ fn normal_atomic_from_then_fact_comm(
     match fact {
         ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::NormalAtomicFact(f)) => Ok(f),
         _ => Err("by commutative_prop: then fact must be a positive prop fact".to_string()),
-    }
-}
-
-fn normal_atomic_has_args_comm(fact: &NormalAtomicFact, left: &str, right: &str) -> bool {
-    if fact.body.len() != 2 {
-        return false;
-    }
-    obj_is_forall_param_comm(&fact.body[0], left) && obj_is_forall_param_comm(&fact.body[1], right)
-}
-
-fn obj_is_forall_param_comm(obj: &Obj, name: &str) -> bool {
-    match obj {
-        Obj::Atom(AtomObj::Forall(p)) => p.name == name,
-        _ => false,
     }
 }

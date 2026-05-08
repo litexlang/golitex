@@ -5,21 +5,26 @@ impl Runtime {
         &mut self,
         stmt: &ByCommutativePropStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let prop_name = stmt.commutative_prop_name().map_err(|msg| {
+        let (prop_name, gather) = stmt.commutative_prop_registration().map_err(|msg| {
             RuntimeError::from(VerifyRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(msg, stmt.line_file.clone()),
             ))
         })?;
 
+        let forall_arity = stmt
+            .forall_fact
+            .params_def_with_type
+            .collect_param_names()
+            .len();
         let prop_definition = self.get_abstract_prop_definition_by_name(&prop_name);
         match prop_definition {
             Some(definition) => {
-                if definition.params.len() != 2 {
+                if definition.params.len() != forall_arity {
                     return Err(short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by commutative_prop: `{}` must be a binary abstract_prop",
-                            prop_name
+                            "by commutative_prop: `{}` must have arity {} to match the forall",
+                            prop_name, forall_arity
                         ),
                         None,
                         vec![],
@@ -68,11 +73,17 @@ impl Runtime {
             Ok(inside_results)
         })?;
 
-        self.top_level_env()
-            .store_commutative_prop_name(prop_name.clone());
+        self.top_level_env().store_commutative_prop_permutation(
+            prop_name.clone(),
+            gather.clone(),
+            stmt.line_file.clone(),
+        )?;
 
         let mut infer_result = InferResult::new();
-        infer_result.new_with_msg(format!("registered `{}` as commutative", prop_name));
+        infer_result.new_with_msg(format!(
+            "registered commutative permutation {:?} for `{}`",
+            gather, prop_name
+        ));
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 }

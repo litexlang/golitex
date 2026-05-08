@@ -102,19 +102,40 @@ impl Runtime {
         verify_state: &VerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
-        let prop_name = match atomic_fact {
-            AtomicFact::NormalAtomicFact(f) if f.body.len() == 2 => f.predicate.to_string(),
-            _ => return Ok(result),
+        let AtomicFact::NormalAtomicFact(f) = atomic_fact else {
+            return Ok(result);
         };
-        if !self.is_commutative_prop_name_known(&prop_name) {
+        if f.body.len() < 2 {
             return Ok(result);
         }
-        let Some(swapped_fact) = atomic_fact.commutative_swapped_binary_args() else {
-            return Ok(result);
-        };
-        let swapped_result =
-            self.verify_non_equational_atomic_fact(&swapped_fact, verify_state, false)?;
-        Self::wrap_post_process_alternate_fact_result(atomic_fact, swapped_result, result)
+        let prop_name = f.predicate.to_string();
+
+        let mut permutations: Vec<Vec<usize>> = Vec::new();
+        for env in self.iter_environments_from_top() {
+            if let Some(perms) = env.known_commutative_props.get(&prop_name) {
+                for g in perms {
+                    if g.len() == f.body.len() {
+                        permutations.push(g.clone());
+                    }
+                }
+            }
+        }
+
+        for gather in permutations {
+            let Some(alt) = atomic_fact.commutative_reordered_args(&gather) else {
+                continue;
+            };
+            let alt_result = self.verify_non_equational_atomic_fact(&alt, verify_state, false)?;
+            if alt_result.is_true() {
+                return Self::wrap_post_process_alternate_fact_result(
+                    atomic_fact,
+                    alt_result,
+                    result,
+                );
+            }
+        }
+
+        Ok(result)
     }
 
     fn wrap_post_process_alternate_fact_result(
