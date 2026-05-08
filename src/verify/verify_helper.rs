@@ -4,12 +4,12 @@ impl Runtime {
     /// If the fact string is in the known-facts cache, return the cached verification result.
     pub fn verify_fact_from_cache_using_display_string(&self, fact: &Fact) -> Option<StmtResult> {
         let key = fact.to_string();
-        let (cache_ok, _) = self.cache_known_facts_contains(&key);
+        let (cache_ok, cite_fact_source) = self.cache_known_facts_contains(&key);
         if cache_ok {
             Some(
                 (FactualStmtSuccess::new_with_verified_by_known_fact(
                     fact.clone(),
-                    VerifiedByResult::fact_with_note(fact.clone(), None),
+                    VerifiedByResult::cached_fact(fact.clone(), cite_fact_source),
                     Vec::new(),
                 ))
                 .into(),

@@ -1,0 +1,8 @@
+let a R: a = 3
+a = 3
+
+forall x R_pos:
+    x = 2
+    =>:
+        x^2 = 4
+        x = 2
