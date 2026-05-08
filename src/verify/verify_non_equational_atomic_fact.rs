@@ -64,8 +64,25 @@ impl Runtime {
         }
     }
 
-    // If direct verification failed, try the order-dual with swapped operands (e.g. a >= b via b <= a).
+    // If direct verification failed, try the order-dual (e.g. a >= b via b <= a), then commutative props.
     fn post_process_non_equational_atomic_fact(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+        result: StmtResult,
+    ) -> Result<StmtResult, RuntimeError> {
+        let result = self.builtin_post_process_non_equational_atomic_fact(
+            atomic_fact,
+            verify_state,
+            result,
+        )?;
+        if result.is_true() {
+            return Ok(result);
+        }
+        self.use_known_commutative_prop(atomic_fact, verify_state, result)
+    }
+
+    fn builtin_post_process_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -76,7 +93,36 @@ impl Runtime {
         };
         let transposed_result =
             self.verify_non_equational_atomic_fact(&transposed_fact, verify_state, false)?;
-        match transposed_result {
+        Self::wrap_post_process_alternate_fact_result(atomic_fact, transposed_result, result)
+    }
+
+    fn use_known_commutative_prop(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+        result: StmtResult,
+    ) -> Result<StmtResult, RuntimeError> {
+        let prop_name = match atomic_fact {
+            AtomicFact::NormalAtomicFact(f) if f.body.len() == 2 => f.predicate.to_string(),
+            _ => return Ok(result),
+        };
+        if !self.is_commutative_prop_name_known(&prop_name) {
+            return Ok(result);
+        }
+        let Some(swapped_fact) = atomic_fact.commutative_swapped_binary_args() else {
+            return Ok(result);
+        };
+        let swapped_result =
+            self.verify_non_equational_atomic_fact(&swapped_fact, verify_state, false)?;
+        Self::wrap_post_process_alternate_fact_result(atomic_fact, swapped_result, result)
+    }
+
+    fn wrap_post_process_alternate_fact_result(
+        original: &AtomicFact,
+        alternate_result: StmtResult,
+        fallback: StmtResult,
+    ) -> Result<StmtResult, RuntimeError> {
+        match alternate_result {
             StmtResult::FactualStmtSuccess(inner_success) => {
                 let FactualStmtSuccess {
                     verified_by,
@@ -84,14 +130,14 @@ impl Runtime {
                     stmt: _,
                 } = inner_success;
                 Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
-                    atomic_fact.clone().into(),
+                    original.clone().into(),
                     verified_by,
                     Vec::new(),
                 )
                 .into())
             }
             other if other.is_true() => Ok(other),
-            _ => Ok(result),
+            _ => Ok(fallback),
         }
     }
 }

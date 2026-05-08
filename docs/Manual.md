@@ -1488,6 +1488,35 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ---
 
+### Register a commutative predicate (`by commutative_prop`)
+
+Use **`by commutative_prop:`** to prove that a binary `abstract_prop` is commutative (symmetric in its two arguments). The `prove:` block must contain exactly this shape: two `set` parameters, one domain fact `$p(x, y)`, and one conclusion `$p(y, x)`.
+
+After the proof succeeds, Litex records that predicate as commutative in the environment stack. Later, when a **positive** atomic goal `$p(a, b)` is still unknown after the usual verification steps (builtins, known facts, `forall` instantiation, etc.), Litex tries the **argument-swapped** goal `$p(b, a)` with post-processing disabled for that retry. If that succeeds, the original `$p(a, b)` is accepted—parallel to how order atoms can be proved via their order-dual (`<` vs `>`). Swapping applies only to normal (positive) `$p(...)` atoms, not to negated `$not $p(...)` forms.
+
+See `examples/by_commutative_prop.lit`.
+
+```litex
+abstract_prop p(x, y)
+
+by commutative_prop:
+    prove:
+        forall x, y set:
+            $p(x, y)
+            =>:
+                $p(y, x)
+    know $p(y, x)
+
+have a, b set
+
+claim:
+    prove:
+        $p(a, b)
+    know $p(b, a)
+```
+
+---
+
 ### Closed range as cases (`by closed_range as cases`)
 
 For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
@@ -1557,6 +1586,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
 | `by transitive_prop` | Register a binary abstract predicate as transitive |
+| `by commutative_prop` | Register a binary abstract predicate as commutative (symmetric); verification may use swapped arguments |
 | `by fn as set` / `by fn set as set` / `by family as set` / `by tuple as set` | Expose the set-theoretic meaning behind function, family, and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
