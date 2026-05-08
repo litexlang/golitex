@@ -38,6 +38,7 @@ pub enum Stmt {
     ByFnSetAsSetStmt(ByFnSetAsSetStmt),
     ByStructStmt(ByStructStmt),
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
+    ByTransitivePropStmt(ByTransitivePropStmt),
     DefStructStmt(DefStructStmt),
 }
 
@@ -169,6 +170,7 @@ impl fmt::Display for Stmt {
             Stmt::ByStructStmt(x) => write!(f, "{}", x),
             Stmt::ByFnSetAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByClosedRangeAsCasesStmt(x) => write!(f, "{}", x),
+            Stmt::ByTransitivePropStmt(x) => write!(f, "{}", x),
             Stmt::DefStructStmt(x) => write!(f, "{}", x),
         }
     }
@@ -212,6 +214,7 @@ impl Stmt {
             Stmt::ByStructStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByTransitivePropStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
         }
     }
@@ -253,6 +256,7 @@ impl Stmt {
             Stmt::ByStructStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByTransitivePropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
         }
     }
@@ -465,6 +469,12 @@ impl From<ByFnSetAsSetStmt> for Stmt {
 impl From<ByClosedRangeAsCasesStmt> for Stmt {
     fn from(v: ByClosedRangeAsCasesStmt) -> Self {
         Stmt::ByClosedRangeAsCasesStmt(v)
+    }
+}
+
+impl From<ByTransitivePropStmt> for Stmt {
+    fn from(v: ByTransitivePropStmt) -> Self {
+        Stmt::ByTransitivePropStmt(v)
     }
 }
 
