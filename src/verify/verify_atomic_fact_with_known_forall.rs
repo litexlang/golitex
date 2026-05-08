@@ -427,6 +427,15 @@ impl Runtime {
                 }
                 _ => Ok(None),
             },
+            Obj::FieldAccess(known) => match given_arg {
+                Obj::FieldAccess(given) => {
+                    if known.to_string() != given.to_string() {
+                        return Ok(None);
+                    }
+                    Ok(Some(HashMap::new()))
+                }
+                _ => Ok(None),
+            },
             Obj::Atom(AtomObj::Forall(ref p)) => {
                 self.match_arg_when_left_is_forall_param(p, given_arg)
             }
@@ -468,6 +477,12 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::DefAlgo(ref p)) => {
+                if p.to_string() != given_arg.to_string() {
+                    return Ok(None);
+                }
+                Ok(Some(HashMap::new()))
+            }
+            Obj::Atom(AtomObj::DefStructField(ref p)) => {
                 if p.to_string() != given_arg.to_string() {
                     return Ok(None);
                 }

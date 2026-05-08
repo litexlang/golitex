@@ -302,6 +302,9 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
             }
         }
+        Obj::FieldAccess(field_access) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.left);
+        }
         Obj::Atom(AtomObj::Forall(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
@@ -323,6 +326,7 @@ fn mark_forall_param_coverage_in_obj(
         Obj::Atom(AtomObj::DefAlgo(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
+        Obj::Atom(AtomObj::DefStructField(_)) => {}
     }
 }
 

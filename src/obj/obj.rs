@@ -53,6 +53,29 @@ pub enum Obj {
     MatrixMul(MatrixMul),
     MatrixScalarMul(MatrixScalarMul),
     MatrixPow(MatrixPow),
+    FieldAccess(FieldAccess),
+}
+
+#[derive(Clone)]
+pub struct FieldAccess {
+    pub left: String,
+    pub right: String,
+}
+
+impl FieldAccess {
+    pub fn new(left: String, right: String) -> Self {
+        FieldAccess { left, right }
+    }
+}
+
+impl fmt::Display for FieldAccess {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}{}",
+            self.left, DOT_AKA_FIELD_ACCESS_SIGN, self.right
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -868,6 +891,7 @@ impl Obj {
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
+            Obj::FieldAccess(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1164,6 +1188,14 @@ impl Obj {
                     .collect(),
             )
             .into(),
+            Obj::FieldAccess(field_access) => {
+                let left = if field_access.left == from {
+                    to.to_string()
+                } else {
+                    field_access.left
+                };
+                FieldAccess::new(left, field_access.right).into()
+            }
         }
     }
 }
@@ -1991,6 +2023,12 @@ impl From<IdentifierWithMod> for Obj {
 impl From<FamilyObj> for Obj {
     fn from(f: FamilyObj) -> Self {
         Obj::FamilyObj(f)
+    }
+}
+
+impl From<FieldAccess> for Obj {
+    fn from(f: FieldAccess) -> Self {
+        Obj::FieldAccess(f)
     }
 }
 

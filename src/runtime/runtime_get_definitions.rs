@@ -44,6 +44,21 @@ impl Runtime {
         None
     }
 
+    pub fn get_struct_definition_by_name(&self, struct_name: &str) -> Option<&DefStructStmt> {
+        let parts = struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            unimplemented!();
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_structs.get(struct_name) {
+                return Some(definition);
+            }
+        }
+
+        None
+    }
+
     pub fn get_family_definition_by_name(&self, family_name: &str) -> Option<&DefFamilyStmt> {
         let parts = family_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {

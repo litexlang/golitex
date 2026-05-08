@@ -582,6 +582,7 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
             Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
             Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
+            Obj::Atom(AtomObj::DefStructField(_)) => return Ok(result),
             Obj::AnonymousFn(anon) => (
                 FnObjHead::AnonymousFnLiteral(Box::new(anon.clone())),
                 vec![],
@@ -1456,12 +1457,9 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "field access (`name.field`) is not supported in this version".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
+            tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
+            let right = parse_synthetically_correct_identifier_string(tb)?;
+            return Ok(FieldAccess::new(left, right).into());
         }
         Ok(Identifier::new(left).into())
     }

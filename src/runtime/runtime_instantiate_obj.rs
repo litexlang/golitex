@@ -97,6 +97,13 @@ impl Runtime {
                 }
                 Ok(FamilyObj::new(family.name.clone(), params).into())
             }
+            Obj::FieldAccess(field_access) => {
+                let left = match param_to_arg_map.get(&field_access.left) {
+                    Some(Obj::Atom(AtomObj::Identifier(identifier))) => identifier.name.clone(),
+                    _ => field_access.left.clone(),
+                };
+                Ok(FieldAccess::new(left, field_access.right.clone()).into())
+            }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {
@@ -166,6 +173,14 @@ impl Runtime {
                 }
                 Ok(p.clone().into())
             }
+            Obj::Atom(AtomObj::DefStructField(p)) => {
+                if param_obj_type == ParamObjType::DefStructField {
+                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                        return Ok(obj.clone());
+                    }
+                }
+                Ok(p.clone().into())
+            }
         }
     }
 
@@ -224,6 +239,13 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
             Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
             Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
+            Obj::Atom(AtomObj::DefStructField(_)) => {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(
+                        "struct field cannot be used as a function head".to_string(),
+                    ),
+                )));
+            }
             Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
