@@ -219,13 +219,13 @@ impl ByContraStmt {
     }
 }
 
-impl ByEnumerateClosedRangeStmt {
+impl ByClosedRangeAsCasesStmt {
     pub fn to_latex_string(&self) -> String {
         let a = self.closed_range.start.to_latex_string();
         let b = self.closed_range.end.to_latex_string();
         let x = self.element.to_latex_string();
         let row1 = format!(
-            r"&\text{{\textbf{{By enumeration}} on the closed integer interval }} [\![ {0},{1}]\!]\text{{.}}",
+            r"&\text{{\textbf{{By closed range as cases}} on }} [\![ {0},{1}]\!]\text{{.}}",
             a, b
         );
         let row2 = format!(
@@ -274,29 +274,29 @@ impl ByExtensionStmt {
     }
 }
 
-impl ByFamilyStmt {
+impl ByFamilyAsSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By family}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
+            "\\begin{{aligned}}\n\\text{{\\textbf{{By family as set}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
             self.family_obj.to_latex_string()
         )
     }
 }
 
-impl ByFnSetStmt {
+impl ByFnSetAsSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn set}}:}} & {} \\in {}\\\\\n& \\quad \\text{{Unfold this membership via the set-theoretic definition of the function space; obtain the corresponding facts.}}\n\\end{{aligned}}",
+            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn set as set}}:}} & {} \\in {}\\\\\n& \\quad \\text{{Unfold this membership via the set-theoretic definition of the function space; obtain the corresponding facts.}}\n\\end{{aligned}}",
             self.func.to_latex_string(),
             self.fn_set.to_latex_string()
         )
     }
 }
 
-impl ByFnStmt {
+impl ByFnAsSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn}}:}} & \\text{{Use the graph / function definition of }} {}\\text{{.}}\n\\end{{aligned}}",
+            "\\begin{{aligned}}\n\\text{{\\textbf{{By fn as set}}:}} & \\text{{Use the graph / function definition of }} {}\\text{{.}}\n\\end{{aligned}}",
             self.function.to_latex_string()
         )
     }
@@ -349,10 +349,10 @@ impl ByInducStmt {
     }
 }
 
-impl ByTupleStmt {
+impl ByTupleAsSetStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By tuple}}:}} & \\text{{Use the set-theoretic ordered-pair / tuple encoding for }} {}\\text{{; obtain the corresponding set-theoretic facts.}}\n\\end{{aligned}}",
+            "\\begin{{aligned}}\n\\text{{\\textbf{{By tuple as set}}:}} & \\text{{Use the set-theoretic ordered-pair / tuple encoding for }} {}\\text{{; obtain the corresponding set-theoretic facts.}}\n\\end{{aligned}}",
             self.obj.to_latex_string()
         )
     }
@@ -2010,12 +2010,12 @@ impl Stmt {
             Stmt::ByInducStmt(x) => x.to_latex_string(),
             Stmt::ByForStmt(x) => x.to_latex_string(),
             Stmt::ByExtensionStmt(x) => x.to_latex_string(),
-            Stmt::ByFnStmt(x) => x.to_latex_string(),
-            Stmt::ByFamilyStmt(x) => x.to_latex_string(),
-            Stmt::ByTuple(x) => x.to_latex_string(),
+            Stmt::ByFnAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByFamilyAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByTupleAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByStructStmt(x) => x.to_latex_string(),
-            Stmt::ByFnSetStmt(x) => x.to_latex_string(),
-            Stmt::ByEnumerateClosedRangeStmt(x) => x.to_latex_string(),
+            Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
+            Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }

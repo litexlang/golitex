@@ -6,4 +6,4 @@ forall a \self_seq(R):
 
 family p(a set) = fn(x a) a
 
-by family: \p(R) # 生成 \p(R) = fn(x R) R。即用实参 R 替换形参 a
+by family as set: \p(R)

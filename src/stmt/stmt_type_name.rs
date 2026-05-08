@@ -117,27 +117,27 @@ impl ByExtensionStmt {
     }
 }
 
-impl ByFnStmt {
+impl ByFnAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByFnStmt".to_string()
+        "ByFnAsSetStmt".to_string()
     }
 }
 
-impl ByFnSetStmt {
+impl ByFnSetAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByFnSetStmt".to_string()
+        "ByFnSetAsSetStmt".to_string()
     }
 }
 
-impl ByFamilyStmt {
+impl ByFamilyAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByFamilyStmt".to_string()
+        "ByFamilyAsSetStmt".to_string()
     }
 }
 
-impl ByTupleStmt {
+impl ByTupleAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByTupleStmt".to_string()
+        "ByTupleAsSetStmt".to_string()
     }
 }
 
@@ -147,9 +147,9 @@ impl ByStructStmt {
     }
 }
 
-impl ByEnumerateClosedRangeStmt {
+impl ByClosedRangeAsCasesStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByEnumerateClosedRangeStmt".to_string()
+        "ByClosedRangeAsCasesStmt".to_string()
     }
 }
 

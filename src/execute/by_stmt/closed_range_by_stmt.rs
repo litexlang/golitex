@@ -2,9 +2,9 @@ use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_enumerate_closed_range_stmt(
+    pub fn exec_by_closed_range_as_cases_stmt(
         &mut self,
-        stmt: &ByEnumerateClosedRangeStmt,
+        stmt: &ByClosedRangeAsCasesStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let set_obj: Obj = stmt.closed_range.clone().into();
         let element = stmt.element.clone();
@@ -16,7 +16,7 @@ impl Runtime {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 format!(
-                    "by enumerate closed_range: membership `{}` is not known",
+                    "by closed_range as cases: membership `{}` is not known",
                     in_fact
                 ),
                 None,
@@ -36,7 +36,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by enumerate closed_range: range {} endpoint must be known in Z (`{}`)",
+                        "by closed_range as cases: range {} endpoint must be known in Z (`{}`)",
                         side, in_z
                     ),
                     None,
@@ -54,7 +54,7 @@ impl Runtime {
                 if b.is_empty() {
                     return Err(short_exec_error(
                         stmt.clone().into(),
-                        "by enumerate closed_range: integer range is empty (end < start)"
+                        "by closed_range as cases: integer range is empty (end < start)"
                             .to_string(),
                         None,
                         vec![],
@@ -97,13 +97,13 @@ impl Runtime {
 fn closed_range_endpoint_integer_string(obj: &Obj) -> Result<String, String> {
     let Obj::Number(n) = obj else {
         return Err(
-            "by enumerate closed_range: range endpoints must be integer literals".to_string(),
+            "by closed_range as cases: range endpoints must be integer literals".to_string(),
         );
     };
     let s = n.normalized_value.clone();
     if !is_number_string_literally_integer_without_dot(s.clone()) {
         return Err(
-            "by enumerate closed_range: range endpoints must be integers (no decimal point)"
+            "by closed_range as cases: range endpoints must be integers (no decimal point)"
                 .to_string(),
         );
     }
@@ -119,10 +119,10 @@ fn or_branches_integer_closed_range_equalities(
     let end_s = closed_range_endpoint_integer_string(closed.end.as_ref())?;
     let start_i: i128 = start_s
         .parse()
-        .map_err(|_| format!("by enumerate closed_range: invalid integer `{}`", start_s))?;
+        .map_err(|_| format!("by closed_range as cases: invalid integer `{}`", start_s))?;
     let end_i: i128 = end_s
         .parse()
-        .map_err(|_| format!("by enumerate closed_range: invalid integer `{}`", end_s))?;
+        .map_err(|_| format!("by closed_range as cases: invalid integer `{}`", end_s))?;
 
     let mut branches: Vec<AndChainAtomicFact> = Vec::new();
     let mut v = start_i;
@@ -148,34 +148,34 @@ fn or_branches_closed_range_start_plus_offset_equalities(
     let end = closed.end.as_ref();
     let Obj::Add(add) = end else {
         return Err(
-            "by enumerate closed_range: when start is not an integer literal, end must be start + N"
+            "by closed_range as cases: when start is not an integer literal, end must be start + N"
                 .to_string(),
         );
     };
     if add.left.as_ref().to_string() != start.to_string() {
         return Err(
-            "by enumerate closed_range: end must be start + N (left addend equals range start)"
+            "by closed_range as cases: end must be start + N (left addend equals range start)"
                 .to_string(),
         );
     }
     let Obj::Number(n) = add.right.as_ref() else {
         return Err(
-            "by enumerate closed_range: N in start + N must be an integer literal".to_string(),
+            "by closed_range as cases: N in start + N must be an integer literal".to_string(),
         );
     };
     let s = n.normalized_value.clone();
     if !is_number_string_literally_integer_without_dot(s.clone()) {
         return Err(
-            "by enumerate closed_range: N in start + N must be an integer (no decimal point)"
+            "by closed_range as cases: N in start + N must be an integer (no decimal point)"
                 .to_string(),
         );
     }
     let k: i128 = s
         .parse()
-        .map_err(|_| format!("by enumerate closed_range: invalid integer offset `{}`", s))?;
+        .map_err(|_| format!("by closed_range as cases: invalid integer offset `{}`", s))?;
     if k < 0 {
         return Err(
-            "by enumerate closed_range: offset N in start + N must be non-negative".to_string(),
+            "by closed_range as cases: offset N in start + N must be non-negative".to_string(),
         );
     }
 

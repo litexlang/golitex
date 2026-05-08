@@ -614,15 +614,15 @@ by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1, b > 3 => {(a, b) = (2
     ...
 ```
 
-Integer **closed_range** membership with literal endpoints uses **`by enumerate` *lo*`...`*hi* `:`** *object* (next section), not list-set enumeration.
+Integer **closed_range** membership uses **`by closed_range as cases:`** *object* `$in` *lo*`...`*hi* (next section), not list-set enumeration.
 
 ---
 
-### `by enumerate` *range* `:` *object*
+### `by closed_range as cases`
 
-**Meaning.** From membership of an object in a **closed interval** with **integer literal** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
+**Meaning.** From membership of an object in a **closed interval** with **integer** endpoints, store the finite disjunction *obj = lo* `or` *obj = lo+1* `or` … `or` *hi* (you must already know the object lies in that `closed_range`).
 
-**Syntax.** `by enumerate` *lo* `...` *hi* `:` *object* — *range* parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`); *object* is any expression the parser accepts as an `obj`.
+**Syntax.** `by closed_range as cases:` *object* `$in` *lo* `...` *hi* — the right side parses to `Obj::ClosedRange` (same as `closed_range(lo, hi)`).
 
 **Example.**
 
@@ -630,13 +630,13 @@ Integer **closed_range** membership with literal endpoints uses **`by enumerate`
 prove:
     have x closed_range(0, 10) # equivalent to have x 0...10
 
-    by enumerate 0...10: x
+    by closed_range as cases: x $in 0...10
 
 prove:
     have a Z
     have x closed_range(a, a + 10)
 
-    by enumerate a...a + 10: x
+    by closed_range as cases: x $in a...a + 10
 ```
 
 ---
@@ -778,27 +778,27 @@ by extension:
 
 ---
 
-### `by fn`
+### `by fn as set`
 
 **Meaning.** Use the graph / membership characterization of a function you already introduced.
 
-**Syntax.** `by fn` `:` *object*.
+**Syntax.** `by fn as set` `:` *object*.
 
 **Example.**
 
 ```litex
 have f fn(x R)R
 
-by fn : f
+by fn as set: f
 ```
 
 ---
 
-### `by fn set`
+### `by fn set as set`
 
 **Meaning.** Show a function belongs to a **function set** `fn(… conditions …) co-domain`.
 
-**Syntax.** `by fn set` `:` *func* `$in fn` *function-set*.
+**Syntax.** `by fn set as set` `:` *func* `$in fn` *function-set*.
 
 **Example.**
 
@@ -827,18 +827,18 @@ know:
         =>:
             x1 = x2
 
-by fn set: f $in fn(x1 R, y1 Q: x1 > y1, x1 > 2) Z
+by fn set as set: f $in fn(x1 R, y1 Q: x1 > y1, x1 > 2) Z
 
 f(100,99) = f(100,99)
 ```
 
 ---
 
-### `by family`
+### `by family as set`
 
 **Meaning.** Use an instantiated **family** (syntax `\` *name* `(` *args* `)`; `family` is only the definition keyword).
 
-**Syntax.** `by family` `:` *object*.
+**Syntax.** `by family as set` `:` *object*.
 
 **Example.**
 
@@ -851,7 +851,7 @@ forall a \self_seq(R):
 
 family p(a set) = fn(x a) a
 
-by family: \p(R) # 生成 \p(R) = fn(x R) R。即用实参 R 替换形参 a
+by family as set: \p(R)
 ```
 
 ---
@@ -864,16 +864,16 @@ The old `by struct: struct ...` form is no longer the current design. See [Previ
 
 ---
 
-### `by tuple`
+### `by tuple as set`
 
 **Meaning.** Tuple / product-space reasoning on an object.
 
-**Syntax.** `by tuple` `:` *object*.
+**Syntax.** `by tuple as set` `:` *object*.
 
 **Example.**
 
 ```litex
-by tuple: (1, 2)
+by tuple as set: (1, 2)
 ```
 
 ---
