@@ -153,6 +153,12 @@ impl ByClosedRangeAsCasesStmt {
     }
 }
 
+impl ByTransitivePropStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByTransitivePropStmt".to_string()
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAbstractPropStmt".to_string()
