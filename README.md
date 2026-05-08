@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: A Simple Formal Language Learnable in 2 Hours
+# Litex: A Fact-Oriented Formal Language for Everyone
 
 *by Jiachen Shen and The Litex Team, version 0.9.73-beta*
 
@@ -26,13 +26,11 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is an open-source language for writing mathematical proofs as code.
+Litex is an open-source language for writing mathematical proofs as a flow of checkable facts. *It is a different philosophy for looking at mathematics as a growing body of checkable facts written in a computer-checkable form.*
 
-The goal is simple: if a piece of mathematics is easy to say on paper, it should also be easy to write in a computer-checkable form.
+The central idea is this: **users write facts; Litex grows a verified context**. A Litex file introduces mathematical objects, states facts about them, checks those facts, stores the successful ones, and uses them to justify later steps.
 
-You can think of Litex as a strict mathematical notebook. You write objects such as numbers, sets, tuples, and functions. You state facts such as `x = 2` or `x $in R`. Litex checks whether those facts follow from what is already known.
-
-This makes Litex feel close to daily mathematical writing. You write facts in the order you want the checker to understand them.
+This is why Litex feels like a strict mathematical notebook. You write objects such as numbers, sets, and functions. You state facts such as `x = 2` or `x $in R`. Litex checks whether those facts follow from the current context, builtin mathematics, definitions, and previously verified facts. 
 
 Here is the intended feel:
 
@@ -63,15 +61,16 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   </tr>
 </table>
 
-This small example shows the intended feel: Litex code looks close to the mathematical steps, while the checker handles routine rewriting, arithmetic, and reuse of known facts.
+This small example shows the intended feel: Litex code states the desired facts directly, while the checker handles routine rewriting, arithmetic, and reuse of known facts.
 
-## Why It Stays Simple
+## Why It Feels Simple
 
-Litex stays simple in three ways.
+Litex is designed to feel simple because much of the routine mathematical structure lives in the checker instead of in user proof scripts.
 
-1. **Set theory and basic mathematics.** Litex starts from familiar things: sets, elements, numbers, functions, tuples, relations, and facts.
-2. **Many basic relationships are built in.** Litex knows many small links between equality, order, membership, functions, sets, tuples, and arithmetic.
-3. **Matching and substitution reduce naming.** Litex finds known facts and known `forall` facts by shape, then substitutes the matching objects.
+1. **Facts are first-class proof steps.** A proof script mostly says mathematical facts in the order the reader should understand them.
+2. **The context grows as the script runs.** Once a fact is verified, Litex stores it and may infer routine consequences for later use.
+3. **Basic mathematics is built in.** Litex knows many small links between equality, order, membership, functions, sets, tuples, and arithmetic.
+4. **Matching and substitution reduce naming.** Litex finds known facts and known `forall` facts by shape, then substitutes the matching objects.
 
 For example, in Litex:
 

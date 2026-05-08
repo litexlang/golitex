@@ -14,11 +14,13 @@ _- Jeff Hinton_
 
 > **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion about the mathematical philosophy behind it.
 
-This manual explains how Litex reads and checks mathematical proof scripts. The main idea is simple: a piece of Litex code introduces mathematical objects, states facts about them, checks those facts, and stores the successful facts for later use.
+This manual explains how Litex reads and checks mathematical proof scripts. The central idea is: **users write facts; Litex grows a verified context**.
 
-Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the language so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
+A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
 
-This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper. For example, using a known value can be written as direct algebraic steps:
+Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
+
+This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a strictly checked and explainable proof trace. For example, using a known value can be written as direct algebraic steps:
 
 <table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
@@ -47,7 +49,7 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   </tr>
 </table>
 
-Litex's checker is designed to remember known facts, use builtin arithmetic and substitution, and infer routine consequences automatically. The result is usually shorter code, fewer proof-engine details, and a lower learning burden for everyday mathematical proofs.
+Litex's checker is designed to remember known facts, use builtin arithmetic and substitution, and infer routine consequences automatically. The result is usually shorter code, fewer proof-engine details, and a lower learning burden for everyday mathematical proofs. The deeper design goal is to make formal proof feel like context growth: write facts in mathematical order, let the checker explain how each accepted fact follows, and reuse the verified context as the argument develops.
 
 > Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
