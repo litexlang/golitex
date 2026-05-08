@@ -1059,17 +1059,26 @@ impl AtomicFact {
         }
     }
 
-    // Swap the two arguments of a positive binary abstract_prop application (for known commutative props).
-    pub fn commutative_swapped_binary_args(&self) -> Option<Self> {
+    pub fn commutative_reordered_args(&self, gather: &[usize]) -> Option<Self> {
         match self {
-            AtomicFact::NormalAtomicFact(f) if f.body.len() == 2 => Some(
-                NormalAtomicFact::new(
-                    f.predicate.clone(),
-                    vec![f.body[1].clone(), f.body[0].clone()],
-                    f.line_file.clone(),
+            AtomicFact::NormalAtomicFact(f) => {
+                let n = f.body.len();
+                if gather.len() != n || n < 2 {
+                    return None;
+                }
+                let mut seen = vec![false; n];
+                for &i in gather {
+                    if i >= n || seen[i] {
+                        return None;
+                    }
+                    seen[i] = true;
+                }
+                let new_body: Vec<Obj> = gather.iter().map(|&i| f.body[i].clone()).collect();
+                Some(
+                    NormalAtomicFact::new(f.predicate.clone(), new_body, f.line_file.clone())
+                        .into(),
                 )
-                .into(),
-            ),
+            }
             _ => None,
         }
     }

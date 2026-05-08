@@ -7,8 +7,10 @@ impl Runtime {
 
     pub fn is_commutative_prop_name_known(&self, prop_name: &str) -> bool {
         for env in self.iter_environments_from_top() {
-            if env.known_commutative_props.contains_key(prop_name) {
-                return true;
+            if let Some(perms) = env.known_commutative_props.get(prop_name) {
+                if !perms.is_empty() {
+                    return true;
+                }
             }
         }
         false

@@ -82,7 +82,7 @@ impl Runtime {
 
         let shape_check =
             ByCommutativePropStmt::new(forall_fact.clone(), Vec::new(), tb.line_file.clone())
-                .commutative_prop_name();
+                .commutative_prop_registration();
         if let Err(msg) = shape_check {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(msg, forall_fact.line_file.clone()),
