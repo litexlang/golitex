@@ -125,12 +125,11 @@ pub fn render_json_value(v: &JsonValue, depth: usize) -> String {
                         }
                     }
                     JsonValue::Object(_) => {
-                        format!(
-                            "{}\"{}\": {}",
-                            indent_inner,
-                            key,
-                            render_json_value(field_value, depth + 1)
-                        )
+                        let rendered = render_json_value(field_value, depth + 1);
+                        let rendered = rendered
+                            .strip_prefix(indent_inner.as_str())
+                            .unwrap_or(rendered.as_str());
+                        format!("{}\"{}\": {}", indent_inner, key, rendered)
                     }
                     _ => {
                         format!(
