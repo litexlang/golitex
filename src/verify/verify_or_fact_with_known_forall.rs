@@ -210,14 +210,11 @@ impl Runtime {
         )?;
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
             given_or_fact.clone().into(),
-            VerifiedByResult::wrap_bys(
+            VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::cited_fact(
                 given_or_fact.clone().into(),
-                vec![VerifiedByResult::cited_fact(
-                    given_or_fact.clone().into(),
-                    verified_by_known_forall_fact.clone().into(),
-                    None,
-                )],
-            ),
+                verified_by_known_forall_fact.clone().into(),
+                None,
+            )]),
             Vec::new(),
         );
         Ok(Some(fact_verified))

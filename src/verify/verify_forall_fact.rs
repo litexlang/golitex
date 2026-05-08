@@ -109,13 +109,11 @@ impl Runtime {
 
         if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
             let forall_infers = InferResult::from_fact(&forall_fact.clone().into());
-            // Outer `verify_what` is the whole forall; list only each then-proof (no duplicate umbrella
-            // builtin row that repeats the same forall string).
-            let cite_items: Vec<VerifiedByResult> = then_verification_results
+            let cite_items: Vec<VerifiedBysEnum> = then_verification_results
                 .into_iter()
-                .filter_map(crate::result::verified_by_from_stmt_result)
+                .flat_map(crate::result::verified_by_items_from_stmt_result)
                 .collect();
-            let verified_by = VerifiedByResult::wrap_bys(forall_fact.clone().into(), cite_items);
+            let verified_by = VerifiedByResult::wrap_bys(cite_items);
             return Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules(
                 forall_fact.clone().into(),
                 forall_infers,
@@ -130,13 +128,7 @@ impl Runtime {
             (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 forall_fact.clone().into(),
                 infer_for_success,
-                VerifiedByResult::wrap_bys(
-                    forall_fact.clone().into(),
-                    vec![VerifiedByResult::fact_with_note(
-                        forall_fact.clone().into(),
-                        None,
-                    )],
-                ),
+                VerifiedByResult::wrap_bys(Vec::new()),
                 then_verification_results,
             ))
             .into(),
