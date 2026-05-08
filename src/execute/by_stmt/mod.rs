@@ -10,4 +10,5 @@ mod for_by_stmt;
 mod helpers_by_stmt;
 mod induc_by_stmt;
 mod kuratowski_by_stmt;
+mod struct_by_stmt;
 mod tuple_by_stmt;

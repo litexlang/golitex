@@ -35,6 +35,7 @@ pub enum Stmt {
     ByFnStmt(ByFnStmt),
     ByFamilyStmt(ByFamilyStmt),
     ByTuple(ByTupleStmt),
+    ByStructStmt(ByStructStmt),
     ByFnSetStmt(ByFnSetStmt),
     ByEnumerateClosedRangeStmt(ByEnumerateClosedRangeStmt),
     DefStructStmt(DefStructStmt),
@@ -166,6 +167,7 @@ impl fmt::Display for Stmt {
             Stmt::ByFnStmt(x) => write!(f, "{}", x),
             Stmt::ByFamilyStmt(x) => write!(f, "{}", x),
             Stmt::ByTuple(x) => write!(f, "{}", x),
+            Stmt::ByStructStmt(x) => write!(f, "{}", x),
             Stmt::ByFnSetStmt(x) => write!(f, "{}", x),
             Stmt::ByEnumerateClosedRangeStmt(x) => write!(f, "{}", x),
             Stmt::DefStructStmt(x) => write!(f, "{}", x),
@@ -208,6 +210,7 @@ impl Stmt {
             Stmt::ByFnStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFamilyStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTuple(stmt) => stmt.line_file.clone(),
+            Stmt::ByStructStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
@@ -248,6 +251,7 @@ impl Stmt {
             Stmt::ByFnStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFamilyStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
+            Stmt::ByStructStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
@@ -444,6 +448,12 @@ impl From<ByFamilyStmt> for Stmt {
 impl From<ByTupleStmt> for Stmt {
     fn from(v: ByTupleStmt) -> Self {
         Stmt::ByTuple(v)
+    }
+}
+
+impl From<ByStructStmt> for Stmt {
+    fn from(v: ByStructStmt) -> Self {
+        Stmt::ByStructStmt(v)
     }
 }
 

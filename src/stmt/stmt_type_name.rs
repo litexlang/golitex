@@ -141,6 +141,12 @@ impl ByTupleStmt {
     }
 }
 
+impl ByStructStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByStructStmt".to_string()
+    }
+}
+
 impl ByEnumerateClosedRangeStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByEnumerateClosedRangeStmt".to_string()
