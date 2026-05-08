@@ -88,7 +88,7 @@ impl Runtime {
 
         let param_to_arg_map = match &def.param_def_with_dom {
             Some((param_def, _)) => {
-                param_def.param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice())
+                param_def.param_defs_and_boxed_args_to_param_to_arg_map(struct_ty.args.as_slice())
             }
             None => HashMap::new(),
         };

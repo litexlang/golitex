@@ -25,16 +25,35 @@ impl Runtime {
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::Struct(struct_ty) => {
-                self.verify_obj_satisfies_struct_param_type(obj, struct_ty)
+                self.verify_obj_satisfies_struct_param_type(obj, struct_ty, verify_state)
             }
         }
     }
 
     fn verify_obj_satisfies_struct_param_type(
-        &self,
+        &mut self,
         obj: Obj,
         struct_ty: &StructAsParamType,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Obj::StructInstance(instance) = &obj {
+            if instance.name.struct_name() != struct_ty.struct_name() {
+                return Ok(StmtUnknown::new().into());
+            }
+            if instance.name.args.len() != struct_ty.args.len() {
+                return Ok(StmtUnknown::new().into());
+            }
+            for (given_arg, expected_arg) in instance.name.args.iter().zip(struct_ty.args.iter()) {
+                if given_arg.to_string() != expected_arg.to_string() {
+                    return Ok(StmtUnknown::new().into());
+                }
+            }
+            self.verify_obj_well_defined_and_store_cache(&obj, verify_state)?;
+            return Ok(NonFactualStmtSuccess::new_with_stmt(
+                DoNothingStmt::new(default_line_file()).into(),
+            )
+            .into());
+        }
         let Some(arg_name) = obj_name_for_struct_param_check(&obj) else {
             return Ok(StmtUnknown::new().into());
         };

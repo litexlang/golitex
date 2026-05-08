@@ -322,6 +322,14 @@ fn mark_forall_param_coverage_in_obj(
         Obj::FieldAccess(field_access) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.left);
         }
+        Obj::StructInstance(instance) => {
+            for arg in instance.name.args.iter() {
+                mark_forall_param_coverage_in_obj(arg, coverage_by_forall_param);
+            }
+            for field in instance.fields_equal_to_what.iter() {
+                mark_forall_param_coverage_in_obj(field, coverage_by_forall_param);
+            }
+        }
         Obj::Atom(AtomObj::Forall(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
