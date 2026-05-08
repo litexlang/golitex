@@ -60,6 +60,15 @@ impl Runtime {
             return Ok(verified_result);
         }
 
+        if let Some(verified_result) = self
+            .try_verify_square_sum_not_equal_zero_from_nonzero_component(
+                not_equal_fact,
+                verify_state,
+            )?
+        {
+            return Ok(verified_result);
+        }
+
         match self
             .try_verify_not_equal_fact_when_zero_and_binary_arithmetic_reduces_by_operand_facts(
                 not_equal_fact,
@@ -237,6 +246,120 @@ impl Runtime {
             ));
         }
         Ok(None)
+    }
+
+    // If `a != 0 or b != 0` is known, then `a^2 + b^2 != 0`.
+    // This also accepts the expanded square spelling `a*a + b*b`.
+    // Example:
+    // `forall x, y R: x != 0 or y != 0 <=>: x^2 + y^2 != 0`.
+    fn try_verify_square_sum_not_equal_zero_from_nonzero_component(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let expression_obj =
+            if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
+                &not_equal_fact.left
+            } else if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.left) {
+                &not_equal_fact.right
+            } else {
+                return Ok(None);
+            };
+
+        let Some((left_base, right_base)) =
+            self.square_sum_bases_for_not_equal_zero(expression_obj)
+        else {
+            return Ok(None);
+        };
+
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let left_nonzero: AtomicFact =
+            NotEqualFact::new(left_base.clone(), zero_obj.clone(), line_file.clone()).into();
+        let right_nonzero: AtomicFact =
+            NotEqualFact::new(right_base.clone(), zero_obj, line_file.clone()).into();
+        let known_or = OrFact::new(
+            vec![
+                AndChainAtomicFact::AtomicFact(left_nonzero.clone()),
+                AndChainAtomicFact::AtomicFact(right_nonzero.clone()),
+            ],
+            line_file.clone(),
+        );
+
+        let mut steps = Vec::new();
+        let known_or_result = self.verify_or_fact(&known_or, verify_state)?;
+        if known_or_result.is_true() {
+            steps.push(known_or_result);
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    not_equal_fact.clone().into(),
+                    InferResult::new(),
+                    "square_sum_not_equal_zero_from_nonzero_component_or".to_string(),
+                    steps,
+                )
+                .into(),
+            ));
+        }
+
+        let left_result =
+            self.verify_non_equational_atomic_fact(&left_nonzero, verify_state, true)?;
+        if left_result.is_true() {
+            steps.push(left_result);
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    not_equal_fact.clone().into(),
+                    InferResult::new(),
+                    "square_sum_not_equal_zero_from_left_nonzero".to_string(),
+                    steps,
+                )
+                .into(),
+            ));
+        }
+
+        let right_result =
+            self.verify_non_equational_atomic_fact(&right_nonzero, verify_state, true)?;
+        if right_result.is_true() {
+            steps.push(right_result);
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    not_equal_fact.clone().into(),
+                    InferResult::new(),
+                    "square_sum_not_equal_zero_from_right_nonzero".to_string(),
+                    steps,
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
+    }
+
+    fn square_sum_bases_for_not_equal_zero(&self, obj: &Obj) -> Option<(Obj, Obj)> {
+        let Obj::Add(add) = obj else {
+            return None;
+        };
+        let left_base = self.square_base_for_not_equal_zero(add.left.as_ref())?;
+        let right_base = self.square_base_for_not_equal_zero(add.right.as_ref())?;
+        Some((left_base, right_base))
+    }
+
+    fn square_base_for_not_equal_zero(&self, obj: &Obj) -> Option<Obj> {
+        match obj {
+            Obj::Pow(pow) => {
+                let Obj::Number(exp_number) = pow.exponent.as_ref() else {
+                    return None;
+                };
+                if exp_number.to_string() == "2" {
+                    Some(pow.base.as_ref().clone())
+                } else {
+                    None
+                }
+            }
+            Obj::Mul(mul) if mul.left.as_ref().to_string() == mul.right.as_ref().to_string() => {
+                Some(mul.left.as_ref().clone())
+            }
+            _ => None,
+        }
     }
 
     fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {
