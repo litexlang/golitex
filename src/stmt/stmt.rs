@@ -37,6 +37,56 @@ pub enum Stmt {
     ByTuple(ByTupleStmt),
     ByFnSetStmt(ByFnSetStmt),
     ByEnumerateClosedRangeStmt(ByEnumerateClosedRangeStmt),
+    DefStructStmt(DefStructStmt),
+}
+
+#[derive(Clone)]
+pub struct DefStructStmt {
+    pub name: String,
+    pub param_def_with_dom: Option<(ParamDefWithType, Vec<OrAndChainAtomicFact>)>,
+    pub fields: Vec<(String, Obj)>,
+    pub equivalent_facts: Vec<Fact>,
+    pub line_file: LineFile,
+}
+
+impl DefStructStmt {
+    pub fn new(
+        name: String,
+        param_def_with_dom: Option<(ParamDefWithType, Vec<OrAndChainAtomicFact>)>,
+        fields: Vec<(String, Obj)>,
+        equivalent_facts: Vec<Fact>,
+        line_file: LineFile,
+    ) -> Self {
+        DefStructStmt {
+            name,
+            param_def_with_dom,
+            fields,
+            equivalent_facts,
+            line_file,
+        }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DefStructStmt".to_string()
+    }
+}
+
+impl fmt::Display for DefStructStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let params = match &self.param_def_with_dom {
+            Some((param_def, _)) => format!("{}", param_def),
+            None => String::new(),
+        };
+        if params.is_empty() {
+            write!(f, "{} {}{}", STRUCT, self.name, COLON)
+        } else {
+            write!(
+                f,
+                "{} {}{}{}{}{}",
+                STRUCT, self.name, LEFT_BRACE, params, RIGHT_BRACE, COLON
+            )
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -118,6 +168,7 @@ impl fmt::Display for Stmt {
             Stmt::ByTuple(x) => write!(f, "{}", x),
             Stmt::ByFnSetStmt(x) => write!(f, "{}", x),
             Stmt::ByEnumerateClosedRangeStmt(x) => write!(f, "{}", x),
+            Stmt::DefStructStmt(x) => write!(f, "{}", x),
         }
     }
 }
@@ -159,6 +210,7 @@ impl Stmt {
             Stmt::ByTuple(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
@@ -198,6 +250,7 @@ impl Stmt {
             Stmt::ByTuple(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByEnumerateClosedRangeStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 }
@@ -403,5 +456,11 @@ impl From<ByFnSetStmt> for Stmt {
 impl From<ByEnumerateClosedRangeStmt> for Stmt {
     fn from(v: ByEnumerateClosedRangeStmt) -> Self {
         Stmt::ByEnumerateClosedRangeStmt(v)
+    }
+}
+
+impl From<DefStructStmt> for Stmt {
+    fn from(v: DefStructStmt) -> Self {
+        Stmt::DefStructStmt(v)
     }
 }

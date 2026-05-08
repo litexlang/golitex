@@ -1,5 +1,13 @@
-forall x R:
-    x = 2
-    =>:
-        x + 1 = 3
-        x^2 = 4
+struct Point:
+    x R
+    y R
+
+abstract_prop group_property(s, zero, add, inv)
+
+struct Group(s set):
+    zero s
+    add fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        $group_property(s, zero, add,inv)
+

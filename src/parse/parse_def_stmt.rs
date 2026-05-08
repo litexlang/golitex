@@ -2,6 +2,168 @@ use crate::prelude::*;
 use crate::verify::number_is_in_z;
 
 impl Runtime {
+    pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(STRUCT)?;
+        let name = tb.advance()?;
+        is_valid_litex_name(&name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+            ))
+        })?;
+
+        let stmt_result = self.run_in_local_parsing_time_name_scope(|this| {
+            let param_def_with_dom = if tb.current_token_is_equal_to(LEFT_BRACE) {
+                let param_def = this.parse_def_braced_param_groups_with_param_type(tb)?;
+                Some((param_def, Vec::new()))
+            } else {
+                None
+            };
+            let struct_param_names = param_def_with_dom
+                .as_ref()
+                .map(|(param_def, _)| param_def.collect_param_names())
+                .unwrap_or_else(Vec::new);
+
+            let parse_result = (|| -> Result<DefStructStmt, RuntimeError> {
+                tb.skip_token(COLON)?;
+                if tb.body.is_empty() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "struct definition expects at least two fields".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+
+                let mut fields: Vec<(String, Obj)> = Vec::new();
+                let mut equivalent_facts: Vec<Fact> = Vec::new();
+                let mut seen_equivalent = false;
+
+                for block in tb.body.iter_mut() {
+                    if block.current()? == EQUIVALENT_SIGN {
+                        if seen_equivalent {
+                            return Err(RuntimeError::from(ParseRuntimeError(
+                                RuntimeErrorStruct::new_with_msg_and_line_file(
+                                    "struct definition can only have one `<=>:` block".to_string(),
+                                    block.line_file.clone(),
+                                ),
+                            )));
+                        }
+                        seen_equivalent = true;
+                        equivalent_facts = this.parse_struct_equivalent_facts(block, &fields)?;
+                    } else {
+                        if seen_equivalent {
+                            return Err(RuntimeError::from(ParseRuntimeError(
+                                RuntimeErrorStruct::new_with_msg_and_line_file(
+                                    "struct fields must appear before `<=>:`".to_string(),
+                                    block.line_file.clone(),
+                                ),
+                            )));
+                        }
+                        let field = this.parse_struct_field(block)?;
+                        if fields.iter().any(|(name, _)| name == &field.0) {
+                            return Err(RuntimeError::from(ParseRuntimeError(
+                                RuntimeErrorStruct::new_with_msg_and_line_file(
+                                    format!("duplicate struct field `{}`", field.0),
+                                    block.line_file.clone(),
+                                ),
+                            )));
+                        }
+                        fields.push(field);
+                    }
+                }
+
+                if fields.len() < 2 {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "struct definition expects at least two fields".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+
+                Ok(DefStructStmt::new(
+                    name.clone(),
+                    param_def_with_dom,
+                    fields,
+                    equivalent_facts,
+                    tb.line_file.clone(),
+                ))
+            })();
+
+            if !struct_param_names.is_empty() {
+                this.parsing_free_param_collection
+                    .end_scope(ParamObjType::DefHeader, &struct_param_names);
+            }
+            parse_result
+        });
+
+        let stmt = stmt_result?;
+        self.insert_parsed_name_into_top_parsing_time_name_scope(&stmt.name, tb.line_file.clone())?;
+        Ok(stmt.into())
+    }
+
+    fn parse_struct_field(
+        &mut self,
+        block: &mut TokenBlock,
+    ) -> Result<(String, Obj), RuntimeError> {
+        if !block.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "struct field must fit on one line".to_string(),
+                    block.line_file.clone(),
+                ),
+            )));
+        }
+
+        let field_name = block.advance()?;
+        is_valid_litex_name(&field_name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, block.line_file.clone()),
+            ))
+        })?;
+
+        let field_type = self.parse_obj(block)?;
+        if !block.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "unexpected token after struct field type".to_string(),
+                    block.line_file.clone(),
+                ),
+            )));
+        }
+        Ok((field_name, field_type))
+    }
+
+    fn parse_struct_equivalent_facts(
+        &mut self,
+        block: &mut TokenBlock,
+        fields: &Vec<(String, Obj)>,
+    ) -> Result<Vec<Fact>, RuntimeError> {
+        block.skip_token(EQUIVALENT_SIGN)?;
+        block.skip_token(COLON)?;
+        if !block.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`<=>:` in struct definition must not have inline facts".to_string(),
+                    block.line_file.clone(),
+                ),
+            )));
+        }
+        let field_names = fields
+            .iter()
+            .map(|(name, _)| name.clone())
+            .collect::<Vec<_>>();
+        self.parsing_free_param_collection.begin_scope(
+            ParamObjType::DefStructField,
+            &field_names,
+            block.line_file.clone(),
+        )?;
+        let facts_result = self.parse_facts_in_body(block);
+        self.parsing_free_param_collection
+            .end_scope(ParamObjType::DefStructField, &field_names);
+        facts_result
+    }
+
     pub fn parse_def_prop_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         let stmt = self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(PROP)?;

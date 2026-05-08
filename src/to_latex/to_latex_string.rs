@@ -1943,6 +1943,7 @@ impl Obj {
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
+            Obj::FieldAccess(x) => latex_local_ident(&x.to_string()),
             Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
@@ -1950,6 +1951,7 @@ impl Obj {
             Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::DefStructField(x)) => latex_local_ident(&x.name),
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),
@@ -1998,6 +2000,7 @@ impl Stmt {
             Stmt::ByTuple(x) => x.to_latex_string(),
             Stmt::ByFnSetStmt(x) => x.to_latex_string(),
             Stmt::ByEnumerateClosedRangeStmt(x) => x.to_latex_string(),
+            Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }
 }

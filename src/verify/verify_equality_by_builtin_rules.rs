@@ -138,6 +138,8 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Atom(AtomObj::FnSet(p)) => p.name == id,
         Obj::Atom(AtomObj::Induc(p)) => p.name == id,
         Obj::Atom(AtomObj::DefAlgo(p)) => p.name == id,
+        Obj::Atom(AtomObj::DefStructField(p)) => p.name == id,
+        Obj::FieldAccess(_) => false,
     }
 }
 

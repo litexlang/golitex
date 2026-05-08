@@ -96,6 +96,7 @@ impl Runtime {
             Obj::FamilyObj(family) => {
                 self.verify_param_type_family_well_defined(family, verify_state)
             }
+            Obj::FieldAccess(field_access) => self.verify_field_access_well_defined(field_access),
             Obj::Atom(AtomObj::Forall(_)) => Ok(()),
             Obj::Atom(AtomObj::Def(_)) => Ok(()),
             Obj::Atom(AtomObj::Exist(_)) => Ok(()),
@@ -103,6 +104,7 @@ impl Runtime {
             Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
             Obj::Atom(AtomObj::Induc(_)) => Ok(()),
             Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
+            Obj::Atom(AtomObj::DefStructField(_)) => Ok(()),
         }?;
 
         self.store_well_defined_obj_cache(obj);
@@ -118,6 +120,53 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "identifier `{}` not defined",
                     identifier.to_string()
+                )),
+            )))
+        }
+    }
+
+    fn verify_field_access_well_defined(
+        &self,
+        field_access: &FieldAccess,
+    ) -> Result<(), RuntimeError> {
+        let struct_name = self
+            .iter_environments_from_top()
+            .find_map(|env| {
+                env.known_name_belong_to_struct
+                    .get(&field_access.left)
+                    .cloned()
+            })
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "`{}` does not have a known struct",
+                        field_access.left
+                    )),
+                ))
+            })?;
+
+        let struct_definition = self
+            .get_struct_definition_by_name(&struct_name)
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "struct `{}` is not defined",
+                        struct_name
+                    )),
+                ))
+            })?;
+
+        if struct_definition
+            .fields
+            .iter()
+            .any(|(field_name, _)| field_name == &field_access.right)
+        {
+            Ok(())
+        } else {
+            Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "struct `{}` does not have field `{}`",
+                    struct_name, field_access.right
                 )),
             )))
         }
@@ -2096,6 +2145,57 @@ impl Runtime {
 
     fn verify_r_nz_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod field_access_well_defined_tests {
+    use crate::prelude::*;
+    use std::rc::Rc;
+
+    fn test_line_file() -> LineFile {
+        (1, Rc::from("field_access_test.lit"))
+    }
+
+    fn insert_group_struct(rt: &mut Runtime) {
+        let struct_stmt = DefStructStmt::new(
+            "Group".to_string(),
+            None,
+            vec![
+                ("zero".to_string(), StandardSet::R.into()),
+                ("add".to_string(), StandardSet::R.into()),
+            ],
+            vec![],
+            test_line_file(),
+        );
+        rt.top_level_env()
+            .defined_structs
+            .insert("Group".to_string(), struct_stmt);
+        rt.top_level_env()
+            .known_name_belong_to_struct
+            .insert("G".to_string(), "Group".to_string());
+    }
+
+    #[test]
+    fn field_access_is_well_defined_when_left_has_struct_with_field() {
+        let mut rt = Runtime::new();
+        insert_group_struct(&mut rt);
+
+        let obj: Obj = FieldAccess::new("G".to_string(), "add".to_string()).into();
+        assert!(rt
+            .verify_obj_well_defined_and_store_cache(&obj, &VerifyState::new(0, false))
+            .is_ok());
+    }
+
+    #[test]
+    fn field_access_is_not_well_defined_when_field_is_missing() {
+        let mut rt = Runtime::new();
+        insert_group_struct(&mut rt);
+
+        let obj: Obj = FieldAccess::new("G".to_string(), "mul".to_string()).into();
+        assert!(rt
+            .verify_obj_well_defined_and_store_cache(&obj, &VerifyState::new(0, false))
+            .is_err());
     }
 }
 

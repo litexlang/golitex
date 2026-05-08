@@ -9,4 +9,5 @@ pub type PropName = String;
 pub type AbstractPropName = String;
 pub type FamilyName = String;
 pub type AlgoName = String;
+pub type StructName = String;
 pub type IdentifierName = String;

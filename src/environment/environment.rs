@@ -10,6 +10,7 @@ pub struct Environment {
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+    pub defined_structs: HashMap<StructName, DefStructStmt>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -40,6 +41,8 @@ pub struct Environment {
 
     pub known_objs_in_fn_sets: HashMap<ObjString, KnownFnInfo>,
 
+    pub known_name_belong_to_struct: HashMap<String, StructName>,
+
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
 }
@@ -51,6 +54,7 @@ impl Environment {
         families: HashMap<FamilyName, DefFamilyStmt>,
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
+        structs: HashMap<StructName, DefStructStmt>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
@@ -87,6 +91,7 @@ impl Environment {
         >,
         known_matrix_list_objs: HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
         known_calculated_value_of_obj: HashMap<ObjString, Number>,
+        known_name_belong_to_struct: HashMap<String, StructName>,
         cache_known_valid_obj: HashMap<ObjString, ()>,
         cache_known_fact: HashMap<FactString, LineFile>,
     ) -> Self {
@@ -96,6 +101,7 @@ impl Environment {
             defined_families: families,
             defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
+            defined_structs: structs,
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -111,6 +117,7 @@ impl Environment {
             known_objs_equal_to_finite_seq_list: known_finite_seq_list_objs,
             known_objs_equal_to_matrix_list: known_matrix_list_objs,
             known_objs_equal_to_normalized_decimal_number: known_calculated_value_of_obj,
+            known_name_belong_to_struct,
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
         }
@@ -124,11 +131,17 @@ impl fmt::Display for Environment {
         write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;
         write!(f, "    families: {:?}\n", self.defined_families.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
+        write!(f, "    structs: {:?}\n", self.defined_structs.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
         write!(
             f,
             "    known_fn_in_fn_set: {:?}\n",
             self.known_objs_in_fn_sets.len()
+        )?;
+        write!(
+            f,
+            "    known_name_belong_to_struct: {:?}\n",
+            self.known_name_belong_to_struct.len()
         )?;
         write!(
             f,
@@ -637,6 +650,8 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

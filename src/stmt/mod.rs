@@ -12,4 +12,5 @@ pub mod witness_stmt;
 mod stmt;
 mod stmt_type_name;
 pub use stmt::ByEnumerateClosedRangeStmt;
+pub use stmt::DefStructStmt;
 pub use stmt::Stmt;

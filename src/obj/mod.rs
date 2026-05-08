@@ -16,14 +16,14 @@ pub use fn_set::{AnonymousFn, FnSet, FnSetBody, FnSetSpace};
 pub use free_param_obj::{
     obj_for_bound_param_in_scope, param_binding_element_obj_for_store,
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
-    ByInducFreeParamObj, DefAlgoFreeParamObj, DefHeaderFreeParamObj, ExistFreeParamObj,
-    FnSetFreeParamObj, ForallFreeParamObj, ParamObjType, SetBuilderFreeParamObj,
+    ByInducFreeParamObj, DefAlgoFreeParamObj, DefHeaderFreeParamObj, DefStructFieldFreeParamObj,
+    ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamObj, ParamObjType, SetBuilderFreeParamObj,
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
-    FamilyObj, FiniteSeqListObj, FiniteSeqSet, FnObj, Intersect, ListSet, Log, MatrixAdd,
-    MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul,
-    Number, Obj, ObjAtIndex, Pow, PowerSet, Product, Proj, Range, SeqSet, SetBuilder, SetDiff,
-    SetMinus, Sub, Sum, Tuple, TupleDim, Union,
+    FamilyObj, FieldAccess, FiniteSeqListObj, FiniteSeqSet, FnObj, Intersect, ListSet, Log,
+    MatrixAdd, MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Max,
+    Min, Mod, Mul, Number, Obj, ObjAtIndex, Pow, PowerSet, Product, Proj, Range, SeqSet,
+    SetBuilder, SetDiff, SetMinus, Sub, Sum, Tuple, TupleDim, Union,
 };
 pub use standard_set::StandardSet;
