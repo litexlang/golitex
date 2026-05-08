@@ -1179,9 +1179,7 @@ impl Runtime {
             if lg.params != gg.params {
                 return Ok(None);
             }
-            let Some(m) =
-                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&lg.set, &gg.set)?
-            else {
+            let Some(m) = self.match_fn_param_group_type_in_known_forall_with_given(lg, gg)? else {
                 return Ok(None);
             };
             if !self.merge_arg_match_map_into(&mut merged, m) {
@@ -1243,9 +1241,7 @@ impl Runtime {
             if lg.params != gg.params {
                 return Ok(None);
             }
-            let Some(m) =
-                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&lg.set, &gg.set)?
-            else {
+            let Some(m) = self.match_fn_param_group_type_in_known_forall_with_given(lg, gg)? else {
                 return Ok(None);
             };
             if !self.merge_arg_match_map_into(&mut merged, m) {
@@ -1294,6 +1290,43 @@ impl Runtime {
             }
         }
         Ok(Some(merged))
+    }
+
+    fn match_fn_param_group_type_in_known_forall_with_given(
+        &mut self,
+        left: &ParamGroupWithSet,
+        given: &ParamGroupWithSet,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match (&left.param_type, &given.param_type) {
+            (
+                ParamGroupWithSetTypeEnum::Set(left_set),
+                ParamGroupWithSetTypeEnum::Set(given_set),
+            ) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_set, given_set),
+            (
+                ParamGroupWithSetTypeEnum::Struct(left_struct),
+                ParamGroupWithSetTypeEnum::Struct(given_struct),
+            ) => {
+                if left_struct.struct_name() != given_struct.struct_name()
+                    || left_struct.args.len() != given_struct.args.len()
+                {
+                    return Ok(None);
+                }
+                let mut merged = HashMap::new();
+                for (left_arg, given_arg) in left_struct.args.iter().zip(given_struct.args.iter()) {
+                    let Some(m) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                        left_arg, given_arg,
+                    )?
+                    else {
+                        return Ok(None);
+                    };
+                    if !self.merge_arg_match_map_into(&mut merged, m) {
+                        return Ok(None);
+                    }
+                }
+                Ok(Some(merged))
+            }
+            _ => Ok(None),
+        }
     }
 
     fn match_arg_when_left_is_n_pos_obj(
