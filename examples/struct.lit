@@ -10,6 +10,17 @@ prove:
 
     point_add(&Point(1, 2), &Point(3, 4)) = &Point(4, 6)
 
+    forall P struct Point, t R:
+        P.x + t $in R
+
+    # 实例化成 1 + 3 $in R
+    by struct P from (1, 2) as Point, t = 3:
+        forall P struct Point, t R:
+            P.x + t $in R
+
+    forall P struct Point:
+        '(Q struct Point) R {Q.x}(P) $in R
+
 prove:
     abstract_prop group_property(s, zero, add, inv)
 
@@ -24,13 +35,4 @@ prove:
         G.zero $in R
         $group_property(R, G.zero, G.add, G.inv)
 
-    forall P struct Point, t R:
-        P.x + t $in R
 
-    # 实例化成 1 + 3 $in R
-    by struct P from (1, 2) as Point, t = 3:
-        forall P struct Point, t R:
-            P.x + t $in R
-
-    forall P struct Point:
-        '(Q struct Point) R {Q.x}(P) $in R

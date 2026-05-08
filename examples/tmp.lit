@@ -1,12 +1,5 @@
-forall x, y R:
-    =>:
-        x != 0 or y != 0
-    <=>:
-        x^2 + y^2 != 0
+have i 1...3
 
-forall x, y R:
-    =>:
-        x*x + y*y != 0
-    <=>:
-        x != 0 or y != 0
+by closed_range as cases: i $in 1...3
 
+i = 1 or i = 2 or i = 3

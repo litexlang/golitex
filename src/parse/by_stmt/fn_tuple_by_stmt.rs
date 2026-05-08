@@ -5,12 +5,16 @@ impl Runtime {
         tb.skip_token(FN_LOWER_CASE)?;
         if tb.current_token_is_equal_to(SET) {
             tb.skip_token(SET)?;
+            tb.skip_token(AS)?;
+            tb.skip_token(SET)?;
             tb.skip_token(COLON)?;
             return self.parse_by_fn_set_stmt(tb);
         }
+        tb.skip_token(AS)?;
+        tb.skip_token(SET)?;
         tb.skip_token(COLON)?;
         let function = self.parse_obj(tb)?;
-        Ok(ByFnStmt::new(function, tb.line_file.clone()).into())
+        Ok(ByFnAsSetStmt::new(function, tb.line_file.clone()).into())
     }
 
     pub fn parse_by_fn_set_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -19,14 +23,16 @@ impl Runtime {
         tb.skip_token(IN)?;
         tb.skip_token(FN_LOWER_CASE)?;
         let fn_set = self.parse_fn_set(tb)?;
-        Ok(ByFnSetStmt::new(func, fn_set, tb.line_file.clone()).into())
+        Ok(ByFnSetAsSetStmt::new(func, fn_set, tb.line_file.clone()).into())
     }
 
-    /// `by tuple: <obj>` — tuple / ordered-pair definitional expansion.
+    // `by tuple as set: <obj>` expands the tuple as its set-theoretic encoding.
     pub fn parse_by_tuple_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TUPLE)?;
+        tb.skip_token(AS)?;
+        tb.skip_token(SET)?;
         tb.skip_token(COLON)?;
         let obj = self.parse_obj(tb)?;
-        Ok(ByTupleStmt::new(obj, tb.line_file.clone()).into())
+        Ok(ByTupleAsSetStmt::new(obj, tb.line_file.clone()).into())
     }
 }
