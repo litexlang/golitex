@@ -1,3 +1,4 @@
+use crate::obj::DefStructFieldFreeParamObj;
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -96,6 +97,9 @@ impl FreeParamCollection {
             ParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Induc => ByInducFreeParamObj::new(name.to_string()).into(),
             ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::DefStructField => {
+                DefStructFieldFreeParamObj::new(name.to_string()).into()
+            }
             ParamObjType::Identifier => Identifier::new(name.to_string()).into(),
         }
     }

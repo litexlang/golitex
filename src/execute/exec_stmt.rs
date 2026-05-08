@@ -41,6 +41,7 @@ impl Runtime {
             Stmt::ByTuple(s) => self.exec_by_tuple_stmt(s),
             Stmt::ByFnSetStmt(s) => self.exec_by_fn_set_stmt(s),
             Stmt::ByEnumerateClosedRangeStmt(s) => self.exec_by_enumerate_closed_range_stmt(s),
+            Stmt::DefStructStmt(s) => self.exec_def_struct_stmt(s),
         }
     }
 

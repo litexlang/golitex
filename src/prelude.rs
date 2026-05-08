@@ -1,7 +1,7 @@
 pub use crate::builtin_code::builtin_code;
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, FamilyName,
-    IdentifierName, ObjString, OrFactKey, PropName,
+    IdentifierName, ObjString, OrFactKey, PropName, StructName,
 };
 pub use crate::environment::{Environment, KnownFnInfo, KnownForallFactParamsAndDom};
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
@@ -92,6 +92,7 @@ pub use crate::obj::DefHeaderFreeParamObj;
 pub use crate::obj::Div;
 pub use crate::obj::ExistFreeParamObj;
 pub use crate::obj::FamilyObj;
+pub use crate::obj::FieldAccess;
 pub use crate::obj::FiniteSeqListObj;
 pub use crate::obj::FiniteSeqSet;
 pub use crate::obj::FnObj;
@@ -207,6 +208,7 @@ pub use crate::stmt::tooling_stmt::RunFileStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByEnumerateClosedRangeStmt;
+pub use crate::stmt::DefStructStmt;
 pub use crate::stmt::Stmt;
 pub use crate::verify::VerifyState;
 

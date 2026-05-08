@@ -299,6 +299,7 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::FieldAccess(_) => Ok(()),
     }
 }
 

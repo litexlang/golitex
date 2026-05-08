@@ -263,6 +263,10 @@ impl Runtime {
                 Obj::FamilyObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::FieldAccess(a) => match right {
+                Obj::FieldAccess(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             // Parsing-time free params: compare [`fmt::Display`] (`~tag` + spine), not only `.name`.
             Obj::Atom(AtomObj::Forall(a)) => {
                 matches!(right, Obj::Atom(AtomObj::Forall(b)) if a.to_string() == b.to_string())
@@ -284,6 +288,9 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::DefAlgo(a)) => {
                 matches!(right, Obj::Atom(AtomObj::DefAlgo(b)) if a.to_string() == b.to_string())
+            }
+            Obj::Atom(AtomObj::DefStructField(a)) => {
+                matches!(right, Obj::Atom(AtomObj::DefStructField(b)) if a.to_string() == b.to_string())
             }
         }
     }
