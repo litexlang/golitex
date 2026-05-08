@@ -1490,11 +1490,11 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ### Register a commutative predicate (`by commutative_prop`)
 
-Use **`by commutative_prop:`** to prove that a binary `abstract_prop` is commutative (symmetric in its two arguments). The `prove:` block must contain exactly this shape: two `set` parameters, one domain fact `$p(x, y)`, and one conclusion `$p(y, x)`.
+Use **`by commutative_prop:`** to prove that an `abstract_prop` is **commutative in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
 
-After the proof succeeds, Litex records that predicate as commutative in the environment stack. Later, when a **positive** atomic goal `$p(a, b)` is still unknown after the usual verification steps (builtins, known facts, `forall` instantiation, etc.), Litex tries the **argument-swapped** goal `$p(b, a)` with post-processing disabled for that retry. If that succeeds, the original `$p(a, b)` is accepted—parallel to how order atoms can be proved via their order-dual (`<` vs `>`). Swapping applies only to normal (positive) `$p(...)` atoms, not to negated `$not $p(...)` forms.
+After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
-See `examples/by_commutative_prop.lit`.
+See `examples/by_commutative_prop.lit` (binary) and `examples/tmp.lit` (four arguments).
 
 ```litex
 abstract_prop p(x, y)
@@ -1586,7 +1586,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
 | `by transitive_prop` | Register a binary abstract predicate as transitive |
-| `by commutative_prop` | Register a binary abstract predicate as commutative (symmetric); verification may use swapped arguments |
+| `by commutative_prop` | Register argument permutations for an `abstract_prop`; verification may try reordered positive instances |
 | `by fn as set` / `by fn set as set` / `by family as set` / `by tuple as set` | Expose the set-theoretic meaning behind function, family, and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
