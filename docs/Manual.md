@@ -3158,3 +3158,59 @@ They can still be used in proofs. Inference simply does not unfold them further 
 When Litex runs, the output may include `infer_facts` or other recorded information. Read that message when you want to understand what inference added after a fact was stored.
 
 If a later fact succeeds unexpectedly, the reason is often that an earlier fact inferred useful information such as a sign condition, a membership consequence, a tuple shape, or a numeric substitution.
+
+---
+
+## Appendix
+
+### Non-Equality Atomic Predicate Flow
+
+For a non-equality atomic predicate fact such as `$p(a)` or `$p(a, b)`, the verification path looks like this:
+
+```mermaid
+flowchart TD
+    atomicGoal["Non-equality atomic predicate fact"]
+    wellDefined["Step 1: Check every object makes sense"]
+    notWellDefined["unknown: some object is not justified"]
+    builtinRules["Step 2: Try builtin math rules"]
+    builtinSuccess["true: verified by builtin rule"]
+    knownFacts["Step 3: Try known facts"]
+    knownFactSuccess["true: verified by known fact"]
+    knownForall["Step 4: Try known forall facts"]
+    matchConclusion["Match goal with forall conclusion"]
+    checkAssumptions["Check substituted assumptions"]
+    forallSuccess["true: verified by known forall"]
+    postProcess["Step 5: Try predicate post-processing"]
+    postProcessSuccess["true: verified by registered predicate property"]
+    unknownResult["unknown: needs a smaller intermediate fact"]
+    storeFact["Store accepted fact in context"]
+    inferMore["Infer routine consequences"]
+
+    atomicGoal --> wellDefined
+    wellDefined -->|"object missing or invalid"| notWellDefined
+    wellDefined -->|"objects are valid"| builtinRules
+
+    builtinRules -->|"rule closes goal"| builtinSuccess
+    builtinRules -->|"not enough"| knownFacts
+
+    knownFacts -->|"same fact or equality-compatible match"| knownFactSuccess
+    knownFacts -->|"not enough"| knownForall
+
+    knownForall -->|"conclusion shape matches"| matchConclusion
+    knownForall -->|"no matching forall"| postProcess
+
+    matchConclusion --> checkAssumptions
+    checkAssumptions -->|"assumptions hold"| forallSuccess
+    checkAssumptions -->|"missing assumption"| postProcess
+
+    postProcess -->|"transitive or commutative registration applies"| postProcessSuccess
+    postProcess -->|"not enough"| unknownResult
+
+    builtinSuccess --> storeFact
+    knownFactSuccess --> storeFact
+    forallSuccess --> storeFact
+    postProcessSuccess --> storeFact
+    storeFact --> inferMore
+```
+
+If one route works, the fact becomes part of the context. Predicate post-processing covers special properties the user has registered, such as a transitive or commutative `abstract_prop`. If none works, `unknown` usually means the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, or a lemma that makes the goal easier to match.
