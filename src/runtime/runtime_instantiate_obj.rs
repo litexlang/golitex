@@ -884,6 +884,16 @@ impl Runtime {
                 param_to_arg_map,
                 param_obj_type,
             )?)),
+            ParamType::Struct(struct_ty) => {
+                let mut args = Vec::with_capacity(struct_ty.args.len());
+                for arg in struct_ty.args.iter() {
+                    args.push(self.inst_obj(arg, param_to_arg_map, param_obj_type)?);
+                }
+                Ok(ParamType::Struct(StructAsParamType::new(
+                    struct_ty.name.clone(),
+                    args,
+                )))
+            }
         }
     }
 

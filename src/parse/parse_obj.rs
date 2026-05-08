@@ -1289,6 +1289,7 @@ impl Runtime {
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
                 Ok(Obj::Atom(AtomObj::IdentifierWithMod(m)))
             }
+            Obj::FieldAccess(field_access) => Ok(Obj::FieldAccess(field_access)),
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(
                     "internal: atom position was not a name form".to_string(),

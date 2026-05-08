@@ -29,7 +29,14 @@ impl Runtime {
             return Ok(());
         }
         match param_type {
-            ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
+            ParamType::Set(_)
+            | ParamType::NonemptySet(_)
+            | ParamType::FiniteSet(_) => Ok(()),
+            ParamType::Struct(_) => Err(RuntimeError::from(VerifyRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(
+                    "struct param type is not known to be nonempty".to_string(),
+                ),
+            ))),
             ParamType::Obj(param_set) => match param_set {
                 Obj::FnSet(fn_set) => {
                     let ret_nonempty = IsNonemptySetFact::new(
