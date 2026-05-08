@@ -14,3 +14,10 @@ struct Group(s set):
 forall G struct Group(R):
     G.zero $in R
     $group_property(R, G.zero, G.add, G.inv)
+
+forall P struct Point, t R:
+    P.x + t $in R
+
+by struct P from (1, 2) as Point, t = 3:
+    forall P struct Point, t R:
+        P.x + t $in R

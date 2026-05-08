@@ -351,6 +351,12 @@ impl ByTupleStmt {
     }
 }
 
+impl ByStructStmt {
+    pub fn to_latex_string(&self) -> String {
+        latex_texttt_escape(&self.to_string())
+    }
+}
+
 impl Cap {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1999,6 +2005,7 @@ impl Stmt {
             Stmt::ByFnStmt(x) => x.to_latex_string(),
             Stmt::ByFamilyStmt(x) => x.to_latex_string(),
             Stmt::ByTuple(x) => x.to_latex_string(),
+            Stmt::ByStructStmt(x) => x.to_latex_string(),
             Stmt::ByFnSetStmt(x) => x.to_latex_string(),
             Stmt::ByEnumerateClosedRangeStmt(x) => x.to_latex_string(),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
