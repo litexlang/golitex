@@ -10,6 +10,7 @@ mod family_by_stmt;
 mod fn_tuple_by_stmt;
 mod for_by_stmt;
 mod induc_by_stmt;
+mod struct_by_stmt;
 
 impl Runtime {
     pub fn parse_by_prefixed_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -25,8 +26,9 @@ impl Runtime {
             FN_LOWER_CASE => self.parse_by_fn_stmt(tb),
             FAMILY => self.parse_by_family_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
+            STRUCT => self.parse_by_struct_stmt(tb),
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                    "by: expected cases, contra, enumerate (finite_set or range), induc, for, extension, fn, fn set, family, or tuple after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate (finite_set or range), induc, for, extension, fn, fn set, family, tuple, or struct after `by`, got `{}`",
                     second_keyword
                 ), tb.line_file.clone())))),
         }

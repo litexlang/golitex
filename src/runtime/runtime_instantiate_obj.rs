@@ -98,6 +98,9 @@ impl Runtime {
                 Ok(FamilyObj::new(family.name.clone(), params).into())
             }
             Obj::FieldAccess(field_access) => {
+                if let Some(obj) = param_to_arg_map.get(&field_access.to_string()) {
+                    return Ok(obj.clone());
+                }
                 let left = match param_to_arg_map.get(&field_access.left) {
                     Some(Obj::Atom(AtomObj::Identifier(identifier))) => identifier.name.clone(),
                     _ => field_access.left.clone(),
