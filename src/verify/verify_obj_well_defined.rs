@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
@@ -307,45 +308,12 @@ impl Runtime {
             args_as_obj.push((**arg).clone());
         }
 
-        let args_satisfy_fn_set_params_set_facts =
-            ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
-                self,
-                params_def_with_set,
-                &args_as_obj,
-                param_binding,
-            )
-            .map_err(|stmt_error| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_cause(
-                        format!("failed to build facts for args satisfy fn set parameter sets"),
-                        stmt_error,
-                    ),
-                ))
-            })?;
-
-        for fact in args_satisfy_fn_set_params_set_facts.iter() {
-            let verify_result =
-                self.verify_atomic_fact(fact, verify_state)
-                    .map_err(|verify_error| {
-                        RuntimeError::from(WellDefinedRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_cause(
-                                format!(
-                                    "failed to verify arg satisfy fn set parameter set: {}",
-                                    fact
-                                ),
-                                verify_error,
-                            ),
-                        ))
-                    })?;
-            if verify_result.is_unknown() {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "arg does not satisfy fn set parameter set, the fact is unknown: {}",
-                        fact
-                    )),
-                )));
-            }
-        }
+        self.verify_args_satisfy_fn_param_groups(
+            params_def_with_set,
+            &args_as_obj,
+            param_binding,
+            verify_state,
+        )?;
 
         let param_to_arg_map = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
             params_def_with_set,
@@ -385,6 +353,66 @@ impl Runtime {
             }
         }
 
+        Ok(())
+    }
+
+    fn verify_args_satisfy_fn_param_groups(
+        &mut self,
+        params_def_with_set: &Vec<ParamGroupWithSet>,
+        args_as_obj: &Vec<Obj>,
+        param_binding: ParamObjType,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+        let mut arg_index: usize = 0;
+        for param_def in params_def_with_set.iter() {
+            let param_type = if let Some(struct_ty) = param_def.struct_ty() {
+                if arg_index != 0 {
+                    self.inst_param_type(
+                        &ParamType::Struct(struct_ty.clone()),
+                        &param_to_arg_map,
+                        param_binding,
+                    )?
+                } else {
+                    ParamType::Struct(struct_ty.clone())
+                }
+            } else if arg_index != 0 {
+                ParamType::Obj(self.inst_obj(
+                    param_def.set_obj().unwrap(),
+                    &param_to_arg_map,
+                    param_binding,
+                )?)
+            } else {
+                ParamType::Obj(param_def.set_obj().unwrap().clone())
+            };
+
+            for param_name in param_def.params.iter() {
+                let arg = args_as_obj[arg_index].clone();
+                let verify_result = self
+                    .verify_obj_satisfies_param_type(arg.clone(), &param_type, verify_state)
+                    .map_err(|verify_error| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!(
+                                    "failed to verify arg `{}` satisfy fn parameter type {}",
+                                    arg, param_type
+                                ),
+                                verify_error,
+                            ),
+                        ))
+                    })?;
+                if verify_result.is_unknown() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "arg `{}` does not satisfy fn parameter type {}",
+                            arg, param_type
+                        )),
+                    )));
+                }
+                param_to_arg_map.insert(param_name.clone(), arg);
+                arg_index += 1;
+            }
+        }
         Ok(())
     }
 
@@ -1273,7 +1301,7 @@ impl Runtime {
     ) -> Option<Obj> {
         for g in params_def {
             if g.params.iter().any(|n| n == pname) {
-                return Some(g.set.clone());
+                return g.set_obj().cloned();
             }
         }
         None
@@ -2196,6 +2224,35 @@ mod field_access_well_defined_tests {
         assert!(rt
             .verify_obj_well_defined_and_store_cache(&obj, &VerifyState::new(0, false))
             .is_err());
+    }
+
+    #[test]
+    fn fn_struct_param_accepts_only_known_struct_name() {
+        let source = r#"
+struct Point:
+    x R
+    y R
+
+forall P struct Point:
+    '(Q struct Point) R {Q.x}(P) $in R
+"#;
+        let mut rt = Runtime::new_with_builtin_code();
+        let (_results, err) = run_source_code(source, &mut rt);
+        assert!(err.is_none());
+    }
+
+    #[test]
+    fn fn_struct_param_rejects_plain_tuple_arg() {
+        let source = r#"
+struct Point:
+    x R
+    y R
+
+'(Q struct Point) R {Q.x}((1, 2)) $in R
+"#;
+        let mut rt = Runtime::new_with_builtin_code();
+        let (_results, err) = run_source_code(source, &mut rt);
+        assert!(err.is_some());
     }
 }
 

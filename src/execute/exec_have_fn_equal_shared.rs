@@ -21,7 +21,7 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
     for pg in clause.params_def_with_set.iter() {
         type_groups.push(ParamGroupWithParamType::new(
             pg.params.clone(),
-            ParamType::Obj(pg.set.clone()),
+            param_group_with_set_to_param_type(pg),
         ));
     }
     for d in clause.dom_facts.iter() {
@@ -36,7 +36,7 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
         for pg in inner.body.params_def_with_set.iter() {
             type_groups.push(ParamGroupWithParamType::new(
                 pg.params.clone(),
-                ParamType::Obj(pg.set.clone()),
+                param_group_with_set_to_param_type(pg),
             ));
         }
 
@@ -172,8 +172,15 @@ pub(crate) fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> 
     for param_def_with_set in clause.params_def_with_set.iter() {
         groups.push(ParamGroupWithParamType::new(
             param_def_with_set.params.clone(),
-            ParamType::Obj(param_def_with_set.set.clone()),
+            param_group_with_set_to_param_type(param_def_with_set),
         ));
     }
     ParamDefWithType::new(groups)
+}
+
+fn param_group_with_set_to_param_type(param_def: &ParamGroupWithSet) -> ParamType {
+    match &param_def.param_type {
+        ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(set.clone()),
+        ParamGroupWithSetTypeEnum::Struct(struct_ty) => ParamType::Struct(struct_ty.clone()),
+    }
 }

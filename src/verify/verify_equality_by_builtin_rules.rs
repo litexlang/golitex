@@ -123,7 +123,14 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Atom(AtomObj::IdentifierWithMod(_)) => false,
         Obj::AnonymousFn(anon) => {
             for g in &anon.body.params_def_with_set {
-                if obj_expr_mentions_bare_id(&g.set, id) {
+                let mentions = match &g.param_type {
+                    ParamGroupWithSetTypeEnum::Set(set) => obj_expr_mentions_bare_id(set, id),
+                    ParamGroupWithSetTypeEnum::Struct(struct_ty) => struct_ty
+                        .args
+                        .iter()
+                        .any(|arg| obj_expr_mentions_bare_id(arg, id)),
+                };
+                if mentions {
                     return true;
                 }
             }

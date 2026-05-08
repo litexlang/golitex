@@ -200,6 +200,7 @@ pub use crate::stmt::parameter_def::NonemptySet;
 pub use crate::stmt::parameter_def::ParamDefWithType;
 pub use crate::stmt::parameter_def::ParamGroupWithParamType;
 pub use crate::stmt::parameter_def::ParamGroupWithSet;
+pub use crate::stmt::parameter_def::ParamGroupWithSetTypeEnum;
 pub use crate::stmt::parameter_def::ParamType;
 pub use crate::stmt::parameter_def::Set;
 pub use crate::stmt::parameter_def::StructAsParamType;

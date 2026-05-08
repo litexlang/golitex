@@ -260,13 +260,13 @@ impl Runtime {
                         tb.line_file.clone(),
                     )?;
 
-                    let set = if tb.current_token_is_equal_to(COLON) {
-                        StandardSet::R.into()
+                    let param_group = if tb.current_token_is_equal_to(COLON) {
+                        ParamGroupWithSet::new(current_params, StandardSet::R.into())
                     } else {
-                        this.parse_obj(tb)?
+                        this.parse_fn_param_group_with_set_or_struct(current_params, tb)?
                     };
 
-                    params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
+                    params_def_with_set.push(param_group);
 
                     if tb.current_token_is_equal_to(COMMA) {
                         tb.skip_token(COMMA)?;
@@ -357,9 +357,10 @@ impl Runtime {
                     tb.line_file.clone(),
                 )?;
 
-                let set = this.parse_obj(tb)?;
+                let param_group =
+                    this.parse_fn_param_group_with_set_or_struct(current_params, tb)?;
 
-                params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
+                params_def_with_set.push(param_group);
 
                 if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
@@ -426,9 +427,10 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
-                let set = this.parse_obj(tb)?;
+                let param_group =
+                    this.parse_fn_param_group_with_set_or_struct(current_params, tb)?;
 
-                params_def_with_set.push(ParamGroupWithSet::new(current_params, set));
+                params_def_with_set.push(param_group);
 
                 if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
@@ -481,6 +483,24 @@ impl Runtime {
                 }
             },
             Err(e) => Err(e),
+        }
+    }
+
+    fn parse_fn_param_group_with_set_or_struct(
+        &mut self,
+        params: Vec<String>,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamGroupWithSet, RuntimeError> {
+        if tb.current_token_is_equal_to(STRUCT) {
+            let param_type = self.parse_param_type_struct(tb)?;
+            match param_type {
+                ParamType::Struct(struct_ty) => {
+                    Ok(ParamGroupWithSet::new_struct(params, struct_ty))
+                }
+                _ => unreachable!(),
+            }
+        } else {
+            Ok(ParamGroupWithSet::new(params, self.parse_obj(tb)?))
         }
     }
 
