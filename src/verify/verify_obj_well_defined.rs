@@ -2209,6 +2209,9 @@ impl Runtime {
             ParamType::Set(_) => Ok(()),
             ParamType::NonemptySet(_) => Ok(()),
             ParamType::FiniteSet(_) => Ok(()),
+            ParamType::Struct(struct_ty) => {
+                self.verify_struct_param_type_well_defined(struct_ty, verify_state)
+            }
             ParamType::Obj(obj) => match obj {
                 Obj::FamilyObj(family) => {
                     self.verify_param_type_family_well_defined(family, verify_state)
@@ -2216,6 +2219,120 @@ impl Runtime {
                 _ => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
             },
         }
+    }
+
+    fn verify_struct_param_type_well_defined(
+        &mut self,
+        struct_ty: &StructAsParamType,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let struct_name = struct_ty.struct_name();
+        let def = self
+            .get_struct_definition_by_name(&struct_name)
+            .cloned()
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "struct `{}` is not defined",
+                        struct_name
+                    )),
+                ))
+            })?;
+
+        let expected_count = def
+            .param_def_with_dom
+            .as_ref()
+            .map(|(param_def, _)| param_def.number_of_params())
+            .unwrap_or(0);
+        if struct_ty.args.len() != expected_count {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "struct `{}` expects {} parameter(s), got {}",
+                    struct_name,
+                    expected_count,
+                    struct_ty.args.len()
+                )),
+            )));
+        }
+
+        for arg in struct_ty.args.iter() {
+            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
+        }
+
+        if let Some((param_def, dom_facts)) = &def.param_def_with_dom {
+            let args_param_types = self
+                .verify_args_satisfy_param_def_flat_types(
+                    param_def,
+                    &struct_ty.args,
+                    verify_state,
+                    ParamObjType::DefHeader,
+                )
+                .map_err(|runtime_error| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
+                                "failed to verify struct `{}` arguments satisfy parameter types",
+                                struct_name
+                            ),
+                            runtime_error,
+                        ),
+                    ))
+                })?;
+            if args_param_types.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "failed to verify struct `{}` arguments satisfy parameter types",
+                        struct_name
+                    )),
+                )));
+            }
+
+            let param_to_arg_map =
+                param_def.param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
+            for dom_fact in dom_facts.iter() {
+                let instantiated_dom_fact = self
+                    .inst_or_and_chain_atomic_fact(
+                        dom_fact,
+                        &param_to_arg_map,
+                        ParamObjType::DefHeader,
+                        None,
+                    )
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!(
+                                    "failed to instantiate struct `{}` domain fact: {}",
+                                    struct_name, e
+                                ),
+                                e,
+                            ),
+                        ))
+                    })?;
+                let verify_result = self
+                    .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
+                    .map_err(|verify_error| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!(
+                                    "failed to verify struct `{}` domain fact:\n{}",
+                                    struct_name, instantiated_dom_fact
+                                ),
+                                verify_error,
+                            ),
+                        ))
+                    })?;
+                if verify_result.is_unknown() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "failed to verify struct `{}` domain fact:\n{}",
+                            struct_name, instantiated_dom_fact
+                        )),
+                    )));
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn verify_param_type_family_well_defined(

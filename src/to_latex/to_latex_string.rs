@@ -1523,6 +1523,7 @@ impl ParamType {
             ParamType::NonemptySet(_) => format!(r"\mathrm{{{}}}", NONEMPTY_SET),
             ParamType::FiniteSet(_) => format!(r"\mathrm{{{}}}", FINITE_SET),
             ParamType::Obj(o) => o.to_latex_string(),
+            ParamType::Struct(struct_ty) => latex_texttt_escape(&struct_ty.to_string()),
         }
     }
 }

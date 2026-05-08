@@ -24,7 +24,33 @@ impl Runtime {
                 let fact = IsFiniteSetFact::new(obj, default_line_file()).into();
                 self.verify_atomic_fact(&fact, verify_state)
             }
+            ParamType::Struct(struct_ty) => {
+                self.verify_obj_satisfies_struct_param_type(obj, struct_ty)
+            }
         }
+    }
+
+    fn verify_obj_satisfies_struct_param_type(
+        &self,
+        obj: Obj,
+        struct_ty: &StructAsParamType,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Some(arg_name) = obj_name_for_struct_param_check(&obj) else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let struct_name = struct_ty.struct_name();
+        for env in self.iter_environments_from_top() {
+            if let Some(known_struct_name) = env.known_name_belong_to_struct.get(&arg_name) {
+                if known_struct_name == &struct_name {
+                    return Ok(NonFactualStmtSuccess::new_with_stmt(
+                        DoNothingStmt::new(default_line_file()).into(),
+                    )
+                    .into());
+                }
+                return Ok(StmtUnknown::new().into());
+            }
+        }
+        Ok(StmtUnknown::new().into())
     }
 
     pub fn verify_args_satisfy_param_def_flat_types(
@@ -60,5 +86,20 @@ impl Runtime {
             Vec::new(),
         )
         .into())
+    }
+}
+
+fn obj_name_for_struct_param_check(obj: &Obj) -> Option<String> {
+    match obj {
+        Obj::Atom(AtomObj::Identifier(identifier)) => Some(identifier.name.clone()),
+        Obj::Atom(AtomObj::Forall(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::Def(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::Exist(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::Induc(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.clone()),
+        Obj::Atom(AtomObj::DefStructField(p)) => Some(p.name.clone()),
+        _ => None,
     }
 }
