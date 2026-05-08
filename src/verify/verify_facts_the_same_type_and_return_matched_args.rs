@@ -206,7 +206,7 @@ impl Runtime {
                         for (arg, other_arg) in
                             struct_ty.args.iter().zip(other_struct_ty.args.iter())
                         {
-                            matched_args.push((arg.clone(), other_arg.clone()));
+                            matched_args.push(((**arg).clone(), (**other_arg).clone()));
                         }
                     }
                     _ => return Ok(None),
