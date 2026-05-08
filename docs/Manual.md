@@ -2429,6 +2429,15 @@ forall a R:
     0 <= a ^ 2
 ```
 
+If at least one component is nonzero, a sum of two squares is nonzero.
+
+```litex
+forall x, y R:
+    x != 0 or y != 0
+    =>:
+        x^2 + y^2 != 0
+```
+
 ```litex
 0 < 2 ^ 3
 ```
