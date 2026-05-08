@@ -51,6 +51,8 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
+> Some experimental syntax, including `struct`, field access, struct parameters, and `by struct`, is documented separately in [Preview Features](https://litexlang.com/doc/Preview_Features).
+
 > You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
 
 ---

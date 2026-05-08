@@ -14,7 +14,7 @@ pub enum ParamType {
 #[derive(Clone)]
 pub struct StructAsParamType {
     pub name: NameOrNameWithMod,
-    pub args: Vec<Obj>,
+    pub args: Vec<Box<Obj>>,
 }
 
 #[derive(Clone)]
@@ -25,6 +25,11 @@ pub enum NameOrNameWithMod {
 
 impl StructAsParamType {
     pub fn new(name: NameOrNameWithMod, args: Vec<Obj>) -> Self {
+        let args = args.into_iter().map(Box::new).collect();
+        StructAsParamType { name, args }
+    }
+
+    pub fn new_with_boxed_args(name: NameOrNameWithMod, args: Vec<Box<Obj>>) -> Self {
         StructAsParamType { name, args }
     }
 
@@ -169,6 +174,26 @@ impl ParamDefWithType {
             let param_name = &param_names[index];
             let arg = &args[index];
             result.insert(param_name.clone(), arg.clone());
+            index += 1;
+        }
+        result
+    }
+
+    pub fn param_defs_and_boxed_args_to_param_to_arg_map(
+        &self,
+        args: &[Box<Obj>],
+    ) -> HashMap<String, Obj> {
+        let param_names = self.collect_param_names();
+        if param_names.len() != args.len() {
+            unreachable!();
+        }
+
+        let mut result: HashMap<String, Obj> = HashMap::new();
+        let mut index = 0;
+        while index < param_names.len() {
+            let param_name = &param_names[index];
+            let arg = &args[index];
+            result.insert(param_name.clone(), (**arg).clone());
             index += 1;
         }
         result

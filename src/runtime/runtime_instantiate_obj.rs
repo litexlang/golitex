@@ -101,11 +101,33 @@ impl Runtime {
                 if let Some(obj) = param_to_arg_map.get(&field_access.to_string()) {
                     return Ok(obj.clone());
                 }
+                if let Some(Obj::StructInstance(instance)) =
+                    param_to_arg_map.get(&field_access.left)
+                {
+                    if let Some(field_obj) =
+                        self.field_obj_from_struct_instance(instance, &field_access.right)?
+                    {
+                        return Ok(field_obj);
+                    }
+                }
                 let left = match param_to_arg_map.get(&field_access.left) {
-                    Some(Obj::Atom(AtomObj::Identifier(identifier))) => identifier.name.clone(),
+                    Some(obj) => Self::obj_name_for_instantiated_field_access_left(obj)
+                        .unwrap_or_else(|| field_access.left.clone()),
                     _ => field_access.left.clone(),
                 };
                 Ok(FieldAccess::new(left, field_access.right.clone()).into())
+            }
+            Obj::StructInstance(instance) => {
+                let name = StructAsParamType::new_with_boxed_args(
+                    instance.name.name.clone(),
+                    self.inst_boxed_objs(&instance.name.args, param_to_arg_map, param_obj_type)?,
+                );
+                let fields_equal_to_what = self.inst_boxed_objs(
+                    &instance.fields_equal_to_what,
+                    param_to_arg_map,
+                    param_obj_type,
+                )?;
+                Ok(StructInstance::new_with_boxed_fields(name, fields_equal_to_what).into())
             }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {
@@ -185,6 +207,45 @@ impl Runtime {
                 Ok(p.clone().into())
             }
         }
+    }
+
+    fn field_obj_from_struct_instance(
+        &self,
+        instance: &StructInstance,
+        field_name: &str,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let struct_name = instance.name.struct_name();
+        let Some(def) = self.get_struct_definition_by_name(&struct_name) else {
+            return Ok(None);
+        };
+        let Some(index) = def
+            .fields
+            .iter()
+            .position(|(defined_field_name, _)| defined_field_name == field_name)
+        else {
+            return Ok(None);
+        };
+        Ok(instance
+            .fields_equal_to_what
+            .get(index)
+            .map(|field| (**field).clone()))
+    }
+
+    fn inst_boxed_objs(
+        &self,
+        objs: &[Box<Obj>],
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Vec<Box<Obj>>, RuntimeError> {
+        let mut result = Vec::with_capacity(objs.len());
+        for obj in objs.iter() {
+            result.push(Box::new(self.inst_obj(
+                obj,
+                param_to_arg_map,
+                param_obj_type,
+            )?));
+        }
+        Ok(result)
     }
 
     pub fn inst_identifier(
@@ -925,6 +986,21 @@ impl Runtime {
                     args,
                 )))
             }
+        }
+    }
+
+    fn obj_name_for_instantiated_field_access_left(obj: &Obj) -> Option<String> {
+        match obj {
+            Obj::Atom(AtomObj::Identifier(identifier)) => Some(identifier.name.clone()),
+            Obj::Atom(AtomObj::Forall(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::Def(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::Exist(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::Induc(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.clone()),
+            Obj::Atom(AtomObj::DefStructField(p)) => Some(p.name.clone()),
+            _ => None,
         }
     }
 

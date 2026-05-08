@@ -98,6 +98,9 @@ impl Runtime {
                 self.verify_param_type_family_well_defined(family, verify_state)
             }
             Obj::FieldAccess(field_access) => self.verify_field_access_well_defined(field_access),
+            Obj::StructInstance(instance) => {
+                self.verify_struct_instance_well_defined(instance, verify_state)
+            }
             Obj::Atom(AtomObj::Forall(_)) => Ok(()),
             Obj::Atom(AtomObj::Def(_)) => Ok(()),
             Obj::Atom(AtomObj::Exist(_)) => Ok(()),
@@ -115,6 +118,11 @@ impl Runtime {
 
     fn verify_identifier_well_defined(&self, identifier: &Identifier) -> Result<(), RuntimeError> {
         if self.is_name_used_for_identifier_and_field_access(&identifier.name) {
+            Ok(())
+        } else if self
+            .get_struct_definition_by_name(&identifier.name)
+            .is_some()
+        {
             Ok(())
         } else {
             Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -171,6 +179,80 @@ impl Runtime {
                 )),
             )))
         }
+    }
+
+    fn verify_struct_instance_well_defined(
+        &mut self,
+        instance: &StructInstance,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_struct_param_type_well_defined(&instance.name, verify_state)?;
+        let struct_name = instance.name.struct_name();
+        let def = self
+            .get_struct_definition_by_name(&struct_name)
+            .cloned()
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "struct `{}` is not defined",
+                        struct_name
+                    )),
+                ))
+            })?;
+
+        if instance.fields_equal_to_what.len() != def.fields.len() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "struct `{}` instance expects {} field value(s), got {}",
+                    struct_name,
+                    def.fields.len(),
+                    instance.fields_equal_to_what.len()
+                )),
+            )));
+        }
+
+        for field_obj in instance.fields_equal_to_what.iter() {
+            self.verify_obj_well_defined_and_store_cache(field_obj, verify_state)?;
+        }
+
+        let param_to_arg_map = match &def.param_def_with_dom {
+            Some((param_def, _)) => param_def
+                .param_defs_and_boxed_args_to_param_to_arg_map(instance.name.args.as_slice()),
+            None => HashMap::new(),
+        };
+
+        for ((field_name, field_type), field_obj) in
+            def.fields.iter().zip(instance.fields_equal_to_what.iter())
+        {
+            let instantiated_field_type = self
+                .inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
+                                "failed to instantiate field `{}` type in struct `{}`",
+                                field_name, struct_name
+                            ),
+                            e,
+                        ),
+                    ))
+                })?;
+            let verify_result = self.verify_obj_satisfies_param_type(
+                (**field_obj).clone(),
+                &ParamType::Obj(instantiated_field_type.clone()),
+                verify_state,
+            )?;
+            if verify_result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "failed to verify field `{}` value `{}` satisfies `{}`",
+                        field_name, field_obj, instantiated_field_type
+                    )),
+                )));
+            }
+        }
+
+        Ok(())
     }
 
     fn verify_identifier_with_mod_well_defined(
@@ -2317,10 +2399,11 @@ impl Runtime {
         }
 
         if let Some((param_def, dom_facts)) = &def.param_def_with_dom {
+            let struct_args: Vec<Obj> = struct_ty.args.iter().map(|arg| (**arg).clone()).collect();
             let args_param_types = self
                 .verify_args_satisfy_param_def_flat_types(
                     param_def,
-                    &struct_ty.args,
+                    &struct_args,
                     verify_state,
                     ParamObjType::DefHeader,
                 )
@@ -2345,7 +2428,7 @@ impl Runtime {
             }
 
             let param_to_arg_map =
-                param_def.param_defs_and_args_to_param_to_arg_map(struct_ty.args.as_slice());
+                param_def.param_defs_and_boxed_args_to_param_to_arg_map(struct_ty.args.as_slice());
             for dom_fact in dom_facts.iter() {
                 let instantiated_dom_fact = self
                     .inst_or_and_chain_atomic_fact(

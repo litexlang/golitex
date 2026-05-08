@@ -281,20 +281,9 @@ abstract_prop P(a, b)
 
 ### `struct` — structured type
 
-**Meaning.** A record-like type: field declarations, optionally an iff-block (`<=>:`) tying instances to a predicate (typically using `self` as the instance name).
+**Meaning.** Preview syntax for record-like declarations and field access.
 
-Only `self.<field>` is allowed in that block (each `<field>` must be a declared field name in that struct’s `<=>:` scope); `self` is not a reserved word elsewhere.
-
-**Syntax.** `struct` *name* `(` *parameters* `)` `:` field lines, optional `<=>:` block.
-
-**Example.**
-
-<!-- litex:skip-test -->
-```litex
-struct point(s set):
-    x s
-    y s
-```
+`struct` is currently documented separately because its syntax and semantics are still changing. See [Preview Features](https://litexlang.com/doc/Preview_Features) for the current `struct`, field access, struct parameter, and `by struct` behavior.
 
 ---
 
@@ -869,32 +858,9 @@ by family: \p(R) # 生成 \p(R) = fn(x R) R。即用实参 R 替换形参 a
 
 ### `by struct`
 
-**Meaning.** Use the defining data of a **struct** instance.
+**Meaning.** Preview syntax for instantiating a `forall` fact with tuple data for a struct parameter.
 
-**Syntax.** `by struct` `:` *object*.
-
-**Example.**
-
-<!-- litex:skip-test -->
-```litex
-abstract_prop p(a, b, c)
-
-struct some_struct(a set):
-    field1 a
-    field2 a
-    <=>:
-        $p(a, self.field1, self.field2)
-
-# use by struct to generate set-theoretic definition of struct
-by struct: struct some_struct(R)
-
-(struct some_struct(R)) = {x2 cart(R, R): $p(R, x2[1], x2[2])}
-
-forall x1 struct some_struct(R):
-    x1 $in cart(R, R)
-    x1[1] = x1.field1
-    x1[2] = x1.field2
-```
+The old `by struct: struct ...` form is no longer the current design. See [Preview Features](https://litexlang.com/doc/Preview_Features) for the current `by struct P from (...) as Point:` form and its boundaries.
 
 ---
 

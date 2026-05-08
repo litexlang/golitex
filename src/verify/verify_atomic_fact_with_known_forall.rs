@@ -436,6 +436,24 @@ impl Runtime {
                 }
                 _ => Ok(None),
             },
+            Obj::StructInstance(known) => match given_arg {
+                Obj::StructInstance(given) => {
+                    if known.name.struct_name() != given.name.struct_name() {
+                        return Ok(None);
+                    }
+                    let header_map =
+                        self.match_boxed_arg_vec_then_merge(&known.name.args, &given.name.args)?;
+                    let field_map = self.match_boxed_arg_vec_then_merge(
+                        &known.fields_equal_to_what,
+                        &given.fields_equal_to_what,
+                    )?;
+                    match (header_map, field_map) {
+                        (Some(h), Some(f)) => Ok(self.merge_arg_match_maps(h, f)),
+                        _ => Ok(None),
+                    }
+                }
+                _ => Ok(None),
+            },
             Obj::Atom(AtomObj::Forall(ref p)) => {
                 self.match_arg_when_left_is_forall_param(p, given_arg)
             }

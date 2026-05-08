@@ -215,6 +215,8 @@ impl Runtime {
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
             Ok(self.parse_fn_set(tb)?.into())
+        } else if tb.current_token_is_equal_to(STRUCT_INSTANCE_PREFIX) {
+            self.parse_struct_instance_obj(tb)
         } else if tb.current_token_is_equal_to(ANONYMOUS_FN_PREFIX) {
             let mut result = self.parse_anonymous_fn(tb)?;
             if let Obj::AnonymousFn(anon) = &result {
@@ -336,6 +338,31 @@ impl Runtime {
             })?;
             Ok(built.into())
         }
+    }
+
+    fn parse_struct_instance_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        tb.skip_token(STRUCT_INSTANCE_PREFIX)?;
+        let name = if tb.token_at_add_index(1) == MOD_SIGN {
+            let mod_name = tb.advance()?;
+            tb.skip_token(MOD_SIGN)?;
+            let name = tb.advance()?;
+            NameOrNameWithMod::new_name_with_mod(mod_name, name)
+        } else {
+            NameOrNameWithMod::new_name(tb.advance()?)
+        };
+        let first_args = self.parse_braced_objs(tb)?;
+        let (header_args, fields_equal_to_what) =
+            if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
+                let field_args = self.parse_braced_objs(tb)?;
+                (first_args, field_args)
+            } else {
+                (vec![], first_args)
+            };
+        Ok(StructInstance::new(
+            StructAsParamType::new(name, header_args),
+            fields_equal_to_what,
+        )
+        .into())
     }
 
     pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
