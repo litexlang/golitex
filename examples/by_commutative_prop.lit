@@ -1,3 +1,4 @@
+
 abstract_prop p(x, y)
 
 by commutative_prop:
@@ -14,3 +15,5 @@ claim:
     prove:
         $p(a, b)
     know $p(b, a)
+
+# After p is registered as commutative, known $p(b, a) verifies $p(a, b).
