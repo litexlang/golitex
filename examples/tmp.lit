@@ -1,0 +1,12 @@
+forall x, y R:
+    =>:
+        x != 0 or y != 0
+    <=>:
+        x^2 + y^2 != 0
+
+forall x, y R:
+    =>:
+        x*x + y*y != 0
+    <=>:
+        x != 0 or y != 0
+
