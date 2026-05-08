@@ -42,6 +42,7 @@ pub struct Environment {
     pub known_objs_in_fn_sets: HashMap<ObjString, KnownFnInfo>,
 
     pub known_name_belong_to_struct: HashMap<String, StructName>,
+    pub known_transitive_props: HashMap<String, ()>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
@@ -118,6 +119,7 @@ impl Environment {
             known_objs_equal_to_matrix_list: known_matrix_list_objs,
             known_objs_equal_to_normalized_decimal_number: known_calculated_value_of_obj,
             known_name_belong_to_struct,
+            known_transitive_props: HashMap::new(),
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
         }
@@ -142,6 +144,11 @@ impl fmt::Display for Environment {
             f,
             "    known_name_belong_to_struct: {:?}\n",
             self.known_name_belong_to_struct.len()
+        )?;
+        write!(
+            f,
+            "    known_transitive_props: {:?}\n",
+            self.known_transitive_props.len()
         )?;
         write!(
             f,
@@ -675,6 +682,12 @@ impl Environment {
             HashMap::new(),
             HashMap::new(),
         )
+    }
+}
+
+impl Environment {
+    pub fn store_transitive_prop_name(&mut self, prop_name: String) {
+        self.known_transitive_props.insert(prop_name, ());
     }
 }
 

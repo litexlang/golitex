@@ -109,6 +109,7 @@ pub const STRONG_INDUC: &str = "strong_induc";
 pub const INDUC_PARAM_2_NAME: &str = "param_2";
 pub const FOR: &str = "for";
 pub const EXTENSION: &str = "extension";
+pub const TRANSITIVE_PROP: &str = "transitive_prop";
 pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
@@ -265,6 +266,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         FOR,
         WITNESS,
         EXTENSION,
+        TRANSITIVE_PROP,
         IMPOSSIBLE,
         TUPLE,
         ALGO,

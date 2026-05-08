@@ -318,6 +318,22 @@ impl ByForStmt {
     }
 }
 
+impl ByTransitivePropStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by transitive_prop}}:}} & {}",
+            self.forall_fact.to_latex_string()
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
 impl ByInducStmt {
     pub fn to_latex_string(&self) -> String {
         let goals = self
@@ -2016,6 +2032,7 @@ impl Stmt {
             Stmt::ByStructStmt(x) => x.to_latex_string(),
             Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
+            Stmt::ByTransitivePropStmt(x) => x.to_latex_string(),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }

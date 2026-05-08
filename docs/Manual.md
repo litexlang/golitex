@@ -1458,6 +1458,36 @@ by extension:
 
 ---
 
+### Register a transitive predicate (`by transitive_prop`)
+
+Use **`by transitive_prop:`** to prove that a binary `abstract_prop` is transitive. The `prove:` block must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
+
+After the proof succeeds, Litex records that predicate as transitive in the current environment. Later, when Litex stores a chain whose links all use the same predicate, such as `a $p b $p c`, it looks through the current environment stack for that transitive registration and stores `$p(a, c)` automatically.
+
+```litex
+abstract_prop p(x, y)
+
+by transitive_prop:
+    prove:
+        forall x, y, z set:
+            $p(x, y)
+            $p(y, z)
+            =>:
+                $p(x, z)
+    know $p(x, z)
+
+have a, b, c set
+
+claim:
+    prove:
+        $p(a, c)
+    know a $p b $p c
+```
+
+For a longer same-predicate chain, Litex stores all non-adjacent consequences, such as `$p(a, c)`, `$p(b, d)`, and `$p(a, d)` from `a $p b $p c $p d`.
+
+---
+
 ### Closed range as cases (`by closed_range as cases`)
 
 For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
@@ -1526,6 +1556,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by induc` | Prove a statement by induction |
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
+| `by transitive_prop` | Register a binary abstract predicate as transitive |
 | `by fn as set` / `by fn set as set` / `by family as set` / `by tuple as set` | Expose the set-theoretic meaning behind function, family, and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
