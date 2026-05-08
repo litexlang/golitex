@@ -663,6 +663,23 @@ have by exist v R st { v = 1 }: h
 h = 1
 ```
 
+Warning: an `exist` witness is local to the existential fact. A known `forall` may be used only with an argument that is meaningful outside that local witness scope.
+
+For example, this known fact says that every real number can be copied as some witness:
+
+```text
+know forall x R:
+    exist y R st {y = x}
+```
+
+It does **not** imply the following:
+
+```text
+exist z R st {z = z + 1}
+```
+
+The object used for the `forall` parameter would have to be the local witness itself, or an expression depending on it. That is not a valid instantiation: after leaving the `exist` body, the witness name no longer denotes an object. The same issue can appear through larger expressions that mention local free parameters, such as set-builder bodies, function-set bodies, definition-header parameters, induction parameters, algorithm parameters, or struct-field parameters.
+
 ---
 
 ### Universal facts
