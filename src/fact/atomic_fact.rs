@@ -1058,6 +1058,30 @@ impl AtomicFact {
             _ => None,
         }
     }
+
+    pub fn commutative_reordered_args(&self, gather: &[usize]) -> Option<Self> {
+        match self {
+            AtomicFact::NormalAtomicFact(f) => {
+                let n = f.body.len();
+                if gather.len() != n || n < 2 {
+                    return None;
+                }
+                let mut seen = vec![false; n];
+                for &i in gather {
+                    if i >= n || seen[i] {
+                        return None;
+                    }
+                    seen[i] = true;
+                }
+                let new_body: Vec<Obj> = gather.iter().map(|&i| f.body[i].clone()).collect();
+                Some(
+                    NormalAtomicFact::new(f.predicate.clone(), new_body, f.line_file.clone())
+                        .into(),
+                )
+            }
+            _ => None,
+        }
+    }
 }
 
 impl AtomicFact {
@@ -1601,6 +1625,44 @@ impl AtomicFact {
             AtomicFact::FnEqualInFact(a) => a.line_file.clone(),
             AtomicFact::FnEqualFact(a) => a.line_file.clone(),
         }
+    }
+
+    pub fn with_line_file(mut self, line_file: LineFile) -> Self {
+        match &mut self {
+            AtomicFact::EqualFact(a) => a.line_file = line_file,
+            AtomicFact::LessFact(a) => a.line_file = line_file,
+            AtomicFact::GreaterFact(a) => a.line_file = line_file,
+            AtomicFact::LessEqualFact(a) => a.line_file = line_file,
+            AtomicFact::GreaterEqualFact(a) => a.line_file = line_file,
+            AtomicFact::IsSetFact(a) => a.line_file = line_file,
+            AtomicFact::IsNonemptySetFact(a) => a.line_file = line_file,
+            AtomicFact::IsFiniteSetFact(a) => a.line_file = line_file,
+            AtomicFact::InFact(a) => a.line_file = line_file,
+            AtomicFact::IsCartFact(a) => a.line_file = line_file,
+            AtomicFact::IsTupleFact(a) => a.line_file = line_file,
+            AtomicFact::SubsetFact(a) => a.line_file = line_file,
+            AtomicFact::SupersetFact(a) => a.line_file = line_file,
+            AtomicFact::NormalAtomicFact(a) => a.line_file = line_file,
+            AtomicFact::NotNormalAtomicFact(a) => a.line_file = line_file,
+            AtomicFact::NotEqualFact(a) => a.line_file = line_file,
+            AtomicFact::NotLessFact(a) => a.line_file = line_file,
+            AtomicFact::NotGreaterFact(a) => a.line_file = line_file,
+            AtomicFact::NotLessEqualFact(a) => a.line_file = line_file,
+            AtomicFact::NotGreaterEqualFact(a) => a.line_file = line_file,
+            AtomicFact::NotIsSetFact(a) => a.line_file = line_file,
+            AtomicFact::NotIsNonemptySetFact(a) => a.line_file = line_file,
+            AtomicFact::NotIsFiniteSetFact(a) => a.line_file = line_file,
+            AtomicFact::NotInFact(a) => a.line_file = line_file,
+            AtomicFact::NotIsCartFact(a) => a.line_file = line_file,
+            AtomicFact::NotIsTupleFact(a) => a.line_file = line_file,
+            AtomicFact::NotSubsetFact(a) => a.line_file = line_file,
+            AtomicFact::NotSupersetFact(a) => a.line_file = line_file,
+            AtomicFact::RestrictFact(a) => a.line_file = line_file,
+            AtomicFact::NotRestrictFact(a) => a.line_file = line_file,
+            AtomicFact::FnEqualInFact(a) => a.line_file = line_file,
+            AtomicFact::FnEqualFact(a) => a.line_file = line_file,
+        }
+        self
     }
 }
 

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 pub const FACT_PREFIX: &str = "$";
+pub const STRUCT_INSTANCE_PREFIX: &str = "&";
 // Family use (member type): `\name(arg1, ...)`; `family` is only the definition keyword.
 pub const FAMILY_OBJ_PREFIX: &str = "\\";
 pub const DOT_AKA_FIELD_ACCESS_SIGN: &str = ".";
@@ -108,6 +109,8 @@ pub const STRONG_INDUC: &str = "strong_induc";
 pub const INDUC_PARAM_2_NAME: &str = "param_2";
 pub const FOR: &str = "for";
 pub const EXTENSION: &str = "extension";
+pub const TRANSITIVE_PROP: &str = "transitive_prop";
+pub const COMMUTATIVE_PROP: &str = "commutative_prop";
 pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
@@ -150,6 +153,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let symbols = [
         FAMILY_OBJ_PREFIX,
+        STRUCT_INSTANCE_PREFIX,
         EQUIVALENT_SIGN,
         NOT_EQUAL,
         LESS_EQUAL,
@@ -263,6 +267,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         FOR,
         WITNESS,
         EXTENSION,
+        TRANSITIVE_PROP,
         IMPOSSIBLE,
         TUPLE,
         ALGO,

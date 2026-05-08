@@ -10,6 +10,7 @@ pub struct Environment {
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub defined_families: HashMap<FamilyName, DefFamilyStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
+    pub defined_structs: HashMap<StructName, DefStructStmt>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -40,6 +41,10 @@ pub struct Environment {
 
     pub known_objs_in_fn_sets: HashMap<ObjString, KnownFnInfo>,
 
+    pub known_name_belong_to_struct: HashMap<String, StructName>,
+    pub known_transitive_props: HashMap<String, ()>,
+    pub known_commutative_props: HashMap<String, CommutativePropValue>,
+
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
 }
@@ -51,6 +56,7 @@ impl Environment {
         families: HashMap<FamilyName, DefFamilyStmt>,
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
+        structs: HashMap<StructName, DefStructStmt>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
@@ -87,6 +93,7 @@ impl Environment {
         >,
         known_matrix_list_objs: HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
         known_calculated_value_of_obj: HashMap<ObjString, Number>,
+        known_name_belong_to_struct: HashMap<String, StructName>,
         cache_known_valid_obj: HashMap<ObjString, ()>,
         cache_known_fact: HashMap<FactString, LineFile>,
     ) -> Self {
@@ -96,6 +103,7 @@ impl Environment {
             defined_families: families,
             defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
+            defined_structs: structs,
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -111,6 +119,9 @@ impl Environment {
             known_objs_equal_to_finite_seq_list: known_finite_seq_list_objs,
             known_objs_equal_to_matrix_list: known_matrix_list_objs,
             known_objs_equal_to_normalized_decimal_number: known_calculated_value_of_obj,
+            known_name_belong_to_struct,
+            known_transitive_props: HashMap::new(),
+            known_commutative_props: HashMap::new(),
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
         }
@@ -124,11 +135,31 @@ impl fmt::Display for Environment {
         write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;
         write!(f, "    families: {:?}\n", self.defined_families.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
+        write!(f, "    structs: {:?}\n", self.defined_structs.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
         write!(
             f,
             "    known_fn_in_fn_set: {:?}\n",
             self.known_objs_in_fn_sets.len()
+        )?;
+        write!(
+            f,
+            "    known_name_belong_to_struct: {:?}\n",
+            self.known_name_belong_to_struct.len()
+        )?;
+        write!(
+            f,
+            "    known_transitive_props: {:?}\n",
+            self.known_transitive_props.len()
+        )?;
+        write!(
+            f,
+            "    known_commutative_props: {} predicates, {} permutations\n",
+            self.known_commutative_props.len(),
+            self.known_commutative_props
+                .values()
+                .map(|v| v.len())
+                .sum::<usize>()
         )?;
         write!(
             f,
@@ -659,7 +690,80 @@ impl Environment {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
         )
+    }
+}
+
+impl Environment {
+    pub fn store_transitive_prop_name(&mut self, prop_name: String) {
+        self.known_transitive_props.insert(prop_name, ());
+    }
+
+    pub fn store_commutative_prop_permutation(
+        &mut self,
+        prop_name: String,
+        gather: Vec<usize>,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        let n = gather.len();
+        if n < 2 {
+            return Err(
+                StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "store_commutative_prop_permutation: arity must be at least 2".to_string(),
+                    line_file,
+                ))
+                .into(),
+            );
+        }
+        if !commutative_gather_is_valid_permutation(&gather, n) {
+            return Err(
+                StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "store_commutative_prop_permutation: gather is not a valid permutation"
+                        .to_string(),
+                    line_file,
+                ))
+                .into(),
+            );
+        }
+        if commutative_gather_is_identity(&gather) {
+            return Err(
+                StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "store_commutative_prop_permutation: identity permutation is not allowed"
+                        .to_string(),
+                    line_file,
+                ))
+                .into(),
+            );
+        }
+        if let Some(existing) = self.known_commutative_props.get(&prop_name) {
+            if let Some(first) = existing.first() {
+                if first.len() != n {
+                    return Err(StoreFactRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!(
+                            "store_commutative_prop_permutation: `{}` already has arity {}, got {}",
+                            prop_name,
+                            first.len(),
+                            n
+                        ),
+                            line_file,
+                        ),
+                    )
+                    .into());
+                }
+            }
+        }
+        let entry = self
+            .known_commutative_props
+            .entry(prop_name)
+            .or_insert_with(Vec::new);
+        if entry.iter().any(|g| g == &gather) {
+            return Ok(());
+        }
+        entry.push(gather);
+        Ok(())
     }
 }
 
@@ -688,4 +792,27 @@ impl KnownForallFactParamsAndDom {
             line_file,
         }
     }
+}
+
+pub type CommutativePropValue = Vec<Vec<usize>>;
+
+fn commutative_gather_is_identity(gather: &[usize]) -> bool {
+    gather.iter().enumerate().all(|(i, &g)| g == i)
+}
+
+fn commutative_gather_is_valid_permutation(gather: &[usize], n: usize) -> bool {
+    if gather.len() != n {
+        return false;
+    }
+    let mut seen = vec![false; n];
+    for &i in gather {
+        if i >= n {
+            return false;
+        }
+        if seen[i] {
+            return false;
+        }
+        seen[i] = true;
+    }
+    true
 }

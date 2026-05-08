@@ -35,23 +35,42 @@ impl Runtime {
             let next_flat_index = flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_forall_param_names[flat_index..next_flat_index].to_vec();
-            let instantiated_set = self
-                .inst_obj(
-                    &param_def_with_set.set,
-                    &original_param_to_forall_obj,
-                    ParamObjType::FnSet,
-                )
-                .map_err(|inst_error| {
-                    short_exec_error(
-                        stmt_exec.clone(),
-                        format!("{}: failed to instantiate generated parameter set", context),
-                        Some(inst_error),
-                        vec![],
+            let instantiated_type = match &param_def_with_set.param_type {
+                ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(
+                    self.inst_obj(set, &original_param_to_forall_obj, ParamObjType::FnSet)
+                        .map_err(|inst_error| {
+                            short_exec_error(
+                                stmt_exec.clone(),
+                                format!(
+                                    "{}: failed to instantiate generated parameter set",
+                                    context
+                                ),
+                                Some(inst_error),
+                                vec![],
+                            )
+                        })?,
+                ),
+                ParamGroupWithSetTypeEnum::Struct(struct_ty) => self
+                    .inst_param_type(
+                        &ParamType::Struct(struct_ty.clone()),
+                        &original_param_to_forall_obj,
+                        ParamObjType::FnSet,
                     )
-                })?;
+                    .map_err(|inst_error| {
+                        short_exec_error(
+                            stmt_exec.clone(),
+                            format!(
+                                "{}: failed to instantiate generated struct parameter type",
+                                context
+                            ),
+                            Some(inst_error),
+                            vec![],
+                        )
+                    })?,
+            };
             forall_param_defs_with_type.push(ParamGroupWithParamType::new(
                 generated_names_for_current_group.clone(),
-                ParamType::Obj(instantiated_set),
+                instantiated_type,
             ));
             for (original_name, generated_name) in param_def_with_set
                 .params
@@ -211,23 +230,39 @@ impl Runtime {
             let next_flat_index = exist_flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_exist_param_names[exist_flat_index..next_flat_index].to_vec();
-            let instantiated_set = self
-                .inst_obj(
-                    &param_def_with_set.set,
-                    &original_param_to_exist_obj,
-                    ParamObjType::FnSet,
-                )
-                .map_err(|inst_error| {
-                    short_exec_error(
-                        stmt_exec.clone(),
-                        format!("{}: failed to instantiate witness parameter set", context),
-                        Some(inst_error),
-                        vec![],
+            let instantiated_type = match &param_def_with_set.param_type {
+                ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(
+                    self.inst_obj(set, &original_param_to_exist_obj, ParamObjType::FnSet)
+                        .map_err(|inst_error| {
+                            short_exec_error(
+                                stmt_exec.clone(),
+                                format!("{}: failed to instantiate witness parameter set", context),
+                                Some(inst_error),
+                                vec![],
+                            )
+                        })?,
+                ),
+                ParamGroupWithSetTypeEnum::Struct(struct_ty) => self
+                    .inst_param_type(
+                        &ParamType::Struct(struct_ty.clone()),
+                        &original_param_to_exist_obj,
+                        ParamObjType::FnSet,
                     )
-                })?;
+                    .map_err(|inst_error| {
+                        short_exec_error(
+                            stmt_exec.clone(),
+                            format!(
+                                "{}: failed to instantiate witness struct parameter type",
+                                context
+                            ),
+                            Some(inst_error),
+                            vec![],
+                        )
+                    })?,
+            };
             exist_param_defs_with_type.push(ParamGroupWithParamType::new(
                 generated_names_for_current_group.clone(),
-                ParamType::Obj(instantiated_set),
+                instantiated_type,
             ));
             for (original_name, generated_name) in param_def_with_set
                 .params
@@ -334,8 +369,16 @@ impl Runtime {
             obj_for_bound_param_in_scope(unique_x2_name.clone(), ParamObjType::Forall);
         let mut unique_element_cart_factors: Vec<Obj> = Vec::with_capacity(param_names.len() + 1);
         for param_def_with_set in fn_body.params_def_with_set.iter() {
+            let Some(set) = param_def_with_set.set_obj() else {
+                return Err(short_exec_error(
+                    stmt_exec.clone(),
+                    "by fn set as set: struct parameters cannot be unfolded as cartesian graph factors yet".to_string(),
+                    None,
+                    vec![],
+                ));
+            };
             for _ in param_def_with_set.params.iter() {
-                unique_element_cart_factors.push(param_def_with_set.set.clone());
+                unique_element_cart_factors.push(set.clone());
             }
         }
         unique_element_cart_factors.push(fn_body.ret_set.as_ref().clone());
@@ -383,7 +426,7 @@ impl Runtime {
         Ok((forall_shape, forall_in, forall_exist, forall_unique))
     }
 
-    /// `by fn`：在本地环境中占位（不另从知识库证明），刻画事实在主环境登记。
+    // `by fn as set` stores the characterization facts in the main environment.
     fn exec_by_fn_stmt_verify_process(&mut self) -> Result<(), RuntimeError> {
         Ok(())
     }
@@ -404,7 +447,8 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn: failed to store cart/tuple shape characterization fact".to_string(),
+                    "by fn as set: failed to store cart/tuple shape characterization fact"
+                        .to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -415,7 +459,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn: failed to store graph-element characterization fact".to_string(),
+                    "by fn as set: failed to store graph-element characterization fact".to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -427,7 +471,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn: failed to store element characterization fact".to_string(),
+                    "by fn as set: failed to store element characterization fact".to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -439,7 +483,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn: failed to store uniqueness characterization fact".to_string(),
+                    "by fn as set: failed to store uniqueness characterization fact".to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -449,7 +493,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnStmt) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_by_fn_stmt(&mut self, stmt: &ByFnAsSetStmt) -> Result<StmtResult, RuntimeError> {
         let stmt_exec: Stmt = stmt.clone().into();
 
         let fn_set = match self.get_cloned_object_in_fn_set(&stmt.function) {
@@ -458,7 +502,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt_exec,
                     format!(
-                        "by fn: `{}` is not known to belong to a fn set",
+                        "by fn as set: `{}` is not known to belong to a fn set",
                         stmt.function
                     ),
                     None,
@@ -473,7 +517,7 @@ impl Runtime {
                 &fn_set,
                 &stmt.line_file,
                 &stmt_exec,
-                "by fn",
+                "by fn as set",
             )?;
 
         self.run_in_local_env(|rt| rt.exec_by_fn_stmt_verify_process())?;
@@ -504,7 +548,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by fn set: failed to prove cart/tuple shape characterization `{}`",
+                        "by fn set as set: failed to prove cart/tuple shape characterization `{}`",
                         forall_shape
                     ),
                     Some(verify_error),
@@ -517,7 +561,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by fn set: failed to prove graph-element characterization `{}`",
+                        "by fn set as set: failed to prove graph-element characterization `{}`",
                         forall_in
                     ),
                     Some(verify_error),
@@ -530,7 +574,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by fn set: failed to prove graph-coverage characterization `{}`",
+                        "by fn set as set: failed to prove graph-coverage characterization `{}`",
                         forall_exist
                     ),
                     Some(verify_error),
@@ -543,7 +587,7 @@ impl Runtime {
                 short_exec_error(
                     stmt_exec.clone(),
                     format!(
-                        "by fn set: failed to prove graph-uniqueness characterization `{}`",
+                        "by fn set as set: failed to prove graph-uniqueness characterization `{}`",
                         forall_unique
                     ),
                     Some(verify_error),
@@ -561,7 +605,7 @@ impl Runtime {
 
     fn exec_by_fn_set_stmt_store_process(
         &mut self,
-        stmt: &ByFnSetStmt,
+        stmt: &ByFnSetAsSetStmt,
         stmt_exec: &Stmt,
     ) -> Result<InferResult, RuntimeError> {
         let membership_fact = InFact::new(
@@ -574,14 +618,17 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt_exec.clone(),
-                    "by fn set: failed to store membership fact".to_string(),
+                    "by fn set as set: failed to store membership fact".to_string(),
                     Some(store_fact_error),
                     vec![],
                 )
             })
     }
 
-    pub fn exec_by_fn_set_stmt(&mut self, stmt: &ByFnSetStmt) -> Result<StmtResult, RuntimeError> {
+    pub fn exec_by_fn_set_stmt(
+        &mut self,
+        stmt: &ByFnSetAsSetStmt,
+    ) -> Result<StmtResult, RuntimeError> {
         let stmt_exec: Stmt = stmt.clone().into();
         let (forall_shape, forall_in, forall_exist, forall_unique) = self
             .build_fn_characterization_facts(
@@ -589,7 +636,7 @@ impl Runtime {
                 &stmt.fn_set.body,
                 &stmt.line_file,
                 &stmt_exec,
-                "by fn set",
+                "by fn set as set",
             )?;
 
         let verify_inside_results = self.run_in_local_env(|rt| {

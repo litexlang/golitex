@@ -5,6 +5,17 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
+    pub fn is_commutative_prop_name_known(&self, prop_name: &str) -> bool {
+        for env in self.iter_environments_from_top() {
+            if let Some(perms) = env.known_commutative_props.get(prop_name) {
+                if !perms.is_empty() {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     /// Declared function space (`KnownFnInfo.fn_set`) only — not `$restrict_fn_in` targets.
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<&FnSetBody> {
         let key = obj.to_string();

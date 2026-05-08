@@ -24,6 +24,23 @@ impl Runtime {
                 ParamType::Obj(obj) => {
                     InFact::new(arg.clone(), obj.clone(), _line_file.clone()).into()
                 }
+                ParamType::Struct(struct_ty) => {
+                    let verify_result = self.verify_obj_satisfies_param_type(
+                        arg.clone(),
+                        &ParamType::Struct(struct_ty.clone()),
+                        &VerifyState::new(0, false),
+                    );
+                    match verify_result? {
+                        StmtResult::NonFactualStmtSuccess(success) => {
+                            infer_result.new_infer_result_inside(success.infers);
+                        }
+                        StmtResult::FactualStmtSuccess(success) => {
+                            infer_result.new_infer_result_inside(success.infers);
+                        }
+                        StmtResult::StmtUnknown(_) => {}
+                    }
+                    continue;
+                }
             };
             infer_result.new_infer_result_inside(
                 self.verify_well_defined_and_store_and_infer_with_default_verify_state(new_fact)?,

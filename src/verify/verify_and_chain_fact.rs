@@ -39,9 +39,9 @@ impl Runtime {
         }
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
             and_fact.clone().into(),
-            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+            VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::fact_with_note(
                 and_fact.clone().into(),
-                "and: each conjunct verified in order".to_string(),
+                Some("and: each conjunct verified in order".to_string()),
             )]),
             child_results,
         ))
@@ -99,9 +99,9 @@ impl Runtime {
         }
         Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
-            VerifiedByResult::wrap_bys(vec![VerifiedByResult::Fact(
+            VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::fact_with_note(
                 chain_fact.clone().into(),
-                "chain: each step verified in order".to_string(),
+                Some("chain: each step verified in order".to_string()),
             )]),
             child_results,
         ))
