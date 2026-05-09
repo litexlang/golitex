@@ -14,6 +14,18 @@ Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Ma
 
 After you prove the standard associativity-shaped `forall` for a binary `abstract_prop`, Litex records that predicate as **transitive**. Storing a same-predicate chain (e.g. `a $p b $p c`) also stores non-adjacent consequences such as `$p(a, c)`. See **Manual — Register a transitive predicate (`by transitive_prop`)**.
 
+### `fn_range(f)` and `fn_dom(f)` objects (2026-05)
+
+`fn_range(f)` and `fn_dom(f)` are preview objects for the range and set-theoretic domain of a known function. In the current minimal form, Litex only checks that `f` is already known as a function. These objects do **not** yet have attached mathematical properties: membership properties, graph facts, and domain/range inference are not part of this preview yet.
+
+`fn_dom(f)` should be read as the set-theoretic / graph domain of `f`, not necessarily the exact argument shape accepted by function application. For example, if `f` is known as `fn(x, y R) R`, a future `fn_dom(f)` may describe the product-style input domain, while ordinary calls still use `f(a, b)` rather than passing one tuple argument to `f`.
+
+```litex
+have f fn(x R) R
+fn_range(f) = fn_range(f)
+fn_dom(f) = fn_dom(f)
+```
+
 ### `by commutative_prop` (2026-05)
 
 After you prove a `forall` whose dom and then are the **same** positive abstract predicate, with every parameter of the `forall` appearing **exactly once** in each row (a permutation), Litex records one or more **gather** permutations for that predicate name. When a **positive** atomic instance is still unproved after the usual steps, the checker may retry using a **reordered** argument list derived from a stored gather (that retry does not run commutative post-processing again). Arity **≥ 2**; multiple registrations append distinct permutations (arity must stay consistent). Does not apply to negated `$not $p(...)` atoms. See **Manual — Register a commutative predicate (`by commutative_prop`)**. Examples: `examples/by_commutative_prop.lit`, `examples/tmp.lit` (4-ary permutation demo).

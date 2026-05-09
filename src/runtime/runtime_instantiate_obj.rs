@@ -74,6 +74,18 @@ impl Runtime {
             Obj::ClosedRange(inner) => {
                 self.inst_closed_range(inner, param_to_arg_map, param_obj_type)
             }
+            Obj::FnRange(inner) => Ok(FnRange::new(self.inst_obj(
+                inner.fn_obj.as_ref(),
+                param_to_arg_map,
+                param_obj_type,
+            )?)
+            .into()),
+            Obj::FnDom(inner) => Ok(FnDom::new(self.inst_obj(
+                inner.fn_obj.as_ref(),
+                param_to_arg_map,
+                param_obj_type,
+            )?)
+            .into()),
             Obj::FiniteSeqSet(inner) => {
                 self.inst_finite_seq_set(inner, param_to_arg_map, param_obj_type)
             }

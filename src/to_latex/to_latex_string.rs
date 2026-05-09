@@ -1982,6 +1982,8 @@ impl Obj {
             Obj::Product(x) => x.to_latex_string(),
             Obj::Range(x) => x.to_latex_string(),
             Obj::ClosedRange(x) => x.to_latex_string(),
+            Obj::FnRange(x) => latex_texttt_escape(&x.to_string()),
+            Obj::FnDom(x) => latex_texttt_escape(&x.to_string()),
             Obj::FiniteSeqSet(x) => x.to_latex_string(),
             Obj::SeqSet(x) => x.to_latex_string(),
             Obj::FiniteSeqListObj(x) => x.to_latex_string(),
