@@ -1,4 +1,8 @@
 pub const COMMON_FACTS: &str = r#"
+abstract_prop injective(f)
+abstract_prop surjective(f)
+abstract_prop bijective(f)
+
 know:
     forall a, b R:
         =>:

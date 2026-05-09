@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: A Simple Formal Language Learnable in 2 Hours
+# Litex: A Fact-Oriented Formal Language for Everyone
 
 *by Jiachen Shen and The Litex Team, version 0.9.73-beta*
 
@@ -16,7 +16,7 @@
 [![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/litexlang/golitex)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
 
-**Beta notice:** Litex is still an experimental project for testing ideas about formalizing everyday mathematics. It is not ready for production or mission-critical proof work yet. **We hope more people will look at Litex, try it and discuss the mathematical philosophy behind it.**
+**Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome people to try it and discuss the mathematical philosophy behind it.**
 
 </div>
 
@@ -26,13 +26,13 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is an open-source language for writing mathematical proofs as code.
+Litex is an open-source language for writing mathematical proofs as a flow of checkable facts. *It is a philosophy of mathematics as a growing body of computer-checkable facts.*
 
-The goal is simple: if a piece of mathematics is easy to say on paper, it should also be easy to write in a computer-checkable form.
+The central idea is: **users write facts; Litex grows a verified context**. A file introduces objects, states facts, checks them, stores successful ones, and reuses them later.
 
-You can think of Litex as a strict mathematical notebook. You write objects such as numbers, sets, tuples, and functions. You state facts such as `x = 2` or `x $in R`. Litex checks whether those facts follow from what is already known.
+Litex is designed around ordinary mathematical writing: objects such as numbers, sets, and functions; facts such as `x = 2` or `x $in R`; and statements that grow a proof step by step. The goal is to make formal proof feel less like programming a proof engine and more like writing a strict checked notebook.
 
-This makes Litex feel close to daily mathematical writing. You write facts in the order you want the checker to understand them.
+It emphasizes a set-theoretic surface, proof scripts as verifiable facts, a growing context, and proof output that explains why each fact was accepted.
 
 Here is the intended feel:
 
@@ -63,41 +63,44 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   </tr>
 </table>
 
-This small example shows the intended feel: Litex code looks close to the mathematical steps, while the checker handles routine rewriting, arithmetic, and reuse of known facts.
+This shows the intended feel: Litex states the desired facts directly, while the checker handles routine rewriting, arithmetic, and reuse of known facts.
 
-## Why It Stays Simple
+## Why It Feels Simple
 
-Litex stays simple in three ways.
+Litex feels simple because routine mathematical structure lives in the checker, not in user proof scripts.
 
-1. **Set theory and basic mathematics.** Litex starts from familiar things: sets, elements, numbers, functions, tuples, relations, and facts.
-2. **Many basic relationships are built in.** Litex knows many small links between equality, order, membership, functions, sets, tuples, and arithmetic.
-3. **Matching and substitution reduce naming.** Litex finds known facts and known `forall` facts by shape, then substitutes the matching objects.
+1. **Facts are proof steps.** A script mostly states mathematical facts in reading order.
+2. **The context grows.** Once verified, a fact is stored and can produce routine consequences.
+3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
+4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
 
-For example, in Litex:
+For example, a syllogism is ordinary mathematical information:
 
 ```litex
-forall x R:
-    x = 2
-    =>:
-        x + 1 = 3
-        x^2 = 4
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+know forall x human:
+    $mortal(x)
+
+$mortal(Socrates)
 ```
 
-The assumption `x = 2` becomes known inside the local proof context. Litex can find it by matching the goal, substitute `2` for `x`, and let builtin arithmetic close `x + 1 = 3`.
+The user does not say "apply the theorem with `x = Socrates`." Litex matches `$mortal(Socrates)` with the known `forall`, sees that `Socrates` belongs to `human`, and verifies the conclusion.
 
-This is also why `forall` is central in Litex. A known `forall` theorem is like knowing infinitely many concrete facts at once: whenever the arguments match and the assumptions hold, Litex can substitute concrete objects and use the result.
+This is why `forall` is central: a known `forall` theorem acts like infinitely many concrete facts, ready to use when arguments and assumptions match.
 
-When thinking in Litex, start with three blocks: **objects**, **facts**, and **statements**.
+Think in three blocks: **objects**, **facts**, and **statements**.
 
-- **Objects** are the mathematical things being discussed, such as number `2`, real number set`R`,anonymous function `'R(z){z}`, list set `{1, 2, 3}`, or a function object `1 + 2`.
-- **Facts** are claims about objects, such as `x = 2`, `x $in R`, `0 <= x`, `forall! x set => {x = x}`, `exist x R st {x ^ 2 = 4}`.
-- **Statements** are actions in the proof script: define an object, introduce a fact, prove a fact, or store known information.
+- **Objects** are mathematical things: `2`, `R`, `'R(z){z}`, `{1, 2, 3}`, or `1 + 2`.
+- **Facts** are claims about objects: `x = 2`, `x $in R`, `0 <= x`, `forall! x set => {x = x}`, or `exist x R st {x ^ 2 = 4}`.
+- **Statements** are proof-script actions: define an object, introduce a fact, prove a fact, or store known information.
 
-For a deeper explanation, read the [Manual](https://litexlang.com/doc/Manual#manual-introduction), especially the [Proof Process](https://litexlang.com/doc/Manual#proof-process).
+For more, read the [Manual](https://litexlang.com/doc/Manual#manual-introduction), especially [Proof Process](https://litexlang.com/doc/Manual#proof-process).
 
 ## Proofs Explain Themselves
 
-Litex does not only say whether a fact passed. Its output tells you how the fact was proved.
+Litex does not only say whether a fact passed. It tells you how it was proved.
 
 ```litex
 abstract_prop p(x)
@@ -106,7 +109,7 @@ know forall x R:
 $p(2)
 ```
 
-The output message is like this:
+The output looks like:
 
 ```json
 {
@@ -125,7 +128,7 @@ The output message is like this:
 }
 ```
 
-This output says that `$p(2)` was proved by reusing the known `forall` fact. Litex matched `x` with `2`, substituted it into `$p(x)`, and closed the goal. This makes the proof process learnable: you can see whether a fact closed by a builtin rule, a known fact, a known `forall`, or an inferred consequence.
+This says `$p(2)` was proved by reusing the known `forall`: Litex matched `x` with `2`, substituted into `$p(x)`, and closed the goal. You can see whether a fact closed by a builtin rule, a known fact, a known `forall`, or an inferred consequence.
 
 ## Start Here
 
@@ -148,4 +151,4 @@ _- 樊振东在巴黎奥运会后接受采访时说_
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 
-Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Zeyu Zheng, Siqi Guo, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Xiuyuan Lu, Yunwen Guo for their emotional support and insightful advice. I am certain this list of special thanks will only grow longer in the future.
+Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Zeyu Zheng, Siqi Guo, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Xiuyuan Lu, and Yunwen Guo for their support and advice. I am sure this list will keep growing.

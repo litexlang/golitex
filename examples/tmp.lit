@@ -1,0 +1,7 @@
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+know forall x human:
+    $mortal(x)
+
+$mortal(Socrates)

@@ -14,11 +14,15 @@ _- Jeff Hinton_
 
 > **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion about the mathematical philosophy behind it.
 
-This manual explains how Litex reads and checks mathematical proof scripts. The main idea is simple: a piece of Litex code introduces mathematical objects, states facts about them, checks those facts, and stores the successful facts for later use.
+This manual explains how Litex reads and checks mathematical proof scripts. The central idea is: **users write facts; Litex grows a verified context**.
 
-Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the language so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
+A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
 
-This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper. For example, using a known value can be written as direct algebraic steps:
+Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work.
+
+Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
+
+This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a strictly checked and explainable proof trace. For example, using a known value can be written as direct algebraic steps:
 
 <table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
@@ -47,7 +51,7 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   </tr>
 </table>
 
-Litex's checker is designed to remember known facts, use builtin arithmetic and substitution, and infer routine consequences automatically. The result is usually shorter code, fewer proof-engine details, and a lower learning burden for everyday mathematical proofs.
+Litex's checker is designed to remember known facts, use builtin arithmetic and substitution, and infer routine consequences automatically. The result is usually shorter code, fewer proof-engine details, and a lower learning burden for everyday mathematical proofs. The deeper design goal is to make formal proof feel like context growth: write facts in mathematical order, let the checker explain how each accepted fact follows, and reuse the verified context as the argument develops.
 
 > Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
@@ -843,6 +847,14 @@ These predicates express equality of functions.
 
 ---
 
+### Function Properties
+
+Litex also provides the standard function-property atomic fact forms `$injective(f)`, `$surjective(f)`, and `$bijective(f)`.
+
+For now, these forms have dedicated atomic-fact nodes in the kernel, but Litex does not apply a builtin verification rule for injectivity, surjectivity, or bijectivity. Users should prove and cite the needed facts explicitly.
+
+---
+
 ### Not Builtin: User Predicates
 
 Calls such as `$p(x)` are also atomic facts, but they are not builtin predicates. They come from user declarations such as `prop p(...)` or `abstract_prop p(...)`, and Litex verifies them from the user's definition or known facts.
@@ -1430,7 +1442,7 @@ forall m Z:
         $r0(m)
 ```
 
-> Hint: Many `by ...` statements are not random proof commands. They match the logical shape of the factual statement you are trying to prove or use. For example, `by cases` matches an `or` fact, `by contra` matches negation, and `by induc` matches an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to specific object structures: `by for` works with bounded ranges, `by enumerate` works with finite objects, and `by extension` works with set equality.
+> Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` works with an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges, `by enumerate` works with finite objects, and `by extension` works with set equality.
 
 
 
@@ -1621,6 +1633,8 @@ _- Donald Knuth_
 A Litex proof is built from facts you claim one after another. After a fact is proved, it becomes known information for proving the next facts.
 
 This page explains how one fact gets proved. The process is designed to stay close to ordinary mathematical thinking: first check that expressions make sense, then try direct mathematical rules, reuse known facts, and instantiate known universal facts when their shape matches the goal.
+
+This is the main proof idea in Litex: the user writes the target fact, and the checker tries to justify it by matching the current verified context. A bare fact asks to be proved from known information, a chain exposes intermediate comparisons, a `by cases` block exposes separate branches, and a `witness` line exposes the objects needed for an existential goal.
 
 ---
 
@@ -3156,3 +3170,63 @@ They can still be used in proofs. Inference simply does not unfold them further 
 When Litex runs, the output may include `infer_facts` or other recorded information. Read that message when you want to understand what inference added after a fact was stored.
 
 If a later fact succeeds unexpectedly, the reason is often that an earlier fact inferred useful information such as a sign condition, a membership consequence, a tuple shape, or a numeric substitution.
+
+---
+
+## Appendix
+
+_A good plan, violently executed now, is better than a perfect plan next week._
+
+_– George S. Patton_
+
+### Non-Equality Atomic Predicate Flow
+
+For a non-equality atomic predicate fact such as `$p(a)` or `$p(a, b)`, the verification path looks like this:
+
+```mermaid
+flowchart TD
+    atomicGoal["Non-equality atomic predicate fact"]
+    wellDefined["Step 1: Check every object makes sense"]
+    notWellDefined["unknown: some object is not justified"]
+    builtinRules["Step 2: Try builtin math rules"]
+    builtinSuccess["true: verified by builtin rule"]
+    knownFacts["Step 3: Try known facts"]
+    knownFactSuccess["true: verified by known fact"]
+    knownForall["Step 4: Try known forall facts"]
+    matchConclusion["Match goal with forall conclusion"]
+    checkAssumptions["Check substituted assumptions"]
+    forallSuccess["true: verified by known forall"]
+    postProcess["Step 5: Try predicate post-processing"]
+    postProcessSuccess["true: verified by registered predicate property"]
+    unknownResult["unknown: needs a smaller intermediate fact"]
+    storeFact["Store accepted fact in context"]
+    inferMore["Infer routine consequences"]
+
+    atomicGoal --> wellDefined
+    wellDefined -->|"object missing or invalid"| notWellDefined
+    wellDefined -->|"objects are valid"| builtinRules
+
+    builtinRules -->|"rule closes goal"| builtinSuccess
+    builtinRules -->|"not enough"| knownFacts
+
+    knownFacts -->|"same fact or equality-compatible match"| knownFactSuccess
+    knownFacts -->|"not enough"| knownForall
+
+    knownForall -->|"conclusion shape matches"| matchConclusion
+    knownForall -->|"no matching forall"| postProcess
+
+    matchConclusion --> checkAssumptions
+    checkAssumptions -->|"assumptions hold"| forallSuccess
+    checkAssumptions -->|"missing assumption"| postProcess
+
+    postProcess -->|"transitive or commutative registration applies"| postProcessSuccess
+    postProcess -->|"not enough"| unknownResult
+
+    builtinSuccess --> storeFact
+    knownFactSuccess --> storeFact
+    forallSuccess --> storeFact
+    postProcessSuccess --> storeFact
+    storeFact --> inferMore
+```
+
+If one route works, the fact becomes part of the context. Predicate post-processing covers special properties the user has registered, such as a transitive or commutative `abstract_prop`. If none works, `unknown` usually means the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, or a lemma that makes the goal easier to match.
