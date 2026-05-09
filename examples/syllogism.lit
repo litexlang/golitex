@@ -1,5 +1,7 @@
-have human nonempty_set, Jordan human
-abstract_prop intelligent(x)
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
 know forall x human:
-    $intelligent(x)
-$intelligent(Jordan)
+    $mortal(x)
+
+$mortal(Socrates)
