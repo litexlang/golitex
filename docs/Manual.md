@@ -18,7 +18,7 @@ This manual explains how Litex reads and checks mathematical proof scripts. The 
 
 A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
 
-The shape of a Litex statement is part of its proof meaning. A chain, a `by cases` block, a `have by exist` line, a `witness` line, or a `forall` statement is not merely formatting; it tells the checker what kind of mathematical pattern to try. In that sense, Litex puts tactic-like intent into ordinary mathematical forms and lets the kernel apply it by matching known facts, known `forall` facts, and builtin rules.
+Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work.
 
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
 
@@ -1442,7 +1442,7 @@ forall m Z:
         $r0(m)
 ```
 
-> Hint: Many `by ...` statements are not random proof commands. They match the logical shape of the factual statement you are trying to prove or use. For example, `by cases` matches an `or` fact, `by contra` matches negation, and `by induc` matches an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to specific object structures: `by for` works with bounded ranges, `by enumerate` works with finite objects, and `by extension` works with set equality.
+> Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` works with an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges, `by enumerate` works with finite objects, and `by extension` works with set equality.
 
 
 
@@ -1634,7 +1634,7 @@ A Litex proof is built from facts you claim one after another. After a fact is p
 
 This page explains how one fact gets proved. The process is designed to stay close to ordinary mathematical thinking: first check that expressions make sense, then try direct mathematical rules, reuse known facts, and instantiate known universal facts when their shape matches the goal.
 
-This is the main "tactic" idea in Litex: the user writes a mathematical statement whose form suggests a proof action, and the checker tries to realize that action by matching. A bare fact asks to be justified from the context, a chain asks for intermediate comparisons to connect, a `by cases` block asks for a case split, and a `witness` line asks for an existential conclusion to be matched.
+This is the main proof idea in Litex: the user writes the target fact, and the checker tries to justify it by matching the current verified context. A bare fact asks to be proved from known information, a chain exposes intermediate comparisons, a `by cases` block exposes separate branches, and a `witness` line exposes the objects needed for an existential goal.
 
 ---
 

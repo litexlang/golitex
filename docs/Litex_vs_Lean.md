@@ -21,7 +21,7 @@ This page is not a ranking. It compares expression style, proof interaction, and
 - Lean exposes a very general proof engine. The user works with theorem statements, hypotheses, terms, proof states, tactics, and library lemmas.
 - Litex exposes a fact-oriented mathematical surface built from objects, facts, and statements, starting from a set-theoretic picture: sets, elements, functions, and relations—the kind of informal foundation many people meet in everyday mathematics. Users write facts; Litex grows a verified context by checking them, storing them, inferring routine consequences, and explaining how accepted facts were proved.
 
-One useful way to say the difference is: Lean makes tactics explicit proof-language commands, while Litex tries to make tactic-like intent live inside the shape of ordinary mathematical statements. A Litex statement is both something a mathematician can read and a pattern the kernel can try to match against known facts, known `forall` facts, or builtin rules.
+One useful way to say the difference is: Lean often asks the user to choose proof commands explicitly, while Litex lets the user state the target fact and asks the kernel to match it against builtin rules, known facts, and known `forall` facts. A Litex statement is both something a mathematician can read and a shape the checker can use for matching.
 
 The trade-off is real. Lean is stronger for large formal developments and advanced abstractions. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
 
@@ -824,7 +824,7 @@ example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
 
 **What differs.** Litex separates background lemmas from the `claim` spine. Lean often interleaves lemmas with proof-state transformations. Both carry real proof burden; they organize it differently.
 
-What Litex is trying to show is different. In Litex, the shape of each statement carries part of the proof method: a chain invites order/transitivity matching, a `have by exist ...` line asks the kernel to match an existential pattern, a `by cases` block asks it to split on a recognized alternative, and a `witness` line asks it to close the existential goal.
+What Litex is trying to show is different. The user states the facts and witnesses they want, while the checker matches those targets against builtin rules and known information. Chains expose order/transitivity goals, `have by exist ...` exposes an existential pattern, `by cases` exposes branches, and `witness` exposes the object that should close an existential goal.
 
 > The `prop` and `know` blocks are the background mathematics. The part that actually performs the proof is the `claim`, and that main proof is only a little more than ten lines.
 
