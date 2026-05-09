@@ -366,7 +366,7 @@ fn check_fn_set_body_has_no_duplicate_free_parameter(
 
     for param_def in body.params_def_with_set.iter() {
         check_obj_has_no_duplicate_free_parameter(
-            param_def.set_obj().unwrap(),
+            param_def.set_obj(),
             free_param_type,
             params_already_used,
         )?;
@@ -405,7 +405,7 @@ fn check_anonymous_fn_has_no_duplicate_free_parameter(
 
     for param_def in anonymous_fn.body.params_def_with_set.iter() {
         check_obj_has_no_duplicate_free_parameter(
-            param_def.set_obj().unwrap(),
+            param_def.set_obj(),
             free_param_type,
             params_already_used,
         )?;

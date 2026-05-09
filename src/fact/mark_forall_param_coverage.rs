@@ -188,7 +188,7 @@ fn mark_forall_param_coverage_in_obj(
         Obj::FnSet(fn_set) => {
             for param_def_with_set in fn_set.body.params_def_with_set.iter() {
                 mark_forall_param_coverage_in_obj(
-                    param_def_with_set.set_obj().unwrap(),
+                    param_def_with_set.set_obj(),
                     coverage_by_forall_param,
                 );
             }
@@ -206,7 +206,7 @@ fn mark_forall_param_coverage_in_obj(
         Obj::AnonymousFn(anon) => {
             for param_def_with_set in anon.body.params_def_with_set.iter() {
                 mark_forall_param_coverage_in_obj(
-                    param_def_with_set.set_obj().unwrap(),
+                    param_def_with_set.set_obj(),
                     coverage_by_forall_param,
                 );
             }

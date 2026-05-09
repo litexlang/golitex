@@ -158,10 +158,9 @@ impl Runtime {
                     }
                 }
             }
-            let ParamGroupWithSetTypeEnum::Set(set) = &param_def_with_set.param_type;
             let instantiated_param_type = ParamType::Obj(
                 self.inst_obj(
-                    set,
+                    param_def_with_set.set_obj(),
                     &fn_set_param_name_to_algo_arg_obj,
                     ParamObjType::Forall,
                 )
