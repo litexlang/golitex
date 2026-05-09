@@ -139,6 +139,7 @@ This says `$p(2)` was proved by reusing the known `forall`: Litex matched `x` wi
 5. [Related Textbooks, Examples, Implementation Notes, and Experimental Materials](https://github.com/litexlang/golitex)
 6. [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 7. [Email](mailto:litexlang@outlook.com)
+8. [Privacy Policy and Terms of Use](Privacy_Policy.md)
 
 ## Special Thanks
 
