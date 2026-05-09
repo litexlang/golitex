@@ -112,21 +112,6 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         }),
         Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
         Obj::FamilyObj(fo) => fo.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
-        Obj::StructType(struct_ty) => struct_ty
-            .args
-            .iter()
-            .any(|arg| obj_expr_mentions_bare_id(arg, id)),
-        Obj::StructInstance(instance) => {
-            instance
-                .name
-                .args
-                .iter()
-                .any(|arg| obj_expr_mentions_bare_id(arg, id))
-                || instance
-                    .fields_equal_to_what
-                    .iter()
-                    .any(|field| obj_expr_mentions_bare_id(field, id))
-        }
         Obj::FiniteSeqSet(fs) => {
             obj_expr_mentions_bare_id(fs.set.as_ref(), id)
                 || obj_expr_mentions_bare_id(fs.n.as_ref(), id)
@@ -142,10 +127,6 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             for g in &anon.body.params_def_with_set {
                 let mentions = match &g.param_type {
                     ParamGroupWithSetTypeEnum::Set(set) => obj_expr_mentions_bare_id(set, id),
-                    ParamGroupWithSetTypeEnum::Struct(struct_ty) => struct_ty
-                        .args
-                        .iter()
-                        .any(|arg| obj_expr_mentions_bare_id(arg, id)),
                 };
                 if mentions {
                     return true;
@@ -163,7 +144,6 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Atom(AtomObj::Induc(p)) => p.name == id,
         Obj::Atom(AtomObj::DefAlgo(p)) => p.name == id,
         Obj::Atom(AtomObj::DefStructField(p)) => p.name == id,
-        Obj::FieldAccess(_) => false,
     }
 }
 

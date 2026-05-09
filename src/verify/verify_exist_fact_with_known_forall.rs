@@ -306,7 +306,6 @@ impl Runtime {
     fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
         match obj {
             Obj::Atom(AtomObj::Exist(p)) => names.iter().any(|name| name == &p.name),
-            Obj::FieldAccess(field_access) => names.iter().any(|name| name == &field_access.left),
             Obj::Atom(_) | Obj::Number(_) | Obj::StandardSet(_) => false,
             Obj::Add(x) => Self::obj_pair_depends_on_given_exist_param(
                 x.left.as_ref(),
@@ -449,10 +448,6 @@ impl Runtime {
                 .params
                 .iter()
                 .any(|obj| Self::obj_depends_on_given_exist_param(obj, names)),
-            Obj::StructType(x) => x
-                .args
-                .iter()
-                .any(|obj| Self::obj_depends_on_given_exist_param(obj.as_ref(), names)),
             Obj::SetBuilder(x) => {
                 Self::obj_depends_on_given_exist_param(x.param_set.as_ref(), names)
                     || x.facts.iter().any(|fact| {
@@ -470,15 +465,6 @@ impl Runtime {
                         args.iter()
                             .any(|arg| Self::obj_depends_on_given_exist_param(arg.as_ref(), names))
                     })
-            }
-            Obj::StructInstance(x) => {
-                x.name
-                    .args
-                    .iter()
-                    .any(|arg| Self::obj_depends_on_given_exist_param(arg.as_ref(), names))
-                    || x.fields_equal_to_what
-                        .iter()
-                        .any(|field| Self::obj_depends_on_given_exist_param(field.as_ref(), names))
             }
         }
     }
@@ -522,10 +508,6 @@ impl Runtime {
             ParamGroupWithSetTypeEnum::Set(set) => {
                 Self::obj_depends_on_given_exist_param(set, names)
             }
-            ParamGroupWithSetTypeEnum::Struct(struct_ty) => struct_ty
-                .args
-                .iter()
-                .any(|arg| Self::obj_depends_on_given_exist_param(arg.as_ref(), names)),
         }
     }
 
@@ -565,17 +547,6 @@ mod tests {
         assert!(Runtime::obj_depends_on_given_exist_param(&nested, &names));
         assert!(!Runtime::obj_depends_on_given_exist_param(
             &external, &names
-        ));
-    }
-
-    #[test]
-    fn detects_field_access_on_exist_witness() {
-        let names = vec!["x".to_string()];
-        let field_access: Obj = FieldAccess::new("x".to_string(), "value".to_string()).into();
-
-        assert!(Runtime::obj_depends_on_given_exist_param(
-            &field_access,
-            &names
         ));
     }
 

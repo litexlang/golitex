@@ -141,12 +141,6 @@ impl ByTupleAsSetStmt {
     }
 }
 
-impl ByStructStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByStructStmt".to_string()
-    }
-}
-
 impl ByClosedRangeAsCasesStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByClosedRangeAsCasesStmt".to_string()

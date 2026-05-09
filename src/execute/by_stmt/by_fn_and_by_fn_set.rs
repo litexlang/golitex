@@ -35,39 +35,18 @@ impl Runtime {
             let next_flat_index = flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_forall_param_names[flat_index..next_flat_index].to_vec();
-            let instantiated_type = match &param_def_with_set.param_type {
-                ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(
-                    self.inst_obj(set, &original_param_to_forall_obj, ParamObjType::FnSet)
-                        .map_err(|inst_error| {
-                            short_exec_error(
-                                stmt_exec.clone(),
-                                format!(
-                                    "{}: failed to instantiate generated parameter set",
-                                    context
-                                ),
-                                Some(inst_error),
-                                vec![],
-                            )
-                        })?,
-                ),
-                ParamGroupWithSetTypeEnum::Struct(struct_ty) => self
-                    .inst_param_type(
-                        &ParamType::Struct(struct_ty.clone()),
-                        &original_param_to_forall_obj,
-                        ParamObjType::FnSet,
-                    )
+            let ParamGroupWithSetTypeEnum::Set(set) = &param_def_with_set.param_type;
+            let instantiated_type = ParamType::Obj(
+                self.inst_obj(set, &original_param_to_forall_obj, ParamObjType::FnSet)
                     .map_err(|inst_error| {
                         short_exec_error(
                             stmt_exec.clone(),
-                            format!(
-                                "{}: failed to instantiate generated struct parameter type",
-                                context
-                            ),
+                            format!("{}: failed to instantiate generated parameter set", context),
                             Some(inst_error),
                             vec![],
                         )
                     })?,
-            };
+            );
             forall_param_defs_with_type.push(ParamGroupWithParamType::new(
                 generated_names_for_current_group.clone(),
                 instantiated_type,
@@ -230,36 +209,18 @@ impl Runtime {
             let next_flat_index = exist_flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_exist_param_names[exist_flat_index..next_flat_index].to_vec();
-            let instantiated_type = match &param_def_with_set.param_type {
-                ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(
-                    self.inst_obj(set, &original_param_to_exist_obj, ParamObjType::FnSet)
-                        .map_err(|inst_error| {
-                            short_exec_error(
-                                stmt_exec.clone(),
-                                format!("{}: failed to instantiate witness parameter set", context),
-                                Some(inst_error),
-                                vec![],
-                            )
-                        })?,
-                ),
-                ParamGroupWithSetTypeEnum::Struct(struct_ty) => self
-                    .inst_param_type(
-                        &ParamType::Struct(struct_ty.clone()),
-                        &original_param_to_exist_obj,
-                        ParamObjType::FnSet,
-                    )
+            let ParamGroupWithSetTypeEnum::Set(set) = &param_def_with_set.param_type;
+            let instantiated_type = ParamType::Obj(
+                self.inst_obj(set, &original_param_to_exist_obj, ParamObjType::FnSet)
                     .map_err(|inst_error| {
                         short_exec_error(
                             stmt_exec.clone(),
-                            format!(
-                                "{}: failed to instantiate witness struct parameter type",
-                                context
-                            ),
+                            format!("{}: failed to instantiate witness parameter set", context),
                             Some(inst_error),
                             vec![],
                         )
                     })?,
-            };
+            );
             exist_param_defs_with_type.push(ParamGroupWithParamType::new(
                 generated_names_for_current_group.clone(),
                 instantiated_type,

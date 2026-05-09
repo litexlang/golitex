@@ -55,7 +55,7 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
-> Some experimental syntax, including `struct`, field access, struct parameters, and `by struct`, is documented separately in [Preview Features](https://litexlang.com/doc/Preview_Features).
+> `struct` definitions are currently kept only as declarations of field shapes. Struct values, field access, struct-typed parameters, and `by struct` are not part of the current surface syntax.
 
 > You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
 
@@ -207,7 +207,7 @@ have s set = { z N : z > 5 }
 
 #### Function types and anonymous functions
 
-A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The return type `T` is a set object, such as `R`. In a function signature, `struct Point` can also be used as a parameter or return type; Litex checks that the value satisfies the struct type.
+A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; `struct Point` is not valid inside a `fn` signature.
 
 ```litex
 have g set = fn(x R) R
@@ -218,9 +218,6 @@ prove:
     struct Point:
         x R
         y R
-
-    have fn make_point(x R, y R) struct Point = &Point(x, y)
-    make_point(1, 2) = &Point(1, 2)
 ```
 
 ```litex

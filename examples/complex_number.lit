@@ -1,25 +1,3 @@
 struct C:
     re R
     im R
-
-have fn c_add(x, y struct C) C = &C(x.re + y.re, x.im + y.im)
-
-have fn c_minus(x, y struct C) C = &C(x.re - y.re, x.im - y.im)
-
-have fn c_mul(x, y struct C) C = &C(x.re * y.re - x.im * y.im, x.re * y.im + x.im * y.re)
-
-have fn c_div(x, y struct C: y.re * y.re + y.im * y.im != 0) C = &C((x.re * y.re + x.im * y.im) / (y.re * y.re + y.im * y.im), (x.im * y.re - x.re * y.im) / (y.re * y.re + y.im * y.im))
-
-c_add(&C(1, 2), &C(3, 4)) = &C(4, 6)
-
-c_minus(&C(1, 2), &C(3, 4)) = &C(-2, -2)
-
-c_mul(&C(1, 2), &C(3, 4)) = &C(-5, 10)
-
-c_div(&C(1, 2), &C(3, 4)) = &C(11/25, 2/25)
-
-forall z struct C:
-    c_add(z, &C(0, 0)) = z
-
-forall x, y struct C:
-    c_add(x, y) = c_add(y, x)

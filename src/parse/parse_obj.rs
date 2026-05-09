@@ -215,8 +215,6 @@ impl Runtime {
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
             Ok(self.parse_fn_set(tb)?.into())
-        } else if tb.current_token_is_equal_to(STRUCT_INSTANCE_PREFIX) {
-            self.parse_struct_instance_obj(tb)
         } else if tb.current_token_is_equal_to(ANONYMOUS_FN_PREFIX) {
             let mut result = self.parse_anonymous_fn(tb)?;
             if let Obj::AnonymousFn(anon) = &result {
@@ -265,7 +263,7 @@ impl Runtime {
                     let param_group = if tb.current_token_is_equal_to(COLON) {
                         ParamGroupWithSet::new(current_params, StandardSet::R.into())
                     } else {
-                        this.parse_fn_param_group_with_set_or_struct(current_params, tb)?
+                        ParamGroupWithSet::new(current_params, this.parse_obj(tb)?)
                     };
 
                     params_def_with_set.push(param_group);
@@ -340,31 +338,6 @@ impl Runtime {
         }
     }
 
-    fn parse_struct_instance_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        tb.skip_token(STRUCT_INSTANCE_PREFIX)?;
-        let name = if tb.token_at_add_index(1) == MOD_SIGN {
-            let mod_name = tb.advance()?;
-            tb.skip_token(MOD_SIGN)?;
-            let name = tb.advance()?;
-            NameOrNameWithMod::new_name_with_mod(mod_name, name)
-        } else {
-            NameOrNameWithMod::new_name(tb.advance()?)
-        };
-        let first_args = self.parse_braced_objs(tb)?;
-        let (header_args, fields_equal_to_what) =
-            if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
-                let field_args = self.parse_braced_objs(tb)?;
-                (first_args, field_args)
-            } else {
-                (vec![], first_args)
-            };
-        Ok(StructInstance::new(
-            StructAsParamType::new(name, header_args),
-            fields_equal_to_what,
-        )
-        .into())
-    }
-
     pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
         let fn_set = self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(LEFT_BRACE)?;
@@ -384,8 +357,7 @@ impl Runtime {
                     tb.line_file.clone(),
                 )?;
 
-                let param_group =
-                    this.parse_fn_param_group_with_set_or_struct(current_params, tb)?;
+                let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
 
                 params_def_with_set.push(param_group);
 
@@ -454,8 +426,7 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
-                let param_group =
-                    this.parse_fn_param_group_with_set_or_struct(current_params, tb)?;
+                let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
 
                 params_def_with_set.push(param_group);
 
@@ -510,24 +481,6 @@ impl Runtime {
                 }
             },
             Err(e) => Err(e),
-        }
-    }
-
-    fn parse_fn_param_group_with_set_or_struct(
-        &mut self,
-        params: Vec<String>,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamGroupWithSet, RuntimeError> {
-        if tb.current_token_is_equal_to(STRUCT) {
-            let param_type = self.parse_param_type_struct(tb)?;
-            match param_type {
-                ParamType::Struct(struct_ty) => {
-                    Ok(ParamGroupWithSet::new_struct(params, struct_ty))
-                }
-                _ => unreachable!(),
-            }
-        } else {
-            Ok(ParamGroupWithSet::new(params, self.parse_obj(tb)?))
         }
     }
 
@@ -654,13 +607,6 @@ impl Runtime {
         if tok == FAMILY_OBJ_PREFIX {
             let family = self.parse_family_obj(tb)?;
             return Ok(Obj::FamilyObj(family));
-        }
-        if tok == STRUCT {
-            let param_type = self.parse_param_type_struct(tb)?;
-            match param_type {
-                ParamType::Struct(struct_ty) => return Ok(struct_ty.into()),
-                _ => unreachable!(),
-            }
         }
         if tok == ABS {
             tb.skip()?;
@@ -1387,7 +1333,6 @@ impl Runtime {
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
                 Ok(Obj::Atom(AtomObj::IdentifierWithMod(m)))
             }
-            Obj::FieldAccess(field_access) => Ok(Obj::FieldAccess(field_access)),
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(
                     "internal: atom position was not a name form".to_string(),
@@ -1562,17 +1507,8 @@ impl Runtime {
         Ok(ListSet::new(objs))
     }
 
-    /// Unqualified name-shaped atom. Field access (`name.field`) is not supported.
-    pub fn parse_identifier_or_field_access(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Obj, RuntimeError> {
+    pub fn parse_identifier(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = parse_synthetically_correct_identifier_string(tb)?;
-        if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
-            let right = parse_synthetically_correct_identifier_string(tb)?;
-            return Ok(FieldAccess::new(left, right).into());
-        }
         Ok(Identifier::new(left).into())
     }
 
@@ -1583,8 +1519,7 @@ impl Runtime {
         if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "field access on module-qualified names is not supported in this version"
-                        .to_string(),
+                    "unexpected `.` after module-qualified name".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -1601,7 +1536,7 @@ impl Runtime {
         if next_is_mod {
             self.parse_mod_qualified_atom(tb)
         } else {
-            self.parse_identifier_or_field_access(tb)
+            self.parse_identifier(tb)
         }
     }
 
