@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Litex Skill
 
-Use this skill when writing, checking, explaining, or debugging Litex proof code.
+Use this skill when writing, checking, explaining, or debugging Litex proof code. Download this SKILL.md here: https://github.com/litexlang/golitex/blob/main/SKILL.md
 
 Litex is a fact-oriented formal language for everyday mathematics. Users write mathematical facts; Litex grows a verified context by checking those facts, storing accepted facts, inferring routine consequences, and explaining how accepted facts were proved.
 
@@ -39,7 +39,7 @@ Litex code is organized around:
 - Verification: checking whether a fact follows from the current context, definitions, builtin rules, known facts, and known `forall` facts.
 - Execution: growing the verified context as accepted facts are stored and inference adds routine consequences.
 
-A Litex statement's shape often carries tactic-like intent. Do not invent tactic commands; instead, choose statement forms that tell the checker what pattern to match. Examples: use chains for transitive/order reasoning, `by cases` for recognized case splits, `have by exist` to extract witnesses, `witness` to close existential goals, and explicit intermediate facts when matching needs help.
+In Litex, users usually state the target fact instead of choosing a tactic for it. The checker tries to match that fact against builtin rules, known facts, and known `forall` facts. Choose statement forms that expose the right information for matching: chains for transitive/order reasoning, `by cases` for recognized case splits, `have by exist` to extract witnesses, `witness` to close existential goals, and explicit intermediate facts when matching needs help.
 
 ## Writing Litex Code
 
