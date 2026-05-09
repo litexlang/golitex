@@ -90,6 +90,8 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::ClosedRange(r) => {
             obj_expr_mentions_bare_id_on_two(r.start.as_ref(), r.end.as_ref(), id)
         }
+        Obj::FnRange(r) => obj_expr_mentions_bare_id(r.fn_obj.as_ref(), id),
+        Obj::FnDom(r) => obj_expr_mentions_bare_id(r.fn_obj.as_ref(), id),
         Obj::Sum(s) => {
             obj_expr_mentions_bare_id(s.start.as_ref(), id)
                 || obj_expr_mentions_bare_id(s.end.as_ref(), id)
