@@ -15,6 +15,7 @@ Litex is a fact-oriented formal language for everyday mathematics. Users write m
 If this skill is inside the `golitex` repository, prefer local files:
 
 - `docs/Manual.md`
+- `docs/Setup.md`
 - `docs/Preview_Features.md`
 - `docs/litex_cheatsheet.md`
 - `examples/`
@@ -22,6 +23,7 @@ If this skill is inside the `golitex` repository, prefer local files:
 If this skill was copied outside the repository, use the GitHub sources:
 
 - Manual: https://github.com/litexlang/golitex/blob/main/docs/Manual.md
+- Setup: https://github.com/litexlang/golitex/blob/main/docs/Setup.md
 - Preview features: https://github.com/litexlang/golitex/blob/main/docs/Preview_Features.md
 - Cheatsheet: https://github.com/litexlang/golitex/blob/main/docs/litex_cheatsheet.md
 - Examples: https://github.com/litexlang/golitex/tree/main/examples
@@ -44,10 +46,11 @@ When asked to write Litex code:
 1. Read nearby examples before inventing syntax.
 2. Prefer stable syntax from `docs/Manual.md`.
 3. Check experimental syntax in `docs/Preview_Features.md`.
-4. Write temporary runnable code in `examples/tmp.lit`.
-5. Run `litex -f examples/tmp.lit` or `cargo run -- -f examples/tmp.lit`.
-6. Use English comments in `.lit` files.
-7. Do not invent unsupported tactics, keywords, or object forms.
+4. If the `litex` command is not available, read `docs/Setup.md` or https://github.com/litexlang/golitex/blob/main/docs/Setup.md before running code.
+5. Create a small temporary `.lit` file for runnable code; inside this repository, `examples/tmp.lit` is the default scratch file unless the user asks for another path.
+6. Run `litex -f path/to/file.lit` or `cargo run -- -f path/to/file.lit`.
+7. Use English comments in `.lit` files.
+8. Do not invent unsupported tactics, keywords, or object forms.
 
 ## Style Guidelines
 
@@ -76,8 +79,8 @@ Examples include structs, struct parameters, field access, `by struct`, `by tran
 
 After generating or editing Litex code:
 
-1. Put a small runnable example in `examples/tmp.lit`.
-2. Run `cargo run -- -f examples/tmp.lit`.
+1. Put a small runnable example in a temporary `.lit` file.
+2. Run `cargo run -- -f path/to/file.lit`.
 3. If changing Rust implementation, run `cargo check`.
 4. If changing language behavior or docs examples, run `cargo test`.
 5. If syntax or semantics changed, update docs or preview docs.

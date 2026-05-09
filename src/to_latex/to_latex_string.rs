@@ -1940,6 +1940,33 @@ impl AtomicFact {
                 f.left.to_latex_string(),
                 f.right.to_latex_string(),
             ),
+            AtomicFact::InjectiveFact(f) => {
+                format!(r"\mathsf{{injective}}({})", f.function.to_latex_string())
+            }
+            AtomicFact::SurjectiveFact(f) => {
+                format!(r"\mathsf{{surjective}}({})", f.function.to_latex_string())
+            }
+            AtomicFact::BijectiveFact(f) => {
+                format!(r"\mathsf{{bijective}}({})", f.function.to_latex_string())
+            }
+            AtomicFact::NotInjectiveFact(f) => {
+                format!(
+                    r"\neg \mathsf{{injective}}({})",
+                    f.function.to_latex_string()
+                )
+            }
+            AtomicFact::NotSurjectiveFact(f) => {
+                format!(
+                    r"\neg \mathsf{{surjective}}({})",
+                    f.function.to_latex_string()
+                )
+            }
+            AtomicFact::NotBijectiveFact(f) => {
+                format!(
+                    r"\neg \mathsf{{bijective}}({})",
+                    f.function.to_latex_string()
+                )
+            }
         }
     }
 }

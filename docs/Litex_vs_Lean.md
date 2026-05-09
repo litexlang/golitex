@@ -824,6 +824,8 @@ example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
 
 The `prop` and `know` blocks are the background mathematics. The part that actually performs the proof is the `claim`, and that main proof is only a little more than ten lines. Each line is a direct mathematical move: build the number, take a prime divisor, split on `k > a`, derive the contradiction, and return the witness.
 
+> It takes
+
 ```litex
 prop prime(a N_pos):
     2 <= a
