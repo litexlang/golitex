@@ -298,20 +298,6 @@ impl Runtime {
                     in_fact,
                 )
             }
-            (Obj::StructInstance(instance), Obj::Atom(AtomObj::Identifier(identifier)))
-                if instance.name.struct_name() == identifier.name =>
-            {
-                self.verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)?;
-                Ok(number_in_set_verified_by_builtin_rules_result(
-                    in_fact,
-                    "struct instance belongs to its struct",
-                ))
-            }
-            (_, Obj::StructType(struct_ty)) => self.verify_obj_satisfies_struct_param_type(
-                in_fact.element.clone(),
-                struct_ty,
-                verify_state,
-            ),
             (_, Obj::FamilyObj(family_ty)) => {
                 self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
             }

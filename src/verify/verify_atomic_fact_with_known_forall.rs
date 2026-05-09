@@ -442,42 +442,6 @@ impl Runtime {
                 }
                 _ => Ok(None),
             },
-            Obj::FieldAccess(known) => match given_arg {
-                Obj::FieldAccess(given) => {
-                    if known.to_string() != given.to_string() {
-                        return Ok(None);
-                    }
-                    Ok(Some(HashMap::new()))
-                }
-                _ => Ok(None),
-            },
-            Obj::StructType(known) => match given_arg {
-                Obj::StructType(given) => {
-                    if known.struct_name() != given.struct_name() {
-                        return Ok(None);
-                    }
-                    self.match_boxed_arg_vec_then_merge(&known.args, &given.args)
-                }
-                _ => Ok(None),
-            },
-            Obj::StructInstance(known) => match given_arg {
-                Obj::StructInstance(given) => {
-                    if known.name.struct_name() != given.name.struct_name() {
-                        return Ok(None);
-                    }
-                    let header_map =
-                        self.match_boxed_arg_vec_then_merge(&known.name.args, &given.name.args)?;
-                    let field_map = self.match_boxed_arg_vec_then_merge(
-                        &known.fields_equal_to_what,
-                        &given.fields_equal_to_what,
-                    )?;
-                    match (header_map, field_map) {
-                        (Some(h), Some(f)) => Ok(self.merge_arg_match_maps(h, f)),
-                        _ => Ok(None),
-                    }
-                }
-                _ => Ok(None),
-            },
             Obj::Atom(AtomObj::Forall(ref p)) => {
                 self.match_arg_when_left_is_forall_param(p, given_arg)
             }
@@ -1344,30 +1308,6 @@ impl Runtime {
                 ParamGroupWithSetTypeEnum::Set(left_set),
                 ParamGroupWithSetTypeEnum::Set(given_set),
             ) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_set, given_set),
-            (
-                ParamGroupWithSetTypeEnum::Struct(left_struct),
-                ParamGroupWithSetTypeEnum::Struct(given_struct),
-            ) => {
-                if left_struct.struct_name() != given_struct.struct_name()
-                    || left_struct.args.len() != given_struct.args.len()
-                {
-                    return Ok(None);
-                }
-                let mut merged = HashMap::new();
-                for (left_arg, given_arg) in left_struct.args.iter().zip(given_struct.args.iter()) {
-                    let Some(m) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                        left_arg, given_arg,
-                    )?
-                    else {
-                        return Ok(None);
-                    };
-                    if !self.merge_arg_match_map_into(&mut merged, m) {
-                        return Ok(None);
-                    }
-                }
-                Ok(Some(merged))
-            }
-            _ => Ok(None),
         }
     }
 

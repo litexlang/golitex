@@ -8,73 +8,6 @@ pub enum ParamType {
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
     Obj(Obj),
-    Struct(StructAsParamType),
-}
-
-#[derive(Clone)]
-pub struct StructAsParamType {
-    pub name: NameOrNameWithMod,
-    pub args: Vec<Box<Obj>>,
-}
-
-#[derive(Clone)]
-pub enum NameOrNameWithMod {
-    Name(String),
-    NameWithMod(String, String),
-}
-
-impl StructAsParamType {
-    pub fn new(name: NameOrNameWithMod, args: Vec<Obj>) -> Self {
-        let args = args.into_iter().map(Box::new).collect();
-        StructAsParamType { name, args }
-    }
-
-    pub fn new_with_boxed_args(name: NameOrNameWithMod, args: Vec<Box<Obj>>) -> Self {
-        StructAsParamType { name, args }
-    }
-
-    pub fn struct_name(&self) -> String {
-        self.name.to_string()
-    }
-}
-
-impl NameOrNameWithMod {
-    pub fn new_name(name: String) -> Self {
-        NameOrNameWithMod::Name(name)
-    }
-
-    pub fn new_name_with_mod(mod_name: String, name: String) -> Self {
-        NameOrNameWithMod::NameWithMod(mod_name, name)
-    }
-}
-
-impl fmt::Display for StructAsParamType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.args.is_empty() {
-            write!(f, "{} {}", STRUCT, self.name)
-        } else {
-            write!(
-                f,
-                "{} {}{}{}{}",
-                STRUCT,
-                self.name,
-                LEFT_BRACE,
-                vec_to_string_join_by_comma(&self.args),
-                RIGHT_BRACE
-            )
-        }
-    }
-}
-
-impl fmt::Display for NameOrNameWithMod {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            NameOrNameWithMod::Name(name) => write!(f, "{}", name),
-            NameOrNameWithMod::NameWithMod(mod_name, name) => {
-                write!(f, "{}{}{}", mod_name, MOD_SIGN, name)
-            }
-        }
-    }
 }
 
 /// Full parameter list with types, e.g. `a, b T, c E` as a sequence of [`ParamGroupWithParamType`].
@@ -221,7 +154,6 @@ pub struct ParamGroupWithSet {
 #[derive(Clone)]
 pub enum ParamGroupWithSetTypeEnum {
     Set(Obj),
-    Struct(StructAsParamType),
 }
 
 #[derive(Clone)]
@@ -264,7 +196,6 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
-            ParamType::Struct(struct_ty) => write!(f, "{}", struct_ty),
         }
     }
 }
@@ -291,7 +222,6 @@ impl fmt::Display for ParamGroupWithSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let param_type = match &self.param_type {
             ParamGroupWithSetTypeEnum::Set(set) => set.to_string(),
-            ParamGroupWithSetTypeEnum::Struct(struct_ty) => struct_ty.to_string(),
         };
         write!(
             f,
@@ -331,24 +261,9 @@ impl ParamGroupWithSet {
         }
     }
 
-    pub fn new_struct(params: Vec<String>, struct_ty: StructAsParamType) -> Self {
-        ParamGroupWithSet {
-            params,
-            param_type: ParamGroupWithSetTypeEnum::Struct(struct_ty),
-        }
-    }
-
     pub fn set_obj(&self) -> Option<&Obj> {
         match &self.param_type {
             ParamGroupWithSetTypeEnum::Set(set) => Some(set),
-            ParamGroupWithSetTypeEnum::Struct(_) => None,
-        }
-    }
-
-    pub fn struct_ty(&self) -> Option<&StructAsParamType> {
-        match &self.param_type {
-            ParamGroupWithSetTypeEnum::Set(_) => None,
-            ParamGroupWithSetTypeEnum::Struct(struct_ty) => Some(struct_ty),
         }
     }
 
@@ -382,16 +297,6 @@ impl ParamGroupWithSet {
         args: &Vec<Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Vec<AtomicFact>, RuntimeError> {
-        for param_def in param_defs.iter() {
-            if param_def.struct_ty().is_some() {
-                return Err(RuntimeError::from(VerifyRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(
-                        "struct fn parameter must be checked as a struct parameter, not as `$in`"
-                            .to_string(),
-                    ),
-                )));
-            }
-        }
         let instantiated_param_sets =
             runtime.inst_param_def_with_set_one_by_one(param_defs, args, param_obj_type)?;
         let flat_param_sets =

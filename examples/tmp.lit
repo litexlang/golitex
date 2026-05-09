@@ -1,8 +1,3 @@
-prove:
-    struct Point:
-        x R
-        y R
-
-    have fn make_point(x R, y R) struct Point = &Point(x, y)
-
-    make_point(1, 2) = &Point(1, 2)
+struct Point:
+    x R
+    y R
