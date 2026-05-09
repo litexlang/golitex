@@ -451,6 +451,15 @@ impl Runtime {
                 }
                 _ => Ok(None),
             },
+            Obj::StructType(known) => match given_arg {
+                Obj::StructType(given) => {
+                    if known.struct_name() != given.struct_name() {
+                        return Ok(None);
+                    }
+                    self.match_boxed_arg_vec_then_merge(&known.args, &given.args)
+                }
+                _ => Ok(None),
+            },
             Obj::StructInstance(known) => match given_arg {
                 Obj::StructInstance(given) => {
                     if known.name.struct_name() != given.name.struct_name() {

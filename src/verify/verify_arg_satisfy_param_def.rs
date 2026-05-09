@@ -9,6 +9,13 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match param_type {
             ParamType::Obj(set_obj) => {
+                if let Obj::StructType(struct_ty) = set_obj {
+                    return self.verify_obj_satisfies_struct_param_type(
+                        obj,
+                        struct_ty,
+                        verify_state,
+                    );
+                }
                 let fact = InFact::new(obj, set_obj.clone(), default_line_file()).into();
                 self.verify_atomic_fact(&fact, verify_state)
             }
@@ -30,7 +37,7 @@ impl Runtime {
         }
     }
 
-    fn verify_obj_satisfies_struct_param_type(
+    pub fn verify_obj_satisfies_struct_param_type(
         &mut self,
         obj: Obj,
         struct_ty: &StructAsParamType,
