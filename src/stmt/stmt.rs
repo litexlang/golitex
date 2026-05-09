@@ -36,7 +36,6 @@ pub enum Stmt {
     ByFamilyAsSetStmt(ByFamilyAsSetStmt),
     ByTupleAsSetStmt(ByTupleAsSetStmt),
     ByFnSetAsSetStmt(ByFnSetAsSetStmt),
-    ByStructStmt(ByStructStmt),
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
     ByTransitivePropStmt(ByTransitivePropStmt),
     ByCommutativePropStmt(ByCommutativePropStmt),
@@ -168,7 +167,6 @@ impl fmt::Display for Stmt {
             Stmt::ByFnAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByFamilyAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByTupleAsSetStmt(x) => write!(f, "{}", x),
-            Stmt::ByStructStmt(x) => write!(f, "{}", x),
             Stmt::ByFnSetAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByClosedRangeAsCasesStmt(x) => write!(f, "{}", x),
             Stmt::ByTransitivePropStmt(x) => write!(f, "{}", x),
@@ -213,7 +211,6 @@ impl Stmt {
             Stmt::ByFnAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFamilyAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTupleAsSetStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByStructStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTransitivePropStmt(stmt) => stmt.line_file.clone(),
@@ -256,7 +253,6 @@ impl Stmt {
             Stmt::ByFnAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFamilyAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTupleAsSetStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByStructStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTransitivePropStmt(stmt) => stmt.stmt_type_name(),
@@ -455,12 +451,6 @@ impl From<ByFamilyAsSetStmt> for Stmt {
 impl From<ByTupleAsSetStmt> for Stmt {
     fn from(v: ByTupleAsSetStmt) -> Self {
         Stmt::ByTupleAsSetStmt(v)
-    }
-}
-
-impl From<ByStructStmt> for Stmt {
-    fn from(v: ByStructStmt) -> Self {
-        Stmt::ByStructStmt(v)
     }
 }
 

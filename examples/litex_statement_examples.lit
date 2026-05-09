@@ -263,8 +263,7 @@ prove:
 
     by family as set: \pf(R)
 
-# --- Stmt::ByStructStmt — use the defining data of a structure instance ---
-"""
+# --- Stmt::DefStructStmt — define a structure shape for future struct features ---
 prove:
     abstract_prop bs(b, c, d)
 
@@ -273,10 +272,7 @@ prove:
         c1 fn(x a) a
         d1 fn(x, y a) a
         <=>:
-            $bs(self.b1, self.c1, self.d1)
-
-    by struct: struct sq(R)
-"""
+            $bs(b1, c1, d1)
 
 # --- Stmt::ByTupleAsSetStmt — tuple / product-space reasoning on an object ---
 prove:

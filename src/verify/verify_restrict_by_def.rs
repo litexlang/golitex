@@ -265,9 +265,6 @@ impl Runtime {
         for param_def_with_set in &rhs_body.params_def_with_set {
             let param_type = match &param_def_with_set.param_type {
                 ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(set.clone()),
-                ParamGroupWithSetTypeEnum::Struct(struct_ty) => {
-                    ParamType::Struct(struct_ty.clone())
-                }
             };
             groups.push(ParamGroupWithParamType::new(
                 param_def_with_set.params.clone(),
