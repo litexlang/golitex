@@ -129,6 +129,11 @@ impl Runtime {
                 };
                 Ok(FieldAccess::new(left, field_access.right.clone()).into())
             }
+            Obj::StructType(struct_ty) => {
+                let args =
+                    self.inst_boxed_objs(&struct_ty.args, param_to_arg_map, param_obj_type)?;
+                Ok(StructAsParamType::new_with_boxed_args(struct_ty.name.clone(), args).into())
+            }
             Obj::StructInstance(instance) => {
                 let name = StructAsParamType::new_with_boxed_args(
                     instance.name.name.clone(),

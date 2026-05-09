@@ -56,6 +56,7 @@ pub enum Obj {
     MatrixScalarMul(MatrixScalarMul),
     MatrixPow(MatrixPow),
     FieldAccess(FieldAccess),
+    StructType(StructAsParamType),
     StructInstance(Box<StructInstance>),
 }
 
@@ -971,6 +972,7 @@ impl Obj {
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
             Obj::FieldAccess(x) => write!(f, "{}", x)?,
+            Obj::StructType(x) => write!(f, "{}", x)?,
             Obj::StructInstance(x) => write!(f, "{}", x)?,
         }
         if need_parens {
@@ -1318,6 +1320,14 @@ impl Obj {
                 };
                 FieldAccess::new(left, field_access.right).into()
             }
+            Obj::StructType(struct_ty) => Obj::StructType(StructAsParamType::new(
+                struct_ty.name,
+                struct_ty
+                    .args
+                    .into_iter()
+                    .map(|arg| Obj::replace_bound_identifier(*arg, from, to))
+                    .collect(),
+            )),
             Obj::StructInstance(instance) => {
                 let instance = *instance;
                 let name = StructAsParamType::new(
@@ -2203,6 +2213,12 @@ impl From<FamilyObj> for Obj {
 impl From<FieldAccess> for Obj {
     fn from(f: FieldAccess) -> Self {
         Obj::FieldAccess(f)
+    }
+}
+
+impl From<StructAsParamType> for Obj {
+    fn from(s: StructAsParamType) -> Self {
+        Obj::StructType(s)
     }
 }
 

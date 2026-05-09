@@ -112,6 +112,10 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         }),
         Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
         Obj::FamilyObj(fo) => fo.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
+        Obj::StructType(struct_ty) => struct_ty
+            .args
+            .iter()
+            .any(|arg| obj_expr_mentions_bare_id(arg, id)),
         Obj::StructInstance(instance) => {
             instance
                 .name

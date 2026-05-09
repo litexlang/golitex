@@ -328,6 +328,11 @@ fn mark_forall_param_coverage_in_obj(
         Obj::FieldAccess(field_access) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.left);
         }
+        Obj::StructType(struct_ty) => {
+            for arg in struct_ty.args.iter() {
+                mark_forall_param_coverage_in_obj(arg, coverage_by_forall_param);
+            }
+        }
         Obj::StructInstance(instance) => {
             for arg in instance.name.args.iter() {
                 mark_forall_param_coverage_in_obj(arg, coverage_by_forall_param);

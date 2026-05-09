@@ -310,6 +310,16 @@ fn check_obj_has_no_duplicate_free_parameter(
             params_already_used,
         ),
         Obj::FieldAccess(_) => Ok(()),
+        Obj::StructType(struct_ty) => {
+            for arg in struct_ty.args.iter() {
+                check_obj_has_no_duplicate_free_parameter(
+                    arg,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            Ok(())
+        }
         Obj::StructInstance(instance) => {
             for arg in instance.name.args.iter() {
                 check_obj_has_no_duplicate_free_parameter(

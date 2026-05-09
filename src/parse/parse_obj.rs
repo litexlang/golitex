@@ -222,7 +222,7 @@ impl Runtime {
             if let Obj::AnonymousFn(anon) = &result {
                 let mut body_vectors: Vec<Vec<Box<Obj>>> = vec![];
                 while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
-                    let args = self.parse_braced_objs(tb)?;
+                    let args = self.parse_fn_obj_arg_group(tb)?;
                     let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
                     body_vectors.push(group);
                 }
@@ -637,7 +637,7 @@ impl Runtime {
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
-            let args = self.parse_braced_objs(tb)?;
+            let args = self.parse_fn_obj_arg_group(tb)?;
             let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
             body_vectors.push(group);
         }
@@ -654,6 +654,13 @@ impl Runtime {
         if tok == FAMILY_OBJ_PREFIX {
             let family = self.parse_family_obj(tb)?;
             return Ok(Obj::FamilyObj(family));
+        }
+        if tok == STRUCT {
+            let param_type = self.parse_param_type_struct(tb)?;
+            match param_type {
+                ParamType::Struct(struct_ty) => return Ok(struct_ty.into()),
+                _ => unreachable!(),
+            }
         }
         if tok == ABS {
             tb.skip()?;
@@ -1402,6 +1409,19 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_BRACE)?;
         Ok(objs)
+    }
+
+    fn parse_fn_obj_arg_group(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, RuntimeError> {
+        let args = self.parse_braced_objs(tb)?;
+        if args.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "function application expects at least one argument".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        Ok(args)
     }
 
     pub fn parse_braced_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {

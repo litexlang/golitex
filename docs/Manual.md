@@ -207,10 +207,20 @@ have s set = { z N : z > 5 }
 
 #### Function types and anonymous functions
 
-A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly.
+A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The return type `T` is a set object, such as `R`. In a function signature, `struct Point` can also be used as a parameter or return type; Litex checks that the value satisfies the struct type.
 
 ```litex
 have g set = fn(x R) R
+```
+
+```litex
+prove:
+    struct Point:
+        x R
+        y R
+
+    have fn make_point(x R, y R) struct Point = &Point(x, y)
+    make_point(1, 2) = &Point(1, 2)
 ```
 
 ```litex
@@ -1011,7 +1021,7 @@ w > 0
 
 ### Function from one defining equation (`have fn … = …`)
 
-Use **`have fn f(x S) T = body`** when the value of the function is given by one expression.
+Use **`have fn f(x S) T = body`** when the value of the function is given by one expression. The return part `T` is checked as the set that contains the function value.
 
 ```litex
 have fn f(x R) R = x + 1
