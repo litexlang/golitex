@@ -18,6 +18,8 @@ This manual explains how Litex reads and checks mathematical proof scripts. The 
 
 A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
 
+The shape of a Litex statement is part of its proof meaning. A chain, a `by cases` block, a `have by exist` line, a `witness` line, or a `forall` statement is not merely formatting; it tells the checker what kind of mathematical pattern to try. In that sense, Litex puts tactic-like intent into ordinary mathematical forms and lets the kernel apply it by matching known facts, known `forall` facts, and builtin rules.
+
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
 
 This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a strictly checked and explainable proof trace. For example, using a known value can be written as direct algebraic steps:
@@ -1631,6 +1633,8 @@ _- Donald Knuth_
 A Litex proof is built from facts you claim one after another. After a fact is proved, it becomes known information for proving the next facts.
 
 This page explains how one fact gets proved. The process is designed to stay close to ordinary mathematical thinking: first check that expressions make sense, then try direct mathematical rules, reuse known facts, and instantiate known universal facts when their shape matches the goal.
+
+This is the main "tactic" idea in Litex: the user writes a mathematical statement whose form suggests a proof action, and the checker tries to realize that action by matching. A bare fact asks to be justified from the context, a chain asks for intermediate comparisons to connect, a `by cases` block asks for a case split, and a `witness` line asks for an existential conclusion to be matched.
 
 ---
 

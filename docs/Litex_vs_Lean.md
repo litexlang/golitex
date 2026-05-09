@@ -21,6 +21,8 @@ This page is not a ranking. It compares expression style, proof interaction, and
 - Lean exposes a very general proof engine. The user works with theorem statements, hypotheses, terms, proof states, tactics, and library lemmas.
 - Litex exposes a fact-oriented mathematical surface built from objects, facts, and statements, starting from a set-theoretic picture: sets, elements, functions, and relations—the kind of informal foundation many people meet in everyday mathematics. Users write facts; Litex grows a verified context by checking them, storing them, inferring routine consequences, and explaining how accepted facts were proved.
 
+One useful way to say the difference is: Lean makes tactics explicit proof-language commands, while Litex tries to make tactic-like intent live inside the shape of ordinary mathematical statements. A Litex statement is both something a mathematician can read and a pattern the kernel can try to match against known facts, known `forall` facts, or builtin rules.
+
 The trade-off is real. Lean is stronger for large formal developments and advanced abstractions. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
 
 Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on the right, then a short note about what differs. The fenced `litex` block after each note is the runnable version used by the documentation test.
@@ -822,9 +824,11 @@ example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
 
 **What differs.** Litex separates background lemmas from the `claim` spine. Lean often interleaves lemmas with proof-state transformations. Both carry real proof burden; they organize it differently.
 
-The `prop` and `know` blocks are the background mathematics. The part that actually performs the proof is the `claim`, and that main proof is only a little more than ten lines. Each line is a direct mathematical move: build the number, take a prime divisor, split on `k > a`, derive the contradiction, and return the witness.
+What Litex is trying to show is different. In Litex, the shape of each statement carries part of the proof method: a chain invites order/transitivity matching, a `have by exist ...` line asks the kernel to match an existential pattern, a `by cases` block asks it to split on a recognized alternative, and a `witness` line asks it to close the existential goal.
 
-> It takes
+> The `prop` and `know` blocks are the background mathematics. The part that actually performs the proof is the `claim`, and that main proof is only a little more than ten lines.
+
+> The Lean example above is adapted from *Mathematics in Lean*, which is an excellent introduction to Lean and formalized mathematics. It takes 6 pages to teach the reader how to prove this simple example. The point here is not that the Lean version is bad; it is carefully teaching the reader how two language philosophies can be used to express the same proof.
 
 ```litex
 prop prime(a N_pos):
