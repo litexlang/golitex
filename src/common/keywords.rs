@@ -150,6 +150,9 @@ pub const END_STRATEGY: &str = "end_strategy";
 pub const FN_EQ_IN: &str = "fn_eq_in";
 /// `$fn_eq(f, g)`: mutual function-space typing and pointwise equality on the shared dom (see verify).
 pub const FN_EQ: &str = "fn_eq";
+pub const INJECTIVE: &str = "injective";
+pub const SURJECTIVE: &str = "surjective";
+pub const BIJECTIVE: &str = "bijective";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -358,6 +361,9 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == RESTRICT_FN_IN
         || atom_name == FN_EQ_IN
         || atom_name == FN_EQ
+        || atom_name == INJECTIVE
+        || atom_name == SURJECTIVE
+        || atom_name == BIJECTIVE
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {

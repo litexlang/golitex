@@ -493,6 +493,24 @@ fn mark_forall_param_coverage_in_atomic_fact(
             mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
         }
+        AtomicFact::InjectiveFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
+        }
+        AtomicFact::SurjectiveFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
+        }
+        AtomicFact::BijectiveFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
+        }
+        AtomicFact::NotInjectiveFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
+        }
+        AtomicFact::NotSurjectiveFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
+        }
+        AtomicFact::NotBijectiveFact(fact) => {
+            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
+        }
     }
 }
 
