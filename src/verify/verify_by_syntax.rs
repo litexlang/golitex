@@ -275,6 +275,10 @@ impl Runtime {
                 Obj::FieldAccess(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::StructType(a) => match right {
+                Obj::StructType(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::StructInstance(a) => match right {
                 Obj::StructInstance(b) => a.to_string() == b.to_string(),
                 _ => false,

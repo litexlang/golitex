@@ -100,6 +100,9 @@ impl Runtime {
                 self.verify_param_type_family_well_defined(family, verify_state)
             }
             Obj::FieldAccess(field_access) => self.verify_field_access_well_defined(field_access),
+            Obj::StructType(struct_ty) => {
+                self.verify_struct_param_type_well_defined(struct_ty, verify_state)
+            }
             Obj::StructInstance(instance) => {
                 self.verify_struct_instance_well_defined(instance, verify_state)
             }
