@@ -504,11 +504,7 @@ impl Runtime {
         param_group: &ParamGroupWithSet,
         names: &[String],
     ) -> bool {
-        match &param_group.param_type {
-            ParamGroupWithSetTypeEnum::Set(set) => {
-                Self::obj_depends_on_given_exist_param(set, names)
-            }
-        }
+        Self::obj_depends_on_given_exist_param(param_group.set_obj(), names)
     }
 
     fn or_and_chain_fact_depends_on_given_exist_param(

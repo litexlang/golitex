@@ -79,7 +79,7 @@ fn fn_set_clause_latex(clause: &FnSetClause) -> String {
 }
 
 fn fn_param_group_type_to_latex(g: &ParamGroupWithSet) -> String {
-    g.set_obj().unwrap().to_latex_string()
+    g.set_obj().to_latex_string()
 }
 
 impl AndChainAtomicFact {

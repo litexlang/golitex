@@ -13,7 +13,7 @@ impl Runtime {
         param_def: &ParamGroupWithSet,
         binding_scope: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        let param_set = param_def.set_obj().unwrap();
+        let param_set = param_def.set_obj();
         self.verify_obj_well_defined_and_store_cache(param_set, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
                 let param_names_text = param_def.params.join(", ");
