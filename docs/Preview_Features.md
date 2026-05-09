@@ -26,6 +26,10 @@ fn_range(f) = fn_range(f)
 fn_dom(f) = fn_dom(f)
 ```
 
+### `$injective(f)`, `$surjective(f)`, and `$bijective(f)` (2026-05)
+
+These function-property predicates are available as dedicated atomic fact forms. In the current version, Litex recognizes and stores their shape, but it does **not** attach builtin verification rules or automatic definitions to them. Users should prove the intended injective, surjective, or bijective facts explicitly when needed.
+
 ### `by commutative_prop` (2026-05)
 
 After you prove a `forall` whose dom and then are the **same** positive abstract predicate, with every parameter of the `forall` appearing **exactly once** in each row (a permutation), Litex records one or more **gather** permutations for that predicate name. When a **positive** atomic instance is still unproved after the usual steps, the checker may retry using a **reordered** argument list derived from a stored gather (that retry does not run commutative post-processing again). Arity **≥ 2**; multiple registrations append distinct permutations (arity must stay consistent). Does not apply to negated `$not $p(...)` atoms. See **Manual — Register a commutative predicate (`by commutative_prop`)**. Examples: `examples/by_commutative_prop.lit`, `examples/tmp.lit` (4-ary permutation demo).

@@ -845,6 +845,14 @@ These predicates express equality of functions.
 
 ---
 
+### Function Properties
+
+Litex also provides the standard function-property atomic fact forms `$injective(f)`, `$surjective(f)`, and `$bijective(f)`.
+
+For now, these forms have dedicated atomic-fact nodes in the kernel, but Litex does not apply a builtin verification rule for injectivity, surjectivity, or bijectivity. Users should prove and cite the needed facts explicitly.
+
+---
+
 ### Not Builtin: User Predicates
 
 Calls such as `$p(x)` are also atomic facts, but they are not builtin predicates. They come from user declarations such as `prop p(...)` or `abstract_prop p(...)`, and Litex verifies them from the user's definition or known facts.
