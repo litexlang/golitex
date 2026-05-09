@@ -6,9 +6,6 @@ Try all snippets in browser: https://litexlang.com/doc/Litex_Cheatsheet
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_Cheatsheet.md
 
-
-*version: 0.1.0*
-
 ---
 
 _Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it’s worth it in the end because once you get there, you can move mountains._

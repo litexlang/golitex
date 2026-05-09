@@ -3163,6 +3163,10 @@ If a later fact succeeds unexpectedly, the reason is often that an earlier fact 
 
 ## Appendix
 
+_A good plan, violently executed now, is better than a perfect plan next week._
+
+_– George S. Patton_
+
 ### Non-Equality Atomic Predicate Flow
 
 For a non-equality atomic predicate fact such as `$p(a)` or `$p(a, b)`, the verification path looks like this:
