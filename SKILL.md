@@ -39,6 +39,8 @@ Litex code is organized around:
 - Verification: checking whether a fact follows from the current context, definitions, builtin rules, known facts, and known `forall` facts.
 - Execution: growing the verified context as accepted facts are stored and inference adds routine consequences.
 
+A Litex statement's shape often carries tactic-like intent. Do not invent tactic commands; instead, choose statement forms that tell the checker what pattern to match. Examples: use chains for transitive/order reasoning, `by cases` for recognized case splits, `have by exist` to extract witnesses, `witness` to close existential goals, and explicit intermediate facts when matching needs help.
+
 ## Writing Litex Code
 
 When asked to write Litex code:

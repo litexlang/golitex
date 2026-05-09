@@ -1,11 +1,7 @@
-have f fn(x R) R
-have g fn(x, y R) R
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
 
-know:
-    $injective(f)
-    not $surjective(g)
-    $bijective(f)
+know forall x human:
+    $mortal(x)
 
-$injective(f)
-not $surjective(g)
-$bijective(f)
+$mortal(Socrates)
