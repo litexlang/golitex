@@ -1657,7 +1657,21 @@ Some facts are closed directly by builtin mathematical rules.
 2 + 3 = 5
 ```
 
-Here Litex does not need a previous lemma. It evaluates the arithmetic expression and closes the equality by calculation. Other builtin rules handle ordinary mathematical background such as order, membership, set predicates, tuples, functions, and standard equality patterns. See [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules) for the detailed list.
+Here Litex does not need a previous lemma. It evaluates the arithmetic expression and closes the equality by calculation.
+
+Here is an example of a polynomial identity:
+
+```litex
+forall a, b Q:
+    a - b = 4
+    a * b = 1
+    =>:
+        (a + b)^2 = (a - b)^2 + 4 * (a * b) = 20
+```
+
+The remembered object can be a compound expression, not only a single name. For instance, in `(a + b)^2 = (a - b)^2 + 4 * (a * b) = 20`, the first equality is a polynomial identity, and the second equality uses the stored numeric values. After Litex has stored `a - b = 4` and `a * b = 1`, it may resolve `a - b` to `4` and `a * b` to `1` inside the larger expression, so the user does not have to manually write the intermediate equality with `4^2 + 4 * 1`.
+
+Other builtin rules handle ordinary mathematical background such as order, membership, set predicates, tuples, functions, and standard equality patterns. See [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules) for the detailed list.
 
 #### The same fact is already known
 
@@ -2900,6 +2914,8 @@ reason:
 ```
 
 This may not always appear as a separate displayed `infer_facts` line. Sometimes it is stored as side information used later by resolution.
+
+For a compound-expression example, see the polynomial-identity calculation in [Proof Process](https://litexlang.com/doc/Manual#proof-process).
 
 #### Simple Linear Equations
 
