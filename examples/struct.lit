@@ -10,3 +10,5 @@ struct Group(s set):
     e s
     <=>:
         $group_prop(s, inv, op, e)
+
+

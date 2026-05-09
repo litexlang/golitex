@@ -1303,12 +1303,10 @@ impl Runtime {
         left: &ParamGroupWithSet,
         given: &ParamGroupWithSet,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match (&left.param_type, &given.param_type) {
-            (
-                ParamGroupWithSetTypeEnum::Set(left_set),
-                ParamGroupWithSetTypeEnum::Set(given_set),
-            ) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_set, given_set),
-        }
+        self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+            left.set_obj(),
+            given.set_obj(),
+        )
     }
 
     fn match_arg_when_left_is_n_pos_obj(

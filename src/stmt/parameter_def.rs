@@ -148,12 +148,7 @@ impl From<Vec<ParamGroupWithParamType>> for ParamDefWithType {
 #[derive(Clone)]
 pub struct ParamGroupWithSet {
     pub params: Vec<String>,
-    pub param_type: ParamGroupWithSetTypeEnum,
-}
-
-#[derive(Clone)]
-pub enum ParamGroupWithSetTypeEnum {
-    Set(Obj),
+    pub param_type: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -220,14 +215,11 @@ impl fmt::Display for FiniteSet {
 
 impl fmt::Display for ParamGroupWithSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let param_type = match &self.param_type {
-            ParamGroupWithSetTypeEnum::Set(set) => set.to_string(),
-        };
         write!(
             f,
             "{} {}",
             comma_separated_stored_fn_params_as_user_source(&self.params),
-            param_type
+            self.param_type
         )
     }
 }
@@ -257,26 +249,21 @@ impl ParamGroupWithSet {
     pub fn new(params: Vec<String>, set: Obj) -> Self {
         ParamGroupWithSet {
             params,
-            param_type: ParamGroupWithSetTypeEnum::Set(set),
+            param_type: Box::new(set),
         }
     }
 
-    pub fn set_obj(&self) -> Option<&Obj> {
-        match &self.param_type {
-            ParamGroupWithSetTypeEnum::Set(set) => Some(set),
-        }
+    pub fn set_obj(&self) -> &Obj {
+        self.param_type.as_ref()
     }
 
     /// Membership facts for parameters; element tagging must match [`define_params_with_set_in_scope`]'s `binding_scope` (e.g. `FnSet` ~5 for `fn` and `'` anonymous heads).
     pub fn facts_for_binding_scope(&self, binding_scope: ParamObjType) -> Vec<Fact> {
-        let Some(set) = self.set_obj() else {
-            return vec![];
-        };
         let mut facts = Vec::with_capacity(self.params.len());
         for name in self.params.iter() {
             let fact = InFact::new(
                 obj_for_bound_param_in_scope(name.clone(), binding_scope),
-                set.clone(),
+                self.set_obj().clone(),
                 default_line_file(),
             )
             .into();

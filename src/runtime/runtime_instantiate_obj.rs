@@ -589,7 +589,7 @@ impl Runtime {
             params_def_with_set.push(ParamGroupWithSet::new(
                 param_def_with_set.params.clone(),
                 self.inst_obj(
-                    param_def_with_set.set_obj().unwrap(),
+                    param_def_with_set.set_obj(),
                     &filtered_param_to_arg_map,
                     param_obj_type,
                 )?,
@@ -630,7 +630,7 @@ impl Runtime {
             params_def_with_set.push(ParamGroupWithSet::new(
                 param_def_with_set.params.clone(),
                 self.inst_obj(
-                    param_def_with_set.set_obj().unwrap(),
+                    param_def_with_set.set_obj(),
                     &filtered_param_to_arg_map,
                     param_obj_type,
                 )?,
@@ -915,13 +915,9 @@ impl Runtime {
         let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
             let instantiated_param_set = if arg_index != 0 {
-                self.inst_obj(
-                    param_def.set_obj().unwrap(),
-                    &param_to_arg_map,
-                    param_obj_type,
-                )?
+                self.inst_obj(param_def.set_obj(), &param_to_arg_map, param_obj_type)?
             } else {
-                param_def.set_obj().unwrap().clone()
+                param_def.set_obj().clone()
             };
             instantiated_param_sets.push(instantiated_param_set);
 

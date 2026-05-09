@@ -1036,12 +1036,10 @@ impl Obj {
                             .into_iter()
                             .map(|p| if p == from { to.to_string() } else { p })
                             .collect();
-                        match pg.param_type {
-                            ParamGroupWithSetTypeEnum::Set(set) => ParamGroupWithSet::new(
-                                params,
-                                Obj::replace_bound_identifier(set, from, to),
-                            ),
-                        }
+                        ParamGroupWithSet::new(
+                            params,
+                            Obj::replace_bound_identifier(*pg.param_type, from, to),
+                        )
                     })
                     .collect();
                 let dom_facts = dom_facts
@@ -1068,12 +1066,10 @@ impl Obj {
                             .into_iter()
                             .map(|p| if p == from { to.to_string() } else { p })
                             .collect();
-                        match pg.param_type {
-                            ParamGroupWithSetTypeEnum::Set(set) => ParamGroupWithSet::new(
-                                params,
-                                Obj::replace_bound_identifier(set, from, to),
-                            ),
-                        }
+                        ParamGroupWithSet::new(
+                            params,
+                            Obj::replace_bound_identifier(*pg.param_type, from, to),
+                        )
                     })
                     .collect();
                 let dom_facts = dom_facts

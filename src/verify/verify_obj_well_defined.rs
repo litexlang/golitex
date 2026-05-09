@@ -327,12 +327,12 @@ impl Runtime {
         for param_def in params_def_with_set.iter() {
             let param_type = if arg_index != 0 {
                 ParamType::Obj(self.inst_obj(
-                    param_def.set_obj().unwrap(),
+                    param_def.set_obj(),
                     &param_to_arg_map,
                     param_binding,
                 )?)
             } else {
-                ParamType::Obj(param_def.set_obj().unwrap().clone())
+                ParamType::Obj(param_def.set_obj().clone())
             };
 
             for param_name in param_def.params.iter() {
@@ -1250,7 +1250,7 @@ impl Runtime {
     ) -> Option<Obj> {
         for g in params_def {
             if g.params.iter().any(|n| n == pname) {
-                return g.set_obj().cloned();
+                return Some(g.set_obj().clone());
             }
         }
         None

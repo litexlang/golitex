@@ -220,7 +220,7 @@ impl Runtime {
             let n = g.params.len();
             let names = generated_flat_names[c_idx..c_idx + n].to_vec();
             c_idx += n;
-            let new_set = self.inst_obj(g.set_obj().unwrap(), &map, ParamObjType::FnSet)?;
+            let new_set = self.inst_obj(g.set_obj(), &map, ParamObjType::FnSet)?;
             new_params.push(ParamGroupWithSet::new(names, new_set));
         }
         let mut new_dom = Vec::with_capacity(fn_set.dom_facts.len());
@@ -248,7 +248,7 @@ impl Runtime {
                 generated_param_names[flat_index..next_flat_index].to_vec();
             let instantiated_param_set = self
                 .inst_obj(
-                    param_def_with_set.set_obj().unwrap(),
+                    param_def_with_set.set_obj(),
                     &source_param_to_generated_arg_map,
                     ParamObjType::FnSet,
                 )
@@ -345,7 +345,7 @@ impl Runtime {
         for param_def_with_set in target.body.params_def_with_set.iter() {
             let instantiated_param_type = ParamType::Obj(
                 self.inst_obj(
-                    param_def_with_set.set_obj().unwrap(),
+                    param_def_with_set.set_obj(),
                     target_param_to_generated_arg_map,
                     ParamObjType::FnSet,
                 )
