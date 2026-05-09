@@ -195,6 +195,14 @@ impl Runtime {
                 Obj::ClosedRange(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::FnRange(a) => match right {
+                Obj::FnRange(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::FnDom(a) => match right {
+                Obj::FnDom(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::FiniteSeqSet(a) => match right {
                 Obj::FiniteSeqSet(b) => a.to_string() == b.to_string(),
                 _ => false,
