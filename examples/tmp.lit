@@ -1,3 +1,16 @@
-struct Point:
-    x R
-    y R
+macro SELF_R "R"
+
+macro HAVE_FN "have fn"
+
+@HAVE_FN f(x @SELF_R) @SELF_R = x
+
+prove:
+    macro SELF_Q "Q"
+    @HAVE_FN g(x @SELF_Q) @SELF_Q = x
+
+    @HAVE_FN h(x @SELF_R) @SELF_R = x
+
+macro STRANGE "f("
+
+forall x R:
+    @STRANGE x) = f( x)
