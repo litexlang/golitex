@@ -458,8 +458,8 @@ impl Runtime {
             | Obj::StandardSet(StandardSet::R) => Ok(InferResult::new()),
             // Struct membership releases its named tuple-view facts.
             // Example: from `p $in &Point`, infer `&Point{p}.x $in R`
-            // and `&Point{p}.y $in R`. Equivalent facts are instantiated with
-            // the explicit field-access objects.
+            // and `p[1] $in R`. Equivalent facts are instantiated with the
+            // explicit field-access objects.
             Obj::StructObj(struct_obj) => {
                 let (def, header_map) =
                     self.struct_header_param_to_arg_map(struct_obj, &VerifyState::new(0, false))?;
@@ -500,6 +500,24 @@ impl Runtime {
                     infer_result.new_infer_result_inside(
                         self.verify_well_defined_and_store_and_infer_with_default_verify_state(
                             field_in_type,
+                        )?,
+                    );
+
+                    let projected_field: Obj = ObjAtIndex::new(
+                        in_fact.element.clone(),
+                        Number::new((index + 1).to_string()).into(),
+                    )
+                    .into();
+                    let projected_field_in_type: Fact = InFact::new(
+                        projected_field,
+                        field_types[index].clone(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
+                    infer_result.new_fact(&projected_field_in_type);
+                    infer_result.new_infer_result_inside(
+                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            projected_field_in_type,
                         )?,
                     );
                 }

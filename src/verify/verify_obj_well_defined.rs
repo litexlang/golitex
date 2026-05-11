@@ -2342,11 +2342,22 @@ impl Runtime {
                 self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
             self.verify_obj_well_defined_and_store_cache(&instantiated_field_type, verify_state)?;
         }
-        for fact in def.equivalent_facts.iter() {
-            let instantiated_fact =
-                self.inst_fact(fact, &param_to_arg_map, ParamObjType::DefHeader, None)?;
-            self.verify_fact_well_defined(&instantiated_fact, verify_state)?;
-        }
+        self.run_in_local_env(|rt| {
+            for (field_name, field_type) in def.fields.iter() {
+                let instantiated_field_type =
+                    rt.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
+                let param_def =
+                    ParamGroupWithSet::new(vec![field_name.clone()], instantiated_field_type);
+                rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
+            }
+
+            for fact in def.equivalent_facts.iter() {
+                let instantiated_fact =
+                    rt.inst_fact(fact, &param_to_arg_map, ParamObjType::DefHeader, None)?;
+                rt.verify_fact_well_defined(&instantiated_fact, verify_state)?;
+            }
+            Ok::<(), RuntimeError>(())
+        })?;
         Ok(())
     }
 

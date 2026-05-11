@@ -1,28 +1,38 @@
-struct Point:
-    x R
-    y R
+prove:
+    struct Point:
+        x R
+        y R
 
-(1, 2) $in &Point
-have p &Point = (1, 2)
-&Point{p}.x = p[1]
-&Point{p}.x = 1
-&Point{(1, 2)}.y = 2
+    (1, 2) $in &Point
+    have p &Point = (1, 2)
+    &Point{p}.x = p[1]
+    &Point{p}.x = 1
+    &Point{(1, 2)}.y = 2
 
-have p2 &Point
+    have p2 &Point
 
-&Point{p2}.x $in R
+    &Point{p2}.x $in R
 
-abstract_prop group_prop(a,b,c,d)
+    have a &Point
 
-struct Group(s set):
-    inv fn(x s) s
-    op fn(x, y s) s
-    e s
-    <=>:
-        $group_prop(s, inv, op, e)
+    have fn point_add (a, b &Point) &Point = (a[1] + b[1], a[2] + b[2])
 
-forall G &Group(R):
-    G[1] = &Group(R){G}.inv
-    G[2] = &Group(R){G}.op
-    G[3] = &Group(R){G}.e
-    $group_prop(R, &Group(R){G}.inv, &Group(R){G}.op, &Group(R){G}.e)
+    forall a, b &Point:
+        point_add(a, b) = (a[1] + b[1], a[2] + b[2]) = (b[1] + a[1], b[2] + a[2]) = point_add(b, a)
+
+prove:
+    abstract_prop group_prop(a,b,c,d)
+
+    struct Group(s set):
+        inv fn(x s) s
+        op fn(x, y s) s
+        e s
+        <=>:
+            $group_prop(s, inv, op, e)
+
+    forall G &Group(R):
+        G[1] = &Group(R){G}.inv
+        G[2] = &Group(R){G}.op
+        G[3] = &Group(R){G}.e
+        $group_prop(R, &Group(R){G}.inv, &Group(R){G}.op, &Group(R){G}.e)
+
