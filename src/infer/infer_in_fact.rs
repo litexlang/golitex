@@ -459,7 +459,7 @@ impl Runtime {
             // Struct membership releases its named tuple-view facts.
             // Example: from `p $in &Point`, infer `&Point{p}.x $in R`
             // and `p[1] $in R`. Equivalent facts are instantiated with the
-            // explicit field-access objects.
+            // explicit field-access objects and tuple projections.
             Obj::StructObj(struct_obj) => {
                 let (def, header_map) =
                     self.struct_header_param_to_arg_map(struct_obj, &VerifyState::new(0, false))?;
@@ -481,6 +481,7 @@ impl Runtime {
                 );
 
                 let mut field_map: HashMap<String, Obj> = HashMap::new();
+                let mut projection_field_map: HashMap<String, Obj> = HashMap::new();
                 for (index, (field_name, _)) in def.fields.iter().enumerate() {
                     let field_access: Obj = ObjAsStructInstanceWithFieldAccess::new(
                         struct_obj.clone(),
@@ -508,6 +509,7 @@ impl Runtime {
                         Number::new((index + 1).to_string()).into(),
                     )
                     .into();
+                    projection_field_map.insert(field_name.clone(), projected_field.clone());
                     let projected_field_in_type: Fact = InFact::new(
                         projected_field,
                         field_types[index].clone(),
@@ -539,6 +541,19 @@ impl Runtime {
                     infer_result.new_infer_result_inside(
                         self.verify_well_defined_and_store_and_infer_with_default_verify_state(
                             instantiated_fact,
+                        )?,
+                    );
+
+                    let projected_fact = self.inst_fact(
+                        &after_header,
+                        &projection_field_map,
+                        ParamObjType::DefStructField,
+                        Some(in_fact.line_file.clone()),
+                    )?;
+                    infer_result.new_fact(&projected_fact);
+                    infer_result.new_infer_result_inside(
+                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            projected_fact,
                         )?,
                     );
                 }
