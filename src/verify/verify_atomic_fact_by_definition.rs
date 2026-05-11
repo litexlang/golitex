@@ -152,7 +152,6 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
 
         let mut infer_result = InferResult::new();
-        let mut definition_clause_verified_bys: Vec<VerifiedBysEnum> = Vec::new();
 
         for iff_fact in definition.iff_facts.iter() {
             let instantiated_iff_fact = self
@@ -182,8 +181,6 @@ impl Runtime {
                 }
                 StmtResult::StmtUnknown(_) => return Ok(None),
             }
-            definition_clause_verified_bys
-                .extend(verified_by_items_from_stmt_result(iff_clause_verify_result));
         }
 
         let verified_by_text = format!(
@@ -195,11 +192,10 @@ impl Runtime {
             (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),
                 infer_result,
-                VerifiedByResult::cited_stmt_with_children(
+                VerifiedByResult::cited_stmt(
                     normal_atomic_fact.clone().into(),
                     definition.clone().into(),
                     Some(verified_by_text),
-                    definition_clause_verified_bys,
                 ),
                 Vec::new(),
             ))

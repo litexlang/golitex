@@ -128,7 +128,6 @@ fn verified_by_result_json_value(runtime: &Runtime, verified_by: &VerifiedByResu
                 cited_stmt_plain.as_str(),
                 display_text.as_str(),
                 None,
-                r.children.as_slice(),
             )
         }
         VerifiedByResult::VerifiedBys(w) => JsonValue::Array(
@@ -161,7 +160,6 @@ fn verified_bys_enum_json_value(runtime: &Runtime, item: &VerifiedBysEnum) -> Js
                 cited_stmt_plain.as_str(),
                 display_text.as_str(),
                 Some(&r.verify_what),
-                r.children.as_slice(),
             )
         }
     }
@@ -194,7 +192,6 @@ fn verified_by_citation_object(
     cited_stmt_plain: &str,
     msg: &str,
     verify_what: Option<&Fact>,
-    children: &[VerifiedBysEnum],
 ) -> JsonValue {
     let source_value = citation_source_json_value(citation_line_file, &runtime.module_manager);
     let cite_source = JsonValue::Object(vec![
@@ -219,17 +216,6 @@ fn verified_by_citation_object(
         fields.push((
             "verify_what".to_string(),
             JsonValue::JsonString(user_visible_stmt_or_msg_text(&vw.to_string())),
-        ));
-    }
-    if !children.is_empty() {
-        fields.push((
-            "children".to_string(),
-            JsonValue::Array(
-                children
-                    .iter()
-                    .map(|item| verified_bys_enum_json_value(runtime, item))
-                    .collect(),
-            ),
         ));
     }
     JsonValue::Object(fields)
