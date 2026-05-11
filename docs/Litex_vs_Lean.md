@@ -24,6 +24,8 @@ One useful way to say the difference is: Lean often asks the user to choose proo
 
 > In short, in Lean, you often remember the names of facts and use `by` to explicitly tell Lean how to prove the goal; in Litex, *the shape of a fact already tells Litex what kind of proof path to try*.
 
+This is why Litex can be described as **the language where mathematics verifies itself**.
+
 The trade-off is real. Lean is stronger for large formal developments and advanced abstractions. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
 
 This page is not a ranking. It compares expression style, proof interaction, and where each system places routine mathematical structure. Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on the right, then a short note about what differs. The fenced `litex` block after each note is the runnable version used by the documentation test.
