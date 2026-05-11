@@ -207,7 +207,7 @@ impl Runtime {
                 }
             }
             // A struct without filters is nonempty when every field type is nonempty.
-            // Example: `struct Point: x R, y R` makes `struct Point` nonempty from `R` and `R`.
+            // Example: `struct Point: x R, y R` makes `&Point` nonempty from `R` and `R`.
             Obj::StructObj(struct_obj) => {
                 let (def, param_to_arg_map) =
                     self.struct_header_param_to_arg_map(struct_obj, _verify_state)?;

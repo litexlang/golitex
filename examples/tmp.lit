@@ -2,13 +2,13 @@ struct Point:
     x R
     y R
 
-(1, 2) $in struct Point
-have p struct Point = (1, 2)
+(1, 2) $in &Point
+have p &Point = (1, 2)
 &Point{p}.x = p[1]
 &Point{p}.x = 1
 &Point{(1, 2)}.y = 2
 
-have p2 struct Point
+have p2 &Point
 
 &Point{p2}.x $in R
 
@@ -21,7 +21,7 @@ struct Group(s set):
     <=>:
         $group_prop(s, inv, op, e)
 
-forall G struct Group(R):
+forall G &Group(R):
     G[1] = &Group(R){G}.inv
     G[2] = &Group(R){G}.op
     G[3] = &Group(R){G}.e

@@ -457,7 +457,7 @@ impl Runtime {
             | Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::R) => Ok(InferResult::new()),
             // Struct membership releases its named tuple-view facts.
-            // Example: from `p $in struct Point`, infer `&Point{p}.x $in R`
+            // Example: from `p $in &Point`, infer `&Point{p}.x $in R`
             // and `&Point{p}.y $in R`. Equivalent facts are instantiated with
             // the explicit field-access objects.
             Obj::StructObj(struct_obj) => {

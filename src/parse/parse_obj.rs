@@ -605,10 +605,7 @@ impl Runtime {
         let tok = tb.current()?;
 
         if tok == STRUCT_VIEW_PREFIX {
-            return self.parse_obj_as_struct_instance_with_field_access(tb);
-        }
-        if tok == STRUCT {
-            return self.parse_struct_obj(tb).map(Obj::StructObj);
+            return self.parse_struct_view_obj(tb);
         }
         if tok == FAMILY_OBJ_PREFIX {
             let family = self.parse_family_obj(tb)?;
@@ -1557,21 +1554,7 @@ impl Runtime {
         Ok(FamilyObj::new(name, params))
     }
 
-    pub fn parse_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<StructObj, RuntimeError> {
-        tb.skip_token(STRUCT)?;
-        let name = self.parse_name_with_or_without_mod(tb)?;
-        let params = if !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
-            self.parse_braced_objs(tb)?
-        } else {
-            vec![]
-        };
-        Ok(StructObj::new(name, params))
-    }
-
-    pub fn parse_obj_as_struct_instance_with_field_access(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Obj, RuntimeError> {
+    pub fn parse_struct_view_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         tb.skip_token(STRUCT_VIEW_PREFIX)?;
         let name = self.parse_name_with_or_without_mod(tb)?;
         let params = if !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
@@ -1579,12 +1562,17 @@ impl Runtime {
         } else {
             vec![]
         };
+        let struct_obj = StructObj::new(name, params);
+
+        if tb.exceed_end_of_head() || tb.current()? != LEFT_CURLY_BRACE {
+            return Ok(struct_obj.into());
+        }
+
         tb.skip_token(LEFT_CURLY_BRACE)?;
         let obj = self.parse_obj(tb)?;
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
         let field_name = parse_synthetically_correct_identifier_string(tb)?;
-        let struct_obj = StructObj::new(name, params);
         Ok(ObjAsStructInstanceWithFieldAccess::new(struct_obj, obj, field_name).into())
     }
 
