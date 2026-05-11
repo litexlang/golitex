@@ -96,4 +96,13 @@ know:
         exist r Z st {a = m * r + k}
         =>:
             a % m = k
+
+    forall a, b finite_set:
+        count(union(a, b)) = count(a) + count(b) - count(intersection(a, b))
+
+    forall a finite_set:
+        count(a) = 0
+        =>:
+            not $is_nonempty_set(a)
+            a = {}
 "#;
