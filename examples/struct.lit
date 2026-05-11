@@ -2,6 +2,16 @@ struct Point:
     x R
     y R
 
+(1, 2) $in struct Point
+have p struct Point = (1, 2)
+&Point{p}.x = p[1]
+&Point{p}.x = 1
+&Point{(1, 2)}.y = 2
+
+have p2 struct Point
+
+&Point{p2}.x $in R
+
 abstract_prop group_prop(a,b,c,d)
 
 struct Group(s set):
@@ -11,4 +21,8 @@ struct Group(s set):
     <=>:
         $group_prop(s, inv, op, e)
 
-
+forall G struct Group(R):
+    G[1] = &Group(R){G}.inv
+    G[2] = &Group(R){G}.op
+    G[3] = &Group(R){G}.e
+    $group_prop(R, &Group(R){G}.inv, &Group(R){G}.op, &Group(R){G}.e)

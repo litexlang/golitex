@@ -110,7 +110,7 @@ The field names are a naming rule for tuple projections: `zero` means `g[1]`, `a
 
 Field access is explicit:
 
-```litex
+```text
 &Point{P}.x
 &Group(R){G}.add
 ```
@@ -119,13 +119,13 @@ The prefix says how the object is being viewed. This avoids the ambiguity of bar
 
 The well-definedness check for:
 
-```litex
+```text
 &Group(R){G}.add
 ```
 
 reduces to proving:
 
-```litex
+```text
 G $in struct Group(R)
 ```
 
@@ -134,14 +134,15 @@ When `G $in struct Group(R)` is known, Litex also stores the facts carried by th
 Once that membership is available, the field access is only a named form of tuple projection:
 
 ```text
-&Group(R){G}.zero = G[1]
-&Group(R){G}.add = G[2]
-&Group(R){G}.inv = G[3]
+forall G struct Group(R):
+    &Group(R){G}.zero = G[1]
+    &Group(R){G}.add = G[2]
+    &Group(R){G}.inv = G[3]
 ```
 
 If a parameter is declared with a struct object, the membership fact is available in the local context:
 
-```litex
+```text
 forall G struct Group(R):
     &Group(R){G}.add = &Group(R){G}.add
 ```
@@ -160,6 +161,10 @@ These syntax forms are intentionally unavailable:
 Use explicit struct objects and explicit field views instead:
 
 ```litex
+struct Point:
+    x R
+    y R
+
 have P struct Point = (1, 2)
 &Point{P}.x = P[1]
 &Point{(1, 2)}.y = 2
