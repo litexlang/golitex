@@ -1,25 +1,19 @@
-struct StandardTwoSimplex:
-    x R
-    y R
-    z R
+prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
+    forall x s:
+        op(x, inv(x)) = e
+        op(inv(x), x) = e
+    forall x, y, z s:
+        op(x, op(y, z)) = op(op(x, y), z)
+    forall x s:
+        op(x, e) = x
+        op(e, x) = x
+
+struct Group(s set):
+    inv fn(x s) s
+    op fn(x, y s) s
+    e s
     <=>:
-        0 <= x
-        0 <= y
-        0 <= z
-        x + y + z = 1
+        $GroupProperty(s, inv, op, e)
 
-macro s "&StandardTwoSimplex{s}"
-macro a "&StandardTwoSimplex{a}"
-macro b "&StandardTwoSimplex{b}"
-
-forall s &StandardTwoSimplex:
-    1 = @s.x + @s.y + @s.z = @s.y + @s.x + @s.z
-    (@s.y, @s.x, @s.z) $in &StandardTwoSimplex
-
-have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (@s.y, @s.x, @s.z)
-
-forall a, b &StandardTwoSimplex:
-    (@a.x + @b.x) / 2 + (@a.y + @b.y) / 2 + (@a.z + @b.z) / 2 = ((@a.x + @a.y + @a.z) + (@b.x + @b.y + @b.z)) / 2 = (1 + 1) / 2 = 1
-    ((@a.x + @b.x) / 2, (@a.y + @b.y) / 2, (@a.z + @b.z) / 2) $in &StandardTwoSimplex
-
-have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((@a.x + @b.x) / 2, (@a.y + @b.y) / 2, (@a.z + @b.z) / 2)
+$GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
+('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group(R)
