@@ -1,6 +1,15 @@
-(1, 2)[1] = 1
-(1, 2)[2] = 2
+struct StandardTwoSimplex:
+    x R
+    y R
+    z R
+    <=>:
+        0 <= x
+        0 <= y
+        0 <= z
+        x + y + z = 1
 
-have a set = (1, 2)
-a[1] = 1
-a[2] = 2
+forall s &StandardTwoSimplex:
+    1 = s[1] + s[2] + s[3] = s[2] + s[1] + s[3]
+    (s[2], s[1], s[3]) $in &StandardTwoSimplex
+
+have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (s[2], s[1], s[3])

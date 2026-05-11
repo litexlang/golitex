@@ -36,3 +36,27 @@ prove:
         G[3] = &Group(R){G}.e
         $group_prop(R, &Group(R){G}.inv, &Group(R){G}.op, &Group(R){G}.e)
 
+prove:
+    struct StandardTwoSimplex:
+        x R
+        y R
+        z R
+        <=>:
+            0 <= x
+            0 <= y
+            0 <= z
+            x + y + z = 1
+
+    forall s &StandardTwoSimplex:
+        s[1] $in R
+        s[2] $in R
+        s[3] $in R
+        0 <= s[1]
+        0 <= s[2]
+        0 <= s[3]
+
+    forall s &StandardTwoSimplex:
+        1 = s[1] + s[2] + s[3] = s[2] + s[1] + s[3]
+        (s[2], s[1], s[3]) $in &StandardTwoSimplex
+
+    have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (s[2], s[1], s[3])
