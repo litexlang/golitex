@@ -13,3 +13,9 @@ forall s &StandardTwoSimplex:
     (s[2], s[1], s[3]) $in &StandardTwoSimplex
 
 have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (s[2], s[1], s[3])
+
+forall a, b &StandardTwoSimplex:
+    (a[1] + b[1]) / 2 + (a[2] + b[2]) / 2 + (a[3] + b[3]) / 2 = ((a[1] + a[2] + a[3]) + (b[1] + b[2] + b[3])) / 2 = (1 + 1) / 2 = 1
+    ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2) $in &StandardTwoSimplex
+
+have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2)

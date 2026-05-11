@@ -133,7 +133,7 @@ reduces to proving:
 G $in &Group(R)
 ```
 
-When `G $in &Group(R)` is known, Litex also stores the facts carried by the struct view: each explicit field access and its corresponding tuple projection belong to the field type, and each `<=>:` fact is instantiated in both forms. One form replaces field names by explicit field accesses, and the other replaces them by tuple projections.
+When `G $in &Group(R)` is known, Litex also stores the facts carried by the struct view: each explicit field access and its corresponding tuple projection belong to the field type, and each `<=>:` fact is instantiated in both forms. One form replaces field names by explicit field accesses, and the other replaces them by tuple projections. When checking tuple membership in a struct object, Litex can use the tuple components directly for the `<=>:` facts.
 
 Once that membership is available, the field access is only a named form of tuple projection:
 

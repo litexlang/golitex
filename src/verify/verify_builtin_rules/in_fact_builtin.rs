@@ -496,14 +496,15 @@ impl Runtime {
         let mut step_results = vec![cart_result];
         let mut field_map = HashMap::new();
         for (index, (field_name, _)) in def.fields.iter().enumerate() {
-            field_map.insert(
-                field_name.clone(),
-                ObjAtIndex::new(
+            let field_obj = match &in_fact.element {
+                Obj::Tuple(tuple) => (*tuple.args[index]).clone(),
+                _ => ObjAtIndex::new(
                     in_fact.element.clone(),
                     Number::new((index + 1).to_string()).into(),
                 )
                 .into(),
-            );
+            };
+            field_map.insert(field_name.clone(), field_obj);
         }
 
         for fact in def.equivalent_facts.iter() {
