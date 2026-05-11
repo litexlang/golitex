@@ -1411,7 +1411,7 @@ impl fmt::Display for ObjAtIndex {
 
 impl fmt::Display for StructObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", STRUCT, self.name)?;
+        write!(f, "{}{}", STRUCT_VIEW_PREFIX, self.name)?;
         if !self.params.is_empty() {
             write!(
                 f,
