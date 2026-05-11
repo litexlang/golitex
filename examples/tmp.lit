@@ -1,0 +1,13 @@
+struct Point:
+    x R
+    y R
+
+(1, 2) $in struct Point
+have p struct Point = (1, 2)
+&Point{p}.x = p[1]
+&Point{p}.x = 1
+&Point{(1, 2)}.y = 2
+
+have p2 struct Point
+
+&Point{p2}.x $in R

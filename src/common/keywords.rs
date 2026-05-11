@@ -4,6 +4,7 @@ use std::sync::OnceLock;
 pub const FACT_PREFIX: &str = "$";
 // Family use (member type): `\name(arg1, ...)`; `family` is only the definition keyword.
 pub const FAMILY_OBJ_PREFIX: &str = "\\";
+pub const STRUCT_VIEW_PREFIX: &str = "&";
 pub const DOT_AKA_FIELD_ACCESS_SIGN: &str = ".";
 /// Infix closed integer interval: `lo ... hi` (same AST as `closed_range(lo, hi)`).
 pub const DOT_DOT_DOT: &str = "...";
@@ -157,6 +158,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let symbols = [
         FAMILY_OBJ_PREFIX,
+        STRUCT_VIEW_PREFIX,
         EQUIVALENT_SIGN,
         NOT_EQUAL,
         LESS_EQUAL,

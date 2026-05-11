@@ -109,6 +109,27 @@ impl Runtime {
                 }
                 Ok(FamilyObj::new(family.name.clone(), params).into())
             }
+            Obj::StructObj(struct_obj) => {
+                let mut params = Vec::with_capacity(struct_obj.params.len());
+                for p in struct_obj.params.iter() {
+                    params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
+                }
+                Ok(StructObj::new(struct_obj.name.clone(), params).into())
+            }
+            Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                let mut params = Vec::with_capacity(field_access.struct_obj.params.len());
+                for p in field_access.struct_obj.params.iter() {
+                    params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
+                }
+                let struct_obj = StructObj::new(field_access.struct_obj.name.clone(), params);
+                let obj = self.inst_obj(&field_access.obj, param_to_arg_map, param_obj_type)?;
+                Ok(ObjAsStructInstanceWithFieldAccess::new(
+                    struct_obj,
+                    obj,
+                    field_access.field_name.clone(),
+                )
+                .into())
+            }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {
                     if let Some(obj) = param_to_arg_map.get(&p.name) {

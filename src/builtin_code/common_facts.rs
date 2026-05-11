@@ -98,7 +98,7 @@ know:
             a % m = k
 
     forall a, b finite_set:
-        count(union(a, b)) = count(a) + count(b) - count(intersection(a, b))
+        count(union(a, b)) = count(a) + count(b) - count(intersect(a, b))
 
     forall a finite_set:
         count(a) = 0

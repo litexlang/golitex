@@ -308,6 +308,17 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
             }
         }
+        Obj::StructObj(struct_obj) => {
+            for o in struct_obj.params.iter() {
+                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
+            }
+        }
+        Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
+            for o in field_access.struct_obj.params.iter() {
+                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
+            }
+            mark_forall_param_coverage_in_obj(field_access.obj.as_ref(), coverage_by_forall_param);
+        }
         Obj::Atom(AtomObj::Forall(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);
         }
