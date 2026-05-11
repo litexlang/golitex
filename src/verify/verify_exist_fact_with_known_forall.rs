@@ -448,6 +448,17 @@ impl Runtime {
                 .params
                 .iter()
                 .any(|obj| Self::obj_depends_on_given_exist_param(obj, names)),
+            Obj::StructObj(x) => x
+                .params
+                .iter()
+                .any(|obj| Self::obj_depends_on_given_exist_param(obj, names)),
+            Obj::ObjAsStructInstanceWithFieldAccess(x) => {
+                x.struct_obj
+                    .params
+                    .iter()
+                    .any(|obj| Self::obj_depends_on_given_exist_param(obj, names))
+                    || Self::obj_depends_on_given_exist_param(x.obj.as_ref(), names)
+            }
             Obj::SetBuilder(x) => {
                 Self::obj_depends_on_given_exist_param(x.param_set.as_ref(), names)
                     || x.facts.iter().any(|fact| {

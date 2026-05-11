@@ -259,6 +259,30 @@ fn check_obj_has_no_duplicate_free_parameter(
             }
             Ok(())
         }
+        Obj::StructObj(obj) => {
+            for param in obj.params.iter() {
+                check_obj_has_no_duplicate_free_parameter(
+                    param,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            Ok(())
+        }
+        Obj::ObjAsStructInstanceWithFieldAccess(obj) => {
+            for param in obj.struct_obj.params.iter() {
+                check_obj_has_no_duplicate_free_parameter(
+                    param,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.obj,
+                free_param_type,
+                params_already_used,
+            )
+        }
         Obj::MatrixSet(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.set,

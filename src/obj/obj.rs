@@ -55,6 +55,60 @@ pub enum Obj {
     MatrixMul(MatrixMul),
     MatrixScalarMul(MatrixScalarMul),
     MatrixPow(MatrixPow),
+    StructObj(StructObj),
+    ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
+}
+
+#[derive(Clone)]
+pub enum NameWithOrWithoutMod {
+    WithoutMod(String),
+    WithMod(String, String),
+}
+
+#[derive(Clone)]
+pub struct StructObj {
+    pub name: NameWithOrWithoutMod,
+    pub params: Vec<Obj>,
+}
+
+#[derive(Clone)]
+pub struct ObjAsStructInstanceWithFieldAccess {
+    pub struct_obj: Box<StructObj>,
+    pub obj: Box<Obj>,
+    pub field_name: String,
+}
+
+impl NameWithOrWithoutMod {
+    pub fn to_name_string(&self) -> String {
+        match self {
+            NameWithOrWithoutMod::WithoutMod(name) => name.clone(),
+            NameWithOrWithoutMod::WithMod(mod_name, name) => {
+                format!("{}{}{}", mod_name, MOD_SIGN, name)
+            }
+        }
+    }
+}
+
+impl fmt::Display for NameWithOrWithoutMod {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_name_string())
+    }
+}
+
+impl StructObj {
+    pub fn new(name: NameWithOrWithoutMod, params: Vec<Obj>) -> Self {
+        StructObj { name, params }
+    }
+}
+
+impl ObjAsStructInstanceWithFieldAccess {
+    pub fn new(struct_obj: StructObj, obj: Obj, field_name: String) -> Self {
+        ObjAsStructInstanceWithFieldAccess {
+            struct_obj: Box::new(struct_obj),
+            obj: Box::new(obj),
+            field_name,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -898,6 +952,8 @@ impl Obj {
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
+            Obj::StructObj(x) => write!(f, "{}", x)?,
+            Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1202,6 +1258,30 @@ impl Obj {
                     .collect(),
             )
             .into(),
+            Obj::StructObj(s) => StructObj::new(
+                s.name,
+                s.params
+                    .into_iter()
+                    .map(|o| Obj::replace_bound_identifier(o, from, to))
+                    .collect(),
+            )
+            .into(),
+            Obj::ObjAsStructInstanceWithFieldAccess(s) => {
+                let struct_obj = StructObj::new(
+                    s.struct_obj.name.clone(),
+                    s.struct_obj
+                        .params
+                        .into_iter()
+                        .map(|o| Obj::replace_bound_identifier(o, from, to))
+                        .collect(),
+                );
+                ObjAsStructInstanceWithFieldAccess::new(
+                    struct_obj,
+                    Obj::replace_bound_identifier(*s.obj, from, to),
+                    s.field_name,
+                )
+                .into()
+            }
         }
     }
 }
@@ -1325,6 +1405,46 @@ impl fmt::Display for ObjAtIndex {
             f,
             "{}{}{}{}",
             self.obj, LEFT_BRACKET, self.index, RIGHT_BRACKET
+        )
+    }
+}
+
+impl fmt::Display for StructObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", STRUCT, self.name)?;
+        if !self.params.is_empty() {
+            write!(
+                f,
+                "{}{}{}",
+                LEFT_BRACE,
+                vec_to_string_join_by_comma(&self.params),
+                RIGHT_BRACE
+            )?;
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Display for ObjAsStructInstanceWithFieldAccess {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", STRUCT_VIEW_PREFIX, self.struct_obj.name)?;
+        if !self.struct_obj.params.is_empty() {
+            write!(
+                f,
+                "{}{}{}",
+                LEFT_BRACE,
+                vec_to_string_join_by_comma(&self.struct_obj.params),
+                RIGHT_BRACE
+            )?;
+        }
+        write!(
+            f,
+            "{}{}{}{}{}",
+            LEFT_CURLY_BRACE,
+            self.obj,
+            RIGHT_CURLY_BRACE,
+            DOT_AKA_FIELD_ACCESS_SIGN,
+            self.field_name
         )
     }
 }
@@ -2063,6 +2183,18 @@ impl From<IdentifierWithMod> for Obj {
 impl From<FamilyObj> for Obj {
     fn from(f: FamilyObj) -> Self {
         Obj::FamilyObj(f)
+    }
+}
+
+impl From<StructObj> for Obj {
+    fn from(s: StructObj) -> Self {
+        Obj::StructObj(s)
+    }
+}
+
+impl From<ObjAsStructInstanceWithFieldAccess> for Obj {
+    fn from(s: ObjAsStructInstanceWithFieldAccess) -> Self {
+        Obj::ObjAsStructInstanceWithFieldAccess(s)
     }
 }
 

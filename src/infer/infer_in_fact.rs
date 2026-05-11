@@ -456,6 +456,77 @@ impl Runtime {
             Obj::StandardSet(StandardSet::Q)
             | Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::R) => Ok(InferResult::new()),
+            // Struct membership releases its named tuple-view facts.
+            // Example: from `p $in struct Point`, infer `&Point{p}.x $in R`
+            // and `&Point{p}.y $in R`. Equivalent facts are instantiated with
+            // the explicit field-access objects.
+            Obj::StructObj(struct_obj) => {
+                let (def, header_map) =
+                    self.struct_header_param_to_arg_map(struct_obj, &VerifyState::new(0, false))?;
+                let field_types =
+                    self.instantiated_struct_field_types(struct_obj, &VerifyState::new(0, false))?;
+
+                let mut infer_result = InferResult::new();
+                let cart_membership: Fact = InFact::new(
+                    in_fact.element.clone(),
+                    Cart::new(field_types.clone()).into(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
+                infer_result.new_fact(&cart_membership);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        cart_membership,
+                    )?,
+                );
+
+                let mut field_map: HashMap<String, Obj> = HashMap::new();
+                for (index, (field_name, _)) in def.fields.iter().enumerate() {
+                    let field_access: Obj = ObjAsStructInstanceWithFieldAccess::new(
+                        struct_obj.clone(),
+                        in_fact.element.clone(),
+                        field_name.clone(),
+                    )
+                    .into();
+                    field_map.insert(field_name.clone(), field_access.clone());
+
+                    let field_in_type: Fact = InFact::new(
+                        field_access,
+                        field_types[index].clone(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
+                    infer_result.new_fact(&field_in_type);
+                    infer_result.new_infer_result_inside(
+                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            field_in_type,
+                        )?,
+                    );
+                }
+
+                for fact in def.equivalent_facts.iter() {
+                    let after_header = self.inst_fact(
+                        fact,
+                        &header_map,
+                        ParamObjType::DefHeader,
+                        Some(in_fact.line_file.clone()),
+                    )?;
+                    let instantiated_fact = self.inst_fact(
+                        &after_header,
+                        &field_map,
+                        ParamObjType::DefStructField,
+                        Some(in_fact.line_file.clone()),
+                    )?;
+                    infer_result.new_fact(&instantiated_fact);
+                    infer_result.new_infer_result_inside(
+                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            instantiated_fact,
+                        )?,
+                    );
+                }
+
+                Ok(infer_result)
+            }
             Obj::FamilyObj(family_obj) => {
                 self.infer_membership_in_family_from_in_fact(in_fact, family_obj)
             }

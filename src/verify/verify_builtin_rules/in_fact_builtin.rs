@@ -67,6 +67,9 @@ impl Runtime {
             return Ok(result);
         }
         match (&in_fact.element, &in_fact.set) {
+            (_, Obj::StructObj(struct_obj)) => {
+                return self.verify_in_fact_by_struct_obj(in_fact, struct_obj, verify_state);
+            }
             (Obj::Tuple(tuple), Obj::Cart(cart)) => {
                 return self.verify_in_fact_by_left_is_tuple_right_is_cart(
                     in_fact,
@@ -465,6 +468,67 @@ impl Runtime {
             in_fact.clone().into(),
             "set builder membership: element is in the base set and satisfies all defining facts"
                 .to_string(),
+            step_results,
+        )
+        .into())
+    }
+
+    fn verify_in_fact_by_struct_obj(
+        &mut self,
+        in_fact: &InFact,
+        struct_obj: &StructObj,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(
+            &Obj::StructObj(struct_obj.clone()),
+            verify_state,
+        )?;
+        let (def, header_map) = self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
+        let field_types = self.instantiated_struct_field_types(struct_obj, verify_state)?;
+        let cart_obj: Obj = Cart::new(field_types).into();
+        let cart_membership: AtomicFact =
+            InFact::new(in_fact.element.clone(), cart_obj, in_fact.line_file.clone()).into();
+        let cart_result = self.verify_atomic_fact(&cart_membership, verify_state)?;
+        if !cart_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let mut step_results = vec![cart_result];
+        let mut field_map = HashMap::new();
+        for (index, (field_name, _)) in def.fields.iter().enumerate() {
+            field_map.insert(
+                field_name.clone(),
+                ObjAtIndex::new(
+                    in_fact.element.clone(),
+                    Number::new((index + 1).to_string()).into(),
+                )
+                .into(),
+            );
+        }
+
+        for fact in def.equivalent_facts.iter() {
+            let after_header = self.inst_fact(
+                fact,
+                &header_map,
+                ParamObjType::DefHeader,
+                Some(in_fact.line_file.clone()),
+            )?;
+            let instantiated_fact = self.inst_fact(
+                &after_header,
+                &field_map,
+                ParamObjType::DefStructField,
+                Some(in_fact.line_file.clone()),
+            )?;
+            let fact_result = self.verify_fact(&instantiated_fact, verify_state)?;
+            if !fact_result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            step_results.push(fact_result);
+        }
+
+        Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            in_fact.clone().into(),
+            "struct membership: element is in the named cart base and satisfies struct equivalent facts".to_string(),
             step_results,
         )
         .into())
