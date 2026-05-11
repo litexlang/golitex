@@ -4,7 +4,7 @@ Jiachen Shen and The Litex Team, 2026-05-08. Email: litexlang@outlook.com
 
 Preview features are usable experiments. They are implemented enough to try, but their syntax and semantics may still change. For stable language concepts, read the [Manual](https://litexlang.com/doc/Manual) first.
 
-New preview-related behavior is **appended** under [Recent additions](#recent-additions-append-only) as it lands. Older material below still focuses on `struct`, instances, field access, and `by struct`.
+New preview-related behavior is **appended** under [Recent additions](#recent-additions-append-only) as it lands. The struct material below describes the explicit struct-view redesign: struct definitions name tuple/cartesian-product shapes, and field access must say which struct view is being used.
 
 ## Recent additions (append-only)
 
@@ -36,11 +36,17 @@ After you prove a `forall` whose dom and then are the **same** positive abstract
 
 ### `by … as set` implementation names (2026-05)
 
-User-facing spellings are unchanged (`by fn as set`, `by fn set as set`, `by family as set`, `by tuple as set`, …). Internal statement / `stmt_type_name` labels were aligned (e.g. `ByFnAsSetStmt`, `ByFamilyAsSetStmt`, `ByTupleAsSetStmt`, `ByFnSetAsSetStmt`). The struct bridge remains **`by struct`** with AST name `ByStructStmt` (not an “AsSet” form).
+User-facing spellings are unchanged (`by fn as set`, `by fn set as set`, `by family as set`, `by tuple as set`, …). Internal statement / `stmt_type_name` labels were aligned (e.g. `ByFnAsSetStmt`, `ByFamilyAsSetStmt`, `ByTupleAsSetStmt`, `ByFnSetAsSetStmt`).
 
-### `struct`, `by struct`, `&Type(...)`, field access (ongoing preview)
+### Explicit struct views (2026-05)
 
-The sections **below** on struct definitions, struct parameters, instances, `by struct`, and field-access limits are unchanged; they remain preview rather than fully stable Manual material.
+Struct usage is being redesigned around explicit views. Bare field access such as `P.x` is not part of the language. A field access must say which struct is being used, such as `&Point{P}.x` or `&Group(R){G}.op`.
+
+The intended model is simple: `&Name(args)` is a set object, and `&Name(args){x}.field` is a named projection after proving `x $in &Name(args)`.
+
+### Design Note: Object Meaning
+
+When designing a new object form in Litex, the first questions are its surface shape and its well-definedness condition. Its mathematical behavior can then be supplied by builtin verification and inference rules. The AST records the shape, well-definedness checks that the expression is legal, and builtin rules explain how the object behaves in proofs.
 
 ## Struct Definitions
 
@@ -52,7 +58,7 @@ struct Point:
     y R
 ```
 
-Structs may also have header parameters. The header parameters are checked when the struct type is used.
+Structs may also have header parameters. The definition is stored and its field declarations are checked. In the explicit-view design, applying the struct header creates a set object such as `&Group(R)`.
 
 ```litex
 abstract_prop group_property(s, zero, add, inv)
@@ -65,162 +71,133 @@ struct Group(s set):
         $group_property(s, zero, add, inv)
 ```
 
-The `<=>:` block is preview behavior. Its facts are checked and can be released when a name is introduced as a struct parameter. It is not the same thing as proving that every object in a cartesian product is a struct.
+The `<=>:` block is still part of the definition record. Its body may refer to fields by their field names, as in the example above.
 
-## Struct Parameters and Identity
+## Struct Objects
 
-The important rule is:
+`&Name(args)` is a set object. It is read as a named set-builder whose base set is the Cartesian product of the instantiated field types.
 
-> `x struct Group(R)` is a special parameter type. It is not the same as proving `x $in struct Group(R)`.
-
-When Litex enters a parameter scope such as:
+For example:
 
 ```litex
 struct Point:
     x R
     y R
-
-forall P struct Point:
-    P.x $in R
 ```
 
-the name `P` is registered in the local environment as belonging to `Point`. That environment-level identity is what makes `P.x` well-defined.
+`&Point` is the named struct set corresponding to `cart(R, R)`.
 
-This identity is intentionally narrow. It is introduced by parameter binding, not by ordinary facts.
+When there is no `<=>:` block, this struct set is nonempty as soon as every field type is nonempty. For example, `&Point` is nonempty because both fields range over `R`.
 
-## Field Access
+For a parameterized struct:
 
-Field access currently has the form:
+```litex
+abstract_prop group_property(s, zero, add, inv)
+
+struct Group(s set):
+    zero s
+    add fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        $group_property(s, zero, add, inv)
+```
+
+`&Group(R)` is read as a named set-builder like:
 
 ```text
-P.x
+{ g $in cart(R, fn(x, y R) R, fn(x R) R) | $group_property(R, g[1], g[2], g[3]) }
 ```
 
-The left side must be a bare name whose struct identity is known in the environment. Litex then checks that the corresponding struct definition has the requested field.
+The field names are a naming rule for tuple projections: `zero` means `g[1]`, `add` means `g[2]`, and `inv` means `g[3]`.
 
-This is intentionally not equality-based. Even if `x = y` is known, Litex does not infer `x.f = y.f`, and it does not give `y` the struct identity of `x`.
+## Explicit Field Access
+
+Field access is explicit:
 
 ```text
-# This is intentionally not supported as a way to open fields.
-let x, y:
-    x = y
-# x.f being meaningful does not make y.f meaningful.
+&Point{P}.x
+&Group(R){G}.add
 ```
 
-Field access on arbitrary object expressions is also not part of this preview feature.
+The prefix says how the object is being viewed. This avoids the ambiguity of bare `P.x`, because the same tuple could be viewed through different struct definitions. A bare field name is not enough: two structs may use the same field name for different tuple positions.
+
+```litex
+struct Point1:
+    x R
+    y R
+
+struct Point2:
+    y R
+    x R
+
+(1, 2) $in &Point1
+(1, 2) $in &Point2
+&Point1{(1, 2)}.x = 1
+&Point2{(1, 2)}.x = 2
+```
+
+The well-definedness check for:
 
 ```text
-# Not supported in this preview feature.
-f(a).x
-(1, 2).x
-mod::P.x
+&Group(R){G}.add
 ```
 
-## Struct in Function Parameters
-
-Function spaces and anonymous functions can use struct parameter types.
-
-```litex
-struct Point:
-    x R
-    y R
-
-forall P struct Point:
-    '(Q struct Point) R {Q.x}(P) $in R
-```
-
-When checking the application above, Litex checks that `P` satisfies the struct parameter type by looking at `P`'s struct identity. It does not prove this by checking `P $in struct Point`.
-
-This distinction is necessary for sound field access. A tuple or function application may be a set-theoretic object, but it does not automatically have fields.
+reduces to proving:
 
 ```text
-struct Point:
-    x R
-    y R
-
-# This should fail: the tuple itself has no struct identity.
-'(Q struct Point) R {Q.x}((1, 2)) $in R
+G $in &Group(R)
 ```
 
-## Struct Instance Objects
+When `G $in &Group(R)` is known, Litex also stores the facts carried by the struct view: each explicit field access and its corresponding tuple projection belong to the field type, and each `<=>:` fact is instantiated in both forms. One form replaces field names by explicit field accesses, and the other replaces them by tuple projections. When checking tuple membership in a struct object, Litex can use the tuple components directly for the `<=>:` facts.
 
-A struct instance object writes concrete field values in struct field order.
+Once that membership is available, the field access is only a named form of tuple projection:
 
-```litex
-struct Point:
-    x R
-    y R
-
-&Point(1, 2) $in Point
+```text
+forall G &Group(R):
+    &Group(R){G}.zero = G[1]
+    &Group(R){G}.add = G[2]
+    &Group(R){G}.inv = G[3]
 ```
 
-For `Point`, `&Point(1, 2)` means a `Point` value whose `x` field is `1` and whose `y` field is `2`. It is a real object, so it can be passed to a function whose parameter type is `struct Point`.
+If a parameter is declared with a struct object, the membership fact is available in the local context:
 
-```litex
-struct Point:
-    x R
-    y R
-
-have fn point_add(x, y struct Point) Point = &Point(x.x + y.x, x.y + y.y)
-
-point_add(&Point(1, 2), &Point(3, 4)) = &Point(4, 6)
+```text
+forall G &Group(R):
+    &Group(R){G}.add = &Group(R){G}.add
 ```
 
-Header arguments are written before field values:
+Here the parameter declaration provides `G $in &Group(R)`, so the field access is well-defined inside the body.
 
-```litex
-struct Box(s set):
-    value s
-    label s
+If the explicit view becomes visually heavy, use a macro to keep the proof readable. The macro does not change the meaning; it only abbreviates the required explicit view.
 
-&Box(R)(1, 2) $in Box
+```text
+macro s "&StandardTwoSimplex{s}"
+
+forall s &StandardTwoSimplex:
+    @s.x + @s.y + @s.z = 1
 ```
 
-This feature is still narrow. `&Point(1, 2)` can satisfy a `struct Point` parameter, and field access inside a function body can instantiate through it. But it does not make `(1, 2)` itself a `Point`, and it does not give every object equal to `&Point(1, 2)` global field access.
-
-## Using Tuples with Struct Forall Facts
-
-`by struct` is a narrow bridge from tuple data to a `forall` fact whose parameter is a struct.
-
-```litex
-struct Point:
-    x R
-    y R
-
-forall P struct Point, t R:
-    P.x + t $in R
-
-by struct P from (1, 2) as Point, t = 3:
-    forall P struct Point, t R:
-        P.x + t $in R
-```
-
-The statement above instantiates the `forall` fact with:
-
-- `P` from `(1, 2)` as `Point`
-- `P.x` as `1`
-- `P.y` as `2`
-- `t` as `3`
-
-It stores the instantiated then-fact:
-
-```litex
-1 + 3 $in R
-```
-
-The tuple must match the struct field list. For `Point`, `(1, 2)` means `x = 1` and `y = 2` only inside this `by struct` instantiation. Litex also checks that each tuple component satisfies the corresponding field type.
+This is still the same as writing `&StandardTwoSimplex{s}.x`, `&StandardTwoSimplex{s}.y`, and `&StandardTwoSimplex{s}.z`.
 
 ## Current Boundaries
 
-These limitations are intentional in the preview design:
+These syntax forms are intentionally unavailable:
 
-- `by struct` currently accepts a body containing exactly one `forall` fact.
-- `by struct` does not support an arbitrary ordinary fact body.
-- `by struct` does not globally register the tuple as a struct instance.
-- `&Point(1, 2)` is a struct instance object, but `(1, 2)` is still only a tuple.
-- `x $in struct Group(R)` does not open field access.
-- `x = y` does not transfer struct identity from `x` to `y`.
-- Field access is only `name.field`, not `f(a).field` or `mod::name.field`.
-- Structs are not yet documented as stable object/cartesian-product syntax in the main manual.
+- `fn(x &Point) Point`
+- `P.x`
+- `&Point(1, 2)`
+- `by struct ...`
 
-The guiding principle is that set-theoretic membership and struct identity are different. Ordinary facts can say that an object belongs to a set; only explicit struct parameter binding gives a name field access.
+Use explicit struct objects and explicit field views instead:
+
+```litex
+struct Point:
+    x R
+    y R
+
+have P &Point = (1, 2)
+&Point{P}.x = P[1]
+&Point{(1, 2)}.y = 2
+```
+
+This design does not add a new logical entity beyond tuples, Cartesian products, and set membership. It lets users introduce an equivalent naming rule for projections while keeping the struct view explicit.

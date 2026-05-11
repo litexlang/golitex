@@ -112,16 +112,14 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         }),
         Obj::Choose(ch) => obj_expr_mentions_bare_id(ch.set.as_ref(), id),
         Obj::FamilyObj(fo) => fo.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
-        Obj::StructInstance(instance) => {
-            instance
-                .name
-                .args
-                .iter()
-                .any(|arg| obj_expr_mentions_bare_id(arg, id))
-                || instance
-                    .fields_equal_to_what
+        Obj::StructObj(so) => so.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
+        Obj::ObjAsStructInstanceWithFieldAccess(fa) => {
+            obj_expr_mentions_bare_id(fa.obj.as_ref(), id)
+                || fa
+                    .struct_obj
+                    .params
                     .iter()
-                    .any(|field| obj_expr_mentions_bare_id(field, id))
+                    .any(|p| obj_expr_mentions_bare_id(p, id))
         }
         Obj::FiniteSeqSet(fs) => {
             obj_expr_mentions_bare_id(fs.set.as_ref(), id)
@@ -136,13 +134,7 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Atom(AtomObj::IdentifierWithMod(_)) => false,
         Obj::AnonymousFn(anon) => {
             for g in &anon.body.params_def_with_set {
-                let mentions = match &g.param_type {
-                    ParamGroupWithSetTypeEnum::Set(set) => obj_expr_mentions_bare_id(set, id),
-                    ParamGroupWithSetTypeEnum::Struct(struct_ty) => struct_ty
-                        .args
-                        .iter()
-                        .any(|arg| obj_expr_mentions_bare_id(arg, id)),
-                };
+                let mentions = obj_expr_mentions_bare_id(g.set_obj(), id);
                 if mentions {
                     return true;
                 }
@@ -159,7 +151,6 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Atom(AtomObj::Induc(p)) => p.name == id,
         Obj::Atom(AtomObj::DefAlgo(p)) => p.name == id,
         Obj::Atom(AtomObj::DefStructField(p)) => p.name == id,
-        Obj::FieldAccess(_) => false,
     }
 }
 

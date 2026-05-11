@@ -3,36 +3,121 @@ prove:
         x R
         y R
 
-    have fn point_add(x, y struct Point) Point = &Point(x.x + y.x, x.y + y.y)
+    (1, 2) $in &Point
+    have p &Point = (1, 2)
+    &Point{p}.x = p[1]
+    &Point{p}.x = 1
+    &Point{(1, 2)}.y = 2
 
-    forall P1, P2 struct Point:
-        point_add(P1, P2) = &Point(P1.x + P2.x, P1.y + P2.y)
+    have p2 &Point
 
-    point_add(&Point(1, 2), &Point(3, 4)) = &Point(4, 6)
+    &Point{p2}.x $in R
 
-    forall P struct Point, t R:
-        P.x + t $in R
+    have a &Point
 
-    # 实例化成 1 + 3 $in R
-    by struct P from (1, 2) as Point, t = 3:
-        forall P struct Point, t R:
-            P.x + t $in R
+    have fn point_add (a, b &Point) &Point = (a[1] + b[1], a[2] + b[2])
 
-    forall P struct Point:
-        '(Q struct Point) R {Q.x}(P) $in R
+    forall a, b &Point:
+        point_add(a, b) = (a[1] + b[1], a[2] + b[2]) = (b[1] + a[1], b[2] + a[2]) = point_add(b, a)
 
 prove:
-    abstract_prop group_property(s, zero, add, inv)
+    prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
+        forall x s:
+            op(x, inv(x)) = e
+            op(inv(x), x) = e
+        forall x, y, z s:
+            op(x, op(y, z)) = op(op(x, y), z)
+        forall x s:
+            op(x, e) = x
+            op(e, x) = x
 
     struct Group(s set):
-        zero s
-        add fn(x, y s) s
         inv fn(x s) s
+        op fn(x, y s) s
+        e s
         <=>:
-            $group_property(s, zero, add,inv)
+            $GroupProperty(s, inv, op, e)
 
-    forall G struct Group(R):
-        G.zero $in R
-        $group_property(R, G.zero, G.add, G.inv)
+    $GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
+    ('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group(R)
+    
+prove:
+    struct StandardTwoSimplex:
+        x R
+        y R
+        z R
+        <=>:
+            0 <= x
+            0 <= y
+            0 <= z
+            x + y + z = 1
 
+    forall s &StandardTwoSimplex:
+        s[1] $in R
+        s[2] $in R
+        s[3] $in R
+        0 <= s[1]
+        0 <= s[2]
+        0 <= s[3]
 
+    forall s &StandardTwoSimplex:
+        1 = s[1] + s[2] + s[3] = s[2] + s[1] + s[3]
+        (s[2], s[1], s[3]) $in &StandardTwoSimplex
+
+    have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (s[2], s[1], s[3])
+
+    forall a, b &StandardTwoSimplex:
+        (a[1] + b[1]) / 2 + (a[2] + b[2]) / 2 + (a[3] + b[3]) / 2 = ((a[1] + a[2] + a[3]) + (b[1] + b[2] + b[3])) / 2 = (1 + 1) / 2 = 1
+        ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2) $in &StandardTwoSimplex
+
+    have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2)
+
+prove:
+    struct StandardTwoSimplex:
+        x R
+        y R
+        z R
+        <=>:
+            0 <= x
+            0 <= y
+            0 <= z
+            x + y + z = 1
+
+    forall s &StandardTwoSimplex:
+        1 = &StandardTwoSimplex{s}.x + &StandardTwoSimplex{s}.y + &StandardTwoSimplex{s}.z = &StandardTwoSimplex{s}.y + &StandardTwoSimplex{s}.x + &StandardTwoSimplex{s}.z
+        (&StandardTwoSimplex{s}.y, &StandardTwoSimplex{s}.x, &StandardTwoSimplex{s}.z) $in &StandardTwoSimplex
+
+    have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (&StandardTwoSimplex{s}.y, &StandardTwoSimplex{s}.x, &StandardTwoSimplex{s}.z)
+
+    forall a, b &StandardTwoSimplex:
+        (&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2 + (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2 + (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2 = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{a}.y + &StandardTwoSimplex{a}.z) + (&StandardTwoSimplex{b}.x + &StandardTwoSimplex{b}.y + &StandardTwoSimplex{b}.z)) / 2 = (1 + 1) / 2 = 1
+        ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2) $in &StandardTwoSimplex
+
+    have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2)
+
+prove:
+    struct StandardTwoSimplex:
+        x R
+        y R
+        z R
+        <=>:
+            0 <= x
+            0 <= y
+            0 <= z
+            x + y + z = 1
+
+    macro s "&StandardTwoSimplex{s}"
+    macro a "&StandardTwoSimplex{a}"
+    macro b "&StandardTwoSimplex{b}"
+
+    forall s &StandardTwoSimplex:
+        1 = @s.x + @s.y + @s.z = @s.y + @s.x + @s.z
+        (@s.y, @s.x, @s.z) $in &StandardTwoSimplex
+
+    have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (@s.y, @s.x, @s.z)
+
+    forall a, b &StandardTwoSimplex:
+        (@a.x + @b.x) / 2 + (@a.y + @b.y) / 2 + (@a.z + @b.z) / 2 = ((@a.x + @a.y + @a.z) + (@b.x + @b.y + @b.z)) / 2 = (1 + 1) / 2 = 1
+        ((@a.x + @b.x) / 2, (@a.y + @b.y) / 2, (@a.z + @b.z) / 2) $in &StandardTwoSimplex
+
+    have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((@a.x + @b.x) / 2, (@a.y + @b.y) / 2, (@a.z + @b.z) / 2)

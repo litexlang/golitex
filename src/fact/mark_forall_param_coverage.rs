@@ -24,11 +24,6 @@ fn mark_forall_param_coverage_in_param_type(
         ParamType::Obj(obj) => {
             mark_forall_param_coverage_in_obj(obj, coverage_by_forall_param);
         }
-        ParamType::Struct(struct_ty) => {
-            for arg in struct_ty.args.iter() {
-                mark_forall_param_coverage_in_obj(arg, coverage_by_forall_param);
-            }
-        }
         ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {}
     }
 }
@@ -192,16 +187,10 @@ fn mark_forall_param_coverage_in_obj(
         }
         Obj::FnSet(fn_set) => {
             for param_def_with_set in fn_set.body.params_def_with_set.iter() {
-                if let Some(struct_ty) = param_def_with_set.struct_ty() {
-                    for arg in struct_ty.args.iter() {
-                        mark_forall_param_coverage_in_obj(arg, coverage_by_forall_param);
-                    }
-                } else {
-                    mark_forall_param_coverage_in_obj(
-                        param_def_with_set.set_obj().unwrap(),
-                        coverage_by_forall_param,
-                    );
-                }
+                mark_forall_param_coverage_in_obj(
+                    param_def_with_set.set_obj(),
+                    coverage_by_forall_param,
+                );
             }
             for dom_fact in fn_set.body.dom_facts.iter() {
                 mark_forall_param_coverage_in_or_and_chain_atomic_fact(
@@ -216,16 +205,10 @@ fn mark_forall_param_coverage_in_obj(
         }
         Obj::AnonymousFn(anon) => {
             for param_def_with_set in anon.body.params_def_with_set.iter() {
-                if let Some(struct_ty) = param_def_with_set.struct_ty() {
-                    for arg in struct_ty.args.iter() {
-                        mark_forall_param_coverage_in_obj(arg, coverage_by_forall_param);
-                    }
-                } else {
-                    mark_forall_param_coverage_in_obj(
-                        param_def_with_set.set_obj().unwrap(),
-                        coverage_by_forall_param,
-                    );
-                }
+                mark_forall_param_coverage_in_obj(
+                    param_def_with_set.set_obj(),
+                    coverage_by_forall_param,
+                );
             }
             for dom_fact in anon.body.dom_facts.iter() {
                 mark_forall_param_coverage_in_or_and_chain_atomic_fact(
@@ -325,16 +308,16 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
             }
         }
-        Obj::FieldAccess(field_access) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, &field_access.left);
+        Obj::StructObj(struct_obj) => {
+            for o in struct_obj.params.iter() {
+                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
+            }
         }
-        Obj::StructInstance(instance) => {
-            for arg in instance.name.args.iter() {
-                mark_forall_param_coverage_in_obj(arg, coverage_by_forall_param);
+        Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
+            for o in field_access.struct_obj.params.iter() {
+                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
             }
-            for field in instance.fields_equal_to_what.iter() {
-                mark_forall_param_coverage_in_obj(field, coverage_by_forall_param);
-            }
+            mark_forall_param_coverage_in_obj(field_access.obj.as_ref(), coverage_by_forall_param);
         }
         Obj::Atom(AtomObj::Forall(p)) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &p.name);

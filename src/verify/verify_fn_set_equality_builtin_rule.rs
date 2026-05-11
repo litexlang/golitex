@@ -220,22 +220,8 @@ impl Runtime {
             let n = g.params.len();
             let names = generated_flat_names[c_idx..c_idx + n].to_vec();
             c_idx += n;
-            if let Some(struct_ty) = g.struct_ty() {
-                let inst_ty = self.inst_param_type(
-                    &ParamType::Struct(struct_ty.clone()),
-                    &map,
-                    ParamObjType::FnSet,
-                )?;
-                match inst_ty {
-                    ParamType::Struct(s) => {
-                        new_params.push(ParamGroupWithSet::new_struct(names, s))
-                    }
-                    _ => unreachable!(),
-                }
-            } else {
-                let new_set = self.inst_obj(g.set_obj().unwrap(), &map, ParamObjType::FnSet)?;
-                new_params.push(ParamGroupWithSet::new(names, new_set));
-            }
+            let new_set = self.inst_obj(g.set_obj(), &map, ParamObjType::FnSet)?;
+            new_params.push(ParamGroupWithSet::new(names, new_set));
         }
         let mut new_dom = Vec::with_capacity(fn_set.dom_facts.len());
         for d in fn_set.dom_facts.iter() {
@@ -260,49 +246,25 @@ impl Runtime {
             let next_flat_index = flat_index + param_def_with_set.params.len();
             let generated_names_for_current_group =
                 generated_param_names[flat_index..next_flat_index].to_vec();
-            let generated_param_def = if let Some(struct_ty) = param_def_with_set.struct_ty() {
-                let inst_ty = self
-                    .inst_param_type(
-                        &ParamType::Struct(struct_ty.clone()),
-                        &source_param_to_generated_arg_map,
-                        ParamObjType::FnSet,
-                    )
-                    .map_err(|e| {
-                        fn_set_equality_verify_error(
-                            source,
-                            target,
-                            line_file.clone(),
-                            "failed to instantiate source fnset struct param type".to_string(),
-                            Some(e),
-                        )
-                    })?;
-                match inst_ty {
-                    ParamType::Struct(s) => {
-                        ParamGroupWithSet::new_struct(generated_names_for_current_group.clone(), s)
-                    }
-                    _ => unreachable!(),
-                }
-            } else {
-                let instantiated_param_set = self
-                    .inst_obj(
-                        param_def_with_set.set_obj().unwrap(),
-                        &source_param_to_generated_arg_map,
-                        ParamObjType::FnSet,
-                    )
-                    .map_err(|e| {
-                        fn_set_equality_verify_error(
-                            source,
-                            target,
-                            line_file.clone(),
-                            "failed to instantiate source fnset param set".to_string(),
-                            Some(e),
-                        )
-                    })?;
-                ParamGroupWithSet::new(
-                    generated_names_for_current_group.clone(),
-                    instantiated_param_set,
+            let instantiated_param_set = self
+                .inst_obj(
+                    param_def_with_set.set_obj(),
+                    &source_param_to_generated_arg_map,
+                    ParamObjType::FnSet,
                 )
-            };
+                .map_err(|e| {
+                    fn_set_equality_verify_error(
+                        source,
+                        target,
+                        line_file.clone(),
+                        "failed to instantiate source fnset param set".to_string(),
+                        Some(e),
+                    )
+                })?;
+            let generated_param_def = ParamGroupWithSet::new(
+                generated_names_for_current_group.clone(),
+                instantiated_param_set,
+            );
             self.define_params_with_set(&generated_param_def)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
@@ -381,9 +343,9 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         for param_def_with_set in target.body.params_def_with_set.iter() {
-            let instantiated_param_type = if let Some(struct_ty) = param_def_with_set.struct_ty() {
-                self.inst_param_type(
-                    &ParamType::Struct(struct_ty.clone()),
+            let instantiated_param_type = ParamType::Obj(
+                self.inst_obj(
+                    param_def_with_set.set_obj(),
                     target_param_to_generated_arg_map,
                     ParamObjType::FnSet,
                 )
@@ -392,28 +354,11 @@ impl Runtime {
                         source,
                         target,
                         line_file.clone(),
-                        "failed to instantiate target fnset struct param type".to_string(),
+                        "failed to instantiate target fnset param set".to_string(),
                         Some(e),
                     )
-                })?
-            } else {
-                ParamType::Obj(
-                    self.inst_obj(
-                        param_def_with_set.set_obj().unwrap(),
-                        target_param_to_generated_arg_map,
-                        ParamObjType::FnSet,
-                    )
-                    .map_err(|e| {
-                        fn_set_equality_verify_error(
-                            source,
-                            target,
-                            line_file.clone(),
-                            "failed to instantiate target fnset param set".to_string(),
-                            Some(e),
-                        )
-                    })?,
-                )
-            };
+                })?,
+            );
             for param_name in param_def_with_set.params.iter() {
                 let Some(generated_param_obj) =
                     target_param_to_generated_arg_map.get(param_name).cloned()

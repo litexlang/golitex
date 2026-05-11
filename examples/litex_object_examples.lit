@@ -1,8 +1,8 @@
 # Object expressions: surface syntax maps to `Obj` in `src/obj/obj.rs`. Independent blocks for copy-paste.
-# IdentifierWithMod / FieldAccessWithMod use `::` between name parts (`MOD_SIGN`); FieldAccess uses a single `.`.
+# IdentifierWithMod uses `::` between name parts (`MOD_SIGN`).
 # Included below: Number, Tuple, Add/Sub/Mul/Div/Mod/Pow, StandardSet (sample), ListSet, SetBuilder,
 # Union/Intersect/SetMinus/SetDiff, infix ` then name (e.g. `union as in lhs `union rhs), Range/ClosedRange, Proj, Cart/CartDim, FnSet (`fn`),
-# TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, Choose, FieldAccess, FamilyObj, StructObj, FnObj (via `have fn`).
+# TupleDim, ObjAtIndex (`[` `]`), PowerSet, Count, Choose, FamilyObj, FnObj (via `have fn`).
 # Cup/Cap: syntax in a comment (list-set distinctness checks often block short `have` demos).
 
 # --- Obj::Number ---
@@ -118,23 +118,14 @@ prove:
 prove:
     have fn f(x R) R = x + 1
 
-# --- Obj::FieldAccess (single `.`; no `a.b.c`) ---
-"""
+# --- Struct definitions keep field declarations, but no field-access object syntax is available. ---
 prove:
     abstract_prop p(a)
     struct rec(a set):
         fld a
         fld2 a
         <=>:
-            $p(self.fld)
-    know forall s set, h struct rec(s):
-        h.fld $in s
-    let t set, y t:
-        y = 1
-    let h struct rec(t):
-        h = (t, y)
-    h.fld $in t
-"""
+            $p(fld)
 
 # --- Obj::FamilyObj ---
 prove:
@@ -144,4 +135,4 @@ prove:
         a $in fn(y N_pos) R
         a(1) = a(1)
 
-# --- Obj::StructObj / `struct Name(args)` type objects — removed in this branch; see git history to restore. ---
+# --- Struct type objects are not supported. ---

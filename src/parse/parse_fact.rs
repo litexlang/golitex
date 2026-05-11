@@ -824,13 +824,14 @@ impl Runtime {
 
 #[cfg(test)]
 mod inline_forall_parse_tests {
-    use crate::parse::TokenBlock;
+    use crate::parse::Tokenizer;
     use crate::prelude::*;
     use std::rc::Rc;
 
     fn parse_one_fact_line(line: &str) -> Result<Fact, RuntimeError> {
         let mut rt = Runtime::new();
-        let mut blocks = TokenBlock::parse_blocks(line, Rc::from("test.lit"))?;
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer.parse_blocks(line, Rc::from("test.lit"))?;
         assert_eq!(blocks.len(), 1, "{line:?}");
         rt.parse_fact(&mut blocks[0])
     }

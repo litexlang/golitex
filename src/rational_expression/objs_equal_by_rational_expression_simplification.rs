@@ -77,13 +77,15 @@ mod algebraic_identity_tests {
 
     #[test]
     fn two_an_plus_bm_squared_equals_expanded_rhs() {
-        use crate::parse::{tokenize_line, TokenBlock};
+        use crate::parse::{TokenBlock, Tokenizer};
         use crate::runtime::Runtime;
         use std::rc::Rc;
 
         fn parse_obj_line(line: &str) -> Obj {
-            let tokens = tokenize_line(line);
-            let mut tb = TokenBlock::new(tokens, vec![], (1, Rc::from("test.lit")));
+            let tokenizer = Tokenizer::new();
+            let line_file = (1, Rc::from("test.lit"));
+            let tokens = tokenizer.tokenize_line(line, line_file.clone()).unwrap();
+            let mut tb = TokenBlock::new(tokens, vec![], line_file);
             let mut rt = Runtime::new();
             rt.parse_obj(&mut tb).expect("parse")
         }

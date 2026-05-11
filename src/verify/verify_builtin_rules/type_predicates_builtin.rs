@@ -206,6 +206,45 @@ impl Runtime {
                     Ok((StmtUnknown::new()).into())
                 }
             }
+            // A struct without filters is nonempty when every field type is nonempty.
+            // Example: `struct Point: x R, y R` makes `&Point` nonempty from `R` and `R`.
+            Obj::StructObj(struct_obj) => {
+                let (def, param_to_arg_map) =
+                    self.struct_header_param_to_arg_map(struct_obj, _verify_state)?;
+                if !def.equivalent_facts.is_empty() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+
+                let mut step_results = Vec::with_capacity(def.fields.len());
+                for (_, field_type) in def.fields.iter() {
+                    let instantiated_field_type =
+                        self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
+                    let field_nonempty: AtomicFact = IsNonemptySetFact::new(
+                        instantiated_field_type,
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
+                    let field_result = self.verify_non_equational_atomic_fact(
+                        &field_nonempty,
+                        _verify_state,
+                        true,
+                    )?;
+                    if !field_result.is_true() {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                    step_results.push(field_result);
+                }
+
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_nonempty_set_fact.clone().into(),
+                        "struct_without_equivalent_facts_is_nonempty_when_all_field_types_are_nonempty"
+                            .to_string(),
+                        step_results,
+                    ))
+                    .into(),
+                )
+            }
             _ => Ok((StmtUnknown::new()).into()),
         }
     }
@@ -240,6 +279,74 @@ impl Runtime {
                 ))
                 .into(),
             ),
+            // The union of two finite sets is finite.
+            // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
+            // `$is_finite_set(union(A, B))`.
+            Obj::Union(union) => {
+                let left_finite: AtomicFact = IsFiniteSetFact::new(
+                    union.left.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let right_finite: AtomicFact = IsFiniteSetFact::new(
+                    union.right.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let left_result =
+                    self.verify_non_equational_atomic_fact(&left_finite, _verify_state, true)?;
+                if !left_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                let right_result =
+                    self.verify_non_equational_atomic_fact(&right_finite, _verify_state, true)?;
+                if !right_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_finite_set_fact.clone().into(),
+                        "union_is_finite_set_when_both_sides_are_finite_set".to_string(),
+                        vec![left_result, right_result],
+                    ))
+                    .into(),
+                )
+            }
+            // The intersection of two finite sets is finite.
+            // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
+            // `$is_finite_set(intersect(A, B))`.
+            Obj::Intersect(intersect) => {
+                let left_finite: AtomicFact = IsFiniteSetFact::new(
+                    intersect.left.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let right_finite: AtomicFact = IsFiniteSetFact::new(
+                    intersect.right.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let left_result =
+                    self.verify_non_equational_atomic_fact(&left_finite, _verify_state, true)?;
+                if !left_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                let right_result =
+                    self.verify_non_equational_atomic_fact(&right_finite, _verify_state, true)?;
+                if !right_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_finite_set_fact.clone().into(),
+                        "intersect_is_finite_set_when_both_sides_are_finite_set".to_string(),
+                        vec![left_result, right_result],
+                    ))
+                    .into(),
+                )
+            }
             _ => Ok((StmtUnknown::new()).into()),
         }
     }

@@ -48,7 +48,6 @@ impl Runtime {
             NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
             FINITE_SET => self.parse_param_type_finite_set(tb),
             SET => self.parse_param_type_set(tb),
-            STRUCT => self.parse_param_type_struct(tb),
             s if s == FAMILY_OBJ_PREFIX => self
                 .parse_family_obj(tb)
                 .map(|f| ParamType::Obj(Obj::FamilyObj(f))),
@@ -80,26 +79,5 @@ impl Runtime {
     pub fn parse_param_type_obj(&mut self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         let obj = self.parse_obj(tb)?;
         Ok(ParamType::Obj(obj))
-    }
-
-    pub fn parse_param_type_struct(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamType, RuntimeError> {
-        tb.skip_token(STRUCT)?;
-        let name = if tb.token_at_add_index(1) == MOD_SIGN {
-            let mod_name = tb.advance()?;
-            tb.skip_token(MOD_SIGN)?;
-            let name = tb.advance()?;
-            NameOrNameWithMod::new_name_with_mod(mod_name, name)
-        } else {
-            NameOrNameWithMod::new_name(tb.advance()?)
-        };
-        let args = if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
-            self.parse_braced_objs(tb)?
-        } else {
-            vec![]
-        };
-        Ok(ParamType::Struct(StructAsParamType::new(name, args)))
     }
 }

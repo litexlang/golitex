@@ -12,6 +12,26 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = left {
+            let projected = self.struct_field_access_projection(field_access)?;
+            return self
+                .try_verify_equality_pair_by_the_same_then_calculation_then_fn_obj_same_head_known_args(
+                    &projected,
+                    right,
+                    line_file,
+                    verify_state,
+                );
+        }
+        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = right {
+            let projected = self.struct_field_access_projection(field_access)?;
+            return self
+                .try_verify_equality_pair_by_the_same_then_calculation_then_fn_obj_same_head_known_args(
+                    left,
+                    &projected,
+                    line_file,
+                    verify_state,
+                );
+        }
         let (result, _, _) = self.verify_equality_by_they_are_the_same_and_calculation(
             left,
             right,

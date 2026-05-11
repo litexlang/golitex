@@ -109,37 +109,26 @@ impl Runtime {
                 }
                 Ok(FamilyObj::new(family.name.clone(), params).into())
             }
-            Obj::FieldAccess(field_access) => {
-                if let Some(obj) = param_to_arg_map.get(&field_access.to_string()) {
-                    return Ok(obj.clone());
+            Obj::StructObj(struct_obj) => {
+                let mut params = Vec::with_capacity(struct_obj.params.len());
+                for p in struct_obj.params.iter() {
+                    params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
                 }
-                if let Some(Obj::StructInstance(instance)) =
-                    param_to_arg_map.get(&field_access.left)
-                {
-                    if let Some(field_obj) =
-                        self.field_obj_from_struct_instance(instance, &field_access.right)?
-                    {
-                        return Ok(field_obj);
-                    }
-                }
-                let left = match param_to_arg_map.get(&field_access.left) {
-                    Some(obj) => Self::obj_name_for_instantiated_field_access_left(obj)
-                        .unwrap_or_else(|| field_access.left.clone()),
-                    _ => field_access.left.clone(),
-                };
-                Ok(FieldAccess::new(left, field_access.right.clone()).into())
+                Ok(StructObj::new(struct_obj.name.clone(), params).into())
             }
-            Obj::StructInstance(instance) => {
-                let name = StructAsParamType::new_with_boxed_args(
-                    instance.name.name.clone(),
-                    self.inst_boxed_objs(&instance.name.args, param_to_arg_map, param_obj_type)?,
-                );
-                let fields_equal_to_what = self.inst_boxed_objs(
-                    &instance.fields_equal_to_what,
-                    param_to_arg_map,
-                    param_obj_type,
-                )?;
-                Ok(StructInstance::new_with_boxed_fields(name, fields_equal_to_what).into())
+            Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                let mut params = Vec::with_capacity(field_access.struct_obj.params.len());
+                for p in field_access.struct_obj.params.iter() {
+                    params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
+                }
+                let struct_obj = StructObj::new(field_access.struct_obj.name.clone(), params);
+                let obj = self.inst_obj(&field_access.obj, param_to_arg_map, param_obj_type)?;
+                Ok(ObjAsStructInstanceWithFieldAccess::new(
+                    struct_obj,
+                    obj,
+                    field_access.field_name.clone(),
+                )
+                .into())
             }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {
@@ -219,45 +208,6 @@ impl Runtime {
                 Ok(p.clone().into())
             }
         }
-    }
-
-    fn field_obj_from_struct_instance(
-        &self,
-        instance: &StructInstance,
-        field_name: &str,
-    ) -> Result<Option<Obj>, RuntimeError> {
-        let struct_name = instance.name.struct_name();
-        let Some(def) = self.get_struct_definition_by_name(&struct_name) else {
-            return Ok(None);
-        };
-        let Some(index) = def
-            .fields
-            .iter()
-            .position(|(defined_field_name, _)| defined_field_name == field_name)
-        else {
-            return Ok(None);
-        };
-        Ok(instance
-            .fields_equal_to_what
-            .get(index)
-            .map(|field| (**field).clone()))
-    }
-
-    fn inst_boxed_objs(
-        &self,
-        objs: &[Box<Obj>],
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Vec<Box<Obj>>, RuntimeError> {
-        let mut result = Vec::with_capacity(objs.len());
-        for obj in objs.iter() {
-            result.push(Box::new(self.inst_obj(
-                obj,
-                param_to_arg_map,
-                param_obj_type,
-            )?));
-        }
-        Ok(result)
     }
 
     pub fn inst_identifier(
@@ -657,28 +607,14 @@ impl Runtime {
         let mut params_def_with_set =
             Vec::with_capacity(fn_set_with_params.body.params_def_with_set.len());
         for param_def_with_set in fn_set_with_params.body.params_def_with_set.iter() {
-            if let Some(struct_ty) = param_def_with_set.struct_ty() {
-                let inst_ty = self.inst_param_type(
-                    &ParamType::Struct(struct_ty.clone()),
+            params_def_with_set.push(ParamGroupWithSet::new(
+                param_def_with_set.params.clone(),
+                self.inst_obj(
+                    param_def_with_set.set_obj(),
                     &filtered_param_to_arg_map,
                     param_obj_type,
-                )?;
-                match inst_ty {
-                    ParamType::Struct(s) => params_def_with_set.push(
-                        ParamGroupWithSet::new_struct(param_def_with_set.params.clone(), s),
-                    ),
-                    _ => unreachable!(),
-                }
-            } else {
-                params_def_with_set.push(ParamGroupWithSet::new(
-                    param_def_with_set.params.clone(),
-                    self.inst_obj(
-                        param_def_with_set.set_obj().unwrap(),
-                        &filtered_param_to_arg_map,
-                        param_obj_type,
-                    )?,
-                ));
-            }
+                )?,
+            ));
         }
         let mut dom_facts = Vec::with_capacity(fn_set_with_params.body.dom_facts.len());
         for dom_fact in fn_set_with_params.body.dom_facts.iter() {
@@ -712,28 +648,14 @@ impl Runtime {
             remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names);
         let mut params_def_with_set = Vec::with_capacity(af.body.params_def_with_set.len());
         for param_def_with_set in af.body.params_def_with_set.iter() {
-            if let Some(struct_ty) = param_def_with_set.struct_ty() {
-                let inst_ty = self.inst_param_type(
-                    &ParamType::Struct(struct_ty.clone()),
+            params_def_with_set.push(ParamGroupWithSet::new(
+                param_def_with_set.params.clone(),
+                self.inst_obj(
+                    param_def_with_set.set_obj(),
                     &filtered_param_to_arg_map,
                     param_obj_type,
-                )?;
-                match inst_ty {
-                    ParamType::Struct(s) => params_def_with_set.push(
-                        ParamGroupWithSet::new_struct(param_def_with_set.params.clone(), s),
-                    ),
-                    _ => unreachable!(),
-                }
-            } else {
-                params_def_with_set.push(ParamGroupWithSet::new(
-                    param_def_with_set.params.clone(),
-                    self.inst_obj(
-                        param_def_with_set.set_obj().unwrap(),
-                        &filtered_param_to_arg_map,
-                        param_obj_type,
-                    )?,
-                ));
-            }
+                )?,
+            ));
         }
         let mut dom_facts = Vec::with_capacity(af.body.dom_facts.len());
         for dom_fact in af.body.dom_facts.iter() {
@@ -988,31 +910,6 @@ impl Runtime {
                 param_to_arg_map,
                 param_obj_type,
             )?)),
-            ParamType::Struct(struct_ty) => {
-                let mut args = Vec::with_capacity(struct_ty.args.len());
-                for arg in struct_ty.args.iter() {
-                    args.push(self.inst_obj(arg, param_to_arg_map, param_obj_type)?);
-                }
-                Ok(ParamType::Struct(StructAsParamType::new(
-                    struct_ty.name.clone(),
-                    args,
-                )))
-            }
-        }
-    }
-
-    fn obj_name_for_instantiated_field_access_left(obj: &Obj) -> Option<String> {
-        match obj {
-            Obj::Atom(AtomObj::Identifier(identifier)) => Some(identifier.name.clone()),
-            Obj::Atom(AtomObj::Forall(p)) => Some(p.name.clone()),
-            Obj::Atom(AtomObj::Def(p)) => Some(p.name.clone()),
-            Obj::Atom(AtomObj::Exist(p)) => Some(p.name.clone()),
-            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.clone()),
-            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.clone()),
-            Obj::Atom(AtomObj::Induc(p)) => Some(p.name.clone()),
-            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.clone()),
-            Obj::Atom(AtomObj::DefStructField(p)) => Some(p.name.clone()),
-            _ => None,
         }
     }
 
@@ -1038,21 +935,10 @@ impl Runtime {
         let mut arg_index: usize = 0;
         let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
-            if param_def.struct_ty().is_some() {
-                return Err(RuntimeError::from(InstantiateRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(
-                        "struct fn parameter type cannot be instantiated as a set".to_string(),
-                    ),
-                )));
-            }
             let instantiated_param_set = if arg_index != 0 {
-                self.inst_obj(
-                    param_def.set_obj().unwrap(),
-                    &param_to_arg_map,
-                    param_obj_type,
-                )?
+                self.inst_obj(param_def.set_obj(), &param_to_arg_map, param_obj_type)?
             } else {
-                param_def.set_obj().unwrap().clone()
+                param_def.set_obj().clone()
             };
             instantiated_param_sets.push(instantiated_param_set);
 
