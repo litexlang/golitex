@@ -4,7 +4,7 @@ Jiachen Shen and The Litex Team, 2026-05-08. Email: litexlang@outlook.com
 
 Preview features are usable experiments. They are implemented enough to try, but their syntax and semantics may still change. For stable language concepts, read the [Manual](https://litexlang.com/doc/Manual) first.
 
-New preview-related behavior is **appended** under [Recent additions](#recent-additions-append-only) as it lands. The struct material below reflects the current reduced state: definitions remain, while usage syntax is removed pending redesign.
+New preview-related behavior is **appended** under [Recent additions](#recent-additions-append-only) as it lands. The struct material below describes the explicit struct-view redesign: struct definitions name tuple/cartesian-product shapes, and field access must say which struct view is being used.
 
 ## Recent additions (append-only)
 
@@ -38,9 +38,11 @@ After you prove a `forall` whose dom and then are the **same** positive abstract
 
 User-facing spellings are unchanged (`by fn as set`, `by fn set as set`, `by family as set`, `by tuple as set`, …). Internal statement / `stmt_type_name` labels were aligned (e.g. `ByFnAsSetStmt`, `ByFamilyAsSetStmt`, `ByTupleAsSetStmt`, `ByFnSetAsSetStmt`).
 
-### Struct usage syntax removed pending redesign (2026-05)
+### Explicit struct views (2026-05)
 
-Only `struct Name:` definitions remain. Struct values (`&Point(...)`), field access (`P.x`), struct-typed parameters (`P struct Point`), struct types in `fn` signatures, and `by struct` have been removed from the current surface syntax while their semantics are redesigned.
+Struct usage is being redesigned around explicit views. Bare field access such as `P.x` is not part of the language. A field access must say which struct is being used, such as `&Point{P}.x` or `&Group(R){G}.op`.
+
+The intended model is simple: `struct Name(args)` is a set object, and `&Name(args){x}.field` is a named projection after proving `x $in struct Name(args)`.
 
 ## Struct Definitions
 
@@ -52,7 +54,7 @@ struct Point:
     y R
 ```
 
-Structs may also have header parameters. The definition is stored and its field declarations are checked, but there is currently no struct-typed parameter syntax that consumes this header as a type.
+Structs may also have header parameters. The definition is stored and its field declarations are checked. In the explicit-view design, applying the struct header creates a set object such as `struct Group(R)`.
 
 ```litex
 abstract_prop group_property(s, zero, add, inv)
@@ -67,14 +69,100 @@ struct Group(s set):
 
 The `<=>:` block is still part of the definition record. Its body may refer to fields by their field names, as in the example above.
 
+## Struct Objects
+
+`struct Name(args)` is a set object. It is read as a named set-builder whose base set is the Cartesian product of the instantiated field types.
+
+For example:
+
+```litex
+struct Point:
+    x R
+    y R
+```
+
+`struct Point` is the named struct set corresponding to `cart(R, R)`.
+
+When there is no `<=>:` block, this struct set is nonempty as soon as every field type is nonempty. For example, `struct Point` is nonempty because both fields range over `R`.
+
+For a parameterized struct:
+
+```litex
+abstract_prop group_property(s, zero, add, inv)
+
+struct Group(s set):
+    zero s
+    add fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        $group_property(s, zero, add, inv)
+```
+
+`struct Group(R)` is read as a named set-builder like:
+
+```text
+{ g $in cart(R, fn(x, y R) R, fn(x R) R) | $group_property(R, g[1], g[2], g[3]) }
+```
+
+The field names are a naming rule for tuple projections: `zero` means `g[1]`, `add` means `g[2]`, and `inv` means `g[3]`.
+
+## Explicit Field Access
+
+Field access is explicit:
+
+```litex
+&Point{P}.x
+&Group(R){G}.add
+```
+
+The prefix says how the object is being viewed. This avoids the ambiguity of bare `P.x`, because the same tuple could be viewed through different struct definitions.
+
+The well-definedness check for:
+
+```litex
+&Group(R){G}.add
+```
+
+reduces to proving:
+
+```litex
+G $in struct Group(R)
+```
+
+When `G $in struct Group(R)` is known, Litex also stores the facts carried by the struct view: each explicit field access belongs to its field type, and each `<=>:` fact is instantiated with field names replaced by explicit field accesses.
+
+Once that membership is available, the field access is only a named form of tuple projection:
+
+```text
+&Group(R){G}.zero = G[1]
+&Group(R){G}.add = G[2]
+&Group(R){G}.inv = G[3]
+```
+
+If a parameter is declared with a struct object, the membership fact is available in the local context:
+
+```litex
+forall G struct Group(R):
+    &Group(R){G}.add = &Group(R){G}.add
+```
+
+Here the parameter declaration provides `G $in struct Group(R)`, so the field access is well-defined inside the body.
+
 ## Current Boundaries
 
-These syntax forms are intentionally unavailable in the current redesign window:
+These syntax forms are intentionally unavailable:
 
-- `P struct Point`
 - `fn(x struct Point) Point`
 - `P.x`
 - `&Point(1, 2)`
 - `by struct ...`
 
-For now, a struct definition is metadata the runtime can parse, check, and store. It does not create a first-class object form, a parameter type, or a field-access expression.
+Use explicit struct objects and explicit field views instead:
+
+```litex
+have P struct Point = (1, 2)
+&Point{P}.x = P[1]
+&Point{(1, 2)}.y = 2
+```
+
+This design does not add a new logical entity beyond tuples, Cartesian products, and set membership. It lets users introduce an equivalent naming rule for projections while keeping the struct view explicit.

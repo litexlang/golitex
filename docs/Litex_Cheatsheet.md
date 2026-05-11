@@ -278,9 +278,21 @@ abstract_prop P(a, b)
 
 ### `struct` — structure definition
 
-**Meaning.** Preview syntax for record-like declarations.
+**Meaning.** Preview syntax for named views of tuple / Cartesian-product shapes.
 
-Only `struct Name:` definitions are currently supported. Struct values, field access, struct parameters, and `by struct` are removed pending redesign; see [Preview Features](https://litexlang.com/doc/Preview_Features).
+`struct Name(args)` can be used as a set object, and field access must explicitly state the struct view. Bare `p.x` is not supported.
+
+**Example.**
+
+```litex
+struct Point:
+    x R
+    y R
+
+have p struct Point = (1, 2)
+&Point{p}.x = p[1]
+&Point{(1, 2)}.y = 2
+```
 
 ---
 
@@ -857,7 +869,7 @@ by family as set: \p(R)
 
 **Meaning.** Removed preview syntax.
 
-`by struct` is not part of the current surface syntax. See [Preview Features](https://litexlang.com/doc/Preview_Features).
+`by struct` is not part of the current surface syntax. Use explicit struct objects and field views such as `struct Point` and `&Point{p}.x`; see [Preview Features](https://litexlang.com/doc/Preview_Features).
 
 ---
 
