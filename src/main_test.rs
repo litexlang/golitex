@@ -7,6 +7,18 @@ mod lit_file_runner_tests {
     use crate::pipeline::{render_run_source_code_output, run_source_code};
     use crate::prelude::*;
 
+    const LARGE_TEST_STACK_SIZE: usize = 16 * 1024 * 1024;
+
+    fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
+        std::thread::Builder::new()
+            .name(test_name.to_string())
+            .stack_size(LARGE_TEST_STACK_SIZE)
+            .spawn(f)
+            .unwrap()
+            .join()
+            .unwrap();
+    }
+
     /// Collect ```litex``` bodies. A block is omitted when the last non-empty line before its opening
     /// fence is exactly `<!-- litex:skip-test -->` (for snippets that are illustrative only).
     /// The line number is 1-based: the markdown line where the opening ` ```litex ` fence starts.
@@ -272,6 +284,10 @@ mod lit_file_runner_tests {
 
     #[test]
     fn run_examples() {
+        run_with_large_stack("run_examples_large_stack", run_examples_impl);
+    }
+
+    fn run_examples_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let lit_file_paths = collect_lit_files_recursive_under(&manifest_dir, "examples");
 
