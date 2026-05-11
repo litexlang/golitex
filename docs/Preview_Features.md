@@ -119,7 +119,22 @@ Field access is explicit:
 &Group(R){G}.add
 ```
 
-The prefix says how the object is being viewed. This avoids the ambiguity of bare `P.x`, because the same tuple could be viewed through different struct definitions.
+The prefix says how the object is being viewed. This avoids the ambiguity of bare `P.x`, because the same tuple could be viewed through different struct definitions. A bare field name is not enough: two structs may use the same field name for different tuple positions.
+
+```litex
+struct Point1:
+    x R
+    y R
+
+struct Point2:
+    y R
+    x R
+
+(1, 2) $in &Point1
+(1, 2) $in &Point2
+&Point1{(1, 2)}.x = 1
+&Point2{(1, 2)}.x = 2
+```
 
 The well-definedness check for:
 
@@ -152,6 +167,17 @@ forall G &Group(R):
 ```
 
 Here the parameter declaration provides `G $in &Group(R)`, so the field access is well-defined inside the body.
+
+If the explicit view becomes visually heavy, use a macro to keep the proof readable. The macro does not change the meaning; it only abbreviates the required explicit view.
+
+```litex
+macro s "&StandardTwoSimplex{s}"
+
+forall s &StandardTwoSimplex:
+    @s.x + @s.y + @s.z = 1
+```
+
+This is still the same as writing `&StandardTwoSimplex{s}.x`, `&StandardTwoSimplex{s}.y`, and `&StandardTwoSimplex{s}.z`.
 
 ## Current Boundaries
 

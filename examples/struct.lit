@@ -66,3 +66,53 @@ prove:
         ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2) $in &StandardTwoSimplex
 
     have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2)
+
+prove:
+    struct StandardTwoSimplex:
+        x R
+        y R
+        z R
+        <=>:
+            0 <= x
+            0 <= y
+            0 <= z
+            x + y + z = 1
+
+    forall s &StandardTwoSimplex:
+        1 = &StandardTwoSimplex{s}.x + &StandardTwoSimplex{s}.y + &StandardTwoSimplex{s}.z = &StandardTwoSimplex{s}.y + &StandardTwoSimplex{s}.x + &StandardTwoSimplex{s}.z
+        (&StandardTwoSimplex{s}.y, &StandardTwoSimplex{s}.x, &StandardTwoSimplex{s}.z) $in &StandardTwoSimplex
+
+    have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (&StandardTwoSimplex{s}.y, &StandardTwoSimplex{s}.x, &StandardTwoSimplex{s}.z)
+
+    forall a, b &StandardTwoSimplex:
+        (&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2 + (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2 + (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2 = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{a}.y + &StandardTwoSimplex{a}.z) + (&StandardTwoSimplex{b}.x + &StandardTwoSimplex{b}.y + &StandardTwoSimplex{b}.z)) / 2 = (1 + 1) / 2 = 1
+        ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2) $in &StandardTwoSimplex
+
+    have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2)
+
+prove:
+    struct StandardTwoSimplex:
+        x R
+        y R
+        z R
+        <=>:
+            0 <= x
+            0 <= y
+            0 <= z
+            x + y + z = 1
+
+    macro s "&StandardTwoSimplex{s}"
+    macro a "&StandardTwoSimplex{a}"
+    macro b "&StandardTwoSimplex{b}"
+
+    forall s &StandardTwoSimplex:
+        1 = @s.x + @s.y + @s.z = @s.y + @s.x + @s.z
+        (@s.y, @s.x, @s.z) $in &StandardTwoSimplex
+
+    have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (@s.y, @s.x, @s.z)
+
+    forall a, b &StandardTwoSimplex:
+        (@a.x + @b.x) / 2 + (@a.y + @b.y) / 2 + (@a.z + @b.z) / 2 = ((@a.x + @a.y + @a.z) + (@b.x + @b.y + @b.z)) / 2 = (1 + 1) / 2 = 1
+        ((@a.x + @b.x) / 2, (@a.y + @b.y) / 2, (@a.z + @b.z) / 2) $in &StandardTwoSimplex
+
+    have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((@a.x + @b.x) / 2, (@a.y + @b.y) / 2, (@a.z + @b.z) / 2)

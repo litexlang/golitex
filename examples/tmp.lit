@@ -8,14 +8,18 @@ struct StandardTwoSimplex:
         0 <= z
         x + y + z = 1
 
-forall s &StandardTwoSimplex:
-    1 = s[1] + s[2] + s[3] = s[2] + s[1] + s[3]
-    (s[2], s[1], s[3]) $in &StandardTwoSimplex
+macro s "&StandardTwoSimplex{s}"
+macro a "&StandardTwoSimplex{a}"
+macro b "&StandardTwoSimplex{b}"
 
-have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (s[2], s[1], s[3])
+forall s &StandardTwoSimplex:
+    1 = @s.x + @s.y + @s.z = @s.y + @s.x + @s.z
+    (@s.y, @s.x, @s.z) $in &StandardTwoSimplex
+
+have fn swapXy(s &StandardTwoSimplex) &StandardTwoSimplex = (@s.y, @s.x, @s.z)
 
 forall a, b &StandardTwoSimplex:
-    (a[1] + b[1]) / 2 + (a[2] + b[2]) / 2 + (a[3] + b[3]) / 2 = ((a[1] + a[2] + a[3]) + (b[1] + b[2] + b[3])) / 2 = (1 + 1) / 2 = 1
-    ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2) $in &StandardTwoSimplex
+    (@a.x + @b.x) / 2 + (@a.y + @b.y) / 2 + (@a.z + @b.z) / 2 = ((@a.x + @a.y + @a.z) + (@b.x + @b.y + @b.z)) / 2 = (1 + 1) / 2 = 1
+    ((@a.x + @b.x) / 2, (@a.y + @b.y) / 2, (@a.z + @b.z) / 2) $in &StandardTwoSimplex
 
-have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2)
+have fn midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((@a.x + @b.x) / 2, (@a.y + @b.y) / 2, (@a.z + @b.z) / 2)
