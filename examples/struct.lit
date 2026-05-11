@@ -21,21 +21,26 @@ prove:
         point_add(a, b) = (a[1] + b[1], a[2] + b[2]) = (b[1] + a[1], b[2] + a[2]) = point_add(b, a)
 
 prove:
-    abstract_prop group_prop(a,b,c,d)
+    prop GroupProperty(s set, inv fn(x s) s, op fn(x, y s) s, e s):
+        forall x s:
+            op(x, inv(x)) = e
+            op(inv(x), x) = e
+        forall x, y, z s:
+            op(x, op(y, z)) = op(op(x, y), z)
+        forall x s:
+            op(x, e) = x
+            op(e, x) = x
 
     struct Group(s set):
         inv fn(x s) s
         op fn(x, y s) s
         e s
         <=>:
-            $group_prop(s, inv, op, e)
+            $GroupProperty(s, inv, op, e)
 
-    forall G &Group(R):
-        G[1] = &Group(R){G}.inv
-        G[2] = &Group(R){G}.op
-        G[3] = &Group(R){G}.e
-        $group_prop(R, &Group(R){G}.inv, &Group(R){G}.op, &Group(R){G}.e)
-
+    $GroupProperty(R, 'R(x){-x}, 'R(x, y){x + y}, 0)
+    ('R(x){-x}, 'R(x, y){x + y}, 0) $in &Group(R)
+    
 prove:
     struct StandardTwoSimplex:
         x R
