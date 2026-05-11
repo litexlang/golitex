@@ -15,8 +15,7 @@ pub struct VerifiedByBuiltinRuleResult {
 #[derive(Debug)]
 pub struct VerifiedByFactResult {
     pub detail: Option<String>,
-    pub cite_what: Stmt,
-    pub children: Vec<VerifiedBysEnum>,
+    pub cite_what: Box<Stmt>,
 }
 
 #[derive(Debug)]
@@ -34,8 +33,7 @@ pub struct FactVerifiedByBuiltinRuleInVerifiedBys {
 pub struct FactVerifiedByFactInVerifiedBys {
     pub detail: Option<String>,
     pub verify_what: Fact,
-    pub cite_what: Stmt,
-    pub children: Vec<VerifiedBysEnum>,
+    pub cite_what: Box<Stmt>,
 }
 
 #[derive(Debug)]
@@ -151,19 +149,9 @@ impl VerifiedByResult {
     }
 
     pub fn cited_stmt(_goal: Fact, cite_what: Stmt, detail: Option<String>) -> Self {
-        Self::cited_stmt_with_children(_goal, cite_what, detail, Vec::new())
-    }
-
-    pub fn cited_stmt_with_children(
-        _goal: Fact,
-        cite_what: Stmt,
-        detail: Option<String>,
-        children: Vec<VerifiedBysEnum>,
-    ) -> Self {
         Self::Fact(VerifiedByFactResult {
             detail,
-            cite_what,
-            children,
+            cite_what: Box::new(cite_what),
         })
     }
 
@@ -177,8 +165,7 @@ impl VerifiedByResult {
         let cite_what = fact.with_line_file(cite_fact_source);
         Self::Fact(VerifiedByFactResult {
             detail: None,
-            cite_what: cite_what.into_stmt(),
-            children: Vec::new(),
+            cite_what: Box::new(cite_what.into_stmt()),
         })
     }
 
@@ -250,20 +237,10 @@ impl VerifiedBysEnum {
     }
 
     pub fn cited_stmt(verify_what: Fact, cite_what: Stmt, detail: Option<String>) -> Self {
-        Self::cited_stmt_with_children(verify_what, cite_what, detail, Vec::new())
-    }
-
-    pub fn cited_stmt_with_children(
-        verify_what: Fact,
-        cite_what: Stmt,
-        detail: Option<String>,
-        children: Vec<VerifiedBysEnum>,
-    ) -> Self {
         VerifiedBysEnum::ByFact(FactVerifiedByFactInVerifiedBys {
             detail,
             verify_what,
-            cite_what,
-            children,
+            cite_what: Box::new(cite_what),
         })
     }
 
@@ -276,12 +253,7 @@ impl VerifiedBysEnum {
         match verified_by {
             VerifiedByResult::BuiltinRule(r) => vec![Self::builtin_rule(r.msg, verify_what)],
             VerifiedByResult::Fact(r) => {
-                vec![Self::cited_stmt_with_children(
-                    verify_what,
-                    r.cite_what,
-                    r.detail,
-                    r.children,
-                )]
+                vec![Self::cited_stmt(verify_what, *r.cite_what, r.detail)]
             }
             VerifiedByResult::VerifiedBys(w) => w.cite_what,
         }
