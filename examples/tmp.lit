@@ -1,4 +1,6 @@
-forall A, B set, x A:
-    A $subset B
+forall x, y R:
+    2 * x + 3 * y = 10
+    4 * x + 5 * y = 14
     =>:
-        x $in B
+        y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
+        x = ((2 * x + 3 * y) - 3 * y) / 2 = -4
