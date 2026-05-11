@@ -1,9 +1,0 @@
-claim:
-    prove:
-        forall x R:
-            x = 1
-            =>:
-                x = 1
-        let y R:
-            y = 2
-    know y = 2
