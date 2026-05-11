@@ -14,8 +14,9 @@ pub struct VerifiedByBuiltinRuleResult {
 
 #[derive(Debug)]
 pub struct VerifiedByFactResult {
-    pub msg: Option<String>,
-    pub cite_what: Fact,
+    pub detail: Option<String>,
+    pub cite_what: Stmt,
+    pub children: Vec<VerifiedBysEnum>,
 }
 
 #[derive(Debug)]
@@ -31,9 +32,10 @@ pub struct FactVerifiedByBuiltinRuleInVerifiedBys {
 
 #[derive(Debug)]
 pub struct FactVerifiedByFactInVerifiedBys {
-    pub msg: Option<String>,
+    pub detail: Option<String>,
     pub verify_what: Fact,
-    pub cite_what: Fact,
+    pub cite_what: Stmt,
+    pub children: Vec<VerifiedBysEnum>,
 }
 
 #[derive(Debug)]
@@ -144,8 +146,25 @@ impl VerifiedByResult {
         Self::BuiltinRule(VerifiedByBuiltinRuleResult { msg: msg.into() })
     }
 
-    pub fn cited_fact(_goal: Fact, cite_what: Fact, msg: Option<String>) -> Self {
-        Self::Fact(VerifiedByFactResult { msg, cite_what })
+    pub fn cited_fact(_goal: Fact, cite_what: Fact, detail: Option<String>) -> Self {
+        Self::cited_stmt(_goal, cite_what.into_stmt(), detail)
+    }
+
+    pub fn cited_stmt(_goal: Fact, cite_what: Stmt, detail: Option<String>) -> Self {
+        Self::cited_stmt_with_children(_goal, cite_what, detail, Vec::new())
+    }
+
+    pub fn cited_stmt_with_children(
+        _goal: Fact,
+        cite_what: Stmt,
+        detail: Option<String>,
+        children: Vec<VerifiedBysEnum>,
+    ) -> Self {
+        Self::Fact(VerifiedByFactResult {
+            detail,
+            cite_what,
+            children,
+        })
     }
 
     /// Same statement as goal and citation; optional human note in `msg`.
@@ -157,8 +176,9 @@ impl VerifiedByResult {
     pub fn cached_fact(fact: Fact, cite_fact_source: LineFile) -> Self {
         let cite_what = fact.with_line_file(cite_fact_source);
         Self::Fact(VerifiedByFactResult {
-            msg: None,
-            cite_what,
+            detail: None,
+            cite_what: cite_what.into_stmt(),
+            children: Vec::new(),
         })
     }
 
@@ -225,11 +245,25 @@ impl VerifiedBysEnum {
         VerifiedBysEnum::ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys { msg, verify_what })
     }
 
-    pub fn cited_fact(verify_what: Fact, cite_what: Fact, msg: Option<String>) -> Self {
+    pub fn cited_fact(verify_what: Fact, cite_what: Fact, detail: Option<String>) -> Self {
+        Self::cited_stmt(verify_what, cite_what.into_stmt(), detail)
+    }
+
+    pub fn cited_stmt(verify_what: Fact, cite_what: Stmt, detail: Option<String>) -> Self {
+        Self::cited_stmt_with_children(verify_what, cite_what, detail, Vec::new())
+    }
+
+    pub fn cited_stmt_with_children(
+        verify_what: Fact,
+        cite_what: Stmt,
+        detail: Option<String>,
+        children: Vec<VerifiedBysEnum>,
+    ) -> Self {
         VerifiedBysEnum::ByFact(FactVerifiedByFactInVerifiedBys {
-            msg,
+            detail,
             verify_what,
             cite_what,
+            children,
         })
     }
 
@@ -242,7 +276,12 @@ impl VerifiedBysEnum {
         match verified_by {
             VerifiedByResult::BuiltinRule(r) => vec![Self::builtin_rule(r.msg, verify_what)],
             VerifiedByResult::Fact(r) => {
-                vec![Self::cited_fact(verify_what, r.cite_what, r.msg)]
+                vec![Self::cited_stmt_with_children(
+                    verify_what,
+                    r.cite_what,
+                    r.detail,
+                    r.children,
+                )]
             }
             VerifiedByResult::VerifiedBys(w) => w.cite_what,
         }
@@ -273,7 +312,7 @@ impl VerifiedBysEnum {
         match self {
             VerifiedBysEnum::ByBuiltinRule(r) => r.msg.clone(),
             VerifiedBysEnum::ByFact(r) => {
-                if let Some(d) = &r.msg {
+                if let Some(d) = &r.detail {
                     if !d.is_empty() {
                         return d.clone();
                     }
@@ -289,7 +328,7 @@ impl VerifiedByResult {
         match self {
             VerifiedByResult::BuiltinRule(r) => r.msg.clone(),
             VerifiedByResult::Fact(r) => {
-                if let Some(d) = &r.msg {
+                if let Some(d) = &r.detail {
                     if !d.is_empty() {
                         return d.clone();
                     }
