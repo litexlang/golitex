@@ -504,11 +504,14 @@ impl Runtime {
                         )?,
                     );
 
-                    let projected_field: Obj = ObjAtIndex::new(
-                        in_fact.element.clone(),
-                        Number::new((index + 1).to_string()).into(),
-                    )
-                    .into();
+                    let projected_field: Obj = match &in_fact.element {
+                        Obj::Tuple(tuple) => (*tuple.args[index]).clone(),
+                        _ => ObjAtIndex::new(
+                            in_fact.element.clone(),
+                            Number::new((index + 1).to_string()).into(),
+                        )
+                        .into(),
+                    };
                     projection_field_map.insert(field_name.clone(), projected_field.clone());
                     let projected_field_in_type: Fact = InFact::new(
                         projected_field,
@@ -538,11 +541,13 @@ impl Runtime {
                         Some(in_fact.line_file.clone()),
                     )?;
                     infer_result.new_fact(&instantiated_fact);
-                    infer_result.new_infer_result_inside(
-                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
-                            instantiated_fact,
-                        )?,
-                    );
+                    let instantiated_fact_line_file = instantiated_fact.line_file();
+                    let instantiated_fact_string = instantiated_fact.to_string();
+                    self.top_level_env().store_fact(instantiated_fact)?;
+                    self.top_level_env().store_fact_to_cache_known_fact(
+                        instantiated_fact_string,
+                        instantiated_fact_line_file,
+                    )?;
 
                     let projected_fact = self.inst_fact(
                         &after_header,
