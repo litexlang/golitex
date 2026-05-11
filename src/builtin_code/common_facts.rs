@@ -1,8 +1,4 @@
 pub const COMMON_FACTS: &str = r#"
-abstract_prop injective(f)
-abstract_prop surjective(f)
-abstract_prop bijective(f)
-
 know:
     + $in fn(a, b R) R
     - $in fn(a, b R) R

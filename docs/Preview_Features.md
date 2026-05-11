@@ -170,7 +170,7 @@ Here the parameter declaration provides `G $in &Group(R)`, so the field access i
 
 If the explicit view becomes visually heavy, use a macro to keep the proof readable. The macro does not change the meaning; it only abbreviates the required explicit view.
 
-```litex
+```text
 macro s "&StandardTwoSimplex{s}"
 
 forall s &StandardTwoSimplex:
