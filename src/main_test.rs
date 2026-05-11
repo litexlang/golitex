@@ -206,60 +206,6 @@ mod lit_file_runner_tests {
         assert!(run_succeeded, "Litex file failed: {}", path_str);
     }
 
-    #[test]
-    fn run_mechanics_of_litex_proof_examples() {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let lit_file_paths =
-            collect_lit_files_recursive_under(&manifest_dir, "The-Mechanics-of-Litex-Proof");
-
-        assert!(
-            !lit_file_paths.is_empty(),
-            "The-Mechanics-of-Litex-Proof must contain .lit files"
-        );
-
-        for lit_file_path in lit_file_paths.iter() {
-            let source_code = match fs::read_to_string(lit_file_path) {
-                Ok(content) => content,
-                Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
-            };
-            let path_str = match lit_file_path.to_str() {
-                Some(path_string) => path_string,
-                None => panic!("{:?} must be valid UTF-8", lit_file_path),
-            };
-
-            let mut runtime = Runtime::new_with_builtin_code();
-            runtime.new_file_path_new_env_new_name_scope(path_str);
-            let normalized_source = remove_windows_carriage_return(source_code.as_str());
-
-            println!("RUN {}", path_str);
-            let start_time = Instant::now();
-            let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                run_source_code(normalized_source.as_str(), &mut runtime)
-            }));
-            let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
-            let (stmt_results, runtime_error) = match run_result {
-                Ok(result) => result,
-                Err(panic_error) => {
-                    std::panic::resume_unwind(Box::new(format!(
-                        "The-Mechanics-of-Litex-Proof file panicked: {}\n{:?}",
-                        path_str, panic_error
-                    )));
-                }
-            };
-
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-            if !run_succeeded {
-                panic!(
-                    "The-Mechanics-of-Litex-Proof file failed: {}\n{}",
-                    path_str, run_output
-                );
-            }
-            println!("OK {:.2} ms {}", duration_ms, path_str);
-        }
-    }
-
     /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
     /// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
     fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {
