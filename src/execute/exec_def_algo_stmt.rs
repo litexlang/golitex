@@ -158,36 +158,20 @@ impl Runtime {
                     }
                 }
             }
-            let instantiated_param_type = match &param_def_with_set.param_type {
-                ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(
-                    self.inst_obj(
-                        set,
-                        &fn_set_param_name_to_algo_arg_obj,
-                        ParamObjType::Forall,
+            let instantiated_param_type = ParamType::Obj(
+                self.inst_obj(
+                    param_def_with_set.set_obj(),
+                    &fn_set_param_name_to_algo_arg_obj,
+                    ParamObjType::Forall,
+                )
+                .map_err(|runtime_error| {
+                    Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                        def_algo_stmt,
+                        "algo verify: failed to instantiate fn set param set".to_string(),
+                        Some(runtime_error),
                     )
-                    .map_err(|runtime_error| {
-                        Self::def_algo_verify_exec_error_with_message_and_optional_cause(
-                            def_algo_stmt,
-                            "algo verify: failed to instantiate fn set param set".to_string(),
-                            Some(runtime_error),
-                        )
-                    })?,
-                ),
-                ParamGroupWithSetTypeEnum::Struct(struct_ty) => self
-                    .inst_param_type(
-                        &ParamType::Struct(struct_ty.clone()),
-                        &fn_set_param_name_to_algo_arg_obj,
-                        ParamObjType::Forall,
-                    )
-                    .map_err(|runtime_error| {
-                        Self::def_algo_verify_exec_error_with_message_and_optional_cause(
-                            def_algo_stmt,
-                            "algo verify: failed to instantiate fn set struct param type"
-                                .to_string(),
-                            Some(runtime_error),
-                        )
-                    })?,
-            };
+                })?,
+            );
             algo_param_defs_with_type.push(ParamGroupWithParamType::new(
                 mapped_param_names,
                 instantiated_param_type,

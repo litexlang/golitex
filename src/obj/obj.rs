@@ -55,77 +55,59 @@ pub enum Obj {
     MatrixMul(MatrixMul),
     MatrixScalarMul(MatrixScalarMul),
     MatrixPow(MatrixPow),
-    FieldAccess(FieldAccess),
-    StructInstance(Box<StructInstance>),
+    StructObj(StructObj),
+    ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
 }
 
 #[derive(Clone)]
-pub struct StructInstance {
-    pub name: StructAsParamType,
-    pub fields_equal_to_what: Vec<Box<Obj>>,
-}
-
-impl StructInstance {
-    pub fn new(name: StructAsParamType, fields_equal_to_what: Vec<Obj>) -> Self {
-        let fields_equal_to_what = fields_equal_to_what.into_iter().map(Box::new).collect();
-        StructInstance {
-            name,
-            fields_equal_to_what,
-        }
-    }
-
-    pub fn new_with_boxed_fields(
-        name: StructAsParamType,
-        fields_equal_to_what: Vec<Box<Obj>>,
-    ) -> Self {
-        StructInstance {
-            name,
-            fields_equal_to_what,
-        }
-    }
-}
-
-impl fmt::Display for StructInstance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", STRUCT_INSTANCE_PREFIX, self.name.struct_name())?;
-        if !self.name.args.is_empty() {
-            write!(
-                f,
-                "{}{}{}",
-                LEFT_BRACE,
-                vec_to_string_join_by_comma(&self.name.args),
-                RIGHT_BRACE
-            )?;
-        }
-        write!(
-            f,
-            "{}{}{}",
-            LEFT_BRACE,
-            vec_to_string_join_by_comma(&self.fields_equal_to_what),
-            RIGHT_BRACE
-        )
-    }
+pub enum NameWithOrWithoutMod {
+    WithoutMod(String),
+    WithMod(String, String),
 }
 
 #[derive(Clone)]
-pub struct FieldAccess {
-    pub left: String,
-    pub right: String,
+pub struct StructObj {
+    pub name: NameWithOrWithoutMod,
+    pub params: Vec<Obj>,
 }
 
-impl FieldAccess {
-    pub fn new(left: String, right: String) -> Self {
-        FieldAccess { left, right }
+#[derive(Clone)]
+pub struct ObjAsStructInstanceWithFieldAccess {
+    pub struct_obj: Box<StructObj>,
+    pub obj: Box<Obj>,
+    pub field_name: String,
+}
+
+impl NameWithOrWithoutMod {
+    pub fn to_name_string(&self) -> String {
+        match self {
+            NameWithOrWithoutMod::WithoutMod(name) => name.clone(),
+            NameWithOrWithoutMod::WithMod(mod_name, name) => {
+                format!("{}{}{}", mod_name, MOD_SIGN, name)
+            }
+        }
     }
 }
 
-impl fmt::Display for FieldAccess {
+impl fmt::Display for NameWithOrWithoutMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}{}",
-            self.left, DOT_AKA_FIELD_ACCESS_SIGN, self.right
-        )
+        write!(f, "{}", self.to_name_string())
+    }
+}
+
+impl StructObj {
+    pub fn new(name: NameWithOrWithoutMod, params: Vec<Obj>) -> Self {
+        StructObj { name, params }
+    }
+}
+
+impl ObjAsStructInstanceWithFieldAccess {
+    pub fn new(struct_obj: StructObj, obj: Obj, field_name: String) -> Self {
+        ObjAsStructInstanceWithFieldAccess {
+            struct_obj: Box::new(struct_obj),
+            obj: Box::new(obj),
+            field_name,
+        }
     }
 }
 
@@ -970,8 +952,8 @@ impl Obj {
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::FamilyObj(x) => write!(f, "{}", x)?,
-            Obj::FieldAccess(x) => write!(f, "{}", x)?,
-            Obj::StructInstance(x) => write!(f, "{}", x)?,
+            Obj::StructObj(x) => write!(f, "{}", x)?,
+            Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1110,27 +1092,10 @@ impl Obj {
                             .into_iter()
                             .map(|p| if p == from { to.to_string() } else { p })
                             .collect();
-                        match pg.param_type {
-                            ParamGroupWithSetTypeEnum::Struct(struct_ty) => {
-                                ParamGroupWithSet::new_struct(
-                                    params,
-                                    StructAsParamType::new(
-                                        struct_ty.name,
-                                        struct_ty
-                                            .args
-                                            .into_iter()
-                                            .map(|arg| {
-                                                Obj::replace_bound_identifier(*arg, from, to)
-                                            })
-                                            .collect(),
-                                    ),
-                                )
-                            }
-                            ParamGroupWithSetTypeEnum::Set(set) => ParamGroupWithSet::new(
-                                params,
-                                Obj::replace_bound_identifier(set, from, to),
-                            ),
-                        }
+                        ParamGroupWithSet::new(
+                            params,
+                            Obj::replace_bound_identifier(*pg.param_type, from, to),
+                        )
                     })
                     .collect();
                 let dom_facts = dom_facts
@@ -1157,27 +1122,10 @@ impl Obj {
                             .into_iter()
                             .map(|p| if p == from { to.to_string() } else { p })
                             .collect();
-                        match pg.param_type {
-                            ParamGroupWithSetTypeEnum::Struct(struct_ty) => {
-                                ParamGroupWithSet::new_struct(
-                                    params,
-                                    StructAsParamType::new(
-                                        struct_ty.name,
-                                        struct_ty
-                                            .args
-                                            .into_iter()
-                                            .map(|arg| {
-                                                Obj::replace_bound_identifier(*arg, from, to)
-                                            })
-                                            .collect(),
-                                    ),
-                                )
-                            }
-                            ParamGroupWithSetTypeEnum::Set(set) => ParamGroupWithSet::new(
-                                params,
-                                Obj::replace_bound_identifier(set, from, to),
-                            ),
-                        }
+                        ParamGroupWithSet::new(
+                            params,
+                            Obj::replace_bound_identifier(*pg.param_type, from, to),
+                        )
                     })
                     .collect();
                 let dom_facts = dom_facts
@@ -1310,31 +1258,29 @@ impl Obj {
                     .collect(),
             )
             .into(),
-            Obj::FieldAccess(field_access) => {
-                let left = if field_access.left == from {
-                    to.to_string()
-                } else {
-                    field_access.left
-                };
-                FieldAccess::new(left, field_access.right).into()
-            }
-            Obj::StructInstance(instance) => {
-                let instance = *instance;
-                let name = StructAsParamType::new(
-                    instance.name.name,
-                    instance
-                        .name
-                        .args
+            Obj::StructObj(s) => StructObj::new(
+                s.name,
+                s.params
+                    .into_iter()
+                    .map(|o| Obj::replace_bound_identifier(o, from, to))
+                    .collect(),
+            )
+            .into(),
+            Obj::ObjAsStructInstanceWithFieldAccess(s) => {
+                let struct_obj = StructObj::new(
+                    s.struct_obj.name.clone(),
+                    s.struct_obj
+                        .params
                         .into_iter()
-                        .map(|arg| Obj::replace_bound_identifier(*arg, from, to))
+                        .map(|o| Obj::replace_bound_identifier(o, from, to))
                         .collect(),
                 );
-                let fields_equal_to_what = instance
-                    .fields_equal_to_what
-                    .into_iter()
-                    .map(|field| Obj::replace_bound_identifier(*field, from, to))
-                    .collect();
-                StructInstance::new(name, fields_equal_to_what).into()
+                ObjAsStructInstanceWithFieldAccess::new(
+                    struct_obj,
+                    Obj::replace_bound_identifier(*s.obj, from, to),
+                    s.field_name,
+                )
+                .into()
             }
         }
     }
@@ -1459,6 +1405,46 @@ impl fmt::Display for ObjAtIndex {
             f,
             "{}{}{}{}",
             self.obj, LEFT_BRACKET, self.index, RIGHT_BRACKET
+        )
+    }
+}
+
+impl fmt::Display for StructObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", STRUCT_VIEW_PREFIX, self.name)?;
+        if !self.params.is_empty() {
+            write!(
+                f,
+                "{}{}{}",
+                LEFT_BRACE,
+                vec_to_string_join_by_comma(&self.params),
+                RIGHT_BRACE
+            )?;
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Display for ObjAsStructInstanceWithFieldAccess {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", STRUCT_VIEW_PREFIX, self.struct_obj.name)?;
+        if !self.struct_obj.params.is_empty() {
+            write!(
+                f,
+                "{}{}{}",
+                LEFT_BRACE,
+                vec_to_string_join_by_comma(&self.struct_obj.params),
+                RIGHT_BRACE
+            )?;
+        }
+        write!(
+            f,
+            "{}{}{}{}{}",
+            LEFT_CURLY_BRACE,
+            self.obj,
+            RIGHT_CURLY_BRACE,
+            DOT_AKA_FIELD_ACCESS_SIGN,
+            self.field_name
         )
     }
 }
@@ -2200,15 +2186,15 @@ impl From<FamilyObj> for Obj {
     }
 }
 
-impl From<FieldAccess> for Obj {
-    fn from(f: FieldAccess) -> Self {
-        Obj::FieldAccess(f)
+impl From<StructObj> for Obj {
+    fn from(s: StructObj) -> Self {
+        Obj::StructObj(s)
     }
 }
 
-impl From<StructInstance> for Obj {
-    fn from(s: StructInstance) -> Self {
-        Obj::StructInstance(Box::new(s))
+impl From<ObjAsStructInstanceWithFieldAccess> for Obj {
+    fn from(s: ObjAsStructInstanceWithFieldAccess) -> Self {
+        Obj::ObjAsStructInstanceWithFieldAccess(s)
     }
 }
 

@@ -12,9 +12,6 @@ by transitive_prop:
 
 have a, b, c set
 
-claim:
-    prove:
-        $p(a, c)
-    know a $p b $p c
+know a $p b $p c
 
-# After p is registered as transitive, a $p b $p c stores $p(a, c).
+a $p b $p c

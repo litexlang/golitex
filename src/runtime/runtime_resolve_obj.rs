@@ -114,6 +114,30 @@ impl Runtime {
                 MatrixListObj::new(rows).into()
             }
             Obj::FnObj(fn_obj) => {
+                if let FnObjHead::AnonymousFnLiteral(anonymous_fn) = fn_obj.head.as_ref() {
+                    if !fn_obj.body.is_empty() {
+                        let mut args: Vec<Obj> = Vec::new();
+                        for group in fn_obj.body.iter() {
+                            for arg in group.iter() {
+                                args.push((**arg).clone());
+                            }
+                        }
+                        let param_defs = &anonymous_fn.body.params_def_with_set;
+                        if args.len() == ParamGroupWithSet::number_of_params(param_defs) {
+                            let param_to_arg_map =
+                                ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
+                                    param_defs, &args,
+                                );
+                            if let Ok(reduced) = self.inst_obj(
+                                anonymous_fn.equal_to.as_ref(),
+                                &param_to_arg_map,
+                                ParamObjType::FnSet,
+                            ) {
+                                return self.resolve_obj(&reduced);
+                            }
+                        }
+                    }
+                }
                 if fn_obj.body.len() == 1 && fn_obj.body[0].len() == 1 {
                     let head_key = fn_obj.head.to_string();
                     if let Some(list) = self.get_obj_equal_to_finite_seq_list(&head_key) {

@@ -38,15 +38,14 @@ pub fn run_source_code(
     source_code: &str,
     runtime: &mut Runtime,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let blocks = match TokenBlock::parse_blocks(
-        source_code,
-        runtime.module_manager.current_file_path_rc(),
-    ) {
-        Ok(b) => b,
-        Err(e) => {
-            return (vec![], Some(e));
-        }
-    };
+    let mut tokenizer = Tokenizer::new();
+    let blocks =
+        match tokenizer.parse_blocks(source_code, runtime.module_manager.current_file_path_rc()) {
+            Ok(b) => b,
+            Err(e) => {
+                return (vec![], Some(e));
+            }
+        };
 
     let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {
