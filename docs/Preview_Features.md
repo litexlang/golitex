@@ -42,7 +42,11 @@ User-facing spellings are unchanged (`by fn as set`, `by fn set as set`, `by fam
 
 Struct usage is being redesigned around explicit views. Bare field access such as `P.x` is not part of the language. A field access must say which struct is being used, such as `&Point{P}.x` or `&Group(R){G}.op`.
 
-The intended model is simple: `struct Name(args)` is a set object, and `&Name(args){x}.field` is a named projection after proving `x $in struct Name(args)`.
+The intended model is simple: `&Name(args)` is a set object, and `&Name(args){x}.field` is a named projection after proving `x $in &Name(args)`.
+
+### Design Note: Object Meaning
+
+When designing a new object form in Litex, the first questions are its surface shape and its well-definedness condition. Its mathematical behavior can then be supplied by builtin verification and inference rules. The AST records the shape, well-definedness checks that the expression is legal, and builtin rules explain how the object behaves in proofs.
 
 ## Struct Definitions
 
@@ -54,7 +58,7 @@ struct Point:
     y R
 ```
 
-Structs may also have header parameters. The definition is stored and its field declarations are checked. In the explicit-view design, applying the struct header creates a set object such as `struct Group(R)`.
+Structs may also have header parameters. The definition is stored and its field declarations are checked. In the explicit-view design, applying the struct header creates a set object such as `&Group(R)`.
 
 ```litex
 abstract_prop group_property(s, zero, add, inv)
@@ -71,7 +75,7 @@ The `<=>:` block is still part of the definition record. Its body may refer to f
 
 ## Struct Objects
 
-`struct Name(args)` is a set object. It is read as a named set-builder whose base set is the Cartesian product of the instantiated field types.
+`&Name(args)` is a set object. It is read as a named set-builder whose base set is the Cartesian product of the instantiated field types.
 
 For example:
 
@@ -81,9 +85,9 @@ struct Point:
     y R
 ```
 
-`struct Point` is the named struct set corresponding to `cart(R, R)`.
+`&Point` is the named struct set corresponding to `cart(R, R)`.
 
-When there is no `<=>:` block, this struct set is nonempty as soon as every field type is nonempty. For example, `struct Point` is nonempty because both fields range over `R`.
+When there is no `<=>:` block, this struct set is nonempty as soon as every field type is nonempty. For example, `&Point` is nonempty because both fields range over `R`.
 
 For a parameterized struct:
 
@@ -98,7 +102,7 @@ struct Group(s set):
         $group_property(s, zero, add, inv)
 ```
 
-`struct Group(R)` is read as a named set-builder like:
+`&Group(R)` is read as a named set-builder like:
 
 ```text
 { g $in cart(R, fn(x, y R) R, fn(x R) R) | $group_property(R, g[1], g[2], g[3]) }
@@ -126,15 +130,15 @@ The well-definedness check for:
 reduces to proving:
 
 ```text
-G $in struct Group(R)
+G $in &Group(R)
 ```
 
-When `G $in struct Group(R)` is known, Litex also stores the facts carried by the struct view: each explicit field access belongs to its field type, and each `<=>:` fact is instantiated with field names replaced by explicit field accesses.
+When `G $in &Group(R)` is known, Litex also stores the facts carried by the struct view: each explicit field access belongs to its field type, and each `<=>:` fact is instantiated with field names replaced by explicit field accesses.
 
 Once that membership is available, the field access is only a named form of tuple projection:
 
 ```text
-forall G struct Group(R):
+forall G &Group(R):
     &Group(R){G}.zero = G[1]
     &Group(R){G}.add = G[2]
     &Group(R){G}.inv = G[3]
@@ -143,17 +147,17 @@ forall G struct Group(R):
 If a parameter is declared with a struct object, the membership fact is available in the local context:
 
 ```text
-forall G struct Group(R):
+forall G &Group(R):
     &Group(R){G}.add = &Group(R){G}.add
 ```
 
-Here the parameter declaration provides `G $in struct Group(R)`, so the field access is well-defined inside the body.
+Here the parameter declaration provides `G $in &Group(R)`, so the field access is well-defined inside the body.
 
 ## Current Boundaries
 
 These syntax forms are intentionally unavailable:
 
-- `fn(x struct Point) Point`
+- `fn(x &Point) Point`
 - `P.x`
 - `&Point(1, 2)`
 - `by struct ...`
@@ -165,7 +169,7 @@ struct Point:
     x R
     y R
 
-have P struct Point = (1, 2)
+have P &Point = (1, 2)
 &Point{P}.x = P[1]
 &Point{(1, 2)}.y = 2
 ```

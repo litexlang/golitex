@@ -55,7 +55,7 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
-> `struct` is a preview feature. A struct object such as `struct Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
+> `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
 
 > You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
 
@@ -208,7 +208,7 @@ have s set = { z N : z > 5 }
 
 #### Function types and anonymous functions
 
-A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; `struct Point` is not valid inside a `fn` signature.
+A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; struct view objects are preview syntax and are not valid inside a `fn` signature.
 
 ```litex
 have g set = fn(x R) R
@@ -262,23 +262,23 @@ e[1] = 2
 
 #### Struct objects and explicit field access
 
-`struct Name(args)` is a preview object form. It names the Cartesian product determined by the struct fields, with any `<=>:` facts treated as membership filters. Field access does not infer a struct from the object; it must say which struct view is being used.
+`&Name(args)` is a preview object form. It names the Cartesian product determined by the struct fields, with any `<=>:` facts treated as membership filters. Field access does not infer a struct from the object; it must say which struct view is being used.
 
 ```litex
 struct Point:
     x R
     y R
 
-have p struct Point = (1, 2)
+have p &Point = (1, 2)
 &Point{p}.x = p[1]
 &Point{(1, 2)}.y = 2
 ```
 
-The well-definedness of `&Point{p}.x` reduces to proving `p $in struct Point`. A declaration such as `forall p struct Point:` or `have p struct Point = ...` provides that membership fact in the local context.
+The well-definedness of `&Point{p}.x` reduces to proving `p $in &Point`. A declaration such as `forall p &Point:` or `have p &Point = ...` provides that membership fact in the local context.
 
-After Litex knows `p $in struct Point`, it also stores the field facts such as `&Point{p}.x $in R` and `&Point{p}.y $in R`. If the struct has `<=>:` filter facts, those facts are also stored after substituting each field name with its explicit field access.
+After Litex knows `p $in &Point`, it also stores the field facts such as `&Point{p}.x $in R` and `&Point{p}.y $in R`. If the struct has `<=>:` filter facts, those facts are also stored after substituting each field name with its explicit field access.
 
-If a struct has no `<=>:` filter facts, Litex can prove `struct Name(args)` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples.
+If a struct has no `<=>:` filter facts, Litex can prove `&Name(args)` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples.
 
 #### Counting members
 
