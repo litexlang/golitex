@@ -28,9 +28,18 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(field_type, &verify_state)?;
         }
 
-        for fact in def_struct_stmt.equivalent_facts.iter() {
-            self.verify_fact_well_defined(fact, &verify_state)?;
-        }
+        self.run_in_local_env(|rt| {
+            for (field_name, field_type) in def_struct_stmt.fields.iter() {
+                let param_def =
+                    ParamGroupWithSet::new(vec![field_name.clone()], field_type.clone());
+                rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
+            }
+
+            for fact in def_struct_stmt.equivalent_facts.iter() {
+                rt.verify_fact_well_defined(fact, &verify_state)?;
+            }
+            Ok::<(), RuntimeError>(())
+        })?;
 
         Ok(())
     }

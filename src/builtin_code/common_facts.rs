@@ -4,6 +4,14 @@ abstract_prop surjective(f)
 abstract_prop bijective(f)
 
 know:
+    + $in fn(a, b R) R
+    - $in fn(a, b R) R
+    * $in fn(a, b R) R
+    / $in fn(a R, b R: b != 0) R
+    % $in fn(a Z, b Z: b != 0) Z
+    ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N_pos) R
+
+know:
     forall a, b R:
         =>:
             a = 0 and b = 0

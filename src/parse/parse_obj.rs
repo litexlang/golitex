@@ -489,6 +489,10 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(SUB) {
+            if minus_token_is_standalone_operator_obj(tb) {
+                tb.skip()?;
+                return Ok(Identifier::new(SUB.to_string()).into());
+            }
             tb.skip()?;
             let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
             Ok(Mul::new(Number::new("-1".to_string()).into(), obj).into())
@@ -1605,6 +1609,17 @@ fn starts_with_digit(s: &str) -> bool {
         .next()
         .map(|c| c.is_ascii_digit())
         .unwrap_or(false)
+}
+
+fn minus_token_is_standalone_operator_obj(tb: &TokenBlock) -> bool {
+    let next = tb.token_at_add_index(1);
+    next == FACT_PREFIX
+        || next == EQUAL
+        || next == NOT_EQUAL
+        || next == LESS
+        || next == GREATER
+        || next == LESS_EQUAL
+        || next == GREATER_EQUAL
 }
 
 fn is_number(s: &str) -> bool {

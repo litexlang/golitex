@@ -153,6 +153,8 @@ Binary operations on expressions; `%` is integer remainder when both sides are c
 2 ^ 3 = 8
 ```
 
+Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases.
+
 #### `abs`, `log`, `max`, `min`
 
 Absolute value, logarithm (base and argument follow Litex parsing rules), and binary maximum and minimum.
@@ -276,7 +278,7 @@ have p &Point = (1, 2)
 
 The well-definedness of `&Point{p}.x` reduces to proving `p $in &Point`. A declaration such as `forall p &Point:` or `have p &Point = ...` provides that membership fact in the local context.
 
-After Litex knows `p $in &Point`, it also stores the field facts such as `&Point{p}.x $in R` and `&Point{p}.y $in R`. If the struct has `<=>:` filter facts, those facts are also stored after substituting each field name with its explicit field access.
+After Litex knows `p $in &Point`, it also stores the field facts such as `&Point{p}.x $in R`, `p[1] $in R`, `&Point{p}.y $in R`, and `p[2] $in R`. If the struct has `<=>:` filter facts, those facts are also stored after substituting each field name with its explicit field access.
 
 If a struct has no `<=>:` filter facts, Litex can prove `&Name(args)` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples.
 
