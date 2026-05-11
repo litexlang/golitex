@@ -79,10 +79,7 @@ fn fn_set_clause_latex(clause: &FnSetClause) -> String {
 }
 
 fn fn_param_group_type_to_latex(g: &ParamGroupWithSet) -> String {
-    match g.struct_ty() {
-        Some(struct_ty) => latex_texttt_escape(&struct_ty.to_string()),
-        None => g.set_obj().unwrap().to_latex_string(),
-    }
+    g.set_obj().to_latex_string()
 }
 
 impl AndChainAtomicFact {
@@ -387,12 +384,6 @@ impl ByTupleAsSetStmt {
             "\\begin{{aligned}}\n\\text{{\\textbf{{By tuple as set}}:}} & \\text{{Use the set-theoretic ordered-pair / tuple encoding for }} {}\\text{{; obtain the corresponding set-theoretic facts.}}\n\\end{{aligned}}",
             self.obj.to_latex_string()
         )
-    }
-}
-
-impl ByStructStmt {
-    pub fn to_latex_string(&self) -> String {
-        latex_texttt_escape(&self.to_string())
     }
 }
 
@@ -1568,7 +1559,6 @@ impl ParamType {
             ParamType::NonemptySet(_) => format!(r"\mathrm{{{}}}", NONEMPTY_SET),
             ParamType::FiniteSet(_) => format!(r"\mathrm{{{}}}", FINITE_SET),
             ParamType::Obj(o) => o.to_latex_string(),
-            ParamType::Struct(struct_ty) => latex_texttt_escape(&struct_ty.to_string()),
         }
     }
 }
@@ -2018,8 +2008,8 @@ impl Obj {
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
             Obj::FamilyObj(x) => x.to_latex_string(),
-            Obj::FieldAccess(x) => latex_local_ident(&x.to_string()),
-            Obj::StructInstance(x) => latex_texttt_escape(&x.to_string()),
+            Obj::StructObj(x) => latex_texttt_escape(&x.to_string()),
+            Obj::ObjAsStructInstanceWithFieldAccess(x) => latex_texttt_escape(&x.to_string()),
             Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
@@ -2074,7 +2064,6 @@ impl Stmt {
             Stmt::ByFnAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByFamilyAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByTupleAsSetStmt(x) => x.to_latex_string(),
-            Stmt::ByStructStmt(x) => x.to_latex_string(),
             Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
             Stmt::ByTransitivePropStmt(x) => x.to_latex_string(),

@@ -99,10 +99,14 @@ impl Runtime {
             Obj::FamilyObj(family) => {
                 self.verify_param_type_family_well_defined(family, verify_state)
             }
-            Obj::FieldAccess(field_access) => self.verify_field_access_well_defined(field_access),
-            Obj::StructInstance(instance) => {
-                self.verify_struct_instance_well_defined(instance, verify_state)
+            Obj::StructObj(struct_obj) => {
+                self.verify_struct_obj_well_defined(struct_obj, verify_state)
             }
+            Obj::ObjAsStructInstanceWithFieldAccess(field_access) => self
+                .verify_obj_as_struct_instance_with_field_access_well_defined(
+                    field_access,
+                    verify_state,
+                ),
             Obj::Atom(AtomObj::Forall(_)) => Ok(()),
             Obj::Atom(AtomObj::Def(_)) => Ok(()),
             Obj::Atom(AtomObj::Exist(_)) => Ok(()),
@@ -119,7 +123,7 @@ impl Runtime {
     }
 
     fn verify_identifier_well_defined(&self, identifier: &Identifier) -> Result<(), RuntimeError> {
-        if self.is_name_used_for_identifier_and_field_access(&identifier.name) {
+        if self.is_name_used_for_identifier(&identifier.name) {
             Ok(())
         } else if self
             .get_struct_definition_by_name(&identifier.name)
@@ -134,127 +138,6 @@ impl Runtime {
                 )),
             )))
         }
-    }
-
-    fn verify_field_access_well_defined(
-        &self,
-        field_access: &FieldAccess,
-    ) -> Result<(), RuntimeError> {
-        let struct_name = self
-            .iter_environments_from_top()
-            .find_map(|env| {
-                env.known_name_belong_to_struct
-                    .get(&field_access.left)
-                    .cloned()
-            })
-            .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "`{}` does not have a known struct",
-                        field_access.left
-                    )),
-                ))
-            })?;
-
-        let struct_definition = self
-            .get_struct_definition_by_name(&struct_name)
-            .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "struct `{}` is not defined",
-                        struct_name
-                    )),
-                ))
-            })?;
-
-        if struct_definition
-            .fields
-            .iter()
-            .any(|(field_name, _)| field_name == &field_access.right)
-        {
-            Ok(())
-        } else {
-            Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "struct `{}` does not have field `{}`",
-                    struct_name, field_access.right
-                )),
-            )))
-        }
-    }
-
-    fn verify_struct_instance_well_defined(
-        &mut self,
-        instance: &StructInstance,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_struct_param_type_well_defined(&instance.name, verify_state)?;
-        let struct_name = instance.name.struct_name();
-        let def = self
-            .get_struct_definition_by_name(&struct_name)
-            .cloned()
-            .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "struct `{}` is not defined",
-                        struct_name
-                    )),
-                ))
-            })?;
-
-        if instance.fields_equal_to_what.len() != def.fields.len() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "struct `{}` instance expects {} field value(s), got {}",
-                    struct_name,
-                    def.fields.len(),
-                    instance.fields_equal_to_what.len()
-                )),
-            )));
-        }
-
-        for field_obj in instance.fields_equal_to_what.iter() {
-            self.verify_obj_well_defined_and_store_cache(field_obj, verify_state)?;
-        }
-
-        let param_to_arg_map = match &def.param_def_with_dom {
-            Some((param_def, _)) => param_def
-                .param_defs_and_boxed_args_to_param_to_arg_map(instance.name.args.as_slice()),
-            None => HashMap::new(),
-        };
-
-        for ((field_name, field_type), field_obj) in
-            def.fields.iter().zip(instance.fields_equal_to_what.iter())
-        {
-            let instantiated_field_type = self
-                .inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)
-                .map_err(|e| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "failed to instantiate field `{}` type in struct `{}`",
-                                field_name, struct_name
-                            ),
-                            e,
-                        ),
-                    ))
-                })?;
-            let verify_result = self.verify_obj_satisfies_param_type(
-                (**field_obj).clone(),
-                &ParamType::Obj(instantiated_field_type.clone()),
-                verify_state,
-            )?;
-            if verify_result.is_unknown() {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "failed to verify field `{}` value `{}` satisfies `{}`",
-                        field_name, field_obj, instantiated_field_type
-                    )),
-                )));
-            }
-        }
-
-        Ok(())
     }
 
     fn verify_identifier_with_mod_well_defined(
@@ -450,24 +333,14 @@ impl Runtime {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         let mut arg_index: usize = 0;
         for param_def in params_def_with_set.iter() {
-            let param_type = if let Some(struct_ty) = param_def.struct_ty() {
-                if arg_index != 0 {
-                    self.inst_param_type(
-                        &ParamType::Struct(struct_ty.clone()),
-                        &param_to_arg_map,
-                        param_binding,
-                    )?
-                } else {
-                    ParamType::Struct(struct_ty.clone())
-                }
-            } else if arg_index != 0 {
+            let param_type = if arg_index != 0 {
                 ParamType::Obj(self.inst_obj(
-                    param_def.set_obj().unwrap(),
+                    param_def.set_obj(),
                     &param_to_arg_map,
                     param_binding,
                 )?)
             } else {
-                ParamType::Obj(param_def.set_obj().unwrap().clone())
+                ParamType::Obj(param_def.set_obj().clone())
             };
 
             for param_name in param_def.params.iter() {
@@ -1385,7 +1258,7 @@ impl Runtime {
     ) -> Option<Obj> {
         for g in params_def {
             if g.params.iter().any(|n| n == pname) {
-                return g.set_obj().cloned();
+                return Some(g.set_obj().clone());
             }
         }
         None
@@ -2292,116 +2165,13 @@ impl Runtime {
     fn verify_r_nz_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
-}
 
-#[cfg(test)]
-mod field_access_well_defined_tests {
-    use crate::prelude::*;
-    use std::rc::Rc;
-
-    fn test_line_file() -> LineFile {
-        (1, Rc::from("field_access_test.lit"))
-    }
-
-    fn insert_group_struct(rt: &mut Runtime) {
-        let struct_stmt = DefStructStmt::new(
-            "Group".to_string(),
-            None,
-            vec![
-                ("zero".to_string(), StandardSet::R.into()),
-                ("add".to_string(), StandardSet::R.into()),
-            ],
-            vec![],
-            test_line_file(),
-        );
-        rt.top_level_env()
-            .defined_structs
-            .insert("Group".to_string(), struct_stmt);
-        rt.top_level_env()
-            .known_name_belong_to_struct
-            .insert("G".to_string(), "Group".to_string());
-    }
-
-    #[test]
-    fn field_access_is_well_defined_when_left_has_struct_with_field() {
-        let mut rt = Runtime::new();
-        insert_group_struct(&mut rt);
-
-        let obj: Obj = FieldAccess::new("G".to_string(), "add".to_string()).into();
-        assert!(rt
-            .verify_obj_well_defined_and_store_cache(&obj, &VerifyState::new(0, false))
-            .is_ok());
-    }
-
-    #[test]
-    fn field_access_is_not_well_defined_when_field_is_missing() {
-        let mut rt = Runtime::new();
-        insert_group_struct(&mut rt);
-
-        let obj: Obj = FieldAccess::new("G".to_string(), "mul".to_string()).into();
-        assert!(rt
-            .verify_obj_well_defined_and_store_cache(&obj, &VerifyState::new(0, false))
-            .is_err());
-    }
-
-    #[test]
-    fn fn_struct_param_accepts_only_known_struct_name() {
-        let source = r#"
-struct Point:
-    x R
-    y R
-
-forall P struct Point:
-    '(Q struct Point) R {Q.x}(P) $in R
-"#;
-        let mut rt = Runtime::new_with_builtin_code();
-        let (_results, err) = run_source_code(source, &mut rt);
-        assert!(err.is_none());
-    }
-
-    #[test]
-    fn fn_struct_param_rejects_plain_tuple_arg() {
-        let source = r#"
-struct Point:
-    x R
-    y R
-
-'(Q struct Point) R {Q.x}((1, 2)) $in R
-"#;
-        let mut rt = Runtime::new_with_builtin_code();
-        let (_results, err) = run_source_code(source, &mut rt);
-        assert!(err.is_some());
-    }
-}
-
-impl Runtime {
-    pub fn verify_param_type_well_defined(
+    pub(crate) fn struct_header_param_to_arg_map(
         &mut self,
-        param_type: &ParamType,
+        struct_obj: &StructObj,
         verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        match param_type {
-            ParamType::Set(_) => Ok(()),
-            ParamType::NonemptySet(_) => Ok(()),
-            ParamType::FiniteSet(_) => Ok(()),
-            ParamType::Struct(struct_ty) => {
-                self.verify_struct_param_type_well_defined(struct_ty, verify_state)
-            }
-            ParamType::Obj(obj) => match obj {
-                Obj::FamilyObj(family) => {
-                    self.verify_param_type_family_well_defined(family, verify_state)
-                }
-                _ => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
-            },
-        }
-    }
-
-    fn verify_struct_param_type_well_defined(
-        &mut self,
-        struct_ty: &StructAsParamType,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        let struct_name = struct_ty.struct_name();
+    ) -> Result<(DefStructStmt, HashMap<String, Obj>), RuntimeError> {
+        let struct_name = struct_obj.name.to_name_string();
         let def = self
             .get_struct_definition_by_name(&struct_name)
             .cloned()
@@ -2419,27 +2189,26 @@ impl Runtime {
             .as_ref()
             .map(|(param_def, _)| param_def.number_of_params())
             .unwrap_or(0);
-        if struct_ty.args.len() != expected_count {
+        if struct_obj.params.len() != expected_count {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "struct `{}` expects {} parameter(s), got {}",
                     struct_name,
                     expected_count,
-                    struct_ty.args.len()
+                    struct_obj.params.len()
                 )),
             )));
         }
 
-        for arg in struct_ty.args.iter() {
+        for arg in struct_obj.params.iter() {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
-        if let Some((param_def, dom_facts)) = &def.param_def_with_dom {
-            let struct_args: Vec<Obj> = struct_ty.args.iter().map(|arg| (**arg).clone()).collect();
-            let args_param_types = self
+        let param_to_arg_map = if let Some((param_def, dom_facts)) = &def.param_def_with_dom {
+            let verify_args_result = self
                 .verify_args_satisfy_param_def_flat_types(
                     param_def,
-                    &struct_args,
+                    &struct_obj.params,
                     verify_state,
                     ParamObjType::DefHeader,
                 )
@@ -2454,7 +2223,7 @@ impl Runtime {
                         ),
                     ))
                 })?;
-            if args_param_types.is_unknown() {
+            if verify_args_result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
                         "failed to verify struct `{}` arguments satisfy parameter types",
@@ -2464,7 +2233,8 @@ impl Runtime {
             }
 
             let param_to_arg_map =
-                param_def.param_defs_and_boxed_args_to_param_to_arg_map(struct_ty.args.as_slice());
+                param_def.param_defs_and_args_to_param_to_arg_map(&struct_obj.params);
+
             for dom_fact in dom_facts.iter() {
                 let instantiated_dom_fact = self
                     .inst_or_and_chain_atomic_fact(
@@ -2477,26 +2247,15 @@ impl Runtime {
                         RuntimeError::from(WellDefinedRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
                                 format!(
-                                    "failed to instantiate struct `{}` domain fact: {}",
-                                    struct_name, e
+                                    "failed to instantiate struct `{}` domain fact",
+                                    struct_name
                                 ),
                                 e,
                             ),
                         ))
                     })?;
-                let verify_result = self
-                    .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
-                    .map_err(|verify_error| {
-                        RuntimeError::from(WellDefinedRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_cause(
-                                format!(
-                                    "failed to verify struct `{}` domain fact:\n{}",
-                                    struct_name, instantiated_dom_fact
-                                ),
-                                verify_error,
-                            ),
-                        ))
-                    })?;
+                let verify_result =
+                    self.verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
                 if verify_result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(
@@ -2506,9 +2265,146 @@ impl Runtime {
                     )));
                 }
             }
-        }
 
+            param_to_arg_map
+        } else {
+            HashMap::new()
+        };
+
+        Ok((def, param_to_arg_map))
+    }
+
+    pub(crate) fn instantiated_struct_field_types(
+        &mut self,
+        struct_obj: &StructObj,
+        verify_state: &VerifyState,
+    ) -> Result<Vec<Obj>, RuntimeError> {
+        let (def, param_to_arg_map) =
+            self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
+        let mut fields = Vec::with_capacity(def.fields.len());
+        for (_, field_type) in def.fields.iter() {
+            fields.push(self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?);
+        }
+        Ok(fields)
+    }
+
+    pub(crate) fn struct_field_index(
+        &self,
+        struct_obj: &StructObj,
+        field_name: &str,
+    ) -> Result<usize, RuntimeError> {
+        let struct_name = struct_obj.name.to_name_string();
+        let def = self
+            .get_struct_definition_by_name(&struct_name)
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "struct `{}` is not defined",
+                        struct_name
+                    )),
+                ))
+            })?;
+        def.fields
+            .iter()
+            .position(|(name, _)| name == field_name)
+            .map(|idx| idx + 1)
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "struct `{}` has no field `{}`",
+                        struct_name, field_name
+                    )),
+                ))
+            })
+    }
+
+    pub(crate) fn struct_field_access_projection(
+        &self,
+        field_access: &ObjAsStructInstanceWithFieldAccess,
+    ) -> Result<Obj, RuntimeError> {
+        let index = self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?;
+        Ok(ObjAtIndex::new(
+            (*field_access.obj).clone(),
+            Number::new(index.to_string()).into(),
+        )
+        .into())
+    }
+
+    fn verify_struct_obj_well_defined(
+        &mut self,
+        struct_obj: &StructObj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let (def, param_to_arg_map) =
+            self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
+        for (_, field_type) in def.fields.iter() {
+            let instantiated_field_type =
+                self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
+            self.verify_obj_well_defined_and_store_cache(&instantiated_field_type, verify_state)?;
+        }
+        self.run_in_local_env(|rt| {
+            for (field_name, field_type) in def.fields.iter() {
+                let instantiated_field_type =
+                    rt.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
+                let param_def =
+                    ParamGroupWithSet::new(vec![field_name.clone()], instantiated_field_type);
+                rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
+            }
+
+            for fact in def.equivalent_facts.iter() {
+                let instantiated_fact =
+                    rt.inst_fact(fact, &param_to_arg_map, ParamObjType::DefHeader, None)?;
+                rt.verify_fact_well_defined(&instantiated_fact, verify_state)?;
+            }
+            Ok::<(), RuntimeError>(())
+        })?;
         Ok(())
+    }
+
+    fn verify_obj_as_struct_instance_with_field_access_well_defined(
+        &mut self,
+        field_access: &ObjAsStructInstanceWithFieldAccess,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_struct_obj_well_defined(&field_access.struct_obj, verify_state)?;
+        self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?;
+        self.verify_obj_well_defined_and_store_cache(&field_access.obj, verify_state)?;
+        let membership_fact: AtomicFact = InFact::new(
+            (*field_access.obj).clone(),
+            (*field_access.struct_obj).clone().into(),
+            default_line_file(),
+        )
+        .into();
+        let result = self.verify_atomic_fact(&membership_fact, verify_state)?;
+        if result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "failed to verify `{}` is well-defined: cannot prove {}",
+                    field_access, membership_fact
+                )),
+            )));
+        }
+        Ok(())
+    }
+}
+
+impl Runtime {
+    pub fn verify_param_type_well_defined(
+        &mut self,
+        param_type: &ParamType,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        match param_type {
+            ParamType::Set(_) => Ok(()),
+            ParamType::NonemptySet(_) => Ok(()),
+            ParamType::FiniteSet(_) => Ok(()),
+            ParamType::Obj(obj) => match obj {
+                Obj::FamilyObj(family) => {
+                    self.verify_param_type_family_well_defined(family, verify_state)
+                }
+                _ => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
+            },
+        }
     }
 
     fn verify_param_type_family_well_defined(

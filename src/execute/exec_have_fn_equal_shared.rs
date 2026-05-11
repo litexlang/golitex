@@ -179,8 +179,5 @@ pub(crate) fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> 
 }
 
 fn param_group_with_set_to_param_type(param_def: &ParamGroupWithSet) -> ParamType {
-    match &param_def.param_type {
-        ParamGroupWithSetTypeEnum::Set(set) => ParamType::Obj(set.clone()),
-        ParamGroupWithSetTypeEnum::Struct(struct_ty) => ParamType::Struct(struct_ty.clone()),
-    }
+    ParamType::Obj(param_def.set_obj().clone())
 }

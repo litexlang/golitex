@@ -71,7 +71,7 @@ pub fn display_runtime_error_json(
 // Citation is in the same logical entry as this run (real path, "repl", "-e", etc.).
 const KNOWN_FACT_SOURCE_ENTRY: &str = "entry";
 
-fn known_fact_citation_source_json_value(line_file: &LineFile, mm: &ModuleManager) -> JsonValue {
+fn citation_source_json_value(line_file: &LineFile, mm: &ModuleManager) -> JsonValue {
     if is_default_line_file(line_file) {
         return line_file_source_json_value(line_file);
     }
@@ -103,7 +103,7 @@ fn verified_by_builtin_rule_value(rule: &str, verify_what: Option<&Fact>) -> Jso
     JsonValue::Object(fields)
 }
 
-/// `verified_by` field for one [`FactualStmtSuccess`] (builtin rule or known fact).
+/// `verified_by` field for one [`FactualStmtSuccess`] (builtin rule or citation).
 fn factual_success_verified_by_value(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     verified_by_result_json_value(runtime, &x.verified_by)
 }
@@ -112,20 +112,20 @@ fn verified_by_result_json_value(runtime: &Runtime, verified_by: &VerifiedByResu
     match verified_by {
         VerifiedByResult::BuiltinRule(r) => verified_by_builtin_rule_value(&r.msg, None),
         VerifiedByResult::Fact(r) => {
-            let cited_plain = user_visible_stmt_or_msg_text(&r.cite_what.to_string());
+            let cited_stmt_plain = user_visible_stmt_or_msg_text(&r.cite_what.to_string());
             let citation_line_file = r.cite_what.line_file();
             let display_text = r
-                .msg
+                .detail
                 .as_deref()
                 .filter(|s| !s.is_empty())
                 .map(|s| user_visible_stmt_or_msg_text(s))
-                .unwrap_or_else(|| cited_plain.clone());
-            let cited_fact_json = JsonValue::JsonString(display_text.clone());
-            verified_by_known_fact_object(
+                .unwrap_or_else(|| cited_stmt_plain.clone());
+            let cited_stmt_json = JsonValue::JsonString(cited_stmt_plain.clone());
+            verified_by_citation_object(
                 runtime,
                 &citation_line_file,
-                cited_fact_json,
-                cited_plain.as_str(),
+                cited_stmt_json,
+                cited_stmt_plain.as_str(),
                 display_text.as_str(),
                 None,
             )
@@ -145,19 +145,19 @@ fn verified_bys_enum_json_value(runtime: &Runtime, item: &VerifiedBysEnum) -> Js
             verified_by_builtin_rule_value(&r.msg, Some(&r.verify_what))
         }
         VerifiedBysEnum::ByFact(r) => {
-            let cited_plain = user_visible_stmt_or_msg_text(&r.cite_what.to_string());
+            let cited_stmt_plain = user_visible_stmt_or_msg_text(&r.cite_what.to_string());
             let citation_line_file = r.cite_what.line_file();
             let display_text = r
-                .msg
+                .detail
                 .as_deref()
                 .filter(|s| !s.is_empty())
                 .map(|s| user_visible_stmt_or_msg_text(s))
-                .unwrap_or_else(|| cited_plain.clone());
-            verified_by_known_fact_object(
+                .unwrap_or_else(|| cited_stmt_plain.clone());
+            verified_by_citation_object(
                 runtime,
                 &citation_line_file,
-                JsonValue::JsonString(display_text.clone()),
-                cited_plain.as_str(),
+                JsonValue::JsonString(cited_stmt_plain.clone()),
+                cited_stmt_plain.as_str(),
                 display_text.as_str(),
                 Some(&r.verify_what),
             )
@@ -185,17 +185,16 @@ fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) 
     }
 }
 
-fn verified_by_known_fact_object(
+fn verified_by_citation_object(
     runtime: &Runtime,
     citation_line_file: &LineFile,
-    cited_fact: JsonValue,
-    cited_fact_plain: &str,
+    cited_stmt: JsonValue,
+    cited_stmt_plain: &str,
     msg: &str,
     verify_what: Option<&Fact>,
 ) -> JsonValue {
-    let source_value =
-        known_fact_citation_source_json_value(citation_line_file, &runtime.module_manager);
-    let cite_fact_source = JsonValue::Object(vec![
+    let source_value = citation_source_json_value(citation_line_file, &runtime.module_manager);
+    let cite_source = JsonValue::Object(vec![
         (
             "line".to_string(),
             line_file_line_json_value(citation_line_file),
@@ -205,12 +204,12 @@ fn verified_by_known_fact_object(
     let mut fields = vec![
         (
             "type".to_string(),
-            JsonValue::JsonString("known_fact".to_string()),
+            JsonValue::JsonString("citation".to_string()),
         ),
-        ("cite_fact_source".to_string(), cite_fact_source),
-        ("cited_fact".to_string(), cited_fact),
+        ("cite_source".to_string(), cite_source),
+        ("cited_stmt".to_string(), cited_stmt),
     ];
-    if msg != cited_fact_plain {
+    if msg != cited_stmt_plain {
         fields.push(("detail".to_string(), JsonValue::JsonString(msg.to_string())));
     }
     if let Some(vw) = verify_what {
@@ -292,7 +291,7 @@ fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> Js
     if x.is_verified_by_builtin_rules_only() {
         factual_builtin_rules_to_json(runtime, x)
     } else {
-        factual_known_fact_to_json(runtime, x)
+        factual_citation_to_json(runtime, x)
     }
 }
 
@@ -330,7 +329,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
     ])
 }
 
-fn factual_known_fact_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
     let verified_by = factual_success_verified_by_value(runtime, x);

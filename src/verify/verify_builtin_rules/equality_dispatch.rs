@@ -21,6 +21,45 @@ impl Runtime {
             .into());
         }
 
+        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = left {
+            let projected = self.struct_field_access_projection(field_access)?;
+            let projected_result = self.verify_equality_by_builtin_rules(
+                &projected,
+                right,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if projected_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                        "struct field access is the corresponding tuple projection".to_string(),
+                        vec![projected_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = right {
+            let projected = self.struct_field_access_projection(field_access)?;
+            let projected_result = self.verify_equality_by_builtin_rules(
+                left,
+                &projected,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if projected_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                        "struct field access is the corresponding tuple projection".to_string(),
+                        vec![projected_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
         if let Some(done) = self.try_verify_objs_equal_by_expanding_family(
             left,
             right,

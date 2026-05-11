@@ -66,26 +66,4 @@ impl Runtime {
             .insert(name, def_family_stmt.clone());
         Ok(())
     }
-
-    pub fn store_name_belong_to_struct(
-        &mut self,
-        name: &str,
-        struct_name: &str,
-    ) -> Result<(), RuntimeError> {
-        let env = self.top_level_env();
-        if let Some(existing_struct_name) = env.known_name_belong_to_struct.get(name) {
-            if existing_struct_name != struct_name {
-                return Err(
-                    NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
-                        "`{}` is already known as struct `{}`, cannot also bind it as `{}`",
-                        name, existing_struct_name, struct_name
-                    )))
-                    .into(),
-                );
-            }
-        }
-        env.known_name_belong_to_struct
-            .insert(name.to_string(), struct_name.to_string());
-        Ok(())
-    }
 }

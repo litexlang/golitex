@@ -20,6 +20,8 @@ A Litex file is not just a list of theorem declarations. It executes as a sequen
 
 Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work.
 
+This is the sense in which Litex aims to be **the language where mathematics verifies itself**.
+
 Litex has many builtin concepts because ordinary mathematics has many small background steps. Numbers, sets, membership, equality, functions, tuples, products, order, finite displays, and positivity facts constantly interact. Litex puts this shared background into the checker so user proofs can focus on the mathematical idea instead of repeating basic bookkeeping.
 
 This is the main usability advantage of Litex: proof code can stay close to the way a person would write the argument on paper, while still producing a strictly checked and explainable proof trace. For example, using a known value can be written as direct algebraic steps:
@@ -55,7 +57,7 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > Litex is different from Lean in design goals and surface style, but its author deeply respects Lean. If you are interested in how the two languages differ in foundations, examples, strengths, and tradeoffs, see [Litex vs Lean](https://litexlang.com/doc/Litex_vs_Lean).
 
-> Some experimental syntax, including `struct`, field access, struct parameters, and `by struct`, is documented separately in [Preview Features](https://litexlang.com/doc/Preview_Features).
+> `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
 
 > You can also use this file directly as an AI agent `SKILL.md`: it is organized as a practical reference from concepts to verification flow.
 
@@ -79,26 +81,27 @@ Many uncommon forms can be skipped at first. Read them when a proof needs them; 
 
 ---
 
-### First reading path
+### Guidance For Reading This Manual
 
-If you are reading the manual to understand how Litex works, start with the things Litex handles, then read how it verifies and executes them.
+This manual is both a tutorial and a reference. You do not need to read every section with the same attention on the first pass.
 
-**What Litex works with**
+**Read first**
 
 1. [Objects](https://litexlang.com/doc/Manual#objects): the mathematical terms and data-like structures Litex can talk about.
-2. [Builtin Predicates](https://litexlang.com/doc/Manual#builtin-predicates): the common builtin predicates used to make atomic facts, such as `=`, `<`, `$in`, `$subset`, and `$is_set`.
-3. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements): how atomic facts combine into chains, conjunctions, disjunctions, `exist`, and `forall`.
-4. [Statements](https://litexlang.com/doc/Manual#statements): the statement forms used to introduce definitions, context, and proof blocks.
+2. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements): how atomic facts combine into chains, conjunctions, disjunctions, `exist`, and `forall`.
+3. [Statements](https://litexlang.com/doc/Manual#statements): the common statement forms used to introduce definitions, context, and proof blocks.
+4. [Proof Process](https://litexlang.com/doc/Manual#proof-process): the end-to-end loop from writing a fact to storing checked information.
 
-**How Litex verifies facts**
+**Read early**
 
-1. [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules): the builtin steps that can close goals while checking a fact.
-2. [Proof Process](https://litexlang.com/doc/Manual#proof-process): the end-to-end flow from writing statements to checked facts.
+1. [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules): the common automatic steps that make Litex proofs short, especially numeric calculation, polynomial normalization, known-value resolution, membership, order, and set facts.
+2. [Builtin Predicates](https://litexlang.com/doc/Manual#builtin-predicates): the standard predicates such as `=`, `<`, `$in`, `$subset`, and `$is_set`. Skim the list first, then return when a proof needs a specific form.
 
-**How Litex executes code**
+**Use as reference**
 
-1. [Statements](https://litexlang.com/doc/Manual#statements): what each statement does when it is executed.
-2. [Inference](https://litexlang.com/doc/Manual#inference): the extra execution step for accepted facts, adding consequences so later statements can use a richer context.
+1. The long builtin-rule catalogue is for lookup. You do not need to memorize every rule.
+2. [Builtin Inference](https://litexlang.com/doc/Manual#builtin-inference) explains extra facts Litex may add after a statement is accepted. Read the overview early, and use the detailed rule list when you want to understand why later facts became available.
+3. Less common object and statement forms, such as advanced set operations, families, induction, finite enumeration, and preview features, can wait until your proof needs them.
 
 ---
 
@@ -151,6 +154,8 @@ Binary operations on expressions; `%` is integer remainder when both sides are c
 5 % 2 = 1
 2 ^ 3 = 8
 ```
+
+Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases.
 
 #### `abs`, `log`, `max`, `min`
 
@@ -207,10 +212,17 @@ have s set = { z N : z > 5 }
 
 #### Function types and anonymous functions
 
-A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly.
+A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; struct view objects are preview syntax and are not valid inside a `fn` signature.
 
 ```litex
 have g set = fn(x R) R
+```
+
+```litex
+prove:
+    struct Point:
+        x R
+        y R
 ```
 
 ```litex
@@ -252,6 +264,45 @@ tuple_dim(e) = 2
 e[1] = 2
 ```
 
+#### Struct objects and explicit field access
+
+`&Name(args)` is a preview object form. It names the Cartesian product determined by the struct fields, with any `<=>:` facts treated as membership filters. Field access does not infer a struct from the object; it must say which struct view is being used.
+
+```litex
+struct Point:
+    x R
+    y R
+
+have p &Point = (1, 2)
+&Point{p}.x = p[1]
+&Point{(1, 2)}.y = 2
+```
+
+The explicit prefix is necessary because the same object may belong to several struct objects, and the same field name may mean different tuple positions in different struct views.
+
+```litex
+struct Point1:
+    x R
+    y R
+
+struct Point2:
+    y R
+    x R
+
+(1, 2) $in &Point1
+(1, 2) $in &Point2
+&Point1{(1, 2)}.x = 1
+&Point2{(1, 2)}.x = 2
+```
+
+This is a basic difference from Lean-style field notation. In Litex, an object may be in many sets at once; it does not belong to one unique class or type that determines all later field access. Lean can often support `x.y` because `x` has a unique type, and that type tells Lean which field `y` means. Litex instead asks the user to write the view explicitly, such as `&Point1{x}.x` or `&Point2{x}.x`.
+
+The well-definedness of `&Point{p}.x` reduces to proving `p $in &Point`. A declaration such as `forall p &Point:` or `have p &Point = ...` provides that membership fact in the local context.
+
+After Litex knows `p $in &Point`, it also stores the field facts such as `&Point{p}.x $in R`, `p[1] $in R`, `&Point{p}.y $in R`, and `p[2] $in R`. If the struct has `<=>:` filter facts, those facts are stored twice: once with each field name replaced by its explicit field access, and once with each field name replaced by its tuple projection. When checking that a tuple itself belongs to a struct object, Litex can instantiate the `<=>:` facts directly with the tuple components.
+
+If a struct has no `<=>:` filter facts, Litex can prove `&Name(args)` is nonempty when every instantiated field type is nonempty. Structs with `<=>:` filters may need an explicit nonempty witness, because the filters can rule out some tuples.
+
 #### Counting members
 
 Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; it also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
@@ -259,6 +310,10 @@ Size of a finite set. Litex knows that the count of a finite set is a natural nu
 ```litex
 count({1, 2, 3}) = 3
 $is_finite_set(union({1, 2}, {2, 3}))
+$is_finite_set(intersect({1, 2}, {2, 3}))
+forall A, B finite_set:
+    $is_finite_set(union(A, B))
+    $is_finite_set(intersect(A, B))
 count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
 ```
 
@@ -1011,7 +1066,7 @@ w > 0
 
 ### Function from one defining equation (`have fn … = …`)
 
-Use **`have fn f(x S) T = body`** when the value of the function is given by one expression.
+Use **`have fn f(x S) T = body`** when the value of the function is given by one expression. The return part `T` is checked as the set that contains the function value.
 
 ```litex
 have fn f(x R) R = x + 1
@@ -2152,9 +2207,35 @@ When a rule does not apply, the usual fix is to write an intermediate fact that 
 
 ---
 
+### Most Common Rules
+
+Most users first benefit from a small group of common rules. These are the ones that most often make Litex proofs look like ordinary written calculation.
+
+- **Numeric evaluation:** concrete arithmetic such as `2 + 3 * 4 = 14` can close directly.
+- **Polynomial and algebraic normalization:** equivalent polynomial expressions over ordinary number domains can normalize to the same form.
+- **Known-value resolution:** after Litex knows that a name or compound expression equals a concrete number, later equalities can resolve that subexpression to the number.
+- **Known facts and known `forall` facts:** if builtin rules do not close a goal, Litex still tries to match facts and universal facts already in the context.
+- **Basic membership, order, and set facts:** examples such as `1 $in {1, 2}`, `2 < 3`, or `$is_set({1, 2})` are common builtin patterns.
+
+For example, the following line combines polynomial normalization with known-value resolution:
+
+```litex
+forall a, b Q:
+    a - b = 4
+    a * b = 1
+    =>:
+        (a + b)^2 = (a - b)^2 + 4 * (a * b) = 20
+```
+
+The first equality is a polynomial identity. The second equality uses the stored values `a - b = 4` and `a * b = 1`, so Litex can resolve those subexpressions inside the larger expression and finish the numeric calculation. The detailed catalogue below explains these patterns and many less common ones.
+
+---
+
 ### Equality Rules
 
 Equality goals are mainly handled by evaluation, normalization, structural matching, and standard algebraic identities.
+
+The rest of this section is a reference catalogue. You do not need to memorize every entry; return here when a goal fails or when you want to know whether a common mathematical pattern is built in.
 
 #### Numeric Evaluation
 
@@ -2812,7 +2893,7 @@ Also read the output message. It often tells you whether a fact was closed by bu
 
 ---
 
-## Inference
+## Builtin Inference
 
 _The more I think about language, the more it amazes me that people ever understand each other at all._
 
@@ -2820,11 +2901,11 @@ _- Kurt Gödel_
 
 Verification answers the question: **can this fact be proved now?**
 
-Inference happens after that. Once a fact is verified or introduced by `know`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.
+Builtin inference happens after that. Once a fact is verified or introduced by `know`, Litex stores it in the current environment and may derive more facts from it. Those derived facts become ordinary known information for later proof steps.
 
 The main purpose is usability. Inference saves the user from manually writing the obvious next facts again and again.
 
-This is different from [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules). Verification rules close the current goal. Inference adds useful consequences after a fact has already been accepted. For the full loop from verification to storage and inference, see [Proof Process](https://litexlang.com/doc/Manual#proof-process).
+This is different from [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules). Verification rules close the current goal. Builtin inference adds useful consequences after a fact has already been accepted. For the full loop from verification to storage and inference, see [Proof Process](https://litexlang.com/doc/Manual#proof-process).
 
 ---
 
@@ -2861,16 +2942,16 @@ The point is not to replace proof. The point is to keep basic mathematical conse
 
 ---
 
-### Which Facts Trigger Inference
+### Which Facts Trigger Builtin Inference
 
-Most inference rules are triggered by **atomic facts**: equalities, memberships, comparisons, predicates, subset facts, and similar small claims.
+Most builtin inference rules are triggered by **atomic facts**: equalities, memberships, comparisons, predicates, subset facts, and similar small claims.
 
 Some larger fact shapes have special inference behavior:
 
 - `exist!` adds a uniqueness statement: any two witnesses satisfying the body must agree.
 - `not exist` adds the usual universal De Morgan form.
 - `not forall` adds an existential counterexample.
-- equality chains add the equalities forced by transitivity, and those equalities then infer as usual.
+- equality chains add every equality forced by transitivity along the chain, and those equalities then infer as usual.
 
 Some larger facts do **not** trigger this extra pass by themselves:
 
@@ -2880,15 +2961,17 @@ Some larger facts do **not** trigger this extra pass by themselves:
 
 Their atomic pieces may still trigger inference when those pieces are assumed, proved, or stored separately.
 
+The rest of this section is a reference catalogue. You do not need to memorize every entry; return here when a later fact succeeds because earlier information was stored, or when you want to know what Litex may infer from a stored fact.
+
 ---
 
 ### Equality Inference
 
-Equality inference is mainly about remembering equivalent forms and structural information.
+Equality inference is mainly about remembering equivalent forms, numeric substitutions, and structural information that later object checks can reuse.
 
 #### Difference Equals Zero
 
-If one side is `0` and the other side is a difference `u - v`, inference adds `u = v`.
+If one side is `0` and the other side is a difference `u - v`, inference adds `u = v` when that equality is not already trivial from syntax.
 
 ```text
 known:
@@ -2900,7 +2983,7 @@ inferred:
 
 #### Concrete Numeric Values
 
-If one side simplifies to a concrete number, Litex treats the other side as known to equal that number for substitution and numeric reasoning.
+If one side simplifies to a concrete number, Litex treats the other side as known to equal that number for substitution and numeric reasoning. The other side may be a name or a compound expression.
 
 ```text
 known:
@@ -2931,7 +3014,7 @@ remembered:
 
 #### Tuples And Cartesian Products
 
-If one side is a tuple and the other side is not, Litex remembers tuple information about the other object.
+If one side is a tuple with at least two components and the other side is not, Litex remembers tuple information about the other object. This includes that it is a tuple, that its length matches, and the related product-set bookkeeping needed by later checks.
 
 ```text
 known:
@@ -2961,7 +3044,7 @@ These rules are mostly bookkeeping rules. They help later object checks and equa
 
 #### Predicate Definitions
 
-For a user-defined `prop` with `<=>:` clauses, once `$P(args)` is known, inference instantiates the corresponding definition facts by plugging in those arguments.
+For a user-defined `prop`, once `$P(args)` is known, inference first checks the typing constraints for the arguments. If the definition has `<=>:` clauses, Litex instantiates the corresponding definition facts by plugging in those arguments.
 
 ```text
 prop unit_x(x R):
@@ -2988,7 +3071,7 @@ Membership facts are one of the most common sources of inferred information.
 
 #### Number Sets
 
-Membership in more specific number sets gives sign or nonzero information.
+Membership in number sets can add sign or nonzero information. Membership in `N` adds nonnegativity.
 
 ```text
 known:
@@ -3022,6 +3105,8 @@ inferred:
     x != 0
 ```
 
+Membership in more specific positive, negative, and nonzero number sets adds the corresponding sign or nonzero fact. For example, `N_pos`, `R_pos`, and `Q_pos` add `0 < x`; `R_neg`, `Q_neg`, and `Z_neg` add `x < 0`; `R_nz`, `Q_nz`, and `Z_nz` add `x != 0`.
+
 Plain membership in `Z`, `Q`, or `R` alone does not add a sign fact.
 
 #### Finite Enumerations
@@ -3038,7 +3123,7 @@ inferred:
 
 #### Products And Tuples
 
-Membership in `cart(...)` adds tuple information and aligns product-set bookkeeping.
+Membership in `cart(...)` with at least two factors adds tuple information, including that the object is a tuple and that its dimension matches the number of factors. It also aligns product-set bookkeeping.
 
 ```text
 known:
@@ -3089,7 +3174,7 @@ inferred:
 
 #### Function-Like Sets And Families
 
-Membership in `fn(...)` records function-space information for suitable function heads, so later goals can use the expected domain and codomain.
+Membership in `fn(...)` records function-space information for suitable function heads, usually names or language-level function objects rather than arbitrary complex expressions. Later goals can use the expected domain and codomain.
 
 Membership in `finite_seq(...)`, `seq(...)`, and `matrix(...)` is handled similarly because these objects are read as function-like types.
 
@@ -3099,7 +3184,7 @@ For membership in a `family` instance such as `\name(...)`, Litex expands the fa
 
 ### Subset And Superset
 
-From `A $subset B`, Litex infers that every element of `A` is also in `B`.
+From `A $subset B`, Litex infers the universal membership consequence: every element of `A` is also in `B`.
 
 ```litex
 prove:
@@ -3109,7 +3194,7 @@ prove:
         x $in B
 ```
 
-From `A $superset B`, Litex infers that every element of `B` is also in `A`.
+From `A $superset B`, Litex infers the universal membership consequence in the other direction: every element of `B` is also in `A`.
 
 ```litex
 prove:
@@ -3127,7 +3212,7 @@ Inside a `forall ... =>:` block, the conclusion cannot be another raw `forall`. 
 
 Order inference mainly turns a comparison with a concrete constant into a simpler sign fact.
 
-If exactly one side of an inequality is a numeric constant, Litex may compare the other side with `0`.
+If exactly one side of an inequality is a fully evaluated numeric constant, Litex may compare the other side with `0`.
 
 ```text
 known:
@@ -3165,10 +3250,10 @@ For `$restrict_fn_in`, inference narrows the recorded function-space information
 
 ```text
 known:
-    $restrict_fn_in(f, smaller_fn_type)
+    $restrict_fn_in(f, smaller_fn_set)
 
 remembered:
-    f can be used with the smaller function type
+    f can be used with the smaller function set
 ```
 
 ---
@@ -3177,7 +3262,7 @@ remembered:
 
 Some builtin atoms are left as they are for this pass. Examples include negated comparisons, `$is_set`, `not $restrict_fn_in`, and similar facts.
 
-They can still be used in proofs. Inference simply does not unfold them further here.
+They can still be used in proofs. Builtin inference simply does not unfold them further here.
 
 ---
 

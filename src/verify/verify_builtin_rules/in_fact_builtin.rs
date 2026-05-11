@@ -6,6 +6,7 @@ use crate::verify::{
     number_is_in_z_nz, verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same,
     verify_number_in_standard_set::is_integer_after_simplification, VerifyState,
 };
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn verify_not_in_fact_with_builtin_rules(
@@ -66,6 +67,9 @@ impl Runtime {
             return Ok(result);
         }
         match (&in_fact.element, &in_fact.set) {
+            (_, Obj::StructObj(struct_obj)) => {
+                return self.verify_in_fact_by_struct_obj(in_fact, struct_obj, verify_state);
+            }
             (Obj::Tuple(tuple), Obj::Cart(cart)) => {
                 return self.verify_in_fact_by_left_is_tuple_right_is_cart(
                     in_fact,
@@ -257,6 +261,12 @@ impl Runtime {
                     power_set,
                     verify_state,
                 ),
+            (_, Obj::SetBuilder(set_builder)) => self
+                .verify_in_fact_in_set_builder_by_defining_facts(
+                    in_fact,
+                    set_builder,
+                    verify_state,
+                ),
             (Obj::Choose(choose), where_is_obj) => {
                 let choose_from = choose.set.clone();
                 let equal_fact = EqualFact::new(
@@ -297,15 +307,6 @@ impl Runtime {
                     expected_fn_set,
                     in_fact,
                 )
-            }
-            (Obj::StructInstance(instance), Obj::Atom(AtomObj::Identifier(identifier)))
-                if instance.name.struct_name() == identifier.name =>
-            {
-                self.verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)?;
-                Ok(number_in_set_verified_by_builtin_rules_result(
-                    in_fact,
-                    "struct instance belongs to its struct",
-                ))
             }
             (_, Obj::FamilyObj(family_ty)) => {
                 self.verify_obj_satisfies_family(in_fact.element.clone(), family_ty, verify_state)
@@ -409,6 +410,131 @@ impl Runtime {
 }
 
 impl Runtime {
+    fn verify_in_fact_in_set_builder_by_defining_facts(
+        &mut self,
+        in_fact: &InFact,
+        set_builder: &SetBuilder,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let mut step_results = Vec::with_capacity(set_builder.facts.len() + 1);
+
+        let element_in_param_set: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            *set_builder.param_set.clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let element_in_param_set_result =
+            self.verify_atomic_fact(&element_in_param_set, verify_state)?;
+        if !element_in_param_set_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(element_in_param_set_result);
+
+        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+        param_to_arg_map.insert(set_builder.param.clone(), in_fact.element.clone());
+
+        for fact_in_set_builder in set_builder.facts.iter() {
+            let instantiated_fact = self
+                .inst_or_and_chain_atomic_fact(
+                    fact_in_set_builder,
+                    &param_to_arg_map,
+                    ParamObjType::SetBuilder,
+                    Some(&in_fact.line_file),
+                )
+                .map_err(|e| {
+                    let fact: Fact = in_fact.clone().into();
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(fact.into_stmt()),
+                        format!(
+                            "failed to instantiate set builder fact while verifying `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+
+            let instantiated_fact_result =
+                self.verify_or_and_chain_atomic_fact(&instantiated_fact, verify_state)?;
+            if !instantiated_fact_result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            step_results.push(instantiated_fact_result);
+        }
+
+        Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            in_fact.clone().into(),
+            "set builder membership: element is in the base set and satisfies all defining facts"
+                .to_string(),
+            step_results,
+        )
+        .into())
+    }
+
+    fn verify_in_fact_by_struct_obj(
+        &mut self,
+        in_fact: &InFact,
+        struct_obj: &StructObj,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(
+            &Obj::StructObj(struct_obj.clone()),
+            verify_state,
+        )?;
+        let (def, header_map) = self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
+        let field_types = self.instantiated_struct_field_types(struct_obj, verify_state)?;
+        let cart_obj: Obj = Cart::new(field_types).into();
+        let cart_membership: AtomicFact =
+            InFact::new(in_fact.element.clone(), cart_obj, in_fact.line_file.clone()).into();
+        let cart_result = self.verify_atomic_fact(&cart_membership, verify_state)?;
+        if !cart_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let mut step_results = vec![cart_result];
+        let mut field_map = HashMap::new();
+        for (index, (field_name, _)) in def.fields.iter().enumerate() {
+            let field_obj = match &in_fact.element {
+                Obj::Tuple(tuple) => (*tuple.args[index]).clone(),
+                _ => ObjAtIndex::new(
+                    in_fact.element.clone(),
+                    Number::new((index + 1).to_string()).into(),
+                )
+                .into(),
+            };
+            field_map.insert(field_name.clone(), field_obj);
+        }
+
+        for fact in def.equivalent_facts.iter() {
+            let after_header = self.inst_fact(
+                fact,
+                &header_map,
+                ParamObjType::DefHeader,
+                Some(in_fact.line_file.clone()),
+            )?;
+            let instantiated_fact = self.inst_fact(
+                &after_header,
+                &field_map,
+                ParamObjType::DefStructField,
+                Some(in_fact.line_file.clone()),
+            )?;
+            let fact_result = self.verify_fact(&instantiated_fact, verify_state)?;
+            if !fact_result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            step_results.push(fact_result);
+        }
+
+        Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            in_fact.clone().into(),
+            "struct membership: element is in the named cart base and satisfies struct equivalent facts".to_string(),
+            step_results,
+        )
+        .into())
+    }
+
     // The cardinality of a finite set is a natural number, hence also an integer, rational, and real.
     // Example: if `A finite_set`, then `count(A) $in N` and `count(A) $in R`.
     fn verify_count_in_standard_number_set(

@@ -1,35 +1,4 @@
-1. Let a and b be rational numbers, and suppose that a - b = 4 and a*b = 1.
-Show that (a+b)^2 = 20.
-
-```litex
-forall a, b Q:
-    a - b = 4
-    a * b = 1
+forall A, B set, x A:
+    A $subset B
     =>:
-        (a + b)^2 = (a - b)^2 + 4 * (a * b) = 20
-```
-
-```lean
-import Mathlib.Tactic
-example (a b : ℚ) (h₁ : a - b = 4) (h₂ : a * b = 1) : (a + b)^2 = 20 := by
-  rw [h₁, h₂]
-  ring
-```
-
-2. Let r and s be real numbers, and suppose that r + 2s = -1 and s = 3.
-Prove that r = -7.
-
-```litex
-forall r, s R:
-    r + 2 * s = -1
-    s = 3
-    =>:
-        r = (r + 2 * s) - 2 * s = -7
-```
-
-```lean
-import Mathlib.Tactic
-example (r s : ℝ) (h₁ : r + 2 * s = -1) (h₂ : s = 3) : r = -7 := by
-  rw [h₁, h₂]
-  ring
-```
+        x $in B

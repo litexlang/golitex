@@ -259,6 +259,30 @@ fn check_obj_has_no_duplicate_free_parameter(
             }
             Ok(())
         }
+        Obj::StructObj(obj) => {
+            for param in obj.params.iter() {
+                check_obj_has_no_duplicate_free_parameter(
+                    param,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            Ok(())
+        }
+        Obj::ObjAsStructInstanceWithFieldAccess(obj) => {
+            for param in obj.struct_obj.params.iter() {
+                check_obj_has_no_duplicate_free_parameter(
+                    param,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.obj,
+                free_param_type,
+                params_already_used,
+            )
+        }
         Obj::MatrixSet(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.set,
@@ -309,24 +333,6 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
-        Obj::FieldAccess(_) => Ok(()),
-        Obj::StructInstance(instance) => {
-            for arg in instance.name.args.iter() {
-                check_obj_has_no_duplicate_free_parameter(
-                    arg,
-                    free_param_type,
-                    params_already_used,
-                )?;
-            }
-            for field in instance.fields_equal_to_what.iter() {
-                check_obj_has_no_duplicate_free_parameter(
-                    field,
-                    free_param_type,
-                    params_already_used,
-                )?;
-            }
-            Ok(())
-        }
     }
 }
 
@@ -383,21 +389,11 @@ fn check_fn_set_body_has_no_duplicate_free_parameter(
     };
 
     for param_def in body.params_def_with_set.iter() {
-        if let Some(struct_ty) = param_def.struct_ty() {
-            for arg in struct_ty.args.iter() {
-                check_obj_has_no_duplicate_free_parameter(
-                    arg,
-                    free_param_type,
-                    params_already_used,
-                )?;
-            }
-        } else {
-            check_obj_has_no_duplicate_free_parameter(
-                param_def.set_obj().unwrap(),
-                free_param_type,
-                params_already_used,
-            )?;
-        }
+        check_obj_has_no_duplicate_free_parameter(
+            param_def.set_obj(),
+            free_param_type,
+            params_already_used,
+        )?;
     }
 
     for fact in body.dom_facts.iter() {
@@ -432,21 +428,11 @@ fn check_anonymous_fn_has_no_duplicate_free_parameter(
     };
 
     for param_def in anonymous_fn.body.params_def_with_set.iter() {
-        if let Some(struct_ty) = param_def.struct_ty() {
-            for arg in struct_ty.args.iter() {
-                check_obj_has_no_duplicate_free_parameter(
-                    arg,
-                    free_param_type,
-                    params_already_used,
-                )?;
-            }
-        } else {
-            check_obj_has_no_duplicate_free_parameter(
-                param_def.set_obj().unwrap(),
-                free_param_type,
-                params_already_used,
-            )?;
-        }
+        check_obj_has_no_duplicate_free_parameter(
+            param_def.set_obj(),
+            free_param_type,
+            params_already_used,
+        )?;
     }
 
     for fact in anonymous_fn.body.dom_facts.iter() {

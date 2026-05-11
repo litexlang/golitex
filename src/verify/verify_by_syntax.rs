@@ -271,12 +271,12 @@ impl Runtime {
                 Obj::FamilyObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::FieldAccess(a) => match right {
-                Obj::FieldAccess(b) => a.to_string() == b.to_string(),
+            Obj::StructObj(a) => match right {
+                Obj::StructObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::StructInstance(a) => match right {
-                Obj::StructInstance(b) => a.to_string() == b.to_string(),
+            Obj::ObjAsStructInstanceWithFieldAccess(a) => match right {
+                Obj::ObjAsStructInstanceWithFieldAccess(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             // Parsing-time free params: compare [`fmt::Display`] (`~tag` + spine), not only `.name`.

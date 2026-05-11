@@ -240,7 +240,7 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn is_name_used_for_identifier_and_field_access(&self, name: &str) -> bool {
+    pub fn is_name_used_for_identifier(&self, name: &str) -> bool {
         if is_builtin_identifier_name(name) {
             return true;
         }

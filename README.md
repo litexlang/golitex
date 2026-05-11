@@ -4,16 +4,16 @@
 
 <div align="center">
 
-# Litex: A Fact-Oriented Formal Language for Everyone
+# Litex: Write math the way it looks
 
 *by Jiachen Shen and The Litex Team, version 0.9.73-beta*
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Manual](https://img.shields.io/badge/Manual-teal)](https://litexlang.com/doc/Manual#manual-introduction)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
+[![Setup](https://img.shields.io/badge/Setup-Download%20Locally-green)](https://litexlang.com/doc/Setup)
 [![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
-[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/litexlang/golitex)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
 
 **Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome people to try it and discuss the mathematical philosophy behind it.**
@@ -26,11 +26,11 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is an open-source language for writing mathematical proofs as a flow of checkable facts. *It is a philosophy of mathematics as a growing body of computer-checkable facts.*
+Litex is an open-source language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write facts almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
 
 The central idea is: **users write facts; Litex grows a verified context**. A file introduces objects, states facts, checks them, stores successful ones, and reuses them later.
 
-Litex is designed around ordinary mathematical writing: objects such as numbers, sets, and functions; facts such as `x = 2` or `x $in R`; and statements that grow a proof step by step. The goal is to make formal proof feel less like programming a proof engine and more like writing a strict checked notebook.
+Litex is designed around ordinary mathematical writing: objects such as numbers, sets, and functions; facts such as `x = 2` or `x $in R`; and statements that grow a proof step by step. 
 
 It emphasizes a set-theoretic surface, proof scripts as verifiable facts, a growing context, and proof output that explains why each fact was accepted.
 
@@ -73,6 +73,8 @@ Litex feels simple because routine mathematical structure lives in the checker, 
 2. **The context grows.** Once verified, a fact is stored and can produce routine consequences.
 3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
 4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
+
+In this sense, Litex aims to be **the language where mathematics verifies itself**.
 
 For example, a syllogism is ordinary mathematical information:
 

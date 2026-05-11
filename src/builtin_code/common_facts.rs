@@ -1,7 +1,11 @@
 pub const COMMON_FACTS: &str = r#"
-abstract_prop injective(f)
-abstract_prop surjective(f)
-abstract_prop bijective(f)
+know:
+    + $in fn(a, b R) R
+    - $in fn(a, b R) R
+    * $in fn(a, b R) R
+    / $in fn(a R, b R: b != 0) R
+    % $in fn(a Z, b Z: b != 0) Z
+    ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N_pos) R
 
 know:
     forall a, b R:
@@ -96,4 +100,13 @@ know:
         exist r Z st {a = m * r + k}
         =>:
             a % m = k
+
+    forall a, b finite_set:
+        count(union(a, b)) = count(a) + count(b) - count(intersect(a, b))
+
+    forall a finite_set:
+        count(a) = 0
+        =>:
+            not $is_nonempty_set(a)
+            a = {}
 "#;

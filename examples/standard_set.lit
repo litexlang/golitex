@@ -48,3 +48,4 @@ forall a N_pos, b N:
 
 forall a, b N_pos:
     a * b $in N_pos
+
