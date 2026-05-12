@@ -1,10 +1,5 @@
-$is_finite_set(cart({1, 2}, {3, 4, 5}))
-count(cart({1, 2}, {3, 4, 5})) = 6
-count(cart({1, 2}, {3, 4, 5})) = count({1, 2}) * count({3, 4, 5})
-
-by for:
-    prove:
-        forall x cart({1, 2}, {3, 4}):
-            0 <= x[1] + x[2]
-    0 <= x[1]
-    0 <= x[2]
+forall x, y Z:
+    x + 3 <= 2
+    y + 2 * x >= 3
+    =>:
+        y = (y + 2 * x) - 2 * x >= 3 - 2 * x = 9 - 2 * (x + 3) >= 9 - 2 * 2 > 3
