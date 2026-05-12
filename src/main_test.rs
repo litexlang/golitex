@@ -523,4 +523,232 @@ mod lit_file_runner_tests {
             docs_phase_wall_ms,
         );
     }
+
+    #[test]
+    #[ignore = "runs every solution in scripts/gsm8k-litex/train.jsonl and test.jsonl"]
+    fn run_gsm8k_solutions() {
+        run_with_large_stack("run_gsm8k_solutions_large_stack", run_gsm8k_solutions_impl);
+    }
+
+    fn run_gsm8k_solutions_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_paths = vec![
+            manifest_dir
+                .join("scripts")
+                .join("gsm8k-litex")
+                .join("train.jsonl"),
+            manifest_dir
+                .join("scripts")
+                .join("gsm8k-litex")
+                .join("test.jsonl"),
+        ];
+
+        for jsonl_path in jsonl_paths.iter() {
+            assert!(
+                jsonl_path.is_file(),
+                "gsm8k jsonl file must exist at {:?}",
+                jsonl_path
+            );
+        }
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+
+        let run_wall_start = Instant::now();
+        let mut total_count: usize = 0;
+        let mut failed_labels: Vec<String> = Vec::new();
+        let mut total_solution_duration_ms: f64 = 0.0;
+
+        for jsonl_path in jsonl_paths.iter() {
+            run_gsm8k_jsonl_file(
+                jsonl_path,
+                &mut runtime,
+                &mut total_count,
+                &mut failed_labels,
+                &mut total_solution_duration_ms,
+            );
+        }
+
+        let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
+        println!("--- gsm8k timing (summary) ---");
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  solutions: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+            total_count, total_solution_duration_ms, run_wall_ms
+        );
+
+        if failed_labels.is_empty() {
+            println!("--- gsm8k: all train/test solutions OK ---");
+            return;
+        }
+
+        println!("--- gsm8k failed titles ---");
+        for label in failed_labels.iter() {
+            println!("{}", label);
+        }
+        panic!(
+            "gsm8k solution run failed for {} of {} item(s)",
+            failed_labels.len(),
+            total_count
+        );
+    }
+
+    fn run_gsm8k_jsonl_file(
+        jsonl_path: &Path,
+        runtime: &mut Runtime,
+        total_count: &mut usize,
+        failed_labels: &mut Vec<String>,
+        total_solution_duration_ms: &mut f64,
+    ) {
+        let jsonl_path_str = match jsonl_path.to_str() {
+            Some(path_string) => path_string.to_string(),
+            None => panic!("{:?} must be valid UTF-8", jsonl_path),
+        };
+
+        let jsonl_content = match fs::read_to_string(&jsonl_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
+        };
+
+        if *total_count == 0 {
+            runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+        } else {
+            runtime.clear_current_env_and_parse_name_scope();
+            runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
+        }
+
+        for (line_index, line) in jsonl_content.lines().enumerate() {
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            if *total_count > 0 || line_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
+            }
+
+            let title = jsonl_string_field(line, "title").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse title in {:?} line {}: {}",
+                    jsonl_path,
+                    line_index + 1,
+                    error_message
+                )
+            });
+            let solution = jsonl_string_field(line, "solution").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse solution in {:?} line {} ({}): {}",
+                    jsonl_path,
+                    line_index + 1,
+                    title,
+                    error_message
+                )
+            });
+            let normalized_source = remove_windows_carriage_return(solution.as_str());
+
+            let start_time_for_one_solution = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), runtime);
+            let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
+            *total_solution_duration_ms += duration_ms;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            *total_count += 1;
+            if !run_succeeded {
+                let label = format!(
+                    "{}:{}",
+                    jsonl_path
+                        .file_name()
+                        .and_then(|file_name| file_name.to_str())
+                        .unwrap_or("gsm8k jsonl"),
+                    title
+                );
+                println!(
+                    "=== [FAILED] {} at jsonl line {} ({:.2} ms) ===\n{}\n",
+                    label,
+                    line_index + 1,
+                    duration_ms,
+                    run_output
+                );
+                failed_labels.push(label);
+            }
+
+            if *total_count % 1000 == 0 {
+                println!(
+                    "--- gsm8k progress: {} solution(s), {} failure(s) ---",
+                    total_count,
+                    failed_labels.len()
+                );
+            }
+        }
+    }
+
+    fn jsonl_string_field(line: &str, key: &str) -> Result<String, String> {
+        let field_name = format!("\"{}\"", key);
+        let field_start = line
+            .find(field_name.as_str())
+            .ok_or_else(|| format!("missing JSON field `{}`", key))?;
+        let after_field_name = field_start + field_name.len();
+        let colon_offset = line[after_field_name..]
+            .find(':')
+            .ok_or_else(|| format!("missing `:` after JSON field `{}`", key))?;
+        let mut value_start = after_field_name + colon_offset + 1;
+        while value_start < line.len() && line.as_bytes()[value_start].is_ascii_whitespace() {
+            value_start += 1;
+        }
+        parse_json_string_at(line, value_start)
+    }
+
+    fn parse_json_string_at(line: &str, start_index: usize) -> Result<String, String> {
+        if start_index >= line.len() || line.as_bytes()[start_index] != b'"' {
+            return Err("JSON field value must be a string".to_string());
+        }
+
+        let mut result = String::new();
+        let mut chars = line[start_index + 1..].chars();
+        while let Some(ch) = chars.next() {
+            if ch == '"' {
+                return Ok(result);
+            }
+            if ch != '\\' {
+                result.push(ch);
+                continue;
+            }
+
+            let escaped = chars
+                .next()
+                .ok_or_else(|| "unfinished JSON escape".to_string())?;
+            match escaped {
+                '"' => result.push('"'),
+                '\\' => result.push('\\'),
+                '/' => result.push('/'),
+                'b' => result.push('\u{0008}'),
+                'f' => result.push('\u{000c}'),
+                'n' => result.push('\n'),
+                'r' => result.push('\r'),
+                't' => result.push('\t'),
+                'u' => {
+                    let mut hex = String::new();
+                    for _ in 0..4 {
+                        hex.push(
+                            chars
+                                .next()
+                                .ok_or_else(|| "unfinished JSON unicode escape".to_string())?,
+                        );
+                    }
+                    let code = u32::from_str_radix(hex.as_str(), 16)
+                        .map_err(|_| format!("invalid JSON unicode escape: {}", hex))?;
+                    let decoded = char::from_u32(code)
+                        .ok_or_else(|| format!("invalid JSON unicode code point: {}", hex))?;
+                    result.push(decoded);
+                }
+                other => return Err(format!("unknown JSON escape: \\{}", other)),
+            }
+        }
+
+        Err("unterminated JSON string".to_string())
+    }
 }

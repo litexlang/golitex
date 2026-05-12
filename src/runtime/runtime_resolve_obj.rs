@@ -237,6 +237,19 @@ impl Runtime {
                     }
                     obj.clone()
                 }
+                Obj::Cart(cart) => {
+                    let mut acc = "1".to_string();
+                    for arg in &cart.args {
+                        let resolved_arg = self.resolve_obj(arg.as_ref());
+                        let count_obj = Obj::Count(Count::new(resolved_arg));
+                        let n = match self.resolve_obj_to_number(&count_obj) {
+                            Some(n) => n,
+                            None => return obj.clone(),
+                        };
+                        acc = mul_signed_decimal_str(acc.trim(), n.normalized_value.trim());
+                    }
+                    Number::new(acc).into()
+                }
                 _ => obj.clone(),
             },
             Obj::TupleDim(dim) => match &*dim.arg {
