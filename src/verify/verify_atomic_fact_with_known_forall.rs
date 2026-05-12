@@ -1033,7 +1033,7 @@ impl Runtime {
         Ok(self.merge_arg_match_maps(map12, map3))
     }
 
-    /// Merge `from` into `into`. Returns `false` when a key is already bound to a different object (`Display`).
+    /// Merge `from` into `into`. Returns `false` when a key is already bound to a different object.
     fn merge_arg_match_map_into(
         &mut self,
         into: &mut HashMap<String, Obj>,
@@ -1041,7 +1041,9 @@ impl Runtime {
     ) -> bool {
         for (k, v) in from {
             if let Some(existing) = into.get(&k) {
-                if existing.to_string() != v.to_string() {
+                if existing.to_string() != v.to_string()
+                    && !existing.two_objs_can_be_calculated_and_equal_by_calculation(&v)
+                {
                     return false;
                 }
             }
@@ -1357,7 +1359,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::N) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::N) | Obj::StandardSet(StandardSet::NPos) => {
+                self.match_arg_same_type(given_arg)
+            }
             _ => Ok(None),
         }
     }
@@ -1367,7 +1371,15 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::Q) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::Q)
+            | Obj::StandardSet(StandardSet::QPos)
+            | Obj::StandardSet(StandardSet::QNeg)
+            | Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::Z)
+            | Obj::StandardSet(StandardSet::ZNeg)
+            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::N)
+            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -1377,7 +1389,11 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::Z) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::Z)
+            | Obj::StandardSet(StandardSet::ZNeg)
+            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::N)
+            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -1387,7 +1403,19 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::R) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::R)
+            | Obj::StandardSet(StandardSet::RPos)
+            | Obj::StandardSet(StandardSet::RNeg)
+            | Obj::StandardSet(StandardSet::RNz)
+            | Obj::StandardSet(StandardSet::Q)
+            | Obj::StandardSet(StandardSet::QPos)
+            | Obj::StandardSet(StandardSet::QNeg)
+            | Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::Z)
+            | Obj::StandardSet(StandardSet::ZNeg)
+            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::N)
+            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -1679,7 +1707,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::QPos) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::QPos) | Obj::StandardSet(StandardSet::NPos) => {
+                self.match_arg_same_type(given_arg)
+            }
             _ => Ok(None),
         }
     }
@@ -1689,7 +1719,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::RPos) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::RPos)
+            | Obj::StandardSet(StandardSet::QPos)
+            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -1699,7 +1731,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::QNeg) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::QNeg) | Obj::StandardSet(StandardSet::ZNeg) => {
+                self.match_arg_same_type(given_arg)
+            }
             _ => Ok(None),
         }
     }
@@ -1719,7 +1753,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::RNeg) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::RNeg)
+            | Obj::StandardSet(StandardSet::QNeg)
+            | Obj::StandardSet(StandardSet::ZNeg) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -1729,7 +1765,12 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::QNz) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::QPos)
+            | Obj::StandardSet(StandardSet::QNeg)
+            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::ZNeg)
+            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -1739,7 +1780,9 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::ZNz) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::ZNeg)
+            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -1749,7 +1792,15 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::RNz) => self.match_arg_same_type(given_arg),
+            Obj::StandardSet(StandardSet::RNz)
+            | Obj::StandardSet(StandardSet::RPos)
+            | Obj::StandardSet(StandardSet::RNeg)
+            | Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::QPos)
+            | Obj::StandardSet(StandardSet::QNeg)
+            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::ZNeg)
+            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }

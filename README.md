@@ -16,7 +16,7 @@
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
 
-**Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome people to try it and discuss the mathematical philosophy behind it.**
+**Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome you to try it.**
 
 </div>
 

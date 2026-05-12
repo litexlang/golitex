@@ -5,6 +5,20 @@ use crate::prelude::*;
 use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 
 impl Runtime {
+    fn cached_less_equal_fact_holds(&self, left: Obj, right: Obj) -> bool {
+        let fact: Fact = LessEqualFact::new(left, right, default_line_file()).into();
+        let (cache_ok, _) = self.cache_known_facts_contains(&fact.to_string());
+        cache_ok
+    }
+
+    fn obj_is_known_nonnegative(&self, obj: &Obj) -> bool {
+        self.cached_less_equal_fact_holds(Number::new("0".to_string()).into(), obj.clone())
+    }
+
+    fn obj_is_known_nonpositive(&self, obj: &Obj) -> bool {
+        self.cached_less_equal_fact_holds(obj.clone(), Number::new("0".to_string()).into())
+    }
+
     pub fn resolve_obj_to_number(&self, obj: &Obj) -> Option<Number> {
         if let Some(number) = obj.evaluate_to_normalized_decimal_number() {
             return Some(number);
@@ -73,7 +87,16 @@ impl Runtime {
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Abs(a) => {
-                let result: Obj = Abs::new(self.resolve_obj(&a.arg)).into();
+                let resolved_arg = self.resolve_obj(&a.arg);
+                if self.obj_is_known_nonnegative(&resolved_arg) {
+                    return resolved_arg;
+                }
+                if self.obj_is_known_nonpositive(&resolved_arg) {
+                    let result: Obj =
+                        Mul::new(Number::new("-1".to_string()).into(), resolved_arg).into();
+                    return self.resolve_obj_try_fold_arithmetic(result);
+                }
+                let result: Obj = Abs::new(resolved_arg).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Max(m) => {

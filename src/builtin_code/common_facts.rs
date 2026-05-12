@@ -59,6 +59,12 @@ know:
     forall n Z, k N_pos:
         (-n) % k = (k - (n % k)) % k
 
+    forall n Z, m Z:
+        n <= m or n >= m + 1
+        n < m or n >= m
+        n >= m or n <= m - 1
+        n > m or n <= m
+
     forall n Z, m N_pos, k N_pos:
         n^m % k = ((n % k)^m) % k
 

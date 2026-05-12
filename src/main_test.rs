@@ -173,6 +173,15 @@ mod lit_file_runner_tests {
             "{}\n=== [{}] {:?} ({:.2} ms user file only) ===\n",
             run_output, path_str, status_label, duration_ms
         );
+        let error_json = match &runtime_error {
+            Some(error) => display_runtime_error_json(&runtime, error, false),
+            None => run_output.clone(),
+        };
+        assert!(
+            run_succeeded,
+            "examples/tmp.lit failed.\n\n>>> Litex error JSON:\n{}\n\n=== [{}] {:?} ({:.2} ms user file only) ===",
+            error_json, path_str, status_label, duration_ms
+        );
     }
 
     #[test]
@@ -215,7 +224,15 @@ mod lit_file_runner_tests {
             "{}\n=== [{}] {:?} ({:.2} ms user file only) ===\n",
             run_output, path_str, status_label, duration_ms
         );
-        assert!(run_succeeded, "Litex file failed: {}", path_str);
+        let error_json = match &runtime_error {
+            Some(error) => display_runtime_error_json(&runtime, error, false),
+            None => run_output.clone(),
+        };
+        assert!(
+            run_succeeded,
+            "Litex file failed: {}\n\n>>> Litex error JSON:\n{}\n\n=== [{}] {:?} ({:.2} ms user file only) ===",
+            path_str, error_json, path_str, status_label, duration_ms
+        );
     }
 
     #[test]
