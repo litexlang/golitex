@@ -42,6 +42,178 @@ impl Runtime {
         Obj::Number(Number::new("1".to_string()))
     }
 
+    fn obj_is_positive_integer_number(obj: &Obj) -> bool {
+        let Obj::Number(number) = obj else {
+            return false;
+        };
+        let Ok(integer) = number.normalized_value.parse::<i128>() else {
+            return false;
+        };
+        integer > 0
+    }
+
+    fn obj_is_positive_odd_integer_number(obj: &Obj) -> bool {
+        let Obj::Number(number) = obj else {
+            return false;
+        };
+        let Ok(integer) = number.normalized_value.parse::<i128>() else {
+            return false;
+        };
+        integer > 0 && integer % 2 == 1
+    }
+
+    // a^n <= b^n from 0 <= a, 0 <= b, a <= b, and positive integer n.
+    // Example: from `0 <= a <= b`, prove `a^2 <= b^2`.
+    fn try_pow_le_same_positive_integer_exponent_nonnegative_base(
+        &mut self,
+        left_pow: &Pow,
+        right_pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
+            return Ok(None);
+        }
+        if !Self::obj_is_positive_integer_number(left_pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+
+        let z = Self::literal_zero_obj();
+        let left_base = left_pow.base.as_ref();
+        let right_base = right_pow.base.as_ref();
+        let subgoals: [AtomicFact; 3] = [
+            LessEqualFact::new(z.clone(), left_base.clone(), lf.clone()).into(),
+            LessEqualFact::new(z, right_base.clone(), lf.clone()).into(),
+            LessEqualFact::new(left_base.clone(), right_base.clone(), lf.clone()).into(),
+        ];
+        let mut step_results = Vec::new();
+        for subgoal in subgoals {
+            let result = self.verify_order_subgoal(subgoal)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            step_results.push(result);
+        }
+
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^n <= b^n from 0 <= a, 0 <= b, a <= b, and positive integer n".to_string(),
+                step_results,
+            ),
+        )))
+    }
+
+    // a^n <= b^n from a <= b when n is a positive odd integer.
+    // Example: from `a <= b`, prove `a^3 <= b^3`.
+    fn try_pow_le_same_positive_odd_integer_exponent(
+        &mut self,
+        left_pow: &Pow,
+        right_pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
+            return Ok(None);
+        }
+        if !Self::obj_is_positive_odd_integer_number(left_pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+
+        let left_base = left_pow.base.as_ref();
+        let right_base = right_pow.base.as_ref();
+        let subgoal: AtomicFact =
+            LessEqualFact::new(left_base.clone(), right_base.clone(), lf.clone()).into();
+        let result = self.verify_order_subgoal(subgoal)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^n <= b^n from a <= b and positive odd integer n".to_string(),
+                vec![result],
+            ),
+        )))
+    }
+
+    // a^n < b^n from a < b when n is a positive odd integer.
+    // Example: from `a < b`, prove `a^3 < b^3`.
+    fn try_pow_lt_same_positive_odd_integer_exponent(
+        &mut self,
+        left_pow: &Pow,
+        right_pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
+            return Ok(None);
+        }
+        if !Self::obj_is_positive_odd_integer_number(left_pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+
+        let left_base = left_pow.base.as_ref();
+        let right_base = right_pow.base.as_ref();
+        let subgoal: AtomicFact =
+            LessFact::new(left_base.clone(), right_base.clone(), lf.clone()).into();
+        let result = self.verify_order_subgoal(subgoal)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^n < b^n from a < b and positive odd integer n".to_string(),
+                vec![result],
+            ),
+        )))
+    }
+
+    // a^n < b^n from 0 <= a, 0 <= b, a < b, and positive integer n.
+    // Example: from `0 <= a < b`, prove `a^2 < b^2`.
+    fn try_pow_lt_same_positive_integer_exponent_nonnegative_base(
+        &mut self,
+        left_pow: &Pow,
+        right_pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
+            return Ok(None);
+        }
+        if !Self::obj_is_positive_integer_number(left_pow.exponent.as_ref()) {
+            return Ok(None);
+        }
+
+        let z = Self::literal_zero_obj();
+        let left_base = left_pow.base.as_ref();
+        let right_base = right_pow.base.as_ref();
+        let subgoals: [AtomicFact; 3] = [
+            LessEqualFact::new(z.clone(), left_base.clone(), lf.clone()).into(),
+            LessEqualFact::new(z, right_base.clone(), lf.clone()).into(),
+            LessFact::new(left_base.clone(), right_base.clone(), lf.clone()).into(),
+        ];
+        let mut step_results = Vec::new();
+        for subgoal in subgoals {
+            let result = self.verify_order_subgoal(subgoal)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            step_results.push(result);
+        }
+
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^n < b^n from 0 <= a, 0 <= b, a < b, and positive integer n".to_string(),
+                step_results,
+            ),
+        )))
+    }
+
     // k*u <= k*v from 0 <= k and u <= v; or k*u <= k*v from k <= 0 and v <= u (order reversal).
     fn try_mul_le_shared_left(
         &mut self,
@@ -168,6 +340,152 @@ impl Runtime {
         try_pairing(l1, l2, r2, r1)
     }
 
+    // 0 <= a*b when a,b have the same weak sign; a*b <= 0 when they have opposite weak signs.
+    // Example: from `a <= 0` and `0 <= b`, prove `a * b <= 0`.
+    fn try_mul_le_zero_by_weak_signs(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let z = Self::literal_zero_obj();
+        let mut try_signs =
+            |negative: &Obj, positive: &Obj| -> Result<Option<StmtResult>, RuntimeError> {
+                let g_neg = LessEqualFact::new(negative.clone(), z.clone(), lf.clone()).into();
+                let g_pos = LessEqualFact::new(z.clone(), positive.clone(), lf.clone()).into();
+                let r_neg = self.verify_order_subgoal(g_neg)?;
+                let r_pos = self.verify_order_subgoal(g_pos)?;
+                if r_neg.is_true() && r_pos.is_true() {
+                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "a * b <= 0 from a <= 0 and 0 <= b".to_string(),
+                            vec![r_neg, r_pos],
+                        ),
+                    )));
+                }
+                Ok(None)
+            };
+        if let Some(r) = try_signs(left, right)? {
+            return Ok(Some(r));
+        }
+        try_signs(right, left)
+    }
+
+    fn try_zero_le_mul_by_weak_signs(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let z = Self::literal_zero_obj();
+        let mut try_signs = |first_nonnegative: bool| -> Result<Option<StmtResult>, RuntimeError> {
+            let subgoals: [AtomicFact; 2] = if first_nonnegative {
+                [
+                    LessEqualFact::new(z.clone(), left.clone(), lf.clone()).into(),
+                    LessEqualFact::new(z.clone(), right.clone(), lf.clone()).into(),
+                ]
+            } else {
+                [
+                    LessEqualFact::new(left.clone(), z.clone(), lf.clone()).into(),
+                    LessEqualFact::new(right.clone(), z.clone(), lf.clone()).into(),
+                ]
+            };
+            let r0 = self.verify_order_subgoal(subgoals[0].clone())?;
+            let r1 = self.verify_order_subgoal(subgoals[1].clone())?;
+            if r0.is_true() && r1.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "0 <= a * b from a,b having the same weak sign".to_string(),
+                        vec![r0, r1],
+                    ),
+                )));
+            }
+            Ok(None)
+        };
+        if let Some(r) = try_signs(true)? {
+            return Ok(Some(r));
+        }
+        try_signs(false)
+    }
+
+    // Strict product sign rules require both factors to be strictly away from zero.
+    fn try_mul_lt_zero_by_signs(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let z = Self::literal_zero_obj();
+        let mut try_signs =
+            |negative: &Obj, positive: &Obj| -> Result<Option<StmtResult>, RuntimeError> {
+                let g_neg = LessFact::new(negative.clone(), z.clone(), lf.clone()).into();
+                let g_pos = LessFact::new(z.clone(), positive.clone(), lf.clone()).into();
+                let r_neg = self.verify_order_subgoal(g_neg)?;
+                let r_pos = self.verify_order_subgoal(g_pos)?;
+                if r_neg.is_true() && r_pos.is_true() {
+                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "a * b < 0 from opposite strict signs".to_string(),
+                            vec![r_neg, r_pos],
+                        ),
+                    )));
+                }
+                Ok(None)
+            };
+        if let Some(r) = try_signs(left, right)? {
+            return Ok(Some(r));
+        }
+        try_signs(right, left)
+    }
+
+    fn try_zero_lt_mul_by_signs(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let z = Self::literal_zero_obj();
+        let cases: [(AtomicFact, AtomicFact); 4] = [
+            (
+                LessFact::new(z.clone(), left.clone(), lf.clone()).into(),
+                LessFact::new(z.clone(), right.clone(), lf.clone()).into(),
+            ),
+            (
+                LessFact::new(z.clone(), right.clone(), lf.clone()).into(),
+                LessFact::new(z.clone(), left.clone(), lf.clone()).into(),
+            ),
+            (
+                LessFact::new(left.clone(), z.clone(), lf.clone()).into(),
+                LessFact::new(right.clone(), z.clone(), lf.clone()).into(),
+            ),
+            (
+                LessFact::new(right.clone(), z.clone(), lf.clone()).into(),
+                LessFact::new(left.clone(), z.clone(), lf.clone()).into(),
+            ),
+        ];
+        for (g0, g1) in cases {
+            let r0 = self.verify_order_subgoal(g0)?;
+            let r1 = self.verify_order_subgoal(g1)?;
+            if r0.is_true() && r1.is_true() {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "0 < a * b from same strict signs".to_string(),
+                        vec![r0, r1],
+                    ),
+                )));
+            }
+        }
+        Ok(None)
+    }
+
     fn try_less_equal_algebra(
         &mut self,
         f: &LessEqualFact,
@@ -176,6 +494,25 @@ impl Runtime {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
         let one = Self::literal_one_obj();
+
+        if let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (&f.left, &f.right) {
+            if let Some(r) = self.try_pow_le_same_positive_integer_exponent_nonnegative_base(
+                left_pow,
+                right_pow,
+                lf,
+                atomic_fact,
+            )? {
+                return Ok(Some(r));
+            }
+            if let Some(r) = self.try_pow_le_same_positive_odd_integer_exponent(
+                left_pow,
+                right_pow,
+                lf,
+                atomic_fact,
+            )? {
+                return Ok(Some(r));
+            }
+        }
 
         if let Obj::Add(add) = &f.right {
             let left_s = f.left.to_string();
@@ -229,6 +566,32 @@ impl Runtime {
                         vec![r3, r4],
                     ),
                 )));
+            }
+        }
+
+        if f.right.to_string() == z.to_string() {
+            if let Obj::Mul(m) = &f.left {
+                if let Some(r) = self.try_mul_le_zero_by_weak_signs(
+                    m.left.as_ref(),
+                    m.right.as_ref(),
+                    lf,
+                    atomic_fact,
+                )? {
+                    return Ok(Some(r));
+                }
+            }
+        }
+
+        if f.left.to_string() == z.to_string() {
+            if let Obj::Mul(m) = &f.right {
+                if let Some(r) = self.try_zero_le_mul_by_weak_signs(
+                    m.left.as_ref(),
+                    m.right.as_ref(),
+                    lf,
+                    atomic_fact,
+                )? {
+                    return Ok(Some(r));
+                }
             }
         }
 
@@ -407,6 +770,25 @@ impl Runtime {
         let z = Self::literal_zero_obj();
         let one = Self::literal_one_obj();
 
+        if let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (&f.left, &f.right) {
+            if let Some(r) = self.try_pow_lt_same_positive_integer_exponent_nonnegative_base(
+                left_pow,
+                right_pow,
+                lf,
+                atomic_fact,
+            )? {
+                return Ok(Some(r));
+            }
+            if let Some(r) = self.try_pow_lt_same_positive_odd_integer_exponent(
+                left_pow,
+                right_pow,
+                lf,
+                atomic_fact,
+            )? {
+                return Ok(Some(r));
+            }
+        }
+
         if let Obj::Add(add) = &f.right {
             let left_s = f.left.to_string();
             let b_opt = if add.left.as_ref().to_string() == left_s {
@@ -459,6 +841,32 @@ impl Runtime {
                         vec![r3, r4],
                     ),
                 )));
+            }
+        }
+
+        if f.right.to_string() == z.to_string() {
+            if let Obj::Mul(m) = &f.left {
+                if let Some(r) = self.try_mul_lt_zero_by_signs(
+                    m.left.as_ref(),
+                    m.right.as_ref(),
+                    lf,
+                    atomic_fact,
+                )? {
+                    return Ok(Some(r));
+                }
+            }
+        }
+
+        if f.left.to_string() == z.to_string() {
+            if let Obj::Mul(m) = &f.right {
+                if let Some(r) = self.try_zero_lt_mul_by_signs(
+                    m.left.as_ref(),
+                    m.right.as_ref(),
+                    lf,
+                    atomic_fact,
+                )? {
+                    return Ok(Some(r));
+                }
             }
         }
 

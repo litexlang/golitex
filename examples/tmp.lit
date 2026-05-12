@@ -1,5 +1,14 @@
-forall x, y Z:
-    x + 3 <= 2
-    y + 2 * x >= 3
-    =>:
-        y = (y + 2 * x) - 2 * x >= 3 - 2 * x = 9 - 2 * (x + 3) >= 9 - 2 * 2 > 3
+claim:
+    prove:
+        forall a, b R:
+            a^2 = b^2 + 1
+            a >= 0
+            =>:
+                a >= 1
+    by contra a >= 1:
+        a^2 = b^2 + 1 >= 0 + 1 = 1
+        a^2 >= 1
+        a < 1
+        a^2 < 1^2 = 1
+        1 <= a^2 < 1
+        impossible 1 < 1

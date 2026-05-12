@@ -170,9 +170,8 @@ impl Obj {
                 Obj::Cart(cart) => {
                     let mut acc = "1".to_string();
                     for arg in cart.args.iter() {
-                        let factor_count =
-                            Obj::Count(Count::new((**arg).clone()))
-                                .evaluate_to_normalized_decimal_number()?;
+                        let factor_count = Obj::Count(Count::new((**arg).clone()))
+                            .evaluate_to_normalized_decimal_number()?;
                         acc = mul_signed_decimal_str(
                             acc.trim(),
                             factor_count.normalized_value.trim(),
