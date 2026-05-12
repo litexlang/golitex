@@ -305,10 +305,12 @@ If a struct has no `<=>:` filter facts, Litex can prove `&Name(args)` is nonempt
 
 #### Counting members
 
-Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; it also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
+Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `count(cart(A_1,...,A_n))` reduces to `count(A_1) * ... * count(A_n)` in calculations. It also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
 
 ```litex
 count({1, 2, 3}) = 3
+$is_finite_set(cart({1, 2}, {3, 4, 5}))
+count(cart({1, 2}, {3, 4, 5})) = count({1, 2}) * count({3, 4, 5})
 $is_finite_set(union({1, 2}, {2, 3}))
 $is_finite_set(intersect({1, 2}, {2, 3}))
 forall A, B finite_set:
@@ -1497,7 +1499,7 @@ forall m Z:
         $r0(m)
 ```
 
-> Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` works with an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges, `by enumerate` works with finite objects, and `by extension` works with set equality.
+> Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` works with an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges and with a single tuple parameter over `cart({...}, {...}, ...)` (list-set factors), `by enumerate` works with finite list-set parameters, and `by extension` works with set equality.
 
 
 
@@ -1505,13 +1507,19 @@ forall m Z:
 
 ### Bounded iteration shell (`by for`)
 
-**`by for:`** packages a proof skeleton that iterates over a bounded index set (e.g. a **`range`**).
+**`by for:`** packages a proof skeleton that iterates over a bounded index set (e.g. a **`range`** or **`closed_range`**), or over the **Cartesian product** of list sets when the header is a single parameter with type **`cart({...}, {...}, ...)`** (each factor must be a list set; at least two factors). In the Cartesian form, the parameter is bound to a **tuple** on each step (nested tuple order matches `cart` arguments), so `x[1]`, `x[2]`, … pick the components.
 
 ```litex
 by for:
     prove:
         forall i range(0, 10):
             i < 10
+    do_nothing
+
+by for:
+    prove:
+        forall x cart({1, 2}, {3, 4}):
+            0 <= x[1] + x[2]
     do_nothing
 
 # inline by for: put the forall goal on the header line

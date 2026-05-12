@@ -102,7 +102,7 @@ For more, read the [Manual](https://litexlang.com/doc/Manual#manual-introduction
 
 ## Proofs Explain Themselves
 
-Litex does not only say whether a fact passed. It tells you how it was proved.
+Not only does Litex aim to be **the language where mathematics verifies itself**, but it also tells you how it was proved.
 
 ```litex
 abstract_prop p(x)

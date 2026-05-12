@@ -166,6 +166,20 @@ impl Obj {
                     let b = r.end.evaluate_to_normalized_decimal_number()?;
                     count_half_open_range_integer_endpoints(&a, &b)
                 }
+                // |A_1 × ... × A_n| = |A_1| * ... * |A_n|; empty product is 1.
+                Obj::Cart(cart) => {
+                    let mut acc = "1".to_string();
+                    for arg in cart.args.iter() {
+                        let factor_count =
+                            Obj::Count(Count::new((**arg).clone()))
+                                .evaluate_to_normalized_decimal_number()?;
+                        acc = mul_signed_decimal_str(
+                            acc.trim(),
+                            factor_count.normalized_value.trim(),
+                        );
+                    }
+                    Some(Number::new(acc))
+                }
                 _ => None,
             },
             _ => None,
