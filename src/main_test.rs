@@ -218,6 +218,78 @@ mod lit_file_runner_tests {
         assert!(run_succeeded, "Litex file failed: {}", path_str);
     }
 
+    #[test]
+    fn run_the_mechanics_markdown_files() {
+        run_with_large_stack(
+            "run_the_mechanics_markdown_files_large_stack",
+            run_the_mechanics_markdown_files_impl,
+        );
+    }
+
+    fn run_the_mechanics_markdown_files_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let mechanics_dir = manifest_dir.join("The-Mechanics-of-Litex-Proof");
+        assert!(
+            mechanics_dir.is_dir(),
+            "The-Mechanics-of-Litex-Proof must exist at {:?}",
+            mechanics_dir
+        );
+
+        let md_paths = collect_markdown_files_under_dir_sorted(&mechanics_dir);
+        assert!(
+            !md_paths.is_empty(),
+            "The-Mechanics-of-Litex-Proof must contain markdown files"
+        );
+
+        let snippets = litex_snippets_from_markdown_files(&manifest_dir, &md_paths);
+        assert!(
+            !snippets.is_empty(),
+            "The-Mechanics-of-Litex-Proof markdown files must contain ```litex``` blocks"
+        );
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
+
+        let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
+        let wall_start = Instant::now();
+        for (snippet_index, (label, source_code, md_path_for_run_file)) in
+            snippets.iter().enumerate()
+        {
+            if snippet_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+            }
+
+            let normalized_source = remove_windows_carriage_return(source_code);
+            let start_snippet = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            if !run_succeeded {
+                panic!(
+                    "The-Mechanics-of-Litex-Proof markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                    run_output, label
+                );
+            }
+
+            snippet_durations_ms.push((label.clone(), duration_ms));
+        }
+
+        println!(
+            "--- The-Mechanics-of-Litex-Proof markdown: {} ```litex``` block(s) in {} markdown file(s), all OK ({:.2} ms wall) ---",
+            snippets.len(),
+            md_paths.len(),
+            wall_start.elapsed().as_secs_f64() * 1000.0
+        );
+        for (label, duration_ms) in snippet_durations_ms.iter() {
+            println!("  OK  {:.2} ms  {}", duration_ms, label);
+        }
+    }
+
     /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
     /// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
     fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {
