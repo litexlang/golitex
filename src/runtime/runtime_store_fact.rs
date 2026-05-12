@@ -119,11 +119,16 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let chain_atomic_facts = match &fact {
+            Fact::ChainFact(chain_fact) => chain_fact.facts_with_order_transitive_closure()?,
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             Fact::ChainFact(chain_fact) => self.transitive_prop_chain_closure_facts(chain_fact)?,
             _ => Vec::new(),
         };
         self.top_level_env().store_fact(fact)?;
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
@@ -139,6 +144,12 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer: Fact = fact.clone().into();
+        let chain_atomic_facts = match &fact {
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                chain_fact.facts_with_order_transitive_closure()?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             AndChainAtomicFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -146,6 +157,7 @@ impl Runtime {
             _ => Vec::new(),
         };
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
@@ -176,6 +188,12 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let chain_atomic_facts = match &fact {
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                chain_fact.facts_with_order_transitive_closure()?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -184,6 +202,7 @@ impl Runtime {
         };
         self.top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
@@ -199,6 +218,12 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let chain_atomic_facts = match &fact {
+            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+                chain_fact.facts_with_order_transitive_closure()?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             OrAndChainAtomicFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -206,6 +231,7 @@ impl Runtime {
             _ => Vec::new(),
         };
         self.top_level_env().store_or_and_chain_atomic_fact(fact)?;
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
@@ -220,6 +246,18 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for atomic_fact in facts {
             self.top_level_env().store_atomic_fact(atomic_fact)?;
+        }
+        Ok(())
+    }
+
+    fn store_chain_atomic_facts_to_cache(
+        &mut self,
+        facts: Vec<AtomicFact>,
+    ) -> Result<(), RuntimeError> {
+        for atomic_fact in facts {
+            let line_file = atomic_fact.line_file();
+            self.top_level_env()
+                .store_fact_to_cache_known_fact(atomic_fact.to_string(), line_file)?;
         }
         Ok(())
     }

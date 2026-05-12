@@ -12,7 +12,7 @@ _In science, you can say things that seem crazy, but in the long run, they can t
 
 _- Jeff Hinton_
 
-> **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion about the mathematical philosophy behind it.
+> **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion.
 
 This manual explains how Litex reads and checks mathematical proof scripts. The central idea is: **users write facts; Litex grows a verified context**.
 
@@ -2628,6 +2628,32 @@ forall a R:
     0 <= a ^ 2
 ```
 
+Odd positive powers preserve order on real numbers.
+
+```litex
+forall a, b R:
+    a < b
+    =>:
+        a^3 < b^3
+```
+
+```litex
+forall a, b R:
+    a <= b
+    =>:
+        a^3 <= b^3
+```
+
+Positive integer powers also preserve strict order on nonnegative bases.
+
+```litex
+forall a, b R:
+    0 <= a
+    a < b
+    =>:
+        a^2 < b^2
+```
+
 If at least one component is nonzero, a sum of two squares is nonzero.
 
 ```litex
@@ -2677,6 +2703,24 @@ prove:
     0 <= k
     a <= b
     k * a <= k * b
+```
+
+Litex can also prove the sign of a product from the signs of its factors.
+
+```litex
+forall a, b R:
+    a <= 0
+    b >= 0
+    =>:
+        a * b <= 0
+```
+
+```litex
+forall a, b R:
+    a >= 0
+    b >= 0
+    =>:
+        a * b >= 0
 ```
 
 ```litex
