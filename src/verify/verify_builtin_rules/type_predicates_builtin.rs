@@ -347,6 +347,36 @@ impl Runtime {
                     .into(),
                 )
             }
+            // Finite Cartesian product: if each factor is finite, the product set is finite.
+            // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
+            // `$is_finite_set(cart(A, B))`.
+            Obj::Cart(cart) => {
+                let mut step_results = Vec::new();
+                for arg in cart.args.iter() {
+                    let factor_finite: AtomicFact = IsFiniteSetFact::new(
+                        arg.as_ref().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
+                    let factor_result = self.verify_non_equational_atomic_fact(
+                        &factor_finite,
+                        _verify_state,
+                        true,
+                    )?;
+                    if !factor_result.is_true() {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                    step_results.push(factor_result);
+                }
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_finite_set_fact.clone().into(),
+                        "cart_is_finite_set_when_all_factors_are_finite_set".to_string(),
+                        step_results,
+                    ))
+                    .into(),
+                )
+            }
             _ => Ok((StmtUnknown::new()).into()),
         }
     }
