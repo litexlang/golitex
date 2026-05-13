@@ -24,6 +24,12 @@ impl EvalStmt {
     }
 }
 
+impl EvalByStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "EvalByStmt".to_string()
+    }
+}
+
 impl DefAlgoStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAlgoStmt".to_string()
