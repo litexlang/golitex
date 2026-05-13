@@ -107,6 +107,12 @@ know:
         =>:
             a % m = k
 
+    forall a Z, m N_pos, k N:
+        k < m
+        exist r Z st {a = r * m + k}
+        =>:
+            a % m = k
+
     forall a, b finite_set:
         count(union(a, b)) = count(a) + count(b) - count(intersect(a, b))
 

@@ -67,7 +67,9 @@ impl Runtime {
                             &evaluated_number,
                             standard_set,
                         );
-                    return Ok(evaluation_membership_result);
+                    if evaluation_membership_result.is_true() {
+                        return Ok(evaluation_membership_result);
+                    }
                 }
                 let resolved_element = self.resolve_obj(&in_fact.element);
                 if let Obj::Number(evaluated_number) = resolved_element {
@@ -77,7 +79,9 @@ impl Runtime {
                             &evaluated_number,
                             standard_set,
                         );
-                    return Ok(resolved_membership_result);
+                    if resolved_membership_result.is_true() {
+                        return Ok(resolved_membership_result);
+                    }
                 }
             }
         }

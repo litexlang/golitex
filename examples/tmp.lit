@@ -1,0 +1,14 @@
+prop dvdN(a N, b N):
+    exist c N st {b = a * c}
+
+claim:
+    prove:
+        not $dvdN(5, 12)
+    by contra not $dvdN(5, 12):
+        have by exist c N st {12 = 5 * c}: a
+        a $in N
+        a $in Z
+        witness exist c Z st {12 = 5 * c + 0} from a
+        12 % 5 = 0
+        2 = 12 % 5
+        impossible 2 = 0
