@@ -1360,7 +1360,9 @@ eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})}) # sum of a sum
 Use **`eval lhs from rhs`** when `lhs` is not itself directly executable but is known to equal an executable expression. Litex first verifies `lhs = rhs`, evaluates `rhs`, then records `lhs` as equal to the evaluated result.
 
 ```litex
-eval \inner_product(3, [1, 2, 3], [4, 5, 6]) from sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+have a set = sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+
+eval a from sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
 ```
 
 ---
@@ -2654,8 +2656,7 @@ Positive integer powers also preserve strict order on nonnegative bases.
 
 ```litex
 forall a, b R:
-    0 <= a
-    a < b
+    0 <= a < b
     =>:
         a^2 < b^2
 ```
