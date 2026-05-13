@@ -669,6 +669,18 @@ impl EvalStmt {
     }
 }
 
+impl EvalByStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\, {} \operatorname{{{}}} {}",
+            EVAL,
+            self.lhs.to_latex_string(),
+            FROM,
+            self.rhs.to_latex_string()
+        )
+    }
+}
+
 impl ExistFactEnum {
     pub fn to_latex_string(&self) -> String {
         let head = if self.is_not_exist() {
@@ -763,6 +775,7 @@ impl FnObj {
             FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
             FnObjHead::FnSet(p) => latex_local_ident(&p.name),
             FnObjHead::AnonymousFnLiteral(a) => a.to_latex_string(),
+            FnObjHead::FiniteSeqListObj(v) => v.to_latex_string(),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
         };
@@ -2053,6 +2066,7 @@ impl Stmt {
             Stmt::ClearStmt(x) => x.to_latex_string(),
             Stmt::RunFileStmt(x) => x.to_latex_string(),
             Stmt::EvalStmt(x) => x.to_latex_string(),
+            Stmt::EvalByStmt(x) => x.to_latex_string(),
             Stmt::WitnessExistFact(x) => x.to_latex_string(),
             Stmt::WitnessNonemptySet(x) => x.to_latex_string(),
             Stmt::ByCasesStmt(x) => x.to_latex_string(),

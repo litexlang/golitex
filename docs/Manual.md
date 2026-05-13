@@ -1357,6 +1357,12 @@ eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
 eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})}) # sum of a sum
 ```
 
+Use **`eval lhs from rhs`** when `lhs` is not itself directly executable but is known to equal an executable expression. Litex first verifies `lhs = rhs`, evaluates `rhs`, then records `lhs` as equal to the evaluated result.
+
+```litex
+eval \inner_product(3, [1, 2, 3], [4, 5, 6]) from sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+```
+
 ---
 
 ### Witness for `exist` (`witness exist`)
@@ -3175,7 +3181,7 @@ inferred:
 
 #### Products And Tuples
 
-Membership in `cart(...)` with at least two factors adds tuple information, including that the object is a tuple and that its dimension matches the number of factors. It also aligns product-set bookkeeping.
+Membership in `cart(...)` with at least two factors adds tuple information, including that the object is a tuple and that its dimension matches the number of factors. It also aligns product-set bookkeeping and infers component membership **`u[i]`** in each cart factor.
 
 ```text
 known:
@@ -3183,6 +3189,8 @@ known:
 
 inferred:
     $is_tuple(u)
+    u[1] $in R
+    u[2] $in R
 ```
 
 #### Ranges
@@ -3229,6 +3237,8 @@ inferred:
 Membership in `fn(...)` records function-space information for suitable function heads, usually names or language-level function objects rather than arbitrary complex expressions. Later goals can use the expected domain and codomain.
 
 Membership in `finite_seq(...)`, `seq(...)`, and `matrix(...)` is handled similarly because these objects are read as function-like types.
+
+A finite sequence literal may be applied as the finite function it denotes. For example, `[1, 2, 3](i)` means the `i`-th entry, and Litex checks `i $in N_pos` and `i <= 3`.
 
 For membership in a `family` instance such as `\name(...)`, Litex expands the family to the set it denotes, then applies the usual membership inference rules to that expanded set.
 

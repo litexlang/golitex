@@ -162,6 +162,16 @@ impl Runtime {
                     }
                 }
                 if fn_obj.body.len() == 1 && fn_obj.body[0].len() == 1 {
+                    if let FnObjHead::FiniteSeqListObj(list) = fn_obj.head.as_ref() {
+                        let arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
+                        if let Some(ix) = self.resolve_obj_to_number(&arg) {
+                            if let Ok(one_based) = ix.normalized_value.parse::<usize>() {
+                                if one_based >= 1 && one_based <= list.objs.len() {
+                                    return (*list.objs[one_based - 1]).clone();
+                                }
+                            }
+                        }
+                    }
                     let head_key = fn_obj.head.to_string();
                     if let Some(list) = self.get_obj_equal_to_finite_seq_list(&head_key) {
                         let arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
