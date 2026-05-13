@@ -13,4 +13,5 @@ mod stmt;
 mod stmt_type_name;
 pub use stmt::ByClosedRangeAsCasesStmt;
 pub use stmt::DefStructStmt;
+pub use stmt::EvalByStmt;
 pub use stmt::Stmt;

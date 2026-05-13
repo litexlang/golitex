@@ -40,6 +40,30 @@ pub enum Stmt {
     ByTransitivePropStmt(ByTransitivePropStmt),
     ByCommutativePropStmt(ByCommutativePropStmt),
     DefStructStmt(DefStructStmt),
+    EvalByStmt(EvalByStmt),
+}
+
+#[derive(Clone)]
+pub struct EvalByStmt {
+    pub lhs: Obj,
+    pub rhs: Obj,
+    pub line_file: LineFile,
+}
+
+impl EvalByStmt {
+    pub fn new(lhs: Obj, rhs: Obj, line_file: LineFile) -> Self {
+        EvalByStmt {
+            lhs,
+            rhs,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for EvalByStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {} {}", EVAL, self.lhs, FROM, self.rhs)
+    }
 }
 
 #[derive(Clone)]
@@ -156,6 +180,7 @@ impl fmt::Display for Stmt {
             Stmt::ClearStmt(x) => write!(f, "{}", x),
             Stmt::RunFileStmt(x) => write!(f, "{}", x),
             Stmt::EvalStmt(x) => write!(f, "{}", x),
+            Stmt::EvalByStmt(x) => write!(f, "{}", x),
             Stmt::WitnessExistFact(x) => write!(f, "{}", x),
             Stmt::WitnessNonemptySet(x) => write!(f, "{}", x),
             Stmt::ByCasesStmt(x) => write!(f, "{}", x),
@@ -200,6 +225,7 @@ impl Stmt {
             Stmt::ClearStmt(stmt) => stmt.line_file.clone(),
             Stmt::RunFileStmt(stmt) => stmt.line_file.clone(),
             Stmt::EvalStmt(stmt) => stmt.line_file.clone(),
+            Stmt::EvalByStmt(stmt) => stmt.line_file.clone(),
             Stmt::WitnessExistFact(stmt) => stmt.line_file.clone(),
             Stmt::WitnessNonemptySet(stmt) => stmt.line_file.clone(),
             Stmt::ByCasesStmt(stmt) => stmt.line_file.clone(),
@@ -242,6 +268,7 @@ impl Stmt {
             Stmt::ClearStmt(stmt) => stmt.stmt_type_name(),
             Stmt::RunFileStmt(stmt) => stmt.stmt_type_name(),
             Stmt::EvalStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::EvalByStmt(stmt) => stmt.stmt_type_name(),
             Stmt::WitnessExistFact(stmt) => stmt.stmt_type_name(),
             Stmt::WitnessNonemptySet(stmt) => stmt.stmt_type_name(),
             Stmt::ByCasesStmt(stmt) => stmt.stmt_type_name(),
@@ -385,6 +412,12 @@ impl From<RunFileStmt> for Stmt {
 impl From<EvalStmt> for Stmt {
     fn from(v: EvalStmt) -> Self {
         Stmt::EvalStmt(v)
+    }
+}
+
+impl From<EvalByStmt> for Stmt {
+    fn from(v: EvalByStmt) -> Self {
+        Stmt::EvalByStmt(v)
     }
 }
 

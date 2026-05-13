@@ -13,6 +13,7 @@ pub enum FnObjHead {
     FnSet(FnSetFreeParamObj),
     /// Anonymous function literal used as applied head, e.g. `'(x R) R {x}(a)`.
     AnonymousFnLiteral(Box<AnonymousFn>),
+    FiniteSeqListObj(FiniteSeqListObj),
     Induc(ByInducFreeParamObj),
     DefAlgo(DefAlgoFreeParamObj),
 }
@@ -28,6 +29,7 @@ impl fmt::Display for FnObjHead {
             FnObjHead::SetBuilder(p) => write!(f, "{}", p),
             FnObjHead::FnSet(p) => write!(f, "{}", p),
             FnObjHead::AnonymousFnLiteral(a) => write!(f, "{}", a),
+            FnObjHead::FiniteSeqListObj(v) => write!(f, "{}", v),
             FnObjHead::Induc(p) => write!(f, "{}", p),
             FnObjHead::DefAlgo(p) => write!(f, "{}", p),
         }
@@ -108,6 +110,7 @@ impl From<FnObjHead> for Obj {
             FnObjHead::SetBuilder(p) => p.into(),
             FnObjHead::FnSet(p) => p.into(),
             FnObjHead::AnonymousFnLiteral(a) => (*a).clone().into(),
+            FnObjHead::FiniteSeqListObj(v) => v.into(),
             FnObjHead::Induc(p) => p.into(),
             FnObjHead::DefAlgo(p) => p.into(),
         }

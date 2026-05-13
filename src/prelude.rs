@@ -224,6 +224,7 @@ pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
 pub use crate::stmt::DefStructStmt;
+pub use crate::stmt::EvalByStmt;
 pub use crate::stmt::Stmt;
 pub use crate::verify::VerifyState;
 

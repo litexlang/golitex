@@ -413,6 +413,15 @@ impl Runtime {
                 self.verify_atomic_fact(&expanded.into(), verify_state)
             }
             (_, target_set_obj) => {
+                let finite_seq_literal_application_result = self
+                    .verify_in_fact_finite_seq_literal_application_in_set(
+                        in_fact,
+                        target_set_obj,
+                        verify_state,
+                    )?;
+                if finite_seq_literal_application_result.is_true() {
+                    return Ok(finite_seq_literal_application_result);
+                }
                 let cart_projection_result = self
                     .verify_in_fact_obj_at_index_in_standard_set_by_cart_factor_list_set(
                         in_fact,
@@ -1869,6 +1878,75 @@ impl Runtime {
             );
         }
         Ok((StmtUnknown::new()).into())
+    }
+
+    // If every entry of `[a, b, ...]` is in `S`, then applying it at a valid index gives an element of `S`.
+    // Example: `[1, 2, 3](i) $in R` follows from `i $in N_pos`, `i <= 3`, and each entry in `R`.
+    fn verify_in_fact_finite_seq_literal_application_in_set(
+        &mut self,
+        in_fact: &InFact,
+        target_set_obj: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Obj::FnObj(fn_obj) = &in_fact.element else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let FnObjHead::FiniteSeqListObj(list) = fn_obj.head.as_ref() else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
+            return Ok((StmtUnknown::new()).into());
+        };
+
+        let index_obj = fn_obj.body[0][0].as_ref().clone();
+        let mut step_results = Vec::new();
+
+        let index_in_n_pos: AtomicFact = InFact::new(
+            index_obj.clone(),
+            StandardSet::NPos.into(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let index_in_n_pos_result = self.verify_atomic_fact(&index_in_n_pos, verify_state)?;
+        if !index_in_n_pos_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(index_in_n_pos_result);
+
+        let list_len_obj: Obj = Number::new(list.objs.len().to_string()).into();
+        let index_in_range: AtomicFact =
+            LessEqualFact::new(index_obj, list_len_obj, in_fact.line_file.clone()).into();
+        let index_in_range_result = self.verify_atomic_fact(&index_in_range, verify_state)?;
+        if !index_in_range_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(index_in_range_result);
+
+        for element in list.objs.iter() {
+            let element_in_target_set: AtomicFact = InFact::new(
+                element.as_ref().clone(),
+                target_set_obj.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let result = self.verify_atomic_fact(&element_in_target_set, verify_state)?;
+            if !result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            step_results.push(result);
+        }
+
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                format!(
+                    "finite sequence literal application is in {}",
+                    target_set_obj
+                ),
+                step_results,
+            ))
+            .into(),
+        )
     }
 
     // If `x $in cart({a, b}, {c, d})` is known, then `x[1]` ranges over `{a, b}`.

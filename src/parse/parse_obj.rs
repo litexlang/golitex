@@ -202,7 +202,19 @@ impl Runtime {
                 }
             } else if tb.current_token_is_equal_to(RIGHT_BRACKET) {
                 tb.skip_token(RIGHT_BRACKET)?;
-                Ok(FiniteSeqListObj::new(vec![]).into())
+                let list = FiniteSeqListObj::new(vec![]);
+                let mut result: Obj = list.clone().into();
+                let head = FnObjHead::FiniteSeqListObj(list);
+                let mut body_vectors: Vec<Vec<Box<Obj>>> = vec![];
+                while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
+                    let args = self.parse_fn_obj_arg_group(tb)?;
+                    let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
+                    body_vectors.push(group);
+                }
+                if !body_vectors.is_empty() {
+                    result = FnObj::new(head, body_vectors).into();
+                }
+                Ok(result)
             } else {
                 let mut objs = vec![self.parse_obj(tb)?];
                 while tb.current_token_is_equal_to(COMMA) {
@@ -210,7 +222,19 @@ impl Runtime {
                     objs.push(self.parse_obj(tb)?);
                 }
                 tb.skip_token(RIGHT_BRACKET)?;
-                Ok(FiniteSeqListObj::new(objs).into())
+                let list = FiniteSeqListObj::new(objs);
+                let mut result: Obj = list.clone().into();
+                let head = FnObjHead::FiniteSeqListObj(list);
+                let mut body_vectors: Vec<Vec<Box<Obj>>> = vec![];
+                while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
+                    let args = self.parse_fn_obj_arg_group(tb)?;
+                    let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
+                    body_vectors.push(group);
+                }
+                if !body_vectors.is_empty() {
+                    result = FnObj::new(head, body_vectors).into();
+                }
+                Ok(result)
             }
         } else if tb.current_token_is_equal_to(FN_LOWER_CASE) {
             tb.skip_token(FN_LOWER_CASE)?;
@@ -591,6 +615,7 @@ impl Runtime {
                 FnObjHead::AnonymousFnLiteral(Box::new(anon.clone())),
                 vec![],
             ),
+            Obj::FiniteSeqListObj(list) => (FnObjHead::FiniteSeqListObj(list.clone()), vec![]),
             _ => return Ok(result),
         };
         while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
