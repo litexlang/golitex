@@ -76,38 +76,24 @@ impl Runtime {
 
         let coverage_error_detail_lines =
             forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
-
-        if coverage_error_detail_lines.is_empty() {
-            return self
-                .store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFact(forall_fact));
+        if !coverage_error_detail_lines.is_empty() {
+            let then_drop: HashSet<usize> = coverage_error_detail_lines
+                .iter()
+                .map(|(i, _)| *i)
+                .collect();
+            forall_fact.then_facts = forall_fact
+                .then_facts
+                .into_iter()
+                .enumerate()
+                .filter(|(i, _)| !then_drop.contains(i))
+                .map(|(_, f)| f)
+                .collect();
+            if forall_fact.then_facts.is_empty() {
+                return Ok(InferResult::new());
+            }
         }
 
-        let warning_msg = forall_fact_coverage_warn_after_drop_then(&coverage_error_detail_lines);
-        let then_drop: HashSet<usize> = coverage_error_detail_lines
-            .iter()
-            .map(|(i, _)| *i)
-            .collect();
-
-        forall_fact.then_facts = forall_fact
-            .then_facts
-            .into_iter()
-            .enumerate()
-            .filter(|(i, _)| !then_drop.contains(i))
-            .map(|(_, f)| f)
-            .collect();
-
-        if forall_fact.then_facts.is_empty() {
-            let mut infer_result = InferResult::new();
-            infer_result.new_with_msg(warning_msg);
-            return Ok(infer_result);
-        }
-
-        let mut infer_result = InferResult::new();
-        infer_result.new_with_msg(warning_msg);
-        infer_result.new_infer_result_inside(
-            self.store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFact(forall_fact))?,
-        );
-        Ok(infer_result)
+        self.store_whole_fact_update_cache_known_fact_and_infer(Fact::ForallFact(forall_fact))
     }
 
     fn store_forall_fact_with_iff_without_well_defined_verified_and_infer(
@@ -133,11 +119,16 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let chain_atomic_facts = match &fact {
+            Fact::ChainFact(chain_fact) => chain_fact.facts_with_order_transitive_closure()?,
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             Fact::ChainFact(chain_fact) => self.transitive_prop_chain_closure_facts(chain_fact)?,
             _ => Vec::new(),
         };
         self.top_level_env().store_fact(fact)?;
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
@@ -153,6 +144,12 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer: Fact = fact.clone().into();
+        let chain_atomic_facts = match &fact {
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                chain_fact.facts_with_order_transitive_closure()?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             AndChainAtomicFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -160,6 +157,7 @@ impl Runtime {
             _ => Vec::new(),
         };
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
@@ -190,6 +188,12 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let chain_atomic_facts = match &fact {
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                chain_fact.facts_with_order_transitive_closure()?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -198,6 +202,7 @@ impl Runtime {
         };
         self.top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
@@ -213,6 +218,12 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
+        let chain_atomic_facts = match &fact {
+            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+                chain_fact.facts_with_order_transitive_closure()?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             OrAndChainAtomicFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -220,6 +231,7 @@ impl Runtime {
             _ => Vec::new(),
         };
         self.top_level_env().store_or_and_chain_atomic_fact(fact)?;
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
@@ -234,6 +246,18 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for atomic_fact in facts {
             self.top_level_env().store_atomic_fact(atomic_fact)?;
+        }
+        Ok(())
+    }
+
+    fn store_chain_atomic_facts_to_cache(
+        &mut self,
+        facts: Vec<AtomicFact>,
+    ) -> Result<(), RuntimeError> {
+        for atomic_fact in facts {
+            let line_file = atomic_fact.line_file();
+            self.top_level_env()
+                .store_fact_to_cache_known_fact(atomic_fact.to_string(), line_file)?;
         }
         Ok(())
     }
@@ -280,17 +304,4 @@ impl Runtime {
         }
         false
     }
-}
-fn forall_fact_coverage_warn_after_drop_then(
-    coverage_error_detail_lines: &[(usize, String)],
-) -> String {
-    let body = coverage_error_detail_lines
-        .iter()
-        .map(|(idx, msg)| format!("at index {}: {}", idx, msg))
-        .collect::<Vec<_>>()
-        .join("\n");
-    format!(
-        "Warning: forall missing forall parameter(s) in some then clause(s); dropped problematic clause(s):\n{}",
-        body
-    )
 }

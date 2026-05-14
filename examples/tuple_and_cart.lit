@@ -18,3 +18,6 @@ forall a2 set:
     $is_cart(a2)
     =>:
         cart_dim(a2) = cart_dim(a2)
+
+forall x cart(R, R):
+    x[1] $in R

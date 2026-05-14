@@ -16,6 +16,6 @@ pub use enumerate::ByEnumerateFiniteSetStmt;
 pub use extension::ByExtensionStmt;
 pub use family::ByFamilyAsSetStmt;
 pub use fn_cart_tuple::{ByFnAsSetStmt, ByFnSetAsSetStmt, ByTupleAsSetStmt};
-pub use for_stmt::{ByForStmt, ClosedRangeOrRange};
+pub use for_stmt::{ByForExpansion, ByForStmt, ClosedRangeOrRange};
 pub use induc::ByInducStmt;
 pub use transitive_prop::ByTransitivePropStmt;

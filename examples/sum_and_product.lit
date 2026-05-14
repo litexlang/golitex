@@ -35,3 +35,24 @@ prove:
     sum(1, 10, 'Z(x){x}) = sum(1, 3, 'Z(x){x}) + sum(4, 8, 'Z(x){x}) + sum(9, 10, 'Z(x){x})
 
 eval sum(1, 3, 'Z(x){sum(1, x, 'Z(y){x + y})})
+
+prove:
+    by induc a from 1:
+        prove:
+            product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+
+        product(1, 1, 'N_pos(x){x}) = 1
+        1 <= product(1, 1, 'N_pos(x){x})
+
+        claim:
+            prove:
+                forall k Z:
+                    k >= 1
+                    product(1, k, 'N_pos(x){x}) % k = 0 and k <= product(1, k, 'N_pos(x){x})
+                    =>:
+                        product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, 'N_pos(x){x})
+
+            product(1, k + 1, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * (k + 1)
+            witness exist t Z st {product(1, k + 1, 'N_pos(x){x}) = t * (k + 1)} from product(1, k, 'N_pos(x){x})
+            product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0
+            k + 1 <= product(1, k + 1, 'N_pos(x){x})

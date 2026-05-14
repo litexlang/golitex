@@ -175,11 +175,13 @@ forall a R:
 
 ## Membership in `cart(…)` (at least two factors)
 
-Inference adds **tuple** information (**“is a tuple”**, **dimension** \(n\) equal to the number of factors) and aligns product-set bookkeeping.
+Inference adds **tuple** information (**“is a tuple”**, **dimension** \(n\) equal to the number of factors), aligns product-set bookkeeping, and for each factor **`A_i`** infers **`u[i] $in A_i`** (one-based indexing).
 
 ```litex
 forall u cart(R, R):
     $is_tuple(u)
+    u[1] $in R
+    u[2] $in R
 ```
 
 ---
@@ -234,6 +236,8 @@ Inference **records function-space information** for suitable function heads (na
 ## Membership in `finite_seq(…)`, `seq(…)`, `matrix(…)`
 
 These are read as **function types**; inference applies the same ideas as for **`fn(…)`** and may expose an explicit **`… $in fn …`** fact.
+
+A finite sequence literal can also be used as the finite function it denotes. For example, `[1, 2, 3](i)` is checked as the `i`-th entry of the sequence, with `i $in N_pos` and `i <= 3`.
 
 ---
 

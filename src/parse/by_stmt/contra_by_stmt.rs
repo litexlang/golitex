@@ -1,29 +1,32 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// `by contra:` then `prove:` block with exactly one atomic fact, optional proof statements, then `impossible` atomic fact.
+    /// `by contra:` then `prove:` block with exactly one fact, optional proof statements, then `impossible` atomic fact.
     ///
-    /// Shorthand: `by contra atomic_goal:` embeds the goal on the header line; body is optional proof
+    /// Shorthand: `by contra goal:` embeds the goal on the header line; body is optional proof
     /// statement blocks followed by `impossible ...` as the last block.
     pub fn parse_by_contra_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CONTRA)?;
         if tb.current()? == RIGHT_ARROW {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by contra: use `by contra <atomic goal>:` instead of `by contra => <atomic goal>:`"
+                    "by contra: use `by contra <goal>:` instead of `by contra => <goal>:`"
                         .to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
-        let (to_prove, inline_goal): (AtomicFact, bool) = if tb.current()? != COLON {
+        let (to_prove, inline_goal): (Fact, bool) = if tb.current()? != COLON {
             let header = &tb.header;
             if header.len() < tb.parse_index + 2 || header.last().map(|t| t.as_str()) != Some(COLON)
             {
-                return Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by contra ... : expected one atomic goal and a trailing `:` on the same line".to_string(),
-                    tb.line_file.clone(),
-                ))));
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by contra ... : expected one goal and a trailing `:` on the same line"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
             let colon_pos = header.len() - 1;
             let fact_tokens = header[tb.parse_index..colon_pos].to_vec();
@@ -36,7 +39,7 @@ impl Runtime {
                 )));
             }
             let mut fact_tb = TokenBlock::new(fact_tokens, vec![], tb.line_file.clone());
-            let atom = self.parse_atomic_fact(&mut fact_tb, true)?;
+            let fact = self.parse_fact(&mut fact_tb)?;
             if !fact_tb.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -54,7 +57,7 @@ impl Runtime {
                     ),
                 )));
             }
-            (atom, true)
+            (fact, true)
         } else {
             tb.skip_token(COLON)?;
             if !tb.exceed_end_of_head() {
@@ -86,12 +89,12 @@ impl Runtime {
                 if prove_block.body.len() != 1 {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "by contra: prove: expects exactly one atomic fact block".to_string(),
+                            "by contra: prove: expects exactly one fact block".to_string(),
                             prove_block.line_file.clone(),
                         ),
                     )));
                 }
-                let atomic_fact_block = prove_block.body.get_mut(0).ok_or_else(|| {
+                let fact_block = prove_block.body.get_mut(0).ok_or_else(|| {
                     RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             "Expected body".to_string(),
@@ -99,7 +102,7 @@ impl Runtime {
                         ),
                     ))
                 })?;
-                self.parse_atomic_fact(atomic_fact_block, true)?
+                self.parse_fact(fact_block)?
             };
             (to_prove, false)
         };

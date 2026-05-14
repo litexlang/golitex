@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: Write math the way it looks
+# Litex: The Formal Way to Write Math as It Looks
 
 *by Jiachen Shen and The Litex Team, version 0.9.73-beta*
 
@@ -16,7 +16,7 @@
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
 
-**Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome people to try it and discuss the mathematical philosophy behind it.**
+**Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome you to try it.**
 
 </div>
 
@@ -26,7 +26,7 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is an open-source language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write facts almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
+Litex is an open-source formal language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write facts almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
 
 The central idea is: **users write facts; Litex grows a verified context**. A file introduces objects, states facts, checks them, stores successful ones, and reuses them later.
 
@@ -102,7 +102,7 @@ For more, read the [Manual](https://litexlang.com/doc/Manual#manual-introduction
 
 ## Proofs Explain Themselves
 
-Litex does not only say whether a fact passed. It tells you how it was proved.
+Not only does Litex aim to be **the language where mathematics verifies itself**, but it also tells you how it was proved.
 
 ```litex
 abstract_prop p(x)

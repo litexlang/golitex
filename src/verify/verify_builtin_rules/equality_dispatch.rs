@@ -99,6 +99,19 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_one_pow_identity(left, right, line_file.clone())? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_zero_pow_positive_exponent_identity(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_power_addition_exponent_rule(
             left,
             right,
@@ -148,7 +161,19 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_sum_single_term(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_sum_split_last_term(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_product_single_term(left, right, line_file.clone(), verify_state)?
         {
             return Ok(done);
         }

@@ -30,20 +30,16 @@ impl Runtime {
                 }
             };
 
-            for g in forall_fact.params_def_with_type.groups.iter() {
-                match &g.param_type {
-                    ParamType::Obj(Obj::Range(_)) | ParamType::Obj(Obj::ClosedRange(_)) => {}
-                    _ => {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "by for: each forall parameter type must be range or closed_range"
-                                    .to_string(),
-                                forall_fact.line_file.clone(),
-                            ),
-                        )));
-                    }
-                }
-            }
+            ByForStmt::new(forall_fact.clone(), vec![], forall_fact.line_file.clone())
+                .expansion()
+                .map_err(|msg| {
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            msg,
+                            forall_fact.line_file.clone(),
+                        ),
+                    ))
+                })?;
 
             let names = forall_fact.params_def_with_type.collect_param_names();
             let lf = tb.line_file.clone();
@@ -134,20 +130,16 @@ impl Runtime {
             }
         };
 
-        for g in forall_fact.params_def_with_type.groups.iter() {
-            match &g.param_type {
-                ParamType::Obj(Obj::Range(_)) | ParamType::Obj(Obj::ClosedRange(_)) => {}
-                _ => {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "by for: each forall parameter type must be range or closed_range"
-                                .to_string(),
-                            forall_fact.line_file.clone(),
-                        ),
-                    )));
-                }
-            }
-        }
+        ByForStmt::new(forall_fact.clone(), vec![], forall_fact.line_file.clone())
+            .expansion()
+            .map_err(|msg| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        msg,
+                        forall_fact.line_file.clone(),
+                    ),
+                ))
+            })?;
 
         let names = forall_fact.params_def_with_type.collect_param_names();
         let lf = tb.line_file.clone();

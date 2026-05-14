@@ -1380,6 +1380,13 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             FnObjHead::AnonymousFnLiteral(Box::new(new_af))
         }
+        FnObjHead::FiniteSeqListObj(v) => {
+            let replaced = Obj::replace_bound_identifier(Obj::FiniteSeqListObj(v), from, to);
+            let Obj::FiniteSeqListObj(new_v) = replaced else {
+                unreachable!()
+            };
+            FnObjHead::FiniteSeqListObj(new_v)
+        }
         FnObjHead::Induc(p) => {
             let name = if p.name == from {
                 to.to_string()

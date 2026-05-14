@@ -50,16 +50,57 @@ impl Runtime {
                 }
             }
 
-            let have_obj_equal_stmt = HaveObjEqualStmt::new(
-                stmt.exist_fact_in_witness.params_def_with_type().clone(),
-                stmt.equal_tos.clone(),
-                stmt.line_file.clone(),
-            );
+            let type_check_result = rt.verify_args_satisfy_param_def_flat_types(
+                stmt.exist_fact_in_witness.params_def_with_type(),
+                &stmt.equal_tos,
+                &verify_state_for_well_defined,
+                ParamObjType::Exist,
+            )?;
+            if type_check_result.is_unknown() {
+                return Err(short_exec_error(
+                    witness_stmt,
+                    "witness exist fact: witness object does not satisfy the existential parameter type"
+                        .to_string(),
+                    None,
+                    vec![],
+                ));
+            }
 
-            match rt.exec_have_obj_equal_stmt(&have_obj_equal_stmt) {
-                Ok(_binding_result) => {}
-                Err(exec_stmt_error) => {
-                    return Err(exec_stmt_error);
+            rt.define_params_with_type(
+                stmt.exist_fact_in_witness.params_def_with_type(),
+                false,
+                ParamObjType::Exist,
+            )
+            .map_err(|define_error| {
+                short_exec_error(
+                    witness_stmt.clone(),
+                    "witness exist fact: failed to bind existential parameters".to_string(),
+                    Some(define_error),
+                    vec![],
+                )
+            })?;
+
+            let exist_param_names = stmt
+                .exist_fact_in_witness
+                .params_def_with_type()
+                .collect_param_names();
+            for (param_name, equal_to_obj) in exist_param_names.iter().zip(stmt.equal_tos.iter()) {
+                let equal_fact: AtomicFact = EqualFact::new(
+                    obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Exist),
+                    equal_to_obj.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
+                if let Err(store_error) =
+                    rt.store_atomic_fact_without_well_defined_verified_and_infer(equal_fact)
+                {
+                    return Err(short_exec_error(
+                        witness_stmt.clone(),
+                        "witness exist fact: failed to bind witness object to existential parameter"
+                            .to_string(),
+                        Some(store_error),
+                        vec![],
+                    ));
                 }
             }
 
