@@ -15,7 +15,7 @@ know:
         =>:
             $p(n + 1)
 
-strong_induc n from 0:
+by strong_induc n from 0:
     prove:
         $p(n)
     do_nothing

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// Prove by induction on an integer (`by induc … from …`) or strong induction (`strong_induc … from …`).
+/// Prove by induction on an integer (`by induc ... from ...`) or strong induction (`by strong_induc ... from ...`).
 #[derive(Clone)]
 pub struct ByInducStmt {
     pub to_prove: Vec<ExistOrAndChainAtomicFact>,
@@ -38,7 +38,8 @@ impl fmt::Display for ByInducStmt {
         if self.strong {
             write!(
                 f,
-                "{} {} {} {}{}\n{}{}\n{}\n{}",
+                "{} {} {} {} {}{}\n{}{}\n{}\n{}",
+                BY,
                 STRONG_INDUC,
                 self.param,
                 FROM,

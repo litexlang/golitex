@@ -1491,7 +1491,7 @@ by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
 
 ---
 
-### Induction (`by induc`)
+### Induction (`by induc`, `by strong_induc`)
 
 **`by induc n from base:`** proves **`P(n)`** for a discrete parameter from a base and step known (or proved) in the environment.
 
@@ -1516,7 +1516,34 @@ forall m Z:
         $r0(m)
 ```
 
-> Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` works with an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges and with a single tuple parameter over `cart({...}, {...}, ...)` (list-set factors), `by enumerate` works with finite list-set parameters, and `by extension` works with set equality.
+**`by strong_induc n from base:`** proves the same kind of target, but its step may use the stronger hypothesis that the target holds for every value from `base` through `n`.
+
+```litex
+abstract_prop r1(a)
+
+know:
+    $r1(0)
+    forall n Z:
+        n >= 0
+        forall y Z:
+            y >= 0
+            y <= n
+            =>:
+                $r1(y)
+        =>:
+            $r1(n + 1)
+
+by strong_induc n from 0:
+    prove:
+        $r1(n)
+
+forall m Z:
+    m >= 0
+    =>:
+        $r1(m)
+```
+
+> Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` / `by strong_induc` work with inductive or universal patterns over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges and with a single tuple parameter over `cart({...}, {...}, ...)` (list-set factors), `by enumerate` works with finite list-set parameters, and `by extension` works with set equality.
 
 
 
@@ -1693,7 +1720,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by contra` | Prove by contradiction |
 | `by enumerate finite_set` | Check a finite list of cases |
 | `by closed_range as cases` | Expand closed integer interval membership into finite equality cases |
-| `by induc` | Prove a statement by induction |
+| `by induc` / `by strong_induc` | Prove a statement by ordinary or strong induction |
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
 | `by transitive_prop` | Register a binary abstract predicate as transitive |
