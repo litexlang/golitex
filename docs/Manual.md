@@ -12,7 +12,7 @@ _In science, you can say things that seem crazy, but in the long run, they can t
 
 _- Jeff Hinton_
 
-> **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion about the mathematical philosophy behind it.
+> **Beta notice:** Litex is still in beta. The language and manual are part of an ongoing experiment in formalizing everyday mathematical reasoning. Please do not use Litex for production or mission-critical proof work yet, but we welcome attention, feedback, and discussion.
 
 This manual explains how Litex reads and checks mathematical proof scripts. The central idea is: **users write facts; Litex grows a verified context**.
 
@@ -305,10 +305,12 @@ If a struct has no `<=>:` filter facts, Litex can prove `&Name(args)` is nonempt
 
 #### Counting members
 
-Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; it also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
+Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `count(cart(A_1,...,A_n))` reduces to `count(A_1) * ... * count(A_n)` in calculations. It also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
 
 ```litex
 count({1, 2, 3}) = 3
+$is_finite_set(cart({1, 2}, {3, 4, 5}))
+count(cart({1, 2}, {3, 4, 5})) = count({1, 2}) * count({3, 4, 5})
 $is_finite_set(union({1, 2}, {2, 3}))
 $is_finite_set(intersect({1, 2}, {2, 3}))
 forall A, B finite_set:
@@ -1355,6 +1357,14 @@ eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
 eval sum(1, 2, '(x Z) Z {sum(2, 3, '(y Z) Z {x + y})}) # sum of a sum
 ```
 
+Use **`eval lhs from rhs`** when `lhs` is not itself directly executable but is known to equal an executable expression. Litex first verifies `lhs = rhs`, evaluates `rhs`, then records `lhs` as equal to the evaluated result.
+
+```litex
+have a set = sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+
+eval a from sum(1, 3, '(z N_pos: z <= 3)R{[1, 2, 3](z) * [4, 5, 6](z)})
+```
+
 ---
 
 ### Witness for `exist` (`witness exist`)
@@ -1424,6 +1434,9 @@ by cases 1 = 1:
 ### Proof by contradiction (`by contra`)
 
 Assumes the positive form of a statement, derives a contradiction (`impossible`), and concludes the negation.
+The goal may be an atomic fact, a `forall` fact, or a `not forall` fact. The
+closing `impossible` line still names an atomic fact whose two opposite forms
+are both known in the temporary proof context.
 
 ```litex
 abstract_prop p0(x, y)
@@ -1446,6 +1459,12 @@ by contra:
 by contra not $p0(1, 2):
     $p0(1, 2)
     impossible $q0(1, 2)
+
+by contra:
+    prove:
+        not forall x R:
+            x^2 >= x
+    impossible 0.5^2 >= 0.5
 ```
 
 ---
@@ -1472,7 +1491,7 @@ by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
 
 ---
 
-### Induction (`by induc`)
+### Induction (`by induc`, `by strong_induc`)
 
 **`by induc n from base:`** proves **`P(n)`** for a discrete parameter from a base and step known (or proved) in the environment.
 
@@ -1497,7 +1516,34 @@ forall m Z:
         $r0(m)
 ```
 
-> Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` works with an inductive or universal pattern over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges, `by enumerate` works with finite objects, and `by extension` works with set equality.
+**`by strong_induc n from base:`** proves the same kind of target, but its step may use the stronger hypothesis that the target holds for every value from `base` through `n`.
+
+```litex
+abstract_prop r1(a)
+
+know:
+    $r1(0)
+    forall n Z:
+        n >= 0
+        forall y Z:
+            y >= 0
+            y <= n
+            =>:
+                $r1(y)
+        =>:
+            $r1(n + 1)
+
+by strong_induc n from 0:
+    prove:
+        $r1(n)
+
+forall m Z:
+    m >= 0
+    =>:
+        $r1(m)
+```
+
+> Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` / `by strong_induc` work with inductive or universal patterns over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges and with a single tuple parameter over `cart({...}, {...}, ...)` (list-set factors), `by enumerate` works with finite list-set parameters, and `by extension` works with set equality.
 
 
 
@@ -1505,13 +1551,19 @@ forall m Z:
 
 ### Bounded iteration shell (`by for`)
 
-**`by for:`** packages a proof skeleton that iterates over a bounded index set (e.g. a **`range`**).
+**`by for:`** packages a proof skeleton that iterates over a bounded index set (e.g. a **`range`** or **`closed_range`**), or over the **Cartesian product** of list sets when the header is a single parameter with type **`cart({...}, {...}, ...)`** (each factor must be a list set; at least two factors). In the Cartesian form, the parameter is bound to a **tuple** on each step (nested tuple order matches `cart` arguments), so `x[1]`, `x[2]`, … pick the components.
 
 ```litex
 by for:
     prove:
         forall i range(0, 10):
             i < 10
+    do_nothing
+
+by for:
+    prove:
+        forall x cart({1, 2}, {3, 4}):
+            0 <= x[1] + x[2]
     do_nothing
 
 # inline by for: put the forall goal on the header line
@@ -1668,7 +1720,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by contra` | Prove by contradiction |
 | `by enumerate finite_set` | Check a finite list of cases |
 | `by closed_range as cases` | Expand closed integer interval membership into finite equality cases |
-| `by induc` | Prove a statement by induction |
+| `by induc` / `by strong_induc` | Prove a statement by ordinary or strong induction |
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
 | `by transitive_prop` | Register a binary abstract predicate as transitive |
@@ -2359,6 +2411,20 @@ forall a R:
     a^1 = a
 ```
 
+Base one simplifies to one for every well-defined exponent.
+
+```litex
+forall x R:
+    1^x = 1
+```
+
+Base zero simplifies to zero when the exponent is positive.
+
+```litex
+forall x R_pos:
+    0^x = 0
+```
+
 Positive integer exponents can use the usual exponent-addition law.
 
 ```litex
@@ -2434,7 +2500,12 @@ forall a, b R_pos, c R:
 
 #### Finite Sums And Products
 
-Litex has builtin rules for common finite `sum` and `product` shapes: splitting summands, concatenating adjacent ranges, peeling the last term, tiling a range, reindexing by a constant shift, and summing a constant body.
+Litex has builtin rules for common finite `sum` and `product` shapes: single-term ranges, splitting summands, concatenating adjacent ranges, peeling the last term, tiling a range, reindexing by a constant shift, and summing a constant body.
+
+```litex
+sum(1, 1, 'N_pos(x){x}) = 1
+product(1, 1, 'N_pos(x){x}) = 1
+```
 
 ```litex
 sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})
@@ -2620,6 +2691,31 @@ forall a R:
     0 <= a ^ 2
 ```
 
+Odd positive powers preserve order on real numbers.
+
+```litex
+forall a, b R:
+    a < b
+    =>:
+        a^3 < b^3
+```
+
+```litex
+forall a, b R:
+    a <= b
+    =>:
+        a^3 <= b^3
+```
+
+Positive integer powers also preserve strict order on nonnegative bases.
+
+```litex
+forall a, b R:
+    0 <= a < b
+    =>:
+        a^2 < b^2
+```
+
 If at least one component is nonzero, a sum of two squares is nonzero.
 
 ```litex
@@ -2669,6 +2765,24 @@ prove:
     0 <= k
     a <= b
     k * a <= k * b
+```
+
+Litex can also prove the sign of a product from the signs of its factors.
+
+```litex
+forall a, b R:
+    a <= 0
+    b >= 0
+    =>:
+        a * b <= 0
+```
+
+```litex
+forall a, b R:
+    a >= 0
+    b >= 0
+    =>:
+        a * b >= 0
 ```
 
 ```litex
@@ -3123,7 +3237,7 @@ inferred:
 
 #### Products And Tuples
 
-Membership in `cart(...)` with at least two factors adds tuple information, including that the object is a tuple and that its dimension matches the number of factors. It also aligns product-set bookkeeping.
+Membership in `cart(...)` with at least two factors adds tuple information, including that the object is a tuple and that its dimension matches the number of factors. It also aligns product-set bookkeeping and infers component membership **`u[i]`** in each cart factor.
 
 ```text
 known:
@@ -3131,6 +3245,8 @@ known:
 
 inferred:
     $is_tuple(u)
+    u[1] $in R
+    u[2] $in R
 ```
 
 #### Ranges
@@ -3177,6 +3293,8 @@ inferred:
 Membership in `fn(...)` records function-space information for suitable function heads, usually names or language-level function objects rather than arbitrary complex expressions. Later goals can use the expected domain and codomain.
 
 Membership in `finite_seq(...)`, `seq(...)`, and `matrix(...)` is handled similarly because these objects are read as function-like types.
+
+A finite sequence literal may be applied as the finite function it denotes. For example, `[1, 2, 3](i)` means the `i`-th entry, and Litex checks `i $in N_pos` and `i <= 3`.
 
 For membership in a `family` instance such as `\name(...)`, Litex expands the family to the set it denotes, then applies the usual membership inference rules to that expanded set.
 

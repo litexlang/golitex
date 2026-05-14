@@ -493,6 +493,90 @@ impl Runtime {
         )))
     }
 
+    // One as a base is invariant under exponentiation: `1^x = 1`.
+    // This is used for simplifying powers with arbitrary well-defined exponents.
+    // Example: `forall x R: 1^x = 1`.
+    pub(crate) fn try_verify_one_pow_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let pow = if Self::obj_is_builtin_literal_one(left) {
+            match right {
+                Obj::Pow(p) => p,
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_one(right) {
+            match left {
+                Obj::Pow(p) => p,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        if !Self::obj_is_builtin_literal_one(pow.base.as_ref()) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: 1^x = 1",
+        )))
+    }
+
+    // Zero as a base stays zero for positive exponents: `0^x = 0` when `x > 0`.
+    // This is the real power rule used to avoid undefined cases such as `0^0`.
+    // Example: `forall x R_pos: 0^x = 0`.
+    pub(crate) fn try_verify_zero_pow_positive_exponent_identity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let pow = if Self::obj_is_builtin_literal_zero(left) {
+            match right {
+                Obj::Pow(p) => p,
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            match left {
+                Obj::Pow(p) => p,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        if !Self::obj_is_builtin_literal_zero(pow.base.as_ref()) {
+            return Ok(None);
+        }
+
+        let positive_exponent: AtomicFact = GreaterFact::new(
+            (*pow.exponent).clone(),
+            Self::literal_zero_obj_for_abs_builtin(),
+            line_file.clone(),
+        )
+        .into();
+        let positive_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &positive_exponent,
+            verify_state,
+        )?;
+        if !positive_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "equality: 0^x = 0 for x > 0".to_string(),
+                vec![positive_result],
+            )
+            .into(),
+        ))
+    }
+
     fn power_factor_matches_base_and_exponent(
         &mut self,
         factor: &Obj,
@@ -1210,6 +1294,96 @@ impl Runtime {
             line_file,
             "equality: merge adjacent sum ranges with the same summand",
         )))
+    }
+
+    // A finite sum over one index is the summand at that index.
+    // Example: `sum(1, 1, 'N_pos(x){x}) = 1`.
+    pub(crate) fn try_verify_sum_single_term(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (sum_obj, other) in [(left, right), (right, left)] {
+            let Obj::Sum(sum) = sum_obj else {
+                continue;
+            };
+            if !self
+                .verify_objs_are_equal(
+                    sum.start.as_ref(),
+                    sum.end.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            let Some(expected) =
+                self.instantiate_unary_anonymous_summand_at(sum.func.as_ref(), sum.start.as_ref())?
+            else {
+                continue;
+            };
+            if self
+                .verify_objs_are_equal(&expected, other, line_file.clone(), verify_state)?
+                .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: single-term sum equals the summand",
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    // A finite product over one index is the factor at that index.
+    // Example: `product(1, 1, 'N_pos(x){x}) = 1`.
+    pub(crate) fn try_verify_product_single_term(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (product_obj, other) in [(left, right), (right, left)] {
+            let Obj::Product(product) = product_obj else {
+                continue;
+            };
+            if !self
+                .verify_objs_are_equal(
+                    product.start.as_ref(),
+                    product.end.as_ref(),
+                    line_file.clone(),
+                    verify_state,
+                )?
+                .is_true()
+            {
+                continue;
+            }
+            let Some(expected) = self.instantiate_unary_anonymous_summand_at(
+                product.func.as_ref(),
+                product.start.as_ref(),
+            )?
+            else {
+                continue;
+            };
+            if self
+                .verify_objs_are_equal(&expected, other, line_file.clone(), verify_state)?
+                .is_true()
+            {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: single-term product equals the factor",
+                )));
+            }
+        }
+        Ok(None)
     }
 
     // sum(s,e,f) = sum(s,e-1,f) + f(e): same unary summand, shared start, e = (e-1)+1 on the shorter range.

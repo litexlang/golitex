@@ -1,0 +1,36 @@
+prop solve_for_second_addend(a, b, c R):
+    forall t N_pos:
+        a + b = c
+        =>:
+            b = c - a
+
+prop double_negative(a R):
+    -(-a) = a
+
+claim:
+    prove:
+        forall x, y, k R:
+            x = -8.4
+            -2 * x + y = k
+            0.5 * x + y = 14
+            =>:
+                k = 35
+    -2 * x = -2 * (-8.4)
+    -2 * x = 16.8
+    -2 * x + y = 16.8 + y
+    16.8 + y = k
+    y = k - 16.8
+
+    0.5 * x = 0.5 * (-8.4)
+    0.5 * x = -4.2
+    0.5 * x + y = -4.2 + y
+    -4.2 + y = 14
+    y = 14 - (-4.2)
+    -(-4.2) = 4.2
+    y = 14 + 4.2
+    y = 18.2
+
+    k - 16.8 = 18.2
+    k = 18.2 + 16.8
+    18.2 + 16.8 = 35
+    k = 35

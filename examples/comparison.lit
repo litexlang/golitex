@@ -41,3 +41,45 @@ forall x, y R:
     <=>:
         x != 0 or y != 0
 
+
+forall a, b R:
+    a <= 0
+    b >= 0
+    =>:
+        a * b <= 0
+
+forall a, b R:
+    a >= 0
+    b <= 0
+    =>:
+        a * b <= 0
+
+forall a, b R:
+    a >= 0
+    b >= 0
+    =>:
+        a * b >= 0
+
+forall a, b R:
+    a <= 0
+    b <= 0
+    =>:
+        a * b >= 0
+
+forall a, b R:
+    a < 0
+    b > 0
+    =>:
+        a * b < 0
+
+forall a, b R:
+    a > 0
+    b > 0
+    =>:
+        a * b > 0
+
+forall a, b R:
+    a < b
+    =>:
+        a^3 < b^3
+        b^5 > a^5

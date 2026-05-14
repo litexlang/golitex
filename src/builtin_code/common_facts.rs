@@ -59,6 +59,12 @@ know:
     forall n Z, k N_pos:
         (-n) % k = (k - (n % k)) % k
 
+    forall n Z, m Z:
+        n <= m or n >= m + 1
+        n < m or n >= m
+        n >= m or n <= m - 1
+        n > m or n <= m
+
     forall n Z, m N_pos, k N_pos:
         n^m % k = ((n % k)^m) % k
 
@@ -101,6 +107,22 @@ know:
         =>:
             a % m = k
 
+    forall a Z, m N_pos:
+        exist r Z st {a = m * r}
+        =>:
+            a % m = 0
+
+    forall a Z, m N_pos:
+        exist r Z st {a = r * m}
+        =>:
+            a % m = 0
+
+    forall a Z, m N_pos, k N:
+        k < m
+        exist r Z st {a = r * m + k}
+        =>:
+            a % m = k
+
     forall a, b finite_set:
         count(union(a, b)) = count(a) + count(b) - count(intersect(a, b))
 
@@ -109,4 +131,9 @@ know:
         =>:
             not $is_nonempty_set(a)
             a = {}
+
+    forall a, b N_pos:
+        a % b = 0
+        =>:
+            b <= a
 "#;

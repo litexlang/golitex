@@ -41,3 +41,8 @@ forall x, y R:
 forall x R:
     x ^ 2 = abs(x) ^ 2
     x ^ 4 = abs(x) ^ 4
+
+forall a, b R:
+    0 <= a <= b
+    =>:
+        abs(a) <= abs(b)
