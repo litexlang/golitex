@@ -22,6 +22,7 @@ impl Runtime {
             CONTRA => self.parse_by_contra_stmt(tb),
             ENUMERATE => self.parse_by_enumerate_stmt(tb),
             INDUC => self.parse_by_induc_stmt(tb),
+            STRONG_INDUC => self.parse_strong_induc_stmt(tb),
             FOR => self.parse_by_for_stmt(tb),
             EXTENSION => self.parse_by_extension_stmt(tb),
             TRANSITIVE_PROP => self.parse_by_transitive_prop_stmt(tb),
@@ -31,7 +32,7 @@ impl Runtime {
             FAMILY => self.parse_by_family_stmt(tb),
             TUPLE => self.parse_by_tuple_stmt(tb),
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                    "by: expected cases, contra, enumerate finite_set, closed_range as cases, induc, for, extension, transitive_prop, commutative_prop, fn as set, fn set as set, family as set, or tuple as set after `by`, got `{}`",
+                    "by: expected cases, contra, enumerate finite_set, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, commutative_prop, fn as set, fn set as set, family as set, or tuple as set after `by`, got `{}`",
                     second_keyword
                 ), tb.line_file.clone())))),
         }
