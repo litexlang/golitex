@@ -935,14 +935,14 @@ impl Runtime {
         }
     }
 
-    pub fn exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
+    fn evaluate_obj_for_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<Obj, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &stmt.obj_to_eval,
             &VerifyState::new(0, false),
         )?;
 
         let resolved_obj = self.resolve_obj(&stmt.obj_to_eval);
-        let eval_result = self.run_in_local_env(|rt| {
+        self.run_in_local_env(|rt| {
             if !Self::object_supported_by_eval_stmt(&resolved_obj) {
                 return Err(short_exec_error(
                     stmt.clone().into(),
@@ -953,9 +953,11 @@ impl Runtime {
                 ));
             }
             rt.evaluate_symbol_obj_iterative(resolved_obj.clone(), stmt)
-        });
+        })
+    }
 
-        let evaluated_obj = eval_result?;
+    pub fn exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
+        let evaluated_obj = self.evaluate_obj_for_eval_stmt(stmt)?;
         let evaluated_equal_fact = EqualFact::new(
             stmt.obj_to_eval.clone(),
             evaluated_obj,
@@ -970,5 +972,47 @@ impl Runtime {
         )?;
 
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
+    }
+
+    pub fn exec_eval_by_stmt(&mut self, stmt: &EvalByStmt) -> Result<StmtResult, RuntimeError> {
+        let lhs_equal_rhs: Fact =
+            EqualFact::new(stmt.lhs.clone(), stmt.rhs.clone(), stmt.line_file.clone()).into();
+        let lhs_equal_rhs_result =
+            self.verify_fact_return_err_if_not_true(&lhs_equal_rhs, &VerifyState::new(0, false))?;
+        let lhs_equal_rhs_infer =
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state(lhs_equal_rhs)?;
+
+        let eval_rhs_stmt = EvalStmt::new(stmt.rhs.clone(), stmt.line_file.clone());
+        let evaluated_obj = self.evaluate_obj_for_eval_stmt(&eval_rhs_stmt)?;
+
+        let rhs_equal_evaluated: Fact = EqualFact::new(
+            stmt.rhs.clone(),
+            evaluated_obj.clone(),
+            stmt.line_file.clone(),
+        )
+        .into();
+        let rhs_equal_evaluated_infer = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                rhs_equal_evaluated,
+            )?;
+
+        let lhs_equal_evaluated: Fact =
+            EqualFact::new(stmt.lhs.clone(), evaluated_obj, stmt.line_file.clone()).into();
+        let lhs_equal_evaluated_infer = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                lhs_equal_evaluated,
+            )?;
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_infer_result_inside(lhs_equal_rhs_infer.clone());
+        infer_result.new_infer_result_inside(rhs_equal_evaluated_infer);
+        infer_result.new_infer_result_inside(lhs_equal_evaluated_infer);
+
+        Ok((NonFactualStmtSuccess::new(
+            stmt.clone().into(),
+            infer_result,
+            vec![lhs_equal_rhs_result.with_infers(lhs_equal_rhs_infer)],
+        ))
+        .into())
     }
 }

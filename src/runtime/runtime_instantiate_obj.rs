@@ -280,6 +280,7 @@ impl Runtime {
                 merged_body.extend(merged_body_original);
                 *x.head.clone()
             }
+            Obj::FiniteSeqListObj(list) => FnObjHead::FiniteSeqListObj(list),
             _ => return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("instantiate fn object: after substitution, head must be an atom, curried fn, or free-param binder, got {}", inst_head)))
             .into()),
         };

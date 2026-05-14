@@ -164,6 +164,55 @@ impl Runtime {
                     })?;
                 FnSetSpace::Anon((**a).clone())
             }
+            FnObjHead::FiniteSeqListObj(list) => {
+                for obj in list.objs.iter() {
+                    self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
+                }
+                if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "finite sequence literal function {} expects one argument",
+                            fn_obj.head
+                        )),
+                    )));
+                }
+                let index_obj = fn_obj.body[0][0].as_ref().clone();
+                self.verify_obj_well_defined_and_store_cache(&index_obj, verify_state)?;
+                let index_in_n_pos: AtomicFact = InFact::new(
+                    index_obj.clone(),
+                    StandardSet::NPos.into(),
+                    default_line_file(),
+                )
+                .into();
+                let index_in_n_pos_result =
+                    self.verify_atomic_fact(&index_in_n_pos, verify_state)?;
+                if index_in_n_pos_result.is_unknown() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "index {} is not a positive integer",
+                            index_obj
+                        )),
+                    )));
+                }
+                let list_len_obj: Obj = Number::new(list.objs.len().to_string()).into();
+                let index_not_larger_than_list_len: AtomicFact = LessEqualFact::new(
+                    index_obj.clone(),
+                    list_len_obj.clone(),
+                    default_line_file(),
+                )
+                .into();
+                let index_not_larger_than_list_len_result =
+                    self.verify_atomic_fact(&index_not_larger_than_list_len, verify_state)?;
+                if index_not_larger_than_list_len_result.is_unknown() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "{} <= {} is unknown",
+                            index_obj, list_len_obj
+                        )),
+                    )));
+                }
+                return Ok(());
+            }
             _ => {
                 let function_name_obj: Obj = (*fn_obj.head).clone().into();
                 let body = self

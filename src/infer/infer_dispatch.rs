@@ -88,9 +88,7 @@ impl Runtime {
         };
         let mut infer_result = InferResult::new();
         for atomic_fact in atomic_facts {
-            if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
-                infer_result.new_infer_result_inside(self.infer_equal_fact(&equal_fact)?);
-            }
+            infer_result.new_infer_result_inside(self.infer_atomic_fact(&atomic_fact)?);
         }
         Ok(infer_result)
     }

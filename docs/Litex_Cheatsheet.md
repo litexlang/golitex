@@ -550,7 +550,10 @@ Execution:
 
 **Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense.
 
-**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` *atomic goal* `:` on the header line, then optional proof blocks and closing `impossible`.
+**Syntax.** `by contra` `:` `prove` `:` *goal fact* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` *goal fact* `:` on the header line, then optional proof blocks and closing `impossible`.
+
+The goal can be an atomic fact, a `forall` fact, or a `not forall` fact. Litex
+uses the opposite fact as the temporary contradiction assumption.
 
 **Example.**
 
@@ -575,6 +578,12 @@ by contra:
 
 by contra 1 = 1:
     impossible 1 != 1
+
+by contra:
+    prove:
+        not forall x R:
+            x^2 >= x
+    impossible 0.5^2 >= 0.5
 ```
 
 Execution:
@@ -738,9 +747,9 @@ claim:
 
 ### `by for`
 
-**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions. For **list sets** `{ … }` instead of ranges, use **`by enumerate finite_set`** (same `prove:` / `forall` shape; see above).
+**Meaning.** For `forall` with parameters in **`range`** or **`closed_range`**, enumerate values, assume domain facts, run the proof, check conclusions. You can also use **one** parameter whose type is **`cart({...}, {...}, ...)`** with **only list-set** factors (at least two): Litex walks the Cartesian product and binds that parameter to a **tuple** each time (`x[1]`, `x[2]`, …). For **several** parameters each ranging over a single list set `{ … }`, use **`by enumerate finite_set`** instead.
 
-**Syntax.** `by for` `:` `prove` `:` single `forall` (only those range forms), then proof steps. Shorthand: `by for` inline `forall!` `:` with proof steps in the body.
+**Syntax.** `by for` `:` `prove` `:` single `forall` (those range forms, or the single-parameter `cart` form above), then proof steps. Shorthand: `by for` inline `forall!` `:` with proof steps in the body.
 
 ```litex
 by for:
@@ -753,6 +762,12 @@ by for:
     prove:
         forall n closed_range(0, 10):
             n <= 10
+    do_nothing
+
+by for:
+    prove:
+        forall x cart({1, 2}, {3, 4}):
+            0 <= x[1] + x[2]
     do_nothing
 
 by for forall! n range(0, 10): n < 10:

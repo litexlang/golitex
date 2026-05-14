@@ -1,0 +1,151 @@
+prop prime(a N_pos):
+    2 <= a
+    forall b N_pos:
+        2 <= b < a
+        =>:
+            a % b != 0
+
+claim:
+    prove:
+        forall a N_pos:
+            product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+
+    by induc a from 1:
+        prove:
+            product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+
+        product(1, 1, 'N_pos(x){x}) = 1
+        1 <= product(1, 1, 'N_pos(x){x})
+
+        claim:
+            prove:
+                forall k Z:
+                    k >= 1
+                    product(1, k, 'N_pos(x){x}) % k = 0 and k <= product(1, k, 'N_pos(x){x})
+                    =>:
+                        product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, 'N_pos(x){x})
+
+            product(1, k + 1, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * (k + 1)
+            witness exist t Z st {product(1, k + 1, 'N_pos(x){x}) = t * (k + 1)} from product(1, k, 'N_pos(x){x})
+            product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0
+            k + 1 <= product(1, k + 1, 'N_pos(x){x})
+
+claim:
+    prove:
+        forall a, k N_pos:
+            k <= a
+            =>:
+                product(1, a, 'N_pos(x){x}) % k = 0
+
+    by cases:
+        prove:
+            product(1, a, 'N_pos(x){x}) % k = 0
+        case k = a:
+            product(1, a, 'N_pos(x){x}) % a = 0
+            product(1, a, 'N_pos(x){x}) % k = product(1, a, 'N_pos(x){x}) % a = 0
+        case k < a:
+            product(1, a, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * product(k + 1, a, 'N_pos(x){x})
+            product(1, k, 'N_pos(x){x}) % k = 0
+            have by exist r Z st {product(1, k, 'N_pos(x){x}) = r * k}: r
+            witness exist t Z st {product(1, a, 'N_pos(x){x}) = t * k} from r * product(k + 1, a, 'N_pos(x){x}):
+                product(1, a, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * product(k + 1, a, 'N_pos(x){x}) = (r * k) * product(k + 1, a, 'N_pos(x){x}) = (r * product(k + 1, a, 'N_pos(x){x})) * k
+            product(1, a, 'N_pos(x){x}) % k = 0
+
+claim:
+    prove:
+        forall a N_pos:
+            a <= product(1, a, 'N_pos(x){x})
+
+    product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+
+claim:
+    prove:
+        forall a N_pos:
+            2 <= a
+            =>:
+                exist k N_pos st {$prime(k), a % k = 0}
+
+    by strong_induc x from 2:
+        prove:
+            exist k N_pos st {$prime(k), x % k = 0}
+
+        claim:
+            prove:
+                forall b N_pos:
+                    2 <= b < 2
+                    =>:
+                        2 % b != 0
+            by contra 2 % b != 0:
+                impossible b < 2
+        $prime(2)
+
+        witness exist t Z st {2 = t * 2} from 1
+        2 % 2 = 0
+        witness exist k N_pos st {$prime(k), 2 % k = 0} from 2
+
+        claim:
+            prove:
+                forall n Z:
+                    n >= 2
+                    forall m Z:
+                        2 <= m
+                        m <= n
+                        =>:
+                            exist k N_pos st {$prime(k), m % k = 0}
+                    =>:
+                        exist k N_pos st {$prime(k), (n + 1) % k = 0}
+
+            by cases exist k N_pos st {$prime(k), (n + 1) % k = 0}:
+                case $prime(n+1):
+                    witness exist t Z st {n + 1 = t * (n + 1)} from 1
+                    (n + 1) % (n + 1) = 0
+                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from n+1
+                case not $prime(n+1):
+                    by contra:
+                        prove:
+                            not forall b N_pos:
+                                2 <= b < n + 1
+                                =>:
+                                    (n + 1) % b != 0
+                        2 <= n + 1
+                        $prime(n+1)
+                        impossible $prime(n+1)
+
+                    have by exist b N_pos st {2 <= b < n+1, not (n + 1) % b != 0}: c
+
+                    2 <= c < n+1
+
+                    (n+1) % c = 0
+                    c <= n or c >= n + 1
+                    by cases:
+                        prove:
+                            c <= n
+                        case c <= n:
+                            ...
+                        case c >= n + 1:
+                            impossible c < n + 1
+
+                    have by exist k N_pos st {$prime(k), c % k = 0}: d
+
+                    have by exist k Z st {(n+1) = k * c}: e
+
+                    have by exist k Z st {c = k * d}: f
+
+                    witness exist t Z st {e * f * d = t * d} from e * f
+                    (e * f * d) % d = 0
+
+                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from d:
+                        n + 1 = e * c = e * (f * d) = (e * f) * d
+                        (n + 1) % d = ((e * f) * d) % d = 0
+
+claim forall! a N_pos: 2 <= a => exist k N_pos st {k > a, $prime(k)}:
+    2 <= a <= product(1, a, 'N_pos(x){x}) <= product(1, a, 'N_pos(x){x}) + 1
+    have by exist k N_pos st {$prime(k), (product(1, a, 'N_pos(x){x}) + 1) % k = 0}: k
+    by cases k > a:
+        case k <= a:
+            product(1, a, 'N_pos(x){x}) % k = 0
+            (product(1, a, 'N_pos(x){x}) + 1) % k = (product(1, a, 'N_pos(x){x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            impossible (product(1, a, 'N_pos(x){x}) + 1) % k = 0
+        case k > a:
+            do_nothing
+    witness exist k N_pos st {k > a, $prime(k)} from k

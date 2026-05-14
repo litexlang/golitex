@@ -3,7 +3,7 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_contra_stmt(&mut self, stmt: &ByContraStmt) -> Result<StmtResult, RuntimeError> {
-        let to_prove_fact: Fact = stmt.to_prove.clone().into();
+        let to_prove_fact = stmt.to_prove.clone();
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
                 short_exec_error(
@@ -17,16 +17,18 @@ impl Runtime {
         let (exec_proof_inside_results, last_error) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
 
-            let reverse_to_prove_fact = stmt.to_prove.make_reversed();
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(reverse_to_prove_fact)
-                .map_err(|store_fact_error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        format!("by contra: failed to know reverse of `{}`", to_prove_fact),
-                        Some(store_fact_error),
-                        vec![],
-                    )
-                })?;
+            let reverse_to_prove_fact = reverse_fact_for_by_contra(&to_prove_fact)?;
+            rt.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                reverse_to_prove_fact,
+            )
+            .map_err(|store_fact_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by contra: failed to know reverse of `{}`", to_prove_fact),
+                    Some(store_fact_error),
+                    vec![],
+                )
+            })?;
 
             let mut last_error: Option<RuntimeError> = None;
             for proof_stmt in stmt.proof.iter() {
@@ -101,5 +103,26 @@ impl Runtime {
             exec_proof_inside_results,
         ))
         .into())
+    }
+}
+
+fn reverse_fact_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
+    match fact {
+        Fact::AtomicFact(atomic_fact) => Ok(atomic_fact.make_reversed().into()),
+        Fact::ForallFact(forall_fact) => Ok(NotForallFact::new(forall_fact.clone()).into()),
+        Fact::NotForall(not_forall) => Ok(not_forall.forall_fact.clone().into()),
+        Fact::ExistFact(_)
+        | Fact::OrFact(_)
+        | Fact::AndFact(_)
+        | Fact::ChainFact(_)
+        | Fact::ForallFactWithIff(_) => Err(RuntimeError::ExecStmtError(
+            RuntimeErrorStruct::new_with_msg_and_line_file(
+                format!(
+                    "by contra: cannot build reverse assumption for `{}` yet",
+                    fact
+                ),
+                fact.line_file(),
+            ),
+        )),
     }
 }

@@ -376,6 +376,31 @@ impl Runtime {
                     in_fact.line_file.clone(),
                 );
 
+                // From `x $in cart(A_1, ..., A_n)`, infer `x[i] $in A_i` (or tuple components when the
+                // element is a literal n-tuple matching the product arity). Matches Cartesian product semantics.
+                // Example: `u $in cart(R, Q)` => `u[1] $in R`, `u[2] $in Q`.
+                for (index, factor) in cart.args.iter().enumerate() {
+                    let projected = match &in_fact.element {
+                        Obj::Tuple(tuple) if tuple.args.len() == cart.args.len() => {
+                            (*tuple.args[index]).clone()
+                        }
+                        _ => ObjAtIndex::new(
+                            in_fact.element.clone(),
+                            Number::new((index + 1).to_string()).into(),
+                        )
+                        .into(),
+                    };
+                    let projected_in_factor: Fact =
+                        InFact::new(projected, (**factor).clone(), in_fact.line_file.clone())
+                            .into();
+                    infer_result.new_fact(&projected_in_factor);
+                    infer_result.new_infer_result_inside(
+                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            projected_in_factor,
+                        )?,
+                    );
+                }
+
                 Ok(infer_result)
             }
             // Half-open integer interval: `i $in range(a,b)` => `i $in Z`, `a <= i`, `i < b`.

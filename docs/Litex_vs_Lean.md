@@ -256,6 +256,47 @@ by cases k(x) > 2:
         k(x) = 4 > 2
 ```
 
+### Application-Flavored Definitions Stay Close To The Formula
+
+Application problems often start from a formula that domain users already know.
+For example, the signed area of the parallelogram spanned by two planar vectors
+`x` and `y` is `x[1] * y[2] - x[2] * y[1]`.
+
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
+  <tr>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>have fn signed_area(x, y cart(R, R)) R = x[1] * y[2] - x[2] * y[1]
+
+signed_area((1, 0), (0, 1)) = 1 * 1 - 0 * 0 = 1</code></pre>
+    </td>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+def signedArea (x y : ℝ × ℝ) : ℝ :=
+  x.1 * y.2 - x.2 * y.1
+
+example : signedArea (1, 0) (0, 1) = 1 := by
+  norm_num [signedArea]</code></pre>
+    </td>
+  </tr>
+</table>
+
+This matters for applied mathematics. Many users who want to verify a geometry,
+physics, economics, or engineering calculation are not trying to study type
+theory first. Litex has an advantage in this setting because common applied
+objects can be written as ordinary mathematical objects, and the proof script
+can stay focused on the formula and the calculation rather than on choosing the
+right type-theoretic encoding or library API.
+
+```litex
+have fn signed_area(x, y cart(R, R)) R = x[1] * y[2] - x[2] * y[1]
+
+signed_area((1, 0), (0, 1)) = 1 * 1 - 0 * 0 = 1
+```
+
 ### Anonymous Functions Can Be Passed Directly
 
 Litex treats anonymous functions as ordinary objects. You can pass them directly into `sum`, `product`, or another higher-level mathematical object without first giving the function a separate name. This is useful for nested sums and products, where naming every temporary function would distract from the formula.

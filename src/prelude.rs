@@ -157,6 +157,7 @@ pub use crate::pipeline::{
     run_repl, run_source_code, run_source_code_in_file, run_source_code_in_file_with_ok,
     run_stmt_at_global_env,
 };
+pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 pub use crate::result::FactualStmtSuccess;
@@ -178,6 +179,7 @@ pub use crate::stmt::by_stmt::ByExtensionStmt;
 pub use crate::stmt::by_stmt::ByFamilyAsSetStmt;
 pub use crate::stmt::by_stmt::ByFnAsSetStmt;
 pub use crate::stmt::by_stmt::ByFnSetAsSetStmt;
+pub use crate::stmt::by_stmt::ByForExpansion;
 pub use crate::stmt::by_stmt::ByForStmt;
 pub use crate::stmt::by_stmt::ByInducStmt;
 pub use crate::stmt::by_stmt::ByTransitivePropStmt;
@@ -222,6 +224,7 @@ pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
 pub use crate::stmt::DefStructStmt;
+pub use crate::stmt::EvalByStmt;
 pub use crate::stmt::Stmt;
 pub use crate::verify::VerifyState;
 

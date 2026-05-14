@@ -28,6 +28,7 @@ impl Runtime {
             Stmt::ClearStmt(s) => self.exec_clear_stmt(s),
             Stmt::RunFileStmt(s) => self.exec_run_file_stmt(s),
             Stmt::EvalStmt(s) => self.exec_eval_stmt(s),
+            Stmt::EvalByStmt(s) => self.exec_eval_by_stmt(s),
             Stmt::WitnessExistFact(s) => self.exec_witness_exist_fact(s),
             Stmt::WitnessNonemptySet(s) => self.exec_witness_nonempty_set(s),
             Stmt::ByCasesStmt(s) => self.exec_by_cases_stmt(s),

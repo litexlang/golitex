@@ -54,6 +54,12 @@ fn mark_forall_param_coverage_in_fn_obj_head(
         | FnObjHead::FnSet(_)
         | FnObjHead::Induc(_)
         | FnObjHead::DefAlgo(_) => {}
+        FnObjHead::FiniteSeqListObj(v) => {
+            mark_forall_param_coverage_in_obj(
+                &Obj::FiniteSeqListObj(v.clone()),
+                coverage_by_forall_param,
+            );
+        }
         FnObjHead::AnonymousFnLiteral(a) => {
             mark_forall_param_coverage_in_obj(
                 &Obj::AnonymousFn((**a).clone()),

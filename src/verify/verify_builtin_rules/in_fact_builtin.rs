@@ -27,6 +27,16 @@ impl Runtime {
                         ),
                     );
                 }
+                let resolved_element = self.resolve_obj(&not_in_fact.element);
+                if let Obj::Number(evaluated_number) = resolved_element {
+                    return Ok(
+                        builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+                            not_in_fact,
+                            &evaluated_number,
+                            standard_set,
+                        ),
+                    );
+                }
             }
         }
         match (&not_in_fact.element, &not_in_fact.set) {
@@ -57,7 +67,21 @@ impl Runtime {
                             &evaluated_number,
                             standard_set,
                         );
-                    return Ok(evaluation_membership_result);
+                    if evaluation_membership_result.is_true() {
+                        return Ok(evaluation_membership_result);
+                    }
+                }
+                let resolved_element = self.resolve_obj(&in_fact.element);
+                if let Obj::Number(evaluated_number) = resolved_element {
+                    let resolved_membership_result =
+                        builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                            in_fact,
+                            &evaluated_number,
+                            standard_set,
+                        );
+                    if resolved_membership_result.is_true() {
+                        return Ok(resolved_membership_result);
+                    }
                 }
             }
         }
@@ -393,6 +417,24 @@ impl Runtime {
                 self.verify_atomic_fact(&expanded.into(), verify_state)
             }
             (_, target_set_obj) => {
+                let finite_seq_literal_application_result = self
+                    .verify_in_fact_finite_seq_literal_application_in_set(
+                        in_fact,
+                        target_set_obj,
+                        verify_state,
+                    )?;
+                if finite_seq_literal_application_result.is_true() {
+                    return Ok(finite_seq_literal_application_result);
+                }
+                let cart_projection_result = self
+                    .verify_in_fact_obj_at_index_in_standard_set_by_cart_factor_list_set(
+                        in_fact,
+                        target_set_obj,
+                        verify_state,
+                    )?;
+                if cart_projection_result.is_true() {
+                    return Ok(cart_projection_result);
+                }
                 if let Obj::FnObj(fn_obj) = &in_fact.element {
                     let fn_try = self.verify_in_fact_fn_application_in_typed_return_set(
                         fn_obj,
@@ -1840,6 +1882,135 @@ impl Runtime {
             );
         }
         Ok((StmtUnknown::new()).into())
+    }
+
+    // If every entry of `[a, b, ...]` is in `S`, then applying it at a valid index gives an element of `S`.
+    // Example: `[1, 2, 3](i) $in R` follows from `i $in N_pos`, `i <= 3`, and each entry in `R`.
+    fn verify_in_fact_finite_seq_literal_application_in_set(
+        &mut self,
+        in_fact: &InFact,
+        target_set_obj: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Obj::FnObj(fn_obj) = &in_fact.element else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let FnObjHead::FiniteSeqListObj(list) = fn_obj.head.as_ref() else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
+            return Ok((StmtUnknown::new()).into());
+        };
+
+        let index_obj = fn_obj.body[0][0].as_ref().clone();
+        let mut step_results = Vec::new();
+
+        let index_in_n_pos: AtomicFact = InFact::new(
+            index_obj.clone(),
+            StandardSet::NPos.into(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let index_in_n_pos_result = self.verify_atomic_fact(&index_in_n_pos, verify_state)?;
+        if !index_in_n_pos_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(index_in_n_pos_result);
+
+        let list_len_obj: Obj = Number::new(list.objs.len().to_string()).into();
+        let index_in_range: AtomicFact =
+            LessEqualFact::new(index_obj, list_len_obj, in_fact.line_file.clone()).into();
+        let index_in_range_result = self.verify_atomic_fact(&index_in_range, verify_state)?;
+        if !index_in_range_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        step_results.push(index_in_range_result);
+
+        for element in list.objs.iter() {
+            let element_in_target_set: AtomicFact = InFact::new(
+                element.as_ref().clone(),
+                target_set_obj.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let result = self.verify_atomic_fact(&element_in_target_set, verify_state)?;
+            if !result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            step_results.push(result);
+        }
+
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                format!(
+                    "finite sequence literal application is in {}",
+                    target_set_obj
+                ),
+                step_results,
+            ))
+            .into(),
+        )
+    }
+
+    // If `x $in cart({a, b}, {c, d})` is known, then `x[1]` ranges over `{a, b}`.
+    // Example: if every element of `{a, b}` is in `R`, prove `x[1] $in R`.
+    fn verify_in_fact_obj_at_index_in_standard_set_by_cart_factor_list_set(
+        &mut self,
+        in_fact: &InFact,
+        target_set_obj: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Obj::StandardSet(_) = target_set_obj else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let Obj::ObjAtIndex(obj_at_index) = &in_fact.element else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let Some(cart) = self.get_object_equal_to_cart(&obj_at_index.obj.to_string()) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let Some(index_number) = self.resolve_obj_to_number(&obj_at_index.index) else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        let Ok(one_based_index) = index_number.normalized_value.parse::<usize>() else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        if one_based_index == 0 || one_based_index > cart.args.len() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let factor = cart.args[one_based_index - 1].as_ref();
+        let Obj::ListSet(list_set) = factor else {
+            return Ok((StmtUnknown::new()).into());
+        };
+
+        let mut step_results = Vec::new();
+        for element in list_set.list.iter() {
+            let element_in_target_set: AtomicFact = InFact::new(
+                element.as_ref().clone(),
+                target_set_obj.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let result = self.verify_atomic_fact(&element_in_target_set, verify_state)?;
+            if !result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            step_results.push(result);
+        }
+
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                format!(
+                    "cart projection list_set elements are all in {}",
+                    target_set_obj
+                ),
+                step_results,
+            ))
+            .into(),
+        )
     }
 
     fn verify_in_fact_by_known_standard_subset_membership(
