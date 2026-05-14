@@ -4,7 +4,7 @@ use std::fmt;
 /// Prove by contradiction (`by contra:`).
 #[derive(Clone)]
 pub struct ByContraStmt {
-    pub to_prove: AtomicFact,
+    pub to_prove: Fact,
     pub proof: Vec<Stmt>,
     pub impossible_fact: AtomicFact,
     pub line_file: LineFile,
@@ -12,7 +12,7 @@ pub struct ByContraStmt {
 
 impl ByContraStmt {
     pub fn new(
-        to_prove: AtomicFact,
+        to_prove: Fact,
         proof: Vec<Stmt>,
         impossible_fact: AtomicFact,
         line_file: LineFile,

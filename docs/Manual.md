@@ -1434,6 +1434,9 @@ by cases 1 = 1:
 ### Proof by contradiction (`by contra`)
 
 Assumes the positive form of a statement, derives a contradiction (`impossible`), and concludes the negation.
+The goal may be an atomic fact, a `forall` fact, or a `not forall` fact. The
+closing `impossible` line still names an atomic fact whose two opposite forms
+are both known in the temporary proof context.
 
 ```litex
 abstract_prop p0(x, y)
@@ -1456,6 +1459,12 @@ by contra:
 by contra not $p0(1, 2):
     $p0(1, 2)
     impossible $q0(1, 2)
+
+by contra:
+    prove:
+        not forall x R:
+            x^2 >= x
+    impossible 0.5^2 >= 0.5
 ```
 
 ---
@@ -2375,6 +2384,20 @@ forall a R:
     a^1 = a
 ```
 
+Base one simplifies to one for every well-defined exponent.
+
+```litex
+forall x R:
+    1^x = 1
+```
+
+Base zero simplifies to zero when the exponent is positive.
+
+```litex
+forall x R_pos:
+    0^x = 0
+```
+
 Positive integer exponents can use the usual exponent-addition law.
 
 ```litex
@@ -2450,7 +2473,12 @@ forall a, b R_pos, c R:
 
 #### Finite Sums And Products
 
-Litex has builtin rules for common finite `sum` and `product` shapes: splitting summands, concatenating adjacent ranges, peeling the last term, tiling a range, reindexing by a constant shift, and summing a constant body.
+Litex has builtin rules for common finite `sum` and `product` shapes: single-term ranges, splitting summands, concatenating adjacent ranges, peeling the last term, tiling a range, reindexing by a constant shift, and summing a constant body.
+
+```litex
+sum(1, 1, 'N_pos(x){x}) = 1
+product(1, 1, 'N_pos(x){x}) = 1
+```
 
 ```litex
 sum(1, 3, '(x Z) Z {x + x}) = sum(1, 3, '(x Z) Z {x}) + sum(1, 3, '(x Z) Z {x})

@@ -550,7 +550,10 @@ Execution:
 
 **Meaning.** Prove the fact in `prove:` by assuming its **negation**, deriving a contradiction, and closing with **`impossible`** on an atomic fact that is jointly inconsistent in the checker’s sense.
 
-**Syntax.** `by contra` `:` `prove` `:` *atomic goal* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` *atomic goal* `:` on the header line, then optional proof blocks and closing `impossible`.
+**Syntax.** `by contra` `:` `prove` `:` *goal fact* newline, proof… `impossible` *atomic fact*. **Shorthand:** `by contra` *goal fact* `:` on the header line, then optional proof blocks and closing `impossible`.
+
+The goal can be an atomic fact, a `forall` fact, or a `not forall` fact. Litex
+uses the opposite fact as the temporary contradiction assumption.
 
 **Example.**
 
@@ -575,6 +578,12 @@ by contra:
 
 by contra 1 = 1:
     impossible 1 != 1
+
+by contra:
+    prove:
+        not forall x R:
+            x^2 >= x
+    impossible 0.5^2 >= 0.5
 ```
 
 Execution:
