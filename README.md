@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: Write math the way it looks
+# Litex: The Formal Way to Write Math as It Looks
 
 *by Jiachen Shen and The Litex Team, version 0.9.73-beta*
 
@@ -26,7 +26,7 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is an open-source language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write facts almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
+Litex is an open-source formal language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write facts almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
 
 The central idea is: **users write facts; Litex grows a verified context**. A file introduces objects, states facts, checks them, stores successful ones, and reuses them later.
 

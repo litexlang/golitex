@@ -1,14 +1,33 @@
-prop dvdN(a N, b N):
-    exist c N st {b = a * c}
-
-claim:
+by induc a from 1:
     prove:
-        not $dvdN(5, 12)
-    by contra not $dvdN(5, 12):
-        have by exist c N st {12 = 5 * c}: a
-        a $in N
-        a $in Z
-        witness exist c Z st {12 = 5 * c + 0} from a
-        12 % 5 = 0
-        2 = 12 % 5
-        impossible 2 = 0
+        product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+
+    product(1, 1, 'N_pos(x){x}) = 1
+    1 <= product(1, 1, 'N_pos(x){x})
+
+    claim:
+        prove:
+            forall k Z:
+                k >= 1
+                product(1, k, 'N_pos(x){x}) % k = 0 and k <= product(1, k, 'N_pos(x){x})
+                =>:
+                    product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, 'N_pos(x){x})
+
+        product(1, k + 1, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * (k + 1)
+        witness exist t Z st {product(1, k + 1, 'N_pos(x){x}) = t * (k + 1)} from product(1, k, 'N_pos(x){x})
+        product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0
+        k + 1 <= product(1, k + 1, 'N_pos(x){x})
+
+prop Prime(a N_pos):
+    2 <= a
+    forall b range(2, a):
+        a % b != 0
+
+prop superpowered(k N_pos):
+    forall n N_pos:
+        $Prime(k ^ (k ^ n) + 1)
+
+by for:
+    prove:
+        forall n range(2, 2):
+            2 % n != 0

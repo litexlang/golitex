@@ -243,6 +243,140 @@ mod lit_file_runner_tests {
         );
     }
 
+    #[test]
+    fn run_the_mechanics_chapter_3_markdown_file() {
+        run_with_large_stack(
+            "run_the_mechanics_chapter_3_markdown_file_large_stack",
+            run_the_mechanics_chapter_3_markdown_file_impl,
+        );
+    }
+
+    fn run_the_mechanics_chapter_3_markdown_file_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let chapter_3_path = manifest_dir
+            .join("The-Mechanics-of-Litex-Proof")
+            .join("Chapter_3_Parity_And_Divisibility.md");
+        assert!(
+            chapter_3_path.is_file(),
+            "Chapter 3 markdown file must exist at {:?}",
+            chapter_3_path
+        );
+
+        let snippets = litex_snippets_from_markdown_files(&manifest_dir, &[chapter_3_path.clone()]);
+        assert!(
+            !snippets.is_empty(),
+            "Chapter 3 markdown file must contain ```litex``` blocks"
+        );
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
+
+        let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
+        let wall_start = Instant::now();
+        for (snippet_index, (label, source_code, md_path_for_run_file)) in
+            snippets.iter().enumerate()
+        {
+            if snippet_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+            }
+
+            let normalized_source = remove_windows_carriage_return(source_code);
+            let start_snippet = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            if !run_succeeded {
+                panic!(
+                    "Chapter 3 markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                    run_output, label
+                );
+            }
+
+            snippet_durations_ms.push((label.clone(), duration_ms));
+        }
+
+        println!(
+            "--- Chapter 3 markdown: {} ```litex``` block(s), all OK ({:.2} ms wall) ---",
+            snippets.len(),
+            wall_start.elapsed().as_secs_f64() * 1000.0
+        );
+        for (label, duration_ms) in snippet_durations_ms.iter() {
+            println!("  OK  {:.2} ms  {}", duration_ms, label);
+        }
+    }
+
+    #[test]
+    fn run_the_mechanics_chapter_4_markdown_file() {
+        run_with_large_stack(
+            "run_the_mechanics_chapter_4_markdown_file_large_stack",
+            run_the_mechanics_chapter_4_markdown_file_impl,
+        );
+    }
+
+    fn run_the_mechanics_chapter_4_markdown_file_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let chapter_4_path = manifest_dir
+            .join("The-Mechanics-of-Litex-Proof")
+            .join("Chapter_4_Proofs_With_Structure_II.md");
+        assert!(
+            chapter_4_path.is_file(),
+            "Chapter 4 markdown file must exist at {:?}",
+            chapter_4_path
+        );
+
+        let snippets = litex_snippets_from_markdown_files(&manifest_dir, &[chapter_4_path.clone()]);
+        assert!(
+            !snippets.is_empty(),
+            "Chapter 4 markdown file must contain ```litex``` blocks"
+        );
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
+
+        let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
+        let wall_start = Instant::now();
+        for (snippet_index, (label, source_code, md_path_for_run_file)) in
+            snippets.iter().enumerate()
+        {
+            if snippet_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+            }
+
+            let normalized_source = remove_windows_carriage_return(source_code);
+            let start_snippet = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            if !run_succeeded {
+                panic!(
+                    "Chapter 4 markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                    run_output, label
+                );
+            }
+
+            snippet_durations_ms.push((label.clone(), duration_ms));
+        }
+
+        println!(
+            "--- Chapter 4 markdown: {} ```litex``` block(s), all OK ({:.2} ms wall) ---",
+            snippets.len(),
+            wall_start.elapsed().as_secs_f64() * 1000.0
+        );
+        for (label, duration_ms) in snippet_durations_ms.iter() {
+            println!("  OK  {:.2} ms  {}", duration_ms, label);
+        }
+    }
+
     fn run_the_mechanics_markdown_files_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let mechanics_dir = manifest_dir.join("The-Mechanics-of-Litex-Proof");
@@ -768,6 +902,148 @@ mod lit_file_runner_tests {
             if *total_count % 1000 == 0 {
                 println!(
                     "--- gsm8k progress: {} solution(s), {} failure(s) ---",
+                    total_count,
+                    failed_labels.len()
+                );
+            }
+        }
+    }
+
+    #[test]
+    #[ignore = "runs every solution in scripts/MetaMathQA-litex/MetaMathQA.jsonl"]
+    fn run_metamathqa_litex_solutions() {
+        run_with_large_stack(
+            "run_metamathqa_litex_solutions_large_stack",
+            run_metamathqa_litex_solutions_impl,
+        );
+    }
+
+    fn run_metamathqa_litex_solutions_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_path = manifest_dir
+            .join("scripts")
+            .join("MetaMathQA-litex")
+            .join("MetaMathQA.jsonl");
+        assert!(
+            jsonl_path.is_file(),
+            "MetaMathQA-litex jsonl file must exist at {:?}",
+            jsonl_path
+        );
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+
+        let run_wall_start = Instant::now();
+        let mut total_count: usize = 0;
+        let mut failed_labels: Vec<String> = Vec::new();
+        let mut total_solution_duration_ms: f64 = 0.0;
+
+        run_metamathqa_jsonl_file(
+            &jsonl_path,
+            &mut runtime,
+            &mut total_count,
+            &mut failed_labels,
+            &mut total_solution_duration_ms,
+        );
+
+        let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
+        println!("--- MetaMathQA-litex timing (summary) ---");
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  solutions: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+            total_count, total_solution_duration_ms, run_wall_ms
+        );
+
+        if failed_labels.is_empty() {
+            println!("--- MetaMathQA-litex: all solutions OK ---");
+            return;
+        }
+
+        println!("--- MetaMathQA-litex failed titles ---");
+        for label in failed_labels.iter() {
+            println!("{}", label);
+        }
+        panic!(
+            "MetaMathQA-litex solution run failed for {} of {} item(s)",
+            failed_labels.len(),
+            total_count
+        );
+    }
+
+    fn run_metamathqa_jsonl_file(
+        jsonl_path: &Path,
+        runtime: &mut Runtime,
+        total_count: &mut usize,
+        failed_labels: &mut Vec<String>,
+        total_solution_duration_ms: &mut f64,
+    ) {
+        let jsonl_path_str = match jsonl_path.to_str() {
+            Some(path_string) => path_string.to_string(),
+            None => panic!("{:?} must be valid UTF-8", jsonl_path),
+        };
+
+        let jsonl_content = match fs::read_to_string(jsonl_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
+        };
+
+        runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+
+        for (line_index, line) in jsonl_content.lines().enumerate() {
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            if line_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
+            }
+
+            let title = jsonl_string_field(line, "title").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse title in {:?} line {}: {}",
+                    jsonl_path,
+                    line_index + 1,
+                    error_message
+                )
+            });
+            let solution = jsonl_string_field(line, "solution").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse solution in {:?} line {} ({}): {}",
+                    jsonl_path,
+                    line_index + 1,
+                    title,
+                    error_message
+                )
+            });
+            let normalized_source = remove_windows_carriage_return(solution.as_str());
+
+            let start_time_for_one_solution = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), runtime);
+            let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
+            *total_solution_duration_ms += duration_ms;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(runtime, &stmt_results, &runtime_error, false);
+
+            *total_count += 1;
+            if !run_succeeded {
+                let label = format!("{}:{}", line_index + 1, title);
+                println!(
+                    "=== [FAILED] MetaMathQA-litex at jsonl line {} ({:.2} ms): {} ===\n{}\n",
+                    line_index + 1,
+                    duration_ms,
+                    title,
+                    run_output
+                );
+                failed_labels.push(label);
+            }
+
+            if *total_count % 100 == 0 {
+                println!(
+                    "--- MetaMathQA-litex progress: {} solution(s), {} failure(s) ---",
                     total_count,
                     failed_labels.len()
                 );

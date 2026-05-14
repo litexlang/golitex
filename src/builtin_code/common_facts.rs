@@ -107,6 +107,16 @@ know:
         =>:
             a % m = k
 
+    forall a Z, m N_pos:
+        exist r Z st {a = m * r}
+        =>:
+            a % m = 0
+
+    forall a Z, m N_pos:
+        exist r Z st {a = r * m}
+        =>:
+            a % m = 0
+
     forall a Z, m N_pos, k N:
         k < m
         exist r Z st {a = r * m + k}
@@ -121,4 +131,9 @@ know:
         =>:
             not $is_nonempty_set(a)
             a = {}
+
+    forall a, b N_pos:
+        a % b = 0
+        =>:
+            b <= a
 "#;

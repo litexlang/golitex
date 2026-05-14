@@ -18,3 +18,34 @@ by for:
         forall x cart({1, 2}, {3, 4}):
             0 <= x[1] + x[2]
     do_nothing
+
+prove:
+    prop Prime(x N_pos):
+        2 <= x
+        forall y range(2, x):
+            x % y != 0
+
+    prop superpowered(k N_pos):
+        forall n N_pos:
+            $Prime(k ^ (k ^ n) + 1)
+
+    by for:
+        prove:
+            forall n range(2, 2):
+                2 % n != 0
+
+    $Prime(2)
+
+    forall n N_pos:
+        1^n = 1
+        1^(1^n) + 1 = 1^1 + 1 = 2
+        $Prime(1^(1^n) + 1)
+
+    $superpowered(1)
+
+    by contra not $superpowered(2):
+        $Prime(2^(2^5) + 1) # by $superpowered(2)
+        (2^(2^5) + 1) % 641 = 0
+        impossible (2^(2^5) + 1) % 641 = 0
+
+    witness exist k N_pos st {$superpowered(k) and not $superpowered(k + 1)} from 1
