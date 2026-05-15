@@ -38,6 +38,7 @@ pub struct Environment {
     pub known_objs_equal_to_matrix_list:
         HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
     pub known_objs_equal_to_normalized_decimal_number: HashMap<ObjString, Number>,
+    pub known_objs_equal_to_set_builder: HashMap<ObjString, (SetBuilder, LineFile)>,
 
     pub known_objs_in_fn_sets: HashMap<ObjString, KnownFnInfo>,
 
@@ -92,6 +93,7 @@ impl Environment {
         >,
         known_matrix_list_objs: HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
         known_calculated_value_of_obj: HashMap<ObjString, Number>,
+        known_set_builder_objs: HashMap<ObjString, (SetBuilder, LineFile)>,
         cache_known_valid_obj: HashMap<ObjString, ()>,
         cache_known_fact: HashMap<FactString, LineFile>,
     ) -> Self {
@@ -117,6 +119,7 @@ impl Environment {
             known_objs_equal_to_finite_seq_list: known_finite_seq_list_objs,
             known_objs_equal_to_matrix_list: known_matrix_list_objs,
             known_objs_equal_to_normalized_decimal_number: known_calculated_value_of_obj,
+            known_objs_equal_to_set_builder: known_set_builder_objs,
             known_transitive_props: HashMap::new(),
             known_commutative_props: HashMap::new(),
             cache_well_defined_obj: cache_known_valid_obj,
@@ -660,6 +663,7 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

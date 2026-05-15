@@ -116,6 +116,15 @@ impl Runtime {
         None
     }
 
+    pub fn get_obj_equal_to_set_builder(&self, name: &str) -> Option<SetBuilder> {
+        for env in self.iter_environments_from_top() {
+            if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(name) {
+                return Some(set_builder.clone());
+            }
+        }
+        None
+    }
+
     pub fn get_obj_equal_to_tuple(&self, name: &str) -> Option<Tuple> {
         for env in self.iter_environments_from_top() {
             if let Some((Some(known_tuple_obj), _, _)) = env.known_objs_equal_to_tuple.get(name) {

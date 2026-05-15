@@ -178,7 +178,7 @@ Set operations `A union B` and `A intersect B` (that is, union and intersection)
 have t set = set_minus({1, 2}, {1})
 ```
 
-When Litex records **`x $in intersect(A, B)`**, membership inference also stores **`x $in A`** and **`x $in B`** so later steps can use each side directly.
+When Litex records **`x $in intersect(A, B)`**, membership inference also stores **`x $in A`** and **`x $in B`** so later steps can use each side directly. Likewise, **`x $in set_minus(A, B)`** yields **`x $in A`** and **`not x $in B`**.
 
 ```litex
 1 $in {1} `union {2}
@@ -3307,6 +3307,10 @@ inferred:
     x $in R
     0 <= x
 ```
+
+If an object is already known to equal a set comprehension, membership in that
+object is unfolded in the same way. For example, after `S = { y R: 0 <= y }`,
+knowing `x $in S` also infers `x $in R` and `0 <= x`.
 
 #### Function-Like Sets And Families
 

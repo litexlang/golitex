@@ -651,10 +651,18 @@ impl Runtime {
             // Example: from `t $in intersect({-2, 3}, {y Q : y^2 = 9})`, infer both memberships for case splits.
             Obj::Intersect(intersect) => {
                 let lf = in_fact.line_file.clone();
-                let element_in_left: Fact =
-                    InFact::new(in_fact.element.clone(), (*intersect.left).clone(), lf.clone()).into();
-                let element_in_right: Fact =
-                    InFact::new(in_fact.element.clone(), (*intersect.right).clone(), lf.clone()).into();
+                let element_in_left: Fact = InFact::new(
+                    in_fact.element.clone(),
+                    (*intersect.left).clone(),
+                    lf.clone(),
+                )
+                .into();
+                let element_in_right: Fact = InFact::new(
+                    in_fact.element.clone(),
+                    (*intersect.right).clone(),
+                    lf.clone(),
+                )
+                .into();
                 let mut infer_result = InferResult::new();
                 infer_result.new_fact(&element_in_left);
                 infer_result.new_infer_result_inside(
@@ -670,8 +678,36 @@ impl Runtime {
                 );
                 Ok(infer_result)
             }
-            // Other set forms: no membership unfold on this path.
-            _ => Ok(InferResult::new()),
+            // Set difference: storing `x $in set_minus(A, B)` yields `x $in A` and `not x $in B`.
+            // Example: from `t $in set_minus({1,2}, {2})`, infer membership in `{1,2}` and non-membership in `{2}`.
+            Obj::SetMinus(sm) => {
+                let lf = in_fact.line_file.clone();
+                let element_in_left: Fact =
+                    InFact::new(in_fact.element.clone(), (*sm.left).clone(), lf.clone()).into();
+                let element_not_in_right: Fact =
+                    NotInFact::new(in_fact.element.clone(), (*sm.right).clone(), lf.clone()).into();
+                let mut infer_result = InferResult::new();
+                infer_result.new_fact(&element_in_left);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        element_in_left,
+                    )?,
+                );
+                infer_result.new_fact(&element_not_in_right);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        element_not_in_right,
+                    )?,
+                );
+                Ok(infer_result)
+            }
+            set_obj => {
+                if let Some(set_builder) = self.get_obj_equal_to_set_builder(&set_obj.to_string()) {
+                    self.infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder)
+                } else {
+                    Ok(InferResult::new())
+                }
+            }
         }
     }
 

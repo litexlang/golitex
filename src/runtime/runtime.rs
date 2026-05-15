@@ -324,6 +324,17 @@ impl Runtime {
             .insert(name.to_string(), (cart, line_file));
     }
 
+    pub fn store_known_set_builder_obj(
+        &mut self,
+        name: &str,
+        set_builder: SetBuilder,
+        line_file: LineFile,
+    ) {
+        self.top_level_env()
+            .known_objs_equal_to_set_builder
+            .insert(name.to_string(), (set_builder, line_file));
+    }
+
     pub fn store_known_finite_seq_list_obj(
         &mut self,
         name: &str,

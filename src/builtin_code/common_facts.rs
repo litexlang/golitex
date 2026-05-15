@@ -136,4 +136,10 @@ know:
         a % b = 0
         =>:
             b <= a
+
+    forall s set:
+        =>:
+            s = {}
+        <=>:
+            not $is_nonempty_set(s)
 "#;

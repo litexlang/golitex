@@ -74,6 +74,8 @@ Litex feels simple because routine mathematical structure lives in the checker, 
 3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
 4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
 
+> Litex asks users to recognize mathematical structures and proof patterns: an equality chain, a membership claim, a subset argument, an existential witness, a contradiction, or a finite case split. The checker uses those patterns to look for the corresponding facts and routine consequences. The burden is not to remember the name of the right tactic or the right library helper for each small move.
+
 In this sense, Litex aims to be **the language where mathematics verifies itself**.
 
 For example, a syllogism is ordinary mathematical information:
