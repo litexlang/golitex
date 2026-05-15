@@ -75,7 +75,7 @@ Before using preview syntax, read:
 - Local: `docs/Preview_Features.md`
 - GitHub: https://github.com/litexlang/golitex/blob/main/docs/Preview_Features.md
 
-Examples include structs, struct parameters, field access, `by struct`, `by transitive_prop`, `by commutative_prop`, `fn_range(f)`, and `fn_dom(f)`.
+Examples include structs, struct parameters, field access, `by struct`, `by transitive_prop`, and `by commutative_prop`.
 
 ## Testing Checklist
 

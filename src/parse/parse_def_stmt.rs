@@ -373,6 +373,34 @@ impl Runtime {
             self.parse_have_fn_by_induc_stmt(tb)
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+            if tb.current_token_is_equal_to(AS) {
+                tb.skip_token(AS)?;
+                tb.skip_token(SET)?;
+                tb.skip_token(COLON)?;
+                let lf = tb.line_file.clone();
+                if tb.body.len() != 1 {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "`have fn <name> as set:` expects exactly one `forall` fact"
+                                .to_string(),
+                            lf,
+                        ),
+                    )));
+                }
+                let fact = self.parse_fact(&mut tb.body[0])?;
+                let forall = match fact {
+                    Fact::ForallFact(ff) => ff,
+                    _ => {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                "`have fn <name> as set:` expects a `forall` fact".to_string(),
+                                lf,
+                            ),
+                        )));
+                    }
+                };
+                return Ok(HaveFnByForallExistUniqueStmt::new(name, forall, lf).into());
+            }
             if tb.current_token_is_equal_to(BY) {
                 tb.skip_token(BY)?;
                 let lf = tb.line_file.clone();

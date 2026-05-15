@@ -71,8 +71,6 @@ impl Runtime {
             Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
-            Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
-            Obj::FnDom(x) => self.verify_fn_dom_well_defined(x, verify_state),
             Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
             Obj::SeqSet(x) => self.verify_seq_set_well_defined(x, verify_state),
             Obj::FiniteSeqListObj(x) => {
@@ -1659,40 +1657,6 @@ impl Runtime {
             )?;
         }
         Ok(())
-    }
-
-    fn verify_fn_range_well_defined(
-        &mut self,
-        x: &FnRange,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.fn_obj, verify_state)?;
-        if self.get_object_in_fn_set_or_restrict(&x.fn_obj).is_some() {
-            return Ok(());
-        }
-        Err(RuntimeError::from(WellDefinedRuntimeError(
-            RuntimeErrorStruct::new_with_just_msg(format!(
-                "`{}` is not known as a function for fn_range",
-                x.fn_obj
-            )),
-        )))
-    }
-
-    fn verify_fn_dom_well_defined(
-        &mut self,
-        x: &FnDom,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.fn_obj, verify_state)?;
-        if self.get_object_in_fn_set_or_restrict(&x.fn_obj).is_some() {
-            return Ok(());
-        }
-        Err(RuntimeError::from(WellDefinedRuntimeError(
-            RuntimeErrorStruct::new_with_just_msg(format!(
-                "`{}` is not known as a function for fn_dom",
-                x.fn_obj
-            )),
-        )))
     }
 
     fn verify_finite_seq_set_well_defined(

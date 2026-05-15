@@ -1,99 +1,64 @@
-by induc a from 1:
-    prove:
-        product(1, a, 'N_pos(x){x}) % a = 0 and a <= product(1, a, 'N_pos(x){x})
+prop injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
 
-    product(1, 1, 'N_pos(x){x}) = 1
-    1 <= product(1, 1, 'N_pos(x){x})
+prop surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
 
-    claim:
-        prove:
-            forall k Z:
-                k >= 1
-                product(1, k, 'N_pos(x){x}) % k = 0 and k <= product(1, k, 'N_pos(x){x})
-                =>:
-                    product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, 'N_pos(x){x})
+prop bijective_fn(S, T set, f fn(x S) T):
+    $injective_fn(S, T, f)
+    $surjective_fn(S, T, f)
 
-        product(1, k + 1, 'N_pos(x){x}) = product(1, k, 'N_pos(x){x}) * (k + 1)
-        witness exist t Z st {product(1, k + 1, 'N_pos(x){x}) = t * (k + 1)} from product(1, k, 'N_pos(x){x})
-        product(1, k + 1, 'N_pos(x){x}) % (k + 1) = 0
-        k + 1 <= product(1, k + 1, 'N_pos(x){x})
+prop is_inverse(S, T set, f fn(a S) T, g fn(b T) S):
+    forall x S:
+        g(f(x)) = x
+    forall y T:
+        y = f(g(y))
 
-prop prime(a N_pos):
-    2 <= a
-    forall b range(2, a):
-        a % b != 0
+know forall n N:
+    exist! y N st {2 * y = n * (n + 1)}
+
+have fn tri as set:
+    forall n N:
+        exist! y N st {2 * y = n * (n + 1)}
+
+have fn cantor_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
+
+know forall n N:
+    exist! t cart(N, N) st {n = cantor_pair(t)}
+
+have fn cantor_unpair as set:
+    forall n N:
+        exist! t cart(N, N) st {n = cantor_pair(t)}
+
+know forall t cart(N, N):
+    cantor_unpair(cantor_pair(t)) = t
+
+know forall n N:
+    n = cantor_pair(cantor_unpair(n))
 
 claim:
     prove:
-        forall a N_pos:
-            2 <= a
-            =>:
-                exist k N_pos st {$prime(k), a % k = 0}
+        $bijective_fn(cart(N, N), N, cantor_pair)
 
-    by strong_induc x from 2:
+    claim:
         prove:
-            exist k N_pos st {$prime(k), x % k = 0}
-            
-        by for:
-            prove:
-                forall n range(2, 2):
-                    2 % n != 0
+            forall t1, t2 cart(N, N):
+                cantor_pair(t1) = cantor_pair(t2)
+                =>:
+                    t1 = t2
+        t1 = cantor_unpair(cantor_pair(t1)) = cantor_unpair(cantor_pair(t2)) = t2
 
-        $prime(2)
+    $injective_fn(cart(N, N), N, cantor_pair)
 
-        witness exist t Z st {2 = t * 2} from 1
-        2 % 2 = 0
-        witness exist k N_pos st {$prime(k), 2 % k = 0} from 2
+    claim:
+        prove:
+            forall n N:
+                exist t cart(N, N) st {n = cantor_pair(t)}
+        witness exist t cart(N, N) st {n = cantor_pair(t)} from cantor_unpair(n)
 
-        claim:
-            prove:
-                forall n Z:
-                    n >= 2
-                    forall m Z:
-                        2 <= m
-                        m <= n
-                        =>:
-                            exist k N_pos st {$prime(k), m % k = 0}
-                    =>:
-                        exist k N_pos st {$prime(k), (n + 1) % k = 0}
-
-            by cases exist k N_pos st {$prime(k), (n + 1) % k = 0}:
-                case $prime(n+1):
-                    witness exist t Z st {n + 1 = t * (n + 1)} from 1
-                    (n + 1) % (n + 1) = 0
-                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from n+1
-                case not $prime(n+1):
-                    by contra:
-                        prove:
-                            not forall b range(2, n+1):
-                                (n + 1) % b != 0
-                        2 <= n + 1
-                        $prime(n+1)
-                        impossible $prime(n+1)
-
-                    have by exist b range(2, n+1) st {(n + 1) % b = 0}: c
-
-                    2 <= c < n+1
-
-                    (n+1) % c = 0
-                    c <= n or c >= n + 1
-                    by cases:
-                        prove:
-                            c <= n
-                        case c <= n:
-                            ...
-                        case c >= n + 1:
-                            impossible c < n + 1
-
-                    have by exist k N_pos st {$prime(k), c % k = 0}: d
-
-                    have by exist k Z st {(n+1) = k * c}: e
-
-                    have by exist k Z st {c = k * d}: f
-
-                    witness exist t Z st {e * f * d = t * d} from e * f
-                    (e * f * d) % d = 0
-
-                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from d:
-                        n + 1 = e * c = e * (f * d) = (e * f) * d
-                        (n + 1) % d = ((e * f) * d) % d = 0
+    $surjective_fn(cart(N, N), N, cantor_pair)
+    $bijective_fn(cart(N, N), N, cantor_pair)
