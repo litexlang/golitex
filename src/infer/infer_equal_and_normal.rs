@@ -200,7 +200,7 @@ impl Runtime {
     }
 
     // From `u = v`: merge numeric normal forms in the env; if one side is `a-b` and the other `0`, emit `a=b`;
-    // if one side is a literal cart/tuple/finite-seq/matrix list, record shape for the other symbol.
+    // if one side is a literal cart/tuple/set-builder/finite-seq/matrix list, record shape for the other symbol.
     // Example: `a = 1+2` binds `a` to normalized `3`; `0 = x-y` yields fact `x = y`.
     pub fn infer_equal_fact(
         &mut self,
@@ -214,6 +214,7 @@ impl Runtime {
             .new_infer_result_inside(self.infer_equal_fact_and_give_value_to_obj(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_cart(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact)?);
+        infer_result.new_infer_result_inside(self.infer_equal_fact_by_set_builder(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_finite_seq_list(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_matrix_list(equal_fact)?);
         infer_result.new_infer_result_inside(self.infer_equal_fact_by_anonymous_fn(equal_fact)?);
@@ -315,6 +316,47 @@ impl Runtime {
         }
 
         Ok(infer_result)
+    }
+
+    fn infer_equal_fact_set_builder_from_known_side(
+        &mut self,
+        set_builder: &SetBuilder,
+        known_set_builder_obj: &Obj,
+        target_obj: &Obj,
+        equal_fact: &EqualFact,
+    ) {
+        let lf = equal_fact.line_file.clone();
+        self.store_known_set_builder_obj(&target_obj.to_string(), set_builder.clone(), lf.clone());
+        self.store_known_set_builder_obj(
+            &known_set_builder_obj.to_string(),
+            set_builder.clone(),
+            lf,
+        );
+    }
+
+    fn infer_equal_fact_by_set_builder(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, RuntimeError> {
+        if let Obj::SetBuilder(set_builder) = &equal_fact.left {
+            self.infer_equal_fact_set_builder_from_known_side(
+                set_builder,
+                &equal_fact.left,
+                &equal_fact.right,
+                equal_fact,
+            );
+        }
+
+        if let Obj::SetBuilder(set_builder) = &equal_fact.right {
+            self.infer_equal_fact_set_builder_from_known_side(
+                set_builder,
+                &equal_fact.right,
+                &equal_fact.left,
+                equal_fact,
+            );
+        }
+
+        Ok(InferResult::new())
     }
 
     fn infer_equal_fact_by_tuple(
