@@ -6,6 +6,29 @@ impl Runtime {
         is_nonempty_set_fact: &IsNonemptySetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        // Empty set rule: `$is_nonempty_set(S)` follows from `S != {}`.
+        // Example: after `S != {}`, prove `$is_nonempty_set(S)`.
+        let empty_set: Obj = ListSet::new(vec![]).into();
+        let not_equal_empty: AtomicFact = NotEqualFact::new(
+            is_nonempty_set_fact.set.clone(),
+            empty_set,
+            is_nonempty_set_fact.line_file.clone(),
+        )
+        .into();
+        let not_equal_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&not_equal_empty)?;
+        if not_equal_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    is_nonempty_set_fact.clone().into(),
+                    InferResult::new(),
+                    "nonempty_set_from_not_equal_empty_set".to_string(),
+                    vec![not_equal_result],
+                )
+                .into(),
+            );
+        }
+
         match &is_nonempty_set_fact.set {
             Obj::StandardSet(_) => Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -457,6 +480,21 @@ impl Runtime {
                     .into(),
                 );
             }
+        }
+        // Empty set rule: `not $is_nonempty_set(S)` follows from known `S = {}`.
+        // Example: after `S = {}`, prove `not $is_nonempty_set(S)`.
+        let empty_set: Obj = ListSet::new(vec![]).into();
+        if self
+            .objs_have_same_known_equality_rc_in_some_env(&not_is_nonempty_set_fact.set, &empty_set)
+        {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    not_is_nonempty_set_fact.clone().into(),
+                    "not_nonempty_set_from_equal_empty_set".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
         }
         Ok((StmtUnknown::new()).into())
     }

@@ -44,7 +44,12 @@ impl Runtime {
                     None => continue,
                 }
             };
-            for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
+            let start_index = if i == iterate_from_env_index {
+                iterate_from_known_forall_fact_index
+            } else {
+                0
+            };
+            for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
                 let (fact_args_in_known_forall, given_fact_args, current_known_forall) = {
                     let env = &self.environment_stack[stack_idx];

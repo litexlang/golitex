@@ -50,7 +50,12 @@ impl Runtime {
             merged_bucket.dedup_by(|a, b| a.0.to_string() == b.0.to_string());
             if !merged_bucket.is_empty() {
                 let known_forall_facts_count = merged_bucket.len();
-                for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
+                let start_index = if i == iterate_from_env_index {
+                    iterate_from_known_forall_fact_index
+                } else {
+                    0
+                };
+                for j in start_index..known_forall_facts_count {
                     let entry_idx = known_forall_facts_count - 1 - j;
                     let (fact_args_in_known_forall, given_fact_args, current_known_forall) = {
                         let current_known_forall = &merged_bucket[entry_idx];

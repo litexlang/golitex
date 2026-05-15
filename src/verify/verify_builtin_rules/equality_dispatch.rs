@@ -214,6 +214,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        // Empty set rule: `S = {}` follows from `not $is_nonempty_set(S)`.
+        // This replaces the old common fact `S = {} <=> not $is_nonempty_set(S)`.
+        // Example: after `not $is_nonempty_set(S)`, prove `S = {}`.
+        if let Some(done) =
+            self.try_verify_empty_set_equality_from_not_nonempty(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_mod_nested_same_modulus_absorption(
             left,
             right,
@@ -327,5 +336,34 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn try_verify_empty_set_equality_from_not_nonempty(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let set = match (left, right) {
+            (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
+            (set, Obj::ListSet(list)) if list.list.is_empty() => set.clone(),
+            _ => return Ok(None),
+        };
+
+        let not_nonempty: AtomicFact = NotIsNonemptySetFact::new(set, line_file.clone()).into();
+        let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&not_nonempty)?;
+        if !sub.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                InferResult::new(),
+                "empty_set_equality_from_not_nonempty".to_string(),
+                vec![sub],
+            )
+            .into(),
+        ))
     }
 }
