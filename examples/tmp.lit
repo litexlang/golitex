@@ -1,0 +1,5 @@
+prop injective_from_R_to_R(f fn(x R) R):
+    forall a, b R:
+        f(a) = f(b)
+        =>:
+            a = b

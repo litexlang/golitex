@@ -14,7 +14,7 @@ _— Hotel California_
 
 Litex and Lean both make mathematical reasoning checkable by a computer. They are not trying to be the same language, and they expose different models of formal proof to the user.
 
-Lean is a mature theorem prover with a powerful type-theoretic foundation, a large ecosystem, and Mathlib, one of the most impressive formal mathematics libraries in the world. Litex is younger and more experimental. Its goal is narrower: make many everyday mathematical arguments look close to the way people write them on paper, while still checking them strictly.
+Lean is a mature theorem prover with a powerful type-theoretic foundation, a large ecosystem, and Mathlib, one of the most impressive formal mathematics libraries in the world. Its user community is large, active, and highly professional, and this gives Lean a significant present-day advantage in library coverage, tooling, examples, and expert support. Litex is younger and more experimental. Its goal is narrower: make many everyday mathematical arguments look close to the way people write them on paper, while still checking them strictly.
 
 - Lean exposes a very general proof engine. The user works with theorem statements, hypotheses, terms, proof states, tactics, and library lemmas.
 
@@ -24,9 +24,24 @@ One useful way to say the difference is: Lean often asks the user to choose proo
 
 > In short, in Lean, you often remember the names of facts and use `by` to explicitly tell Lean how to prove the goal; in Litex, *the shape of a fact already tells Litex what kind of proof path to try*.
 
+This is not just a syntactic convenience. Litex tries to make the main memory
+load be mathematical patterns: equality chains, subset arguments, existential
+witnesses, contradiction proofs, finite case splits, membership in a displayed
+set, and so on. The checker uses those patterns to search builtin rules, known
+facts, and known `forall` facts. The user is therefore asked to remember the
+mathematical structure of the argument, not the name of the tactic or library
+lemma that happens to package that move.
+
+This is a large reduction in friction for ordinary proofs. Even the largest
+library cannot package every future argument in exactly the final shape a user
+needs; eventually the user still has to write the mathematics. Litex's bet is
+that the remembered material should stay close to that mathematics. Remembering
+library and tactic names is useful in a system like Lean, but it is not the
+mathematical beauty the proof is trying to expose.
+
 This is why Litex can be described as **the language where mathematics verifies itself**.
 
-The trade-off is real. Lean is stronger for large formal developments and advanced abstractions. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
+The trade-off is real. Lean is stronger for large formal developments and advanced abstractions, and at present its ecosystem advantage is substantial. Litex aims to make a different part of the design space feel natural: ordinary mathematical arguments where the proof script reads like a sequence of checked facts.
 
 This page is not a ranking. It compares expression style, proof interaction, and where each system places routine mathematical structure. Most comparisons below use a Rosetta-stone layout: Litex on the left, Lean on the right, then a short note about what differs. The fenced `litex` block after each note is the runnable version used by the documentation test.
 
@@ -990,6 +1005,7 @@ some_statement(h)
 Use Lean when you need:
 
 - Mathlib coverage and a mature theorem-proving ecosystem;
+- a large professional user community with accumulated examples and expertise;
 - advanced type-theoretic abstractions;
 - production-grade formalization;
 - dependent induction, custom recursors, and deep automation;
@@ -1004,7 +1020,7 @@ Use Litex when you want:
 - builtin relationships among basic mathematical objects;
 - matching and substitution that reduce proof-engine bookkeeping.
 
-Both systems require mathematics. Litex is not a way to avoid proving things. It changes where many routine steps live: more basic relationships are built into the language, and more reuse happens through fact matching and substitution. Lean gives the user a much more general engine; Litex tries to make common mathematical reasoning feel direct.
+Both systems require mathematics. Litex is not a way to avoid proving things. It changes where many routine steps live: more basic relationships are built into the language, and more reuse happens through fact matching and substitution. Lean gives the user a much more general engine, backed by a rich library and a large expert community; Litex tries to make common mathematical reasoning feel direct.
 
 ---
 
@@ -1016,4 +1032,4 @@ For this reason, Litex treats its builtin mathematical concepts as primitive at 
 
 Lean makes a different foundational choice. Its kernel is based on dependent type theory, which is more abstract and more general than the set-theoretic picture used in much informal mathematics. Type theory can encode set theory and many other mathematical structures, and Lean can support highly abstract mathematics such as category theory in libraries on top of that kernel. In this sense, Lean is stronger for foundational flexibility, large abstractions, and developments that need precise control over the underlying representation.
 
-This does not mean one system is simply better at mathematics. Lean is a powerful proof assistant and functional programming language with a very general foundation. Litex is intentionally narrower: it aims to make ordinary mathematical proof scripts read like checked facts over familiar concepts. The design cost is less foundational generality; the design benefit is a surface where common mathematical relationships are builtin and directly usable.
+This does not mean one system is simply better at mathematics. Lean is a powerful proof assistant and functional programming language with a very general foundation. It also has the practical advantage of Mathlib, an active expert community, and years of accumulated formalization practice. Litex is intentionally narrower: it aims to make ordinary mathematical proof scripts read like checked facts over familiar concepts. The design cost is less foundational generality; the design benefit is a surface where common mathematical relationships are builtin and directly usable.
