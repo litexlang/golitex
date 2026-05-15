@@ -178,6 +178,8 @@ Set operations `A union B` and `A intersect B` (that is, union and intersection)
 have t set = set_minus({1, 2}, {1})
 ```
 
+When Litex records **`x $in intersect(A, B)`**, membership inference also stores **`x $in A`** and **`x $in B`** so later steps can use each side directly.
+
 ```litex
 1 $in {1} `union {2}
 ```
@@ -1576,6 +1578,24 @@ by for forall! i range(0, 10) => {i < 10}:
 ### Set equality by extensionality (`by extension`)
 
 Proves **`A = B`** by mutual inclusion, often with **`by enumerate finite_set`** on each side.
+
+Shorthand: put the equality on the header line — **`by extension A = B:`** — and use the body only for proof steps (no **`prove:`** wrapper).
+
+```litex
+by extension {1, 2} = {2, 1}:
+    by enumerate finite_set:
+        prove:
+            forall x {1, 2}:
+                x $in {2, 1}
+    by enumerate finite_set:
+        prove:
+            forall y {2, 1}:
+                y $in {1, 2}
+
+{1, 2} = {2, 1}
+```
+
+Long form (still supported):
 
 ```litex
 by extension:

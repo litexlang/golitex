@@ -780,14 +780,12 @@ by for forall! n range(0, 10): n < 10:
 
 **Meaning.** Set equality by extensionality (typically mutual inclusion).
 
-**Syntax.** `by extension` `:` `prove` `:` *set* `=` *set* newline, proof.
+**Syntax.** Either **`by extension`** `:` **`prove`** `:` *set* `=` *set* newline, proof blocks; or shorthand **`by extension`** *set* `=` *set* `:` newline, proof blocks only.
 
 **Example.**
 
 ```litex
-by extension:
-    prove:
-        {1, 2} = {2, 1}
+by extension {1, 2} = {2, 1}:
     by enumerate finite_set:
         prove:
             forall x {1, 2}:

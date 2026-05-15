@@ -1,0 +1,986 @@
+
+%%%% MetaMathQA-MATH_SV-332041 %%%%
+let factorial(n N_pos) N_pos
+
+know factorial(4) = 24
+
+prop round_table_permutations(x N_pos, y N_pos, w N_pos):
+    y = x - 1
+    w = factorial(y)
+
+know:
+    forall x N_pos, y N_pos, w N_pos:
+        y = x - 1
+        =>:
+            $round_table_permutations(x, y, w)
+prop factorial_equals_24_implies_4(n N_pos):
+    factorial(n) = 24
+    n = 4
+
+know:
+    forall n N_pos:
+        factorial(n) = 24
+        =>:
+            $factorial_equals_24_implies_4(n)
+claim:
+    prove:
+        forall x, y, w N_pos:
+            w = 24
+            y = x - 1
+            =>:
+                x = 5
+    $round_table_permutations(x, y, w)
+    w = factorial(y)
+    w = 24
+    factorial(y) = 24
+    $factorial_equals_24_implies_4(y)
+    y = 4
+    x = y + 1
+    x = 4 + 1
+    x = 5
+
+%%%% MetaMathQA-MATH_AnsAug-332214 %%%%
+let det(x obj) R
+let matmul(x obj, y obj) obj
+prop determinant_multiplicative(x, y obj):
+    det(matmul(x, y)) = det(x) * det(y)
+claim:
+    prove:
+        forall a, b obj, r R:
+            det(a) = 2
+            det(b) = 12
+            r = det(matmul(a, b))
+            =>:
+                r = 24
+    $determinant_multiplicative(a, b)
+    _mmq_calc = r = det(matmul(a, b)) = det(a) * det(b) = 2 * 12 = 24
+    r = 24
+
+%%%% MetaMathQA-MATH_AnsAug-332014 %%%%
+let sin(t R) R
+let cos(t R) R
+know:
+    forall a, b R:
+        sin(a - b) = sin(a) * cos(b) - cos(a) * sin(b)
+know:
+    forall a, b R:
+        cos(a - b) = cos(a) * cos(b) + sin(a) * sin(b)
+know:
+    forall t R:
+        cos(t) * cos(t) + sin(t) * sin(t) = 1
+
+claim:
+    prove:
+        forall x, y R, expr R:
+            expr = sin(x - y) * cos(y) + cos(x - y) * sin(y)
+            =>:
+                expr = sin(x)
+    _mmq_calc = expr = sin(x - y) * cos(y) + cos(x - y) * sin(y) = (sin(x) * cos(y) - cos(x) * sin(y)) * cos(y) + (cos(x) * cos(y) + sin(x) * sin(y)) * sin(y) = sin(x) * cos(y) * cos(y) - cos(x) * sin(y) * cos(y) + cos(x) * cos(y) * sin(y) + sin(x) * sin(y) * sin(y) = sin(x) * cos(y) * cos(y) - cos(x) * sin(y) * cos(y) + cos(x) * sin(y) * cos(y) + sin(x) * sin(y) * sin(y) = sin(x) * cos(y) * cos(y) + sin(x) * sin(y) * sin(y) + (-cos(x) * sin(y) * cos(y) + cos(x) * sin(y) * cos(y)) = sin(x) * cos(y) * cos(y) + sin(x) * sin(y) * sin(y) + 0 = sin(x) * (cos(y) * cos(y)) + sin(x) * (sin(y) * sin(y)) = sin(x) * (cos(y) * cos(y) + sin(y) * sin(y)) = sin(x) * 1 = sin(x)
+
+%%%% MetaMathQA-MATH_AnsAug-332672 %%%%
+let f(x R) R
+know:
+    forall x, y R:
+        f(x * y) = x * f(y)
+know f(1) = 25
+
+claim:
+    prove:
+        forall r R:
+            r = f(79)
+            =>:
+                r = 1975
+    _mmq_calc = f(79) = f(79 * 1) = 79 * f(1) = 79 * 25 = (80 - 1) * 25 = 80 * 25 - 1 * 25 = 2000 - 25 = 1975
+    r = 1975
+
+%%%% MetaMathQA-MATH_Rephrased-394271 %%%%
+prop cancel_common_factor(a, b, c R):
+    a != 0
+    c != 0
+    (a * b) / (a * c) = b / c
+
+know:
+    forall a, b, c R:
+        a != 0
+        c != 0
+        =>:
+            $cancel_common_factor(a, b, c)
+claim:
+    1.45 = 29 / 20
+    prove:
+            _mmq_calc = 1.45 = 145 / 100
+        145 = 5 * 29
+        100 = 5 * 20
+            _mmq_calc = 145 / 100 = (5 * 29) / (5 * 20)
+        5 != 0
+        20 != 0
+        $cancel_common_factor(5, 29, 20)
+            _mmq_calc = (5 * 29) / (5 * 20) = 29 / 20
+
+%%%% MetaMathQA-MATH_AnsAug-332818 %%%%
+prop rect_identity(x, y R):
+    (x + 1) * (y + 1) = x * y + x + y + 1
+prop pair_7_11(a N_pos, b N_pos):
+    a = 7
+    b = 11
+
+prop pair_11_7(a N_pos, b N_pos):
+    a = 11
+    b = 7
+
+prop lt_succ_le_20(n N_pos):
+    n < 20
+    n + 1 <= 20
+
+know:
+    forall n N_pos:
+        n < 20
+        =>:
+            $lt_succ_le_20(n)
+prop pos_imp_succ_ge_2(n N_pos):
+    n + 1 >= 2
+prop factor_pairs_for_77_in_range(a, b N_pos):
+    a >= 2
+    b >= 2
+    a <= 20
+    b <= 20
+    a * b = 77
+    $pair_7_11(a, b) or $pair_11_7(a, b)
+
+know:
+    forall a, b N_pos:
+        a >= 2
+        b >= 2
+        a <= 20
+        b <= 20
+        a * b = 77
+        =>:
+            $factor_pairs_for_77_in_range(a, b)
+claim:
+    prove:
+        forall x, y N_pos:
+            x < 20
+            y < 20
+            x * y + x + y = 76
+            =>:
+                x + y = 16
+    _mmq_calc = (x + 1) * (y + 1) = x * y + x + y + 1 = 76 + 1 = 77
+    $pos_imp_succ_ge_2(x)
+    $pos_imp_succ_ge_2(y)
+    $lt_succ_le_20(x)
+    $lt_succ_le_20(y)
+
+    $factor_pairs_for_77_in_range(x + 1, y + 1)
+
+    prove_in_each_case:
+        $pair_7_11(x + 1, y + 1) or $pair_11_7(x + 1, y + 1)
+        =>:
+            x + y = 16
+        prove:
+            x + 1 = 7
+            y + 1 = 11
+            x = 7 - 1
+            x = 6
+            y = 11 - 1
+            y = 10
+            x + y = 6 + 10
+            x + y = 16
+        prove:
+            x + 1 = 11
+            y + 1 = 7
+            x = 11 - 1
+            x = 10
+            y = 7 - 1
+            y = 6
+            x + y = 10 + 6
+            x + y = 16
+
+%%%% MetaMathQA-MATH_AnsAug-332378 %%%%
+let f(x R) R
+know:
+    forall x R:
+        x < -2
+        =>:
+            f(x) = 2 * x + 9
+know:
+    forall x R:
+        x >= -2
+        =>:
+            f(x) = 5 - 2 * x
+
+claim:
+    prove:
+        forall x R:
+            x = 3
+            x >= -2
+            =>:
+                f(x) = -1
+    f(x) = 5 - 2 * x
+    2 * x = 2 * 3
+    2 * x = 6
+    5 - 2 * x = 5 - 6
+    f(x) = 5 - 6
+    5 - 6 = -1
+    f(x) = -1
+
+%%%% MetaMathQA-MATH_Rephrased-332183 %%%%
+let c(n N_pos, k N_pos) N_pos
+know c(8, 2) = 28
+
+claim:
+    prove:
+        forall v, e, p, d N_pos:
+            v = 8
+            e = 12
+            p = c(v, 2)
+            d = p - e
+            =>:
+                d = 16
+    p = c(8, 2)
+    c(8, 2) = 28
+    p = 28
+    d = p - e
+    d = 28 - 12
+    d = 16
+
+%%%% MetaMathQA-MATH_Rephrased-332757 %%%%
+prop divides(d Z, n Z):
+    d != 0
+    <=>:
+        n % d = 0
+
+prop integer_root_theorem_monic_cubic(a2 Z, a1 Z, a0 Z, r Z):
+    r ^ 3 + a2 * r ^ 2 + a1 * r + a0 = 0
+    $divides(r, a0)
+
+know:
+    forall a2 Z, a1 Z, a0 Z, r Z:
+        r ^ 3 + a2 * r ^ 2 + a1 * r + a0 = 0
+        =>:
+            $integer_root_theorem_monic_cubic(a2, a1, a0, r)
+prop divides_minus_11_enumeration(d Z):
+    $divides(d, -11)
+    d = -11 or d = -1 or d = 1 or d = 11
+
+know:
+    forall d Z:
+        $divides(d, -11)
+        =>:
+            $divides_minus_11_enumeration(d)
+claim:
+    prove:
+        forall a2 Z, a1 Z, x Z:
+            x ^ 3 + a2 * x ^ 2 + a1 * x - 11 = 0
+            =>:
+                x = -11 or x = -1 or x = 1 or x = 11
+    $integer_root_theorem_monic_cubic(a2, a1, -11, x)
+    $divides_minus_11_enumeration(x)
+
+%%%% MetaMathQA-MATH_Rephrased-331383 %%%%
+let cos(x R) R
+let sin(x R) R
+
+know:
+    forall a, b R:
+        cos(a + b) = cos(a) * cos(b) - sin(a) * sin(b)
+know cos(60) = 1/2, sin(60) = sqrt(3) / 2, cos(90) = 0, sin(90) = 1
+
+claim:
+    prove:
+        forall a60, a90, a150, c150 R:
+            a60 = 60
+            a90 = 90
+            a150 = a60 + a90
+            c150 = cos(a150)
+            =>:
+                c150 = -sqrt(3)/2
+    _mmq_calc = c150 = cos(a150) = cos(a60 + a90) = cos(a60) * cos(a90) - sin(a60) * sin(a90) = (1/2) * 0 - (sqrt(3)/2) * 1 = 0 - sqrt(3)/2 = -sqrt(3)/2
+
+%%%% MetaMathQA-MATH_AnsAug-332633 %%%%
+prop midpoint_sum_preserved(n N_pos, a finite_seq(R, n), b finite_seq(R, n)):
+    forall k N_pos: k < n => b(k) = (a(k) + a(k+1)) / 2
+    b(n) = (a(n) + a(1)) / 2
+    finite_seq_sum(n, b, n) = finite_seq_sum(n, a, n)
+
+know:
+    forall n N_pos, a finite_seq(R, n), b finite_seq(R, n):
+        forall k N_pos: k < n => b(k) = (a(k) + a(k+1)) / 2
+        b(n) = (a(n) + a(1)) / 2
+        =>:
+            $midpoint_sum_preserved(n, a, n), b, n))
+claim:
+    prove:
+        forall n N_pos, a finite_seq(R, n), b finite_seq(R, n), c finite_seq(R, n), sum_a R, sum_b R, sum_c R:
+            n = 33
+            sum_a = finite_seq_sum(n, a, n)
+            sum_b = finite_seq_sum(n, b, n)
+            sum_c = finite_seq_sum(n, c, n)
+            forall k N_pos: k < n => b(k) = (a(k) + a(k+1)) / 2
+            b(n) = (a(n) + a(1)) / 2
+            forall k N_pos: k < n => c(k) = (b(k) + b(k+1)) / 2
+            c(n) = (b(n) + b(1)) / 2
+            sum_a = 99
+            =>:
+                sum_c = 99
+    $midpoint_sum_preserved(n, a, b)
+    finite_seq_sum(n, b, n) = finite_seq_sum(n, a, n)
+    sum_b = sum_a
+
+    $midpoint_sum_preserved(n, b, c)
+    finite_seq_sum(n, c, n) = finite_seq_sum(n, b, n)
+    sum_c = sum_b
+
+    sum_c = sum_a
+    sum_c = 99
+
+%%%% MetaMathQA-MATH_AnsAug-332353 %%%%
+know:
+    forall t, a R:
+        t != a <=> t < a or t > a
+
+claim:
+    prove:
+        forall x, y, denom R, domain set:
+            y = (x ^ 3 - 27) / (x + 27)
+            denom = x + 27
+            domain = {u R: u != -27}
+            =>:
+                domain = {u R: u != -27}
+    denom = x + 27 = x + 27
+    x + 27 = denom
+
+    claim:
+    prove:
+            forall u R:
+                u = -27
+                =>:
+                    u + 27 = 0
+            _mmq_calc = u + 27 = -27 + 27 = 0
+    claim:
+    forall u R:
+        u != -27
+        =>:
+            u + 27 != 0
+    prove_by_contradiction:
+        u + 27 = 0
+        u = 0 - 27
+        u = -27
+
+    domain = {u R: u != -27}
+    # interval notation: (-infty, -27) U (-27, infty)
+
+%%%% MetaMathQA-MATH_AnsAug-332013 %%%%
+prop divisible_by(x, y N_pos):
+    y > 0
+    <=>:
+        x % y = 0
+
+prop odd_not_divisible_by_two(k N_pos):
+    not $divisible_by(2 * k + 1, 2)
+prop product_divisible_left(a, b N_pos):
+    $divisible_by(a * b, a)
+prop product_divisible_right(a, b N_pos):
+    $divisible_by(a * b, b)
+claim:
+    prove:
+        forall n, two, three, k, q, ans N_pos:
+            two = 2
+            three = 3
+            k = 910
+            q = 607
+            n = 1821
+            ans = three
+            $odd_not_divisible_by_two(k)
+            $product_divisible_left(three, q)
+            =>:
+                ans = 3
+    _mmq_calc = two * k = 2 * 910 = 1820
+    two * k + 1 = 1820 + 1
+    two * k + 1 = 1821
+    n = 1821
+    n = two * k + 1
+    not $divisible_by(n, two)
+    _mmq_calc = three * 600 = 3 * 600 = 1800
+    _mmq_calc = three * 7 = 3 * 7 = 21
+    600 + 7 = 607
+    three * (600 + 7) = three * 600 + three * 7
+    three * 607 = 1800 + 21
+    three * 607 = 1821
+    three * q = three * 607
+    three * q = 1821
+    n = 1821
+    n = three * q
+    $divisible_by(n, three)
+    ans = three = three
+    three = 3
+    ans = three = (3) = 3
+
+%%%% MetaMathQA-MATH_Rephrased-359771 %%%%
+let cbrt(t R) R:
+    =>:
+        cbrt(t) ^ 3 = t
+prop cbrt_of_cube(t R):
+    cbrt(t ^ 3) = t
+claim:
+    prove:
+        forall x R:
+            x >= 0
+            (sqrt(x)) ^ 3 = 64
+            =>:
+                x = 16
+    cbrt((sqrt(x)) ^ 3) = cbrt(64)
+    $cbrt_of_cube(sqrt(x))
+    cbrt((sqrt(x)) ^ 3) = sqrt(x)
+    4 ^ 3 = 64
+    cbrt(4 ^ 3) = cbrt(64)
+    $cbrt_of_cube(4)
+    cbrt(4 ^ 3) = 4
+    cbrt(64) = 4
+    sqrt(x) = cbrt(64)
+    sqrt(x) = 4
+    (sqrt(x)) ^ 2 = 4 ^ 2
+    (sqrt(x)) ^ 2 = x
+    4 ^ 2 = 16
+    x = 16
+
+%%%% MetaMathQA-MATH_Rephrased-332874 %%%%
+claim:
+    prove:
+        forall n, a1, a2, a3, a4, a5, median, total, count, mean R:
+            a1 = n
+            a2 = n + 5
+            a3 = n + 6
+            a4 = n + 9
+            a5 = n + 15
+            median = 9
+            a3 = median
+            total = a1 + a2 + a3 + a4 + a5
+            count = 5
+            mean = total / count
+            =>:
+                mean = 10
+    n + 6 = 9
+    n = 9 - 6
+    n = 3
+
+    a1 = n
+    a1 = n = (3) = 3
+
+    a2 = n + 5
+    a2 = n + 5 = (3) + 5 = 3 + 5
+    a2 = n + 5 = (3) + 5 = 8
+
+    a3 = n + 6
+    a3 = n + 6 = (3) + 6 = 3 + 6
+    a3 = n + 6 = (3) + 6 = 9
+
+    a4 = n + 9
+    a4 = n + 9 = (3) + 9 = 3 + 9
+    a4 = n + 9 = (3) + 9 = 12
+
+    a5 = n + 15
+    a5 = n + 15 = (3) + 15 = 3 + 15
+    a5 = n + 15 = (3) + 15 = 18
+
+    total = a1 + a2 + a3 + a4 + a5
+    total = a1 + a2 + a3 + a4 + a5 = (3) + (8) + (9) + (12) + (18) = 3 + 8 + 9 + 12 + 18
+    total = a1 + a2 + a3 + a4 + a5 = (3) + (8) + (9) + (12) + (18) = 11 + 9 + 12 + 18
+    total = a1 + a2 + a3 + a4 + a5 = (3) + (8) + (9) + (12) + (18) = 20 + 12 + 18
+    total = a1 + a2 + a3 + a4 + a5 = (3) + (8) + (9) + (12) + (18) = 32 + 18
+    total = a1 + a2 + a3 + a4 + a5 = (3) + (8) + (9) + (12) + (18) = 50
+
+    count = 5
+    mean = total / count
+    mean = total / count = (50) / (5) = 50 / 5
+    mean = total / count = (50) / (5) = 10
+
+%%%% MetaMathQA-MATH_AnsAug-350743 %%%%
+prop pow_add_split(a, b, c R):
+    a ^ (b + c) = (a ^ b) * (a ^ c)
+prop sqrt_square(a R):
+    a >= 0
+    (sqrt(a)) ^ 2 = a
+
+know:
+    forall a R:
+        a >= 0
+        =>:
+            $sqrt_square(a)
+claim:
+    (sqrt(5)) ^ 4 = 25
+    prove:
+        2 + 2 = 4
+        5 >= 0
+        $sqrt_square(5)
+        $pow_add_split(sqrt(5), 2, 2)
+            _mmq_calc = (sqrt(5)) ^ 4 = (sqrt(5)) ^ (2 + 2) = (sqrt(5)) ^ 2 * (sqrt(5)) ^ 2 = 5 * 5 = 25
+
+%%%% MetaMathQA-MATH_Rephrased-332121 %%%%
+let designs_count(a N_pos, b N_pos) N_pos
+prop designs_count_def(a, b N_pos):
+    designs_count(a, b) = a * b
+claim:
+    prove:
+        forall colors, patterns, total N_pos:
+            colors = 3
+            patterns = 4
+            total = designs_count(colors, patterns)
+            =>:
+                total = 12
+    total = designs_count(colors, patterns) = designs_count(colors, patterns)
+    colors = 3
+    total = designs_count(3, patterns)
+    patterns = 4
+    total = designs_count(3, 4)
+    $designs_count_def(3, 4)
+    total = 3 * 4
+    total = 12
+
+%%%% MetaMathQA-MATH_AnsAug-331094 %%%%
+let sin(x R) R
+prop sin_90_is_1():
+    sin(90) = 1
+claim:
+    prove:
+        forall a, ab, bc, s R:
+            a = 90
+            ab = 16
+            bc = 24
+            s = sin(a)
+            =>:
+                s = 1
+    $sin_90_is_1()
+    _mmq_calc = s = sin(a) = sin(90) = 1
+
+%%%% MetaMathQA-GSM_Rephrased-332520 %%%%
+claim:
+    prove:
+        forall received, price, count, spent, remaining N_pos:
+            received = 100
+            price = 1
+            count = 3
+            spent = count * price
+            remaining = received - spent
+            =>:
+                remaining = 97
+    spent = 3 * 1
+    spent = 3
+    remaining = 100 - 3
+    remaining = 97
+
+%%%% MetaMathQA-MATH_SV-168022 %%%%
+claim:
+    prove:
+        forall X R:
+            X = 3
+            =>:
+                (1 + 2 + X) / 2 = 3
+    1 + 2 + 3 = 6
+    6 / 2 = 3
+    (1 + 2 + 3) / 2 = 3
+    (1 + 2 + X) / 2 = 3
+    (3 + X) / 2 = 3
+    3 + X = 6
+    X = 3
+
+prop barycentric_ratio(X R):
+    (1 + 2 + X) / 2 = 3
+    X = 3
+
+know:
+    forall X R:
+    (1 + 2 + X) / 2 = 3
+    =>:
+        $barycentric_ratio(X)
+$barycentric_ratio(3)
+
+%%%% MetaMathQA-MATH_AnsAug-332744 %%%%
+let sin(x R) R
+
+prop sin_period(x R):
+    sin(x) = sin(x - 360)
+prop sin_odd(x R):
+    sin(-x) = -sin(x)
+know sin(90) = 1
+
+claim:
+    prove:
+        forall theta, value R:
+            theta = 270
+            value = sin(theta)
+            =>:
+                value = -1
+    $sin_period(theta)
+    _mmq_calc = value = sin(theta) = sin(theta - 360)
+    _mmq_calc = theta - 360 = 270 - 360 = -90
+    sin(theta - 360) = sin(-90)
+    $sin_odd(90)
+    sin(-90) = -sin(90)
+    sin(90) = 1
+    _mmq_calc = sin(-90) = -sin(90) = -1
+    _mmq_calc = value = sin(-90) = -1
+
+%%%% MetaMathQA-GSM_Rephrased-332974 %%%%
+claim:
+    prove:
+        forall h_lucille, h_neighbor1, h_neighbor2, total, count, average, diff N_pos:
+            h_lucille = 80
+            h_neighbor1 = 70
+            h_neighbor2 = 99
+            total = h_lucille + h_neighbor1 + h_neighbor2
+            count = 3
+            average = total / count
+            diff = average - h_lucille
+            =>:
+                diff = 3
+    total = 80 + 70 + 99
+    total = 150 + 99
+    total = 249
+
+    average = 249 / 3
+    average = 83
+
+    diff = 83 - 80
+    diff = 3
+
+%%%% MetaMathQA-GSM_FOBAR-394336 %%%%
+know:
+    forall a, b R => a + b = b + a
+    forall a, b R => a - b = a + (-b)
+    forall a, b, c R: a + b = c => a = c - b
+    forall a, b, x R: a != 0, a * x = b => x = b / a
+    forall a R: a != 0 => a / a = 1
+    forall a, b R: b != 0 => (-a) / (-b) = a / b
+
+claim:
+    prove:
+        forall per_week, weeks, total_bought, periods, x, total_eaten, saved R:
+            per_week = 2
+            weeks = 16
+            total_bought = per_week * weeks
+            periods = weeks / 4
+            total_eaten = periods * x
+            saved = total_bought - total_eaten
+            saved = 28
+            =>:
+                x = 1
+    total_bought = 2 * 16
+    total_bought = 32
+    periods = 16 / 4
+    periods = 4
+    total_eaten = periods * x = (4) * x = 4 * x
+    saved = total_bought - total_eaten = (32) - (4 * x) = 32 - 4 * x
+    saved = 28
+    32 - 4 * x = 28
+    32 - 4 * x = 32 + (-4 * x)
+    32 + (-4 * x) = (-4 * x) + 32
+    -4 * x = 28 - 32
+    28 - 32 = -4
+    -4 * x = -4
+    x = (-4) / (-4)
+    (-4) / (-4) = 4 / 4
+    4 / 4 = 1
+    x = 1
+
+%%%% MetaMathQA-MATH_Rephrased-350028 %%%%
+let binom(n N, k N) N
+prop binom_all_chosen_is_one(n N):
+    binom(n, n) = 1
+claim:
+    prove:
+        forall n, k, v N:
+            n = 133
+            k = 133
+            v = binom(n, k)
+            =>:
+                v = 1
+    v = binom(n, k) = binom(n, k)
+    v = binom(133, k)
+    v = binom(133, 133)
+    $binom_all_chosen_is_one(133)
+    v = 1
+
+%%%% MetaMathQA-MATH_AnsAug-394193 %%%%
+let floor(x R) Z:
+    =>:
+        floor(x) $in Z
+        floor(x) <= x
+        x < floor(x) + 1
+
+prop floor_interval(x R, n Z):
+    n <= x
+    x < n + 1
+    floor(x) = n
+
+know:
+    forall x R, n Z:
+        n <= x
+        x < n + 1
+        =>:
+            $floor_interval(x, n)
+know:
+    forall x, y R:
+        x >= 0
+        y >= 0
+        x > y
+        =>:
+            sqrt(x) > sqrt(y)
+know:
+    forall x, y R:
+        x >= 0
+        y >= 0
+        x >= y
+        =>:
+            sqrt(x) >= sqrt(y)
+know sqrt(9) = 3
+know sqrt(16) = 4
+know:
+    forall x, y R:
+        x > y
+        =>:
+            x >= y
+
+claim:
+    prove:
+        forall ans R:
+            ans = (floor(sqrt(12))) ^ 2
+            =>:
+                ans = 9
+    12 > 9
+    sqrt(12) > sqrt(9)
+    sqrt(9) = 3
+    sqrt(12) > 3
+    16 > 12
+    sqrt(16) > sqrt(12)
+    sqrt(16) = 4
+    4 > sqrt(12)
+    sqrt(12) < 4
+    sqrt(12) >= 3
+    3 + 1 = 4
+    $floor_interval(sqrt(12), 3)
+    _mmq_calc = ans = (floor(sqrt(12))) ^ 2 = 3 ^ 2 = 9
+
+%%%% MetaMathQA-MATH_Rephrased-332375 %%%%
+prop sqrt_product(a, b R):
+    a >= 0
+    b >= 0
+    sqrt(a * b) = sqrt(a) * sqrt(b)
+
+know:
+    forall a, b R:
+        a >= 0
+        b >= 0
+        =>:
+            $sqrt_product(a, b)
+prop sqrt_square_nonneg(a R):
+    a >= 0
+    sqrt(a ^ 2) = a
+
+know:
+    forall a R:
+        a >= 0
+        =>:
+            $sqrt_square_nonneg(a)
+claim:
+    sqrt(288) = 12 * sqrt(2)
+    prove:
+        288 = 144 * 2
+        144 = 12 ^ 2
+        144 >= 0
+        2 >= 0
+        12 >= 0
+        $sqrt_product(144, 2)
+        $sqrt_square_nonneg(12)
+            _mmq_calc = sqrt(288) = sqrt(144 * 2) = sqrt(144) * sqrt(2) = sqrt(12 ^ 2) * sqrt(2) = 12 * sqrt(2)
+
+%%%% MetaMathQA-MATH_AnsAug-394178 %%%%
+let tan(x R) R
+prop tan_add(a, b R):
+    1 - tan(a) * tan(b) != 0
+    tan(a + b) = (tan(a) + tan(b)) / (1 - tan(a) * tan(b))
+
+know:
+    forall a, b R:
+        1 - tan(a) * tan(b) != 0
+        =>:
+            $tan_add(a, b)
+claim:
+    prove:
+        forall x, p, n, d, t R:
+            tan(x) = 2
+            tan(p) = 1
+            n = tan(x) + tan(p)
+            d = 1 - tan(x) * tan(p)
+            t = n / d
+            =>:
+                tan(x + p) = -3
+    n = tan(x) + tan(p) = tan(x) + tan(p)
+    n = 2 + 1
+    n = 3
+
+    d = 1 - tan(x) * tan(p) = 1 - tan(x) * tan(p)
+    d = 1 - 2 * 1
+    d = 1 - 2
+    d = -1
+    -1 != 0
+    1 - tan(x) * tan(p) != 0
+
+    $tan_add(x, p)
+    tan(x + p) = (tan(x) + tan(p)) / (1 - tan(x) * tan(p))
+    (tan(x) + tan(p)) / (1 - tan(x) * tan(p)) = n / d
+    tan(x + p) = n / d
+
+    t = n / d
+    t = n / d = (3) / (-1) = 3 / -1
+    t = n / d = (3) / (-1) = -3
+    tan(x + p) = t
+    tan(x + p) = -3
+
+%%%% MetaMathQA-MATH_Rephrased-350233 %%%%
+have mat nonempty_set
+let det(x mat) R
+let matmul(x mat, y mat) mat
+prop det_multiplicative(x, y mat):
+    det(matmul(x, y)) = det(x) * det(y)
+claim:
+    prove:
+        forall a, b mat, det_ab R:
+            det(a) = 2
+            det(b) = 12
+            det_ab = det(matmul(a, b))
+            =>:
+                det_ab = 24
+    $det_multiplicative(a, b)
+    _mmq_calc = det_ab = det(matmul(a, b)) = det(a) * det(b) = 2 * det(b) = 2 * 12 = 24
+
+%%%% MetaMathQA-MATH_FOBAR-332215 %%%%
+let f(n Z) Z
+prop rule_both(n Z):
+    n % 3 = 0
+    n % 7 = 0
+    f(n) = n / 21
+
+know:
+    forall n Z:
+        n % 3 = 0
+        n % 7 = 0
+        =>:
+            $rule_both(n)
+prop rule_only7(n Z):
+    n % 7 = 0
+    n % 3 != 0
+    f(n) = 3 * n
+
+know:
+    forall n Z:
+        n % 7 = 0
+        n % 3 != 0
+        =>:
+            $rule_only7(n)
+prop rule_only3(n Z):
+    n % 3 = 0
+    n % 7 != 0
+    f(n) = 7 * n
+
+know:
+    forall n Z:
+        n % 3 = 0
+        n % 7 != 0
+        =>:
+            $rule_only3(n)
+prop rule_else(n Z):
+    n % 3 != 0
+    n % 7 != 0
+    f(n) = n + 3
+
+know:
+    forall n Z:
+        n % 3 != 0
+        n % 7 != 0
+        =>:
+            $rule_else(n)
+claim:
+    prove:
+        forall a, x N_pos:
+            a = 7
+            x = 7
+            =>:
+                x = 7
+                f(2) = f(f(f(f(f(f(f(2)))))))
+    2 % 3 = 2
+    2 != 0
+    2 % 7 = 2
+    2 != 0
+    $rule_else(2)
+    _mmq_calc = f(2) = 2 + 3 = 5
+    5 % 3 = 2
+    2 != 0
+    5 % 7 = 5
+    5 != 0
+    $rule_else(5)
+    _mmq_calc = f(f(2)) = f(5) = 5 + 3 = 8
+    8 % 3 = 2
+    2 != 0
+    8 % 7 = 1
+    1 != 0
+    $rule_else(8)
+    _mmq_calc = f(f(f(2))) = f(8) = 8 + 3 = 11
+    11 % 3 = 2
+    2 != 0
+    11 % 7 = 4
+    4 != 0
+    $rule_else(11)
+    _mmq_calc = f(f(f(f(2)))) = f(11) = 11 + 3 = 14
+    14 % 7 = 0
+    14 % 3 = 2
+    2 != 0
+    $rule_only7(14)
+    _mmq_calc = f(f(f(f(f(2))))) = f(14) = 3 * 14 = 42
+    42 % 3 = 0
+    42 % 7 = 0
+    $rule_both(42)
+    _mmq_calc = f(f(f(f(f(f(2)))))) = f(42) = 42 / 21 = 2
+    2 % 3 = 2
+    2 != 0
+    2 % 7 = 2
+    2 != 0
+    $rule_else(2)
+    _mmq_calc = f(f(f(f(f(f(f(2))))))) = f(2) = 2 + 3 = 5
+
+%%%% MetaMathQA-MATH_Rephrased-358023 %%%%
+know:
+    forall a, b R: b != 0 => (a / b) * b = a
+    forall a, b, x R: a != 0, a * x = b => x = b / a
+
+claim:
+    prove:
+        forall y, doubled, after_divide R:
+            doubled = 2 * y
+            after_divide = doubled / 5
+            after_divide = 10
+            =>:
+                y = 25
+    _mmq_calc = doubled / 5 = after_divide = 10
+    (doubled / 5) * 5 = 10 * 5
+    _mmq_calc = (doubled / 5) * 5 = doubled
+    10 * 5 = 50
+    _mmq_calc = doubled = 50
+    _mmq_calc = 2 * y = doubled = 50
+    y = 50 / 2
+    y = 25
+
+%%%% MetaMathQA-MATH_FOBAR-394226 %%%%
+let digit_sum(y N) N
+know digit_sum(2004) = 2 + 0 + 0 + 4
+know digit_sum(2019) = 2 + 0 + 1 + 9
+
+claim:
+    prove:
+        forall x, s2004, s2019 N:
+            s2004 = digit_sum(2004)
+            s2019 = digit_sum(2019)
+            x = s2019
+            =>:
+                x = 12
+    _mmq_calc = s2004 = digit_sum(2004) = 2 + 0 + 0 + 4 = 2 + 0 + 4 = 2 + 4 = 6
+    _mmq_calc = x = s2019 = digit_sum(2019) = 2 + 0 + 1 + 9 = 2 + 1 + 9 = 3 + 9 = 12
