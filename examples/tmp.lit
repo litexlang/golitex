@@ -1,0 +1,83 @@
+prop injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+prop surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
+
+prop bijective_fn(S, T set, f fn(x S) T):
+    $injective_fn(S, T, f)
+    $surjective_fn(S, T, f)
+
+prop is_inverse(S, T set, f fn(a S) T, g fn(b T) S):
+    forall x S:
+        g(f(x)) = x
+    forall y T:
+        y = f(g(y))
+
+claim:
+    prove:
+        forall n N:
+            exist! y N st {2 * y = n * (n + 1)}
+    by cases:
+        prove:
+            exist y N st {2 * y = n * (n + 1)}
+        case n % 2 = 0:
+            have by exist y N st {n = 2 * y + 0}: a
+            witness exist y N st {2 * y = n * (n + 1)} from a * (n + 1):
+                2 * (a * (n + 1)) = (2 * a) * (n + 1) = (2 * a + 0) * (n + 1) = n * (n + 1)
+        case n % 2 = 1:
+            have by exist y N st {n = 2 * y + 1}: a
+            witness exist y N st {2 * y = n * (n + 1)} from (a + 1) * n:
+                2 * ((a + 1) * n) = (2 * (a + 1)) * n = (2 * a + 2) * n = (2 * a + 1 + 1) * n = (n + 1) * n = n * (n + 1)
+
+    forall y1, y2 N:
+        2 * y1 = n * (n + 1)
+        2 * y2 = n * (n + 1)
+        =>:
+            y1 = (2 * y1) / 2 = (n * (n + 1)) / 2 = (2 * y2) / 2 = y2
+
+have fn tri as set:
+    forall n N:
+        exist! y N st {2 * y = n * (n + 1)}
+
+have fn cantor_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
+
+know forall n N:
+    exist! t cart(N, N) st {n = cantor_pair(t)}
+
+have fn cantor_unpair as set:
+    forall n N:
+        exist! t cart(N, N) st {n = cantor_pair(t)}
+
+know forall t cart(N, N):
+    cantor_unpair(cantor_pair(t)) = t
+
+know forall n N:
+    n = cantor_pair(cantor_unpair(n))
+
+claim:
+    prove:
+        $bijective_fn(cart(N, N), N, cantor_pair)
+
+    claim:
+        prove:
+            forall t1, t2 cart(N, N):
+                cantor_pair(t1) = cantor_pair(t2)
+                =>:
+                    t1 = t2
+        t1 = cantor_unpair(cantor_pair(t1)) = cantor_unpair(cantor_pair(t2)) = t2
+
+    $injective_fn(cart(N, N), N, cantor_pair)
+
+    claim:
+        prove:
+            forall n N:
+                exist t cart(N, N) st {n = cantor_pair(t)}
+        witness exist t cart(N, N) st {n = cantor_pair(t)} from cantor_unpair(n)
+
+    $surjective_fn(cart(N, N), N, cantor_pair)
+    $bijective_fn(cart(N, N), N, cantor_pair)

@@ -906,14 +906,6 @@ These predicates express equality of functions.
 
 ---
 
-### Function Properties
-
-Litex also provides the standard function-property atomic fact forms `$injective(f)`, `$surjective(f)`, and `$bijective(f)`.
-
-For now, these forms have dedicated atomic-fact nodes in the kernel, but Litex does not apply a builtin verification rule for injectivity, surjectivity, or bijectivity. Users should prove and cite the needed facts explicitly.
-
----
-
 ### Not Builtin: User Predicates
 
 Calls such as `$p(x)` are also atomic facts, but they are not builtin predicates. They come from user declarations such as `prop p(...)` or `abstract_prop p(...)`, and Litex verifies them from the user's definition or known facts.
@@ -1111,7 +1103,7 @@ forall z R:
 
 ---
 
-### Function from unique existence (`have fn … by forall … exist!`)
+### Function from unique existence (`have fn ... as set: forall ... exist!`)
 
 Use this when mathematics tells you that for every input there exists a **unique** output. Litex then introduces the corresponding function.
 
@@ -1126,10 +1118,11 @@ know forall x A:
     =>:
         exist! y B st {$F(x, y)}
 
-have fn f by forall x A:
-    $p(x)
-    =>:
-        exist! y B st {$F(x, y)}
+have fn f as set:
+    forall x A:
+        $p(x)
+        =>:
+            exist! y B st {$F(x, y)}
 
 forall x A:
     $p(x)
@@ -1723,7 +1716,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have by exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
 | `have fn ... : case ...` | Define a function by cases |
-| `have fn ... by forall ... exist!` | Define a function from unique existence |
+| `have fn ... as set: forall ... exist!` | Define a function from unique existence |
 | `have fn by induc` | Define a recursive function by induction |
 | `let` | Introduce local names and local assumptions |
 | `family` | Define a parameterized set or function space |

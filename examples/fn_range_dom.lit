@@ -1,4 +1,0 @@
-have f fn(x R) R
-
-fn_range(f) = fn_range(f)
-fn_dom(f) = fn_dom(f)

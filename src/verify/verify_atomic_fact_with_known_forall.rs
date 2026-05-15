@@ -387,21 +387,6 @@ impl Runtime {
                 left.end.as_ref(),
                 given_arg,
             ),
-            Obj::FnRange(ref left) => match given_arg {
-                Obj::FnRange(given) => self
-                    .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                        left.fn_obj.as_ref(),
-                        given.fn_obj.as_ref(),
-                    ),
-                _ => Ok(None),
-            },
-            Obj::FnDom(ref left) => match given_arg {
-                Obj::FnDom(given) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    left.fn_obj.as_ref(),
-                    given.fn_obj.as_ref(),
-                ),
-                _ => Ok(None),
-            },
             Obj::FiniteSeqSet(ref left) => self.match_arg_when_left_is_finite_seq_set(
                 left.set.as_ref(),
                 left.n.as_ref(),

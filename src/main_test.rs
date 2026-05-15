@@ -130,6 +130,71 @@ mod lit_file_runner_tests {
         out
     }
 
+    fn run_single_the_mechanics_chapter_markdown_file_impl(
+        chapter_filename: &str,
+        chapter_label: &str,
+    ) {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let chapter_path = manifest_dir
+            .join("The-Mechanics-of-Litex-Proof")
+            .join(chapter_filename);
+        assert!(
+            chapter_path.is_file(),
+            "{} markdown file must exist at {:?}",
+            chapter_label,
+            chapter_path
+        );
+
+        let snippets = litex_snippets_from_markdown_files(&manifest_dir, &[chapter_path.clone()]);
+        assert!(
+            !snippets.is_empty(),
+            "{} markdown file must contain ```litex``` blocks",
+            chapter_label
+        );
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
+
+        let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
+        let wall_start = Instant::now();
+        for (snippet_index, (label, source_code, md_path_for_run_file)) in
+            snippets.iter().enumerate()
+        {
+            if snippet_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+            }
+
+            let normalized_source = remove_windows_carriage_return(source_code);
+            let start_snippet = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            if !run_succeeded {
+                panic!(
+                    "{} markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                    chapter_label, run_output, label
+                );
+            }
+
+            snippet_durations_ms.push((label.clone(), duration_ms));
+        }
+
+        println!(
+            "--- {} markdown: {} ```litex``` block(s), all OK ({:.2} ms wall) ---",
+            chapter_label,
+            snippets.len(),
+            wall_start.elapsed().as_secs_f64() * 1000.0
+        );
+        for (label, duration_ms) in snippet_durations_ms.iter() {
+            println!("  OK  {:.2} ms  {}", duration_ms, label);
+        }
+    }
+
     #[test]
     fn run_tmp() {
         let tmp_lit_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -274,62 +339,10 @@ forall a set:
     }
 
     fn run_the_mechanics_chapter_3_markdown_file_impl() {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let chapter_3_path = manifest_dir
-            .join("The-Mechanics-of-Litex-Proof")
-            .join("Chapter_3_Parity_And_Divisibility.md");
-        assert!(
-            chapter_3_path.is_file(),
-            "Chapter 3 markdown file must exist at {:?}",
-            chapter_3_path
+        run_single_the_mechanics_chapter_markdown_file_impl(
+            "Chapter_3_Parity_And_Divisibility.md",
+            "Chapter 3",
         );
-
-        let snippets = litex_snippets_from_markdown_files(&manifest_dir, &[chapter_3_path.clone()]);
-        assert!(
-            !snippets.is_empty(),
-            "Chapter 3 markdown file must contain ```litex``` blocks"
-        );
-
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
-
-        let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
-        let wall_start = Instant::now();
-        for (snippet_index, (label, source_code, md_path_for_run_file)) in
-            snippets.iter().enumerate()
-        {
-            if snippet_index > 0 {
-                runtime.clear_current_env_and_parse_name_scope();
-                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
-            }
-
-            let normalized_source = remove_windows_carriage_return(source_code);
-            let start_snippet = Instant::now();
-            let (stmt_results, runtime_error) =
-                run_source_code(normalized_source.as_str(), &mut runtime);
-            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
-
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-            if !run_succeeded {
-                panic!(
-                    "Chapter 3 markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                    run_output, label
-                );
-            }
-
-            snippet_durations_ms.push((label.clone(), duration_ms));
-        }
-
-        println!(
-            "--- Chapter 3 markdown: {} ```litex``` block(s), all OK ({:.2} ms wall) ---",
-            snippets.len(),
-            wall_start.elapsed().as_secs_f64() * 1000.0
-        );
-        for (label, duration_ms) in snippet_durations_ms.iter() {
-            println!("  OK  {:.2} ms  {}", duration_ms, label);
-        }
     }
 
     #[test]
@@ -341,62 +354,49 @@ forall a set:
     }
 
     fn run_the_mechanics_chapter_4_markdown_file_impl() {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let chapter_4_path = manifest_dir
-            .join("The-Mechanics-of-Litex-Proof")
-            .join("Chapter_4_Proofs_With_Structure_II.md");
-        assert!(
-            chapter_4_path.is_file(),
-            "Chapter 4 markdown file must exist at {:?}",
-            chapter_4_path
+        run_single_the_mechanics_chapter_markdown_file_impl(
+            "Chapter_4_Proofs_With_Structure_II.md",
+            "Chapter 4",
         );
+    }
 
-        let snippets = litex_snippets_from_markdown_files(&manifest_dir, &[chapter_4_path.clone()]);
-        assert!(
-            !snippets.is_empty(),
-            "Chapter 4 markdown file must contain ```litex``` blocks"
+    #[test]
+    fn run_the_mechanics_chapter_5_markdown_file() {
+        run_with_large_stack(
+            "run_the_mechanics_chapter_5_markdown_file_large_stack",
+            run_the_mechanics_chapter_5_markdown_file_impl,
         );
+    }
 
-        let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
+    fn run_the_mechanics_chapter_5_markdown_file_impl() {
+        run_single_the_mechanics_chapter_markdown_file_impl("Chapter_5_Logic.md", "Chapter 5");
+    }
 
-        let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
-        let wall_start = Instant::now();
-        for (snippet_index, (label, source_code, md_path_for_run_file)) in
-            snippets.iter().enumerate()
-        {
-            if snippet_index > 0 {
-                runtime.clear_current_env_and_parse_name_scope();
-                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
-            }
-
-            let normalized_source = remove_windows_carriage_return(source_code);
-            let start_snippet = Instant::now();
-            let (stmt_results, runtime_error) =
-                run_source_code(normalized_source.as_str(), &mut runtime);
-            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
-
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-            if !run_succeeded {
-                panic!(
-                    "Chapter 4 markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                    run_output, label
-                );
-            }
-
-            snippet_durations_ms.push((label.clone(), duration_ms));
-        }
-
-        println!(
-            "--- Chapter 4 markdown: {} ```litex``` block(s), all OK ({:.2} ms wall) ---",
-            snippets.len(),
-            wall_start.elapsed().as_secs_f64() * 1000.0
+    #[test]
+    fn run_the_mechanics_chapter_7_markdown_file() {
+        run_with_large_stack(
+            "run_the_mechanics_chapter_7_markdown_file_large_stack",
+            run_the_mechanics_chapter_7_markdown_file_impl,
         );
-        for (label, duration_ms) in snippet_durations_ms.iter() {
-            println!("  OK  {:.2} ms  {}", duration_ms, label);
-        }
+    }
+
+    fn run_the_mechanics_chapter_7_markdown_file_impl() {
+        run_single_the_mechanics_chapter_markdown_file_impl(
+            "Chapter_7_Number_Theory.md",
+            "Chapter 7",
+        );
+    }
+
+    #[test]
+    fn run_the_mechanics_chapter_9_markdown_file() {
+        run_with_large_stack(
+            "run_the_mechanics_chapter_9_markdown_file_large_stack",
+            run_the_mechanics_chapter_9_markdown_file_impl,
+        );
+    }
+
+    fn run_the_mechanics_chapter_9_markdown_file_impl() {
+        run_single_the_mechanics_chapter_markdown_file_impl("Chapter_9_Sets.md", "Chapter 9");
     }
 
     fn run_the_mechanics_markdown_files_impl() {

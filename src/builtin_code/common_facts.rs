@@ -123,6 +123,33 @@ know:
         =>:
             a % m = k
 
+    forall a N, m N_pos, k N:
+        a % m = k
+        =>:
+            exist r N st {a = m * r + k}
+
+    forall a N, m N_pos, k N:
+        k < m
+        exist r N st {a = m * r + k}
+        =>:
+            a % m = k
+
+    forall a N, m N_pos:
+        exist r N st {a = m * r}
+        =>:
+            a % m = 0
+
+    forall a N, m N_pos:
+        exist r N st {a = r * m}
+        =>:
+            a % m = 0
+
+    forall a N, m N_pos, k N:
+        k < m
+        exist r N st {a = r * m + k}
+        =>:
+            a % m = k
+
     forall a, b finite_set:
         count(union(a, b)) = count(a) + count(b) - count(intersect(a, b))
 

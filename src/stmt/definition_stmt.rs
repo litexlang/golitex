@@ -342,8 +342,17 @@ impl HaveFnByForallExistUniqueStmt {
 
 impl fmt::Display for HaveFnByForallExistUniqueStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}", HAVE, FN_LOWER_CASE, self.fn_name, BY)?;
-        write!(f, " {}", self.forall)
+        write!(
+            f,
+            "{} {} {} {} {}{}\n{}",
+            HAVE,
+            FN_LOWER_CASE,
+            self.fn_name,
+            AS,
+            SET,
+            COLON,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(&self.forall, 1)
+        )
     }
 }
 
