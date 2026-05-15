@@ -339,6 +339,22 @@ impl Runtime {
             Obj::SetBuilder(set_builder) => {
                 self.infer_membership_in_set_builder_from_in_fact(in_fact, set_builder)
             }
+            // Power set membership: `A $in power_set(B)` means `A $subset B`.
+            // Example: from `A $in power_set(Z)`, infer `A $subset Z`.
+            Obj::PowerSet(power_set) => {
+                let subset_fact = SubsetFact::new(
+                    in_fact.element.clone(),
+                    (*power_set.set).clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
+                let mut infer_result = InferResult::new();
+                infer_result.push_atomic_fact(&subset_fact);
+                infer_result.new_infer_result_inside(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(subset_fact)?,
+                );
+                Ok(infer_result)
+            }
             // Cartesian product: element is an n-tuple with matching dimension; bind tuple/cart metadata.
             Obj::Cart(cart) => {
                 if cart.args.len() < 2 {
