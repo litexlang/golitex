@@ -47,6 +47,12 @@ impl Runtime {
                     standard_set,
                 ),
             ),
+            (_, Obj::ListSet(list_set)) => self
+                .verify_not_in_fact_by_not_equal_to_every_element_in_list_set(
+                    not_in_fact,
+                    list_set,
+                    _verify_state,
+                ),
             _ => Ok((StmtUnknown::new()).into()),
         }
     }
@@ -1693,6 +1699,12 @@ impl Runtime {
         list_set: &ListSet,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        let equality_or_result =
+            self.verify_in_fact_by_equality_or_for_list_set(in_fact, list_set, verify_state)?;
+        if equality_or_result.is_true() {
+            return Ok(equality_or_result);
+        }
+
         for current_element_in_list_set in list_set.list.iter() {
             let equal_fact = EqualFact::new(
                 in_fact.element.clone(),
@@ -1716,6 +1728,93 @@ impl Runtime {
             }
         }
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn verify_in_fact_by_equality_or_for_list_set(
+        &mut self,
+        in_fact: &InFact,
+        list_set: &ListSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if list_set.list.is_empty() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let mut left_equal_facts = Vec::with_capacity(list_set.list.len());
+        let mut right_equal_facts = Vec::with_capacity(list_set.list.len());
+        for current_element_in_list_set in list_set.list.iter() {
+            left_equal_facts.push(AndChainAtomicFact::AtomicFact(
+                EqualFact::new(
+                    in_fact.element.clone(),
+                    *current_element_in_list_set.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into(),
+            ));
+            right_equal_facts.push(AndChainAtomicFact::AtomicFact(
+                EqualFact::new(
+                    *current_element_in_list_set.clone(),
+                    in_fact.element.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into(),
+            ));
+        }
+
+        let candidate_or_facts = [
+            OrFact::new(left_equal_facts, in_fact.line_file.clone()),
+            OrFact::new(right_equal_facts, in_fact.line_file.clone()),
+        ];
+
+        for candidate_or_fact in candidate_or_facts {
+            let candidate_result = self.verify_or_fact(&candidate_or_fact, verify_state)?;
+            if candidate_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        in_fact.clone().into(),
+                        InferResult::from_fact(&in_fact.clone().into()),
+                        "list_set membership: equality with one listed element".to_string(),
+                        vec![candidate_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        Ok((StmtUnknown::new()).into())
+    }
+
+    fn verify_not_in_fact_by_not_equal_to_every_element_in_list_set(
+        &mut self,
+        not_in_fact: &NotInFact,
+        list_set: &ListSet,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        for current_element_in_list_set in list_set.list.iter() {
+            let not_equal_fact = NotEqualFact::new(
+                not_in_fact.element.clone(),
+                *current_element_in_list_set.clone(),
+                not_in_fact.line_file.clone(),
+            )
+            .into();
+            let not_equal_fact_verify_result =
+                self.verify_atomic_fact(&not_equal_fact, verify_state)?;
+            if !not_equal_fact_verify_result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+        }
+
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                not_in_fact.clone().into(),
+                format!(
+                    "{} is not equal to every element in list_set {}",
+                    not_in_fact.element, not_in_fact.set
+                ),
+                Vec::new(),
+            ))
+            .into(),
+        )
     }
 
     fn standard_subset_set_objs_for_target_set(target_set_obj: &Obj) -> Option<Vec<Obj>> {

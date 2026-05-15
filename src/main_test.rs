@@ -185,6 +185,28 @@ mod lit_file_runner_tests {
     }
 
     #[test]
+    fn list_set_membership_implies_equality_or() {
+        let source_code = r#"
+forall a set:
+    a = 1 or a = 2 or a = 3
+    =>:
+        a $in {1, 2, 3}
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("list_set_membership_implies_equality_or");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "list_set_membership_implies_equality_or failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn run_file_from_path() {
         let path: String = "./examples/chapter_6_induction.lit".to_string();
         let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
