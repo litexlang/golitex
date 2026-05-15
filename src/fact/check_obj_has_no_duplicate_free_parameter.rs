@@ -213,16 +213,6 @@ fn check_obj_has_no_duplicate_free_parameter(
         Obj::ClosedRange(obj) => {
             check_two_objs(&obj.start, &obj.end, free_param_type, params_already_used)
         }
-        Obj::FnRange(obj) => check_obj_has_no_duplicate_free_parameter(
-            &obj.fn_obj,
-            free_param_type,
-            params_already_used,
-        ),
-        Obj::FnDom(obj) => check_obj_has_no_duplicate_free_parameter(
-            &obj.fn_obj,
-            free_param_type,
-            params_already_used,
-        ),
         Obj::FiniteSeqSet(obj) => {
             check_two_objs(&obj.set, &obj.n, free_param_type, params_already_used)
         }
