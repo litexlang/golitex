@@ -83,23 +83,30 @@ forall x R:
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>1 + 1 = 2
-1 &#36;in {1, 2}</code></pre>
+1 &#36;in {1, 2}
+forall a {1, 2, 3}:
+    a = 1 or a = 2 or a = 3</code></pre>
     </td>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 <pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
 example : 1 + 1 = 2 := by
   norm_num
 example : 1 ∈ ({1, 2} : Finset ℕ) := by
-  simp</code></pre>
+  simp
+example (a : ℕ) (ha : a ∈ ({1, 2, 3} : Finset ℕ)) :
+    a = 1 ∨ a = 2 ∨ a = 3 := by
+  simpa using ha</code></pre>
     </td>
   </tr>
 </table>
 
-**What differs.** Litex writes arithmetic and membership as direct facts. Lean proves them quickly too, but usually after choosing the set-like type and calling simplification.
+**What differs.** Litex writes arithmetic and membership as direct facts. Lean proves them quickly too, but usually after choosing the set-like type and calling simplification. If an object is in an enumerated set such as `{1, 2, 3}`, Litex immediately knows the corresponding disjunction: `a = 1 or a = 2 or a = 3`.
 
 ```litex
 1 + 1 = 2
 1 $in {1, 2}
+forall a {1, 2, 3}:
+    a = 1 or a = 2 or a = 3
 ```
 
 ---
@@ -497,6 +504,43 @@ know not $q0(1, 2)
 by contra not $p0(1, 2):
     $p0(1, 2)
     impossible $q0(1, 2)
+```
+
+### Set Equality By Counterexample
+
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
+  <tr>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 1px solid black; padding: 4px; text-align: left; width: 50%;">Lean</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+    2 &#36;in {a N: a % 2 = 0}
+    2 &#36;in {a N: a % 4 = 0}
+    impossible 2 % 4 = 0</code></pre>
+    </td>
+    <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
+<pre style="margin: 0; white-space: pre-wrap"><code>import Mathlib
+example : ({a : ℕ | a % 4 = 0} : Set ℕ) ≠ {a : ℕ | a % 2 = 0} := by
+  intro h
+  have h2 : (2 : ℕ) ∈ ({a : ℕ | a % 2 = 0} : Set ℕ) := by
+    norm_num
+  have h4 : (2 : ℕ) ∈ ({a : ℕ | a % 4 = 0} : Set ℕ) := by
+    rw [h]
+    exact h2
+  norm_num at h4</code></pre>
+    </td>
+  </tr>
+</table>
+
+**What differs.** Litex uses `2` as the counterexample directly. Under the temporary equality assumption, membership transfers from the even naturals to the multiples of `4`, and the arithmetic contradiction closes the proof. Lean names the equality, rewrites the membership goal, and lets `norm_num` discharge the false modular fact.
+
+```litex
+by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+    2 $in {a N: a % 2 = 0}
+    2 $in {a N: a % 4 = 0}
+    impossible 2 % 4 = 0
 ```
 
 ---
