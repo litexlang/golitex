@@ -24,20 +24,9 @@ One useful way to say the difference is: Lean often asks the user to choose proo
 
 > In short, in Lean, you often remember the names of facts and use `by` to explicitly tell Lean how to prove the goal; in Litex, *the shape of a fact already tells Litex what kind of proof path to try*.
 
-This is not just a syntactic convenience. Litex tries to make the main memory
-load be mathematical patterns: equality chains, subset arguments, existential
-witnesses, contradiction proofs, finite case splits, membership in a displayed
-set, and so on. The checker uses those patterns to search builtin rules, known
-facts, and known `forall` facts. The user is therefore asked to remember the
-mathematical structure of the argument, not the name of the tactic or library
-lemma that happens to package that move.
+This is not just a syntactic convenience. Litex tries to keep the main cognitive load on mathematical patterns: equality chains, subset arguments, existential witnesses, contradiction proofs, finite case splits, membership in a displayed set, and so on. The checker uses those patterns to search builtin rules, known facts, and known `forall` facts. The user is asked to remember the mathematical structure of the argument, not the name of the tactic or library lemma that packages the same move—as G. H. Hardy put it, *A mathematician, like a painter or poet, is a maker of patterns*.
 
-This is a large reduction in friction for ordinary proofs. Even the largest
-library cannot package every future argument in exactly the final shape a user
-needs; eventually the user still has to write the mathematics. Litex's bet is
-that the remembered material should stay close to that mathematics. Remembering
-library and tactic names is useful in a system like Lean, but it is not the
-mathematical beauty the proof is trying to expose.
+This is a large reduction in friction for ordinary proofs. Even the largest library cannot package every future argument in exactly the final shape a user needs; eventually the user still has to write the mathematics. Litex's bet is that the remembered material should stay close to that mathematics. Remembering library and tactic names is useful in a system like Lean, but it is not the mathematical content the proof is trying to expose.
 
 This is why Litex can be described as **the language where mathematics verifies itself**.
 
@@ -561,6 +550,10 @@ by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
 ---
 
 ## Proof Process: Why Litex Needs Less Instruction
+
+_A mathematician, like a painter or a poet, is a maker of patterns._
+
+_– G. H. Hardy, *A Mathematician's Apology*_
 
 When Litex checks a fact, the usual loop is:
 

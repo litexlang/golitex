@@ -18,7 +18,7 @@ This manual explains how Litex reads and checks mathematical proof scripts. The 
 
 A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
 
-Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work.
+Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
 
 This is the sense in which Litex aims to be **the language where mathematics verifies itself**.
 
@@ -1749,6 +1749,10 @@ The sections above explain the common use cases. This table is a quick map of th
 _Beware of bugs in the above code; I have only proved it correct, not tried it._
 
 _- Donald Knuth_
+
+_A mathematician, like a painter or a poet, is a maker of patterns._
+
+_– G. H. Hardy, *A Mathematician's Apology*_
 
 A Litex proof is built from facts you claim one after another. After a fact is proved, it becomes known information for proving the next facts.
 

@@ -67,6 +67,10 @@ This shows the intended feel: Litex states the desired facts directly, while the
 
 ## Why It Feels Simple
 
+_A mathematician, like a painter or a poet, is a maker of patterns._
+
+_– G. H. Hardy, *A Mathematician's Apology*_
+
 Litex feels simple because routine mathematical structure lives in the checker, not in user proof scripts.
 
 1. **Facts are proof steps.** A script mostly states mathematical facts in reading order.
@@ -74,7 +78,7 @@ Litex feels simple because routine mathematical structure lives in the checker, 
 3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
 4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
 
-> Litex asks users to recognize mathematical structures and proof patterns: an equality chain, a membership claim, a subset argument, an existential witness, a contradiction, or a finite case split. The checker uses those patterns to look for the corresponding facts and routine consequences. The burden is not to remember the name of the right tactic or the right library helper for each small move.
+> Litex expects you to recognize familiar proof patterns (equality chains, membership, subsets, witnesses, contradiction, finite case splits). The checker matches those shapes to facts and routine consequences—more like following a textbook argument than memorizing tactic or library names for each line.
 
 In this sense, Litex aims to be **the language where mathematics verifies itself**.
 
@@ -103,6 +107,10 @@ Think in three blocks: **objects**, **facts**, and **statements**.
 For more, read the [Manual](https://litexlang.com/doc/Manual#manual-introduction), especially [Proof Process](https://litexlang.com/doc/Manual#proof-process).
 
 ## Proofs Explain Themselves
+
+_Make things as simple as possible, but no simpler._
+
+_– Albert Einstein_
 
 Not only does Litex aim to be **the language where mathematics verifies itself**, but it also tells you how it was proved.
 
