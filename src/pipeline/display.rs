@@ -310,7 +310,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
         ),
         (
             "type".to_string(),
-            JsonValue::JsonString("Fact".to_string()),
+            JsonValue::JsonString(x.stmt.fact_type_string()),
         ),
         (
             "line".to_string(),
@@ -344,7 +344,7 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
         ),
         (
             "type".to_string(),
-            JsonValue::JsonString("Fact".to_string()),
+            JsonValue::JsonString(x.stmt.fact_type_string()),
         ),
         (
             "line".to_string(),

@@ -126,7 +126,7 @@ The output looks like:
 ```json
 {
   "result": "success",
-  "type": "Fact",
+  "type": "AtomicFact",
   "line": 4,
   "stmt": "$p(2)",
   "verified_by":   {
