@@ -2232,7 +2232,7 @@ x = 0 or x > 0
 
 {
   "result": "success",
-  "type": "Fact",
+  "type": "OrFact",
   "line": 5,
   "stmt": "x = 0 or x > 0",
   "verified_by":   {

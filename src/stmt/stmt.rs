@@ -247,7 +247,7 @@ impl Stmt {
 
     pub fn stmt_type_name(&self) -> String {
         match self {
-            Stmt::Fact(_) => "Fact".to_string(),
+            Stmt::Fact(f) => f.fact_type_string(),
             Stmt::DefLetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),

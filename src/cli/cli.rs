@@ -44,7 +44,6 @@ pub fn run_cli() {
                 let output =
                     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
                 println!("{}", output.1.trim());
-                println!("{}", repl_footer_placeholder());
                 return;
             }
             "-f" => {
@@ -295,15 +294,10 @@ fn main_flag_file(file_flag: &str) {
 
     let output = run_source_code_in_file(path_string.as_str());
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
-    println!("{}", repl_footer_placeholder());
 }
 
 fn string_with_trimmed_outer_newlines(text: &str) -> String {
     text.trim().to_string()
-}
-
-fn repl_footer_placeholder() -> String {
-    "(REPL / ret-type footer: not implemented in Rust kernel yet)".to_string()
 }
 
 fn compile_code_to_latex(code: &str) -> String {

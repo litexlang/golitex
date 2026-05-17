@@ -276,7 +276,7 @@ Example success output looks like this. The exact output may differ by version:
 ```json
 {
   "result": "success",
-  "type": "Fact",
+  "type": "AtomicFact",
   "line": 1,
   "source": "~/tmp.lit",
   "stmt": "1 + 1 = 2",
