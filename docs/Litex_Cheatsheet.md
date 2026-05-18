@@ -657,7 +657,7 @@ prove:
 
 ### `by induc`
 
-**Meaning.** Induction on an integer parameter from a given base. In a local environment, optional proof steps run first; then for each goal the checker verifies the base instance (with *param* := *object*), that *object* lies in `Z`, and that the usual induction-step `forall` (hypothesis *param* ≥ base together with the goal template implies the *param*+1 instance) holds. On success, the corresponding universal fact (`forall` *param* in `Z`, *param* ≥ base ⇒ goals) is stored. You still need a usable induction principle in context (e.g. from `know`).
+**Meaning.** Induction on an integer parameter from a given base. On success, Litex stores the corresponding universal fact (`forall` *param* in `Z`, *param* ≥ base ⇒ goals). You can either use the old form, where proof statements make the generated base and step obligations available, or the structured form with separate base and step proof blocks.
 
 **Syntax.**
 
@@ -671,16 +671,32 @@ by induc param from object:
     …
 ```
 
+```text
+by induc param from object:
+    prove:
+        goal_1
+        goal_2
+        …
+    prove from param = object:
+        base_proof_statement
+        …
+    prove induc:
+        step_proof_statement
+        …
+```
+
+For strong induction, use the same shape but write `prove strong_induc:` for the step block.
+
 - The first body block must be `prove:`; each nested block under it is one atomic-style goal (`ExistOrAndChainAtomicFact`).
-- Further blocks are optional proof steps (same idea as after `prove:` in `claim` / `by enumerate finite_set`). They are parsed under a local parsing-time name scope so names introduced there do not leak to the file.
+- Further blocks are either old-style proof statements, or exactly one `prove from ...:` block plus exactly one step block.
 - Multiple goals share one proof segment and one local run; each goal is checked in turn after that proof.
+- In `prove from param = object:`, Litex declares `param $in Z`, assumes `param = object`, and checks the base goals.
+- In `prove induc:`, Litex declares `param $in Z`, assumes `param >= object` and each goal at `param`, then checks each goal at `param + 1`.
+- In `prove strong_induc:`, Litex declares `param $in Z`, assumes `param >= object` and, for each goal, a `forall y Z` hypothesis from `object` through `param`, then checks each goal at `param + 1`.
 
 **Example.**
 
 ```litex
-# Minimal `by induc` example: first block is `prove:` (one or more goals);
-# optional proof blocks follow (here empty — lemmas come from `know`).
-
 abstract_prop p(a)
 
 know:
@@ -694,12 +710,22 @@ know:
 by induc n from 0:
     prove:
         $p(n)
-    $p(0)
-    forall n Z:
-        n >= 0
+
+    prove from n = 0:
+        $p(0)
+
+    prove induc:
+        $p(n + 1)
+
+by strong_induc n from 0:
+    prove:
         $p(n)
-        =>:
-            $p(n + 1)
+
+    prove from n = 0:
+        $p(0)
+
+    prove strong_induc:
+        $p(n + 1)
 
 # Derived from the above by induction
 forall n Z:
