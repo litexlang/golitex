@@ -3398,6 +3398,18 @@ knowing `x $in S` also infers `x $in R` and `0 <= x`.
 
 Membership in `fn(...)` records function-space information for suitable function heads, usually names or language-level function objects rather than arbitrary complex expressions. Later goals can use the expected domain and codomain.
 
+If an applied function has return set `cart(A_1, ..., A_n)`, tuple projection can use that return set directly. Litex treats `f(args)` as a tuple of dimension `n` and records `f(args)[i] $in A_i`.
+
+```text
+known:
+    pair_value $in fn(x Z) cart(Z, Z)
+
+inferred for pair_value(0):
+    $is_tuple(pair_value(0))
+    pair_value(0)[1] $in Z
+    pair_value(0)[2] $in Z
+```
+
 Membership in `finite_seq(...)`, `seq(...)`, and `matrix(...)` is handled similarly because these objects are read as function-like types.
 
 A finite sequence literal may be applied as the finite function it denotes. For example, `[1, 2, 3](i)` means the `i`-th entry, and Litex checks `i $in N_pos` and `i <= 3`.
