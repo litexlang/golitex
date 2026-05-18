@@ -199,7 +199,7 @@ g(1) = 2
   </tr>
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>have fn h(x R) R :
+<pre style="margin: 0; white-space: pre-wrap"><code>have fn h(x R) R by cases:
     case x = 2: 3
     case x != 2: 4
 h(2) = 3</code></pre>
@@ -216,7 +216,7 @@ example : h 2 = 3 := by
 **What differs.** Litex's `case` form reads like a piecewise definition. Lean uses `if` and unfolds it with simplification.
 
 ```litex
-have fn h(x R) R :
+have fn h(x R) R by cases:
     case x = 2: 3
     case x != 2: 4
 
@@ -230,7 +230,7 @@ h(2) = 3
   </tr>
   <tr>
     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-<pre style="margin: 0; white-space: pre-wrap"><code>have fn k(z R) R :
+<pre style="margin: 0; white-space: pre-wrap"><code>have fn k(z R) R by cases:
     case z = 2: 3
     case z != 2: 4
 have x R
@@ -254,7 +254,7 @@ example (x : ℝ) : k x > 2 := by
 **What differs.** Litex keeps the cases and the function use close together. Lean introduces a named case assumption and feeds it to `simp`.
 
 ```litex
-have fn k(z R) R :
+have fn k(z R) R by cases:
     case z = 2: 3
     case z != 2: 4
 

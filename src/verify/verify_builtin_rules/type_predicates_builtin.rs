@@ -52,6 +52,16 @@ impl Runtime {
                     )
                 }
             }
+            // Power set nonempty rule: `power_set(S)` contains the empty set as a subset of `S`.
+            // Example: prove `$is_nonempty_set(power_set(Z))`.
+            Obj::PowerSet(_) => Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    is_nonempty_set_fact.clone().into(),
+                    "power_set_is_nonempty_because_empty_set_is_subset".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            ),
             // Integer closed interval `{x in Z | lo <= x <= hi}` is nonempty iff `lo <= hi`.
             // Numeric well-defined `closed_range` requires this order when endpoints are concrete;
             // otherwise we still need a provable `lo <= hi` (e.g. from the environment).

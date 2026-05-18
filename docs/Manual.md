@@ -1076,12 +1076,12 @@ forall x R:
 
 ---
 
-### Piecewise function (`have fn` with `case`)
+### Piecewise function (`have fn ... by cases`)
 
 Use **`case`** branches when the formula for a function depends on conditions.
 
 ```litex
-have fn g(z R) R :
+have fn g(z R) R by cases:
     case z = 2: 3
     case z != 2: 4
 
@@ -1136,24 +1136,18 @@ forall x A:
 
 ---
 
-### Function by induction on a parameter (`have fn by induc`)
+### Recursive function by decreasing measure (`have fn ... by decreasing`)
 
-Use **`have fn by induc`** to define a function on an inductive domain, such as nonnegative integers. Base cases and the recursive step are written as `case` branches.
+Use **`have fn ... by decreasing ... from ...`** to define a recursive function whose calls are justified by a decreasing measure. The function signature gives the parameters, domain facts, and return set; the `by decreasing` clause gives a measure and a lower bound.
 
-The intended meaning is close to strong induction for defining a function. The first `case` lines give the starting values. The final `case x >= ...:` is the recursive step: when defining `h(x)`, the right-hand side may use values of the same function that are already defined, from the starting value up to `x - 1`. It may not use `h(x)` itself or any later value such as `h(x + 1)`.
+When defining `h(args)`, a recursive call `h(args')` is allowed only if Litex can verify that `args'` satisfies the function domain, that the measure at `args'` is strictly smaller than the current measure, and that the measure remains above the lower bound.
 
-If the final recursive step has nested `case` branches, those branches should cover all possible situations for the current `x`. They should also behave like a real case split: overlapping branches must not give conflicting values. If two branches can both apply, their right-hand sides should be provably equal under the overlap.
+Every case list must cover all possibilities in its current context, and cases must be mutually exclusive. Nested case lists are checked under their parent case assumptions.
 
 ```litex
-know forall x Z:
-    x % 2 = 0 or x % 2 = 1
-
-have fn by induc from 0: h(x Z: x >= 0) R:
-    case x = 0: 1
-    case x = 1: 1
-    case x >= 2:
-        case x % 2 = 0: h(0) + h(x - 1)
-        case x % 2 = 1: h(x - 2) + h(x - 1)
+have fn h(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+    case b = 0: a
+    case b > 0: h(a, b - 1) + 1
 ```
 
 
@@ -1202,7 +1196,7 @@ An `algo` is not the same as a function in a programming language such as Python
 `algo` also does not compute by floating-point approximation. It works with exact symbolic arithmetic, so the current evaluator only supports operations such as `+`, `-`, `*`, and integer powers.
 
 ```litex
-have fn m(x N_pos) R:
+have fn m(x N_pos) R by cases:
     case x = 1: 1
     case x != 1: 0
 
@@ -1398,7 +1392,7 @@ $is_nonempty_set({1, 2, 3})
 Splits a goal along a finite disjunction; each **`case`** branch finishes the goal under that assumption.
 
 ```litex
-have fn k(z R) R :
+have fn k(z R) R by cases:
     case z = 2: 3
     case z != 2: 4
 
@@ -1763,9 +1757,9 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have x S = expr` | Introduce a named value |
 | `have by exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
-| `have fn ... : case ...` | Define a function by cases |
+| `have fn ... by cases` | Define a function by cases |
 | `have fn ... as set: forall ... exist!` | Define a function from unique existence |
-| `have fn by induc` | Define a recursive function by induction |
+| `have fn ... by decreasing` | Define a recursive function by decreasing measure |
 | `let` | Introduce local names and local assumptions |
 | `family` | Define a parameterized set or function space |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
@@ -2285,12 +2279,17 @@ x = 0 or x > 0
   "type": "OrFact",
   "line": 5,
   "stmt": "x = 0 or x > 0",
-  "verified_by":   {
-    "type": "known_fact",
-    "line": 2,
-    "source": "entry",
-    "cited_fact": "a = 0 or a > 0"
-  },
+  "verified_by": [
+    {
+      "type": "cite or fact",
+      "cite_source": {
+        "line": 2,
+        "source": "entry"
+      },
+      "cited_stmt": "a = 0 or a > 0",
+      "verify_what": "x = 0 or x > 0"
+    }
+  ],
   "infer_facts": [],
   "inside_results": []
 }
@@ -2995,7 +2994,7 @@ Type predicates recognize standard object shapes.
 $is_set({1, 2})
 ```
 
-Nonempty enumerated sets, standard sets such as `R`, integer closed ranges with valid endpoints, Cartesian products with nonempty factors, nonempty function spaces, and similar shapes can be recognized as nonempty.
+Nonempty enumerated sets, standard sets such as `R`, power sets, integer closed ranges with valid endpoints, Cartesian products with nonempty factors, nonempty function spaces, and similar shapes can be recognized as nonempty.
 
 ```litex
 $is_nonempty_set({1})
@@ -3009,6 +3008,12 @@ prove:
 ```litex
 prove:
     $is_nonempty_set(cart(R_pos, R_pos))
+```
+
+Power sets are always nonempty because they contain the empty set.
+
+```litex
+$is_nonempty_set(power_set(Z))
 ```
 
 An empty enumeration proves negated non-emptiness.

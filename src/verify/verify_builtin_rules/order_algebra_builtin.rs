@@ -52,6 +52,16 @@ impl Runtime {
         integer > 0
     }
 
+    fn obj_is_nonnegative_integer_number(obj: &Obj) -> bool {
+        let Obj::Number(number) = obj else {
+            return false;
+        };
+        let Ok(integer) = number.normalized_value.parse::<i128>() else {
+            return false;
+        };
+        integer >= 0
+    }
+
     fn obj_is_positive_odd_integer_number(obj: &Obj) -> bool {
         let Obj::Number(number) = obj else {
             return false;
@@ -60,6 +70,45 @@ impl Runtime {
             return false;
         };
         integer > 0 && integer % 2 == 1
+    }
+
+    fn objs_same_by_display(left: &Obj, right: &Obj) -> bool {
+        left.to_string() == right.to_string()
+    }
+
+    fn add_common_remaining<'a>(left: &'a Add, right: &'a Add) -> Option<(&'a Obj, &'a Obj)> {
+        let pairs = [
+            (
+                left.left.as_ref(),
+                left.right.as_ref(),
+                right.left.as_ref(),
+                right.right.as_ref(),
+            ),
+            (
+                left.left.as_ref(),
+                left.right.as_ref(),
+                right.right.as_ref(),
+                right.left.as_ref(),
+            ),
+            (
+                left.right.as_ref(),
+                left.left.as_ref(),
+                right.left.as_ref(),
+                right.right.as_ref(),
+            ),
+            (
+                left.right.as_ref(),
+                left.left.as_ref(),
+                right.right.as_ref(),
+                right.left.as_ref(),
+            ),
+        ];
+        for (left_common, left_remaining, right_common, right_remaining) in pairs {
+            if Self::objs_same_by_display(left_common, right_common) {
+                return Some((left_remaining, right_remaining));
+            }
+        }
+        None
     }
 
     // a^n <= b^n from 0 <= a, 0 <= b, a <= b, and positive integer n.
@@ -514,6 +563,26 @@ impl Runtime {
             }
         }
 
+        if let (Obj::Add(left_add), Obj::Add(right_add)) = (&f.left, &f.right) {
+            if let Some((left_remaining, right_remaining)) =
+                Self::add_common_remaining(left_add, right_add)
+            {
+                let subgoal: AtomicFact =
+                    LessEqualFact::new(left_remaining.clone(), right_remaining.clone(), lf.clone())
+                        .into();
+                let result = self.verify_order_subgoal(subgoal)?;
+                if result.is_true() {
+                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "u + a <= u + b from a <= b".to_string(),
+                            vec![result],
+                        ),
+                    )));
+                }
+            }
+        }
+
         if let Obj::Add(add) = &f.right {
             let left_s = f.left.to_string();
             let b_opt = if add.left.as_ref().to_string() == left_s {
@@ -564,6 +633,20 @@ impl Runtime {
                         atomic_fact.clone().into(),
                         "a <= b + c from a <= b and 0 <= c".to_string(),
                         vec![r3, r4],
+                    ),
+                )));
+            }
+        }
+
+        if let Obj::Sub(sub) = &f.left {
+            if sub.left.as_ref().to_string() == f.right.to_string()
+                && Self::obj_is_nonnegative_integer_number(sub.right.as_ref())
+            {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - n <= a for n >= 0".to_string(),
+                        Vec::new(),
                     ),
                 )));
             }
@@ -789,6 +872,53 @@ impl Runtime {
             }
         }
 
+        if let (Obj::Add(left_add), Obj::Add(right_add)) = (&f.left, &f.right) {
+            if let Some((left_remaining, right_remaining)) =
+                Self::add_common_remaining(left_add, right_add)
+            {
+                let subgoal: AtomicFact =
+                    LessFact::new(left_remaining.clone(), right_remaining.clone(), lf.clone())
+                        .into();
+                let result = self.verify_order_subgoal(subgoal)?;
+                if result.is_true() {
+                    return Ok(Some(StmtResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "u + a < u + b from a < b".to_string(),
+                            vec![result],
+                        ),
+                    )));
+                }
+            }
+        }
+
+        if let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (&f.left, &f.right) {
+            if let Obj::Sub(sub) = left_abs.arg.as_ref() {
+                if Self::objs_same_by_display(sub.left.as_ref(), right_abs.arg.as_ref())
+                    && Self::obj_is_positive_integer_number(sub.right.as_ref())
+                {
+                    let zero = Self::literal_zero_obj();
+                    let positive_arg: AtomicFact =
+                        LessFact::new(zero.clone(), right_abs.arg.as_ref().clone(), lf.clone())
+                            .into();
+                    let nonnegative_sub: AtomicFact =
+                        LessEqualFact::new(zero, left_abs.arg.as_ref().clone(), lf.clone()).into();
+                    let r_pos = self.verify_order_subgoal(positive_arg)?;
+                    let r_sub = self.verify_order_subgoal(nonnegative_sub)?;
+                    if r_pos.is_true() && r_sub.is_true() {
+                        return Ok(Some(StmtResult::FactualStmtSuccess(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                atomic_fact.clone().into(),
+                                "abs(x - n) < abs(x) for positive x and nonnegative x - n"
+                                    .to_string(),
+                                vec![r_pos, r_sub],
+                            ),
+                        )));
+                    }
+                }
+            }
+        }
+
         if let Obj::Add(add) = &f.right {
             let left_s = f.left.to_string();
             let b_opt = if add.left.as_ref().to_string() == left_s {
@@ -839,6 +969,20 @@ impl Runtime {
                         atomic_fact.clone().into(),
                         "a < b + c from a < c and 0 <= b".to_string(),
                         vec![r3, r4],
+                    ),
+                )));
+            }
+        }
+
+        if let Obj::Sub(sub) = &f.left {
+            if sub.left.as_ref().to_string() == f.right.to_string()
+                && Self::obj_is_positive_integer_number(sub.right.as_ref())
+            {
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - n < a for n > 0".to_string(),
+                        Vec::new(),
                     ),
                 )));
             }

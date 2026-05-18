@@ -27,6 +27,34 @@ fn order_split_or_is_exhaustive_pair(a: &AtomicFact, b: &AtomicFact) -> bool {
     }
 }
 
+fn equality_and_strict_order_need_weak_bound(
+    equality: &AtomicFact,
+    strict: &AtomicFact,
+) -> Option<AtomicFact> {
+    let AtomicFact::EqualFact(eq) = equality else {
+        return None;
+    };
+    match strict {
+        AtomicFact::GreaterFact(g)
+            if (objs_equal_by_display_string(&eq.left, &g.left)
+                && objs_equal_by_display_string(&eq.right, &g.right))
+                || (objs_equal_by_display_string(&eq.left, &g.right)
+                    && objs_equal_by_display_string(&eq.right, &g.left)) =>
+        {
+            Some(GreaterEqualFact::new(g.left.clone(), g.right.clone(), g.line_file.clone()).into())
+        }
+        AtomicFact::LessFact(l)
+            if (objs_equal_by_display_string(&eq.left, &l.left)
+                && objs_equal_by_display_string(&eq.right, &l.right))
+                || (objs_equal_by_display_string(&eq.left, &l.right)
+                    && objs_equal_by_display_string(&eq.right, &l.left)) =>
+        {
+            Some(LessEqualFact::new(l.left.clone(), l.right.clone(), l.line_file.clone()).into())
+        }
+        _ => None,
+    }
+}
+
 fn obj_is_literal_neg_one_for_abs_or_builtin(obj: &Obj) -> bool {
     match obj {
         Obj::Number(n) => n.normalized_value == "-1",
@@ -288,6 +316,27 @@ impl Runtime {
                         ))
                         .into(),
                     );
+                }
+                if let Some(weak_bound) =
+                    equality_and_strict_order_need_weak_bound(first_atomic, second_atomic).or_else(
+                        || equality_and_strict_order_need_weak_bound(second_atomic, first_atomic),
+                    )
+                {
+                    let weak_result = self.verify_non_equational_known_then_builtin_rules_only(
+                        &weak_bound,
+                        verify_state,
+                    )?;
+                    if weak_result.is_true() {
+                        return Ok(
+                            (FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                                or_fact.clone().into(),
+                                InferResult::new(),
+                                "or: equality plus strict order covers a known weak order".to_string(),
+                                vec![weak_result],
+                            ))
+                            .into(),
+                        );
+                    }
                 }
                 if abs_sign_split_or_is_exhaustive_pair(first_atomic, second_atomic)
                     || abs_sign_split_or_is_exhaustive_pair(second_atomic, first_atomic)

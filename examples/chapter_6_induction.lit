@@ -541,5 +541,349 @@ claim:
                 f((k + 1) + 1) = (k + 2) * f(k + 1) >= 2 * f(k + 1) >= 2 * 2^k = 2^(k + 1)
                 f(k + 1 + 1) >= 2^(k + 1)
 
-# Sections 6.3 and later are intentionally omitted in this first pass.
-# They use two-step, strong, or well-founded induction patterns.
+# ---------------------------------------------------------------------------
+# 6.4 强归纳（strong induction）
+# 这一节的证明都需要不止前一项的信息；Litex 中用 `by strong_induc` 把
+# `forall y ... y <= n => P(y)` 作为归纳假设。
+# ---------------------------------------------------------------------------
+
+# --- 6.4.1：Fibonacci 数列满足 fib(n) <= 2^n ---
+
+"""
+Example 6.4.1. Show that fib(n) <= 2^n.
+"""
+
+claim:
+    prove:
+        forall fib fn(x Z: x >= 0) N, n Z:
+            fib(0) = 0
+            fib(1) = 1
+            forall k Z:
+                k >= 1
+                =>:
+                    fib(k + 1) = fib(k) + fib(k - 1)
+            n >= 0
+            =>:
+                fib(n) <= 2^n
+    by strong_induc n from 0:
+        prove:
+            fib(n) <= 2^n
+        fib(0) = 0 <= 1 = 2^0
+
+        claim:
+            prove:
+                forall k Z:
+                    k >= 0
+                    forall y Z:
+                        y >= 0
+                        y <= k
+                        =>:
+                            fib(y) <= 2^y
+                    =>:
+                        fib(k + 1) <= 2^(k + 1)
+            by cases:
+                prove:
+                    fib(k + 1) <= 2^(k + 1)
+                case k < 1:
+                    k = 0
+                    fib(k + 1) = fib(1) = 1 <= 2 = 2^1 = 2^(k + 1)
+                case k >= 1:
+                    k - 1 >= 0
+                    k - 1 <= k
+                    fib(k - 1) <= 2^(k - 1)
+                    fib(k) <= 2^k
+                    fib(k + 1) = fib(k) + fib(k - 1)
+                    fib(k) + fib(k - 1) <= 2^k + 2^(k - 1)
+                    2^k = 2^((k - 1) + 1) = 2^(k - 1) * 2^1 >= 2^(k - 1) * 1 = 2^(k - 1)
+                    2^k + 2^(k - 1) <= 2^k + 2^k = 2 * 2^k = 2^1 * 2^k = 2^(1 + k) = 2^(k + 1)
+                    fib(k + 1) = fib(k) + fib(k - 1) <= 2^k + 2^(k - 1) <= 2^(k + 1)
+
+# --- 6.4.2：每个 n >= 2 的自然数有素因子 ---
+
+"""
+Example 6.4.2. Show that every natural number n >= 2 has a prime divisor.
+"""
+
+# This no-small-divisor formulation is convenient for the strong-induction split below.
+prop prime(a N_pos):
+    2 <= a
+    forall b N_pos:
+        2 <= b < a
+        =>:
+            a % b != 0
+
+claim:
+    prove:
+        forall a N_pos:
+            2 <= a
+            =>:
+                exist p N_pos st {$prime(p), a % p = 0}
+    by strong_induc x from 2:
+        prove:
+            exist p N_pos st {$prime(p), x % p = 0}
+
+        claim:
+            prove:
+                forall b N_pos:
+                    2 <= b < 2
+                    =>:
+                        2 % b != 0
+            by contra:
+                prove:
+                    2 % b != 0
+                impossible b < 2
+        $prime(2)
+        witness exist t Z st {2 = t * 2} from 1
+        2 % 2 = 0
+        witness exist p N_pos st {$prime(p), 2 % p = 0} from 2
+
+        claim:
+            prove:
+                forall n Z:
+                    n >= 2
+                    forall m Z:
+                        2 <= m
+                        m <= n
+                        =>:
+                            exist p N_pos st {$prime(p), m % p = 0}
+                    =>:
+                        exist p N_pos st {$prime(p), (n + 1) % p = 0}
+
+            by cases exist p N_pos st {$prime(p), (n + 1) % p = 0}:
+                case $prime(n + 1):
+                    witness exist t Z st {n + 1 = t * (n + 1)} from 1
+                    (n + 1) % (n + 1) = 0
+                    witness exist p N_pos st {$prime(p), (n + 1) % p = 0} from n + 1
+                case not $prime(n + 1):
+                    by contra:
+                        prove:
+                            not forall b N_pos:
+                                2 <= b < n + 1
+                                =>:
+                                    (n + 1) % b != 0
+                        2 <= n + 1
+                        $prime(n + 1)
+                        impossible $prime(n + 1)
+
+                    have by exist b N_pos st {2 <= b < n + 1, not (n + 1) % b != 0}: c
+
+                    2 <= c < n + 1
+
+                    (n + 1) % c = 0
+                    c <= n or c >= n + 1
+                    by cases:
+                        prove:
+                            c <= n
+                        case c <= n:
+                            do_nothing
+                        case c >= n + 1:
+                            impossible c < n + 1
+
+                    have by exist p N_pos st {$prime(p), c % p = 0}: d
+
+                    have by exist q Z st {(n + 1) = q * c}: e
+
+                    have by exist r Z st {c = r * d}: f
+
+                    witness exist t Z st {e * f * d = t * d} from e * f
+                    (e * f * d) % d = 0
+
+                    witness exist p N_pos st {$prime(p), (n + 1) % p = 0} from d:
+                        n + 1 = e * c = e * (f * d) = (e * f) * d
+                        (n + 1) % d = ((e * f) * d) % d = 0
+
+claim:
+    prove:
+        forall n N:
+            n >= 2
+            =>:
+                exist p N_pos st {$prime(p), $dvdN(p, n)}
+    have by exist p N_pos st {$prime(p), n % p = 0}: p
+    p != 0
+    $dvdN(p, n)
+    witness exist p N_pos st {$prime(p), $dvdN(p, n)} from p
+
+# ---------------------------------------------------------------------------
+# 6.5 Pascal's Triangle
+# ---------------------------------------------------------------------------
+
+"""
+Pascal's triangle has two recursive coordinates.  Litex needs the decreasing
+measure to be explicit, so the recursive definition below decreases `a + b`.
+We write `factorial(n)` instead of postfix `n!`.
+"""
+
+have fn pascal(a Z, b Z: a >= 0, b >= 0) N by decreasing a + b from 0:
+    case a = 0: 1
+    case a > 0:
+        case b = 0: 1
+        case b > 0: pascal(a - 1, b) + pascal(a, b - 1)
+
+pascal(0, 0) = 1
+pascal(0, 3) = 1
+pascal(2, 0) = 1
+pascal(1, 1) = pascal(0, 1) + pascal(1, 0)
+
+have fn factorial(n Z: n >= 0) R by decreasing n from 0:
+    case n = 0: 1
+    case n > 0: n * factorial(n - 1)
+
+factorial(0) = 1
+factorial(3) = 3 * factorial(2)
+
+claim:
+    prove:
+        forall n Z:
+            n >= 0
+            =>:
+                factorial(n) >= 1
+    by induc n from 0:
+        prove:
+            factorial(n) >= 1
+        factorial(0) = 1 >= 1
+
+        forall k Z:
+            k >= 0
+            factorial(k) >= 1
+            =>:
+                k + 1 >= 1
+                k + 1 > 0
+                factorial(k + 1) = (k + 1) * factorial((k + 1) - 1) = (k + 1) * factorial(k)
+                (k + 1) * factorial(k) >= 1 * 1 = 1
+                factorial(k + 1) >= 1
+
+prop pascal_factorial_formula_on_sum(s Z):
+    s >= 0
+    forall a, b Z:
+        a >= 0
+        b >= 0
+        a + b = s
+        =>:
+            pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+
+claim:
+    prove:
+        forall s Z:
+            s >= 0
+            =>:
+                $pascal_factorial_formula_on_sum(s)
+    by strong_induc s from 0:
+        prove:
+            $pascal_factorial_formula_on_sum(s)
+
+        claim:
+            prove:
+                forall a, b Z:
+                    a >= 0
+                    b >= 0
+                    a + b = 0
+                    =>:
+                        pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+            by cases:
+                prove:
+                    pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+                case a = 0:
+                    b = 0 + b = a + b = 0
+                    pascal(a, b) = pascal(0, 0) = 1
+                    factorial(a) = factorial(0) = 1
+                    factorial(b) = factorial(0) = 1
+                    factorial(a + b) = factorial(0) = 1
+                    pascal(a, b) * factorial(a) * factorial(b) = 1 * 1 * 1 = 1 = factorial(a + b)
+                case a > 0:
+                    a + b > 0
+                    impossible a + b = 0
+        $pascal_factorial_formula_on_sum(0)
+
+        claim:
+            prove:
+                forall step_s Z:
+                    step_s >= 0
+                    forall y Z:
+                        y >= 0
+                        y <= step_s
+                        =>:
+                            $pascal_factorial_formula_on_sum(y)
+                    =>:
+                        $pascal_factorial_formula_on_sum(step_s + 1)
+
+            step_s + 1 >= 0
+            claim:
+                prove:
+                    forall a, b Z:
+                        a >= 0
+                        b >= 0
+                        a + b = step_s + 1
+                        =>:
+                            pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+                by cases:
+                    prove:
+                        pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+                    case a = 0:
+                        b = 0 + b = a + b = step_s + 1
+                        pascal(a, b) = pascal(0, b) = 1
+                        factorial(a) = factorial(0) = 1
+                        factorial(a + b) = factorial(b)
+                        pascal(a, b) * factorial(a) * factorial(b) = 1 * 1 * factorial(b) = factorial(b) = factorial(a + b)
+                    case a > 0:
+                        by cases:
+                            prove:
+                                pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+                            case b = 0:
+                                pascal(a, b) = pascal(a, 0) = 1
+                                factorial(b) = factorial(0) = 1
+                                factorial(a + b) = factorial(a)
+                                pascal(a, b) * factorial(a) * factorial(b) = 1 * factorial(a) * 1 = factorial(a) = factorial(a + b)
+                            case b > 0:
+                                a - 1 >= 0
+                                b - 1 >= 0
+                                (a + b) - 1 = (step_s + 1) - 1 = step_s
+                                (a - 1) + b = (a + b) - 1 = step_s
+                                a + (b - 1) = (a + b) - 1 = step_s
+                                $pascal_factorial_formula_on_sum(step_s)
+                                pascal(a - 1, b) * factorial(a - 1) * factorial(b) = factorial((a - 1) + b)
+                                pascal(a, b - 1) * factorial(a) * factorial(b - 1) = factorial(a + (b - 1))
+                                pascal(a, b) = pascal(a - 1, b) + pascal(a, b - 1)
+                                factorial(a) = a * factorial(a - 1)
+                                factorial(b) = b * factorial(b - 1)
+                                a + b > 0
+                                factorial(a + b) = (a + b) * factorial(a + b - 1)
+                                pascal(a, b) * factorial(a) * factorial(b) = (pascal(a - 1, b) + pascal(a, b - 1)) * factorial(a) * factorial(b)
+                                (pascal(a - 1, b) + pascal(a, b - 1)) * factorial(a) * factorial(b) = pascal(a - 1, b) * factorial(a) * factorial(b) + pascal(a, b - 1) * factorial(a) * factorial(b)
+                                pascal(a - 1, b) * factorial(a) * factorial(b) = pascal(a - 1, b) * (a * factorial(a - 1)) * factorial(b) = a * pascal(a - 1, b) * factorial(a - 1) * factorial(b)
+                                pascal(a, b - 1) * factorial(a) * factorial(b) = pascal(a, b - 1) * factorial(a) * (b * factorial(b - 1)) = b * pascal(a, b - 1) * factorial(a) * factorial(b - 1)
+                                pascal(a - 1, b) * factorial(a) * factorial(b) + pascal(a, b - 1) * factorial(a) * factorial(b) = a * (pascal(a - 1, b) * factorial(a - 1) * factorial(b)) + b * (pascal(a, b - 1) * factorial(a) * factorial(b - 1))
+                                a * (pascal(a - 1, b) * factorial(a - 1) * factorial(b)) + b * (pascal(a, b - 1) * factorial(a) * factorial(b - 1)) = a * factorial((a - 1) + b) + b * factorial(a + (b - 1))
+                                a * factorial((a - 1) + b) + b * factorial(a + (b - 1)) = a * factorial(a + b - 1) + b * factorial(a + b - 1)
+                                a * factorial(a + b - 1) + b * factorial(a + b - 1) = (a + b) * factorial(a + b - 1)
+                                (a + b) * factorial(a + b - 1) = factorial(a + b)
+                                pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+            $pascal_factorial_formula_on_sum(step_s + 1)
+
+claim:
+    prove:
+        forall a, b Z:
+            a >= 0
+            b >= 0
+            =>:
+                pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+    a + b >= 0
+    $pascal_factorial_formula_on_sum(a + b)
+    pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+
+claim:
+    prove:
+        forall a, b Z:
+            a >= 0
+            b >= 0
+            =>:
+                pascal(a, b) <= factorial(a + b)
+    a + b >= 0
+    $pascal_factorial_formula_on_sum(a + b)
+    pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+    factorial(a) >= 1
+    factorial(b) >= 1
+    pascal(a, b) >= 0
+    pascal(a, b) = pascal(a, b) * 1 <= pascal(a, b) * factorial(a) = pascal(a, b) * factorial(a) * 1 <= pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
+
+# Sections 6.3 and 6.6+ are intentionally omitted in this first pass.
+# They use additional two-step or well-founded induction patterns.

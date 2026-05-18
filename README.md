@@ -130,10 +130,12 @@ The output looks like:
   "line": 4,
   "stmt": "$p(2)",
   "verified_by":   {
-    "type": "known_fact",
-    "line": 2,
-    "source": "entry",
-    "cited_fact": "forall x R:\n    $p(x)"
+    "type": "cite forall fact",
+    "cite_source": {
+      "line": 2,
+      "source": "entry"
+    },
+    "cited_stmt": "forall x R:\n    $p(x)"
   },
   "infer_facts": [],
   "inside_results": []
