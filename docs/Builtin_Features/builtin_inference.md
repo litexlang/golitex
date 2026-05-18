@@ -231,6 +231,15 @@ forall x R:
 
 Inference **records function-space information** for suitable function heads (names coming from the language, not arbitrary complex expressions) so later goals can use the expected **domain and codomain** shape.
 
+When an applied function has return set `cart(A_1, ..., A_n)`, tuple projection can use that return set. Litex treats `f(args)` as a tuple of dimension `n` and records `f(args)[i] $in A_i`.
+
+```litex
+have fn pair_value(x Z) cart(Z, Z) = (x, x + 1)
+
+pair_value(0)[1] $in Z
+pair_value(0)[2] $in Z
+```
+
 ---
 
 ## Membership in `finite_seq(…)`, `seq(…)`, `matrix(…)`

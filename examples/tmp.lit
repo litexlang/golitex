@@ -1,53 +1,190 @@
-abstract_prop p(a)
-
-know:
-    $p(0)
-    forall n Z:
-        n >= 0
-        $p(n)
-        =>:
-            $p(n + 1)
-
-by induc n from 0:
+claim:
     prove:
-        $p(n)
+        forall x, y R:
+            0 <= x
+            0 <= y
+            x^2 < y^2
+            =>:
+                x < y
 
-    prove from n = 0:
-        $p(0)
+    by contra:
+        prove:
+            x < y
+        y <= x
+        y^2 <= x^2
+        impossible x^2 < y^2
 
-    prove induc:
-        $p(n + 1)
+claim:
+    prove:
+        forall n, d Z:
+            n * d < 0
+            =>:
+                abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
 
-forall n Z:
-    n >= 0
-    =>:
-        $p(n)
+    0 < -(n * d)
+    0 < 8
+    0 < 8 * (-(n * d))
+    8 * (-(n * d)) = -8 * n * d
+    0 < -8 * n * d
+    (2 * (n + d) - d)^2 < (2 * (n + d) - d)^2 + (-8 * n * d) = (2 * n - d)^2
+    abs(2 * (n + d) - d)^2 = (2 * (n + d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
 
-abstract_prop q(a)
+claim:
+    prove:
+        forall n, d Z:
+            n * d < 0
+            =>:
+                abs(2 * (n + d) - d) < abs(2 * n - d)
+
+    0 <= abs(2 * (n + d) - d)
+    0 <= abs(2 * n - d)
+    abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
+
+claim:
+    prove:
+        forall n, d Z:
+            n * d >= 0
+            0 < d * (n - d)
+            =>:
+                abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
+
+    0 < 8
+    0 < 8 * (d * (n - d))
+    8 * (d * (n - d)) = 8 * d * (n - d)
+    0 < 8 * d * (n - d)
+    (2 * (n - d) - d)^2 < (2 * (n - d) - d)^2 + 8 * d * (n - d) = (2 * n - d)^2
+    abs(2 * (n - d) - d)^2 = (2 * (n - d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
+
+claim:
+    prove:
+        forall n, d Z:
+            n * d >= 0
+            0 < d * (n - d)
+            =>:
+                abs(2 * (n - d) - d) < abs(2 * n - d)
+
+    0 <= abs(2 * (n - d) - d)
+    0 <= abs(2 * n - d)
+    abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
+
+have fn fmod(n Z, d Z) Z by decreasing abs(2 * n - d) from 0:
+    case n * d < 0: fmod(n + d, d)
+    case n * d >= 0:
+        case 0 < d * (n - d): fmod(n - d, d)
+        case 0 >= d * (n - d):
+            case n = d: 0
+            case n != d: n
+
+have fn fdiv(n Z, d Z) Z by decreasing abs(2 * n - d) from 0:
+    case n * d < 0: fdiv(n + d, d) - 1
+    case n * d >= 0:
+        case 0 < d * (n - d): fdiv(n - d, d) + 1
+        case 0 >= d * (n - d):
+            case n = d: 1
+            case n != d: 0
+
+prop fmod_add_fdiv_at_measure(m Z):
+    forall n, d Z:
+        abs(2 * n - d) = m
+        =>:
+            fmod(n, d) + d * fdiv(n, d) = n
 
 know:
-    $q(0)
-    forall n Z:
-        n >= 0
+    $fmod_add_fdiv_at_measure(0)
+    forall m Z:
+        m >= 0
         forall y Z:
             y >= 0
-            y <= n
+            y <= m
             =>:
-                $q(y)
+                $fmod_add_fdiv_at_measure(y)
         =>:
-            $q(n + 1)
+            $fmod_add_fdiv_at_measure(m + 1)
 
-by strong_induc n from 0:
+by strong_induc m from 0:
     prove:
-        $q(n)
+        $fmod_add_fdiv_at_measure(m)
 
-    prove from n = 0:
-        $q(0)
+    prove from m = 0:
+        $fmod_add_fdiv_at_measure(0)
 
     prove strong_induc:
-        $q(n + 1)
+        $fmod_add_fdiv_at_measure(m + 1)
 
-forall n Z:
-    n >= 0
-    =>:
-        $q(n)
+claim:
+    prove:
+        forall n, d Z:
+            fmod(n, d) + d * fdiv(n, d) = n
+
+    forall n1, d1 Z:
+        abs(2 * n1 - d1) >= 0
+        $fmod_add_fdiv_at_measure(abs(2 * n1 - d1))
+        fmod(n1, d1) + d1 * fdiv(n1, d1) = n1
+
+know:
+    forall a, b Z:
+        0 < b
+        =>:
+            abs(fmod(a, b)) < abs(b)
+    forall a, b Z:
+        b < 0
+        =>:
+            abs(fmod(a, -b)) < abs(b)
+
+have fn gcd(a Z, b Z) Z by decreasing abs(b) from 0:
+    case 0 < b: gcd(b, fmod(a, b))
+    case 0 >= b:
+        case b < 0: gcd(b, fmod(a, -b))
+        case b >= 0:
+            case 0 <= a: a
+            case 0 > a: -a
+
+have fn egcd_pair(a Z, b Z) cart(Z, Z) by decreasing abs(b) from 0:
+    case 0 < b: (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
+    case 0 >= b:
+        case b < 0: (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])
+        case b >= 0:
+            case 0 <= a: (1, 0)
+            case 0 > a: (-1, 0)
+
+have fn egcd_l(a Z, b Z) Z = egcd_pair(a, b)[1]
+
+have fn egcd_r(a Z, b Z) Z = egcd_pair(a, b)[2]
+
+prop egcd_identity_at_measure(m Z):
+    forall a, b Z:
+        abs(b) = m
+        =>:
+            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+
+know:
+    $egcd_identity_at_measure(0)
+    forall m Z:
+        m >= 0
+        forall y Z:
+            y >= 0
+            y <= m
+            =>:
+                $egcd_identity_at_measure(y)
+        =>:
+            $egcd_identity_at_measure(m + 1)
+
+by strong_induc m from 0:
+    prove:
+        $egcd_identity_at_measure(m)
+
+    prove from m = 0:
+        $egcd_identity_at_measure(0)
+
+    prove strong_induc:
+        $egcd_identity_at_measure(m + 1)
+
+claim:
+    prove:
+        forall a, b Z:
+            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+
+    forall a1, b1 Z:
+        abs(b1) >= 0
+        $egcd_identity_at_measure(abs(b1))
+        egcd_l(a1, b1) * a1 + egcd_r(a1, b1) * b1 = gcd(a1, b1)
