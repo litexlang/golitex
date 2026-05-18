@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::stmt::definition_stmt::induc_obj_plus_offset;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn exec_have_fn_by_induc(
@@ -8,107 +8,77 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_process(stmt))?;
 
-        let infer_result = self.exec_have_fn_by_induc_store_process(stmt)?;
+        let flat = stmt.to_have_fn_equal_case_by_case_stmt();
+        let fn_set_stored = self
+            .fn_set_from_fn_set_clause(&flat.fn_set_clause)
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        let infer_result = self
+            .store_have_fn_equal_case_by_case_stmt_facts(&flat, &fn_set_stored)
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
-    }
-
-    fn exec_have_fn_by_induc_verify_process(
-        &mut self,
-        stmt: &HaveFnByInducStmt,
-    ) -> Result<(), RuntimeError> {
-        for special_case_equal_to in stmt.special_cases_equal_tos.iter() {
-            self.verify_obj_well_defined_and_store_cache(
-                special_case_equal_to,
-                &VerifyState::new(0, false),
-            )?;
-        }
-
-        self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_last_case(stmt))?;
-
-        Ok(())
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
         exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), cause)
     }
 
-    // have fn by induc from 0: f(x Z: x >= 0) R: case 0: … case 1: …
-    // In the induction step, recursive calls may use any already defined value: from <= arg < x.
-    fn have_fn_by_induc_verify_last_case_register_fn(
+    fn exec_have_fn_by_induc_verify_process(
         &mut self,
         stmt: &HaveFnByInducStmt,
-        param_name: &str,
     ) -> Result<(), RuntimeError> {
-        self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)?;
+        self.define_have_fn_by_induc_current_params_and_domain(stmt)?;
+        self.verify_have_fn_by_induc_measure_lower_bound(stmt)?;
+        self.register_have_fn_by_induc_recursive_fn(stmt)?;
+        self.verify_have_fn_by_induc_case_list(stmt, &stmt.cases)
+    }
 
-        let random_param = self.generate_random_unused_name();
+    fn define_have_fn_by_induc_current_params_and_domain(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+    ) -> Result<(), RuntimeError> {
+        for param_def_with_set in stmt.fn_set_clause.params_def_with_set.iter() {
+            self.define_params_with_set(param_def_with_set)
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        }
 
-        let induc_outer_param =
-            obj_for_bound_param_in_scope(param_name.to_string(), ParamObjType::Induc);
-        let dom_facts: Vec<OrAndChainAtomicFact> = vec![
-            GreaterEqualFact::new(
-                obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::FnSet),
-                stmt.induc_from.clone(),
-                stmt.line_file.clone(),
+        for dom_fact in stmt.fn_set_clause.dom_facts.iter() {
+            self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                dom_fact.clone(),
             )
-            .into(),
-            LessFact::new(
-                obj_for_bound_param_in_scope(random_param.clone(), ParamObjType::FnSet),
-                induc_outer_param,
-                stmt.line_file.clone(),
-            )
-            .into(),
-        ];
-
-        let fn_set = self.new_fn_set(
-            vec![ParamGroupWithSet::new(
-                vec![random_param.clone()],
-                StandardSet::Z.into(),
-            )],
-            dom_facts,
-            stmt.ret_set.clone(),
-        )?;
-
-        let function_in_function_set_fact: Fact = InFact::new(
-            Identifier::new(stmt.name.clone()).into(),
-            fn_set.into(),
-            stmt.line_file.clone(),
-        )
-        .into();
-
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
-            function_in_function_set_fact,
-        )
-        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        }
 
         Ok(())
     }
 
-    fn have_fn_by_induc_verify_one_equal_to_well_defined(
+    fn verify_have_fn_by_induc_measure_lower_bound(
         &mut self,
         stmt: &HaveFnByInducStmt,
-        equal_to: &Obj,
-        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(equal_to, verify_state)
+        self.verify_obj_well_defined_and_store_cache(&stmt.measure, &VerifyState::new(0, false))
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        self.verify_obj_well_defined_and_store_cache(
+            &stmt.lower_bound,
+            &VerifyState::new(0, false),
+        )
+        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
-        let equal_to_in_ret_set_atomic_fact: AtomicFact = InFact::new(
-            equal_to.clone(),
-            stmt.ret_set.clone(),
+        let lower_fact: AtomicFact = GreaterEqualFact::new(
+            stmt.measure.clone(),
+            stmt.lower_bound.clone(),
             stmt.line_file.clone(),
         )
         .into();
-        let verify_result = self
-            .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, verify_state)
+        let result = self
+            .verify_atomic_fact(&lower_fact, &VerifyState::new(0, false))
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-        if verify_result.is_unknown() {
+        if result.is_unknown() {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 format!(
-                    "have_fn_by_induc: {} is not in return set {}",
-                    equal_to, stmt.ret_set
+                    "have_fn_by_induc: failed to prove decreasing measure lower bound `{}`",
+                    lower_fact
                 ),
                 None,
                 vec![],
@@ -117,316 +87,238 @@ impl Runtime {
         Ok(())
     }
 
-    // have fn by induc from 0: f(x Z: x >= 0) R:
-    // case 0: 1
-    // case 1: 2
-    // case >= 2:
-    //      case x % 2 = 0: f(x - 1)
-    //      case x % 2 = 2: f(x - 1) + f(x - 2)
-    fn exec_have_fn_by_induc_verify_last_case(
+    fn register_have_fn_by_induc_recursive_fn(
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<(), RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
-        let n = stmt.special_cases_equal_tos.len();
-        let line_file = stmt.line_file.clone();
+        self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
-        let param_name_str = stmt.param.clone();
+        let param_names = stmt.param_names();
+        let generated_names = self.generate_random_unused_names(param_names.len());
+        let mut param_to_generated_obj: HashMap<String, Obj> = HashMap::new();
+        for (param_name, generated_name) in param_names.iter().zip(generated_names.iter()) {
+            param_to_generated_obj.insert(
+                param_name.clone(),
+                obj_for_bound_param_in_scope(generated_name.clone(), ParamObjType::FnSet),
+            );
+        }
 
-        let left_id: Obj =
-            obj_for_bound_param_in_scope(param_name_str.clone(), ParamObjType::Induc);
+        let mut generated_groups: Vec<ParamGroupWithSet> =
+            Vec::with_capacity(stmt.fn_set_clause.params_def_with_set.len());
+        let mut generated_index = 0;
+        for group in stmt.fn_set_clause.params_def_with_set.iter() {
+            let mut generated_group_names = Vec::with_capacity(group.params.len());
+            for _ in group.params.iter() {
+                generated_group_names.push(generated_names[generated_index].clone());
+                generated_index += 1;
+            }
+            let generated_set = self
+                .inst_obj(
+                    group.set_obj(),
+                    &param_to_generated_obj,
+                    ParamObjType::FnSet,
+                )
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+            generated_groups.push(ParamGroupWithSet::new(generated_group_names, generated_set));
+        }
 
-        self.store_free_param_or_identifier_name(&param_name_str, ParamObjType::Induc)?;
+        let mut recursive_dom_facts: Vec<OrAndChainAtomicFact> =
+            Vec::with_capacity(stmt.fn_set_clause.dom_facts.len() + 2);
+        for dom_fact in stmt.fn_set_clause.dom_facts.iter() {
+            recursive_dom_facts.push(
+                self.inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    &param_to_generated_obj,
+                    ParamObjType::FnSet,
+                    None,
+                )
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?,
+            );
+        }
 
-        self.define_parameter_by_binding_param_type(
-            &param_name_str,
-            &ParamType::Obj(StandardSet::Z.into()),
-            ParamObjType::Induc,
-        )?;
+        let generated_measure = self
+            .inst_obj(&stmt.measure, &param_to_generated_obj, ParamObjType::FnSet)
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        recursive_dom_facts.push(OrAndChainAtomicFact::AtomicFact(
+            LessFact::new(
+                generated_measure.clone(),
+                stmt.measure.clone(),
+                stmt.line_file.clone(),
+            )
+            .into(),
+        ));
+        recursive_dom_facts.push(OrAndChainAtomicFact::AtomicFact(
+            GreaterEqualFact::new(
+                generated_measure,
+                stmt.lower_bound.clone(),
+                stmt.line_file.clone(),
+            )
+            .into(),
+        ));
 
-        let param_larger_than_induc_plus_offset: AndChainAtomicFact = GreaterEqualFact::new(
-            left_id,
-            induc_obj_plus_offset(&stmt.induc_from, n),
-            line_file.clone(),
+        let generated_ret_set = self
+            .inst_obj(
+                &stmt.fn_set_clause.ret_set,
+                &param_to_generated_obj,
+                ParamObjType::FnSet,
+            )
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        let recursive_fn_set = self
+            .new_fn_set(generated_groups, recursive_dom_facts, generated_ret_set)
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+
+        let function_in_function_set_fact: Fact = InFact::new(
+            Identifier::new(stmt.name.clone()).into(),
+            recursive_fn_set.into(),
+            stmt.line_file.clone(),
         )
         .into();
 
         self.verify_well_defined_and_store_and_infer_with_default_verify_state(
-            param_larger_than_induc_plus_offset.into(),
+            function_in_function_set_fact,
         )
         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-
-        // Induction step needs f(x-1)..f(x-n); cache alone skips fn membership, so store FnObj and in ret_set.
-        for i in 1..=n {
-            let arg: Obj = Sub::new(
-                obj_for_bound_param_in_scope(param_name_str.clone(), ParamObjType::Induc),
-                i.into(),
-            )
-            .into();
-            let fn_obj: Obj = FnObj::new(
-                FnObjHead::Identifier(Identifier::new(stmt.name.clone())),
-                vec![vec![Box::new(arg.clone())]],
-            )
-            .into();
-            self.store_well_defined_obj_cache(&fn_obj);
-            let fn_in_ret: Fact =
-                InFact::new(fn_obj, stmt.ret_set.clone(), line_file.clone()).into();
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fn_in_ret)
-                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-        }
-
-        self.have_fn_by_induc_verify_last_case_register_fn(stmt, &param_name_str)?;
-
-        match &stmt.last_case {
-            HaveFnByInducLastCase::EqualTo(eq) => {
-                self.have_fn_by_induc_verify_one_equal_to_well_defined(stmt, eq, &verify_state)?;
-            }
-            HaveFnByInducLastCase::NestedCases(last_pairs) if !last_pairs.is_empty() => {
-                let coverage_cases: Vec<AndChainAtomicFact> =
-                    last_pairs.iter().map(|c| c.case_fact.clone()).collect();
-                let coverage: Fact = OrFact::new(coverage_cases, line_file.clone()).into();
-                self.verify_fact_return_err_if_not_true(&coverage, &verify_state)
-                    .map_err(|e| {
-                        short_exec_error(
-                            stmt.clone().into(),
-                            "have_fn_by_induc: nested last cases do not cover all situations"
-                                .to_string(),
-                            Some(e),
-                            vec![],
-                        )
-                    })?;
-
-                for nested in last_pairs.iter() {
-                    self.run_in_local_env(|rt| {
-                        rt.verify_well_defined_and_store_and_infer_with_default_verify_state(
-                            nested.case_fact.clone().into(),
-                        )
-                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-                        rt.have_fn_by_induc_verify_one_equal_to_well_defined(
-                            stmt,
-                            &nested.equal_to,
-                            &verify_state,
-                        )
-                    })?;
-                }
-            }
-            HaveFnByInducLastCase::NestedCases(_) => {
-                return Err(short_exec_error(
-                    stmt.clone().into(),
-                    "have_fn_by_induc: nested last case list must not be empty".to_string(),
-                    None,
-                    vec![],
-                ));
-            }
-        }
-
         Ok(())
     }
 
-    // When store_*_and_infer yields an empty chain, record the stored fact for infer_facts display.
-    fn merge_store_infer_with_fallback_fact(
-        infer_result: &mut InferResult,
-        store_infer: InferResult,
-        fallback_fact: &Fact,
-    ) {
-        let empty = store_infer.is_empty();
-        infer_result.new_infer_result_inside(store_infer);
-        if empty {
-            infer_result.new_fact(fallback_fact);
-        }
-    }
-
-    fn exec_have_fn_by_induc_store_process(
+    fn verify_have_fn_by_induc_case_list(
         &mut self,
         stmt: &HaveFnByInducStmt,
-    ) -> Result<InferResult, RuntimeError> {
-        // stmt.induc_from 得是 Z
-        let in_fact: AtomicFact = InFact::new(
-            stmt.induc_from.clone(),
-            StandardSet::Z.into(),
-            stmt.line_file.clone(),
-        )
-        .into();
-        let verify_result = self
-            .verify_atomic_fact(&in_fact, &VerifyState::new(0, false))
-            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-        if verify_result.is_unknown() {
+        cases: &[HaveFnByInducCase],
+    ) -> Result<(), RuntimeError> {
+        if cases.is_empty() {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "have_fn_by_induc: induc_from is not in Z".to_string(),
+                "have_fn_by_induc: case list must not be empty".to_string(),
                 None,
                 vec![],
             ));
         }
 
-        let mut infer_result = InferResult::new();
-        let fs = self.fn_set_from_fn_set_clause(&stmt.fn_user_fn_set_clause())?;
+        let coverage_cases: Vec<AndChainAtomicFact> =
+            cases.iter().map(|c| c.case_fact.clone()).collect();
+        let coverage: Fact = OrFact::new(coverage_cases, stmt.line_file.clone()).into();
+        self.verify_fact_return_err_if_not_true(&coverage, &VerifyState::new(0, false))
+            .map_err(|e| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "have_fn_by_induc: cases do not cover all situations".to_string(),
+                    Some(e),
+                    vec![],
+                )
+            })?;
 
-        // Same order as `define_params_with_type`: declare the name before storing the typing fact,
-        // otherwise `verify_fact_well_defined` rejects `f $in ...` with "identifier not defined".
-        self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)?;
+        self.verify_have_fn_by_induc_cases_mutually_exclusive(stmt, cases)?;
 
-        let bind_infer = self.define_parameter_by_binding_param_type(
-            &stmt.name,
-            &ParamType::Obj(fs.clone().into()),
-            ParamObjType::Identifier,
-        )?;
-        let bind_fact: Fact = InFact::new(
-            Identifier::new(stmt.name.clone()).into(),
-            fs.clone().into(),
+        for case in cases.iter() {
+            self.run_in_local_env(|rt| {
+                rt.verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::from(
+                    case.case_fact.clone(),
+                ))
+                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+
+                match &case.body {
+                    HaveFnByInducCaseBody::EqualTo(equal_to) => {
+                        rt.verify_have_fn_by_induc_equal_to(stmt, equal_to)
+                    }
+                    HaveFnByInducCaseBody::NestedCases(nested) => {
+                        rt.verify_have_fn_by_induc_case_list(stmt, nested)
+                    }
+                }
+            })?;
+        }
+
+        Ok(())
+    }
+
+    fn verify_have_fn_by_induc_equal_to(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+        equal_to: &Obj,
+    ) -> Result<(), RuntimeError> {
+        let verify_state = VerifyState::new(0, false);
+        self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+
+        let equal_to_in_ret_set_atomic_fact: AtomicFact = InFact::new(
+            equal_to.clone(),
+            stmt.fn_set_clause.ret_set.clone(),
             stmt.line_file.clone(),
         )
         .into();
-        Self::merge_store_infer_with_fallback_fact(&mut infer_result, bind_infer, &bind_fact);
-
-        // Special cases: stmt.name(induc_from + i) = equal_to[i]
-        for i in 0..stmt.special_cases_equal_tos.len() {
-            let raw_arg = if i == 0 {
-                stmt.induc_from.clone()
-            } else {
-                Add::new(stmt.induc_from.clone(), i.into()).into()
-            };
-            // Fold numeric adds so we store f(1) not f(0 + 1)
-            let arg = raw_arg.replace_with_numeric_result_if_can_be_calculated().0;
-
-            let equal_to = &stmt.special_cases_equal_tos[i];
-
-            let fn_obj: Obj = FnObj::new(
-                FnObjHead::Identifier(Identifier::new(stmt.name.clone())),
-                vec![vec![Box::new(arg.clone())]],
-            )
-            .into();
-
-            let equal_fact: Fact =
-                EqualFact::new(fn_obj.clone(), equal_to.clone(), stmt.line_file.clone()).into();
-
-            let result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(
-                    equal_fact.clone(),
-                )
-                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-
-            Self::merge_store_infer_with_fallback_fact(&mut infer_result, result, &equal_fact);
+        let verify_result = self
+            .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        if verify_result.is_unknown() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "have_fn_by_induc: {} is not in return set {}",
+                    equal_to, stmt.fn_set_clause.ret_set
+                ),
+                None,
+                vec![],
+            ));
         }
+        Ok(())
+    }
 
-        match &stmt.last_case {
-            HaveFnByInducLastCase::EqualTo(eq) => {
-                let param_name = stmt.param.clone();
-                let param_def = vec![ParamGroupWithParamType::new(
-                    vec![param_name.clone()],
-                    ParamType::Obj(StandardSet::Z.into()),
-                )];
-
-                let mut dom: Vec<Fact> = stmt.forall_fn_base_dom_exist_or_facts();
-
-                let induc_plus_n =
-                    induc_obj_plus_offset(&stmt.induc_from, stmt.special_cases_equal_tos.len())
-                        .replace_with_numeric_result_if_can_be_calculated()
-                        .0;
-                dom.push(
-                    GreaterEqualFact::new(
-                        obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
-                        induc_plus_n,
-                        stmt.line_file.clone(),
-                    )
-                    .into(),
-                );
-
-                let forall_fact_raw = ForallFact::new(
-                    ParamDefWithType::new(param_def),
-                    dom,
-                    vec![EqualFact::new(
-                        FnObj::new(
-                            FnObjHead::Identifier(Identifier::new(stmt.name.clone())),
-                            vec![vec![Box::new(obj_for_bound_param_in_scope(
-                                param_name.clone(),
-                                ParamObjType::Forall,
-                            ))]],
-                        )
-                        .into(),
-                        eq.clone(),
-                        stmt.line_file.clone(),
-                    )
-                    .into()],
-                    stmt.line_file.clone(),
-                )?;
-
-                let forall_fact = self
-                    .inst_have_fn_forall_fact_for_store(forall_fact_raw)
-                    .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-
-                let result = self
-                    .verify_well_defined_and_store_and_infer_with_default_verify_state(
-                        forall_fact.clone(),
-                    )
-                    .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-                Self::merge_store_infer_with_fallback_fact(&mut infer_result, result, &forall_fact);
-            }
-            HaveFnByInducLastCase::NestedCases(last_pairs) => {
-                for nested in last_pairs.iter() {
-                    let param_name = stmt.param.clone();
-                    let param_def = vec![ParamGroupWithParamType::new(
-                        vec![param_name.clone()],
-                        ParamType::Obj(StandardSet::Z.into()),
-                    )];
-                    let eq = nested.equal_to.clone();
-
-                    let mut dom: Vec<Fact> = stmt.forall_fn_base_dom_exist_or_facts();
-
-                    let induc_plus_n =
-                        induc_obj_plus_offset(&stmt.induc_from, stmt.special_cases_equal_tos.len())
-                            .replace_with_numeric_result_if_can_be_calculated()
-                            .0;
-                    dom.push(
-                        GreaterEqualFact::new(
-                            obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
-                            induc_plus_n,
-                            stmt.line_file.clone(),
-                        )
-                        .into(),
-                    );
-
-                    let c: AndChainAtomicFact = nested.case_fact.clone();
-                    dom.push(c.into());
-
-                    let forall_fact_raw = ForallFact::new(
-                        ParamDefWithType::new(param_def),
-                        dom,
-                        vec![EqualFact::new(
-                            FnObj::new(
-                                FnObjHead::Identifier(Identifier::new(stmt.name.clone())),
-                                vec![vec![Box::new(obj_for_bound_param_in_scope(
-                                    param_name.clone(),
-                                    ParamObjType::Forall,
-                                ))]],
-                            )
-                            .into(),
-                            eq.clone(),
-                            stmt.line_file.clone(),
-                        )
-                        .into()],
-                        stmt.line_file.clone(),
-                    )?;
-
-                    let forall_fact = self
-                        .inst_have_fn_forall_fact_for_store(forall_fact_raw)
-                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-
-                    let result = self
-                        .verify_well_defined_and_store_and_infer_with_default_verify_state(
-                            forall_fact.clone(),
-                        )
-                        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-                    Self::merge_store_infer_with_fallback_fact(
-                        &mut infer_result,
-                        result,
-                        &forall_fact,
-                    );
+    fn verify_have_fn_by_induc_cases_mutually_exclusive(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+        cases: &[HaveFnByInducCase],
+    ) -> Result<(), RuntimeError> {
+        for i in 0..cases.len() {
+            for j in (i + 1)..cases.len() {
+                if !self
+                    .have_fn_by_induc_cases_are_disjoint(&cases[i].case_fact, &cases[j].case_fact)?
+                {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        format!(
+                            "have_fn_by_induc: cases overlap or cannot be proved mutually exclusive: `{}` and `{}`",
+                            cases[i].case_fact, cases[j].case_fact
+                        ),
+                        None,
+                        vec![],
+                    ));
                 }
             }
         }
+        Ok(())
+    }
 
-        Ok(infer_result)
+    fn have_fn_by_induc_cases_are_disjoint(
+        &mut self,
+        left: &AndChainAtomicFact,
+        right: &AndChainAtomicFact,
+    ) -> Result<bool, RuntimeError> {
+        if self.have_fn_by_induc_case_implies_not_other(left, right)? {
+            return Ok(true);
+        }
+        self.have_fn_by_induc_case_implies_not_other(right, left)
+    }
+
+    fn have_fn_by_induc_case_implies_not_other(
+        &mut self,
+        assumed: &AndChainAtomicFact,
+        other: &AndChainAtomicFact,
+    ) -> Result<bool, RuntimeError> {
+        self.run_in_local_env(|rt| {
+            rt.verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::from(
+                assumed.clone(),
+            ))?;
+
+            for atom in flatten_have_fn_by_induc_and_chain_to_atomic_facts(other) {
+                let reversed = atom.make_reversed();
+                let result = rt.verify_atomic_fact(&reversed, &VerifyState::new(0, false))?;
+                if result.is_true() {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        })
     }
 
     pub fn exec_have_fn_by_induc_stmt(
@@ -434,5 +326,13 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_have_fn_by_induc(stmt)
+    }
+}
+
+fn flatten_have_fn_by_induc_and_chain_to_atomic_facts(c: &AndChainAtomicFact) -> Vec<AtomicFact> {
+    match c {
+        AndChainAtomicFact::AtomicFact(a) => vec![a.clone()],
+        AndChainAtomicFact::AndFact(af) => af.facts.clone(),
+        AndChainAtomicFact::ChainFact(cf) => cf.facts().unwrap(),
     }
 }

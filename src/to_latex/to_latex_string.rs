@@ -979,61 +979,54 @@ impl HaveFnByInducStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows: Vec<String> = Vec::new();
         rows.push(format!(
-            r"\mathrm{{have}}\ \mathrm{{fn}}\ \mathrm{{by}}\ \mathrm{{induc}}\ \mathrm{{from}}\ {} \texttt{{:}}\ \mathrm{{fn}}\ {}\left( {} : {} \geq {} \right) {}",
-            self.induc_from.to_latex_string(),
+            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} \quad \mathrm{{by}}\ \mathrm{{decreasing}}\ {} \ \mathrm{{from}}\ {}",
             latex_local_ident(&self.name),
-            latex_local_ident(&self.param),
-            Z,
-            self.induc_from.to_latex_string(),
-            self.ret_set.to_latex_string()
+            fn_set_clause_latex(&self.fn_set_clause),
+            self.measure.to_latex_string(),
+            self.lower_bound.to_latex_string(),
         ));
-        for (i, eq) in self.special_cases_equal_tos.iter().enumerate() {
-            rows.push(format!(
-                r"& \quad \mathrm{{case}}\ {} : {}",
-                i,
-                eq.to_latex_string()
-            ));
-        }
-        let n = self.special_cases_equal_tos.len();
-        match &self.last_case {
-            HaveFnByInducLastCase::EqualTo(eq) => {
-                rows.push(format!(
-                    r"& \quad \mathrm{{case}}\ \geq {} : {}",
-                    n,
-                    eq.to_latex_string()
-                ));
-            }
-            HaveFnByInducLastCase::NestedCases(nc) => {
-                rows.push(format!(r"& \quad \mathrm{{case}}\ \geq {} \texttt{{:}}", n));
-                for c in nc {
-                    rows.push(format!(
-                        r"& \quad \quad \mathrm{{case}}\ {} : {}",
-                        c.case_fact.to_latex_string(),
-                        c.equal_to.to_latex_string()
-                    ));
-                }
-            }
-        }
+        Self::push_case_rows(&mut rows, &self.cases, 1);
         format!(
             "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
             rows.join(" \\\\\n")
         )
+    }
+
+    fn push_case_rows(rows: &mut Vec<String>, cases: &[HaveFnByInducCase], indent: usize) {
+        let pad = r"\quad ".repeat(indent);
+        for c in cases {
+            match &c.body {
+                HaveFnByInducCaseBody::EqualTo(eq) => rows.push(format!(
+                    r"& {} \mathrm{{case}}\ {} : {}",
+                    pad,
+                    c.case_fact.to_latex_string(),
+                    eq.to_latex_string()
+                )),
+                HaveFnByInducCaseBody::NestedCases(nested) => {
+                    rows.push(format!(
+                        r"& {} \mathrm{{case}}\ {} \texttt{{:}}",
+                        pad,
+                        c.case_fact.to_latex_string()
+                    ));
+                    Self::push_case_rows(rows, nested, indent + 1);
+                }
+            }
+        }
     }
 }
 
 impl HaveFnEqualCaseByCaseStmt {
     pub fn to_latex_string(&self) -> String {
         let head = format!(
-            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \texttt{{=}} \texttt{{:}}",
+            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \mathrm{{by}}\ \mathrm{{cases}}\texttt{{:}}",
             latex_local_ident(&self.name)
         );
         let clause = fn_set_clause_latex(&self.fn_set_clause);
         let mut rows = vec![format!(r"{} & {}", head, clause)];
         for (i, case) in self.cases.iter().enumerate() {
             rows.push(format!(
-                r"& \quad \mathrm{{case}}\ {} \texttt{{:}}\ {} = {}",
+                r"& \quad \mathrm{{case}}\ {} \texttt{{:}}\ {}",
                 case.to_latex_string(),
-                latex_local_ident(&self.name),
                 self.equal_tos[i].to_latex_string()
             ));
         }

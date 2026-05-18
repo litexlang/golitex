@@ -272,7 +272,44 @@ forall a set:
     }
 
     #[test]
+    fn citation_verified_by_type_reflects_cited_stmt_kind() {
+        let source_code = r#"
+abstract_prop p(x)
+know forall x R:
+    $p(x)
+$p(2)
+let a R:
+    a = 1
+a = 1
+prop q(x R):
+    x = 1
+$q(1)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "citation_verified_by_type_reflects_cited_stmt_kind",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "citation_verified_by_type_reflects_cited_stmt_kind failed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"type\": \"cite forall fact\""));
+        assert!(run_output.contains("\"type\": \"cite atomic fact\""));
+        assert!(run_output.contains("\"type\": \"cite prop def\""));
+    }
+
+    #[test]
     fn run_file_from_path() {
+        run_with_large_stack("run_file_from_path_large_stack", run_file_from_path_impl);
+    }
+
+    fn run_file_from_path_impl() {
         let path: String = "./examples/chapter_6_induction.lit".to_string();
         let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
         assert!(

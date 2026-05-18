@@ -99,6 +99,7 @@ pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
 
 pub const BY: &str = "by";
+pub const DECREASING: &str = "decreasing";
 pub const CASES: &str = "cases";
 pub const CONTRA: &str = "contra";
 pub const ENUMERATE: &str = "enumerate";
@@ -254,6 +255,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CLAIM,
         PROVE,
         BY,
+        DECREASING,
         CASES,
         CONTRA,
         CASE,
