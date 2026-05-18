@@ -1482,7 +1482,7 @@ by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
 
 ### Induction (`by induc`, `by strong_induc`)
 
-**`by induc n from base:`** proves **`P(n)`** for a discrete parameter from a base and step known (or proved) in the environment.
+**`by induc n from base:`** proves **`P(n)`** for a discrete parameter from a base and step known (or proved) in the environment. The structured form separates the base proof from the induction-step proof.
 
 ```litex
 abstract_prop r0(a)
@@ -1499,13 +1499,21 @@ by induc n from 0:
     prove:
         $r0(n)
 
+    prove from n = 0:
+        $r0(0)
+
+    prove induc:
+        $r0(n + 1)
+
 forall m Z:
     m >= 0
     =>:
         $r0(m)
 ```
 
-**`by strong_induc n from base:`** proves the same kind of target, but its step may use the stronger hypothesis that the target holds for every value from `base` through `n`.
+Inside `prove from n = base:`, Litex declares `n $in Z`, assumes `n = base`, and checks the base goal. Inside `prove induc:`, Litex declares `n $in Z`, assumes `n >= base` and `P(n)`, and checks `P(n + 1)`.
+
+**`by strong_induc n from base:`** proves the same kind of target, but its step may use the stronger hypothesis that the target holds for every value from `base` through `n`. Its structured step block is named `prove strong_induc:`.
 
 ```litex
 abstract_prop r1(a)
@@ -1526,11 +1534,19 @@ by strong_induc n from 0:
     prove:
         $r1(n)
 
+    prove from n = 0:
+        $r1(0)
+
+    prove strong_induc:
+        $r1(n + 1)
+
 forall m Z:
     m >= 0
     =>:
         $r1(m)
 ```
+
+Inside `prove strong_induc:`, Litex declares `n $in Z`, assumes `n >= base`, and for each target goal assumes a `forall y Z` induction hypothesis covering `base <= y <= n`. It then checks the target at `n + 1`.
 
 > Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` / `by strong_induc` work with inductive or universal patterns over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges and with a single tuple parameter over `cart({...}, {...}, ...)` (list-set factors), `by enumerate` works with finite list-set parameters, and `by extension` works with set equality.
 

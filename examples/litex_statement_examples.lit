@@ -212,6 +212,12 @@ prove:
         prove:
             $r0(n)
 
+        prove from n = 0:
+            $r0(0)
+
+        prove induc:
+            $r0(n + 1)
+
     forall m Z:
         m >= 0
         =>:

@@ -3,30 +3,34 @@ use std::collections::HashMap;
 
 impl Runtime {
     pub fn exec_by_induc_stmt(&mut self, stmt: &ByInducStmt) -> Result<StmtResult, RuntimeError> {
-        let body_exec_result: Result<StmtResult, RuntimeError> = self.run_in_local_env(|rt| {
-            if stmt.strong {
-                rt.exec_strong_induc_stmt_assume_proof_context(stmt)?;
-            } else {
-                rt.exec_by_induc_stmt_assume_proof_context(stmt)?;
-            }
-            let mut infer_result = InferResult::new();
-            let mut inside_results: Vec<StmtResult> = Vec::new();
-            for proof_stmt in stmt.proof.iter() {
-                inside_results.push(rt.exec_stmt(proof_stmt)?);
-            }
-            for fact in stmt.to_prove.iter() {
-                let one_fact_infer_result = if stmt.strong {
-                    rt.exec_strong_induc_stmt_for_one_fact(stmt, fact)?
+        let body_exec_result: Result<StmtResult, RuntimeError> = if stmt.has_structured_proof() {
+            self.exec_structured_induc_stmt_body(stmt)
+        } else {
+            self.run_in_local_env(|rt| {
+                if stmt.strong {
+                    rt.exec_strong_induc_stmt_assume_proof_context(stmt)?;
                 } else {
-                    rt.exec_by_induc_stmt_for_one_fact(stmt, fact)?
-                };
-                infer_result.new_infer_result_inside(one_fact_infer_result);
-            }
-            Ok(
-                NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)
-                    .into(),
-            )
-        });
+                    rt.exec_by_induc_stmt_assume_proof_context(stmt)?;
+                }
+                let mut infer_result = InferResult::new();
+                let mut inside_results: Vec<StmtResult> = Vec::new();
+                for proof_stmt in stmt.proof.iter() {
+                    inside_results.push(rt.exec_stmt(proof_stmt)?);
+                }
+                for fact in stmt.to_prove.iter() {
+                    let one_fact_infer_result = if stmt.strong {
+                        rt.exec_strong_induc_stmt_for_one_fact(stmt, fact)?
+                    } else {
+                        rt.exec_by_induc_stmt_for_one_fact(stmt, fact)?
+                    };
+                    infer_result.new_infer_result_inside(one_fact_infer_result);
+                }
+                Ok(
+                    NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)
+                        .into(),
+                )
+            })
+        };
 
         let non_err_after_body: StmtResult = match body_exec_result {
             Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
@@ -478,5 +482,241 @@ impl Runtime {
 
         infer_result.new_fact(&corresponding_forall_fact);
         Ok(infer_result)
+    }
+
+    fn exec_structured_induc_stmt_body(
+        &mut self,
+        stmt: &ByInducStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.run_in_local_env(|rt| {
+            rt.verify_induc_from_in_z(stmt)?;
+
+            let mut inside_results: Vec<StmtResult> = Vec::new();
+            inside_results.extend(rt.exec_structured_induc_base_proof(stmt)?);
+            inside_results.extend(rt.exec_structured_induc_step_proof(stmt)?);
+
+            Ok(
+                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), inside_results)
+                    .into(),
+            )
+        })
+    }
+
+    fn exec_structured_induc_base_proof(
+        &mut self,
+        stmt: &ByInducStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        let base_proof = stmt
+            .base_proof
+            .as_ref()
+            .expect("structured induction proof must have a base proof");
+        self.run_in_local_env(|rt| {
+            rt.exec_structured_induc_base_context(stmt)?;
+            let mut inside_results =
+                rt.exec_structured_induc_proof_stmts(stmt, base_proof, "induc base proof")?;
+
+            for fact in stmt.to_prove.iter() {
+                let base_fact = rt.induc_goal_fact_at_obj(stmt, fact, stmt.induc_from.clone())?;
+                let result = rt
+                    .verify_fact_return_err_if_not_true(&base_fact, &VerifyState::new(0, false))
+                    .map_err(|verify_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "{}: base case is not proved `{}`",
+                                Self::induc_stmt_error_prefix(stmt),
+                                base_fact
+                            ),
+                            Some(verify_error),
+                            std::mem::take(&mut inside_results),
+                        )
+                    })?;
+                inside_results.push(result);
+            }
+
+            Ok(inside_results)
+        })
+    }
+
+    fn exec_structured_induc_step_proof(
+        &mut self,
+        stmt: &ByInducStmt,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        let step_proof = stmt
+            .step_proof
+            .as_ref()
+            .expect("structured induction proof must have a step proof");
+        self.run_in_local_env(|rt| {
+            if stmt.strong {
+                rt.exec_strong_induc_stmt_assume_proof_context(stmt)?;
+            } else {
+                rt.exec_by_induc_stmt_assume_proof_context(stmt)?;
+            }
+
+            let mut inside_results =
+                rt.exec_structured_induc_proof_stmts(stmt, step_proof, "induc step proof")?;
+            let next_obj = rt.induc_step_next_obj(stmt);
+
+            for fact in stmt.to_prove.iter() {
+                let next_fact = rt.induc_goal_fact_at_obj(stmt, fact, next_obj.clone())?;
+                let result = rt
+                    .verify_fact_return_err_if_not_true(&next_fact, &VerifyState::new(0, false))
+                    .map_err(|verify_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "{}: induction step is not proved `{}`",
+                                Self::induc_stmt_error_prefix(stmt),
+                                next_fact
+                            ),
+                            Some(verify_error),
+                            std::mem::take(&mut inside_results),
+                        )
+                    })?;
+                inside_results.push(result);
+            }
+
+            Ok(inside_results)
+        })
+    }
+
+    fn exec_structured_induc_base_context(
+        &mut self,
+        stmt: &ByInducStmt,
+    ) -> Result<(), RuntimeError> {
+        let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            vec![stmt.param.clone()],
+            ParamType::Obj(StandardSet::Z.into()),
+        )]);
+        self.define_params_with_type(&params_def, false, ParamObjType::Induc)
+            .map_err(|e| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "{}: failed to declare induction parameter in base proof",
+                        Self::induc_stmt_error_prefix(stmt)
+                    ),
+                    Some(e),
+                    vec![],
+                )
+            })?;
+
+        let param_obj = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
+        let base_eq: Fact =
+            EqualFact::new(param_obj, stmt.induc_from.clone(), stmt.line_file.clone()).into();
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state(base_eq)
+            .map_err(|e| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "{}: failed to assume base equality",
+                        Self::induc_stmt_error_prefix(stmt)
+                    ),
+                    Some(e),
+                    vec![],
+                )
+            })?;
+
+        Ok(())
+    }
+
+    fn exec_structured_induc_proof_stmts(
+        &mut self,
+        stmt: &ByInducStmt,
+        proof: &[Stmt],
+        label: &str,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        let mut inside_results: Vec<StmtResult> = Vec::new();
+        let proof_len = proof.len();
+        for (proof_index, proof_stmt) in proof.iter().enumerate() {
+            let exec_result = self.exec_stmt(proof_stmt);
+            match exec_result {
+                Ok(result) => inside_results.push(result),
+                Err(statement_error) => {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        format!(
+                            "{}: proof step {}/{} failed: `{}`",
+                            label,
+                            proof_index + 1,
+                            proof_len,
+                            proof_stmt
+                        ),
+                        Some(statement_error),
+                        inside_results,
+                    ));
+                }
+            }
+        }
+        Ok(inside_results)
+    }
+
+    fn verify_induc_from_in_z(&mut self, stmt: &ByInducStmt) -> Result<(), RuntimeError> {
+        let induc_from_in_z_fact = InFact::new(
+            stmt.induc_from.clone(),
+            StandardSet::Z.into(),
+            stmt.line_file.clone(),
+        )
+        .into();
+        let verify_result = self
+            .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
+            .map_err(|verify_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "{}: failed to verify `{}`",
+                        Self::induc_stmt_error_prefix(stmt),
+                        induc_from_in_z_fact
+                    ),
+                    Some(verify_error),
+                    vec![],
+                )
+            })?;
+        if verify_result.is_unknown() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "{}: failed to verify `{}`",
+                    Self::induc_stmt_error_prefix(stmt),
+                    induc_from_in_z_fact
+                ),
+                None,
+                vec![],
+            ));
+        }
+        Ok(())
+    }
+
+    fn induc_goal_fact_at_obj(
+        &mut self,
+        stmt: &ByInducStmt,
+        fact: &ExistOrAndChainAtomicFact,
+        obj: Obj,
+    ) -> Result<Fact, RuntimeError> {
+        let param_to_obj_map: HashMap<String, Obj> = HashMap::from([(stmt.param.clone(), obj)]);
+        Ok(self
+            .inst_exist_or_and_chain_atomic_fact(
+                fact,
+                &param_to_obj_map,
+                ParamObjType::Induc,
+                None,
+            )?
+            .to_fact())
+    }
+
+    fn induc_step_next_obj(&self, stmt: &ByInducStmt) -> Obj {
+        Add::new(
+            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc),
+            Number::new("1".to_string()).into(),
+        )
+        .into()
+    }
+
+    fn induc_stmt_error_prefix(stmt: &ByInducStmt) -> &'static str {
+        if stmt.strong {
+            "strong_induc"
+        } else {
+            "by induc"
+        }
     }
 }

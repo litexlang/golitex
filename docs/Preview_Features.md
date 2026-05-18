@@ -10,6 +10,10 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Structured induction proof blocks (2026-05)
+
+`by induc` and `by strong_induc` can now split their proof into a base block and a step block. Use `prove from n = base:` for the base case, `prove induc:` for ordinary induction steps, and `prove strong_induc:` for strong induction steps. See **Manual — Induction (`by induc`, `by strong_induc`)**.
+
 ### `by transitive_prop` (2026-05)
 
 After you prove the standard associativity-shaped `forall` for a binary user-defined `prop` or `abstract_prop`, Litex records that predicate as **transitive**. Storing a same-predicate chain (e.g. `a $p b $p c`) also stores non-adjacent consequences such as `$p(a, c)`. See **Manual — Register a transitive predicate (`by transitive_prop`)**.
