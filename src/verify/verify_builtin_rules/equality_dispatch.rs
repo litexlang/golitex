@@ -84,6 +84,18 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_equality_from_two_sided_weak_order(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_equality_from_known_antisymmetric_props(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_zero_equals_pow_from_base_zero(
             left,
             right,
@@ -365,5 +377,125 @@ impl Runtime {
             )
             .into(),
         ))
+    }
+
+    fn verify_weak_order_subgoal(
+        &mut self,
+        greater_or_equal: &Obj,
+        less_or_equal: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let greater_equal: AtomicFact = GreaterEqualFact::new(
+            greater_or_equal.clone(),
+            less_or_equal.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let result = self.verify_non_equational_known_then_builtin_rules_only(
+            &greater_equal,
+            &VerifyState::new(0, true),
+        )?;
+        if result.is_true() {
+            return Ok(Some(result));
+        }
+
+        let less_equal: AtomicFact =
+            LessEqualFact::new(less_or_equal.clone(), greater_or_equal.clone(), line_file).into();
+        let result = self.verify_non_equational_known_then_builtin_rules_only(
+            &less_equal,
+            &VerifyState::new(0, true),
+        )?;
+        if result.is_true() {
+            return Ok(Some(result));
+        }
+
+        Ok(None)
+    }
+
+    // Equality follows from antisymmetry of the standard weak order.
+    // Example: from `a >= b` and `b >= a`, prove `a = b`.
+    fn try_verify_equality_from_two_sided_weak_order(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(left_ge_right) = self.verify_weak_order_subgoal(left, right, line_file.clone())?
+        else {
+            return Ok(None);
+        };
+        let Some(right_ge_left) = self.verify_weak_order_subgoal(right, left, line_file.clone())?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "equality from a >= b and b >= a".to_string(),
+                vec![left_ge_right, right_ge_left],
+            )
+            .into(),
+        ))
+    }
+
+    fn verify_user_prop_subgoal(
+        &mut self,
+        prop_name: &str,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<StmtResult, RuntimeError> {
+        let fact: AtomicFact = NormalAtomicFact::new(
+            AtomicName::WithoutMod(prop_name.to_string()),
+            vec![left.clone(), right.clone()],
+            line_file,
+        )
+        .into();
+        self.verify_non_equational_atomic_fact(&fact, &VerifyState::new(0, true), true)
+    }
+
+    // Antisymmetry rule for registered user-defined props.
+    // Example: from `$p(a, b)` and `$p(b, a)`, prove `a = b`.
+    fn try_verify_equality_from_known_antisymmetric_props(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let mut prop_names: Vec<String> = Vec::new();
+        for env in self.iter_environments_from_top() {
+            for prop_name in env.known_antisymmetric_props.keys() {
+                if !prop_names.iter().any(|name| name == prop_name) {
+                    prop_names.push(prop_name.clone());
+                }
+            }
+        }
+
+        for prop_name in prop_names {
+            let left_to_right =
+                self.verify_user_prop_subgoal(&prop_name, left, right, line_file.clone())?;
+            if !left_to_right.is_true() {
+                continue;
+            }
+            let right_to_left =
+                self.verify_user_prop_subgoal(&prop_name, right, left, line_file.clone())?;
+            if !right_to_left.is_true() {
+                continue;
+            }
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    format!(
+                        "equality from registered antisymmetric prop `{}`",
+                        prop_name
+                    ),
+                    vec![left_to_right, right_to_left],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
     }
 }

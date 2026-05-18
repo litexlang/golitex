@@ -1,30 +1,25 @@
+use super::helpers_by_stmt::user_defined_prop_arity;
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_commutative_prop_stmt(
+    pub fn exec_by_antisymmetric_prop_stmt(
         &mut self,
-        stmt: &ByCommutativePropStmt,
+        stmt: &ByAntisymmetricPropStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let (prop_name, gather) = stmt.commutative_prop_registration().map_err(|msg| {
+        let prop_name = stmt.antisymmetric_prop_name().map_err(|msg| {
             RuntimeError::from(VerifyRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(msg, stmt.line_file.clone()),
             ))
         })?;
 
-        let forall_arity = stmt
-            .forall_fact
-            .params_def_with_type
-            .collect_param_names()
-            .len();
-        let prop_definition = self.get_abstract_prop_definition_by_name(&prop_name);
-        match prop_definition {
-            Some(definition) => {
-                if definition.params.len() != forall_arity {
+        match user_defined_prop_arity(self, &prop_name) {
+            Some(arity) => {
+                if arity != 2 {
                     return Err(short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by commutative_prop: `{}` must have arity {} to match the forall",
-                            prop_name, forall_arity
+                            "by antisymmetric_prop: `{}` must be a binary user-defined prop",
+                            prop_name
                         ),
                         None,
                         vec![],
@@ -35,7 +30,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by commutative_prop: `{}` must be an abstract_prop",
+                        "by antisymmetric_prop: `{}` must be a user-defined prop",
                         prop_name
                     ),
                     None,
@@ -62,7 +57,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by commutative_prop: failed to prove `{}`",
+                        "by antisymmetric_prop: failed to prove `{}`",
                         stmt.forall_fact
                     ),
                     None,
@@ -73,17 +68,11 @@ impl Runtime {
             Ok(inside_results)
         })?;
 
-        self.top_level_env().store_commutative_prop_permutation(
-            prop_name.clone(),
-            gather.clone(),
-            stmt.line_file.clone(),
-        )?;
+        self.top_level_env()
+            .store_antisymmetric_prop_name(prop_name.clone());
 
         let mut infer_result = InferResult::new();
-        infer_result.new_with_msg(format!(
-            "registered commutative permutation {:?} for `{}`",
-            gather, prop_name
-        ));
+        infer_result.new_with_msg(format!("registered `{}` as antisymmetric", prop_name));
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 }

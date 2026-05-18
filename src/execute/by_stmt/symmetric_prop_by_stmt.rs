@@ -2,24 +2,29 @@ use super::helpers_by_stmt::user_defined_prop_arity;
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_transitive_prop_stmt(
+    pub fn exec_by_symmetric_prop_stmt(
         &mut self,
-        stmt: &ByTransitivePropStmt,
+        stmt: &BySymmetricPropStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let prop_name = stmt.transitive_prop_name().map_err(|msg| {
+        let (prop_name, gather) = stmt.symmetric_prop_registration().map_err(|msg| {
             RuntimeError::from(VerifyRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(msg, stmt.line_file.clone()),
             ))
         })?;
 
+        let forall_arity = stmt
+            .forall_fact
+            .params_def_with_type
+            .collect_param_names()
+            .len();
         match user_defined_prop_arity(self, &prop_name) {
             Some(arity) => {
-                if arity != 2 {
+                if arity != forall_arity {
                     return Err(short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by transitive_prop: `{}` must be a binary user-defined prop",
-                            prop_name
+                            "by symmetric_prop: `{}` must have arity {} to match the forall",
+                            prop_name, forall_arity
                         ),
                         None,
                         vec![],
@@ -30,7 +35,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by transitive_prop: `{}` must be a user-defined prop",
+                        "by symmetric_prop: `{}` must be a user-defined prop",
                         prop_name
                     ),
                     None,
@@ -56,7 +61,7 @@ impl Runtime {
             if result.is_unknown() {
                 return Err(short_exec_error(
                     stmt.clone().into(),
-                    format!("by transitive_prop: failed to prove `{}`", stmt.forall_fact),
+                    format!("by symmetric_prop: failed to prove `{}`", stmt.forall_fact),
                     None,
                     inside_results,
                 ));
@@ -65,11 +70,17 @@ impl Runtime {
             Ok(inside_results)
         })?;
 
-        self.top_level_env()
-            .store_transitive_prop_name(prop_name.clone());
+        self.top_level_env().store_symmetric_prop_permutation(
+            prop_name.clone(),
+            gather.clone(),
+            stmt.line_file.clone(),
+        )?;
 
         let mut infer_result = InferResult::new();
-        infer_result.new_with_msg(format!("registered `{}` as transitive", prop_name));
+        infer_result.new_with_msg(format!(
+            "registered symmetric permutation {:?} for `{}`",
+            gather, prop_name
+        ));
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 }

@@ -1059,7 +1059,7 @@ impl AtomicFact {
         }
     }
 
-    pub fn commutative_reordered_args(&self, gather: &[usize]) -> Option<Self> {
+    pub fn symmetric_reordered_args(&self, gather: &[usize]) -> Option<Self> {
         match self {
             AtomicFact::NormalAtomicFact(f) => {
                 let n = f.body.len();

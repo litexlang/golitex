@@ -43,7 +43,9 @@ pub struct Environment {
     pub known_objs_in_fn_sets: HashMap<ObjString, KnownFnInfo>,
 
     pub known_transitive_props: HashMap<String, ()>,
-    pub known_commutative_props: HashMap<String, CommutativePropValue>,
+    pub known_symmetric_props: HashMap<String, SymmetricPropValue>,
+    pub known_reflexive_props: HashMap<String, ()>,
+    pub known_antisymmetric_props: HashMap<String, ()>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
@@ -121,7 +123,9 @@ impl Environment {
             known_objs_equal_to_normalized_decimal_number: known_calculated_value_of_obj,
             known_objs_equal_to_set_builder: known_set_builder_objs,
             known_transitive_props: HashMap::new(),
-            known_commutative_props: HashMap::new(),
+            known_symmetric_props: HashMap::new(),
+            known_reflexive_props: HashMap::new(),
+            known_antisymmetric_props: HashMap::new(),
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
         }
@@ -149,12 +153,22 @@ impl fmt::Display for Environment {
         )?;
         write!(
             f,
-            "    known_commutative_props: {} predicates, {} permutations\n",
-            self.known_commutative_props.len(),
-            self.known_commutative_props
+            "    known_symmetric_props: {} predicates, {} permutations\n",
+            self.known_symmetric_props.len(),
+            self.known_symmetric_props
                 .values()
                 .map(|v| v.len())
                 .sum::<usize>()
+        )?;
+        write!(
+            f,
+            "    known_reflexive_props: {:?}\n",
+            self.known_reflexive_props.len()
+        )?;
+        write!(
+            f,
+            "    known_antisymmetric_props: {:?}\n",
+            self.known_antisymmetric_props.len()
         )?;
         write!(
             f,
@@ -696,7 +710,15 @@ impl Environment {
         self.known_transitive_props.insert(prop_name, ());
     }
 
-    pub fn store_commutative_prop_permutation(
+    pub fn store_reflexive_prop_name(&mut self, prop_name: String) {
+        self.known_reflexive_props.insert(prop_name, ());
+    }
+
+    pub fn store_antisymmetric_prop_name(&mut self, prop_name: String) {
+        self.known_antisymmetric_props.insert(prop_name, ());
+    }
+
+    pub fn store_symmetric_prop_permutation(
         &mut self,
         prop_name: String,
         gather: Vec<usize>,
@@ -706,39 +728,39 @@ impl Environment {
         if n < 2 {
             return Err(
                 StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "store_commutative_prop_permutation: arity must be at least 2".to_string(),
+                    "store_symmetric_prop_permutation: arity must be at least 2".to_string(),
                     line_file,
                 ))
                 .into(),
             );
         }
-        if !commutative_gather_is_valid_permutation(&gather, n) {
+        if !symmetric_gather_is_valid_permutation(&gather, n) {
             return Err(
                 StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "store_commutative_prop_permutation: gather is not a valid permutation"
+                    "store_symmetric_prop_permutation: gather is not a valid permutation"
                         .to_string(),
                     line_file,
                 ))
                 .into(),
             );
         }
-        if commutative_gather_is_identity(&gather) {
+        if symmetric_gather_is_identity(&gather) {
             return Err(
                 StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "store_commutative_prop_permutation: identity permutation is not allowed"
+                    "store_symmetric_prop_permutation: identity permutation is not allowed"
                         .to_string(),
                     line_file,
                 ))
                 .into(),
             );
         }
-        if let Some(existing) = self.known_commutative_props.get(&prop_name) {
+        if let Some(existing) = self.known_symmetric_props.get(&prop_name) {
             if let Some(first) = existing.first() {
                 if first.len() != n {
                     return Err(StoreFactRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             format!(
-                            "store_commutative_prop_permutation: `{}` already has arity {}, got {}",
+                            "store_symmetric_prop_permutation: `{}` already has arity {}, got {}",
                             prop_name,
                             first.len(),
                             n
@@ -751,7 +773,7 @@ impl Environment {
             }
         }
         let entry = self
-            .known_commutative_props
+            .known_symmetric_props
             .entry(prop_name)
             .or_insert_with(Vec::new);
         if entry.iter().any(|g| g == &gather) {
@@ -789,13 +811,13 @@ impl KnownForallFactParamsAndDom {
     }
 }
 
-pub type CommutativePropValue = Vec<Vec<usize>>;
+pub type SymmetricPropValue = Vec<Vec<usize>>;
 
-fn commutative_gather_is_identity(gather: &[usize]) -> bool {
+fn symmetric_gather_is_identity(gather: &[usize]) -> bool {
     gather.iter().enumerate().all(|(i, &g)| g == i)
 }
 
-fn commutative_gather_is_valid_permutation(gather: &[usize], n: usize) -> bool {
+fn symmetric_gather_is_valid_permutation(gather: &[usize], n: usize) -> bool {
     if gather.len() != n {
         return false;
     }
