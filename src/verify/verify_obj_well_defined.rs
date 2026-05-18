@@ -2113,6 +2113,8 @@ impl Runtime {
             )));
         }
 
+        self.store_fn_obj_cart_return_facts_if_available(&x.obj, default_line_file())?;
+
         let target_obj_is_tuple_fact =
             IsTupleFact::new((*x.obj).clone(), default_line_file()).into();
         let target_obj_is_tuple_result =
@@ -2145,6 +2147,93 @@ impl Runtime {
         }
 
         Ok(())
+    }
+
+    fn store_fn_obj_cart_return_facts_if_available(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        let Obj::FnObj(fn_obj) = obj else {
+            return Ok(());
+        };
+        let Some(ret_set) = self.fn_obj_return_set_after_application(fn_obj)? else {
+            return Ok(());
+        };
+        let Obj::Cart(cart) = ret_set else {
+            return Ok(());
+        };
+        if cart.args.len() < 2 {
+            return Ok(());
+        }
+
+        self.store_tuple_obj_and_cart(
+            &obj.to_string(),
+            None,
+            Some(cart.clone()),
+            line_file.clone(),
+        );
+
+        let is_tuple_fact: AtomicFact = IsTupleFact::new(obj.clone(), line_file.clone()).into();
+        self.store_atomic_fact_without_well_defined_verified_and_infer(is_tuple_fact)?;
+
+        let tuple_dim_obj: Obj = TupleDim::new(obj.clone()).into();
+        let cart_arg_count_obj: Obj = Number::new(cart.args.len().to_string()).into();
+        let tuple_dim_fact: AtomicFact =
+            EqualFact::new(tuple_dim_obj, cart_arg_count_obj, line_file.clone()).into();
+        self.store_atomic_fact_without_well_defined_verified_and_infer(tuple_dim_fact)?;
+
+        for (factor_index, factor) in cart.args.iter().enumerate() {
+            let index = factor_index + 1;
+            let index_obj: Obj = Number::new(index.to_string()).into();
+            let index_bound_fact: AtomicFact = LessEqualFact::new(
+                index_obj.clone(),
+                TupleDim::new(obj.clone()).into(),
+                line_file.clone(),
+            )
+            .into();
+            self.store_atomic_fact_without_well_defined_verified_and_infer(index_bound_fact)?;
+
+            let projected_obj: Obj = ObjAtIndex::new(obj.clone(), index_obj).into();
+            let projected_in_factor_fact: AtomicFact =
+                InFact::new(projected_obj, (**factor).clone(), line_file.clone()).into();
+            self.store_atomic_fact_without_well_defined_verified_and_infer(
+                projected_in_factor_fact,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn fn_obj_return_set_after_application(
+        &self,
+        fn_obj: &FnObj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        if fn_obj.body.is_empty() {
+            return Ok(None);
+        }
+
+        let mut space = match fn_obj.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(a) => FnSetSpace::Anon((**a).clone()),
+            FnObjHead::FiniteSeqListObj(_) => return Ok(None),
+            _ => {
+                let function_name_obj: Obj = (*fn_obj.head).clone().into();
+                let Some(body) = self.get_object_in_fn_set_or_restrict(&function_name_obj) else {
+                    return Ok(None);
+                };
+                FnSetSpace::Set(FnSet::from_body(body.clone())?)
+            }
+        };
+
+        for i in 0..fn_obj.body.len() {
+            let ret_set = space.ret_set_obj();
+            if i == fn_obj.body.len() - 1 {
+                return Ok(Some(ret_set));
+            }
+            space = FnSetSpace::from_ret_obj(ret_set)?;
+        }
+
+        Ok(None)
     }
 
     fn verify_q_pos_well_defined(&self) -> Result<(), RuntimeError> {
