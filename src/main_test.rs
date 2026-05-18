@@ -399,6 +399,21 @@ forall a set:
         run_single_the_mechanics_chapter_markdown_file_impl("Chapter_9_Sets.md", "Chapter 9");
     }
 
+    #[test]
+    fn run_the_mechanics_chapter_10_markdown_file() {
+        run_with_large_stack(
+            "run_the_mechanics_chapter_10_markdown_file_large_stack",
+            run_the_mechanics_chapter_10_markdown_file_impl,
+        );
+    }
+
+    fn run_the_mechanics_chapter_10_markdown_file_impl() {
+        run_single_the_mechanics_chapter_markdown_file_impl(
+            "Chapter_10_Relations.md",
+            "Chapter 10",
+        );
+    }
+
     fn run_the_mechanics_markdown_files_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let mechanics_dir = manifest_dir.join("The-Mechanics-of-Litex-Proof");

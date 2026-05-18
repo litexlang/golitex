@@ -5,9 +5,9 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn is_commutative_prop_name_known(&self, prop_name: &str) -> bool {
+    pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
         for env in self.iter_environments_from_top() {
-            if let Some(perms) = env.known_commutative_props.get(prop_name) {
+            if let Some(perms) = env.known_symmetric_props.get(prop_name) {
                 if !perms.is_empty() {
                     return true;
                 }

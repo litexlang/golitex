@@ -331,10 +331,42 @@ impl ByTransitivePropStmt {
     }
 }
 
-impl ByCommutativePropStmt {
+impl BySymmetricPropStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
-            r"\text{{\textbf{{by commutative_prop}}:}} & {}",
+            r"\text{{\textbf{{by symmetric_prop}}:}} & {}",
+            self.forall_fact.to_latex_string()
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
+impl ByReflexivePropStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by reflexive_prop}}:}} & {}",
+            self.forall_fact.to_latex_string()
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
+impl ByAntisymmetricPropStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by antisymmetric_prop}}:}} & {}",
             self.forall_fact.to_latex_string()
         )];
         for st in &self.proof {
@@ -2052,7 +2084,9 @@ impl Stmt {
             Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
             Stmt::ByTransitivePropStmt(x) => x.to_latex_string(),
-            Stmt::ByCommutativePropStmt(x) => x.to_latex_string(),
+            Stmt::BySymmetricPropStmt(x) => x.to_latex_string(),
+            Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
+            Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }

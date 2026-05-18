@@ -1,16 +1,16 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_by_commutative_prop_stmt(
+    pub fn parse_by_antisymmetric_prop_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(COMMUTATIVE_PROP)?;
+        tb.skip_token(ANTISYMMETRIC_PROP)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by commutative_prop: expected end of head after `:`".to_string(),
+                    "by antisymmetric_prop: expected end of head after `:`".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -18,7 +18,7 @@ impl Runtime {
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by commutative_prop: expects a body".to_string(),
+                    "by antisymmetric_prop: expects a body".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -27,7 +27,7 @@ impl Runtime {
         let prove_block = tb.body.get_mut(0).ok_or_else(|| {
             RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by commutative_prop: expected prove block".to_string(),
+                    "by antisymmetric_prop: expected prove block".to_string(),
                     tb.line_file.clone(),
                 ),
             ))
@@ -35,7 +35,7 @@ impl Runtime {
         if prove_block.header.get(0).map(|s| s.as_str()) != Some(PROVE) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by commutative_prop: first block must be `prove:`".to_string(),
+                    "by antisymmetric_prop: first block must be `prove:`".to_string(),
                     prove_block.line_file.clone(),
                 ),
             )));
@@ -44,7 +44,7 @@ impl Runtime {
         if prove_block.body.len() != 1 {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by commutative_prop: `prove:` must contain exactly one forall fact"
+                    "by antisymmetric_prop: `prove:` must contain exactly one forall fact"
                         .to_string(),
                     prove_block.line_file.clone(),
                 ),
@@ -54,7 +54,7 @@ impl Runtime {
         let forall_block = prove_block.body.get_mut(0).ok_or_else(|| {
             RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by commutative_prop: missing forall block".to_string(),
+                    "by antisymmetric_prop: missing forall block".to_string(),
                     tb.line_file.clone(),
                 ),
             ))
@@ -65,7 +65,7 @@ impl Runtime {
             Fact::ForallFactWithIff(_) => {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by commutative_prop: forall with `<=>` is not allowed here".to_string(),
+                        "by antisymmetric_prop: forall with `<=>` is not allowed here".to_string(),
                         forall_block.line_file.clone(),
                     ),
                 )));
@@ -73,7 +73,8 @@ impl Runtime {
             _ => {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by commutative_prop: `prove:` must be a single `forall` fact".to_string(),
+                        "by antisymmetric_prop: `prove:` must be a single `forall` fact"
+                            .to_string(),
                         forall_block.line_file.clone(),
                     ),
                 )));
@@ -81,8 +82,8 @@ impl Runtime {
         };
 
         let shape_check =
-            ByCommutativePropStmt::new(forall_fact.clone(), Vec::new(), tb.line_file.clone())
-                .commutative_prop_registration();
+            ByAntisymmetricPropStmt::new(forall_fact.clone(), Vec::new(), tb.line_file.clone())
+                .antisymmetric_prop_name();
         if let Err(msg) = shape_check {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(msg, forall_fact.line_file.clone()),
@@ -104,6 +105,6 @@ impl Runtime {
             },
         )?;
 
-        Ok(ByCommutativePropStmt::new(forall_fact, proof, tb.line_file.clone()).into())
+        Ok(ByAntisymmetricPropStmt::new(forall_fact, proof, tb.line_file.clone()).into())
     }
 }

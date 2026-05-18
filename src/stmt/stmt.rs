@@ -38,7 +38,9 @@ pub enum Stmt {
     ByFnSetAsSetStmt(ByFnSetAsSetStmt),
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
     ByTransitivePropStmt(ByTransitivePropStmt),
-    ByCommutativePropStmt(ByCommutativePropStmt),
+    BySymmetricPropStmt(BySymmetricPropStmt),
+    ByReflexivePropStmt(ByReflexivePropStmt),
+    ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     DefStructStmt(DefStructStmt),
     EvalByStmt(EvalByStmt),
 }
@@ -195,7 +197,9 @@ impl fmt::Display for Stmt {
             Stmt::ByFnSetAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByClosedRangeAsCasesStmt(x) => write!(f, "{}", x),
             Stmt::ByTransitivePropStmt(x) => write!(f, "{}", x),
-            Stmt::ByCommutativePropStmt(x) => write!(f, "{}", x),
+            Stmt::BySymmetricPropStmt(x) => write!(f, "{}", x),
+            Stmt::ByReflexivePropStmt(x) => write!(f, "{}", x),
+            Stmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
             Stmt::DefStructStmt(x) => write!(f, "{}", x),
         }
     }
@@ -240,7 +244,9 @@ impl Stmt {
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTransitivePropStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByCommutativePropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::BySymmetricPropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByReflexivePropStmt(stmt) => stmt.line_file.clone(),
+            Stmt::ByAntisymmetricPropStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefStructStmt(stmt) => stmt.line_file.clone(),
         }
     }
@@ -283,7 +289,9 @@ impl Stmt {
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTransitivePropStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByCommutativePropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::BySymmetricPropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByReflexivePropStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::ByAntisymmetricPropStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
         }
     }
@@ -505,9 +513,21 @@ impl From<ByTransitivePropStmt> for Stmt {
     }
 }
 
-impl From<ByCommutativePropStmt> for Stmt {
-    fn from(v: ByCommutativePropStmt) -> Self {
-        Stmt::ByCommutativePropStmt(v)
+impl From<BySymmetricPropStmt> for Stmt {
+    fn from(v: BySymmetricPropStmt) -> Self {
+        Stmt::BySymmetricPropStmt(v)
+    }
+}
+
+impl From<ByReflexivePropStmt> for Stmt {
+    fn from(v: ByReflexivePropStmt) -> Self {
+        Stmt::ByReflexivePropStmt(v)
+    }
+}
+
+impl From<ByAntisymmetricPropStmt> for Stmt {
+    fn from(v: ByAntisymmetricPropStmt) -> Self {
+        Stmt::ByAntisymmetricPropStmt(v)
     }
 }
 

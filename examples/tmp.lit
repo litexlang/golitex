@@ -1,9 +1,28 @@
-import litexpy
+prop injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
 
-runner = litexpy.runner()
+prop surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
 
-runner.run("1 = 1")
+prop bijective_fn(S, T set, f fn(x S) T):
+    $injective_fn(S, T, f)
+    $surjective_fn(S, T, f)
 
-runner.clear()
+prop exist_bijection(S, T set):
+    exist f fn(x S) T st {$bijective_fn(S, T, f)}
 
-runner.quit()
+prop is_inverse_of_fn(S, T set, f fn(x S) T, g fn(x T) S):
+    forall x S:
+        g(f(x)) = x
+    forall y T:
+        y = f(g(y))
+
+know forall A, B, f fn(x A) B:
+    $bijective_fn(A, B, f)
+    =>:
+        exist g fn(x B) A st {$is_inverse_of_fn(A, B, f, g)}
+

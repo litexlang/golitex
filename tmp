@@ -1,36 +1,29 @@
-prop solve_for_second_addend(a, b, c R):
-    forall t N_pos:
-        a + b = c
-        =>:
-            b = c - a
-
-prop double_negative(a R):
-    -(-a) = a
+prop rational_pair_eq(p cart(Z, N), q cart(Z, N)):
+    p[1] * (q[2] + 1) = q[1] * (p[2] + 1)
 
 claim:
     prove:
-        forall x, y, k R:
-            x = -8.4
-            -2 * x + y = k
-            0.5 * x + y = 14
+        forall p cart(Z, N):
+            $rational_pair_eq(p, p)
+    p[1] * (p[2] + 1) = p[1] * (p[2] + 1)
+
+claim:
+    prove:
+        forall p, q cart(Z, N):
+            $rational_pair_eq(p, q)
             =>:
-                k = 35
-    -2 * x = -2 * (-8.4)
-    -2 * x = 16.8
-    -2 * x + y = 16.8 + y
-    16.8 + y = k
-    y = k - 16.8
+                $rational_pair_eq(q, p)
+    p[1] * (q[2] + 1) = q[1] * (p[2] + 1)
+    q[1] * (p[2] + 1) = p[1] * (q[2] + 1)
 
-    0.5 * x = 0.5 * (-8.4)
-    0.5 * x = -4.2
-    0.5 * x + y = -4.2 + y
-    -4.2 + y = 14
-    y = 14 - (-4.2)
-    -(-4.2) = 4.2
-    y = 14 + 4.2
-    y = 18.2
-
-    k - 16.8 = 18.2
-    k = 18.2 + 16.8
-    18.2 + 16.8 = 35
-    k = 35
+claim:
+    prove:
+        forall p, q, r cart(Z, N):
+            $rational_pair_eq(p, q)
+            $rational_pair_eq(q, r)
+            =>:
+                $rational_pair_eq(p, r)
+    (q[2] + 1) * (p[1] * (r[2] + 1)) = (p[1] * (q[2] + 1)) * (r[2] + 1) = (q[1] * (p[2] + 1)) * (r[2] + 1) = (q[1] * (r[2] + 1)) * (p[2] + 1) = (r[1] * (q[2] + 1)) * (p[2] + 1) = (q[2] + 1) * (r[1] * (p[2] + 1))
+    q[2] + 1 > 0
+    q[2] + 1 != 0
+    p[1] * (r[2] + 1) = ((q[2] + 1) * (p[1] * (r[2] + 1))) / (q[2] + 1) = ((q[2] + 1) * (r[1] * (p[2] + 1))) / (q[2] + 1) = r[1] * (p[2] + 1)

@@ -1609,9 +1609,31 @@ by extension:
 
 ---
 
+### Register a reflexive predicate (`by reflexive_prop`)
+
+Use **`by reflexive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is reflexive. The `prove:` block must contain exactly this shape: one `set` parameter and one conclusion `$p(x, x)`.
+
+After the proof succeeds, Litex records that predicate as reflexive in the current environment. Later, if a positive goal `$p(a, a)` is still unproved after the usual steps, Litex can close it from the reflexive registration.
+
+```litex
+prop same_obj(x set, y set):
+    x = y
+
+by reflexive_prop:
+    prove:
+        forall x set:
+            $same_obj(x, x)
+    x = x
+
+have a set
+$same_obj(a, a)
+```
+
+---
+
 ### Register a transitive predicate (`by transitive_prop`)
 
-Use **`by transitive_prop:`** to prove that a binary `abstract_prop` is transitive. The `prove:` block must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
+Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is transitive. The `prove:` block must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
 
 After the proof succeeds, Litex records that predicate as transitive in the current environment. Later, when Litex stores a chain whose links all use the same predicate, such as `a $p b $p c`, it looks through the current environment stack for that transitive registration and stores `$p(a, c)` automatically.
 
@@ -1639,18 +1661,18 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ---
 
-### Register a commutative predicate (`by commutative_prop`)
+### Register a symmetric predicate (`by symmetric_prop`)
 
-Use **`by commutative_prop:`** to prove that an `abstract_prop` is **commutative in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
+Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
 
 After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
-See `examples/by_commutative_prop.lit` (binary) and `examples/tmp.lit` (four arguments).
+See `examples/by_symmetric_reflexive_antisymmetric_prop.lit`.
 
 ```litex
 abstract_prop p(x, y)
 
-by commutative_prop:
+by symmetric_prop:
     prove:
         forall x, y set:
             $p(x, y)
@@ -1664,6 +1686,32 @@ claim:
     prove:
         $p(a, b)
     know $p(b, a)
+```
+
+---
+
+### Register an antisymmetric predicate (`by antisymmetric_prop`)
+
+Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is antisymmetric. The `prove:` block must contain exactly this shape: two `set` parameters, two domain facts `$p(x, y)` and `$p(y, x)`, and one equality conclusion `x = y`.
+
+After the proof succeeds, Litex records that predicate as antisymmetric in the current environment. Later, if an equality goal `a = b` is still unproved after the usual equality rules, Litex can close it from the two verified facts `$p(a, b)` and `$p(b, a)`.
+
+```litex
+abstract_prop p(x, y)
+
+by antisymmetric_prop:
+    prove:
+        forall x, y set:
+            $p(x, y)
+            $p(y, x)
+            =>:
+                x = y
+    know x = y
+
+have a, b set
+know $p(a, b)
+know $p(b, a)
+a = b
 ```
 
 ---
@@ -1736,8 +1784,10 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by induc` / `by strong_induc` | Prove a statement by ordinary or strong induction |
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
-| `by transitive_prop` | Register a binary abstract predicate as transitive |
-| `by commutative_prop` | Register argument permutations for an `abstract_prop`; verification may try reordered positive instances |
+| `by reflexive_prop` | Register a binary user-defined predicate as reflexive |
+| `by transitive_prop` | Register a binary user-defined predicate as transitive |
+| `by symmetric_prop` | Register argument permutations for a user-defined predicate; verification may try reordered positive instances |
+| `by antisymmetric_prop` | Register a binary user-defined predicate as antisymmetric |
 | `by fn as set` / `by fn set as set` / `by family as set` / `by tuple as set` | Expose the set-theoretic meaning behind function, family, and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
@@ -2418,6 +2468,20 @@ forall x R:
     =>:
         x = 0
 ```
+
+#### Equality From Two-Sided Weak Order
+
+Litex can prove equality from the antisymmetry of the standard weak order.
+
+```litex
+forall a, b R:
+    a >= b
+    b >= a
+    =>:
+        a = b
+```
+
+The same rule also applies when the two comparisons are written with `<=` in the opposite direction.
 
 #### Powers
 
@@ -3459,7 +3523,7 @@ flowchart TD
     checkAssumptions -->|"assumptions hold"| forallSuccess
     checkAssumptions -->|"missing assumption"| postProcess
 
-    postProcess -->|"transitive or commutative registration applies"| postProcessSuccess
+    postProcess -->|"registered relation property applies"| postProcessSuccess
     postProcess -->|"not enough"| unknownResult
 
     builtinSuccess --> storeFact
@@ -3469,4 +3533,4 @@ flowchart TD
     storeFact --> inferMore
 ```
 
-If one route works, the fact becomes part of the context. Predicate post-processing covers special properties the user has registered, such as a transitive or commutative `abstract_prop`. If none works, `unknown` usually means the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, or a lemma that makes the goal easier to match.
+If one route works, the fact becomes part of the context. Predicate post-processing covers special properties the user has registered, such as a reflexive, transitive, symmetric, or antisymmetric user-defined prop. If none works, `unknown` usually means the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, or a lemma that makes the goal easier to match.
