@@ -6,7 +6,7 @@
 
 # Litex: The Formal Way to Write Math as It Looks
 
-*by Jiachen Shen and The Litex Team, version 0.9.73-beta*
+*by Jiachen Shen and The Litex Team, version 0.9.81-beta*
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Manual](https://img.shields.io/badge/Manual-teal)](https://litexlang.com/doc/Manual#manual-introduction)
@@ -22,9 +22,9 @@
 
 ## What is Litex?
 
-_Simplicity is the ultimate sophistication._
+_Truth is ever to be found in simplicity, and not in the multiplicity and confusion of things._
 
-_– Leonardo da Vinci_
+_– Isaac Newton_
 
 Litex is an open-source formal language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write facts almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
 
@@ -67,9 +67,9 @@ This shows the intended feel: Litex states the desired facts directly, while the
 
 ## Why It Feels Simple
 
-_A mathematician, like a painter or a poet, is a maker of patterns._
+_To understand is to see connections._
 
-_– G. H. Hardy, *A Mathematician's Apology*_
+_– Ludwig Wittgenstein_
 
 Litex feels simple because routine mathematical structure lives in the checker, not in user proof scripts.
 
@@ -78,7 +78,7 @@ Litex feels simple because routine mathematical structure lives in the checker, 
 3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
 4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
 
-> Litex expects you to recognize familiar proof patterns (equality chains, membership, subsets, witnesses, contradiction, finite case splits). The checker matches those shapes to facts and routine consequences—more like following a textbook argument than memorizing tactic or library names for each line.
+> As great mathematicians Hardy said, "A mathematician, like a painter or poet, is a maker of patterns.", Litex expects you to recognize familiar proof patterns (equality chains, membership, subsets, witnesses, contradiction, finite case splits). The checker matches those shapes to facts and routine consequences—more like following a textbook argument than memorizing tactic or library names for each line.
 
 In this sense, Litex aims to be **the language where mathematics verifies itself**.
 
@@ -142,7 +142,13 @@ The output looks like:
 
 This says `$p(2)` was proved by reusing the known `forall`: Litex matched `x` with `2`, substituted into `$p(x)`, and closed the goal. You can see whether a fact closed by a builtin rule, a known fact, a known `forall`, or an inferred consequence.
 
-## Start Here
+## Starting Points
+
+_Learn the rules like a pro, so you can break them like an artist._
+
+_– Pablo Picasso_
+
+Litex is aiming at a specific target: not making formal proof look clever, but making ordinary mathematical reasoning precise enough to check without changing its shape.
 
 1. [Official site](https://litexlang.com)
 2. [Manual](https://litexlang.com/doc/Manual#manual-introduction)
