@@ -64,7 +64,7 @@ impl Runtime {
         }
     }
 
-    // If direct verification failed, try the order-dual (e.g. a >= b via b <= a), then commutative props.
+    // If direct verification failed, try order-dual, then registered user-defined prop properties.
     fn post_process_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -79,7 +79,11 @@ impl Runtime {
         if result.is_true() {
             return Ok(result);
         }
-        self.use_known_commutative_prop(atomic_fact, verify_state, result)
+        let result = self.use_known_reflexive_prop(atomic_fact, result)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+        self.use_known_symmetric_prop(atomic_fact, verify_state, result)
     }
 
     fn builtin_post_process_non_equational_atomic_fact(
@@ -96,7 +100,37 @@ impl Runtime {
         Self::wrap_post_process_alternate_fact_result(atomic_fact, transposed_result, result)
     }
 
-    fn use_known_commutative_prop(
+    fn use_known_reflexive_prop(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        result: StmtResult,
+    ) -> Result<StmtResult, RuntimeError> {
+        let AtomicFact::NormalAtomicFact(f) = atomic_fact else {
+            return Ok(result);
+        };
+        if f.body.len() != 2 {
+            return Ok(result);
+        }
+        if f.body[0].to_string() != f.body[1].to_string() {
+            return Ok(result);
+        }
+        let prop_name = f.predicate.to_string();
+        for env in self.iter_environments_from_top() {
+            if env.known_reflexive_props.contains_key(&prop_name) {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "registered reflexive prop".to_string(),
+                        Vec::new(),
+                    )
+                    .into(),
+                );
+            }
+        }
+        Ok(result)
+    }
+
+    fn use_known_symmetric_prop(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -112,7 +146,7 @@ impl Runtime {
 
         let mut permutations: Vec<Vec<usize>> = Vec::new();
         for env in self.iter_environments_from_top() {
-            if let Some(perms) = env.known_commutative_props.get(&prop_name) {
+            if let Some(perms) = env.known_symmetric_props.get(&prop_name) {
                 for g in perms {
                     if g.len() == f.body.len() {
                         permutations.push(g.clone());
@@ -122,7 +156,7 @@ impl Runtime {
         }
 
         for gather in permutations {
-            let Some(alt) = atomic_fact.commutative_reordered_args(&gather) else {
+            let Some(alt) = atomic_fact.symmetric_reordered_args(&gather) else {
                 continue;
             };
             let alt_result = self.verify_non_equational_atomic_fact(&alt, verify_state, false)?;
