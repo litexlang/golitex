@@ -1,1 +1,53 @@
-$is_nonempty_set(power_set(Z))
+abstract_prop p(a)
+
+know:
+    $p(0)
+    forall n Z:
+        n >= 0
+        $p(n)
+        =>:
+            $p(n + 1)
+
+by induc n from 0:
+    prove:
+        $p(n)
+
+    prove from n = 0:
+        $p(0)
+
+    prove induc:
+        $p(n + 1)
+
+forall n Z:
+    n >= 0
+    =>:
+        $p(n)
+
+abstract_prop q(a)
+
+know:
+    $q(0)
+    forall n Z:
+        n >= 0
+        forall y Z:
+            y >= 0
+            y <= n
+            =>:
+                $q(y)
+        =>:
+            $q(n + 1)
+
+by strong_induc n from 0:
+    prove:
+        $q(n)
+
+    prove from n = 0:
+        $q(0)
+
+    prove strong_induc:
+        $q(n + 1)
+
+forall n Z:
+    n >= 0
+    =>:
+        $q(n)

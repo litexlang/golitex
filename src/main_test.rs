@@ -8,6 +8,7 @@ mod lit_file_runner_tests {
     use crate::prelude::*;
 
     const LARGE_TEST_STACK_SIZE: usize = 16 * 1024 * 1024;
+    const SLOWEST_RUNS_TO_PRINT: usize = 10;
 
     fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
         std::thread::Builder::new()
@@ -189,6 +190,10 @@ mod lit_file_runner_tests {
             chapter_label,
             snippets.len(),
             wall_start.elapsed().as_secs_f64() * 1000.0
+        );
+        print_slowest_run_labels(
+            format!("{} markdown snippets", chapter_label).as_str(),
+            snippet_durations_ms.as_slice(),
         );
         for (label, duration_ms) in snippet_durations_ms.iter() {
             println!("  OK  {:.2} ms  {}", duration_ms, label);
@@ -577,6 +582,40 @@ $q(1)
             "--- phase timing: phase1 {:.2} ms | docs {:.2} ms ---",
             examples_phase_wall_ms, docs_phase_wall_ms
         );
+
+        let mut all_runs_ms: Vec<(String, f64)> = Vec::new();
+        for (label, duration_ms) in example_runs_ms.iter() {
+            all_runs_ms.push((format!("phase 1: {}", label), *duration_ms));
+        }
+        for (label, duration_ms) in doc_runs_ms.iter() {
+            all_runs_ms.push((format!("docs: {}", label), *duration_ms));
+        }
+        print_slowest_run_labels("all examples/docs runs", all_runs_ms.as_slice());
+    }
+
+    fn print_slowest_run_labels(title: &str, run_durations_ms: &[(String, f64)]) {
+        if run_durations_ms.is_empty() {
+            return;
+        }
+
+        let mut sorted_runs = run_durations_ms.to_vec();
+        sorted_runs.sort_by(|left, right| {
+            right
+                .1
+                .partial_cmp(&left.1)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        let count_to_print = SLOWEST_RUNS_TO_PRINT.min(sorted_runs.len());
+        println!(
+            "--- slowest {}: top {} of {} ---",
+            title,
+            count_to_print,
+            sorted_runs.len()
+        );
+        for (index, (label, duration_ms)) in sorted_runs.iter().take(count_to_print).enumerate() {
+            println!("  {:>2}. {:.2} ms  {}", index + 1, duration_ms, label);
+        }
     }
 
     #[test]
@@ -669,6 +708,12 @@ $q(1)
 
                 if !run_succeeded {
                     every_file_run_ok = false;
+                    file_label_and_duration_ms_list
+                        .push((item.report_label.clone(), duration_ms_for_one_file));
+                    print_slowest_run_labels(
+                        "phase 1 runs before failure",
+                        file_label_and_duration_ms_list.as_slice(),
+                    );
                     println!(
                         "=== [{}] {} ===\n{}\n>>> FAILED snippet (open .md here): {}\n",
                         "FAILED", item.report_label, run_output, item.report_label
@@ -687,6 +732,7 @@ $q(1)
                 "--- phase 1: {} run(s) (examples/*.lit + docs/Manual ```litex```), all OK ---",
                 file_label_and_duration_ms_list.len()
             );
+            print_slowest_run_labels("phase 1 runs", file_label_and_duration_ms_list.as_slice());
             for (file_label, duration_ms) in file_label_and_duration_ms_list.iter() {
                 println!("  {}  {:.2} ms", file_label, duration_ms);
             }
@@ -797,17 +843,22 @@ $q(1)
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
+            doc_durations_ms.push((label.clone(), duration_ms));
+
             if !run_succeeded {
+                print_slowest_run_labels(
+                    "remaining markdown snippets before failure",
+                    doc_durations_ms.as_slice(),
+                );
                 panic!(
                     "docs litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
                     run_output, label
                 );
             }
-
-            doc_durations_ms.push((label.clone(), duration_ms));
         }
         let docs_phase_wall_ms = docs_wall_start.elapsed().as_secs_f64() * 1000.0;
 
+        print_slowest_run_labels("remaining markdown snippets", doc_durations_ms.as_slice());
         for (label, duration_ms) in doc_durations_ms.iter() {
             println!("  OK  {:.2} ms  {}", duration_ms, label);
         }
