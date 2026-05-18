@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use crate::verify::number_is_in_z;
 
 impl Runtime {
     pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -369,8 +368,13 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_LOWER_CASE)?;
         if tb.current_token_is_equal_to(BY) {
-            tb.skip_token(BY)?;
-            self.parse_have_fn_by_induc_stmt(tb)
+            Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`have fn by induc from ...` has been replaced by `have fn f(...) R by decreasing ... from ...:`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )))
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
             if tb.current_token_is_equal_to(AS) {
@@ -429,41 +433,10 @@ impl Runtime {
 
             let fs = self.parse_fn_set_clause(tb)?;
             let fn_param_names = fs.collect_all_param_names_including_nested_ret_fn_sets();
+            let top_level_fn_param_names =
+                ParamGroupWithSet::collect_param_names(&fs.params_def_with_set);
 
-            if tb.current_token_is_equal_to(COLON) {
-                tb.skip_token(COLON)?;
-                let case_block_count = tb.body.len();
-                let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
-                let mut equal_tos: Vec<Obj> = Vec::with_capacity(case_block_count);
-                for block in tb.body.iter_mut() {
-                    block.skip_token(CASE)?;
-                    let case_lf = block.line_file.clone();
-                    cases.push(self.with_optional_free_param_scope(
-                        ParamObjType::FnSet,
-                        &fn_param_names,
-                        case_lf,
-                        |this| this.parse_and_chain_atomic_fact(block),
-                    )?);
-                    block.skip_token(COLON)?;
-                    let rhs_lf = block.line_file.clone();
-                    equal_tos.push(self.with_optional_free_param_scope(
-                        ParamObjType::FnSet,
-                        &fn_param_names,
-                        rhs_lf,
-                        |this| this.parse_obj(block),
-                    )?);
-                }
-                Ok(
-                    HaveFnEqualCaseByCaseStmt::new(
-                        name,
-                        fs,
-                        cases,
-                        equal_tos,
-                        tb.line_file.clone(),
-                    )
-                    .into(),
-                )
-            } else {
+            if tb.current_token_is_equal_to(EQUAL) {
                 tb.skip_token(EQUAL)?;
 
                 let lf = tb.line_file.clone();
@@ -480,314 +453,249 @@ impl Runtime {
                     equal_to,
                 )?;
                 Ok(HaveFnEqualStmt::new(name, equal_to_anonymous_fn, tb.line_file.clone()).into())
+            } else if tb.current_token_is_equal_to(COLON) {
+                tb.skip_token(COLON)?;
+                self.parse_have_fn_case_by_case_stmt_after_colon(tb, name, fs, &fn_param_names)
+            } else if tb.current_token_is_equal_to(BY) {
+                match tb.token_at_add_index(1) {
+                    CASES => self.parse_have_fn_by_cases_stmt_after_signature(
+                        tb,
+                        name,
+                        fs,
+                        &fn_param_names,
+                    ),
+                    DECREASING => self.parse_have_fn_by_decreasing_stmt_after_signature(
+                        tb,
+                        name,
+                        fs,
+                        top_level_fn_param_names,
+                    ),
+                    _ => Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "expected `by cases` or `by decreasing` after `have fn` signature"
+                                .to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    ))),
+                }
+            } else {
+                Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "expected `=`, `:`, `by cases`, or `by decreasing` after `have fn` signature"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )))
             }
         }
     }
 
-    /// `have fn by` 已消费；解析 `induc from <Obj>: <name> ( <param> Z: <param> >= <induc_from> ) <ret_set> : case ...`。
-    /// 前若干条特例为 `case <k>: obj`，其中 `<k>` 为 **0 起下标占位符**，须与该行顺序一致（第 1 条为 0，第 2 条为 1，…）；
-    /// 最后一条须为 `case >= n:`，其中 **n 为特例个数**（数字字面量）；且要么行末 `: obj`，要么 `:` 后换行跟子块 `case when: obj`。
-    fn parse_have_fn_by_induc_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(INDUC)?;
-        tb.skip_token(FROM)?;
-        let induc_from = self.parse_obj(tb)?;
-        tb.skip_token(COLON)?;
-        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-
-        tb.skip_token(LEFT_BRACE)?;
-        let param = tb.advance()?;
-        if !tb.current_token_is_equal_to(Z) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "have fn by induc from: expected `Z` after parameter name".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        tb.skip_token(Z)?;
-        tb.skip_token(COLON)?;
-
-        self.run_in_local_parsing_time_name_scope(|this| {
-            this.parse_have_fn_by_induc_stmt_after_param_scope(tb, name, param, induc_from)
-        })
-    }
-
-    fn parse_have_fn_by_induc_stmt_after_param_scope(
+    fn parse_have_fn_case_by_case_stmt_after_colon(
         &mut self,
         tb: &mut TokenBlock,
         name: String,
-        param: String,
-        induc_from: Obj,
+        fn_set_clause: FnSetClause,
+        fn_param_names: &[String],
     ) -> Result<Stmt, RuntimeError> {
-        self.validate_user_fn_param_names_for_parse(&[param.clone()], tb.line_file.clone())?;
-        let dom_and_chain = self.parse_and_chain_atomic_fact(tb)?;
-        Self::verify_have_fn_by_induc_dom_matches_induc_from(
-            &dom_and_chain,
-            &param,
-            &induc_from,
-            tb.line_file.clone(),
-        )?;
-        tb.skip_token(RIGHT_BRACE)?;
-        let ret_set = self.parse_obj(tb)?;
-
-        if !tb.current_token_is_equal_to(COLON) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "have fn by induc from: expected `:` before case blocks".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        tb.skip_token(COLON)?;
-
-        let num_blocks = tb.body.len();
-        if num_blocks <= 1 {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "have fn by induc from: expected at least two case blocks".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-
-        let num_special = num_blocks - 1;
-        let mut special_cases_equal_tos: Vec<Obj> = Vec::with_capacity(num_special);
-
-        let induc_from_is_number_obj = matches!(induc_from, Obj::Number(_));
-        if induc_from_is_number_obj {
-            if let Obj::Number(n) = &induc_from {
-                if !number_is_in_z(n) {
-                    return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                                "have fn by induc from: when `from` is a number literal, it must be an integer, got {}",
-                                induc_from.to_string()
-                            ), tb.line_file.clone()))));
-                }
-            }
-        }
-
-        for i in 0..num_special {
-            let block = &mut tb.body[i];
-            block.skip_token(CASE)?;
-
-            block.skip_token(&param)?;
-
-            block.skip_token(EQUAL)?;
-
-            let slot_label = self.parse_obj(block)?;
-            Self::verify_have_fn_by_induc_special_case_slot_label(
-                &slot_label,
-                i,
-                block.line_file.clone(),
-            )?;
-
-            if induc_from_is_number_obj {
-                let induc_from_add_i: Obj = Add::new(
-                    induc_from.clone(),
-                    Into::<Obj>::into(Number::new(i.to_string())),
-                )
-                .into();
-
-                if !induc_from_add_i
-                    .two_objs_can_be_calculated_and_equal_by_calculation(&slot_label)
-                {
-                    return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                                "have fn by induc from: when `from` is a number literal, special case must be `case {} = {}:` (`from` + {}), got {}",
-                                param, induc_from_add_i.to_string(), i, slot_label.to_string()
-                            ), block.line_file.clone()))));
-                }
-            } else {
-                let induc_from_add_i: Obj = Add::new(
-                    induc_from.clone(),
-                    Into::<Obj>::into(Number::new(i.to_string())),
-                )
-                .into();
-
-                if induc_from_add_i.to_string() != slot_label.to_string() {
-                    return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                                "have fn by induc from: when `from` is not a number literal, special case must be `case {} = {}:`, got {}",
-                                param, induc_from_add_i.to_string(), slot_label.to_string()
-                            ), block.line_file.clone()))));
-                }
-            }
-
-            block.skip_token(COLON)?;
-            if !block.exceed_end_of_head() {
-                special_cases_equal_tos.push(self.parse_obj(block)?);
-            } else {
-                return Err(
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: special case must be `case <index>: <obj>` on one line"
-                            .to_string(), block.line_file.clone()))));
-            }
-        }
-
-        let induc_names_last = [param.clone()];
-        let last_case_line = tb.body[num_blocks - 1].line_file.clone();
-        let last_case = self.parse_in_local_free_param_scope(
-            ParamObjType::Induc,
-            &induc_names_last,
-            last_case_line,
-            |this| {
-                let last_block = &mut tb.body[num_blocks - 1];
-                last_block.skip_token(CASE)?;
-                last_block.skip_token(&param)?;
-                last_block.skip_token(GREATER_EQUAL)?;
-                let last_bound = this.parse_obj(last_block)?;
-
-                if induc_from_is_number_obj {
-                    let induc_from_add_n: Obj = Add::new(
-                        induc_from.clone(),
-                        Into::<Obj>::into(Number::new(num_special.to_string())),
-                    )
-                    .into();
-                    if !induc_from_add_n
-                        .two_objs_can_be_calculated_and_equal_by_calculation(&last_bound)
-                    {
-                        return Err(
-                            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                            "have fn by induc from: when `from` is a number literal, last case must be `case >= {}:` (`from` + {}), got {}",
-                            induc_from_add_n.to_string(), num_special, last_bound.to_string()
-                        ), last_block.line_file.clone()))));
-                    }
-                } else {
-                    let induc_from_add_n: Obj = Add::new(
-                        induc_from.clone(),
-                        Into::<Obj>::into(Number::new(num_special.to_string())),
-                    )
-                    .into();
-                    if induc_from_add_n.to_string() != last_bound.to_string() {
-                        return Err(
-                            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                            "have fn by induc from: when `from` is not a number literal, last case must be `case >= {}:`, got {}",
-                            induc_from_add_n.to_string(), last_bound.to_string()
-                        ), last_block.line_file.clone()))));
-                    }
-                }
-
-                last_block.skip_token(COLON)?;
-
-                if !last_block.exceed_end_of_head() {
-                    let last_obj = this.parse_obj(last_block)?;
-                    if !last_block.exceed_end_of_head() {
-                        return Err(
-                            RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: unexpected tokens after `obj` in last case"
-                            .to_string(), last_block.line_file.clone()))));
-                    }
-                    if !last_block.body.is_empty() {
-                        return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: if last case has `:` and an object on the same line, it must not have a nested body"
-                                .to_string(), last_block.line_file.clone()))));
-                    }
-                    Ok(HaveFnByInducLastCase::EqualTo(last_obj))
-                } else if !last_block.body.is_empty() {
-                    let mut nested: Vec<HaveFnByInducNestedCase> =
-                        Vec::with_capacity(last_block.body.len());
-                    for sub in last_block.body.iter_mut() {
-                        sub.skip_token(CASE)?;
-                        let w = this.parse_and_chain_atomic_fact(sub)?;
-                        sub.skip_token(COLON)?;
-                        if sub.exceed_end_of_head() {
-                            return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: nested case must be `case <when>: <obj>`"
-                                .to_string(), sub.line_file.clone()))));
-                        }
-                        let o = this.parse_obj(sub)?;
-                        if !sub.body.is_empty() {
-                            return Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: nested case must not have further indentation"
-                                .to_string(), sub.line_file.clone()))));
-                        }
-                        nested.push(HaveFnByInducNestedCase {
-                            case_fact: w,
-                            equal_to: o,
-                        });
-                    }
-                    Ok(HaveFnByInducLastCase::NestedCases(nested))
-                } else {
-                    Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: last case must end with `: <obj>` or `:` with nested `case` blocks"
-                                .to_string(), last_block.line_file.clone()),
-                    )))
-                }
-            },
-        )?;
-
-        Ok(HaveFnByInducStmt::new(
+        let (cases, equal_tos) =
+            self.parse_have_fn_case_by_case_blocks(&mut tb.body, fn_param_names)?;
+        Ok(HaveFnEqualCaseByCaseStmt::new(
             name,
-            param,
-            ret_set,
-            induc_from,
-            special_cases_equal_tos,
-            last_case,
+            fn_set_clause,
+            cases,
+            equal_tos,
             tb.line_file.clone(),
         )
         .into())
     }
 
-    fn verify_have_fn_by_induc_dom_matches_induc_from(
-        when: &AndChainAtomicFact,
-        param_name: &str,
-        induc_from: &Obj,
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        let ge = match when {
-            AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(ge)) => ge,
-            _ => {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "have fn by induc from: dom fact must be a single `>=` fact".to_string(),
-                        line_file,
-                    ),
-                )));
-            }
-        };
-        match &ge.left {
-            Obj::Atom(AtomObj::Identifier(id)) if id.name == param_name => {}
-            _ => {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "have fn by induc from: `>=` left must be the parameter name".to_string(),
-                        line_file,
-                    ),
-                )));
-            }
-        }
-        if ge.right.to_string() != induc_from.to_string() {
+    fn parse_have_fn_by_cases_stmt_after_signature(
+        &mut self,
+        tb: &mut TokenBlock,
+        name: String,
+        fn_set_clause: FnSetClause,
+        fn_param_names: &[String],
+    ) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(BY)?;
+        tb.skip_token(CASES)?;
+        tb.skip_token(COLON)?;
+        if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "have fn by induc from: `>=` right must match the object after `from`"
-                        .to_string(),
-                    line_file,
+                    "unexpected token after `have fn ... by cases:`".to_string(),
+                    tb.line_file.clone(),
                 ),
             )));
         }
-        Ok(())
+        self.parse_have_fn_case_by_case_stmt_after_colon(tb, name, fn_set_clause, fn_param_names)
     }
 
-    /// 特例行 `case <k>:`：`<k>` 须为自然数字面量，且等于该行在特例中的 **0-based 顺序**（第 1 条为 0，第 2 条为 1，…）。
-    fn verify_have_fn_by_induc_special_case_slot_label(
-        slot: &Obj,
-        expected_index: usize,
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        match slot {
-            Obj::Number(n) => {
-                if n.normalized_value == expected_index.to_string() {
-                    Ok(())
-                } else {
-                    Err(
-                        RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                                "have fn by induc from: special case label must be `{}` (0-based index for this row), got {}",
-                                expected_index, n.normalized_value
-                            ), line_file))))
-                }
-            }
-            _ => Err(
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file("have fn by induc from: special case must be `case <natural>: <obj>` where <natural> is the 0-based index (0, 1, …)"
-                        .to_string(), line_file)))),
+    fn parse_have_fn_case_by_case_blocks(
+        &mut self,
+        blocks: &mut [TokenBlock],
+        fn_param_names: &[String],
+    ) -> Result<(Vec<AndChainAtomicFact>, Vec<Obj>), RuntimeError> {
+        let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(blocks.len());
+        let mut equal_tos: Vec<Obj> = Vec::with_capacity(blocks.len());
+        for block in blocks.iter_mut() {
+            block.skip_token(CASE)?;
+            let case_lf = block.line_file.clone();
+            cases.push(self.with_optional_free_param_scope(
+                ParamObjType::FnSet,
+                fn_param_names,
+                case_lf,
+                |this| this.parse_and_chain_atomic_fact(block),
+            )?);
+            block.skip_token(COLON)?;
+            let rhs_lf = block.line_file.clone();
+            equal_tos.push(self.with_optional_free_param_scope(
+                ParamObjType::FnSet,
+                fn_param_names,
+                rhs_lf,
+                |this| this.parse_obj(block),
+            )?);
         }
+        Ok((cases, equal_tos))
+    }
+
+    fn parse_have_fn_by_decreasing_stmt_after_signature(
+        &mut self,
+        tb: &mut TokenBlock,
+        name: String,
+        fn_set_clause: FnSetClause,
+        fn_param_names: Vec<String>,
+    ) -> Result<Stmt, RuntimeError> {
+        self.parse_have_fn_by_decreasing_block(tb, name, fn_set_clause, &fn_param_names)
+    }
+
+    fn parse_have_fn_by_decreasing_block(
+        &mut self,
+        block: &mut TokenBlock,
+        name: String,
+        fn_set_clause: FnSetClause,
+        fn_param_names: &[String],
+    ) -> Result<Stmt, RuntimeError> {
+        block.skip_token(BY)?;
+        block.skip_token(DECREASING)?;
+
+        let measure_lf = block.line_file.clone();
+        let measure = self.with_optional_free_param_scope(
+            ParamObjType::FnSet,
+            fn_param_names,
+            measure_lf,
+            |this| this.parse_obj(block),
+        )?;
+
+        block.skip_token(FROM)?;
+        let lower_lf = block.line_file.clone();
+        let lower_bound = self.with_optional_free_param_scope(
+            ParamObjType::FnSet,
+            fn_param_names,
+            lower_lf,
+            |this| this.parse_obj(block),
+        )?;
+        block.skip_token(COLON)?;
+        if !block.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "unexpected token after `by decreasing ... from ...:`".to_string(),
+                    block.line_file.clone(),
+                ),
+            )));
+        }
+        if block.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`by decreasing` expects at least one `case` block".to_string(),
+                    block.line_file.clone(),
+                ),
+            )));
+        }
+
+        let cases = self.parse_have_fn_by_decreasing_cases(&mut block.body, fn_param_names)?;
+        Ok(HaveFnByInducStmt::new(
+            name,
+            fn_set_clause,
+            measure,
+            lower_bound,
+            cases,
+            block.line_file.clone(),
+        )
+        .into())
+    }
+
+    fn parse_have_fn_by_decreasing_cases(
+        &mut self,
+        blocks: &mut [TokenBlock],
+        fn_param_names: &[String],
+    ) -> Result<Vec<HaveFnByInducCase>, RuntimeError> {
+        let mut cases = Vec::with_capacity(blocks.len());
+        for block in blocks.iter_mut() {
+            cases.push(self.parse_have_fn_by_decreasing_case(block, fn_param_names)?);
+        }
+        Ok(cases)
+    }
+
+    fn parse_have_fn_by_decreasing_case(
+        &mut self,
+        block: &mut TokenBlock,
+        fn_param_names: &[String],
+    ) -> Result<HaveFnByInducCase, RuntimeError> {
+        block.skip_token(CASE)?;
+        let case_lf = block.line_file.clone();
+        let case_fact = self.with_optional_free_param_scope(
+            ParamObjType::FnSet,
+            fn_param_names,
+            case_lf,
+            |this| this.parse_and_chain_atomic_fact_allow_leading_not(block),
+        )?;
+        block.skip_token(COLON)?;
+
+        if !block.exceed_end_of_head() {
+            let rhs_lf = block.line_file.clone();
+            let equal_to = self.with_optional_free_param_scope(
+                ParamObjType::FnSet,
+                fn_param_names,
+                rhs_lf,
+                |this| this.parse_obj(block),
+            )?;
+            if !block.exceed_end_of_head() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "unexpected token after case right-hand side".to_string(),
+                        block.line_file.clone(),
+                    ),
+                )));
+            }
+            if !block.body.is_empty() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "a case with an inline right-hand side cannot also have nested cases"
+                            .to_string(),
+                        block.line_file.clone(),
+                    ),
+                )));
+            }
+            return Ok(HaveFnByInducCase::new(
+                case_fact,
+                HaveFnByInducCaseBody::EqualTo(equal_to),
+            ));
+        }
+
+        if block.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "case must end with a right-hand side or nested case blocks".to_string(),
+                    block.line_file.clone(),
+                ),
+            )));
+        }
+
+        let nested = self.parse_have_fn_by_decreasing_cases(&mut block.body, fn_param_names)?;
+        Ok(HaveFnByInducCase::new(
+            case_fact,
+            HaveFnByInducCaseBody::NestedCases(nested),
+        ))
     }
 
     pub fn parse_have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {

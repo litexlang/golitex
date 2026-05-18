@@ -252,12 +252,10 @@ The family is **expanded** to the set it denotes; then the usual **membership** 
 From **`A $in power_set(B)`**, inference adds **`A $subset B`**. The usual subset inference can then add universal membership: every element of `A` is also in `B`.
 
 ```litex
-prove:
-    let A power_set(Z):
-        do_nothing
-    A $subset Z
-    forall x A:
-        x $in Z
+have A power_set(Z)
+A $subset Z
+forall x A:
+    x $in Z
 ```
 
 ---
