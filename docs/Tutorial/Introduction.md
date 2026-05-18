@@ -10,9 +10,9 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/In
 
 ## What is Litex?
 
-_Simplicity is the ultimate sophistication._
+_Truth is ever to be found in simplicity, and not in the multiplicity and confusion of things._
 
-_– Leonardo da Vinci_
+_– Isaac Newton_
 
 Litex is a simple and intuitive open-source language for mathematical proofs.
 
