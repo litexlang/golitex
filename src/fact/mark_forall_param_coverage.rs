@@ -269,12 +269,6 @@ fn mark_forall_param_coverage_in_obj(
             );
             mark_forall_param_coverage_in_obj(closed_range.end.as_ref(), coverage_by_forall_param);
         }
-        Obj::FnRange(fn_range) => {
-            mark_forall_param_coverage_in_obj(fn_range.fn_obj.as_ref(), coverage_by_forall_param);
-        }
-        Obj::FnDom(fn_dom) => {
-            mark_forall_param_coverage_in_obj(fn_dom.fn_obj.as_ref(), coverage_by_forall_param);
-        }
         Obj::FiniteSeqSet(fs) => {
             mark_forall_param_coverage_in_obj(fs.set.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(fs.n.as_ref(), coverage_by_forall_param);
@@ -481,24 +475,6 @@ fn mark_forall_param_coverage_in_atomic_fact(
         AtomicFact::FnEqualFact(fact) => {
             mark_forall_param_coverage_in_obj(&fact.left, coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(&fact.right, coverage_by_forall_param);
-        }
-        AtomicFact::InjectiveFact(fact) => {
-            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
-        }
-        AtomicFact::SurjectiveFact(fact) => {
-            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
-        }
-        AtomicFact::BijectiveFact(fact) => {
-            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
-        }
-        AtomicFact::NotInjectiveFact(fact) => {
-            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
-        }
-        AtomicFact::NotSurjectiveFact(fact) => {
-            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
-        }
-        AtomicFact::NotBijectiveFact(fact) => {
-            mark_forall_param_coverage_in_obj(&fact.function, coverage_by_forall_param);
         }
     }
 }

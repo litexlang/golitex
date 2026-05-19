@@ -159,9 +159,21 @@ impl ByTransitivePropStmt {
     }
 }
 
-impl ByCommutativePropStmt {
+impl BySymmetricPropStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByCommutativePropStmt".to_string()
+        "BySymmetricPropStmt".to_string()
+    }
+}
+
+impl ByReflexivePropStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByReflexivePropStmt".to_string()
+    }
+}
+
+impl ByAntisymmetricPropStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByAntisymmetricPropStmt".to_string()
     }
 }
 

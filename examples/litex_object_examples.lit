@@ -118,6 +118,10 @@ prove:
 prove:
     have fn f(x R) R = x + 1
 
+    have fn pair_value(x Z) cart(Z, Z) = (x, x + 1)
+    pair_value(0)[1] $in Z
+    pair_value(0)[2] $in Z
+
 # --- Struct definitions keep field declarations, but no field-access object syntax is available. ---
 prove:
     abstract_prop p(a)

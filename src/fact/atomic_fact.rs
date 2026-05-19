@@ -35,12 +35,6 @@ pub enum AtomicFact {
     NotSupersetFact(NotSupersetFact),
     FnEqualInFact(FnEqualInFact),
     FnEqualFact(FnEqualFact),
-    InjectiveFact(InjectiveFact),
-    SurjectiveFact(SurjectiveFact),
-    BijectiveFact(BijectiveFact),
-    NotInjectiveFact(NotInjectiveFact),
-    NotSurjectiveFact(NotSurjectiveFact),
-    NotBijectiveFact(NotBijectiveFact),
 }
 
 #[derive(Clone)]
@@ -92,136 +86,6 @@ impl FnEqualFact {
 impl fmt::Display for FnEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}({}, {})", FACT_PREFIX, FN_EQ, self.left, self.right)
-    }
-}
-
-#[derive(Clone)]
-pub struct InjectiveFact {
-    pub function: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct SurjectiveFact {
-    pub function: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct BijectiveFact {
-    pub function: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct NotInjectiveFact {
-    pub function: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct NotSurjectiveFact {
-    pub function: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct NotBijectiveFact {
-    pub function: Obj,
-    pub line_file: LineFile,
-}
-
-impl InjectiveFact {
-    pub fn new(function: Obj, line_file: LineFile) -> Self {
-        InjectiveFact {
-            function,
-            line_file,
-        }
-    }
-}
-
-impl SurjectiveFact {
-    pub fn new(function: Obj, line_file: LineFile) -> Self {
-        SurjectiveFact {
-            function,
-            line_file,
-        }
-    }
-}
-
-impl BijectiveFact {
-    pub fn new(function: Obj, line_file: LineFile) -> Self {
-        BijectiveFact {
-            function,
-            line_file,
-        }
-    }
-}
-
-impl NotInjectiveFact {
-    pub fn new(function: Obj, line_file: LineFile) -> Self {
-        NotInjectiveFact {
-            function,
-            line_file,
-        }
-    }
-}
-
-impl NotSurjectiveFact {
-    pub fn new(function: Obj, line_file: LineFile) -> Self {
-        NotSurjectiveFact {
-            function,
-            line_file,
-        }
-    }
-}
-
-impl NotBijectiveFact {
-    pub fn new(function: Obj, line_file: LineFile) -> Self {
-        NotBijectiveFact {
-            function,
-            line_file,
-        }
-    }
-}
-
-impl fmt::Display for InjectiveFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}({})", FACT_PREFIX, INJECTIVE, self.function)
-    }
-}
-
-impl fmt::Display for SurjectiveFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}({})", FACT_PREFIX, SURJECTIVE, self.function)
-    }
-}
-
-impl fmt::Display for BijectiveFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}({})", FACT_PREFIX, BIJECTIVE, self.function)
-    }
-}
-
-impl fmt::Display for NotInjectiveFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}({})", NOT, FACT_PREFIX, INJECTIVE, self.function)
-    }
-}
-
-impl fmt::Display for NotSurjectiveFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}{}({})",
-            NOT, FACT_PREFIX, SURJECTIVE, self.function
-        )
-    }
-}
-
-impl fmt::Display for NotBijectiveFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}({})", NOT, FACT_PREFIX, BIJECTIVE, self.function)
     }
 }
 
@@ -706,12 +570,6 @@ impl fmt::Display for AtomicFact {
             AtomicFact::NotRestrictFact(x) => write!(f, "{}", x),
             AtomicFact::FnEqualInFact(x) => write!(f, "{}", x),
             AtomicFact::FnEqualFact(x) => write!(f, "{}", x),
-            AtomicFact::InjectiveFact(x) => write!(f, "{}", x),
-            AtomicFact::SurjectiveFact(x) => write!(f, "{}", x),
-            AtomicFact::BijectiveFact(x) => write!(f, "{}", x),
-            AtomicFact::NotInjectiveFact(x) => write!(f, "{}", x),
-            AtomicFact::NotSurjectiveFact(x) => write!(f, "{}", x),
-            AtomicFact::NotBijectiveFact(x) => write!(f, "{}", x),
         }
     }
 }
@@ -1076,24 +934,6 @@ impl AtomicFact {
             AtomicFact::FnEqualFact(x) => {
                 FnEqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
             }
-            AtomicFact::InjectiveFact(x) => {
-                InjectiveFact::new(r(x.function, from, to), x.line_file).into()
-            }
-            AtomicFact::SurjectiveFact(x) => {
-                SurjectiveFact::new(r(x.function, from, to), x.line_file).into()
-            }
-            AtomicFact::BijectiveFact(x) => {
-                BijectiveFact::new(r(x.function, from, to), x.line_file).into()
-            }
-            AtomicFact::NotInjectiveFact(x) => {
-                NotInjectiveFact::new(r(x.function, from, to), x.line_file).into()
-            }
-            AtomicFact::NotSurjectiveFact(x) => {
-                NotSurjectiveFact::new(r(x.function, from, to), x.line_file).into()
-            }
-            AtomicFact::NotBijectiveFact(x) => {
-                NotBijectiveFact::new(r(x.function, from, to), x.line_file).into()
-            }
         }
     }
 }
@@ -1133,12 +973,6 @@ impl AtomicFact {
             AtomicFact::NotRestrictFact(_) => RESTRICT_FN_IN.to_string(),
             AtomicFact::FnEqualInFact(_) => FN_EQ_IN.to_string(),
             AtomicFact::FnEqualFact(_) => FN_EQ.to_string(),
-            AtomicFact::InjectiveFact(_) => INJECTIVE.to_string(),
-            AtomicFact::SurjectiveFact(_) => SURJECTIVE.to_string(),
-            AtomicFact::BijectiveFact(_) => BIJECTIVE.to_string(),
-            AtomicFact::NotInjectiveFact(_) => INJECTIVE.to_string(),
-            AtomicFact::NotSurjectiveFact(_) => SURJECTIVE.to_string(),
-            AtomicFact::NotBijectiveFact(_) => BIJECTIVE.to_string(),
         }
     }
 
@@ -1176,12 +1010,6 @@ impl AtomicFact {
             AtomicFact::NotRestrictFact(_) => false,
             AtomicFact::FnEqualInFact(_) => true,
             AtomicFact::FnEqualFact(_) => true,
-            AtomicFact::InjectiveFact(_) => true,
-            AtomicFact::SurjectiveFact(_) => true,
-            AtomicFact::BijectiveFact(_) => true,
-            AtomicFact::NotInjectiveFact(_) => false,
-            AtomicFact::NotSurjectiveFact(_) => false,
-            AtomicFact::NotBijectiveFact(_) => false,
         }
     }
 
@@ -1231,7 +1059,7 @@ impl AtomicFact {
         }
     }
 
-    pub fn commutative_reordered_args(&self, gather: &[usize]) -> Option<Self> {
+    pub fn symmetric_reordered_args(&self, gather: &[usize]) -> Option<Self> {
         match self {
             AtomicFact::NormalAtomicFact(f) => {
                 let n = f.body.len();
@@ -1584,54 +1412,6 @@ impl AtomicFact {
                 let a1 = args.remove(0);
                 Ok(FnEqualFact::new(a0, a1, line_file).into())
             }
-            INJECTIVE => {
-                if args.len() != 1 {
-                    let msg = format!("{} requires 1 argument, but got {}", INJECTIVE, args.len());
-                    return Err(NewFactRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
-                    )
-                    .into());
-                }
-                let mut args = args;
-                let a0 = args.remove(0);
-                if is_true {
-                    Ok(InjectiveFact::new(a0, line_file).into())
-                } else {
-                    Ok(NotInjectiveFact::new(a0, line_file).into())
-                }
-            }
-            SURJECTIVE => {
-                if args.len() != 1 {
-                    let msg = format!("{} requires 1 argument, but got {}", SURJECTIVE, args.len());
-                    return Err(NewFactRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
-                    )
-                    .into());
-                }
-                let mut args = args;
-                let a0 = args.remove(0);
-                if is_true {
-                    Ok(SurjectiveFact::new(a0, line_file).into())
-                } else {
-                    Ok(NotSurjectiveFact::new(a0, line_file).into())
-                }
-            }
-            BIJECTIVE => {
-                if args.len() != 1 {
-                    let msg = format!("{} requires 1 argument, but got {}", BIJECTIVE, args.len());
-                    return Err(NewFactRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
-                    )
-                    .into());
-                }
-                let mut args = args;
-                let a0 = args.remove(0);
-                if is_true {
-                    Ok(BijectiveFact::new(a0, line_file).into())
-                } else {
-                    Ok(NotBijectiveFact::new(a0, line_file).into())
-                }
-            }
             _ => {
                 if is_true {
                     Ok(NormalAtomicFact::new(prop_name, args, line_file).into())
@@ -1729,12 +1509,6 @@ impl AtomicFact {
                 vec![f.left.clone(), f.right.clone(), f.set.clone()]
             }
             AtomicFact::FnEqualFact(f) => vec![f.left.clone(), f.right.clone()],
-            AtomicFact::InjectiveFact(f) => vec![f.function.clone()],
-            AtomicFact::SurjectiveFact(f) => vec![f.function.clone()],
-            AtomicFact::BijectiveFact(f) => vec![f.function.clone()],
-            AtomicFact::NotInjectiveFact(f) => vec![f.function.clone()],
-            AtomicFact::NotSurjectiveFact(f) => vec![f.function.clone()],
-            AtomicFact::NotBijectiveFact(f) => vec![f.function.clone()],
         }
     }
 }
@@ -1773,12 +1547,6 @@ impl AtomicFact {
             AtomicFact::NotRestrictFact(_) => 2,
             AtomicFact::FnEqualInFact(_) => 3,
             AtomicFact::FnEqualFact(_) => 2,
-            AtomicFact::InjectiveFact(_) => 1,
-            AtomicFact::SurjectiveFact(_) => 1,
-            AtomicFact::BijectiveFact(_) => 1,
-            AtomicFact::NotInjectiveFact(_) => 1,
-            AtomicFact::NotSurjectiveFact(_) => 1,
-            AtomicFact::NotBijectiveFact(_) => 1,
             _ => unreachable!("其他情况不是builtin predicate"),
         }
     }
@@ -1819,12 +1587,6 @@ impl AtomicFact {
             AtomicFact::NotRestrictFact(_) => 2,
             AtomicFact::FnEqualInFact(_) => 3,
             AtomicFact::FnEqualFact(_) => 2,
-            AtomicFact::InjectiveFact(_) => 1,
-            AtomicFact::SurjectiveFact(_) => 1,
-            AtomicFact::BijectiveFact(_) => 1,
-            AtomicFact::NotInjectiveFact(_) => 1,
-            AtomicFact::NotSurjectiveFact(_) => 1,
-            AtomicFact::NotBijectiveFact(_) => 1,
         }
     }
 
@@ -1862,12 +1624,6 @@ impl AtomicFact {
             AtomicFact::NotRestrictFact(a) => a.line_file.clone(),
             AtomicFact::FnEqualInFact(a) => a.line_file.clone(),
             AtomicFact::FnEqualFact(a) => a.line_file.clone(),
-            AtomicFact::InjectiveFact(a) => a.line_file.clone(),
-            AtomicFact::SurjectiveFact(a) => a.line_file.clone(),
-            AtomicFact::BijectiveFact(a) => a.line_file.clone(),
-            AtomicFact::NotInjectiveFact(a) => a.line_file.clone(),
-            AtomicFact::NotSurjectiveFact(a) => a.line_file.clone(),
-            AtomicFact::NotBijectiveFact(a) => a.line_file.clone(),
         }
     }
 
@@ -1905,12 +1661,6 @@ impl AtomicFact {
             AtomicFact::NotRestrictFact(a) => a.line_file = line_file,
             AtomicFact::FnEqualInFact(a) => a.line_file = line_file,
             AtomicFact::FnEqualFact(a) => a.line_file = line_file,
-            AtomicFact::InjectiveFact(a) => a.line_file = line_file,
-            AtomicFact::SurjectiveFact(a) => a.line_file = line_file,
-            AtomicFact::BijectiveFact(a) => a.line_file = line_file,
-            AtomicFact::NotInjectiveFact(a) => a.line_file = line_file,
-            AtomicFact::NotSurjectiveFact(a) => a.line_file = line_file,
-            AtomicFact::NotBijectiveFact(a) => a.line_file = line_file,
         }
         self
     }
@@ -2070,24 +1820,6 @@ impl AtomicFact {
             .into(),
             AtomicFact::FnEqualFact(a) => {
                 FnEqualFact::new(a.right.clone(), a.left.clone(), a.line_file.clone()).into()
-            }
-            AtomicFact::InjectiveFact(a) => {
-                NotInjectiveFact::new(a.function.clone(), a.line_file.clone()).into()
-            }
-            AtomicFact::SurjectiveFact(a) => {
-                NotSurjectiveFact::new(a.function.clone(), a.line_file.clone()).into()
-            }
-            AtomicFact::BijectiveFact(a) => {
-                NotBijectiveFact::new(a.function.clone(), a.line_file.clone()).into()
-            }
-            AtomicFact::NotInjectiveFact(a) => {
-                InjectiveFact::new(a.function.clone(), a.line_file.clone()).into()
-            }
-            AtomicFact::NotSurjectiveFact(a) => {
-                SurjectiveFact::new(a.function.clone(), a.line_file.clone()).into()
-            }
-            AtomicFact::NotBijectiveFact(a) => {
-                BijectiveFact::new(a.function.clone(), a.line_file.clone()).into()
             }
         }
     }
@@ -2440,54 +2172,6 @@ impl AtomicFact {
                 inner.line_file.clone(),
             )
             .into(),
-            AtomicFact::InjectiveFact(inner) => InjectiveFact::new(
-                inner
-                    .function
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner.line_file.clone(),
-            )
-            .into(),
-            AtomicFact::SurjectiveFact(inner) => SurjectiveFact::new(
-                inner
-                    .function
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner.line_file.clone(),
-            )
-            .into(),
-            AtomicFact::BijectiveFact(inner) => BijectiveFact::new(
-                inner
-                    .function
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner.line_file.clone(),
-            )
-            .into(),
-            AtomicFact::NotInjectiveFact(inner) => NotInjectiveFact::new(
-                inner
-                    .function
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner.line_file.clone(),
-            )
-            .into(),
-            AtomicFact::NotSurjectiveFact(inner) => NotSurjectiveFact::new(
-                inner
-                    .function
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner.line_file.clone(),
-            )
-            .into(),
-            AtomicFact::NotBijectiveFact(inner) => NotBijectiveFact::new(
-                inner
-                    .function
-                    .replace_with_numeric_result_if_can_be_calculated()
-                    .0,
-                inner.line_file.clone(),
-            )
-            .into(),
         };
         let any_argument_replaced = calculated_atomic_fact.to_string() != self.to_string();
         (calculated_atomic_fact, any_argument_replaced)
@@ -2683,42 +2367,6 @@ impl From<FnEqualInFact> for AtomicFact {
 impl From<FnEqualFact> for AtomicFact {
     fn from(f: FnEqualFact) -> Self {
         AtomicFact::FnEqualFact(f)
-    }
-}
-
-impl From<InjectiveFact> for AtomicFact {
-    fn from(f: InjectiveFact) -> Self {
-        AtomicFact::InjectiveFact(f)
-    }
-}
-
-impl From<SurjectiveFact> for AtomicFact {
-    fn from(f: SurjectiveFact) -> Self {
-        AtomicFact::SurjectiveFact(f)
-    }
-}
-
-impl From<BijectiveFact> for AtomicFact {
-    fn from(f: BijectiveFact) -> Self {
-        AtomicFact::BijectiveFact(f)
-    }
-}
-
-impl From<NotInjectiveFact> for AtomicFact {
-    fn from(f: NotInjectiveFact) -> Self {
-        AtomicFact::NotInjectiveFact(f)
-    }
-}
-
-impl From<NotSurjectiveFact> for AtomicFact {
-    fn from(f: NotSurjectiveFact) -> Self {
-        AtomicFact::NotSurjectiveFact(f)
-    }
-}
-
-impl From<NotBijectiveFact> for AtomicFact {
-    fn from(f: NotBijectiveFact) -> Self {
-        AtomicFact::NotBijectiveFact(f)
     }
 }
 

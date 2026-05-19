@@ -1,5 +1,5 @@
-# Minimal `by induc` example: first block is `prove:` (one or more goals);
-# optional proof blocks follow (here empty — lemmas come from `know`).
+# Minimal structured `by induc` example.
+# `prove induc:` proves the step under the default induction hypotheses.
 
 abstract_prop p(a)
 
@@ -14,6 +14,12 @@ know:
 by induc n from 0:
     prove:
         $p(n)
+
+    prove from n = 0:
+        $p(0)
+
+    prove induc:
+        $p(n + 1)
 
 forall n Z:
     n >= 0

@@ -645,42 +645,6 @@ impl Runtime {
                 ])),
                 _ => Ok(None),
             },
-            AtomicFact::InjectiveFact(f) => match _other {
-                AtomicFact::InjectiveFact(o) => {
-                    Ok(Some(vec![(f.function.clone(), o.function.clone())]))
-                }
-                _ => Ok(None),
-            },
-            AtomicFact::SurjectiveFact(f) => match _other {
-                AtomicFact::SurjectiveFact(o) => {
-                    Ok(Some(vec![(f.function.clone(), o.function.clone())]))
-                }
-                _ => Ok(None),
-            },
-            AtomicFact::BijectiveFact(f) => match _other {
-                AtomicFact::BijectiveFact(o) => {
-                    Ok(Some(vec![(f.function.clone(), o.function.clone())]))
-                }
-                _ => Ok(None),
-            },
-            AtomicFact::NotInjectiveFact(f) => match _other {
-                AtomicFact::NotInjectiveFact(o) => {
-                    Ok(Some(vec![(f.function.clone(), o.function.clone())]))
-                }
-                _ => Ok(None),
-            },
-            AtomicFact::NotSurjectiveFact(f) => match _other {
-                AtomicFact::NotSurjectiveFact(o) => {
-                    Ok(Some(vec![(f.function.clone(), o.function.clone())]))
-                }
-                _ => Ok(None),
-            },
-            AtomicFact::NotBijectiveFact(f) => match _other {
-                AtomicFact::NotBijectiveFact(o) => {
-                    Ok(Some(vec![(f.function.clone(), o.function.clone())]))
-                }
-                _ => Ok(None),
-            },
         }
     }
 }

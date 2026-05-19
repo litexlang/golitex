@@ -10,29 +10,25 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Singleton integer intervals infer equality (2026-05)
+
+Membership in `range(a, b)` and `closed_range(a, b)` now records the element equality directly when the integer interval has exactly one value, such as `range(1, 2)` or `closed_range(1, 1)`. `by closed_range as cases` likewise records the single equality instead of a one-branch `or`. See **Manual — Builtin Inference — Ranges** and **Manual — Closed range as cases**.
+
+### Natural membership from nonnegative integers (2026-05)
+
+Builtin verification can now close `x $in N` from `x $in Z` together with `x >= 0` / `0 <= x`, or from `x $in Z` together with `x > 0` / `0 < x`. See **Manual — Builtin Verification Rules — Membership Rules**.
+
+### Structured induction proof blocks (2026-05)
+
+`by induc` and `by strong_induc` can now split their proof into a base block and a step block. Use `prove from n = base:` for the base case, `prove induc:` for ordinary induction steps, and `prove strong_induc:` for strong induction steps. See **Manual — Induction (`by induc`, `by strong_induc`)**.
+
 ### `by transitive_prop` (2026-05)
 
-After you prove the standard associativity-shaped `forall` for a binary `abstract_prop`, Litex records that predicate as **transitive**. Storing a same-predicate chain (e.g. `a $p b $p c`) also stores non-adjacent consequences such as `$p(a, c)`. See **Manual — Register a transitive predicate (`by transitive_prop`)**.
+After you prove the standard associativity-shaped `forall` for a binary user-defined `prop` or `abstract_prop`, Litex records that predicate as **transitive**. Storing a same-predicate chain (e.g. `a $p b $p c`) also stores non-adjacent consequences such as `$p(a, c)`. See **Manual — Register a transitive predicate (`by transitive_prop`)**.
 
-### `fn_range(f)` and `fn_dom(f)` objects (2026-05)
+### `by reflexive_prop`, `by symmetric_prop`, `by antisymmetric_prop` (2026-05)
 
-`fn_range(f)` and `fn_dom(f)` are preview objects for the range and set-theoretic domain of a known function. In the current minimal form, Litex only checks that `f` is already known as a function. These objects do **not** yet have attached mathematical properties: membership properties, graph facts, and domain/range inference are not part of this preview yet.
-
-`fn_dom(f)` should be read as the set-theoretic / graph domain of `f`, not necessarily the exact argument shape accepted by function application. For example, if `f` is known as `fn(x, y R) R`, a future `fn_dom(f)` may describe the product-style input domain, while ordinary calls still use `f(a, b)` rather than passing one tuple argument to `f`.
-
-```litex
-have f fn(x R) R
-fn_range(f) = fn_range(f)
-fn_dom(f) = fn_dom(f)
-```
-
-### `$injective(f)`, `$surjective(f)`, and `$bijective(f)` (2026-05)
-
-These function-property predicates are available as dedicated atomic fact forms. In the current version, Litex recognizes and stores their shape, but it does **not** attach builtin verification rules or automatic definitions to them. Users should prove the intended injective, surjective, or bijective facts explicitly when needed.
-
-### `by commutative_prop` (2026-05)
-
-After you prove a `forall` whose dom and then are the **same** positive abstract predicate, with every parameter of the `forall` appearing **exactly once** in each row (a permutation), Litex records one or more **gather** permutations for that predicate name. When a **positive** atomic instance is still unproved after the usual steps, the checker may retry using a **reordered** argument list derived from a stored gather (that retry does not run commutative post-processing again). Arity **≥ 2**; multiple registrations append distinct permutations (arity must stay consistent). Does not apply to negated `$not $p(...)` atoms. See **Manual — Register a commutative predicate (`by commutative_prop`)**. Examples: `examples/by_commutative_prop.lit`, `examples/tmp.lit` (4-ary permutation demo).
+These register basic relation properties for user-defined props only, not builtin predicates. Reflexive registrations can close `$p(a, a)`. Symmetric registrations retry positive atoms with the registered argument permutation. Antisymmetric registrations can close `a = b` from `$p(a, b)` and `$p(b, a)`. See the corresponding Manual sections and `examples/by_symmetric_reflexive_antisymmetric_prop.lit`.
 
 ### `by … as set` implementation names (2026-05)
 

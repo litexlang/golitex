@@ -43,6 +43,12 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_not_equal_empty_set_from_nonempty(not_equal_fact)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_not_equal_from_known_strict_order(not_equal_fact)?
         {
             return Ok(verified_result);
@@ -120,6 +126,40 @@ impl Runtime {
             }
         }
         None
+    }
+
+    // Empty set rule: `S != {}` follows from `$is_nonempty_set(S)`.
+    // This replaces the old common fact `S != {} <=> $is_nonempty_set(S)`.
+    // Example: after `$is_nonempty_set(S)`, prove `S != {}`.
+    fn try_verify_not_equal_empty_set_from_nonempty(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let set = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
+            (set, Obj::ListSet(list)) if list.list.is_empty() => set.clone(),
+            _ => return Ok(None),
+        };
+
+        let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
+        let sub = self.verify_non_equational_known_then_builtin_rules_only(
+            &nonempty,
+            &VerifyState::new(0, true),
+        )?;
+        if !sub.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                not_equal_fact.clone().into(),
+                InferResult::new(),
+                "not_equal_empty_set_from_nonempty".to_string(),
+                vec![sub],
+            )
+            .into(),
+        ))
     }
 
     // x < y or x > y (including y < x / y > x spellings) in known facts implies x != y.

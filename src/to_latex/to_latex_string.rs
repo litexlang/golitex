@@ -331,10 +331,42 @@ impl ByTransitivePropStmt {
     }
 }
 
-impl ByCommutativePropStmt {
+impl BySymmetricPropStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
-            r"\text{{\textbf{{by commutative_prop}}:}} & {}",
+            r"\text{{\textbf{{by symmetric_prop}}:}} & {}",
+            self.forall_fact.to_latex_string()
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
+impl ByReflexivePropStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by reflexive_prop}}:}} & {}",
+            self.forall_fact.to_latex_string()
+        )];
+        for st in &self.proof {
+            rows.push(format!(r"& \quad {}", st.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n")
+        )
+    }
+}
+
+impl ByAntisymmetricPropStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![format!(
+            r"\text{{\textbf{{by antisymmetric_prop}}:}} & {}",
             self.forall_fact.to_latex_string()
         )];
         for st in &self.proof {
@@ -947,61 +979,54 @@ impl HaveFnByInducStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows: Vec<String> = Vec::new();
         rows.push(format!(
-            r"\mathrm{{have}}\ \mathrm{{fn}}\ \mathrm{{by}}\ \mathrm{{induc}}\ \mathrm{{from}}\ {} \texttt{{:}}\ \mathrm{{fn}}\ {}\left( {} : {} \geq {} \right) {}",
-            self.induc_from.to_latex_string(),
+            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} \quad \mathrm{{by}}\ \mathrm{{decreasing}}\ {} \ \mathrm{{from}}\ {}",
             latex_local_ident(&self.name),
-            latex_local_ident(&self.param),
-            Z,
-            self.induc_from.to_latex_string(),
-            self.ret_set.to_latex_string()
+            fn_set_clause_latex(&self.fn_set_clause),
+            self.measure.to_latex_string(),
+            self.lower_bound.to_latex_string(),
         ));
-        for (i, eq) in self.special_cases_equal_tos.iter().enumerate() {
-            rows.push(format!(
-                r"& \quad \mathrm{{case}}\ {} : {}",
-                i,
-                eq.to_latex_string()
-            ));
-        }
-        let n = self.special_cases_equal_tos.len();
-        match &self.last_case {
-            HaveFnByInducLastCase::EqualTo(eq) => {
-                rows.push(format!(
-                    r"& \quad \mathrm{{case}}\ \geq {} : {}",
-                    n,
-                    eq.to_latex_string()
-                ));
-            }
-            HaveFnByInducLastCase::NestedCases(nc) => {
-                rows.push(format!(r"& \quad \mathrm{{case}}\ \geq {} \texttt{{:}}", n));
-                for c in nc {
-                    rows.push(format!(
-                        r"& \quad \quad \mathrm{{case}}\ {} : {}",
-                        c.case_fact.to_latex_string(),
-                        c.equal_to.to_latex_string()
-                    ));
-                }
-            }
-        }
+        Self::push_case_rows(&mut rows, &self.cases, 1);
         format!(
             "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
             rows.join(" \\\\\n")
         )
+    }
+
+    fn push_case_rows(rows: &mut Vec<String>, cases: &[HaveFnByInducCase], indent: usize) {
+        let pad = r"\quad ".repeat(indent);
+        for c in cases {
+            match &c.body {
+                HaveFnByInducCaseBody::EqualTo(eq) => rows.push(format!(
+                    r"& {} \mathrm{{case}}\ {} : {}",
+                    pad,
+                    c.case_fact.to_latex_string(),
+                    eq.to_latex_string()
+                )),
+                HaveFnByInducCaseBody::NestedCases(nested) => {
+                    rows.push(format!(
+                        r"& {} \mathrm{{case}}\ {} \texttt{{:}}",
+                        pad,
+                        c.case_fact.to_latex_string()
+                    ));
+                    Self::push_case_rows(rows, nested, indent + 1);
+                }
+            }
+        }
     }
 }
 
 impl HaveFnEqualCaseByCaseStmt {
     pub fn to_latex_string(&self) -> String {
         let head = format!(
-            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \texttt{{=}} \texttt{{:}}",
+            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \mathrm{{by}}\ \mathrm{{cases}}\texttt{{:}}",
             latex_local_ident(&self.name)
         );
         let clause = fn_set_clause_latex(&self.fn_set_clause);
         let mut rows = vec![format!(r"{} & {}", head, clause)];
         for (i, case) in self.cases.iter().enumerate() {
             rows.push(format!(
-                r"& \quad \mathrm{{case}}\ {} \texttt{{:}}\ {} = {}",
+                r"& \quad \mathrm{{case}}\ {} \texttt{{:}}\ {}",
                 case.to_latex_string(),
-                latex_local_ident(&self.name),
                 self.equal_tos[i].to_latex_string()
             ));
         }
@@ -1031,7 +1056,7 @@ impl HaveFnEqualStmt {
 impl HaveFnByForallExistUniqueStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
-            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \mathrm{{by}}\ {}",
+            r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \mathrm{{as}}\ \mathrm{{set}}:\ {}",
             latex_local_ident(&self.fn_name),
             self.forall.to_latex_string()
         )
@@ -1943,33 +1968,6 @@ impl AtomicFact {
                 f.left.to_latex_string(),
                 f.right.to_latex_string(),
             ),
-            AtomicFact::InjectiveFact(f) => {
-                format!(r"\mathsf{{injective}}({})", f.function.to_latex_string())
-            }
-            AtomicFact::SurjectiveFact(f) => {
-                format!(r"\mathsf{{surjective}}({})", f.function.to_latex_string())
-            }
-            AtomicFact::BijectiveFact(f) => {
-                format!(r"\mathsf{{bijective}}({})", f.function.to_latex_string())
-            }
-            AtomicFact::NotInjectiveFact(f) => {
-                format!(
-                    r"\neg \mathsf{{injective}}({})",
-                    f.function.to_latex_string()
-                )
-            }
-            AtomicFact::NotSurjectiveFact(f) => {
-                format!(
-                    r"\neg \mathsf{{surjective}}({})",
-                    f.function.to_latex_string()
-                )
-            }
-            AtomicFact::NotBijectiveFact(f) => {
-                format!(
-                    r"\neg \mathsf{{bijective}}({})",
-                    f.function.to_latex_string()
-                )
-            }
         }
     }
 }
@@ -2012,8 +2010,6 @@ impl Obj {
             Obj::Product(x) => x.to_latex_string(),
             Obj::Range(x) => x.to_latex_string(),
             Obj::ClosedRange(x) => x.to_latex_string(),
-            Obj::FnRange(x) => latex_texttt_escape(&x.to_string()),
-            Obj::FnDom(x) => latex_texttt_escape(&x.to_string()),
             Obj::FiniteSeqSet(x) => x.to_latex_string(),
             Obj::SeqSet(x) => x.to_latex_string(),
             Obj::FiniteSeqListObj(x) => x.to_latex_string(),
@@ -2081,7 +2077,9 @@ impl Stmt {
             Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
             Stmt::ByTransitivePropStmt(x) => x.to_latex_string(),
-            Stmt::ByCommutativePropStmt(x) => x.to_latex_string(),
+            Stmt::BySymmetricPropStmt(x) => x.to_latex_string(),
+            Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
+            Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }

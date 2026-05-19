@@ -78,16 +78,19 @@ impl Runtime {
                 }
             },
         };
-        let disjunction = OrFact::new(branches, stmt.line_file.clone());
-        let disjunction_fact: Fact = disjunction.into();
+        let generated_fact: Fact = if branches.len() == 1 {
+            branches[0].clone().into()
+        } else {
+            OrFact::new(branches, stmt.line_file.clone()).into()
+        };
         let infer_after_store = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(
-                disjunction_fact.clone(),
+                generated_fact.clone(),
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
         let mut infer_result = InferResult::new();
-        infer_result.new_fact(&disjunction_fact);
+        infer_result.new_fact(&generated_fact);
         infer_result.new_infer_result_inside(infer_after_store);
 
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())

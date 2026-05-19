@@ -1,32 +1,30 @@
-use crate::{common::keywords::GREATER_EQUAL, prelude::*, stmt::parameter_def::ParamDefWithType};
+use crate::prelude::*;
+use crate::stmt::parameter_def::ParamDefWithType;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct HaveFnByInducNestedCase {
+pub struct HaveFnByInducCase {
     pub case_fact: AndChainAtomicFact,
-    pub equal_to: Obj,
+    pub body: HaveFnByInducCaseBody,
 }
 
 #[derive(Clone)]
-pub enum HaveFnByInducLastCase {
+pub enum HaveFnByInducCaseBody {
     EqualTo(Obj),
-    NestedCases(Vec<HaveFnByInducNestedCase>),
+    NestedCases(Vec<HaveFnByInducCase>),
 }
 
-// have fn by induc from 0: f(x Z: x >= 0) R:
-//     case 0: 1
-//     case 1: 1
-//     case >= 2:
-//         case x % 2 = 0: f(x / 2)
-//         case x % 2 = 1: f(x / 2) + f(x / 2 + 1)
+// have fn f(a Z, b Z: a >= 0, b >= 0) R
+//     by decreasing abs(a) + abs(b) from 0:
+//         case b = 0: 0
+//         case b > 0: f(a, b - 1) + 1
 #[derive(Clone)]
 pub struct HaveFnByInducStmt {
-    pub induc_from: Obj,
     pub name: String,
-    pub param: String,
-    pub ret_set: Obj,
-    pub special_cases_equal_tos: Vec<Obj>,
-    pub last_case: HaveFnByInducLastCase,
+    pub fn_set_clause: FnSetClause,
+    pub measure: Obj,
+    pub lower_bound: Obj,
+    pub cases: Vec<HaveFnByInducCase>,
     pub line_file: LineFile,
 }
 
@@ -342,8 +340,17 @@ impl HaveFnByForallExistUniqueStmt {
 
 impl fmt::Display for HaveFnByForallExistUniqueStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}", HAVE, FN_LOWER_CASE, self.fn_name, BY)?;
-        write!(f, " {}", self.forall)
+        write!(
+            f,
+            "{} {} {} {} {}{}\n{}",
+            HAVE,
+            FN_LOWER_CASE,
+            self.fn_name,
+            AS,
+            SET,
+            COLON,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(&self.forall, 1)
+        )
     }
 }
 
@@ -355,18 +362,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             .enumerate()
             .map(|(i, case)| {
                 to_string_and_add_four_spaces_at_beginning_of_each_line(
-                    &format!(
-                        "{} {}{} {}{} {} {}",
-                        CASE,
-                        case,
-                        COMMA,
-                        self.name,
-                        braced_vec_to_string(&ParamGroupWithSet::collect_param_names(
-                            &self.fn_set_clause.params_def_with_set,
-                        )),
-                        EQUAL,
-                        self.equal_tos[i]
-                    ),
+                    &format!("{} {}{} {}", CASE, case, COLON, self.equal_tos[i]),
                     1,
                 )
             })
@@ -374,7 +370,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 
         write!(
             f,
-            "{} {} {}{} {} {}\n{}",
+            "{} {} {}{} {} {} {}{}\n{}",
             HAVE,
             FN_LOWER_CASE,
             self.name,
@@ -382,7 +378,9 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
                 &self.fn_set_clause.params_def_with_set,
                 &self.fn_set_clause.dom_facts
             ),
-            EQUAL,
+            self.fn_set_clause.ret_set,
+            BY,
+            CASES,
             COLON,
             vec_to_string_with_sep(&cases_and_proofs, "\n".to_string())
         )
@@ -433,150 +431,118 @@ fn merge_two_and_chain_clauses(
     AndChainAtomicFact::AndFact(AndFact::new(atoms, line_file))
 }
 
+impl HaveFnByInducCase {
+    pub fn new(case_fact: AndChainAtomicFact, body: HaveFnByInducCaseBody) -> Self {
+        HaveFnByInducCase { case_fact, body }
+    }
+}
+
 impl HaveFnByInducStmt {
-    /// Source-shaped `fn` block (param names + dom + ret); build stored [`FnSet`] via [`Runtime::fn_set_from_fn_set_clause`].
-    pub fn fn_user_fn_set_clause(&self) -> FnSetClause {
-        FnSetClause::new(
-            vec![ParamGroupWithSet::new(
-                vec![self.param.clone()],
-                StandardSet::Z.into(),
-            )],
-            vec![OrAndChainAtomicFact::AtomicFact(
-                GreaterEqualFact::new(
-                    obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::FnSet),
-                    self.induc_from.clone(),
-                    self.line_file.clone(),
-                )
-                .into(),
-            )],
-            self.ret_set.clone(),
-        )
-    }
-
-    /// `forall x Z: ...` 里与 `fn` 定义域一致的那一段：标识符用源码 [`Self::param`]，与 [`Self::fn_user_fn_set_clause`] 的 dom 语义相同。
-    pub fn forall_fn_base_dom_exist_or_facts(&self) -> Vec<Fact> {
-        vec![GreaterEqualFact::new(
-            obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::Forall),
-            self.induc_from.clone(),
-            self.line_file.clone(),
-        )
-        .into()]
-    }
-
     pub fn new(
         name: String,
-        param: String,
-        ret_set: Obj,
-        induc_from: Obj,
-        special_cases_equal_tos: Vec<Obj>,
-        last_case: HaveFnByInducLastCase,
+        fn_set_clause: FnSetClause,
+        measure: Obj,
+        lower_bound: Obj,
+        cases: Vec<HaveFnByInducCase>,
         line_file: LineFile,
     ) -> Self {
         HaveFnByInducStmt {
             name,
-            param,
-            ret_set,
-            induc_from,
-            special_cases_equal_tos,
-            last_case,
+            fn_set_clause,
+            measure,
+            lower_bound,
+            cases,
             line_file,
         }
     }
 
-    /// 展开为与旧 `HaveFnEqualCaseByCaseStmt` 兼容的平铺 `case` 列表（源码最后一条为 `case >= n:`（n 为特例个数），此处仍展开为 `param = from + n` 与可选子条件的合取）。
+    pub fn param_names(&self) -> Vec<String> {
+        ParamGroupWithSet::collect_param_names(&self.fn_set_clause.params_def_with_set)
+    }
+
+    /// Flatten nested cases into the ordinary case-by-case shape used for stored forall facts.
     pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
-        let left_id: Obj = obj_for_bound_param_in_scope(self.param.clone(), ParamObjType::Induc);
-        let n = self.special_cases_equal_tos.len();
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
         let mut equal_tos: Vec<Obj> = Vec::new();
-        for i in 0..n {
-            let when = AndChainAtomicFact::AtomicFact(
-                EqualFact::new(
-                    left_id.clone(),
-                    induc_obj_plus_offset(&self.induc_from, i),
-                    line_file.clone(),
-                )
-                .into(),
-            );
-            cases.push(when);
-            equal_tos.push(self.special_cases_equal_tos[i].clone());
-        }
-        let step = AndChainAtomicFact::AtomicFact(
-            EqualFact::new(
-                left_id.clone(),
-                induc_obj_plus_offset(&self.induc_from, n),
-                line_file.clone(),
-            )
-            .into(),
-        );
-        match &self.last_case {
-            HaveFnByInducLastCase::EqualTo(eq) => {
-                cases.push(step);
-                equal_tos.push(eq.clone());
-            }
-            HaveFnByInducLastCase::NestedCases(last_pairs) => {
-                for nested in last_pairs {
-                    let merged = merge_two_and_chain_clauses(
-                        step.clone(),
-                        nested.case_fact.clone(),
-                        line_file.clone(),
-                    );
-                    cases.push(merged);
-                    equal_tos.push(nested.equal_to.clone());
-                }
-            }
-        }
+        Self::flatten_case_list(&self.cases, None, &mut cases, &mut equal_tos, &line_file);
         HaveFnEqualCaseByCaseStmt::new(
             self.name.clone(),
-            self.fn_user_fn_set_clause(),
+            self.fn_set_clause.clone(),
             cases,
             equal_tos,
             line_file,
         )
+    }
+
+    fn flatten_case_list(
+        source_cases: &[HaveFnByInducCase],
+        prefix: Option<AndChainAtomicFact>,
+        cases: &mut Vec<AndChainAtomicFact>,
+        equal_tos: &mut Vec<Obj>,
+        line_file: &LineFile,
+    ) {
+        for c in source_cases {
+            let merged = match &prefix {
+                Some(p) => {
+                    merge_two_and_chain_clauses(p.clone(), c.case_fact.clone(), line_file.clone())
+                }
+                None => c.case_fact.clone(),
+            };
+            match &c.body {
+                HaveFnByInducCaseBody::EqualTo(eq) => {
+                    cases.push(merged);
+                    equal_tos.push(eq.clone());
+                }
+                HaveFnByInducCaseBody::NestedCases(nested) => {
+                    Self::flatten_case_list(nested, Some(merged), cases, equal_tos, line_file);
+                }
+            }
+        }
     }
 }
 
 impl fmt::Display for HaveFnByInducStmt {
     /// Display uses the same parameter names as in source.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let n = self.special_cases_equal_tos.len();
         write!(
             f,
-            "{} {} {} {} {} {} {}{}",
-            HAVE, FN_LOWER_CASE, BY, INDUC, FROM, " ", self.induc_from, COLON,
+            "{} {} {}{} {} {} {} {} {} {}{}",
+            HAVE,
+            FN_LOWER_CASE,
+            self.name,
+            brace_vec_colon_vec_to_string(
+                &self.fn_set_clause.params_def_with_set,
+                &self.fn_set_clause.dom_facts
+            ),
+            self.fn_set_clause.ret_set,
+            BY,
+            DECREASING,
+            self.measure,
+            FROM,
+            self.lower_bound,
+            COLON
         )?;
-        write!(f, " {} {}{}", self.name, LEFT_BRACE, self.param)?;
-        write!(
-            f,
-            " {} {} {} {} {} {} {} {} {} {} {} {}",
-            Z,
-            COLON,
-            " ",
-            self.param,
-            " ",
-            GREATER_EQUAL,
-            " ",
-            self.induc_from,
-            RIGHT_BRACE,
-            " ",
-            self.ret_set,
-            COLON,
-        )?;
-        for (i, eq) in self.special_cases_equal_tos.iter().enumerate() {
+        Self::fmt_cases(f, &self.cases, 1)
+    }
+}
+
+impl HaveFnByInducStmt {
+    fn fmt_cases(
+        f: &mut fmt::Formatter<'_>,
+        cases: &[HaveFnByInducCase],
+        indent: usize,
+    ) -> fmt::Result {
+        let pad = "    ".repeat(indent);
+        for c in cases {
             writeln!(f)?;
-            write!(f, "    {} {}: {}", CASE, i, eq)?;
-        }
-        writeln!(f)?;
-        match &self.last_case {
-            HaveFnByInducLastCase::EqualTo(eq) => {
-                write!(f, "    {} {} {}: {}", CASE, GREATER_EQUAL, n, eq)?;
-            }
-            HaveFnByInducLastCase::NestedCases(nested) => {
-                write!(f, "    {} {} {}:", CASE, GREATER_EQUAL, n)?;
-                for nc in nested {
-                    writeln!(f)?;
-                    write!(f, "        {} {}: {}", CASE, nc.case_fact, nc.equal_to)?;
+            match &c.body {
+                HaveFnByInducCaseBody::EqualTo(eq) => {
+                    write!(f, "{}{} {}: {}", pad, CASE, c.case_fact, eq)?;
+                }
+                HaveFnByInducCaseBody::NestedCases(nested) => {
+                    write!(f, "{}{} {}:", pad, CASE, c.case_fact)?;
+                    Self::fmt_cases(f, nested, indent + 1)?;
                 }
             }
         }
