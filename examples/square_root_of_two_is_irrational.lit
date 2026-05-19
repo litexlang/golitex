@@ -1,0 +1,88 @@
+prop no_sqrt2_pair_with_denominator(b N):
+    forall a N:
+        b != 0
+        =>:
+            a ^ 2 != 2 * b ^ 2
+
+prop descent_data(k N, b N):
+    k != 0
+    k <= b
+
+# Chapter 6 parity/descent facts used by the textbook proof.
+know:
+    forall b Z:
+        b >= 0
+        =>:
+            b $in N
+            b + 1 $in N
+
+    forall a, b N:
+        a ^ 2 = 2 * b ^ 2
+        =>:
+            exist k N st {a = 2 * k, b ^ 2 = 2 * k ^ 2}
+
+    forall b, k N:
+        (b + 1) ^ 2 = 2 * k ^ 2
+        =>:
+            $descent_data(k, b)
+
+by strong_induc b from 0:
+    prove:
+        $no_sqrt2_pair_with_denominator(b)
+
+    prove from b = 0:
+        claim:
+            prove:
+                forall a N:
+                    b != 0
+                    =>:
+                        a ^ 2 != 2 * b ^ 2
+
+            by contra:
+                prove:
+                    a ^ 2 != 2 * b ^ 2
+                impossible b != 0
+
+        $no_sqrt2_pair_with_denominator(b)
+
+    prove strong_induc:
+        claim:
+            prove:
+                forall a N:
+                    b + 1 != 0
+                    =>:
+                        a ^ 2 != 2 * (b + 1) ^ 2
+
+            by contra:
+                prove:
+                    a ^ 2 != 2 * (b + 1) ^ 2
+
+                b $in N
+                (b + 1) $in N
+                have by exist k N st {a = 2 * k, (b + 1) ^ 2 = 2 * k ^ 2}: k
+                $descent_data(k, b)
+                k != 0
+                k <= b
+                $no_sqrt2_pair_with_denominator(k)
+                (b + 1) ^ 2 != 2 * k ^ 2
+                impossible (b + 1) ^ 2 = 2 * k ^ 2
+
+        $no_sqrt2_pair_with_denominator(b + 1)
+
+forall b N:
+    $no_sqrt2_pair_with_denominator(b)
+
+claim:
+    prove:
+        forall a, b N:
+            b != 0
+            =>:
+                a ^ 2 != 2 * b ^ 2
+
+    $no_sqrt2_pair_with_denominator(b)
+    a ^ 2 != 2 * b ^ 2
+
+# Litex does not yet derive this `not exist` packaging from the forall form.
+know not exist a, b N st {b != 0, a ^ 2 = 2 * b ^ 2}
+
+not exist a, b N st {b != 0, a ^ 2 = 2 * b ^ 2}

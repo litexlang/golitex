@@ -8,13 +8,13 @@
 
 *by Jiachen Shen and The Litex Team, version 0.9.81-beta*
 
-[![Official Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
-[![Manual](https://img.shields.io/badge/Manual-teal)](https://litexlang.com/doc/Manual#manual-introduction)
+[![Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
-[![Setup](https://img.shields.io/badge/Setup-Download%20Locally-green)](https://litexlang.com/doc/Setup)
-[![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+[![litexpy](https://img.shields.io/badge/Litexpy-green?logo=python)](https://github.com/litexlang/litexpy)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
+[![Zulip](https://img.shields.io/badge/Zulip-blue?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
+[![Textbook](https://img.shields.io/badge/Textbook-orange?logo=book)](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof)
 
 **Beta notice:** Litex is experimental and not ready for production or mission-critical proof work. **We welcome you to try it.**
 
@@ -142,15 +142,26 @@ _Learn the rules like a pro, so you can break them like an artist._
 
 _– Pablo Picasso_
 
-Litex is aiming at a specific target: not making formal proof look clever, but making ordinary mathematical reasoning precise enough to check without changing its shape.
+Litex is aiming at a specific target: not making formal proof look clever, but making ordinary mathematical reasoning precise enough to check without changing its shape. Welcome to explore Litex by yourself.
+
+Resources on the official website:
 
 1. [Official site](https://litexlang.com)
 2. [Manual](https://litexlang.com/doc/Manual)
-3. [Open Source Language Implementation, Documents](https://github.com/litexlang/golitex)
-4. [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
-5. [Email](mailto:litexlang@outlook.com)
-6. [Use Litex in Python](https://github.com/litexlang/litexpy)
-7. [Download Litex](https://litexlang.com/doc/Setup)
+3. [Setup: Download Litex](https://litexlang.com/doc/Setup)
+4. [Textbook: The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof)
+
+Resources:
+
+1. [Litex Kernel and Documents](https://github.com/litexlang/golitex)
+2. [litexpy: Use Litex in Python](https://github.com/litexlang/litexpy)
+3. [litex-lang on crates.io: Use Litex in Rust](https://crates.io/crates/litex-lang)
+4. [Hugging Face: Litex code examples and datasets](https://huggingface.co/litexlang)
+
+Contact us:
+
+1. [Email](mailto:litexlang@outlook.com)
+2. [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
 ## Special Thanks
 
