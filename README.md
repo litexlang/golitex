@@ -26,9 +26,9 @@ _Truth is ever to be found in simplicity, and not in the multiplicity and confus
 
 _– Isaac Newton_
 
-Litex is an open-source formal language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write facts almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
+Litex is an open-source formal language for writing mathematical proofs that *look like ordinary mathematical writing*. Users write math almost exactly as they would in notes or textbooks; Litex checks them, stores verified results, and lets the proof grow from the context.
 
-The central idea is: **users write facts; Litex grows a verified context**. A file introduces objects, states facts, checks them, stores successful ones, and reuses them later.
+The central idea is: **users write facts; Litex grows a verified context**. Litex code introduces objects, states facts, checks them, stores successful ones, and reuses them later.
 
 Litex is designed around ordinary mathematical writing: objects such as numbers, sets, and functions; facts such as `x = 2` or `x $in R`; and statements that grow a proof step by step. 
 
@@ -63,7 +63,7 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   </tr>
 </table>
 
-This shows the intended feel: Litex states the desired facts directly, while the checker handles routine rewriting, arithmetic, and reuse of known facts.
+This shows the intended feel: Litex states the desired facts directly, while the checker handles routine rewriting, arithmetic, and reuse of known facts. *Reading Litex code is a pleasant experience, because you can understand it without any prior study.*
 
 ## Why It Feels Simple
 
@@ -78,7 +78,7 @@ Litex feels simple because routine mathematical structure lives in the checker, 
 3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
 4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
 
-> As great mathematicians Hardy said, "A mathematician, like a painter or poet, is a maker of patterns.", Litex expects you to recognize familiar proof patterns (equality chains, membership, subsets, witnesses, contradiction, finite case splits). The checker matches those shapes to facts and routine consequences—more like following a textbook argument than memorizing tactic or library names for each line.
+> As Hardy said, "A mathematician, like a painter or poet, is a maker of patterns.", Litex expects you to recognize familiar proof patterns (equality chains, membership, subsets, witnesses, contradiction, finite case splits). The checker matches those shapes to facts and routine consequences—more like following a textbook argument than memorizing tactic or library names for each line.
 
 In this sense, Litex aims to be **the language where mathematics verifies itself**.
 
@@ -97,14 +97,6 @@ $mortal(Socrates)
 The user does not say "apply the theorem with `x = Socrates`." Litex matches `$mortal(Socrates)` with the known `forall`, sees that `Socrates` belongs to `human`, and verifies the conclusion.
 
 This is why `forall` is central: a known `forall` theorem acts like infinitely many concrete facts, ready to use when arguments and assumptions match.
-
-Think in three blocks: **objects**, **facts**, and **statements**.
-
-- **Objects** are mathematical things: `2`, `R`, `'R(z){z}`, `{1, 2, 3}`, or `1 + 2`.
-- **Facts** are claims about objects: `x = 2`, `x $in R`, `0 <= x`, `forall! x set => {x = x}`, or `exist x R st {x ^ 2 = 4}`.
-- **Statements** are proof-script actions: define an object, introduce a fact, prove a fact, or store known information.
-
-For more, read the [Manual](https://litexlang.com/doc/Manual#manual-introduction), especially [Proof Process](https://litexlang.com/doc/Manual#proof-process).
 
 ## Proofs Explain Themselves
 
@@ -153,13 +145,12 @@ _– Pablo Picasso_
 Litex is aiming at a specific target: not making formal proof look clever, but making ordinary mathematical reasoning precise enough to check without changing its shape.
 
 1. [Official site](https://litexlang.com)
-2. [Manual](https://litexlang.com/doc/Manual#manual-introduction)
-3. [Tutorial](https://litexlang.com/doc/Tutorial/Introduction)
-4. [Open Source Language Implementation](https://github.com/litexlang/golitex)
-5. [Related Textbooks, Examples, Implementation Notes, and Experimental Materials](https://github.com/litexlang/golitex)
-6. [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
-7. [Email](mailto:litexlang@outlook.com)
-8. [Privacy Policy and Terms of Use](Privacy_Policy.md)
+2. [Manual](https://litexlang.com/doc/Manual)
+3. [Open Source Language Implementation, Documents](https://github.com/litexlang/golitex)
+4. [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+5. [Email](mailto:litexlang@outlook.com)
+6. [Use Litex in Python](https://github.com/litexlang/litexpy)
+7. [Download Litex](https://litexlang.com/doc/Setup)
 
 ## Special Thanks
 
