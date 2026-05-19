@@ -1,14 +1,10 @@
-claim:
-    prove:
-        forall a, k N_pos:
-            a^k $in N
+prop mod_eq(a Z, b Z, n Z):
+    exist k Z st {a - b = n * k}
 
 claim:
     prove:
-        forall a Z, k N_pos:
-            a^k $in Z
-
-claim:
-    prove:
-        forall a, k N_pos:
-            a^k $in N_pos
+        exist a Z st {$mod_eq(6 * a, 4, 11)}
+    witness exist a Z st {$mod_eq(6 * a, 4, 11)} from 8:
+        witness exist k Z st {6 * 8 - 4 = 11 * k} from 4:
+            6 * 8 - 4 = 11 * 4
+        $mod_eq(6 * 8, 4, 11)
