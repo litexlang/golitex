@@ -968,8 +968,7 @@ algo f(x, y):
 
 **Example.**
 
-<!-- litex:skip-test -->
-```litex
+```text
 import "other.lit"
 ```
 
@@ -983,8 +982,7 @@ import "other.lit"
 
 **Example.**
 
-<!-- litex:skip-test -->
-```litex
+```text
 run_file "./runfile2.lit"
 
 $p(1, 2)
