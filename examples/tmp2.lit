@@ -1,4 +1,14 @@
-forall a, b Z:
-    a > b
-    =>:
-        a >= b+ 1
+claim:
+    prove:
+        forall a, k N_pos:
+            a^k $in N
+
+claim:
+    prove:
+        forall a Z, k N_pos:
+            a^k $in Z
+
+claim:
+    prove:
+        forall a, k N_pos:
+            a^k $in N_pos

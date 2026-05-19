@@ -135,6 +135,14 @@ impl Runtime {
             (Obj::Mul(mul), Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_mul_in_n_from_factors_in_n(in_fact, mul, verify_state)
             }
+            (Obj::Pow(pow), Obj::StandardSet(StandardSet::N)) => self
+                .verify_in_fact_pow_in_standard_set_from_base_and_positive_exponent(
+                    in_fact,
+                    pow,
+                    verify_state,
+                    StandardSet::N,
+                    "N: a^k from a in N and k in N_pos",
+                ),
             (Obj::Count(count), Obj::StandardSet(StandardSet::N))
             | (Obj::Count(count), Obj::StandardSet(StandardSet::Z))
             | (Obj::Count(count), Obj::StandardSet(StandardSet::Q))
@@ -150,6 +158,14 @@ impl Runtime {
             (Obj::Mul(mul), Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_mul_in_n_pos_from_factors_in_n_pos(in_fact, mul, verify_state)
             }
+            (Obj::Pow(pow), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_pow_in_standard_set_from_base_and_positive_exponent(
+                    in_fact,
+                    pow,
+                    verify_state,
+                    StandardSet::NPos,
+                    "N_pos: a^k from a in N_pos and k in N_pos",
+                ),
             (_, Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(in_fact, verify_state)
             }
@@ -1105,6 +1121,54 @@ impl Runtime {
         )
     }
 
+    // Positive integer powers preserve standard integer-like sets.
+    // Example: `forall a Z, k N_pos: a^k $in Z`.
+    fn verify_in_fact_pow_in_standard_set_from_base_and_positive_exponent(
+        &mut self,
+        in_fact: &InFact,
+        pow: &Pow,
+        verify_state: &VerifyState,
+        base_set: StandardSet,
+        reason: &str,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
+            return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                in_fact,
+                &evaluated_number,
+                &base_set,
+            ));
+        }
+        let lf = in_fact.line_file.clone();
+        let base_in_target: AtomicFact =
+            InFact::new(pow.base.as_ref().clone(), base_set.into(), lf.clone()).into();
+        let exponent_in_n_pos: AtomicFact = InFact::new(
+            pow.exponent.as_ref().clone(),
+            StandardSet::NPos.into(),
+            lf.clone(),
+        )
+        .into();
+
+        let base_result =
+            self.verify_non_equational_atomic_fact(&base_in_target, verify_state, true)?;
+        if !base_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        let exponent_result =
+            self.verify_non_equational_atomic_fact(&exponent_in_n_pos, verify_state, true)?;
+        if !exponent_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                reason.to_string(),
+                vec![base_result, exponent_result],
+            )
+            .into(),
+        )
+    }
+
     // `a + b $in N_pos` when both summands are in `N_pos`, or one summand is in
     // `N_pos` and the other is in `N`.
     // Example: `forall a, b N_pos: a + b $in N_pos`.
@@ -1459,8 +1523,8 @@ impl Runtime {
         self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&strict, verify_state)
     }
 
-    // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and `^` when direct operands are in `Z`
-    // (`Pow` checks `base` and `exponent`; if the power normalizes to a decimal, the numeric branch above applies).
+    // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, and positive integer powers.
+    // Example: `forall a Z, k N_pos: a^k $in Z`.
     fn verify_in_fact_arithmetic_expression_in_z(
         &mut self,
         in_fact: &InFact,
@@ -1474,6 +1538,8 @@ impl Runtime {
             ));
         }
         let z_obj: Obj = StandardSet::Z.into();
+        let n_obj: Obj = StandardSet::N.into();
+        let n_pos_obj: Obj = StandardSet::NPos.into();
         let lf = in_fact.line_file.clone();
 
         let mut require_in_z = |o: &Obj| -> Result<bool, RuntimeError> {
@@ -1486,7 +1552,30 @@ impl Runtime {
             Obj::Sub(s) => require_in_z(&s.left)? && require_in_z(&s.right)?,
             Obj::Mul(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             Obj::Mod(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
-            Obj::Pow(p) => require_in_z(&p.base)? && require_in_z(&p.exponent)?,
+            Obj::Pow(p) => {
+                let exponent_in_n_pos: AtomicFact =
+                    InFact::new(p.exponent.as_ref().clone(), n_pos_obj.clone(), lf.clone()).into();
+                let base_z_and_positive_exponent = require_in_z(&p.base)?
+                    && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                        &exponent_in_n_pos,
+                        verify_state,
+                    )?;
+                if base_z_and_positive_exponent {
+                    true
+                } else {
+                    let base_in_n_pos: AtomicFact =
+                        InFact::new(p.base.as_ref().clone(), n_pos_obj.clone(), lf.clone()).into();
+                    let exponent_in_n: AtomicFact =
+                        InFact::new(p.exponent.as_ref().clone(), n_obj.clone(), lf.clone()).into();
+                    self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                        &base_in_n_pos,
+                        verify_state,
+                    )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                        &exponent_in_n,
+                        verify_state,
+                    )?
+                }
+            }
             Obj::Max(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             Obj::Min(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             Obj::Abs(a) => require_in_z(a.arg.as_ref())?,
@@ -1500,7 +1589,8 @@ impl Runtime {
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "Z closure: operands in Z".to_string(),
+                "Z closure: arithmetic operands in Z; pow base in Z and exponent in N_pos, or base in N_pos and exponent in N"
+                    .to_string(),
                 Vec::new(),
             ))
             .into(),
