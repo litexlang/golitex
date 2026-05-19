@@ -429,48 +429,6 @@ eval m ** m
 eval 2 *. m
 ```
 
-**Indexed definition (`family` + `have fn`).** You can define the space of all `m x n` matrices over `S` as a binary-indexed function set, then give one `case` per index pair, useful for proofs that branch on `(i, j)`:
-
-```litex
-family self_matrix(s set, m, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
-```
-
-Full worked proofs (for example a diagonal matrix claim and `$is_diagonal_matrix`) use the same `family` / `prop` / `claim` layout as in longer packaged examples. A compact illustration (not run as an isolated doc test):
-
-<!-- litex:skip-test -->
-
-```litex
-family self_matrix(s set, m, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
-
-prop is_diagonal_matrix(n N_pos,m \self_matrix(R, n, n)):
-    forall i closed_range(1, n), j closed_range(1, n):
-        i != j
-        =>:
-            m(i, j) = 0
-
-claim:
-    prove:
-        forall M \self_matrix(R, 3, 3):
-            M(1, 1) = 1
-            M(1, 2) = 0
-            M(1, 3) = 0
-            M(2, 1) = 0
-            M(2, 2) = 1
-            M(2, 3) = 0
-            M(3, 1) = 0
-            M(3, 2) = 0
-            M(3, 3) = 1
-            =>:
-                $is_diagonal_matrix(3, M)
-
-    by for:
-        prove:
-            forall i closed_range(1, 3), j closed_range(1, 3):
-                i != j
-                =>:
-                    M(i, j) = 0
-```
-
 ---
 
 ## Factual Statements
@@ -2847,6 +2805,24 @@ know:
             a <= b
 ```
 
+Even positive integer powers compare absolute values instead of signed values.
+
+```litex
+forall a, b R, k N_pos:
+    k % 2 = 0
+    abs(a) <= abs(b)
+    =>:
+        a^k <= b^k
+```
+
+```litex
+forall a, b R, k N_pos:
+    k % 2 = 0
+    a^k <= b^k
+    =>:
+        abs(a) <= abs(b)
+```
+
 If at least one component is nonzero, a sum of two squares is nonzero.
 
 ```litex
@@ -2960,6 +2936,41 @@ forall x, b R:
     -x <= b
     =>:
         abs(x) <= b
+```
+
+The converse direction and strict forms are also builtin.
+
+```litex
+forall x, b R:
+    x < b
+    -x < b
+    =>:
+        abs(x) < b
+```
+
+```litex
+forall x, y R:
+    abs(x) <= abs(y)
+    =>:
+        -abs(y) <= x <= abs(y)
+```
+
+When the bound is a signed number rather than an absolute value, use the sign of `y`:
+
+```litex
+forall x, y R:
+    abs(x) <= abs(y)
+    0 <= y
+    =>:
+        -y <= x <= y
+```
+
+```litex
+forall x, y R:
+    abs(x) <= abs(y)
+    y <= 0
+    =>:
+        y <= x <= -y
 ```
 
 ```litex
