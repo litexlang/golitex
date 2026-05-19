@@ -1,0 +1,663 @@
+claim:
+    prove:
+        forall x, y R:
+            0 <= x
+            0 <= y
+            x^2 < y^2
+            =>:
+                x < y
+
+    by contra:
+        prove:
+            x < y
+        y <= x
+        y^2 <= x^2
+        impossible x^2 < y^2
+
+claim:
+    prove:
+        forall n, d Z:
+            n * d < 0
+            =>:
+                abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
+
+    0 < -(n * d)
+    0 < 8
+    0 < 8 * (-(n * d))
+    8 * (-(n * d)) = -8 * n * d
+    0 < -8 * n * d
+    (2 * (n + d) - d)^2 < (2 * (n + d) - d)^2 + (-8 * n * d) = (2 * n - d)^2
+    abs(2 * (n + d) - d)^2 = (2 * (n + d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
+
+claim:
+    prove:
+        forall n, d Z:
+            n * d < 0
+            =>:
+                abs(2 * (n + d) - d) < abs(2 * n - d)
+
+    0 <= abs(2 * (n + d) - d)
+    0 <= abs(2 * n - d)
+    abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
+
+claim:
+    prove:
+        forall n, d Z:
+            n * d >= 0
+            0 < d * (n - d)
+            =>:
+                abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
+
+    0 < 8
+    0 < 8 * (d * (n - d))
+    8 * (d * (n - d)) = 8 * d * (n - d)
+    0 < 8 * d * (n - d)
+    (2 * (n - d) - d)^2 < (2 * (n - d) - d)^2 + 8 * d * (n - d) = (2 * n - d)^2
+    abs(2 * (n - d) - d)^2 = (2 * (n - d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
+
+claim:
+    prove:
+        forall n, d Z:
+            n * d >= 0
+            0 < d * (n - d)
+            =>:
+                abs(2 * (n - d) - d) < abs(2 * n - d)
+
+    0 <= abs(2 * (n - d) - d)
+    0 <= abs(2 * n - d)
+    abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
+
+have fn fmod(n Z, d Z) Z by decreasing abs(2 * n - d) from 0:
+    case n * d < 0: fmod(n + d, d)
+    case n * d >= 0:
+        case 0 < d * (n - d): fmod(n - d, d)
+        case 0 >= d * (n - d):
+            case n = d: 0
+            case n != d: n
+
+have fn fdiv(n Z, d Z) Z by decreasing abs(2 * n - d) from 0:
+    case n * d < 0: fdiv(n + d, d) - 1
+    case n * d >= 0:
+        case 0 < d * (n - d): fdiv(n - d, d) + 1
+        case 0 >= d * (n - d):
+            case n = d: 1
+            case n != d: 0
+
+prop fmod_add_fdiv_at_measure(m Z):
+    forall u, v Z:
+        abs(2 * u - v) = m
+        =>:
+            fmod(u, v) + v * fdiv(u, v) = u
+
+claim:
+    prove:
+        forall n, d Z:
+            abs(2 * n - d) = 0
+            =>:
+                fmod(n, d) + d * fdiv(n, d) = n
+
+    by cases:
+        prove:
+            fmod(n, d) + d * fdiv(n, d) = n
+        case n * d < 0:
+            abs(2 * (n + d) - d) < abs(2 * n - d) = 0
+            0 <= abs(2 * (n + d) - d)
+            impossible abs(2 * (n + d) - d) < 0
+        case n * d >= 0:
+            by cases:
+                prove:
+                    fmod(n, d) + d * fdiv(n, d) = n
+                case 0 < d * (n - d):
+                    abs(2 * (n - d) - d) < abs(2 * n - d) = 0
+                    0 <= abs(2 * (n - d) - d)
+                    impossible abs(2 * (n - d) - d) < 0
+                case 0 >= d * (n - d):
+                    by cases:
+                        prove:
+                            fmod(n, d) + d * fdiv(n, d) = n
+                        case n = d:
+                            fmod(n, d) = 0
+                            fdiv(n, d) = 1
+                            fmod(n, d) + d * fdiv(n, d) = 0 + d * 1 = d = n
+                        case n != d:
+                            fmod(n, d) = n
+                            fdiv(n, d) = 0
+                            fmod(n, d) + d * fdiv(n, d) = n + d * 0 = n
+
+$fmod_add_fdiv_at_measure(0)
+
+claim:
+    prove:
+        forall m Z:
+            m >= 0
+            forall y Z:
+                y >= 0
+                y <= m
+                =>:
+                    $fmod_add_fdiv_at_measure(y)
+            =>:
+                $fmod_add_fdiv_at_measure(m + 1)
+
+    claim:
+        prove:
+            forall n, d Z:
+                abs(2 * n - d) = m + 1
+                =>:
+                    fmod(n, d) + d * fdiv(n, d) = n
+
+        by cases:
+            prove:
+                fmod(n, d) + d * fdiv(n, d) = n
+            case n * d < 0:
+                abs(2 * (n + d) - d) >= 0
+                abs(2 * (n + d) - d) < abs(2 * n - d) = m + 1
+                abs(2 * (n + d) - d) <= m or abs(2 * (n + d) - d) >= m + 1
+                by cases:
+                    prove:
+                        abs(2 * (n + d) - d) <= m
+                    case abs(2 * (n + d) - d) <= m:
+                        do_nothing
+                    case abs(2 * (n + d) - d) >= m + 1:
+                        impossible abs(2 * (n + d) - d) < m + 1
+                $fmod_add_fdiv_at_measure(abs(2 * (n + d) - d))
+                n + d $in Z
+                abs(2 * (n + d) - d) = abs(2 * (n + d) - d)
+                fmod(n + d, d) + d * fdiv(n + d, d) = n + d
+                fmod(n, d) = fmod(n + d, d)
+                fdiv(n, d) = fdiv(n + d, d) - 1
+                fmod(n, d) + d * fdiv(n, d) = fmod(n + d, d) + d * (fdiv(n + d, d) - 1) = fmod(n + d, d) + d * fdiv(n + d, d) - d = n + d - d = n
+            case n * d >= 0:
+                by cases:
+                    prove:
+                        fmod(n, d) + d * fdiv(n, d) = n
+                    case 0 < d * (n - d):
+                        abs(2 * (n - d) - d) >= 0
+                        abs(2 * (n - d) - d) < abs(2 * n - d) = m + 1
+                        abs(2 * (n - d) - d) <= m or abs(2 * (n - d) - d) >= m + 1
+                        by cases:
+                            prove:
+                                abs(2 * (n - d) - d) <= m
+                            case abs(2 * (n - d) - d) <= m:
+                                do_nothing
+                            case abs(2 * (n - d) - d) >= m + 1:
+                                impossible abs(2 * (n - d) - d) < m + 1
+                        $fmod_add_fdiv_at_measure(abs(2 * (n - d) - d))
+                        n - d $in Z
+                        abs(2 * (n - d) - d) = abs(2 * (n - d) - d)
+                        fmod(n - d, d) + d * fdiv(n - d, d) = n - d
+                        fmod(n, d) = fmod(n - d, d)
+                        fdiv(n, d) = fdiv(n - d, d) + 1
+                        fmod(n, d) + d * fdiv(n, d) = fmod(n - d, d) + d * (fdiv(n - d, d) + 1) = fmod(n - d, d) + d * fdiv(n - d, d) + d = n - d + d = n
+                    case 0 >= d * (n - d):
+                        by cases:
+                            prove:
+                                fmod(n, d) + d * fdiv(n, d) = n
+                            case n = d:
+                                fmod(n, d) = 0
+                                fdiv(n, d) = 1
+                                fmod(n, d) + d * fdiv(n, d) = 0 + d * 1 = d = n
+                            case n != d:
+                                fmod(n, d) = n
+                                fdiv(n, d) = 0
+                                fmod(n, d) + d * fdiv(n, d) = n + d * 0 = n
+
+    $fmod_add_fdiv_at_measure(m + 1)
+
+by strong_induc m from 0:
+    prove:
+        $fmod_add_fdiv_at_measure(m)
+
+    prove from m = 0:
+        $fmod_add_fdiv_at_measure(0)
+
+    prove strong_induc:
+        $fmod_add_fdiv_at_measure(m + 1)
+
+claim:
+    prove:
+        forall n, d Z:
+            fmod(n, d) + d * fdiv(n, d) = n
+
+    forall n1, d1 Z:
+        abs(2 * n1 - d1) >= 0
+        $fmod_add_fdiv_at_measure(abs(2 * n1 - d1))
+        fmod(n1, d1) + d1 * fdiv(n1, d1) = n1
+
+claim:
+    prove:
+        forall x, y Z:
+            0 < y
+            x * y >= 0
+            =>:
+                0 <= x
+
+    by contra:
+        prove:
+            0 <= x
+        x < 0
+        x * y < 0
+        impossible x * y >= 0
+
+claim:
+    prove:
+        forall x, y Z:
+            0 < y
+            0 >= y * (x - y)
+            =>:
+                x <= y
+
+    by contra:
+        prove:
+            x <= y
+        y < x
+        0 < x - y
+        0 < y * (x - y)
+        impossible 0 >= y * (x - y)
+
+claim:
+    prove:
+        forall x, y Z:
+            x <= y
+            x != y
+            =>:
+                x < y
+
+    by contra:
+        prove:
+            x < y
+        x >= y
+        x = y
+        impossible x != y
+
+prop fmod_bound_at_measure(m Z):
+    forall u, v Z:
+        abs(2 * u - v) = m
+        0 < v
+        =>:
+            abs(fmod(u, v)) < abs(v)
+
+claim:
+    prove:
+        forall a, b Z:
+            abs(2 * a - b) = 0
+            0 < b
+            =>:
+                abs(fmod(a, b)) < abs(b)
+
+    by cases:
+        prove:
+            abs(fmod(a, b)) < abs(b)
+        case a * b < 0:
+            abs(2 * (a + b) - b) < abs(2 * a - b) = 0
+            0 <= abs(2 * (a + b) - b)
+            impossible abs(2 * (a + b) - b) < 0
+        case a * b >= 0:
+            by cases:
+                prove:
+                    abs(fmod(a, b)) < abs(b)
+                case 0 < b * (a - b):
+                    abs(2 * (a - b) - b) < abs(2 * a - b) = 0
+                    0 <= abs(2 * (a - b) - b)
+                    impossible abs(2 * (a - b) - b) < 0
+                case 0 >= b * (a - b):
+                    by cases:
+                        prove:
+                            abs(fmod(a, b)) < abs(b)
+                        case a = b:
+                            fmod(a, b) = 0
+                            abs(fmod(a, b)) = abs(0) = 0
+                            abs(b) = b
+                            0 < abs(b)
+                            abs(fmod(a, b)) < abs(b)
+                        case a != b:
+                            fmod(a, b) = a
+                            by contra:
+                                prove:
+                                    0 <= a
+                                a < 0
+                                a * b < 0
+                                impossible a * b >= 0
+                            by contra:
+                                prove:
+                                    a <= b
+                                b < a
+                                0 < a - b
+                                0 < b * (a - b)
+                                impossible 0 >= b * (a - b)
+                            by contra:
+                                prove:
+                                    a < b
+                                a >= b
+                                a = b
+                                impossible a != b
+                            abs(a) = a
+                            abs(b) = b
+                            0 <= fmod(a, b)
+                            abs(fmod(a, b)) = fmod(a, b) = a < b = abs(b)
+
+$fmod_bound_at_measure(0)
+
+claim:
+    prove:
+        forall m Z:
+            m >= 0
+            forall y Z:
+                y >= 0
+                y <= m
+                =>:
+                    $fmod_bound_at_measure(y)
+            =>:
+                $fmod_bound_at_measure(m + 1)
+
+    claim:
+        prove:
+            forall a, b Z:
+                abs(2 * a - b) = m + 1
+                0 < b
+                =>:
+                    abs(fmod(a, b)) < abs(b)
+
+        by cases:
+            prove:
+                abs(fmod(a, b)) < abs(b)
+            case a * b < 0:
+                abs(2 * (a + b) - b) >= 0
+                abs(2 * (a + b) - b) < abs(2 * a - b) = m + 1
+                abs(2 * (a + b) - b) <= m or abs(2 * (a + b) - b) >= m + 1
+                by cases:
+                    prove:
+                        abs(2 * (a + b) - b) <= m
+                    case abs(2 * (a + b) - b) <= m:
+                        do_nothing
+                    case abs(2 * (a + b) - b) >= m + 1:
+                        impossible abs(2 * (a + b) - b) < m + 1
+                $fmod_bound_at_measure(abs(2 * (a + b) - b))
+                a + b $in Z
+                abs(2 * (a + b) - b) = abs(2 * (a + b) - b)
+                abs(fmod(a + b, b)) < abs(b)
+                fmod(a, b) = fmod(a + b, b)
+                fmod(a, b) - fmod(a + b, b) = 0
+                abs(fmod(a, b)) - abs(fmod(a + b, b)) <= abs(fmod(a, b) - fmod(a + b, b)) = abs(0) = 0
+                abs(fmod(a, b)) <= abs(fmod(a + b, b))
+                abs(fmod(a, b)) <= abs(fmod(a + b, b)) < abs(b)
+                abs(fmod(a, b)) < abs(b)
+            case a * b >= 0:
+                by cases:
+                    prove:
+                        abs(fmod(a, b)) < abs(b)
+                    case 0 < b * (a - b):
+                        abs(2 * (a - b) - b) >= 0
+                        abs(2 * (a - b) - b) < abs(2 * a - b) = m + 1
+                        abs(2 * (a - b) - b) <= m or abs(2 * (a - b) - b) >= m + 1
+                        by cases:
+                            prove:
+                                abs(2 * (a - b) - b) <= m
+                            case abs(2 * (a - b) - b) <= m:
+                                do_nothing
+                            case abs(2 * (a - b) - b) >= m + 1:
+                                impossible abs(2 * (a - b) - b) < m + 1
+                        $fmod_bound_at_measure(abs(2 * (a - b) - b))
+                        a - b $in Z
+                        abs(2 * (a - b) - b) = abs(2 * (a - b) - b)
+                        abs(fmod(a - b, b)) < abs(b)
+                        fmod(a, b) = fmod(a - b, b)
+                        fmod(a, b) - fmod(a - b, b) = 0
+                        abs(fmod(a, b)) - abs(fmod(a - b, b)) <= abs(fmod(a, b) - fmod(a - b, b)) = abs(0) = 0
+                        abs(fmod(a, b)) <= abs(fmod(a - b, b))
+                        abs(fmod(a, b)) <= abs(fmod(a - b, b)) < abs(b)
+                        abs(fmod(a, b)) < abs(b)
+                    case 0 >= b * (a - b):
+                        by cases:
+                            prove:
+                                abs(fmod(a, b)) < abs(b)
+                            case a = b:
+                                fmod(a, b) = 0
+                                abs(fmod(a, b)) = abs(0) = 0
+                                abs(b) = b
+                                0 < abs(b)
+                                abs(fmod(a, b)) < abs(b)
+                            case a != b:
+                                fmod(a, b) = a
+                                by contra:
+                                    prove:
+                                        0 <= a
+                                    a < 0
+                                    a * b < 0
+                                    impossible a * b >= 0
+                                by contra:
+                                    prove:
+                                        a <= b
+                                    b < a
+                                    0 < a - b
+                                    0 < b * (a - b)
+                                    impossible 0 >= b * (a - b)
+                                by contra:
+                                    prove:
+                                        a < b
+                                    a >= b
+                                    a = b
+                                    impossible a != b
+                                abs(a) = a
+                                abs(b) = b
+                                0 <= fmod(a, b)
+                                abs(fmod(a, b)) = fmod(a, b) = a < b = abs(b)
+
+    $fmod_bound_at_measure(m + 1)
+
+by strong_induc m from 0:
+    prove:
+        $fmod_bound_at_measure(m)
+
+    prove from m = 0:
+        $fmod_bound_at_measure(0)
+
+    prove strong_induc:
+        $fmod_bound_at_measure(m + 1)
+
+claim:
+    prove:
+        forall a, b Z:
+            0 < b
+            =>:
+                abs(fmod(a, b)) < abs(b)
+
+    forall a1, b1 Z:
+        0 < b1
+        =>:
+            abs(2 * a1 - b1) >= 0
+            $fmod_bound_at_measure(abs(2 * a1 - b1))
+            abs(fmod(a1, b1)) < abs(b1)
+
+claim:
+    prove:
+        forall a, b Z:
+            b < 0
+            =>:
+                abs(fmod(a, -b)) < abs(b)
+
+    0 < -b
+    -b $in Z
+    abs(fmod(a, -b)) < abs(-b)
+    b <= 0
+    abs(b) = -b
+    abs(-b) = -b
+    abs(-b) = abs(b)
+    abs(fmod(a, -b)) < abs(b)
+
+have fn gcd(a Z, b Z) Z by decreasing abs(b) from 0:
+    case 0 < b: gcd(b, fmod(a, b))
+    case 0 >= b:
+        case b < 0: gcd(b, fmod(a, -b))
+        case b >= 0:
+            case 0 <= a: a
+            case 0 > a: -a
+
+have fn egcd_pair(a Z, b Z) cart(Z, Z) by decreasing abs(b) from 0:
+    case 0 < b: (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
+    case 0 >= b:
+        case b < 0: (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])
+        case b >= 0:
+            case 0 <= a: (1, 0)
+            case 0 > a: (-1, 0)
+
+have fn egcd_l(a Z, b Z) Z = egcd_pair(a, b)[1]
+
+have fn egcd_r(a Z, b Z) Z = egcd_pair(a, b)[2]
+
+prop egcd_identity_at_measure(m Z):
+    forall u, v Z:
+        abs(v) = m
+        =>:
+            egcd_l(u, v) * u + egcd_r(u, v) * v = gcd(u, v)
+
+claim:
+    prove:
+        forall a, b Z:
+            abs(b) = 0
+            =>:
+                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+
+    b = 0
+    0 >= b
+    b >= 0
+    by cases:
+        prove:
+            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+        case 0 <= a:
+            egcd_pair(a, b) = (1, 0)
+            egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
+            egcd_r(a, b) = egcd_pair(a, b)[2] = (1, 0)[2] = 0
+            gcd(a, b) = a
+            egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = gcd(a, b)
+        case 0 > a:
+            egcd_pair(a, b) = (-1, 0)
+            egcd_l(a, b) = egcd_pair(a, b)[1] = (-1, 0)[1] = -1
+            egcd_r(a, b) = egcd_pair(a, b)[2] = (-1, 0)[2] = 0
+            gcd(a, b) = -a
+            egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = gcd(a, b)
+
+$egcd_identity_at_measure(0)
+
+claim:
+    prove:
+        forall m Z:
+            m >= 0
+            forall y Z:
+                y >= 0
+                y <= m
+                =>:
+                    $egcd_identity_at_measure(y)
+            =>:
+                $egcd_identity_at_measure(m + 1)
+
+    claim:
+        prove:
+            forall a, b Z:
+                abs(b) = m + 1
+                =>:
+                    egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+
+        by cases:
+            prove:
+                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+            case 0 < b:
+                abs(fmod(a, b)) >= 0
+                abs(fmod(a, b)) < abs(b) = m + 1
+                abs(fmod(a, b)) <= m or abs(fmod(a, b)) >= m + 1
+                by cases:
+                    prove:
+                        abs(fmod(a, b)) <= m
+                    case abs(fmod(a, b)) <= m:
+                        do_nothing
+                    case abs(fmod(a, b)) >= m + 1:
+                        impossible abs(fmod(a, b)) < m + 1
+                $egcd_identity_at_measure(abs(fmod(a, b)))
+                fmod(a, b) $in Z
+                abs(fmod(a, b)) = abs(fmod(a, b))
+                egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = gcd(b, fmod(a, b))
+                egcd_pair(a, b) = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
+                egcd_l(a, b) = egcd_pair(a, b)[1] = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])[1] = egcd_pair(b, fmod(a, b))[2]
+                egcd_r(b, fmod(a, b)) = egcd_pair(b, fmod(a, b))[2]
+                egcd_l(a, b) = egcd_r(b, fmod(a, b))
+                egcd_r(a, b) = egcd_pair(a, b)[2] = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])[2] = egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2]
+                egcd_l(b, fmod(a, b)) = egcd_pair(b, fmod(a, b))[1]
+                egcd_pair(b, fmod(a, b))[1] = egcd_l(b, fmod(a, b))
+                egcd_pair(b, fmod(a, b))[2] = egcd_r(b, fmod(a, b))
+                egcd_r(a, b) = egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2] = egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))
+                fmod(a, b) + b * fdiv(a, b) = a
+                a = fmod(a, b) + b * fdiv(a, b)
+                a - b * fdiv(a, b) = fmod(a, b) + b * fdiv(a, b) - b * fdiv(a, b) = fmod(a, b)
+                gcd(a, b) = gcd(b, fmod(a, b))
+                egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, b)) * a + (egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))) * b = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * (a - b * fdiv(a, b)) = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = gcd(b, fmod(a, b)) = gcd(a, b)
+            case 0 >= b:
+                by cases:
+                    prove:
+                        egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                    case b < 0:
+                        abs(fmod(a, -b)) >= 0
+                        abs(fmod(a, -b)) < abs(b) = m + 1
+                        abs(fmod(a, -b)) <= m or abs(fmod(a, -b)) >= m + 1
+                        by cases:
+                            prove:
+                                abs(fmod(a, -b)) <= m
+                            case abs(fmod(a, -b)) <= m:
+                                do_nothing
+                            case abs(fmod(a, -b)) >= m + 1:
+                                impossible abs(fmod(a, -b)) < m + 1
+                        $egcd_identity_at_measure(abs(fmod(a, -b)))
+                        fmod(a, -b) $in Z
+                        abs(fmod(a, -b)) = abs(fmod(a, -b))
+                        egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * fmod(a, -b) = gcd(b, fmod(a, -b))
+                        egcd_pair(a, b) = (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])
+                        egcd_l(a, b) = egcd_pair(a, b)[1] = (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])[1] = egcd_pair(b, fmod(a, -b))[2]
+                        egcd_r(b, fmod(a, -b)) = egcd_pair(b, fmod(a, -b))[2]
+                        egcd_l(a, b) = egcd_r(b, fmod(a, -b))
+                        egcd_r(a, b) = egcd_pair(a, b)[2] = (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])[2] = egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2]
+                        egcd_l(b, fmod(a, -b)) = egcd_pair(b, fmod(a, -b))[1]
+                        egcd_pair(b, fmod(a, -b))[1] = egcd_l(b, fmod(a, -b))
+                        egcd_pair(b, fmod(a, -b))[2] = egcd_r(b, fmod(a, -b))
+                        egcd_r(a, b) = egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2] = egcd_l(b, fmod(a, -b)) + fdiv(a, -b) * egcd_r(b, fmod(a, -b))
+                        fmod(a, -b) + (-b) * fdiv(a, -b) = a
+                        a = fmod(a, -b) + (-b) * fdiv(a, -b)
+                        a + b * fdiv(a, -b) = fmod(a, -b) + (-b) * fdiv(a, -b) + b * fdiv(a, -b) = fmod(a, -b)
+                        gcd(a, b) = gcd(b, fmod(a, -b))
+                        egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, -b)) * a + (egcd_l(b, fmod(a, -b)) + fdiv(a, -b) * egcd_r(b, fmod(a, -b))) * b = egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * (a + b * fdiv(a, -b)) = egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * fmod(a, -b) = gcd(b, fmod(a, -b)) = gcd(a, b)
+                    case b >= 0:
+                        b = 0
+                        by cases:
+                            prove:
+                                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                            case 0 <= a:
+                                egcd_pair(a, b) = (1, 0)
+                                egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
+                                egcd_r(a, b) = egcd_pair(a, b)[2] = (1, 0)[2] = 0
+                                gcd(a, b) = a
+                                egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = gcd(a, b)
+                            case 0 > a:
+                                egcd_pair(a, b) = (-1, 0)
+                                egcd_l(a, b) = egcd_pair(a, b)[1] = (-1, 0)[1] = -1
+                                egcd_r(a, b) = egcd_pair(a, b)[2] = (-1, 0)[2] = 0
+                                gcd(a, b) = -a
+                                egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = gcd(a, b)
+
+    $egcd_identity_at_measure(m + 1)
+
+by strong_induc m from 0:
+    prove:
+        $egcd_identity_at_measure(m)
+
+    prove from m = 0:
+        $egcd_identity_at_measure(0)
+
+    prove strong_induc:
+        $egcd_identity_at_measure(m + 1)
+
+claim:
+    prove:
+        forall a, b Z:
+            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+
+    forall a1, b1 Z:
+        abs(b1) >= 0
+        $egcd_identity_at_measure(abs(b1))
+        egcd_l(a1, b1) * a1 + egcd_r(a1, b1) * b1 = gcd(a1, b1)
