@@ -9,13 +9,13 @@ prop descent_data(k N, b N):
     k <= b
 
 # Chapter 6 parity/descent facts used by the textbook proof.
-know:
-    forall b Z:
-        b >= 0
-        =>:
-            b $in N
-            b + 1 $in N
+forall b Z:
+    b >= 0
+    =>:
+        b $in N
+        b + 1 $in N
 
+know:
     forall a, b N:
         a ^ 2 = 2 * b ^ 2
         =>:

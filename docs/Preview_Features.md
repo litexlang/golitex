@@ -10,6 +10,14 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Singleton integer intervals infer equality (2026-05)
+
+Membership in `range(a, b)` and `closed_range(a, b)` now records the element equality directly when the integer interval has exactly one value, such as `range(1, 2)` or `closed_range(1, 1)`. `by closed_range as cases` likewise records the single equality instead of a one-branch `or`. See **Manual — Builtin Inference — Ranges** and **Manual — Closed range as cases**.
+
+### Natural membership from nonnegative integers (2026-05)
+
+Builtin verification can now close `x $in N` from `x $in Z` together with `x >= 0` / `0 <= x`, or from `x $in Z` together with `x > 0` / `0 < x`. See **Manual — Builtin Verification Rules — Membership Rules**.
+
 ### Structured induction proof blocks (2026-05)
 
 `by induc` and `by strong_induc` can now split their proof into a base block and a step block. Use `prove from n = base:` for the base case, `prove induc:` for ordinary induction steps, and `prove strong_induc:` for strong induction steps. See **Manual — Induction (`by induc`, `by strong_induc`)**.
