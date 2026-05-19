@@ -5,9 +5,9 @@ impl Runtime {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn is_commutative_prop_name_known(&self, prop_name: &str) -> bool {
+    pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
         for env in self.iter_environments_from_top() {
-            if let Some(perms) = env.known_commutative_props.get(prop_name) {
+            if let Some(perms) = env.known_symmetric_props.get(prop_name) {
                 if !perms.is_empty() {
                     return true;
                 }
@@ -111,6 +111,15 @@ impl Runtime {
             }
             if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(name) {
                 return Some(known_cart_obj.clone());
+            }
+        }
+        None
+    }
+
+    pub fn get_obj_equal_to_set_builder(&self, name: &str) -> Option<SetBuilder> {
+        for env in self.iter_environments_from_top() {
+            if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(name) {
+                return Some(set_builder.clone());
             }
         }
         None

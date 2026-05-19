@@ -59,7 +59,12 @@ impl Runtime {
                     None => continue,
                 }
             };
-            for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
+            let start_index = if i == iterate_from_env_index {
+                iterate_from_known_forall_fact_index
+            } else {
+                0
+            };
+            for j in start_index..known_forall_facts_count {
                 let entry_idx = known_forall_facts_count - 1 - j;
                 let (atomic_fact_args_in_known_forall, current_known_forall) = {
                     let env = &self.environment_stack[stack_idx];
@@ -382,21 +387,6 @@ impl Runtime {
                 left.end.as_ref(),
                 given_arg,
             ),
-            Obj::FnRange(ref left) => match given_arg {
-                Obj::FnRange(given) => self
-                    .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                        left.fn_obj.as_ref(),
-                        given.fn_obj.as_ref(),
-                    ),
-                _ => Ok(None),
-            },
-            Obj::FnDom(ref left) => match given_arg {
-                Obj::FnDom(given) => self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    left.fn_obj.as_ref(),
-                    given.fn_obj.as_ref(),
-                ),
-                _ => Ok(None),
-            },
             Obj::FiniteSeqSet(ref left) => self.match_arg_when_left_is_finite_seq_set(
                 left.set.as_ref(),
                 left.n.as_ref(),

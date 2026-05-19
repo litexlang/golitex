@@ -21,3 +21,6 @@ forall i Z:
     =>:
         i $in range(2, 6)
         i $in 2...5
+
+count(1...5) =  5
+count(range(1, 5)) = 4 

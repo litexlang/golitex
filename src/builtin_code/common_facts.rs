@@ -44,6 +44,14 @@ know:
 
     forall a R_pos, b R, c R:
         a^(b+c) = a^b * a^c
+
+    forall a R_pos, b R:
+        a * a^b = a^(b+1)
+        a^b * a = a^(b+1)
+
+    forall a R_nz, b Z:
+        a * a^b = a^(b+1)
+        a^b * a = a^(b+1)
     
     forall a R_pos, b R_pos:
         a != 1
@@ -117,9 +125,56 @@ know:
         =>:
             a % m = 0
 
+    forall a Z, m N_pos:
+        a % m = 0
+        =>:
+            exist r Z st {a = m * r}
+
+    forall a Z, m N_pos:
+        a % m = 0
+        =>:
+            exist r Z st {a = r * m}
+
     forall a Z, m N_pos, k N:
         k < m
         exist r Z st {a = r * m + k}
+        =>:
+            a % m = k
+
+    forall a N, m N_pos, k N:
+        a % m = k
+        =>:
+            exist r N st {a = m * r + k}
+
+    forall a N, m N_pos, k N:
+        k < m
+        exist r N st {a = m * r + k}
+        =>:
+            a % m = k
+
+    forall a N, m N_pos:
+        exist r N st {a = m * r}
+        =>:
+            a % m = 0
+
+    forall a N, m N_pos:
+        exist r N st {a = r * m}
+        =>:
+            a % m = 0
+
+    forall a N, m N_pos:
+        a % m = 0
+        =>:
+            exist r N st {a = m * r}
+
+    forall a N, m N_pos:
+        a % m = 0
+        =>:
+            exist r N st {a = r * m}
+
+    forall a N, m N_pos, k N:
+        k < m
+        exist r N st {a = r * m + k}
         =>:
             a % m = k
 
@@ -136,4 +191,12 @@ know:
         a % b = 0
         =>:
             b <= a
+
+    forall a Q:
+        exist p Z, q N_pos st {a = p / q}
+
+    forall a Q:
+        a >= 0
+        =>:
+            exist p N, q N_pos st {a = p / q}
 "#;

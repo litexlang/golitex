@@ -36,6 +36,11 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) =
+            self.try_verify_order_one_le_from_membership_in_z_and_positive(atomic_fact, &vs)?
+        {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
             return Ok(result);
         }
@@ -587,6 +592,64 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in N and n != 0".to_string(),
+                Vec::new(),
+            ),
+        )))
+    }
+
+    /// `n >= 1` / `1 <= n` from known `n $in Z` and `0 < n`.
+    fn try_verify_order_one_le_from_membership_in_z_and_positive(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (n, line_file) = match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) => {
+                let Some(one) = self.resolve_obj_to_number(&f.right) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_number_strings(&one.normalized_value, "1"),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.left.clone(), f.line_file.clone())
+            }
+            AtomicFact::LessEqualFact(f) => {
+                let Some(one) = self.resolve_obj_to_number(&f.left) else {
+                    return Ok(None);
+                };
+                if !matches!(
+                    compare_number_strings(&one.normalized_value, "1"),
+                    NumberCompareResult::Equal
+                ) {
+                    return Ok(None);
+                }
+                (f.right.clone(), f.line_file.clone())
+            }
+            _ => return Ok(None),
+        };
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let in_z: AtomicFact =
+            InFact::new(n.clone(), StandardSet::Z.into(), line_file.clone()).into();
+        let positive: AtomicFact = LessFact::new(zero_obj, n, line_file.clone()).into();
+        if !self
+            .verify_non_equational_known_then_builtin_rules_only(&in_z, verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        if !self
+            .verify_non_equational_known_then_builtin_rules_only(&positive, verify_state)?
+            .is_true()
+        {
+            return Ok(None);
+        }
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "1 <= n from n $in Z and 0 < n".to_string(),
                 Vec::new(),
             ),
         )))

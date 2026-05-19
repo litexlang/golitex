@@ -39,8 +39,6 @@ pub enum Obj {
     Product(Product),
     Range(Range),
     ClosedRange(ClosedRange),
-    FnRange(FnRange),
-    FnDom(FnDom),
     FiniteSeqSet(FiniteSeqSet),
     SeqSet(SeqSet),
     FiniteSeqListObj(FiniteSeqListObj),
@@ -220,16 +218,6 @@ pub struct Range {
 pub struct ClosedRange {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct FnRange {
-    pub fn_obj: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct FnDom {
-    pub fn_obj: Box<Obj>,
 }
 
 /// Set of functions `fn(x N_pos: x <= n) s` (Lit surface syntax: keyword `finite_seq(s, n)`).
@@ -669,22 +657,6 @@ impl ClosedRange {
     }
 }
 
-impl FnRange {
-    pub fn new(fn_obj: Obj) -> Self {
-        FnRange {
-            fn_obj: Box::new(fn_obj),
-        }
-    }
-}
-
-impl FnDom {
-    pub fn new(fn_obj: Obj) -> Self {
-        FnDom {
-            fn_obj: Box::new(fn_obj),
-        }
-    }
-}
-
 impl FiniteSeqSet {
     pub fn new(set: Obj, n: Obj) -> Self {
         FiniteSeqSet {
@@ -941,8 +913,6 @@ impl Obj {
             Obj::Product(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
-            Obj::FnRange(x) => write!(f, "{}", x)?,
-            Obj::FnDom(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
             Obj::SeqSet(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqListObj(x) => write!(f, "{}", x)?,
@@ -1184,10 +1154,6 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.end, from, to),
             )
             .into(),
-            Obj::FnRange(x) => {
-                FnRange::new(Obj::replace_bound_identifier(*x.fn_obj, from, to)).into()
-            }
-            Obj::FnDom(x) => FnDom::new(Obj::replace_bound_identifier(*x.fn_obj, from, to)).into(),
             Obj::FiniteSeqSet(x) => FiniteSeqSet::new(
                 Obj::replace_bound_identifier(*x.set, from, to),
                 Obj::replace_bound_identifier(*x.n, from, to),
@@ -1485,28 +1451,6 @@ impl fmt::Display for ClosedRange {
             "{}{}",
             CLOSED_RANGE,
             braced_vec_to_string(&vec![self.start.as_ref(), self.end.as_ref()])
-        )
-    }
-}
-
-impl fmt::Display for FnRange {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            FN_RANGE,
-            braced_vec_to_string(&vec![self.fn_obj.as_ref()])
-        )
-    }
-}
-
-impl fmt::Display for FnDom {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            FN_DOM,
-            braced_vec_to_string(&vec![self.fn_obj.as_ref()])
         )
     }
 }
@@ -2124,18 +2068,6 @@ impl From<Range> for Obj {
 impl From<ClosedRange> for Obj {
     fn from(r: ClosedRange) -> Self {
         Obj::ClosedRange(r)
-    }
-}
-
-impl From<FnRange> for Obj {
-    fn from(r: FnRange) -> Self {
-        Obj::FnRange(r)
-    }
-}
-
-impl From<FnDom> for Obj {
-    fn from(r: FnDom) -> Self {
-        Obj::FnDom(r)
     }
 }
 

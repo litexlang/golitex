@@ -339,6 +339,22 @@ impl Runtime {
             Obj::SetBuilder(set_builder) => {
                 self.infer_membership_in_set_builder_from_in_fact(in_fact, set_builder)
             }
+            // Power set membership: `A $in power_set(B)` means `A $subset B`.
+            // Example: from `A $in power_set(Z)`, infer `A $subset Z`.
+            Obj::PowerSet(power_set) => {
+                let subset_fact = SubsetFact::new(
+                    in_fact.element.clone(),
+                    (*power_set.set).clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
+                let mut infer_result = InferResult::new();
+                infer_result.push_atomic_fact(&subset_fact);
+                infer_result.new_infer_result_inside(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(subset_fact)?,
+                );
+                Ok(infer_result)
+            }
             // Cartesian product: element is an n-tuple with matching dimension; bind tuple/cart metadata.
             Obj::Cart(cart) => {
                 if cart.args.len() < 2 {
@@ -647,8 +663,67 @@ impl Runtime {
                 );
                 Ok(infer_result)
             }
-            // Other set forms: no membership unfold on this path.
-            _ => Ok(InferResult::new()),
+            // Binary intersection: storing `x $in intersect(A, B)` yields `x $in A` and `x $in B`.
+            // Example: from `t $in intersect({-2, 3}, {y Q : y^2 = 9})`, infer both memberships for case splits.
+            Obj::Intersect(intersect) => {
+                let lf = in_fact.line_file.clone();
+                let element_in_left: Fact = InFact::new(
+                    in_fact.element.clone(),
+                    (*intersect.left).clone(),
+                    lf.clone(),
+                )
+                .into();
+                let element_in_right: Fact = InFact::new(
+                    in_fact.element.clone(),
+                    (*intersect.right).clone(),
+                    lf.clone(),
+                )
+                .into();
+                let mut infer_result = InferResult::new();
+                infer_result.new_fact(&element_in_left);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        element_in_left,
+                    )?,
+                );
+                infer_result.new_fact(&element_in_right);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        element_in_right,
+                    )?,
+                );
+                Ok(infer_result)
+            }
+            // Set difference: storing `x $in set_minus(A, B)` yields `x $in A` and `not x $in B`.
+            // Example: from `t $in set_minus({1,2}, {2})`, infer membership in `{1,2}` and non-membership in `{2}`.
+            Obj::SetMinus(sm) => {
+                let lf = in_fact.line_file.clone();
+                let element_in_left: Fact =
+                    InFact::new(in_fact.element.clone(), (*sm.left).clone(), lf.clone()).into();
+                let element_not_in_right: Fact =
+                    NotInFact::new(in_fact.element.clone(), (*sm.right).clone(), lf.clone()).into();
+                let mut infer_result = InferResult::new();
+                infer_result.new_fact(&element_in_left);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        element_in_left,
+                    )?,
+                );
+                infer_result.new_fact(&element_not_in_right);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        element_not_in_right,
+                    )?,
+                );
+                Ok(infer_result)
+            }
+            set_obj => {
+                if let Some(set_builder) = self.get_obj_equal_to_set_builder(&set_obj.to_string()) {
+                    self.infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder)
+                } else {
+                    Ok(InferResult::new())
+                }
+            }
         }
     }
 
@@ -669,18 +744,48 @@ impl Runtime {
         infer_result.push_atomic_fact(&inferred_in_z_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_z_fact.clone())?;
 
-        let lower_bound = LessEqualFact::new(start, element.clone(), lf.clone()).into();
+        let lower_bound = LessEqualFact::new(start.clone(), element.clone(), lf.clone()).into();
         infer_result.push_atomic_fact(&lower_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound.clone())?;
 
         let upper_bound = if end_inclusive {
-            LessEqualFact::new(element, end, lf.clone()).into()
+            LessEqualFact::new(element.clone(), end.clone(), lf.clone()).into()
         } else {
-            LessFact::new(element, end, lf.clone()).into()
+            LessFact::new(element.clone(), end.clone(), lf.clone()).into()
         };
         infer_result.push_atomic_fact(&upper_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer(upper_bound.clone())?;
 
+        if let Some(singleton) =
+            self.singleton_value_for_integer_interval(&start, &end, end_inclusive)
+        {
+            let equal_fact = EqualFact::new(element, singleton, lf).into();
+            infer_result.push_atomic_fact(&equal_fact);
+            self.store_atomic_fact_without_well_defined_verified_and_infer(equal_fact)?;
+        }
+
         Ok(infer_result)
+    }
+
+    // Singleton integer intervals force the element's value.
+    // Example: `x $in range(1, 2)` or `x $in closed_range(1, 1)` infers `x = 1`.
+    fn singleton_value_for_integer_interval(
+        &self,
+        start: &Obj,
+        end: &Obj,
+        end_inclusive: bool,
+    ) -> Option<Obj> {
+        let start_number = self.resolve_obj_to_number(start)?;
+        let end_number = self.resolve_obj_to_number(end)?;
+        let start_i = start_number.normalized_value.parse::<i128>().ok()?;
+        let end_i = end_number.normalized_value.parse::<i128>().ok()?;
+        if end_inclusive {
+            if start_i == end_i {
+                return Some(Number::new(start_i.to_string()).into());
+            }
+        } else if start_i.checked_add(1) == Some(end_i) {
+            return Some(Number::new(start_i.to_string()).into());
+        }
+        None
     }
 }

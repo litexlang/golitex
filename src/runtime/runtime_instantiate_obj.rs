@@ -74,18 +74,6 @@ impl Runtime {
             Obj::ClosedRange(inner) => {
                 self.inst_closed_range(inner, param_to_arg_map, param_obj_type)
             }
-            Obj::FnRange(inner) => Ok(FnRange::new(self.inst_obj(
-                inner.fn_obj.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?)
-            .into()),
-            Obj::FnDom(inner) => Ok(FnDom::new(self.inst_obj(
-                inner.fn_obj.as_ref(),
-                param_to_arg_map,
-                param_obj_type,
-            )?)
-            .into()),
             Obj::FiniteSeqSet(inner) => {
                 self.inst_finite_seq_set(inner, param_to_arg_map, param_obj_type)
             }
@@ -972,16 +960,16 @@ impl Runtime {
 
         let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
-        let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.groups.len());
+        let mut new_types: Vec<ParamType> = Vec::with_capacity(total_param_count);
         for param_def in param_defs.groups.iter() {
             let new_type = if arg_index != 0 {
                 self.inst_param_type(&param_def.param_type, &param_arg_map, param_obj_type)?
             } else {
                 param_def.param_type.clone()
             };
-            new_types.push(new_type);
 
             for param_name in param_def.params.iter() {
+                new_types.push(new_type.clone());
                 param_arg_map.insert(param_name.clone(), args[arg_index].clone());
                 arg_index += 1;
             }

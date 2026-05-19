@@ -1,6 +1,6 @@
 //! Surface syntax for `by …` proof statements (one submodule per form).
+mod antisymmetric_prop;
 mod cases;
-mod commutative_prop;
 mod contra;
 mod enumerate;
 mod extension;
@@ -8,9 +8,11 @@ mod family;
 mod fn_cart_tuple;
 mod for_stmt;
 mod induc;
+mod reflexive_prop;
+mod symmetric_prop;
 mod transitive_prop;
+pub use antisymmetric_prop::ByAntisymmetricPropStmt;
 pub use cases::ByCasesStmt;
-pub use commutative_prop::ByCommutativePropStmt;
 pub use contra::ByContraStmt;
 pub use enumerate::ByEnumerateFiniteSetStmt;
 pub use extension::ByExtensionStmt;
@@ -18,4 +20,6 @@ pub use family::ByFamilyAsSetStmt;
 pub use fn_cart_tuple::{ByFnAsSetStmt, ByFnSetAsSetStmt, ByTupleAsSetStmt};
 pub use for_stmt::{ByForExpansion, ByForStmt, ClosedRangeOrRange};
 pub use induc::ByInducStmt;
+pub use reflexive_prop::ByReflexivePropStmt;
+pub use symmetric_prop::BySymmetricPropStmt;
 pub use transitive_prop::ByTransitivePropStmt;

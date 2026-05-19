@@ -10,9 +10,9 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Tutorial/In
 
 ## What is Litex?
 
-_Simplicity is the ultimate sophistication._
+_Truth is ever to be found in simplicity, and not in the multiplicity and confusion of things._
 
-_– Leonardo da Vinci_
+_– Isaac Newton_
 
 Litex is a simple and intuitive open-source language for mathematical proofs.
 
@@ -21,10 +21,6 @@ This tutorial section is still young. In the future, it will contain more math-o
 For now, the best place to learn Litex is the manual:
 
 1. [Manual Introduction](https://litexlang.com/doc/Manual#manual-introduction)
-2. [Proof Process](https://litexlang.com/doc/Manual#proof-process)
-3. [Objects](https://litexlang.com/doc/Manual#objects)
-4. [Factual Statements](https://litexlang.com/doc/Manual#factual-statements)
-5. [Builtin Verification Rules](https://litexlang.com/doc/Manual#builtin-verification-rules)
-6. [Inference](https://litexlang.com/doc/Manual#inference)
+2. [Textbook: The Mechanics of Litex Proof](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Introduction)
 
 The manual explains the main mental model: Litex code is built from mathematical objects, facts about those objects, and statements that define, verify, store, and infer information.

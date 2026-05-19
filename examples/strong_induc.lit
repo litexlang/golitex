@@ -18,7 +18,12 @@ know:
 by strong_induc n from 0:
     prove:
         $p(n)
-    do_nothing
+
+    prove from n = 0:
+        $p(0)
+
+    prove strong_induc:
+        $p(n + 1)
 
 forall n Z:
     n >= 0

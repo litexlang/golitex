@@ -18,7 +18,7 @@ This manual explains how Litex reads and checks mathematical proof scripts. The 
 
 A Litex file is not just a list of theorem declarations. It executes as a sequence of mathematical statements. Each statement may introduce objects, assert facts, open a proof block, store accepted information, or trigger inference. Once a fact is verified, it becomes part of the current context and can help justify later facts.
 
-Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work.
+Litex does not ask users to choose a tactic for each fact. The user states the fact they want, and the checker tries to match it against builtin rules, known facts, and known `forall` facts. Statement shapes such as chains, `by cases`, `have by exist`, `witness`, and `forall` organize the mathematical information so this matching can work. G. H. Hardy said: A mathematician, like a painter or poet, is a maker of patterns; Litex is meant to reward recognizing those patterns rather than naming every packaging lemma.
 
 This is the sense in which Litex aims to be **the language where mathematics verifies itself**.
 
@@ -155,7 +155,7 @@ Binary operations on expressions; `%` is integer remainder when both sides are c
 2 ^ 3 = 8
 ```
 
-Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases.
+Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases. Positive integer powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N_pos`, then `a^k $in N_pos`.
 
 #### `abs`, `log`, `max`, `min`
 
@@ -177,6 +177,8 @@ Set operations `A union B` and `A intersect B` (that is, union and intersection)
 2 $in intersect({1, 2}, {2, 3})
 have t set = set_minus({1, 2}, {1})
 ```
+
+When Litex records **`x $in intersect(A, B)`**, membership inference also stores **`x $in A`** and **`x $in B`** so later steps can use each side directly. Likewise, **`x $in set_minus(A, B)`** yields **`x $in A`** and **`not x $in B`**.
 
 ```litex
 1 $in {1} `union {2}
@@ -904,14 +906,6 @@ These predicates express equality of functions.
 
 ---
 
-### Function Properties
-
-Litex also provides the standard function-property atomic fact forms `$injective(f)`, `$surjective(f)`, and `$bijective(f)`.
-
-For now, these forms have dedicated atomic-fact nodes in the kernel, but Litex does not apply a builtin verification rule for injectivity, surjectivity, or bijectivity. Users should prove and cite the needed facts explicitly.
-
----
-
 ### Not Builtin: User Predicates
 
 Calls such as `$p(x)` are also atomic facts, but they are not builtin predicates. They come from user declarations such as `prop p(...)` or `abstract_prop p(...)`, and Litex verifies them from the user's definition or known facts.
@@ -1082,12 +1076,12 @@ forall x R:
 
 ---
 
-### Piecewise function (`have fn` with `case`)
+### Piecewise function (`have fn ... by cases`)
 
 Use **`case`** branches when the formula for a function depends on conditions.
 
 ```litex
-have fn g(z R) R :
+have fn g(z R) R by cases:
     case z = 2: 3
     case z != 2: 4
 
@@ -1109,7 +1103,7 @@ forall z R:
 
 ---
 
-### Function from unique existence (`have fn … by forall … exist!`)
+### Function from unique existence (`have fn ... as set: forall ... exist!`)
 
 Use this when mathematics tells you that for every input there exists a **unique** output. Litex then introduces the corresponding function.
 
@@ -1124,10 +1118,11 @@ know forall x A:
     =>:
         exist! y B st {$F(x, y)}
 
-have fn f by forall x A:
-    $p(x)
-    =>:
-        exist! y B st {$F(x, y)}
+have fn f as set:
+    forall x A:
+        $p(x)
+        =>:
+            exist! y B st {$F(x, y)}
 
 forall x A:
     $p(x)
@@ -1141,24 +1136,18 @@ forall x A:
 
 ---
 
-### Function by induction on a parameter (`have fn by induc`)
+### Recursive function by decreasing measure (`have fn ... by decreasing`)
 
-Use **`have fn by induc`** to define a function on an inductive domain, such as nonnegative integers. Base cases and the recursive step are written as `case` branches.
+Use **`have fn ... by decreasing ... from ...`** to define a recursive function whose calls are justified by a decreasing measure. The function signature gives the parameters, domain facts, and return set; the `by decreasing` clause gives a measure and a lower bound.
 
-The intended meaning is close to strong induction for defining a function. The first `case` lines give the starting values. The final `case x >= ...:` is the recursive step: when defining `h(x)`, the right-hand side may use values of the same function that are already defined, from the starting value up to `x - 1`. It may not use `h(x)` itself or any later value such as `h(x + 1)`.
+When defining `h(args)`, a recursive call `h(args')` is allowed only if Litex can verify that `args'` satisfies the function domain, that the measure at `args'` is strictly smaller than the current measure, and that the measure remains above the lower bound.
 
-If the final recursive step has nested `case` branches, those branches should cover all possible situations for the current `x`. They should also behave like a real case split: overlapping branches must not give conflicting values. If two branches can both apply, their right-hand sides should be provably equal under the overlap.
+Every case list must cover all possibilities in its current context, and cases must be mutually exclusive. Nested case lists are checked under their parent case assumptions.
 
 ```litex
-know forall x Z:
-    x % 2 = 0 or x % 2 = 1
-
-have fn by induc from 0: h(x Z: x >= 0) R:
-    case x = 0: 1
-    case x = 1: 1
-    case x >= 2:
-        case x % 2 = 0: h(0) + h(x - 1)
-        case x % 2 = 1: h(x - 2) + h(x - 1)
+have fn h(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+    case b = 0: a
+    case b > 0: h(a, b - 1) + 1
 ```
 
 
@@ -1207,7 +1196,7 @@ An `algo` is not the same as a function in a programming language such as Python
 `algo` also does not compute by floating-point approximation. It works with exact symbolic arithmetic, so the current evaluator only supports operations such as `+`, `-`, `*`, and integer powers.
 
 ```litex
-have fn m(x N_pos) R:
+have fn m(x N_pos) R by cases:
     case x = 1: 1
     case x != 1: 0
 
@@ -1403,7 +1392,7 @@ $is_nonempty_set({1, 2, 3})
 Splits a goal along a finite disjunction; each **`case`** branch finishes the goal under that assumption.
 
 ```litex
-have fn k(z R) R :
+have fn k(z R) R by cases:
     case z = 2: 3
     case z != 2: 4
 
@@ -1493,7 +1482,7 @@ by enumerate finite_set forall! a2 {1, 2, 3} => {a2 < 4}:
 
 ### Induction (`by induc`, `by strong_induc`)
 
-**`by induc n from base:`** proves **`P(n)`** for a discrete parameter from a base and step known (or proved) in the environment.
+**`by induc n from base:`** proves **`P(n)`** for a discrete parameter from a base and step known (or proved) in the environment. The structured form separates the base proof from the induction-step proof.
 
 ```litex
 abstract_prop r0(a)
@@ -1510,13 +1499,21 @@ by induc n from 0:
     prove:
         $r0(n)
 
+    prove from n = 0:
+        $r0(0)
+
+    prove induc:
+        $r0(n + 1)
+
 forall m Z:
     m >= 0
     =>:
         $r0(m)
 ```
 
-**`by strong_induc n from base:`** proves the same kind of target, but its step may use the stronger hypothesis that the target holds for every value from `base` through `n`.
+Inside `prove from n = base:`, Litex declares `n $in Z`, assumes `n = base`, and checks the base goal. Inside `prove induc:`, Litex declares `n $in Z`, assumes `n >= base` and `P(n)`, and checks `P(n + 1)`.
+
+**`by strong_induc n from base:`** proves the same kind of target, but its step may use the stronger hypothesis that the target holds for every value from `base` through `n`. Its structured step block is named `prove strong_induc:`.
 
 ```litex
 abstract_prop r1(a)
@@ -1537,11 +1534,19 @@ by strong_induc n from 0:
     prove:
         $r1(n)
 
+    prove from n = 0:
+        $r1(0)
+
+    prove strong_induc:
+        $r1(n + 1)
+
 forall m Z:
     m >= 0
     =>:
         $r1(m)
 ```
+
+Inside `prove strong_induc:`, Litex declares `n $in Z`, assumes `n >= base`, and for each target goal assumes a `forall y Z` induction hypothesis covering `base <= y <= n`. It then checks the target at `n + 1`.
 
 > Hint: Many `by ...` statements expose information in the shape the checker needs. For example, `by cases` works with an `or` fact, `by contra` works with negation, and `by induc` / `by strong_induc` work with inductive or universal patterns over a discrete domain. Other `by ...` statements are tied to object structures: `by for` works with bounded ranges and with a single tuple parameter over `cart({...}, {...}, ...)` (list-set factors), `by enumerate` works with finite list-set parameters, and `by extension` works with set equality.
 
@@ -1577,6 +1582,24 @@ by for forall! i range(0, 10) => {i < 10}:
 
 Proves **`A = B`** by mutual inclusion, often with **`by enumerate finite_set`** on each side.
 
+Shorthand: put the equality on the header line — **`by extension A = B:`** — and use the body only for proof steps (no **`prove:`** wrapper).
+
+```litex
+by extension {1, 2} = {2, 1}:
+    by enumerate finite_set:
+        prove:
+            forall x {1, 2}:
+                x $in {2, 1}
+    by enumerate finite_set:
+        prove:
+            forall y {2, 1}:
+                y $in {1, 2}
+
+{1, 2} = {2, 1}
+```
+
+Long form (still supported):
+
 ```litex
 by extension:
     prove:
@@ -1596,9 +1619,31 @@ by extension:
 
 ---
 
+### Register a reflexive predicate (`by reflexive_prop`)
+
+Use **`by reflexive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is reflexive. The `prove:` block must contain exactly this shape: one `set` parameter and one conclusion `$p(x, x)`.
+
+After the proof succeeds, Litex records that predicate as reflexive in the current environment. Later, if a positive goal `$p(a, a)` is still unproved after the usual steps, Litex can close it from the reflexive registration.
+
+```litex
+prop same_obj(x set, y set):
+    x = y
+
+by reflexive_prop:
+    prove:
+        forall x set:
+            $same_obj(x, x)
+    x = x
+
+have a set
+$same_obj(a, a)
+```
+
+---
+
 ### Register a transitive predicate (`by transitive_prop`)
 
-Use **`by transitive_prop:`** to prove that a binary `abstract_prop` is transitive. The `prove:` block must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
+Use **`by transitive_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is transitive. The `prove:` block must contain exactly this shape: three `set` parameters, two domain facts `$p(x, y)` and `$p(y, z)`, and one conclusion `$p(x, z)`.
 
 After the proof succeeds, Litex records that predicate as transitive in the current environment. Later, when Litex stores a chain whose links all use the same predicate, such as `a $p b $p c`, it looks through the current environment stack for that transitive registration and stores `$p(a, c)` automatically.
 
@@ -1626,18 +1671,18 @@ For a longer same-predicate chain, Litex stores all non-adjacent consequences, s
 
 ---
 
-### Register a commutative predicate (`by commutative_prop`)
+### Register a symmetric predicate (`by symmetric_prop`)
 
-Use **`by commutative_prop:`** to prove that an `abstract_prop` is **commutative in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
+Use **`by symmetric_prop:`** to prove that a user-defined `prop` or `abstract_prop` is **symmetric in the sense you state**: the `prove:` block is a single `forall` with at least two `set` parameters, one domain fact and one conclusion, both **positive** instances of the same predicate. Each argument in the domain and conclusion must be a `forall` parameter, and **each parameter must appear exactly once** in the domain fact and exactly once in the conclusion (so both rows are permutations of the parameter list). The conclusion must use a **different order** than the domain (the identity case is rejected).
 
 After the proof succeeds, Litex records a **gather permutation** derived from the domain and conclusion: for argument slots `k = 0 … n-1` of the conclusion, slot `k` is filled from domain slot `gather[k]`. The same rule is used at verification time on concrete atoms: if goal `$p(o_0,…,o_{n-1})` is still unknown after the usual steps, Litex tries the reordered atom `$p(o_{g_0},…,o_{g_{n-1}})` (with post-processing disabled for that retry) for each stored gather. If any try succeeds, the original goal is accepted. Multiple registrations for the same predicate name append **additional** permutations (arity must stay consistent). Only normal **positive** `$p(...)` atoms participate, not `$not $p(...)` forms.
 
-See `examples/by_commutative_prop.lit` (binary) and `examples/tmp.lit` (four arguments).
+See `examples/by_symmetric_reflexive_antisymmetric_prop.lit`.
 
 ```litex
 abstract_prop p(x, y)
 
-by commutative_prop:
+by symmetric_prop:
     prove:
         forall x, y set:
             $p(x, y)
@@ -1655,9 +1700,36 @@ claim:
 
 ---
 
+### Register an antisymmetric predicate (`by antisymmetric_prop`)
+
+Use **`by antisymmetric_prop:`** to prove that a binary user-defined `prop` or `abstract_prop` is antisymmetric. The `prove:` block must contain exactly this shape: two `set` parameters, two domain facts `$p(x, y)` and `$p(y, x)`, and one equality conclusion `x = y`.
+
+After the proof succeeds, Litex records that predicate as antisymmetric in the current environment. Later, if an equality goal `a = b` is still unproved after the usual equality rules, Litex can close it from the two verified facts `$p(a, b)` and `$p(b, a)`.
+
+```litex
+abstract_prop p(x, y)
+
+by antisymmetric_prop:
+    prove:
+        forall x, y set:
+            $p(x, y)
+            $p(y, x)
+            =>:
+                x = y
+    know x = y
+
+have a, b set
+know $p(a, b)
+know $p(b, a)
+a = b
+```
+
+---
+
 ### Closed range as cases (`by closed_range as cases`)
 
 For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
+For a one-point range, it records the single equality directly instead of a one-branch `or`.
 
 ```litex
 have x closed_range(0, 10)
@@ -1702,9 +1774,9 @@ The sections above explain the common use cases. This table is a quick map of th
 | `have x S = expr` | Introduce a named value |
 | `have by exist` | Name witnesses from a known existential fact |
 | `have fn ... = ...` | Define a function by one formula |
-| `have fn ... : case ...` | Define a function by cases |
-| `have fn ... by forall ... exist!` | Define a function from unique existence |
-| `have fn by induc` | Define a recursive function by induction |
+| `have fn ... by cases` | Define a function by cases |
+| `have fn ... as set: forall ... exist!` | Define a function from unique existence |
+| `have fn ... by decreasing` | Define a recursive function by decreasing measure |
 | `let` | Introduce local names and local assumptions |
 | `family` | Define a parameterized set or function space |
 | `algo` / `eval` | Define and run executable mathematical algorithms |
@@ -1723,8 +1795,10 @@ The sections above explain the common use cases. This table is a quick map of th
 | `by induc` / `by strong_induc` | Prove a statement by ordinary or strong induction |
 | `by for` | Run a bounded proof skeleton |
 | `by extension` | Prove set equality by mutual membership |
-| `by transitive_prop` | Register a binary abstract predicate as transitive |
-| `by commutative_prop` | Register argument permutations for an `abstract_prop`; verification may try reordered positive instances |
+| `by reflexive_prop` | Register a binary user-defined predicate as reflexive |
+| `by transitive_prop` | Register a binary user-defined predicate as transitive |
+| `by symmetric_prop` | Register argument permutations for a user-defined predicate; verification may try reordered positive instances |
+| `by antisymmetric_prop` | Register a binary user-defined predicate as antisymmetric |
 | `by fn as set` / `by fn set as set` / `by family as set` / `by tuple as set` | Expose the set-theoretic meaning behind function, family, and tuple objects |
 
 > Hint: when learning Litex, start with `have`, `know`, bare facts, `claim`, and `by cases`. The other statements become useful when your proofs need definitions, functions, induction, or finite enumeration.
@@ -1736,6 +1810,10 @@ The sections above explain the common use cases. This table is a quick map of th
 _Beware of bugs in the above code; I have only proved it correct, not tried it._
 
 _- Donald Knuth_
+
+_A mathematician, like a painter or a poet, is a maker of patterns._
+
+_– G. H. Hardy, *A Mathematician's Apology*_
 
 A Litex proof is built from facts you claim one after another. After a fact is proved, it becomes known information for proving the next facts.
 
@@ -2215,15 +2293,20 @@ x = 0 or x > 0
 
 {
   "result": "success",
-  "type": "Fact",
+  "type": "OrFact",
   "line": 5,
   "stmt": "x = 0 or x > 0",
-  "verified_by":   {
-    "type": "known_fact",
-    "line": 2,
-    "source": "entry",
-    "cited_fact": "a = 0 or a > 0"
-  },
+  "verified_by": [
+    {
+      "type": "cite or fact",
+      "cite_source": {
+        "line": 2,
+        "source": "entry"
+      },
+      "cited_stmt": "a = 0 or a > 0",
+      "verify_what": "x = 0 or x > 0"
+    }
+  ],
   "infer_facts": [],
   "inside_results": []
 }
@@ -2401,6 +2484,20 @@ forall x R:
     =>:
         x = 0
 ```
+
+#### Equality From Two-Sided Weak Order
+
+Litex can prove equality from the antisymmetry of the standard weak order.
+
+```litex
+forall a, b R:
+    a >= b
+    b >= a
+    =>:
+        a = b
+```
+
+The same rule also applies when the two comparisons are written with `<=` in the opposite direction.
 
 #### Powers
 
@@ -2707,13 +2804,47 @@ forall a, b R:
         a^3 <= b^3
 ```
 
-Positive integer powers also preserve strict order on nonnegative bases.
+Positive integer powers preserve order on nonnegative bases. The exponent can be a literal
+positive integer or any object verified in `N_pos`.
 
 ```litex
 forall a, b R:
     0 <= a < b
     =>:
         a^2 < b^2
+```
+
+```litex
+forall a, b R, m N_pos:
+    0 <= a
+    0 <= b
+    a <= b
+    =>:
+        a^m <= b^m
+```
+
+The weak order is also reflected by positive integer powers on nonnegative bases.
+
+```litex
+forall a, b R, m N_pos:
+    0 <= a
+    0 <= b
+    a^m <= b^m
+    =>:
+        a <= b
+```
+
+So Litex can check the reversible form directly.
+
+```litex
+know:
+    forall a, b R, m N_pos:
+        0 <= a
+        0 <= b
+        =>:
+            a^m <= b^m
+        <=>:
+            a <= b
 ```
 
 If at least one component is nonzero, a sum of two squares is nonzero.
@@ -2867,6 +2998,22 @@ Concrete literals and many arithmetic combinations of literals can be checked ag
 1 + 1 $in N
 ```
 
+If an object is already known to be an integer, nonnegativity proves natural-number membership. Strict positivity is also enough.
+
+```litex
+forall b Z:
+    b >= 0
+    =>:
+        b $in N
+```
+
+```litex
+forall b Z:
+    b > 0
+    =>:
+        b $in N
+```
+
 Negated membership in a standard set can close for concrete numeric values.
 
 ```litex
@@ -2914,7 +3061,7 @@ Type predicates recognize standard object shapes.
 $is_set({1, 2})
 ```
 
-Nonempty enumerated sets, standard sets such as `R`, integer closed ranges with valid endpoints, Cartesian products with nonempty factors, nonempty function spaces, and similar shapes can be recognized as nonempty.
+Nonempty enumerated sets, standard sets such as `R`, power sets, integer closed ranges with valid endpoints, Cartesian products with nonempty factors, nonempty function spaces, and similar shapes can be recognized as nonempty.
 
 ```litex
 $is_nonempty_set({1})
@@ -2928,6 +3075,12 @@ prove:
 ```litex
 prove:
     $is_nonempty_set(cart(R_pos, R_pos))
+```
+
+Power sets are always nonempty because they contain the empty set.
+
+```litex
+$is_nonempty_set(power_set(Z))
 ```
 
 An empty enumeration proves negated non-emptiness.
@@ -3252,6 +3405,7 @@ inferred:
 #### Ranges
 
 Membership in a half-open integer range gives integer membership and two-sided bounds.
+If the range contains exactly one integer, inference also records the corresponding equality.
 
 ```text
 known:
@@ -3263,7 +3417,16 @@ inferred:
     i < 6
 ```
 
+```text
+known:
+    i $in range(1, 2)
+
+inferred:
+    i = 1
+```
+
 Membership in a closed range gives closed bounds.
+If the closed range contains exactly one integer, inference also records the corresponding equality.
 
 ```text
 known:
@@ -3273,6 +3436,14 @@ inferred:
     i $in Z
     1 <= i
     i <= 3
+```
+
+```text
+known:
+    i $in closed_range(1, 1)
+
+inferred:
+    i = 1
 ```
 
 #### Set Comprehensions
@@ -3288,9 +3459,25 @@ inferred:
     0 <= x
 ```
 
+If an object is already known to equal a set comprehension, membership in that
+object is unfolded in the same way. For example, after `S = { y R: 0 <= y }`,
+knowing `x $in S` also infers `x $in R` and `0 <= x`.
+
 #### Function-Like Sets And Families
 
 Membership in `fn(...)` records function-space information for suitable function heads, usually names or language-level function objects rather than arbitrary complex expressions. Later goals can use the expected domain and codomain.
+
+If an applied function has return set `cart(A_1, ..., A_n)`, tuple projection can use that return set directly. Litex treats `f(args)` as a tuple of dimension `n` and records `f(args)[i] $in A_i`.
+
+```text
+known:
+    pair_value $in fn(x Z) cart(Z, Z)
+
+inferred for pair_value(0):
+    $is_tuple(pair_value(0))
+    pair_value(0)[1] $in Z
+    pair_value(0)[2] $in Z
+```
 
 Membership in `finite_seq(...)`, `seq(...)`, and `matrix(...)` is handled similarly because these objects are read as function-like types.
 
@@ -3438,7 +3625,7 @@ flowchart TD
     checkAssumptions -->|"assumptions hold"| forallSuccess
     checkAssumptions -->|"missing assumption"| postProcess
 
-    postProcess -->|"transitive or commutative registration applies"| postProcessSuccess
+    postProcess -->|"registered relation property applies"| postProcessSuccess
     postProcess -->|"not enough"| unknownResult
 
     builtinSuccess --> storeFact
@@ -3448,4 +3635,4 @@ flowchart TD
     storeFact --> inferMore
 ```
 
-If one route works, the fact becomes part of the context. Predicate post-processing covers special properties the user has registered, such as a transitive or commutative `abstract_prop`. If none works, `unknown` usually means the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, or a lemma that makes the goal easier to match.
+If one route works, the fact becomes part of the context. Predicate post-processing covers special properties the user has registered, such as a reflexive, transitive, symmetric, or antisymmetric user-defined prop. If none works, `unknown` usually means the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, or a lemma that makes the goal easier to match.

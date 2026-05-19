@@ -3,6 +3,48 @@ use std::collections::HashSet;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 impl Runtime {
+    fn generated_name_is_used_in_known_forall_facts(&self, candidate_name: &str) -> bool {
+        for env in self.iter_environments_from_top() {
+            for facts in env.known_atomic_facts_in_forall_facts.values() {
+                for (_, known_forall) in facts {
+                    if known_forall
+                        .params_def
+                        .collect_param_names()
+                        .iter()
+                        .any(|name| name == candidate_name)
+                    {
+                        return true;
+                    }
+                }
+            }
+            for facts in env.known_exist_facts_in_forall_facts.values() {
+                for (_, known_forall) in facts {
+                    if known_forall
+                        .params_def
+                        .collect_param_names()
+                        .iter()
+                        .any(|name| name == candidate_name)
+                    {
+                        return true;
+                    }
+                }
+            }
+            for facts in env.known_or_facts_in_forall_facts.values() {
+                for (_, known_forall) in facts {
+                    if known_forall
+                        .params_def
+                        .collect_param_names()
+                        .iter()
+                        .any(|name| name == candidate_name)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
     fn generated_name_is_available_with_reserved(
         &self,
         candidate_name: &str,
@@ -12,6 +54,12 @@ impl Runtime {
             return false;
         }
         if reserved_names.contains(candidate_name) {
+            return false;
+        }
+        if self.is_name_used_for_identifier(candidate_name) {
+            return false;
+        }
+        if self.generated_name_is_used_in_known_forall_facts(candidate_name) {
             return false;
         }
         true

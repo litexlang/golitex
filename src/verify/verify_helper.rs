@@ -29,9 +29,7 @@ impl Runtime {
             return Ok(());
         }
         match param_type {
-            ParamType::Set(_)
-            | ParamType::NonemptySet(_)
-            | ParamType::FiniteSet(_) => Ok(()),
+            ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(param_set) => match param_set {
                 Obj::FnSet(fn_set) => {
                     let ret_nonempty = IsNonemptySetFact::new(
@@ -57,17 +55,17 @@ impl Runtime {
                     )?;
                     Ok(())
                 }
-                Obj::SetBuilder(_) => Err(RuntimeError::ExecStmtError(RuntimeErrorStruct::new_with_just_msg("set builder param type is not supported yet in verify_param_type_nonempty_if_required"
-                        .to_string()))),
                 _ => {
                     let nonempty_fact =
                         IsNonemptySetFact::new(param_set.clone(), default_line_file());
-                    let ret=  self.verify_fact(
-                        &nonempty_fact.into(),
-                        &VerifyState::new(0, false),
-                    )?;
+                    let ret =
+                        self.verify_fact(&nonempty_fact.into(), &VerifyState::new(0, false))?;
                     if ret.is_unknown() {
-                        return Err(RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg("param type is not nonempty".to_string()))));
+                        return Err(RuntimeError::from(VerifyRuntimeError(
+                            RuntimeErrorStruct::new_with_just_msg(
+                                "param type is not nonempty".to_string(),
+                            ),
+                        )));
                     }
                     Ok(())
                 }
