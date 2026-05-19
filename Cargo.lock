@@ -4,4 +4,4 @@ version = 3
 
 [[package]]
 name = "litex-lang"
-version = "0.9.81-beta"
+version = "0.9.82-beta"
