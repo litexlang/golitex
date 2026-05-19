@@ -125,6 +125,16 @@ know:
         =>:
             a % m = 0
 
+    forall a Z, m N_pos:
+        a % m = 0
+        =>:
+            exist r Z st {a = m * r}
+
+    forall a Z, m N_pos:
+        a % m = 0
+        =>:
+            exist r Z st {a = r * m}
+
     forall a Z, m N_pos, k N:
         k < m
         exist r Z st {a = r * m + k}
@@ -151,6 +161,16 @@ know:
         exist r N st {a = r * m}
         =>:
             a % m = 0
+
+    forall a N, m N_pos:
+        a % m = 0
+        =>:
+            exist r N st {a = m * r}
+
+    forall a N, m N_pos:
+        a % m = 0
+        =>:
+            exist r N st {a = r * m}
 
     forall a N, m N_pos, k N:
         k < m

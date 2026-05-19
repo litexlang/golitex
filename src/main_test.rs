@@ -255,7 +255,7 @@ mod lit_file_runner_tests {
     }
 
     #[test]
-    fn run_tmp() {
+    fn run_tmp0() {
         run_tmp_lit_file("tmp.lit");
     }
 
