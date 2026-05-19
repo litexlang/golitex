@@ -1,0 +1,68 @@
+run_file "./euclid_algorithm.lit"
+
+prop divides(d Z, n Z):
+    exist k Z st {n = d * k}
+
+prop prime(p N_pos):
+    2 <= p
+    forall d Z:
+        1 <= d
+        $divides(d, p)
+        =>:
+            d = 1 or d = p
+
+# Chapter 6 gcd facts used to pass from the integer gcd to Euclid's lemma.
+know:
+    forall a N, p N_pos:
+        $prime(p)
+        =>:
+            1 <= gcd(a, p)
+
+    forall a N, p N_pos:
+        $divides(gcd(a, p), a)
+
+    forall a N, p N_pos:
+        $divides(gcd(a, p), p)
+
+claim:
+    prove:
+        forall d, a, b Z:
+            $divides(d, a * b)
+            gcd(a, d) = 1
+            =>:
+                $divides(d, b)
+
+    have by exist z Z st {a * b = d * z}: z
+    egcd_l(a, d) * a + egcd_r(a, d) * d = gcd(a, d)
+    witness exist k Z st {b = d * k} from egcd_l(a, d) * z + b * egcd_r(a, d):
+        b = b * 1 = b * gcd(a, d) = b * (egcd_l(a, d) * a + egcd_r(a, d) * d) = egcd_l(a, d) * (a * b) + b * egcd_r(a, d) * d = egcd_l(a, d) * (d * z) + b * egcd_r(a, d) * d = d * (egcd_l(a, d) * z + b * egcd_r(a, d))
+
+claim:
+    prove:
+        forall a, b N, p N_pos:
+            $prime(p)
+            $divides(p, a * b)
+            =>:
+                $divides(p, a) or $divides(p, b)
+
+    a $in Z
+    b $in Z
+    p $in Z
+    1 <= gcd(a, p)
+    $divides(gcd(a, p), p)
+    gcd(a, p) = 1 or gcd(a, p) = p
+    by cases:
+        prove:
+            $divides(p, a) or $divides(p, b)
+        case gcd(a, p) = 1:
+            have by exist z Z st {a * b = p * z}: z
+            egcd_l(a, p) * a + egcd_r(a, p) * p = gcd(a, p)
+            witness exist k Z st {b = p * k} from egcd_l(a, p) * z + b * egcd_r(a, p):
+                b = b * 1 = b * gcd(a, p) = b * (egcd_l(a, p) * a + egcd_r(a, p) * p) = egcd_l(a, p) * (a * b) + b * egcd_r(a, p) * p = egcd_l(a, p) * (p * z) + b * egcd_r(a, p) * p = p * (egcd_l(a, p) * z + b * egcd_r(a, p))
+            $divides(p, a) or $divides(p, b)
+        case gcd(a, p) = p:
+            $divides(gcd(a, p), a)
+            have by exist q Z st {a = gcd(a, p) * q}: q
+            witness exist k Z st {a = p * k} from q:
+                a = gcd(a, p) * q = p * q
+            $divides(p, a) or $divides(p, b)
