@@ -172,4 +172,11 @@ know:
         =>:
             b <= a
 
+    forall a Q:
+        exist p Z, q N_pos st {a = p / q}
+
+    forall a Q:
+        a >= 0
+        =>:
+            exist p N, q N_pos st {a = p / q}
 "#;

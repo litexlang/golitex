@@ -744,18 +744,48 @@ impl Runtime {
         infer_result.push_atomic_fact(&inferred_in_z_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_z_fact.clone())?;
 
-        let lower_bound = LessEqualFact::new(start, element.clone(), lf.clone()).into();
+        let lower_bound = LessEqualFact::new(start.clone(), element.clone(), lf.clone()).into();
         infer_result.push_atomic_fact(&lower_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound.clone())?;
 
         let upper_bound = if end_inclusive {
-            LessEqualFact::new(element, end, lf.clone()).into()
+            LessEqualFact::new(element.clone(), end.clone(), lf.clone()).into()
         } else {
-            LessFact::new(element, end, lf.clone()).into()
+            LessFact::new(element.clone(), end.clone(), lf.clone()).into()
         };
         infer_result.push_atomic_fact(&upper_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer(upper_bound.clone())?;
 
+        if let Some(singleton) =
+            self.singleton_value_for_integer_interval(&start, &end, end_inclusive)
+        {
+            let equal_fact = EqualFact::new(element, singleton, lf).into();
+            infer_result.push_atomic_fact(&equal_fact);
+            self.store_atomic_fact_without_well_defined_verified_and_infer(equal_fact)?;
+        }
+
         Ok(infer_result)
+    }
+
+    // Singleton integer intervals force the element's value.
+    // Example: `x $in range(1, 2)` or `x $in closed_range(1, 1)` infers `x = 1`.
+    fn singleton_value_for_integer_interval(
+        &self,
+        start: &Obj,
+        end: &Obj,
+        end_inclusive: bool,
+    ) -> Option<Obj> {
+        let start_number = self.resolve_obj_to_number(start)?;
+        let end_number = self.resolve_obj_to_number(end)?;
+        let start_i = start_number.normalized_value.parse::<i128>().ok()?;
+        let end_i = end_number.normalized_value.parse::<i128>().ok()?;
+        if end_inclusive {
+            if start_i == end_i {
+                return Some(Number::new(start_i.to_string()).into());
+            }
+        } else if start_i.checked_add(1) == Some(end_i) {
+            return Some(Number::new(start_i.to_string()).into());
+        }
+        None
     }
 }

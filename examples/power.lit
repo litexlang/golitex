@@ -17,3 +17,26 @@ forall a R_pos, m R:
 forall a R_nz, m Z:
     a * a^m = a^(m + 1)
     a^m * a = a^(m + 1)
+
+forall x, y R, m N_pos:
+    x >= 0
+    y >= 0
+    x <= y
+    =>:
+        x^m <= y^m
+
+forall x, y R, m N_pos:
+    x >= 0
+    y >= 0
+    x^m <= y^m
+    =>:
+        x <= y
+
+know:
+    forall x, y R, m N_pos:
+        x >= 0
+        y >= 0
+        =>:
+            x^m <= y^m
+        <=>:
+            x <= y

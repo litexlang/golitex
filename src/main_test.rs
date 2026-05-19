@@ -200,15 +200,15 @@ mod lit_file_runner_tests {
         }
     }
 
-    #[test]
-    fn run_tmp() {
+    fn run_tmp_lit_file(file_name: &str) {
         let tmp_lit_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("examples")
-            .join("tmp.lit");
+            .join(file_name);
 
         assert!(
             tmp_lit_path.is_file(),
-            "examples/tmp.lit must exist at {:?}",
+            "examples/{} must exist at {:?}",
+            file_name,
             tmp_lit_path
         );
 
@@ -217,7 +217,7 @@ mod lit_file_runner_tests {
             Err(read_error) => panic!("failed to read {:?}: {}", tmp_lit_path, read_error),
         };
         if tmp_lit_content.trim().is_empty() {
-            println!("examples/tmp.lit is empty; skip run_tmp");
+            println!("examples/{} is empty; skip run", file_name);
             return;
         }
 
@@ -249,9 +249,24 @@ mod lit_file_runner_tests {
         };
         assert!(
             run_succeeded,
-            "examples/tmp.lit failed.\n\n>>> Litex error JSON:\n{}\n\n=== [{}] {:?} ({:.2} ms user file only) ===",
-            error_json, path_str, status_label, duration_ms
+            "examples/{} failed.\n\n>>> Litex error JSON:\n{}\n\n=== [{}] {:?} ({:.2} ms user file only) ===",
+            file_name, error_json, path_str, status_label, duration_ms
         );
+    }
+
+    #[test]
+    fn run_tmp() {
+        run_tmp_lit_file("tmp.lit");
+    }
+
+    #[test]
+    fn run_tmp2() {
+        run_tmp_lit_file("tmp2.lit");
+    }
+
+    #[test]
+    fn run_tmp3() {
+        run_tmp_lit_file("tmp3.lit");
     }
 
     #[test]
