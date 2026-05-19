@@ -1729,6 +1729,7 @@ a = b
 ### Closed range as cases (`by closed_range as cases`)
 
 For **`x`** known to lie in **`closed_range(lo, hi)`**, **`by closed_range as cases: x $in lo...hi`** expands the membership into finite equality cases such as `x = lo or x = lo + 1 or ... or x = hi`.
+For a one-point range, it records the single equality directly instead of a one-branch `or`.
 
 ```litex
 have x closed_range(0, 10)
@@ -2803,13 +2804,47 @@ forall a, b R:
         a^3 <= b^3
 ```
 
-Positive integer powers also preserve strict order on nonnegative bases.
+Positive integer powers preserve order on nonnegative bases. The exponent can be a literal
+positive integer or any object verified in `N_pos`.
 
 ```litex
 forall a, b R:
     0 <= a < b
     =>:
         a^2 < b^2
+```
+
+```litex
+forall a, b R, m N_pos:
+    0 <= a
+    0 <= b
+    a <= b
+    =>:
+        a^m <= b^m
+```
+
+The weak order is also reflected by positive integer powers on nonnegative bases.
+
+```litex
+forall a, b R, m N_pos:
+    0 <= a
+    0 <= b
+    a^m <= b^m
+    =>:
+        a <= b
+```
+
+So Litex can check the reversible form directly.
+
+```litex
+know:
+    forall a, b R, m N_pos:
+        0 <= a
+        0 <= b
+        =>:
+            a^m <= b^m
+        <=>:
+            a <= b
 ```
 
 If at least one component is nonzero, a sum of two squares is nonzero.
@@ -2961,6 +2996,22 @@ Concrete literals and many arithmetic combinations of literals can be checked ag
 
 ```litex
 1 + 1 $in N
+```
+
+If an object is already known to be an integer, nonnegativity proves natural-number membership. Strict positivity is also enough.
+
+```litex
+forall b Z:
+    b >= 0
+    =>:
+        b $in N
+```
+
+```litex
+forall b Z:
+    b > 0
+    =>:
+        b $in N
 ```
 
 Negated membership in a standard set can close for concrete numeric values.
@@ -3354,6 +3405,7 @@ inferred:
 #### Ranges
 
 Membership in a half-open integer range gives integer membership and two-sided bounds.
+If the range contains exactly one integer, inference also records the corresponding equality.
 
 ```text
 known:
@@ -3365,7 +3417,16 @@ inferred:
     i < 6
 ```
 
+```text
+known:
+    i $in range(1, 2)
+
+inferred:
+    i = 1
+```
+
 Membership in a closed range gives closed bounds.
+If the closed range contains exactly one integer, inference also records the corresponding equality.
 
 ```text
 known:
@@ -3375,6 +3436,14 @@ inferred:
     i $in Z
     1 <= i
     i <= 3
+```
+
+```text
+known:
+    i $in closed_range(1, 1)
+
+inferred:
+    i = 1
 ```
 
 #### Set Comprehensions

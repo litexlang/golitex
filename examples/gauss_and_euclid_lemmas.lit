@@ -1,5 +1,3 @@
-run_file "./euclid_algorithm.lit"
-
 prop divides(d Z, n Z):
     exist k Z st {n = d * k}
 
@@ -11,8 +9,38 @@ prop prime(p N_pos):
         =>:
             d = 1 or d = p
 
-# Chapter 6 gcd facts used to pass from the integer gcd to Euclid's lemma.
+abstract_prop gcd_value(a, b, g)
+abstract_prop egcd_l_value(a, b, l)
+abstract_prop egcd_r_value(a, b, r)
+
+# Chapter 6 constructs these functions by Euclid's algorithm.
 know:
+    forall a, b Z:
+        exist! g Z st {$gcd_value(a, b, g)}
+
+    forall a, b Z:
+        exist! l Z st {$egcd_l_value(a, b, l)}
+
+    forall a, b Z:
+        exist! r Z st {$egcd_r_value(a, b, r)}
+
+have fn gcd as set:
+    forall a, b Z:
+        exist! g Z st {$gcd_value(a, b, g)}
+
+have fn egcd_l as set:
+    forall a, b Z:
+        exist! l Z st {$egcd_l_value(a, b, l)}
+
+have fn egcd_r as set:
+    forall a, b Z:
+        exist! r Z st {$egcd_r_value(a, b, r)}
+
+# Chapter 6 gcd facts used by Gauss and Euclid's lemma.
+know:
+    forall a, b Z:
+        egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+
     forall a N, p N_pos:
         $prime(p)
         =>:
@@ -66,3 +94,108 @@ claim:
             witness exist k Z st {a = p * k} from q:
                 a = gcd(a, p) * q = p * q
             $divides(p, a) or $divides(p, b)
+
+prop natural_power_in_n(k Z):
+    forall a N:
+        k >= 1
+        =>:
+            a ^ k $in N
+
+by induc k from 1:
+    prove:
+        $natural_power_in_n(k)
+
+    prove from k = 1:
+        claim:
+            prove:
+                forall a N:
+                    k >= 1
+                    =>:
+                        a ^ k $in N
+
+            a ^ k = a ^ 1 = a
+            a ^ k $in N
+
+        $natural_power_in_n(k)
+
+    prove induc:
+        claim:
+            prove:
+                forall a N:
+                    k + 1 >= 1
+                    =>:
+                        a ^ (k + 1) $in N
+
+            k $in N_pos
+            a ^ k $in N
+            a ^ (k + 1) = a ^ k * a
+            a ^ k * a $in N
+            a ^ (k + 1) $in N
+
+        $natural_power_in_n(k + 1)
+
+prop euclid_lemma_pow_at(k Z):
+    forall a N, p N_pos:
+        k >= 1
+        $prime(p)
+        $divides(p, a ^ k)
+        =>:
+            $divides(p, a)
+
+by induc k from 1:
+    prove:
+        $euclid_lemma_pow_at(k)
+
+    prove from k = 1:
+        claim:
+            prove:
+                forall a N, p N_pos:
+                    k >= 1
+                    $prime(p)
+                    $divides(p, a ^ k)
+                    =>:
+                        $divides(p, a)
+
+            a ^ k = a ^ 1 = a
+            $divides(p, a)
+
+        $euclid_lemma_pow_at(k)
+
+    prove induc:
+        claim:
+            prove:
+                forall a N, p N_pos:
+                    k + 1 >= 1
+                    $prime(p)
+                    $divides(p, a ^ (k + 1))
+                    =>:
+                        $divides(p, a)
+
+            k $in N_pos
+            $natural_power_in_n(k)
+            a ^ k $in N
+            a ^ (k + 1) = a ^ k * a
+            $divides(p, a ^ k * a)
+            $divides(p, a ^ k) or $divides(p, a)
+            by cases:
+                prove:
+                    $divides(p, a)
+                case $divides(p, a ^ k):
+                    $divides(p, a)
+                case $divides(p, a):
+                    $divides(p, a)
+
+        $euclid_lemma_pow_at(k + 1)
+
+claim:
+    prove:
+        forall a, k N, p N_pos:
+            1 <= k
+            $prime(p)
+            $divides(p, a ^ k)
+            =>:
+                $divides(p, a)
+
+    k $in Z
+    $euclid_lemma_pow_at(k)
+    $divides(p, a)

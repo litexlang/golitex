@@ -1,0 +1,14 @@
+have gcd fn(a, b N_pos) N_pos
+know forall a, b, c N_pos:
+    a % c = 0
+    b % c = 0
+    =>:
+        c <= gcd(a, b)
+know forall q Q:
+    q > 0
+    =>:
+        exist p, q N_pos st {q = p / q, gcd(p, q) = 1}
+
+by contra not 2^(1/2) $in Q:
+    have by exist p, q N_pos st {2^(1/2) = p / q, gcd(p, q) = 1}: p, q
+    (p/q)^2 = (2^(1/2))^2 = 2^(1/2 * 2) = 2^(1) = 2

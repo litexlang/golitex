@@ -141,6 +141,9 @@ impl Runtime {
             | (Obj::Count(count), Obj::StandardSet(StandardSet::R)) => {
                 self.verify_count_in_standard_number_set(in_fact, count, verify_state)
             }
+            (_, Obj::StandardSet(StandardSet::N)) => {
+                self.verify_in_fact_n_by_nonnegative_integer(in_fact)
+            }
             (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, verify_state)
             }
@@ -1252,6 +1255,57 @@ impl Runtime {
                 in_fact,
                 "N_pos: 0 < x and x in N",
             ));
+        }
+
+        Ok((StmtUnknown::new()).into())
+    }
+
+    // `N` = nonnegative integers: from `x $in Z` and `x >= 0`; strict `x > 0` also suffices.
+    // Example: after `b $in Z` and `b >= 0`, Litex verifies `b $in N`.
+    fn verify_in_fact_n_by_nonnegative_integer(
+        &mut self,
+        in_fact: &InFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let elem = &in_fact.element;
+        let lf = in_fact.line_file.clone();
+
+        let in_n_pos: AtomicFact =
+            InFact::new(elem.clone(), StandardSet::NPos.into(), lf.clone()).into();
+        if self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&in_n_pos)?
+            .is_true()
+        {
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "N: x in N_pos",
+            ));
+        }
+
+        let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
+        if !self
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&in_z)?
+            .is_true()
+        {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let zero: Obj = Number::new("0".to_string()).into();
+        let order_facts: [AtomicFact; 4] = [
+            GreaterEqualFact::new(elem.clone(), zero.clone(), lf.clone()).into(),
+            LessEqualFact::new(zero.clone(), elem.clone(), lf.clone()).into(),
+            GreaterFact::new(elem.clone(), zero.clone(), lf.clone()).into(),
+            LessFact::new(zero, elem.clone(), lf).into(),
+        ];
+        for order_fact in order_facts.iter() {
+            if self
+                .verify_non_equational_atomic_fact_with_known_atomic_facts(order_fact)?
+                .is_true()
+            {
+                return Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "N: x in Z and x >= 0 or x > 0",
+                ));
+            }
         }
 
         Ok((StmtUnknown::new()).into())
