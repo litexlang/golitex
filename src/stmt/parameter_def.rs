@@ -69,6 +69,10 @@ impl ParamDefWithType {
         &self,
         instantiated_types: &[ParamType],
     ) -> Vec<ParamType> {
+        if instantiated_types.len() == self.number_of_params() {
+            return instantiated_types.to_vec();
+        }
+
         let mut result = Vec::with_capacity(self.number_of_params());
         for (param_def, param_type) in self.groups.iter().zip(instantiated_types.iter()) {
             for _ in param_def.params.iter() {

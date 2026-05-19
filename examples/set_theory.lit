@@ -61,3 +61,13 @@ prove:
 
 prove:
     not $is_nonempty_set({})
+
+prove:
+    not 4 $in {1, 2, 3}
+
+prove:
+    have x Z = 4
+    x != 1
+    x != 2
+    x != 3
+    not x $in {1, 2, 3}

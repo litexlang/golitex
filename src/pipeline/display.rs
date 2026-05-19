@@ -112,6 +112,7 @@ fn verified_by_result_json_value(runtime: &Runtime, verified_by: &VerifiedByResu
     match verified_by {
         VerifiedByResult::BuiltinRule(r) => verified_by_builtin_rule_value(&r.msg, None),
         VerifiedByResult::Fact(r) => {
+            let citation_type = citation_type_for_stmt(r.cite_what.as_ref());
             let cited_stmt_plain = user_visible_stmt_or_msg_text(&r.cite_what.to_string());
             let citation_line_file = r.cite_what.line_file();
             let display_text = r
@@ -124,6 +125,7 @@ fn verified_by_result_json_value(runtime: &Runtime, verified_by: &VerifiedByResu
             verified_by_citation_object(
                 runtime,
                 &citation_line_file,
+                citation_type.as_str(),
                 cited_stmt_json,
                 cited_stmt_plain.as_str(),
                 display_text.as_str(),
@@ -145,6 +147,7 @@ fn verified_bys_enum_json_value(runtime: &Runtime, item: &VerifiedBysEnum) -> Js
             verified_by_builtin_rule_value(&r.msg, Some(&r.verify_what))
         }
         VerifiedBysEnum::ByFact(r) => {
+            let citation_type = citation_type_for_stmt(r.cite_what.as_ref());
             let cited_stmt_plain = user_visible_stmt_or_msg_text(&r.cite_what.to_string());
             let citation_line_file = r.cite_what.line_file();
             let display_text = r
@@ -156,6 +159,7 @@ fn verified_bys_enum_json_value(runtime: &Runtime, item: &VerifiedBysEnum) -> Js
             verified_by_citation_object(
                 runtime,
                 &citation_line_file,
+                citation_type.as_str(),
                 JsonValue::JsonString(cited_stmt_plain.clone()),
                 cited_stmt_plain.as_str(),
                 display_text.as_str(),
@@ -185,9 +189,62 @@ fn stmt_result_to_composite_step_verified_by(runtime: &Runtime, r: &StmtResult) 
     }
 }
 
+fn citation_type_for_stmt(stmt: &Stmt) -> String {
+    match stmt {
+        Stmt::Fact(fact) => format!("cite {}", citation_fact_type_label(fact)),
+        Stmt::DefPropStmt(_) => "cite prop def".to_string(),
+        Stmt::DefAbstractPropStmt(_) => "cite abstract prop def".to_string(),
+        Stmt::DefLetStmt(_) => "cite let def".to_string(),
+        Stmt::DefFamilyStmt(_) => "cite family def".to_string(),
+        Stmt::DefAlgoStmt(_) => "cite algo def".to_string(),
+        Stmt::DefStructStmt(_) => "cite struct def".to_string(),
+        _ => format!("cite {} stmt", stmt_type_label_for_citation(stmt)),
+    }
+}
+
+fn citation_fact_type_label(fact: &Fact) -> &'static str {
+    match fact {
+        Fact::AtomicFact(_) => "atomic fact",
+        Fact::ExistFact(_) => "exist fact",
+        Fact::OrFact(_) => "or fact",
+        Fact::AndFact(_) => "and fact",
+        Fact::ChainFact(_) => "chain fact",
+        Fact::ForallFact(_) => "forall fact",
+        Fact::ForallFactWithIff(_) => "forall iff fact",
+        Fact::NotForall(_) => "not forall fact",
+    }
+}
+
+fn stmt_type_label_for_citation(stmt: &Stmt) -> String {
+    let stmt_type_name = stmt.stmt_type_name();
+    let base_name = stmt_type_name
+        .strip_suffix("Stmt")
+        .unwrap_or(stmt_type_name.as_str());
+    lower_camel_case_words(base_name)
+}
+
+fn lower_camel_case_words(input: &str) -> String {
+    let mut out = String::new();
+    let mut prev_is_lower_or_digit = false;
+    for ch in input.chars() {
+        if ch.is_ascii_uppercase() {
+            if prev_is_lower_or_digit && !out.is_empty() {
+                out.push(' ');
+            }
+            out.push(ch.to_ascii_lowercase());
+            prev_is_lower_or_digit = false;
+        } else {
+            out.push(ch);
+            prev_is_lower_or_digit = ch.is_ascii_lowercase() || ch.is_ascii_digit();
+        }
+    }
+    out
+}
+
 fn verified_by_citation_object(
     runtime: &Runtime,
     citation_line_file: &LineFile,
+    citation_type: &str,
     cited_stmt: JsonValue,
     cited_stmt_plain: &str,
     msg: &str,
@@ -204,7 +261,7 @@ fn verified_by_citation_object(
     let mut fields = vec![
         (
             "type".to_string(),
-            JsonValue::JsonString("citation".to_string()),
+            JsonValue::JsonString(citation_type.to_string()),
         ),
         ("cite_source".to_string(), cite_source),
         ("cited_stmt".to_string(), cited_stmt),
@@ -310,7 +367,7 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
         ),
         (
             "type".to_string(),
-            JsonValue::JsonString("Fact".to_string()),
+            JsonValue::JsonString(x.stmt.fact_type_string()),
         ),
         (
             "line".to_string(),
@@ -344,7 +401,7 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
         ),
         (
             "type".to_string(),
-            JsonValue::JsonString("Fact".to_string()),
+            JsonValue::JsonString(x.stmt.fact_type_string()),
         ),
         (
             "line".to_string(),

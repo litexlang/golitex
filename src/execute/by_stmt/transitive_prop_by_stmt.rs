@@ -1,3 +1,4 @@
+use super::helpers_by_stmt::user_defined_prop_arity;
 use crate::prelude::*;
 
 impl Runtime {
@@ -11,14 +12,13 @@ impl Runtime {
             ))
         })?;
 
-        let prop_definition = self.get_abstract_prop_definition_by_name(&prop_name);
-        match prop_definition {
-            Some(definition) => {
-                if definition.params.len() != 2 {
+        match user_defined_prop_arity(self, &prop_name) {
+            Some(arity) => {
+                if arity != 2 {
                     return Err(short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by transitive_prop: `{}` must be a binary abstract_prop",
+                            "by transitive_prop: `{}` must be a binary user-defined prop",
                             prop_name
                         ),
                         None,
@@ -30,7 +30,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by transitive_prop: `{}` must be an abstract_prop",
+                        "by transitive_prop: `{}` must be a user-defined prop",
                         prop_name
                     ),
                     None,

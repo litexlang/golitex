@@ -332,14 +332,16 @@ prove:
 
 ### `have` — parameters or values
 
-**Meaning.** Introduce names in scope for the rest of the block: **typed parameters** (membership / type keywords), **fixed values** with `=`, **functions** (single equation or `case` branches), **inductive functions** (`have fn by induc from` …), or **names from an existential** already known (`have by exist` …).
+**Meaning.** Introduce names in scope for the rest of the block: **typed parameters** (membership / type keywords), **fixed values** with `=`, **functions** (single equation or `case` branches), **recursive functions** (`have fn ... by decreasing` …), or **names from an existential** already known (`have by exist` …).
 
 **Syntax.**
 
 - `have` *groups* — types only, no `=`.
 - `have` *groups* `=` *objects* …
 - `have fn` *name* *function-space clause* `=` *object*
-- `have fn` *name* *clause* `:` newline, `case` *fact* `:` *object* …
+- `have fn` *name* *clause* `by cases:` newline, `case` *fact* `:` *object* …
+- `have fn` *name* *clause* `by decreasing` *measure* `from` *lower-bound* `:` newline, `case` *fact* `:` *object* …
+- `have fn` *name* `as set:` newline, `forall` ... `exist!` ...
 - `have by exist` *exist … st { … }* `:` *names*
 
 **Example.**
@@ -352,28 +354,22 @@ prove:
     a + b = b + a
 ```
 
-> **Hint.** Piecewise functions and induction variants:
+> **Hint.** Piecewise and recursive function variants:
 
 `have_fn_case_by_case.lit`:
 
 ```litex
-have fn self_max(x, y R) R:
+have fn self_max(x, y R) R by cases:
     case x > y: x
     case x <= y: y
 ```
 
-`have_fn_by_induc.lit`:
+Recursive definition by decreasing measure:
 
 ```litex
-know forall x Z:
-    x % 2 = 0 or x % 2 = 1
-
-have fn by induc from 0: f(x Z: x >= 0) R:
-    case x = 0: 1
-    case x = 1: 1
-    case x >= 2:
-        case x % 2 = 0: f(x - 2) + f(x - 1)
-        case x % 2 = 1: f(x - 2) + f(x - 1) + 100
+have fn f(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+    case b = 0: a
+    case b > 0: f(a, b - 1) + 1
 ```
 
 ---
@@ -661,7 +657,7 @@ prove:
 
 ### `by induc`
 
-**Meaning.** Induction on an integer parameter from a given base. In a local environment, optional proof steps run first; then for each goal the checker verifies the base instance (with *param* := *object*), that *object* lies in `Z`, and that the usual induction-step `forall` (hypothesis *param* ≥ base together with the goal template implies the *param*+1 instance) holds. On success, the corresponding universal fact (`forall` *param* in `Z`, *param* ≥ base ⇒ goals) is stored. You still need a usable induction principle in context (e.g. from `know`).
+**Meaning.** Induction on an integer parameter from a given base. On success, Litex stores the corresponding universal fact (`forall` *param* in `Z`, *param* ≥ base ⇒ goals). You can either use the old form, where proof statements make the generated base and step obligations available, or the structured form with separate base and step proof blocks.
 
 **Syntax.**
 
@@ -675,16 +671,32 @@ by induc param from object:
     …
 ```
 
+```text
+by induc param from object:
+    prove:
+        goal_1
+        goal_2
+        …
+    prove from param = object:
+        base_proof_statement
+        …
+    prove induc:
+        step_proof_statement
+        …
+```
+
+For strong induction, use the same shape but write `prove strong_induc:` for the step block.
+
 - The first body block must be `prove:`; each nested block under it is one atomic-style goal (`ExistOrAndChainAtomicFact`).
-- Further blocks are optional proof steps (same idea as after `prove:` in `claim` / `by enumerate finite_set`). They are parsed under a local parsing-time name scope so names introduced there do not leak to the file.
+- Further blocks are either old-style proof statements, or exactly one `prove from ...:` block plus exactly one step block.
 - Multiple goals share one proof segment and one local run; each goal is checked in turn after that proof.
+- In `prove from param = object:`, Litex declares `param $in Z`, assumes `param = object`, and checks the base goals.
+- In `prove induc:`, Litex declares `param $in Z`, assumes `param >= object` and each goal at `param`, then checks each goal at `param + 1`.
+- In `prove strong_induc:`, Litex declares `param $in Z`, assumes `param >= object` and, for each goal, a `forall y Z` hypothesis from `object` through `param`, then checks each goal at `param + 1`.
 
 **Example.**
 
 ```litex
-# Minimal `by induc` example: first block is `prove:` (one or more goals);
-# optional proof blocks follow (here empty — lemmas come from `know`).
-
 abstract_prop p(a)
 
 know:
@@ -698,12 +710,22 @@ know:
 by induc n from 0:
     prove:
         $p(n)
-    $p(0)
-    forall n Z:
-        n >= 0
+
+    prove from n = 0:
+        $p(0)
+
+    prove induc:
+        $p(n + 1)
+
+by strong_induc n from 0:
+    prove:
         $p(n)
-        =>:
-            $p(n + 1)
+
+    prove from n = 0:
+        $p(0)
+
+    prove strong_induc:
+        $p(n + 1)
 
 # Derived from the above by induction
 forall n Z:
@@ -780,14 +802,12 @@ by for forall! n range(0, 10): n < 10:
 
 **Meaning.** Set equality by extensionality (typically mutual inclusion).
 
-**Syntax.** `by extension` `:` `prove` `:` *set* `=` *set* newline, proof.
+**Syntax.** Either **`by extension`** `:` **`prove`** `:` *set* `=` *set* newline, proof blocks; or shorthand **`by extension`** *set* `=` *set* `:` newline, proof blocks only.
 
 **Example.**
 
 ```litex
-by extension:
-    prove:
-        {1, 2} = {2, 1}
+by extension {1, 2} = {2, 1}:
     by enumerate finite_set:
         prove:
             forall x {1, 2}:
@@ -1020,4 +1040,3 @@ prove:
 | *(other)* | Assert a fact to verify |
 
 > **Hint.** Details and edge cases are covered in the **Example** code blocks above; the repository **`examples/`** folder may contain longer variants.
-

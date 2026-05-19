@@ -366,36 +366,6 @@ impl Runtime {
                 self.inst_obj(&fact.right, param_to_arg_map, to_inst_param_type)?,
                 Self::line_file_after_inst(&fact.line_file, inst_lf),
             )),
-            AtomicFact::InjectiveFact(fact) => AtomicFact::InjectiveFact(InjectiveFact::new(
-                self.inst_obj(&fact.function, param_to_arg_map, to_inst_param_type)?,
-                Self::line_file_after_inst(&fact.line_file, inst_lf),
-            )),
-            AtomicFact::SurjectiveFact(fact) => AtomicFact::SurjectiveFact(SurjectiveFact::new(
-                self.inst_obj(&fact.function, param_to_arg_map, to_inst_param_type)?,
-                Self::line_file_after_inst(&fact.line_file, inst_lf),
-            )),
-            AtomicFact::BijectiveFact(fact) => AtomicFact::BijectiveFact(BijectiveFact::new(
-                self.inst_obj(&fact.function, param_to_arg_map, to_inst_param_type)?,
-                Self::line_file_after_inst(&fact.line_file, inst_lf),
-            )),
-            AtomicFact::NotInjectiveFact(fact) => {
-                AtomicFact::NotInjectiveFact(NotInjectiveFact::new(
-                    self.inst_obj(&fact.function, param_to_arg_map, to_inst_param_type)?,
-                    Self::line_file_after_inst(&fact.line_file, inst_lf),
-                ))
-            }
-            AtomicFact::NotSurjectiveFact(fact) => {
-                AtomicFact::NotSurjectiveFact(NotSurjectiveFact::new(
-                    self.inst_obj(&fact.function, param_to_arg_map, to_inst_param_type)?,
-                    Self::line_file_after_inst(&fact.line_file, inst_lf),
-                ))
-            }
-            AtomicFact::NotBijectiveFact(fact) => {
-                AtomicFact::NotBijectiveFact(NotBijectiveFact::new(
-                    self.inst_obj(&fact.function, param_to_arg_map, to_inst_param_type)?,
-                    Self::line_file_after_inst(&fact.line_file, inst_lf),
-                ))
-            }
         })
     }
 

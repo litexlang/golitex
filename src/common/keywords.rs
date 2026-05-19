@@ -69,8 +69,6 @@ pub const SEQ: &str = "seq";
 pub const MATRIX: &str = "matrix";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
-pub const FN_RANGE: &str = "fn_range";
-pub const FN_DOM: &str = "fn_dom";
 pub const SUM: &str = "sum";
 pub const PRODUCT: &str = "product";
 pub const EXIST: &str = "exist";
@@ -101,6 +99,7 @@ pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
 
 pub const BY: &str = "by";
+pub const DECREASING: &str = "decreasing";
 pub const CASES: &str = "cases";
 pub const CONTRA: &str = "contra";
 pub const ENUMERATE: &str = "enumerate";
@@ -112,7 +111,9 @@ pub const INDUC_PARAM_2_NAME: &str = "param_2";
 pub const FOR: &str = "for";
 pub const EXTENSION: &str = "extension";
 pub const TRANSITIVE_PROP: &str = "transitive_prop";
-pub const COMMUTATIVE_PROP: &str = "commutative_prop";
+pub const SYMMETRIC_PROP: &str = "symmetric_prop";
+pub const REFLEXIVE_PROP: &str = "reflexive_prop";
+pub const ANTISYMMETRIC_PROP: &str = "antisymmetric_prop";
 pub const TUPLE: &str = "tuple";
 
 pub const CASE: &str = "case";
@@ -232,8 +233,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         MATRIX,
         RANGE,
         CLOSED_RANGE,
-        FN_RANGE,
-        FN_DOM,
         EXIST,
         ST,
         FORALL,
@@ -256,6 +255,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CLAIM,
         PROVE,
         BY,
+        DECREASING,
         CASES,
         CONTRA,
         CASE,
@@ -361,9 +361,6 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == RESTRICT_FN_IN
         || atom_name == FN_EQ_IN
         || atom_name == FN_EQ
-        || atom_name == INJECTIVE
-        || atom_name == SURJECTIVE
-        || atom_name == BIJECTIVE
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {

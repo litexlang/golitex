@@ -42,22 +42,16 @@ prove:
 
 # --- Stmt::HaveFnEqualCaseByCaseStmt — piecewise definition by cases on the domain ---
 prove:
-    have fn g(z R) R :
+    have fn g(z R) R by cases:
         case z = 2: 3
         case z != 2: 4
     do_nothing
 
-# --- Stmt::HaveFnByInducStmt — function given by induction on a discrete parameter ---
+# --- Stmt::HaveFnByInducStmt — recursive function given by a decreasing measure ---
 prove:
-    know forall x Z:
-        x % 2 = 0 or x % 2 = 1
-
-    have fn by induc from 0: h(x Z: x >= 0) R:
-        case x = 0: 1
-        case x = 1: 1
-        case x >= 2:
-            case x % 2 = 0: h(x - 2) + h(x - 1)
-            case x % 2 = 1: h(x - 2) + h(x - 1)
+    have fn h(a Z, b Z: a >= 0, b >= 0) R by decreasing abs(a) + abs(b) from 0:
+        case b = 0: a
+        case b > 0: h(a, b - 1) + 1
 
 # --- Stmt::DefStructStmt — removed in this branch (record-like `struct`); see git history to restore. ---
 
@@ -71,7 +65,7 @@ prove:
 
 # --- Stmt::DefAlgoStmt — computational presentation of a function (evaluation) ---
 prove:
-    have fn m(x N_pos) R:
+    have fn m(x N_pos) R by cases:
         case x = 1: 1
         case x != 1: 0
 
@@ -154,7 +148,7 @@ prove:
 
 # --- Stmt::ByCasesStmt — proof by cases on a finite disjunction ---
 prove:
-    have fn k(z R) R :
+    have fn k(z R) R by cases:
         case z = 2: 3
         case z != 2: 4
 
@@ -217,6 +211,12 @@ prove:
     by induc n from 0:
         prove:
             $r0(n)
+
+        prove from n = 0:
+            $r0(0)
+
+        prove induc:
+            $r0(n + 1)
 
     forall m Z:
         m >= 0

@@ -45,7 +45,7 @@ impl Runtime {
         .into())
     }
 
-    fn store_have_fn_equal_case_by_case_stmt_facts(
+    pub(crate) fn store_have_fn_equal_case_by_case_stmt_facts(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
