@@ -63,6 +63,17 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > If you are reading this manual online, it usually helps to run the examples and inspect the output. Some examples are intentionally more explicit than the Litex kernel strictly needs: the checker can often close shorter versions automatically, but the longer form is easier to read while learning.
 
+### Working With AI Agents
+
+Litex works well with AI agents because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
+
+1. Ask the agent to solve the theorem first in natural language, step by step.
+2. Ask it to formalize every step in Litex, using a precise `know` only when a step is not formalized yet.
+3. Repeatedly refine each broad `know` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
+4. After the proof works, ask which lines are redundant because Litex already infers them, and which repeated structures should become a `claim forall` or a named `prop`.
+
+This turns `know` into temporary scaffolding rather than the final proof. The agent can read this manual, run Litex, inspect verification output and error messages, and keep shrinking the informal gaps. Large examples such as a bijection from `N^2` to `N` are approachable with this loop: first build the proof skeleton, then replace the broad assumptions by smaller verified branches.
+
 ---
 
 ### Mental model
@@ -3018,7 +3029,7 @@ Concrete literals and many arithmetic combinations of literals can be checked ag
 1 + 1 $in N
 ```
 
-If an object is already known to be an integer, nonnegativity proves natural-number membership. Strict positivity is also enough.
+If an object can be verified as an integer, nonnegativity proves natural-number membership. Strict positivity is also enough.
 
 ```litex
 forall b Z:
@@ -3032,6 +3043,13 @@ forall b Z:
     b > 0
     =>:
         b $in N
+```
+
+```litex
+forall a, b Z:
+    b - a >= 0
+    =>:
+        b - a $in N
 ```
 
 Negated membership in a standard set can close for concrete numeric values.
