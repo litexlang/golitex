@@ -127,39 +127,6 @@ impl Runtime {
         self.objs_have_same_known_equality_rc_in_some_env(&mod_obj, &zero)
     }
 
-    fn collect_known_power_lt_candidates(
-        &self,
-        left_base: &Obj,
-        right_base: &Obj,
-    ) -> Vec<AtomicFact> {
-        let mut candidates = Vec::new();
-        for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
-                for known_fact in known_facts_map.values() {
-                    let AtomicFact::LessFact(known_lt) = known_fact else {
-                        continue;
-                    };
-                    let (Obj::Pow(left_pow), Obj::Pow(right_pow)) =
-                        (&known_lt.left, &known_lt.right)
-                    else {
-                        continue;
-                    };
-                    if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
-                        continue;
-                    }
-                    if !Self::objs_same_by_display(left_pow.base.as_ref(), left_base) {
-                        continue;
-                    }
-                    if !Self::objs_same_by_display(right_pow.base.as_ref(), right_base) {
-                        continue;
-                    }
-                    candidates.push(known_fact.clone());
-                }
-            }
-        }
-        candidates
-    }
-
     fn objs_same_by_display(left: &Obj, right: &Obj) -> bool {
         left.to_string() == right.to_string()
     }
@@ -392,57 +359,6 @@ impl Runtime {
                 step_results,
             ),
         )))
-    }
-
-    // abs(a) <= abs(b) from a^k <= b^k when k in N_pos and k % 2 = 0.
-    // Example: `forall x, y R: x^2 <= y^2 => abs(x) <= abs(y)`.
-    pub(crate) fn try_abs_le_even_exponent_from_pow_le(
-        &mut self,
-        left_base: &Obj,
-        right_base: &Obj,
-        lf: &LineFile,
-        atomic_fact: &AtomicFact,
-        strict: bool,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let candidates = if strict {
-            self.collect_known_power_lt_candidates(left_base, right_base)
-        } else {
-            self.collect_known_power_le_candidates(left_base, right_base)
-        };
-        for candidate in candidates {
-            let (left_pow, right_pow) = match &candidate {
-                AtomicFact::LessEqualFact(f) => match (&f.left, &f.right) {
-                    (Obj::Pow(l), Obj::Pow(r)) => (l, r),
-                    _ => continue,
-                },
-                AtomicFact::LessFact(f) => match (&f.left, &f.right) {
-                    (Obj::Pow(l), Obj::Pow(r)) => (l, r),
-                    _ => continue,
-                },
-                _ => continue,
-            };
-            if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
-                continue;
-            }
-            let Some(step_results) =
-                self.verify_even_exponent_in_n_pos_subgoal(left_pow.exponent.as_ref(), lf)?
-            else {
-                continue;
-            };
-            let rule = if strict {
-                "abs(a) < abs(b) from a^k < b^k and even k in N_pos"
-            } else {
-                "abs(a) <= abs(b) from a^k <= b^k and even k in N_pos"
-            };
-            return Ok(Some(StmtResult::FactualStmtSuccess(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    atomic_fact.clone().into(),
-                    rule.to_string(),
-                    step_results,
-                ),
-            )));
-        }
-        Ok(None)
     }
 
     // a^k < b^k from abs(a) < abs(b) when k in N_pos and k % 2 = 0.
