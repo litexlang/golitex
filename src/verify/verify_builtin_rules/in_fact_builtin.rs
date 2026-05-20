@@ -318,14 +318,11 @@ impl Runtime {
                 ),
             (Obj::Choose(choose), where_is_obj) => {
                 let choose_from = choose.set.clone();
-                let equal_fact = EqualFact::new(
-                    *choose_from,
-                    where_is_obj.clone(),
+                let equal_fact_verify_result = self.verify_objs_are_equal_known_only(
+                    choose_from.as_ref(),
+                    where_is_obj,
                     in_fact.line_file.clone(),
-                )
-                .into();
-                let equal_fact_verify_result =
-                    self.verify_atomic_fact(&equal_fact, verify_state)?;
+                );
                 if equal_fact_verify_result.is_true() {
                     return Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
@@ -363,9 +360,10 @@ impl Runtime {
             (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
                 let lf = in_fact.line_file.clone();
                 let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
-                let len_eq_n: AtomicFact =
-                    EqualFact::new(len_obj, (*fs.n).clone(), lf.clone()).into();
-                if !self.verify_atomic_fact(&len_eq_n, verify_state)?.is_true() {
+                if !self
+                    .verify_objs_are_equal_known_only(&len_obj, fs.n.as_ref(), lf.clone())
+                    .is_true()
+                {
                     return Ok((StmtUnknown::new()).into());
                 }
                 for o in list.objs.iter() {
@@ -386,16 +384,22 @@ impl Runtime {
             (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
                 let lf = in_fact.line_file.clone();
                 let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
-                let row_eq: AtomicFact =
-                    EqualFact::new(n_rows_obj, (*ms.row_len).clone(), lf.clone()).into();
-                if !self.verify_atomic_fact(&row_eq, verify_state)?.is_true() {
+                if !self
+                    .verify_objs_are_equal_known_only(&n_rows_obj, ms.row_len.as_ref(), lf.clone())
+                    .is_true()
+                {
                     return Ok((StmtUnknown::new()).into());
                 }
                 for row in list.rows.iter() {
                     let n_col_obj: Obj = Number::new(row.len().to_string()).into();
-                    let col_eq: AtomicFact =
-                        EqualFact::new(n_col_obj, (*ms.col_len).clone(), lf.clone()).into();
-                    if !self.verify_atomic_fact(&col_eq, verify_state)?.is_true() {
+                    if !self
+                        .verify_objs_are_equal_known_only(
+                            &n_col_obj,
+                            ms.col_len.as_ref(),
+                            lf.clone(),
+                        )
+                        .is_true()
+                    {
                         return Ok((StmtUnknown::new()).into());
                     }
                     for o in row.iter() {
@@ -1019,13 +1023,9 @@ impl Runtime {
             }
         };
         let target = &in_fact.set;
-        let ret_matches = verify_equality_by_they_are_the_same(target, &typed_ret)
-            || self
-                .verify_equal_fact(
-                    &EqualFact::new(target.clone(), typed_ret.clone(), in_fact.line_file.clone()),
-                    verify_state,
-                )?
-                .is_true();
+        let ret_matches = self
+            .verify_objs_are_equal_known_only(target, &typed_ret, in_fact.line_file.clone())
+            .is_true();
         if !ret_matches {
             return Ok((StmtUnknown::new()).into());
         }
@@ -1848,13 +1848,11 @@ impl Runtime {
         }
 
         for current_element_in_list_set in list_set.list.iter() {
-            let equal_fact = EqualFact::new(
-                in_fact.element.clone(),
-                *current_element_in_list_set.clone(),
+            let equal_fact_verify_result = self.verify_objs_are_equal_known_only(
+                &in_fact.element,
+                current_element_in_list_set.as_ref(),
                 in_fact.line_file.clone(),
-            )
-            .into();
-            let equal_fact_verify_result = self.verify_atomic_fact(&equal_fact, verify_state)?;
+            );
             if equal_fact_verify_result.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
