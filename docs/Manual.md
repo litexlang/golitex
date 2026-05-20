@@ -2825,24 +2825,6 @@ know:
             a <= b
 ```
 
-Even positive integer powers compare absolute values instead of signed values.
-
-```litex
-forall a, b R, k N_pos:
-    k % 2 = 0
-    abs(a) <= abs(b)
-    =>:
-        a^k <= b^k
-```
-
-```litex
-forall a, b R, k N_pos:
-    k % 2 = 0
-    a^k <= b^k
-    =>:
-        abs(a) <= abs(b)
-```
-
 If at least one component is nonzero, a sum of two squares is nonzero.
 
 ```litex
