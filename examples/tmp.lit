@@ -1,1 +1,19 @@
-1=1
+prop finite_set_with_n_R_items_has_max_item(n N_pos):
+    n >= 1
+    forall s finite_set:
+        count(s) = n
+        forall x s:
+            x $in R
+        =>:
+            exist! x s st {forall y s: y<= x}
+
+claim:
+    prove:
+        forall n N_pos:
+            $finite_set_with_n_R_items_has_max_item(n)
+
+    by induc n from 1:
+        prove from n = 1:
+            $is_nonempty_set(s)
+            have x s
+            

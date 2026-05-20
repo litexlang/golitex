@@ -250,18 +250,6 @@ impl Runtime {
         let rule_suffix = if strict { " (strict)" } else { "" };
         let zero: Obj = Number::new("0".to_string()).into();
 
-        if let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (left, right) {
-            if let Some(r) = self.try_abs_le_even_exponent_from_pow_le(
-                left_abs.arg.as_ref(),
-                right_abs.arg.as_ref(),
-                line_file,
-                atomic_fact,
-                strict,
-            )? {
-                return Ok(Some(r));
-            }
-        }
-
         // -abs(y) <= x from abs(x) <= abs(y); or -y <= x when 0 <= y.
         if let Some(inner) = peel_negation(left) {
             if let Some(y) = peel_abs(inner) {

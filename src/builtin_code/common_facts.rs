@@ -199,4 +199,42 @@ know:
         a >= 0
         =>:
             exist p N, q N_pos st {a = p / q}
+
+prop even_power_abs_bound(x, y R, k N_pos):
+    abs(x) <= abs(y)
+
+prop even_power_bound_by_nonnegative_rhs(x, y R, k N_pos):
+    -y <= x
+    x <= y
+
+prop even_power_bound_by_nonpositive_rhs(x, y R, k N_pos):
+    y <= x
+    x <= -y
+
+know:
+    forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        =>:
+            $even_power_abs_bound(x, y, k)
+
+    forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        y >= 0
+        =>:
+            $even_power_bound_by_nonnegative_rhs(x, y, k)
+
+    forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        y <= 0
+        =>:
+            $even_power_bound_by_nonpositive_rhs(x, y, k)
+
+know:
+    forall s finite_set:
+        count(s) > 0
+        =>:
+            $is_nonempty_set(s)
 "#;
