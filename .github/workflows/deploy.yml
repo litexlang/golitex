@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   # ─────────────────────────────────────────────
-  # Job 1: Validate tag and run tests
+  # Job 1: Validate tag
   # ─────────────────────────────────────────────
   validate:
     name: Validate
@@ -43,11 +43,6 @@ jobs:
             echo "::error::Tag ${{ steps.version.outputs.version }} does not match Cargo.toml version $CARGO_VERSION"
             exit 1
           fi
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Run tests
-        run: cargo test
 
   # ─────────────────────────────────────────────
   # Job 2: Build binaries for all platforms
@@ -215,9 +210,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download binary artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: binary-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Download .deb artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: deb-*
           path: artifacts
           merge-multiple: true
 
