@@ -279,6 +279,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_tuple_equality_from_dim_and_projections(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         let (result, calculated_left, calculated_right) = self
             .verify_equality_by_they_are_the_same_and_calculation(
                 left,
@@ -357,6 +366,65 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    // Tuple extensionality: a tuple is equal to `(a, b, ...)` when its dimension matches
+    // and each projection matches the corresponding component.
+    // Example: from `tuple_dim(t) = 2`, `t[1] = a`, and `t[2] = b`, prove `t = (a, b)`.
+    fn try_verify_tuple_equality_from_dim_and_projections(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (tuple_obj, target_obj) = match (left, right) {
+            (target_obj, Obj::Tuple(tuple_obj)) => (tuple_obj, target_obj),
+            (Obj::Tuple(tuple_obj), target_obj) => (tuple_obj, target_obj),
+            _ => return Ok(None),
+        };
+
+        if matches!(target_obj, Obj::Tuple(_)) {
+            return Ok(None);
+        }
+
+        let is_tuple_fact: AtomicFact =
+            IsTupleFact::new(target_obj.clone(), line_file.clone()).into();
+        let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
+        if !is_tuple_result.is_true() {
+            return Ok(None);
+        }
+
+        let tuple_dim_obj: Obj = TupleDim::new(target_obj.clone()).into();
+        let tuple_dim_value_obj: Obj = Number::new(tuple_obj.args.len().to_string()).into();
+        let tuple_dim_fact: AtomicFact =
+            EqualFact::new(tuple_dim_obj, tuple_dim_value_obj, line_file.clone()).into();
+        let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
+        if !tuple_dim_result.is_true() {
+            return Ok(None);
+        }
+
+        let mut steps = vec![is_tuple_result, tuple_dim_result];
+        for (index, arg) in tuple_obj.args.iter().enumerate() {
+            let index_obj: Obj = Number::new((index + 1).to_string()).into();
+            let projected_obj: Obj = ObjAtIndex::new(target_obj.clone(), index_obj).into();
+            let component_fact: AtomicFact =
+                EqualFact::new(projected_obj, arg.as_ref().clone(), line_file.clone()).into();
+            let component_result = self.verify_atomic_fact(&component_fact, verify_state)?;
+            if !component_result.is_true() {
+                return Ok(None);
+            }
+            steps.push(component_result);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "tuple equality from dimension and projections".to_string(),
+                steps,
+            )
+            .into(),
+        ))
     }
 
     fn try_verify_empty_set_equality_from_not_nonempty(
