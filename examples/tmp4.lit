@@ -1,0 +1,2 @@
+forall t cart(N, N):
+    t = (t[1], t[2])

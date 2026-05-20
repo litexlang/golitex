@@ -63,6 +63,17 @@ Litex's checker is designed to remember known facts, use builtin arithmetic and 
 
 > If you are reading this manual online, it usually helps to run the examples and inspect the output. Some examples are intentionally more explicit than the Litex kernel strictly needs: the checker can often close shorter versions automatically, but the longer form is easier to read while learning.
 
+### Working With AI Agents
+
+Litex works well with AI agents because the proof language is close to ordinary mathematical writing and the checker gives structured feedback after every attempt. For larger proofs, a useful workflow is:
+
+1. Ask the agent to solve the theorem first in natural language, step by step.
+2. Ask it to formalize every step in Litex, using a precise `know` only when a step is not formalized yet.
+3. Repeatedly refine each broad `know` into smaller claims, facts, or helper propositions until the remaining assumptions are local and concrete.
+4. After the proof works, ask which lines are redundant because Litex already infers them, and which repeated structures should become a `claim forall` or a named `prop`.
+
+This turns `know` into temporary scaffolding rather than the final proof. The agent can read this manual, run Litex, inspect verification output and error messages, and keep shrinking the informal gaps. Large examples such as a bijection from `N^2` to `N` are approachable with this loop: first build the proof skeleton, then replace the broad assumptions by smaller verified branches.
+
 ---
 
 ### Mental model
@@ -307,7 +318,7 @@ If a struct has no `<=>:` filter facts, Litex can prove `&Name(args)` is nonempt
 
 #### Counting members
 
-Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `count(cart(A_1,...,A_n))` reduces to `count(A_1) * ... * count(A_n)` in calculations. It also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
+Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `count(cart(A_1,...,A_n))` reduces to `count(A_1) * ... * count(A_n)` in calculations. It also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`, plus count identities for `union`, `set_minus`, and `set_diff`.
 
 ```litex
 count({1, 2, 3}) = 3
@@ -319,6 +330,8 @@ forall A, B finite_set:
     $is_finite_set(union(A, B))
     $is_finite_set(intersect(A, B))
 count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
+count(union({1, 2}, {2, 3})) = count({1, 2}) + count({2, 3}) - count(intersect({1, 2}, {2, 3}))
+count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3}))
 ```
 
 #### Finite `sum` and `product`
@@ -427,48 +440,6 @@ eval m ++ m
 eval m ** m
 
 eval 2 *. m
-```
-
-**Indexed definition (`family` + `have fn`).** You can define the space of all `m x n` matrices over `S` as a binary-indexed function set, then give one `case` per index pair, useful for proofs that branch on `(i, j)`:
-
-```litex
-family self_matrix(s set, m, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
-```
-
-Full worked proofs (for example a diagonal matrix claim and `$is_diagonal_matrix`) use the same `family` / `prop` / `claim` layout as in longer packaged examples. A compact illustration (not run as an isolated doc test):
-
-<!-- litex:skip-test -->
-
-```litex
-family self_matrix(s set, m, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
-
-prop is_diagonal_matrix(n N_pos,m \self_matrix(R, n, n)):
-    forall i closed_range(1, n), j closed_range(1, n):
-        i != j
-        =>:
-            m(i, j) = 0
-
-claim:
-    prove:
-        forall M \self_matrix(R, 3, 3):
-            M(1, 1) = 1
-            M(1, 2) = 0
-            M(1, 3) = 0
-            M(2, 1) = 0
-            M(2, 2) = 1
-            M(2, 3) = 0
-            M(3, 1) = 0
-            M(3, 2) = 0
-            M(3, 3) = 1
-            =>:
-                $is_diagonal_matrix(3, M)
-
-    by for:
-        prove:
-            forall i closed_range(1, 3), j closed_range(1, 3):
-                i != j
-                =>:
-                    M(i, j) = 0
 ```
 
 ---
@@ -2412,6 +2383,13 @@ forall x, y R:
 
 The same structural idea applies to many composite objects: matrices, `max`, `min`, set operations, tuples, and other builtin object heads.
 
+Tuple equality can also be proved from projections. If Litex knows the left side is a tuple of the same dimension and each component matches, it can close equality with a tuple object.
+
+```litex
+forall t cart(N, N):
+    t = (t[1], t[2])
+```
+
 #### Known Numeric Values
 
 After a name is known to equal a concrete number, Litex can resolve that name when checking later equalities.
@@ -2847,6 +2825,24 @@ know:
             a <= b
 ```
 
+Even positive integer powers compare absolute values instead of signed values.
+
+```litex
+forall a, b R, k N_pos:
+    k % 2 = 0
+    abs(a) <= abs(b)
+    =>:
+        a^k <= b^k
+```
+
+```litex
+forall a, b R, k N_pos:
+    k % 2 = 0
+    a^k <= b^k
+    =>:
+        abs(a) <= abs(b)
+```
+
 If at least one component is nonzero, a sum of two squares is nonzero.
 
 ```litex
@@ -2962,6 +2958,41 @@ forall x, b R:
         abs(x) <= b
 ```
 
+The converse direction and strict forms are also builtin.
+
+```litex
+forall x, b R:
+    x < b
+    -x < b
+    =>:
+        abs(x) < b
+```
+
+```litex
+forall x, y R:
+    abs(x) <= abs(y)
+    =>:
+        -abs(y) <= x <= abs(y)
+```
+
+When the bound is a signed number rather than an absolute value, use the sign of `y`:
+
+```litex
+forall x, y R:
+    abs(x) <= abs(y)
+    0 <= y
+    =>:
+        -y <= x <= y
+```
+
+```litex
+forall x, y R:
+    abs(x) <= abs(y)
+    y <= 0
+    =>:
+        y <= x <= -y
+```
+
 ```litex
 forall x, y R:
     abs(x + y) <= abs(x) + abs(y)
@@ -2998,7 +3029,7 @@ Concrete literals and many arithmetic combinations of literals can be checked ag
 1 + 1 $in N
 ```
 
-If an object is already known to be an integer, nonnegativity proves natural-number membership. Strict positivity is also enough.
+If an object can be verified as an integer, nonnegativity proves natural-number membership. Strict positivity is also enough.
 
 ```litex
 forall b Z:
@@ -3012,6 +3043,13 @@ forall b Z:
     b > 0
     =>:
         b $in N
+```
+
+```litex
+forall a, b Z:
+    b - a >= 0
+    =>:
+        b - a $in N
 ```
 
 Negated membership in a standard set can close for concrete numeric values.
