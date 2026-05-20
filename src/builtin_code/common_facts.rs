@@ -229,9 +229,4 @@ know:
         =>:
             $even_power_bound_by_nonpositive_rhs(x, y, k)
 
-know:
-    forall s finite_set:
-        count(s) > 0
-        =>:
-            $is_nonempty_set(s)
 "#;
