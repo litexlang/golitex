@@ -142,20 +142,11 @@ _The only way to get artificial intelligence to work is to do the computation in
 
 _– Jeff Hinton_
 
-Litex is also becoming a good target language for AI-assisted formalization. The practical loop is simple: ask an agent to solve the theorem first in ordinary mathematical language, then translate the proof plan into Litex step by step.
+Litex is designed so that modern coding agents can formalize textbook-style mathematics by iterating against verifier feedback. An agent can sketch a proof in ordinary mathematical language, translate it into Litex step by step, run the checker, read why each fact failed or succeeded, and refine the argument until every step is local and concrete.
 
-When a step is not formalized yet, write it as a precise `know` fact. Then refine each broad `know` into smaller and more concrete claims, reading Litex's verification output and error messages after every run. Once the proof works, ask which lines are redundant because Litex already infers them, and which repeated structures should become a `claim forall` or a named `prop`.
+A concrete example is the final example in [Here](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Chapter_8_Functions), which proves that there is a bijection from `N^2` to `N` using Cauchy pairs. Codex formalized this example in Litex by reading the Manual and project documentation, running Litex, inspecting the verifier output, and iterating on the proof about three times. The final proof is explicit step by step, does not rely on external mathematical facts, and was produced from Litex's own feedback loop rather than from hand-written hints about the proof.
 
-This workflow makes larger examples approachable for modern coding agents such as GPT-5.5 and Codex. For instance, a formalization of a bijection from `N^2` to `N` can be developed by letting an agent read the Manual, inspect the kernel behavior through debug output, build the proof skeleton, and shrink the remaining `know` facts until the argument is local and concrete.
-
-This is remarkable. If enough agents are given enough time, perhaps much less
-time than we expect, they can help formalize textbooks at scale. Textbooks are
-especially suitable because they already reveal the argument step by step.
-The same pattern may eventually reach frontier papers: first recover the
-mathematical path in ordinary language, then make each step checkable. The main
-limitation today is that Litex is still young, so many basic packages and
-standard libraries are not ready yet. In the age of AI agents, I believe these
-gaps can close quickly.
+This is the point Litex is trying to make especially strong: the theorem itself can be expressed in mature proof assistants such as Lean, but Litex gives agents a very direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof.
 
 ## Starting Points
 
