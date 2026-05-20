@@ -70,7 +70,7 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    fn verify_equality_with_known_equalities(
+    pub(crate) fn verify_equality_with_known_equalities(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -181,8 +181,12 @@ impl Runtime {
         let param_to_arg_map =
             ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
         let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, ParamObjType::FnSet)?;
-        let inner =
-            self.verify_objs_are_equal(&reduced, other_side, line_file.clone(), verify_state)?;
+        let inner = self.verify_objs_are_equal_in_equality_builtin(
+            &reduced,
+            other_side,
+            line_file.clone(),
+            verify_state,
+        )?;
         if !inner.is_true() {
             return Ok(None);
         }
@@ -391,7 +395,7 @@ impl Runtime {
         Ok(remaining_equality_result.is_true())
     }
 
-    fn verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
+    pub(crate) fn verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
         &mut self,
         left_obj: &Obj,
         right_obj: &Obj,

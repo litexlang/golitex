@@ -1,4 +1,7 @@
-forall a, b Z:
-    b - a >= 0
-    =>:
-        b - a $in N
+have human nonempty_set, Socrates human
+abstract_prop mortal(x)
+
+know forall x human:
+    $mortal(x)
+
+$mortal(Socrates)

@@ -297,6 +297,50 @@ forall a set:
     }
 
     #[test]
+    fn known_equality_implies_weak_order() {
+        let source_code = r#"
+have a, b R
+know a = b
+a <= b
+a >= b
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("known_equality_implies_weak_order");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known_equality_implies_weak_order failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn weak_order_does_not_recursively_prove_equality() {
+        let source_code = r#"
+have a, b R
+know a <= b
+a = b
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("weak_order_does_not_recursively_prove_equality");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "recursive equality/order proof should fail, but succeeded:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn citation_verified_by_type_reflects_cited_stmt_kind() {
         let source_code = r#"
 abstract_prop p(x)
@@ -671,6 +715,16 @@ $q(1)
     #[test]
     fn run_examples() {
         run_with_large_stack("run_examples_large_stack", run_examples_impl);
+    }
+
+    #[test]
+    fn run_all() {
+        run_with_large_stack("run_all_large_stack", run_all_impl);
+    }
+
+    fn run_all_impl() {
+        run_examples_impl();
+        run_the_mechanics_markdown_files_impl();
     }
 
     fn run_examples_impl() {
