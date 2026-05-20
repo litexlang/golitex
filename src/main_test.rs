@@ -403,6 +403,21 @@ $q(1)
     }
 
     #[test]
+    fn run_the_mechanics_chapter_2_markdown_file() {
+        run_with_large_stack(
+            "run_the_mechanics_chapter_2_markdown_file_large_stack",
+            run_the_mechanics_chapter_2_markdown_file_impl,
+        );
+    }
+
+    fn run_the_mechanics_chapter_2_markdown_file_impl() {
+        run_single_the_mechanics_chapter_markdown_file_impl(
+            "Chapter_2_Proofs_With_Structure.md",
+            "Chapter 2",
+        );
+    }
+
+    #[test]
     fn run_the_mechanics_chapter_3_markdown_file() {
         run_with_large_stack(
             "run_the_mechanics_chapter_3_markdown_file_large_stack",
