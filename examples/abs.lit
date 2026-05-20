@@ -81,15 +81,3 @@ forall a, b R, k N_pos:
     =>:
         a^k <= b^k
 
-forall a, b R, k N_pos:
-    k % 2 = 0
-    a^k <= b^k
-    =>:
-        abs(a) <= abs(b)
-
-forall x, y R:
-    x^2 <= y^2
-    y >= 0
-    =>:
-        abs(x) <= abs(y)
-        -y <= x <= y

@@ -146,6 +146,16 @@ claim:
 
 claim:
     prove:
+        forall a, b N:
+            b <= a
+            =>:
+                a - b $in N
+    a - b >= 0
+    a - b $in Z
+    a - b $in N
+
+claim:
+    prove:
         forall n, s N:
             $triangular_interval(n, s)
             =>:
