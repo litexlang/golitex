@@ -11,3 +11,7 @@ count(intersect({1, 2}, {2, 3})) <= count({2, 3})
 count(set_minus({1, 2}, {2, 3})) <= count({1, 2})
 count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
 count(set_diff({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
+
+count(union({1, 2}, {2, 3})) = count({1, 2}) + count({2, 3}) - count(intersect({1, 2}, {2, 3}))
+count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3}))
+count(set_diff({1, 2}, {2, 3})) = count(set_minus({1, 2}, {2, 3})) + count(set_minus({2, 3}, {1, 2}))

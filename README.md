@@ -136,6 +136,27 @@ The output looks like:
 
 This says `$p(2)` was proved by reusing the known `forall`: Litex matched `x` with `2`, substituted into `$p(x)`, and closed the goal. You can see whether a fact closed by a builtin rule, a known fact, a known `forall`, or an inferred consequence.
 
+## AI Agents Can Work With Litex
+
+_The only way to get artificial intelligence to work is to do the computation in a way similar to the human brain._
+
+_– Jeff Hinton_
+
+Litex is also becoming a good target language for AI-assisted formalization. The practical loop is simple: ask an agent to solve the theorem first in ordinary mathematical language, then translate the proof plan into Litex step by step.
+
+When a step is not formalized yet, write it as a precise `know` fact. Then refine each broad `know` into smaller and more concrete claims, reading Litex's verification output and error messages after every run. Once the proof works, ask which lines are redundant because Litex already infers them, and which repeated structures should become a `claim forall` or a named `prop`.
+
+This workflow makes larger examples approachable for modern coding agents such as GPT-5.5 and Codex. For instance, a formalization of a bijection from `N^2` to `N` can be developed by letting an agent read the Manual, inspect the kernel behavior through debug output, build the proof skeleton, and shrink the remaining `know` facts until the argument is local and concrete.
+
+This is remarkable. If enough agents are given enough time, perhaps much less
+time than we expect, they can help formalize textbooks at scale. Textbooks are
+especially suitable because they already reveal the argument step by step.
+The same pattern may eventually reach frontier papers: first recover the
+mathematical path in ordinary language, then make each step checkable. The main
+limitation today is that Litex is still young, so many basic packages and
+standard libraries are not ready yet. In the age of AI agents, I believe these
+gaps can close quickly.
+
 ## Starting Points
 
 _Learn the rules like a pro, so you can break them like an artist._
