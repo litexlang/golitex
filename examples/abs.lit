@@ -30,6 +30,34 @@ forall x, b R:
     =>:
         abs(x) <= b
 
+forall x, b R:
+    x < b
+    -x < b
+    =>:
+        abs(x) < b
+
+forall x, y R:
+    abs(x) <= abs(y)
+    =>:
+        -abs(y) <= x <= abs(y)
+
+forall x, y R:
+    abs(x) < abs(y)
+    =>:
+        -abs(y) < x < abs(y)
+
+forall x, y R:
+    abs(x) <= abs(y)
+    0 <= y
+    =>:
+        -y <= x <= y
+
+forall x, y R:
+    abs(x) <= abs(y)
+    y <= 0
+    =>:
+        y <= x <= -y
+
 forall x, y R:
     abs(x + y) <= abs(x) + abs(y)
     abs(x - y) <= abs(x) + abs(y)
@@ -46,3 +74,22 @@ forall a, b R:
     0 <= a <= b
     =>:
         abs(a) <= abs(b)
+
+forall a, b R, k N_pos:
+    k % 2 = 0
+    abs(a) <= abs(b)
+    =>:
+        a^k <= b^k
+
+forall a, b R, k N_pos:
+    k % 2 = 0
+    a^k <= b^k
+    =>:
+        abs(a) <= abs(b)
+
+forall x, y R:
+    x^2 <= y^2
+    y >= 0
+    =>:
+        abs(x) <= abs(y)
+        -y <= x <= y

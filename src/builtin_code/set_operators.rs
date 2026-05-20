@@ -15,6 +15,9 @@ prop in_set_minus_is_not_in_second_operand(z set, A set, B set):
 prop in_cup_via_member_set(z set, F set, Y set):
     $in(z, cup(F))
 
+prop subset_of_finite_set_is_finite(A set, B finite_set):
+    $is_finite_set(A)
+
 know:
     forall z set, A set, B set:
         $in(z, A)
@@ -136,6 +139,26 @@ know:
 
     forall A finite_set:
         count(A) $in N
+
+    forall A set, B finite_set:
+        A $subset B
+        =>:
+            $subset_of_finite_set_is_finite(A, B)
+
+    forall A finite_set, B set:
+        B $subset A
+        =>:
+            $is_finite_set(B)
+            $is_finite_set(set_minus(A, B))
+            count(set_minus(A, B)) = count(A) - count(B)
+
+    forall A, B finite_set:
+        count(union(A, B)) = count(A) + count(B) - count(intersect(A, B))
+        count(A) = count(intersect(A, B)) + count(set_minus(A, B))
+        count(B) = count(intersect(A, B)) + count(set_minus(B, A))
+        count(set_minus(A, B)) = count(A) - count(intersect(A, B))
+        count(set_minus(B, A)) = count(B) - count(intersect(A, B))
+        count(set_diff(A, B)) = count(set_minus(A, B)) + count(set_minus(B, A))
 
     forall A, B finite_set:
         A $subset B

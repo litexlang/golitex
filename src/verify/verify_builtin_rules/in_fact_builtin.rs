@@ -150,7 +150,7 @@ impl Runtime {
                 self.verify_count_in_standard_number_set(in_fact, count, verify_state)
             }
             (_, Obj::StandardSet(StandardSet::N)) => {
-                self.verify_in_fact_n_by_nonnegative_integer(in_fact)
+                self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
             }
             (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, verify_state)
@@ -1325,10 +1325,11 @@ impl Runtime {
     }
 
     // `N` = nonnegative integers: from `x $in Z` and `x >= 0`; strict `x > 0` also suffices.
-    // Example: after `b $in Z` and `b >= 0`, Litex verifies `b $in N`.
+    // Example: after `a, b $in Z` and `b - a >= 0`, Litex verifies `b - a $in N`.
     fn verify_in_fact_n_by_nonnegative_integer(
         &mut self,
         in_fact: &InFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
@@ -1346,10 +1347,7 @@ impl Runtime {
         }
 
         let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
-        if !self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(&in_z)?
-            .is_true()
-        {
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(&in_z, verify_state)? {
             return Ok((StmtUnknown::new()).into());
         }
 

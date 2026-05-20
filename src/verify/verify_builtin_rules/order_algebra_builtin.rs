@@ -8,6 +8,7 @@
 // (a <= b => k*a <= k*b with k on the same side of both products), reverses when k <= 0 (b <= a =>
 // k*a <= k*b). Strict: 0 < k and a < b => k*a < k*b; k < 0 and b < a => k*a < k*b.
 
+use super::number_compare::normalized_decimal_string_is_even_integer;
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
@@ -83,6 +84,47 @@ impl Runtime {
             return false;
         };
         integer > 0 && integer % 2 == 1
+    }
+
+    fn obj_is_positive_even_integer_number(obj: &Obj) -> bool {
+        let Obj::Number(number) = obj else {
+            return false;
+        };
+        if !normalized_decimal_string_is_even_integer(&number.normalized_value) {
+            return false;
+        };
+        let Ok(integer) = number.normalized_value.parse::<i128>() else {
+            return false;
+        };
+        integer > 0
+    }
+
+    // k in N_pos and k % 2 = 0, or k is a positive even literal.
+    fn verify_even_exponent_in_n_pos_subgoal(
+        &mut self,
+        exp: &Obj,
+        lf: &LineFile,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        if Self::obj_is_positive_even_integer_number(exp) {
+            return Ok(Some(Vec::new()));
+        }
+        let mut steps = Vec::new();
+        let n_pos_result = self.verify_obj_in_n_pos_subgoal(exp, lf)?;
+        if !n_pos_result.is_true() {
+            return Ok(None);
+        }
+        steps.push(n_pos_result);
+        let two: Obj = Number::new("2".to_string()).into();
+        if self.known_mod_equals_zero(exp, &two) {
+            return Ok(Some(steps));
+        }
+        Ok(None)
+    }
+
+    fn known_mod_equals_zero(&self, dividend: &Obj, divisor: &Obj) -> bool {
+        let zero = Self::literal_zero_obj();
+        let mod_obj: Obj = Mod::new(dividend.clone(), divisor.clone()).into();
+        self.objs_have_same_known_equality_rc_in_some_env(&mod_obj, &zero)
     }
 
     fn objs_same_by_display(left: &Obj, right: &Obj) -> bool {
@@ -231,7 +273,8 @@ impl Runtime {
                 LessEqualFact::new(z.clone(), f.left.clone(), f.line_file.clone()).into();
             let right_nonnegative: AtomicFact =
                 LessEqualFact::new(z, f.right.clone(), f.line_file.clone()).into();
-            let power_le_result = self.verify_order_subgoal(candidate)?;
+            let power_le_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
             let left_result = self.verify_order_subgoal(left_nonnegative)?;
             let right_result = self.verify_order_subgoal(right_nonnegative)?;
             if power_le_result.is_true() && left_result.is_true() && right_result.is_true() {
@@ -277,6 +320,79 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 "a^n <= b^n from a <= b and positive odd integer n".to_string(),
                 vec![result],
+            ),
+        )))
+    }
+
+    // a^k <= b^k from abs(a) <= abs(b) when k in N_pos and k % 2 = 0.
+    // Example: `forall x, y R: abs(x) <= abs(y) => x^2 <= y^2`.
+    fn try_pow_le_even_exponent_from_abs_le(
+        &mut self,
+        left_pow: &Pow,
+        right_pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
+            return Ok(None);
+        }
+        let Some(mut step_results) =
+            self.verify_even_exponent_in_n_pos_subgoal(left_pow.exponent.as_ref(), lf)?
+        else {
+            return Ok(None);
+        };
+        let abs_le: AtomicFact = LessEqualFact::new(
+            Abs::new(left_pow.base.as_ref().clone()).into(),
+            Abs::new(right_pow.base.as_ref().clone()).into(),
+            lf.clone(),
+        )
+        .into();
+        let abs_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&abs_le)?;
+        if !abs_result.is_true() {
+            return Ok(None);
+        }
+        step_results.push(abs_result);
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^k <= b^k from abs(a) <= abs(b) and even k in N_pos".to_string(),
+                step_results,
+            ),
+        )))
+    }
+
+    // a^k < b^k from abs(a) < abs(b) when k in N_pos and k % 2 = 0.
+    fn try_pow_lt_even_exponent_from_abs_lt(
+        &mut self,
+        left_pow: &Pow,
+        right_pow: &Pow,
+        lf: &LineFile,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
+            return Ok(None);
+        }
+        let Some(mut step_results) =
+            self.verify_even_exponent_in_n_pos_subgoal(left_pow.exponent.as_ref(), lf)?
+        else {
+            return Ok(None);
+        };
+        let abs_lt: AtomicFact = LessFact::new(
+            Abs::new(left_pow.base.as_ref().clone()).into(),
+            Abs::new(right_pow.base.as_ref().clone()).into(),
+            lf.clone(),
+        )
+        .into();
+        let abs_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&abs_lt)?;
+        if !abs_result.is_true() {
+            return Ok(None);
+        }
+        step_results.push(abs_result);
+        Ok(Some(StmtResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a^k < b^k from abs(a) < abs(b) and even k in N_pos".to_string(),
+                step_results,
             ),
         )))
     }
@@ -660,6 +776,11 @@ impl Runtime {
             )? {
                 return Ok(Some(r));
             }
+            if let Some(r) =
+                self.try_pow_le_even_exponent_from_abs_le(left_pow, right_pow, lf, atomic_fact)?
+            {
+                return Ok(Some(r));
+            }
         }
 
         if let Some(r) = self
@@ -976,6 +1097,11 @@ impl Runtime {
                 lf,
                 atomic_fact,
             )? {
+                return Ok(Some(r));
+            }
+            if let Some(r) =
+                self.try_pow_lt_even_exponent_from_abs_lt(left_pow, right_pow, lf, atomic_fact)?
+            {
                 return Ok(Some(r));
             }
         }

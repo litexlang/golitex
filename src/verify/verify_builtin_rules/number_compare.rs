@@ -59,6 +59,9 @@ impl Runtime {
         if let Some(result) = self.verify_abs_order_builtin_rule(atomic_fact)? {
             return Ok(result);
         }
+        if let Some(result) = self.verify_abs_order_strict_builtin_rule(atomic_fact)? {
+            return Ok(result);
+        }
         if let Some(result) =
             self.verify_zero_order_on_sub_from_two_sided_order_builtin_rule(atomic_fact)?
         {
