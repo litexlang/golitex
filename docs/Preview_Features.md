@@ -10,6 +10,14 @@ New preview-related behavior is **appended** under [Recent additions](#recent-ad
 
 Short pointers only; fuller syntax and semantics live in the in-repo [Manual](Manual.md) where noted.
 
+### Tuple equality from projections (2026-05)
+
+Litex can now prove `t = (a, b, ...)` from tuple shape information and component equalities such as `tuple_dim(t) = 2`, `t[1] = a`, and `t[2] = b`. This also closes goals like `forall t cart(N, N): t = (t[1], t[2])`.
+
+### Finite set count identities (2026-05)
+
+Litex now knows more count identities for finite set operations, including `union`, `set_minus`, and `set_diff`. See **Manual — Counting members**.
+
 ### Singleton integer intervals infer equality (2026-05)
 
 Membership in `range(a, b)` and `closed_range(a, b)` now records the element equality directly when the integer interval has exactly one value, such as `range(1, 2)` or `closed_range(1, 1)`. `by closed_range as cases` likewise records the single equality instead of a one-branch `or`. See **Manual — Builtin Inference — Ranges** and **Manual — Closed range as cases**.

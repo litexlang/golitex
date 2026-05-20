@@ -270,6 +270,11 @@ mod lit_file_runner_tests {
     }
 
     #[test]
+    fn run_tmp4() {
+        run_tmp_lit_file("tmp4.lit");
+    }
+
+    #[test]
     fn list_set_membership_implies_equality_or() {
         let source_code = r#"
 forall a set:
