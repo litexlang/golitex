@@ -54,6 +54,14 @@ fn order_edge_from_prop(p: &AtomicName) -> Option<OrderEdge> {
     }
 }
 
+fn subset_chain_prop(p: &AtomicName) -> Option<&'static str> {
+    match p.to_string().as_str() {
+        SUBSET => Some(SUBSET),
+        SUPERSET => Some(SUPERSET),
+        _ => None,
+    }
+}
+
 fn dedup_atomic_facts(mut facts: Vec<AtomicFact>) -> Vec<AtomicFact> {
     let mut seen = HashSet::new();
     facts.retain(|f| seen.insert(f.to_string()));
@@ -66,6 +74,37 @@ impl ChainFact {
         let n = self.objs.len();
         if n < 2 {
             return Ok(base);
+        }
+
+        if let Some(first_prop) = self.prop_names.first().and_then(subset_chain_prop) {
+            let all_same_subset_prop = self
+                .prop_names
+                .iter()
+                .all(|p| subset_chain_prop(p) == Some(first_prop));
+            if all_same_subset_prop {
+                let mut extra = Vec::new();
+                let lf = self.line_file.clone();
+                for i in 0..n {
+                    for j in i + 2..n {
+                        let fact: AtomicFact = if first_prop == SUBSET {
+                            SubsetFact::new(self.objs[i].clone(), self.objs[j].clone(), lf.clone())
+                                .into()
+                        } else {
+                            SupersetFact::new(
+                                self.objs[i].clone(),
+                                self.objs[j].clone(),
+                                lf.clone(),
+                            )
+                            .into()
+                        };
+                        extra.push(fact);
+                    }
+                }
+
+                let mut all = base;
+                all.extend(extra);
+                return Ok(dedup_atomic_facts(all));
+            }
         }
 
         let mut edges: Vec<OrderEdge> = Vec::with_capacity(self.prop_names.len());

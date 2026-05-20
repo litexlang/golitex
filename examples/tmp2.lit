@@ -1,0 +1,149 @@
+prop injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+claim:
+    prove:
+        forall n N:
+            exist! y N st {2 * y = n * (n + 1)}
+
+    by cases:
+        prove:
+            n * (n + 1) % 2 = 0
+        case n % 2 = 0:
+            n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 0 * ((n + 1) % 2) % 2 = 0 % 2 = 0
+        case n % 2 = 1:
+            (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
+            n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
+    have by exist r N st {n * (n + 1) = 2 * r}: r
+    witness exist y N st {2 * y = n * (n + 1)} from r:
+        n * (n + 1) = 2 * r
+        2 * r = n * (n + 1)
+    forall y1, y2 N:
+        2 * y1 = n * (n + 1)
+        2 * y2 = n * (n + 1)
+        =>:
+            y1 = n * (n + 1) / 2 = y2
+    exist! y N st {2 * y = n * (n + 1)}
+
+have fn tri as set:
+    forall n N:
+        exist! y N st {2 * y = n * (n + 1)}
+
+claim:
+    prove:
+        forall n N:
+            tri(n + 1) = tri(n) + n + 1
+    2 * tri(n + 1) = (n + 1) * ((n + 1) + 1) = (n + 1) * (n + 2)
+    2 * tri(n) = n * (n + 1)
+    2 * (tri(n) + n + 1) = 2 * tri(n) + 2 * n + 2 = n * (n + 1) + 2 * n + 2 = (n + 1) * (n + 2)
+    tri(n + 1) = (2 * tri(n + 1)) / 2 = ((n + 1) * (n + 2)) / 2 = (2 * (tri(n) + n + 1)) / 2 = tri(n) + n + 1
+
+have fn diagonal_index(u cart(N, N)) N = tri(u[1]) + u[2]
+
+claim:
+    prove:
+        forall u cart(N, N):
+            u[2] <= u[1]
+            =>:
+                diagonal_index(u) < tri(u[1] + 1)
+    diagonal_index(u) = tri(u[1]) + u[2] <= tri(u[1]) + u[1] < tri(u[1]) + u[1] + 1 = tri(u[1] + 1)
+
+claim:
+    prove:
+        forall u cart(N, N):
+            tri(u[1]) <= diagonal_index(u)
+    tri(u[1]) <= tri(u[1]) + u[2] = diagonal_index(u)
+
+claim:
+    prove:
+        forall a, b N:
+            a < b
+            =>:
+                tri(a + 1) <= tri(b)
+    a + 1 <= b
+    2 * tri(a + 1) = (a + 1) * ((a + 1) + 1) <= b * (b + 1) = 2 * tri(b)
+    tri(a + 1) = (2 * tri(a + 1)) / 2 <= (2 * tri(b)) / 2 = tri(b)
+
+claim:
+    prove:
+        forall u, v cart(N, N):
+            u[2] <= u[1]
+            u[1] < v[1]
+            =>:
+                diagonal_index(u) < diagonal_index(v)
+    diagonal_index(u) < tri(u[1] + 1) <= tri(v[1]) <= diagonal_index(v)
+
+claim:
+    prove:
+        forall u, v cart(N, N):
+            u[2] <= u[1]
+            diagonal_index(u) = diagonal_index(v)
+            =>:
+                not u[1] < v[1]
+    by contra:
+        prove:
+            not u[1] < v[1]
+        diagonal_index(u) < diagonal_index(v)
+        impossible diagonal_index(u) = diagonal_index(v)
+
+# If two valid diagonal positions have the same number, they are on the same diagonal.
+claim:
+    prove:
+        forall u, v cart(N, N):
+            u[2] <= u[1]
+            v[2] <= v[1]
+            diagonal_index(u) = diagonal_index(v)
+            =>:
+                u[1] = v[1]
+    not u[1] < v[1]
+    not v[1] < u[1]
+    u[1] = v[1]
+
+have fn cauchy_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
+
+# On one diagonal, the offset determines the position.
+claim:
+    prove:
+        forall u, v cart(N, N):
+            u[1] = v[1]
+            diagonal_index(u) = diagonal_index(v)
+            =>:
+                u[2] = v[2]
+    diagonal_index(u) = tri(u[1]) + u[2]
+    diagonal_index(v) = tri(v[1]) + v[2]
+    tri(u[1]) + u[2] = diagonal_index(u) = diagonal_index(v) = tri(v[1]) + v[2]
+    u[2] = (tri(u[1]) + u[2]) - tri(u[1]) = (tri(v[1]) + v[2]) - tri(v[1]) = v[2]
+
+claim:
+    prove:
+        forall t1, t2 cart(N, N):
+            cauchy_pair(t1) = cauchy_pair(t2)
+            =>:
+                t1 = t2
+    have u cart(N, N) = (t1[1] + t1[2], t1[2])
+    have v cart(N, N) = (t2[1] + t2[2], t2[2])
+    u[2] = t1[2]
+    u[1] = t1[1] + t1[2]
+    v[2] = t2[2]
+    v[1] = t2[1] + t2[2]
+    t1[2] <= t1[1] + t1[2]
+    t2[2] <= t2[1] + t2[2]
+    u[2] = t1[2] <= t1[1] + t1[2] = u[1]
+    v[2] = t2[2] <= t2[1] + t2[2] = v[1]
+    diagonal_index(u) = tri(t1[1] + t1[2]) + t1[2] = cauchy_pair(t1)
+    diagonal_index(v) = tri(t2[1] + t2[2]) + t2[2] = cauchy_pair(t2)
+    diagonal_index(u) = diagonal_index(v)
+    u[1] = v[1]
+    u[2] = v[2]
+    t1[1] + t1[2] = t2[1] + t2[2]
+    t1[2] = t2[2]
+    t1[1] = (t1[1] + t1[2]) - t1[2] = (t2[1] + t2[2]) - t2[2] = t2[1]
+    t1 = (t1[1], t1[2]) = (t2[1], t2[2]) = t2
+
+claim:
+    prove:
+        $injective_fn(cart(N, N), N, cauchy_pair)
+    $injective_fn(cart(N, N), N, cauchy_pair)

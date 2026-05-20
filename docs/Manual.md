@@ -307,7 +307,7 @@ If a struct has no `<=>:` filter facts, Litex can prove `&Name(args)` is nonempt
 
 #### Counting members
 
-Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `count(cart(A_1,...,A_n))` reduces to `count(A_1) * ... * count(A_n)` in calculations. It also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`.
+Size of a finite set. Litex knows that the count of a finite set is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `count(cart(A_1,...,A_n))` reduces to `count(A_1) * ... * count(A_n)` in calculations. It also knows basic upper bounds such as `count(intersect(A, B)) <= count(A)` and `count(union(A, B)) <= count(A) + count(B)`, plus count identities for `union`, `set_minus`, and `set_diff`.
 
 ```litex
 count({1, 2, 3}) = 3
@@ -319,6 +319,8 @@ forall A, B finite_set:
     $is_finite_set(union(A, B))
     $is_finite_set(intersect(A, B))
 count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
+count(union({1, 2}, {2, 3})) = count({1, 2}) + count({2, 3}) - count(intersect({1, 2}, {2, 3}))
+count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3}))
 ```
 
 #### Finite `sum` and `product`
@@ -2369,6 +2371,13 @@ forall x, y R:
 ```
 
 The same structural idea applies to many composite objects: matrices, `max`, `min`, set operations, tuples, and other builtin object heads.
+
+Tuple equality can also be proved from projections. If Litex knows the left side is a tuple of the same dimension and each component matches, it can close equality with a tuple object.
+
+```litex
+forall t cart(N, N):
+    t = (t[1], t[2])
+```
 
 #### Known Numeric Values
 
