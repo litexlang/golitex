@@ -40,8 +40,12 @@ impl Runtime {
             ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
         let reduced =
             self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
-        let inner =
-            self.verify_objs_are_equal(&reduced, other_side, line_file.clone(), verify_state)?;
+        let inner = self.verify_objs_are_equal_in_equality_builtin(
+            &reduced,
+            other_side,
+            line_file.clone(),
+            verify_state,
+        )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 statement_left,

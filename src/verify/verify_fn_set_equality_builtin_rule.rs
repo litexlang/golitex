@@ -175,8 +175,8 @@ impl Runtime {
                     Some(e),
                 )
             })?;
-        let ret_equal_fact = EqualFact::new(source_ret_set, target_ret_set, line_file);
-        let ret_equal_result = self.verify_equal_fact(&ret_equal_fact, verify_state)?;
+        let ret_equal_result =
+            self.verify_objs_are_equal_known_only(&source_ret_set, &target_ret_set, line_file);
         Ok(ret_equal_result.is_true())
     }
 

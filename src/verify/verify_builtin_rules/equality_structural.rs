@@ -127,6 +127,105 @@ impl Runtime {
         false
     }
 
+    pub fn verify_objs_are_equal_known_only(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> StmtResult {
+        if verify_equality_by_they_are_the_same(left, right) {
+            return factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "known-only equality: they are the same",
+            );
+        }
+
+        if self.objs_have_same_known_equality_rc_in_some_env(left, right) {
+            return factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "known-only equality: same known equality class",
+            );
+        }
+
+        let left_resolved = self.resolve_obj(left);
+        let right_resolved = self.resolve_obj(right);
+        if left_resolved.to_string() != left.to_string()
+            || right_resolved.to_string() != right.to_string()
+        {
+            if verify_equality_by_they_are_the_same(&left_resolved, &right_resolved)
+                || self
+                    .objs_have_same_known_equality_rc_in_some_env(&left_resolved, &right_resolved)
+                || left_resolved
+                    .two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved)
+            {
+                return factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "known-only equality: resolved objects match",
+                );
+            }
+        }
+
+        StmtResult::StmtUnknown(StmtUnknown::new())
+    }
+
+    pub fn verify_objs_are_equal_in_equality_builtin(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let known_result = self.verify_objs_are_equal_known_only(left, right, line_file.clone());
+        if known_result.is_true() {
+            return Ok(known_result);
+        }
+        let builtin_result =
+            self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
+        if builtin_result.is_true() {
+            return Ok(builtin_result);
+        }
+        let known_equalities_result = self.verify_equality_with_known_equalities(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if known_equalities_result.is_true() {
+            return Ok(known_equalities_result);
+        }
+        let same_shape_result = self
+            .verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
+                left,
+                right,
+                verify_state,
+                line_file.clone(),
+            )?;
+        if same_shape_result {
+            return Ok(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality builtin: same shape with equal arguments",
+            ));
+        }
+        if verify_state.is_round_0() {
+            let next_verify_state = verify_state.new_state_with_round_increased();
+            let fact: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
+            let forall_result =
+                self.verify_atomic_fact_with_known_forall(&fact, &next_verify_state)?;
+            if forall_result.is_true() {
+                return Ok(forall_result);
+            }
+        }
+        Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
     fn arg_pairs_share_known_equality_class(&self, pairs: &[(&Obj, &Obj)]) -> bool {
         pairs
             .iter()

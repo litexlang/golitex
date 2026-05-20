@@ -288,6 +288,12 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_projection_from_known_tuple_equality(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
         let (result, calculated_left, calculated_right) = self
             .verify_equality_by_they_are_the_same_and_calculation(
                 left,
@@ -366,6 +372,84 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn try_verify_projection_from_known_tuple_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(done) = self.try_verify_one_projection_from_known_tuple_equality(
+            left,
+            right,
+            line_file.clone(),
+        )? {
+            return Ok(Some(done));
+        }
+        self.try_verify_one_projection_from_known_tuple_equality(right, left, line_file)
+    }
+
+    fn try_verify_one_projection_from_known_tuple_equality(
+        &mut self,
+        projection_side: &Obj,
+        other_side: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::ObjAtIndex(obj_at_index) = projection_side else {
+            return Ok(None);
+        };
+        let Some(index) = self.obj_at_index_literal_positive_usize(obj_at_index.index.as_ref())
+        else {
+            return Ok(None);
+        };
+        let target_key = obj_at_index.obj.to_string();
+        for env in self.iter_environments_from_top() {
+            let Some((_, equal_objs)) = env.known_equality.get(&target_key) else {
+                continue;
+            };
+            for equal_obj in equal_objs.iter() {
+                if let Some(component) = Self::component_at_index(equal_obj, index) {
+                    if self
+                        .verify_objs_are_equal_known_only(&component, other_side, line_file.clone())
+                        .is_true()
+                    {
+                        return Ok(Some(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                EqualFact::new(
+                                    projection_side.clone(),
+                                    other_side.clone(),
+                                    line_file,
+                                )
+                                .into(),
+                                "projection from known tuple equality".to_string(),
+                                Vec::new(),
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn obj_at_index_literal_positive_usize(&self, index_obj: &Obj) -> Option<usize> {
+        let number = self.resolve_obj_to_number(index_obj)?;
+        let parsed = number.normalized_value.parse::<usize>().ok()?;
+        if parsed == 0 {
+            None
+        } else {
+            Some(parsed)
+        }
+    }
+
+    fn component_at_index(obj: &Obj, index: usize) -> Option<Obj> {
+        match obj {
+            Obj::Tuple(tuple) => tuple.args.get(index - 1).map(|x| x.as_ref().clone()),
+            Obj::ListSet(list_set) => list_set.list.get(index - 1).map(|x| x.as_ref().clone()),
+            _ => None,
+        }
     }
 
     // Tuple extensionality: a tuple is equal to `(a, b, ...)` when its dimension matches
