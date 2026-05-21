@@ -438,6 +438,30 @@ $q(1)
         run_with_large_stack("run_file_from_path_large_stack", run_file_from_path_impl);
     }
 
+    #[test]
+    fn run_file_in_std_from_folder_name() {
+        run_with_large_stack(
+            "run_file_in_std_from_folder_name_large_stack",
+            run_file_in_std_from_folder_name_impl,
+        );
+    }
+
+    fn run_file_in_std_from_folder_name_impl() {
+        let source_code = "run_file trigonometry\n\nsin(0) = 0\ncos(0) = 1";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(run_succeeded, "run_file in std failed:\n{}", run_output);
+        assert!(run_output.contains("\"type\": \"RunFileInStd\""));
+        assert!(run_output.contains("\"stmt\": \"run_file trigonometry\""));
+        assert!(run_output.contains("\"stmt\": \"sin(0) = 0\""));
+        assert!(run_output.contains("\"stmt\": \"cos(0) = 1\""));
+    }
+
     fn run_file_from_path_impl() {
         let path: String = "./examples/strong_induc.lit".to_string();
         let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
@@ -983,94 +1007,110 @@ $q(1)
 
     #[test]
     fn run_math500_litex_all() {
-        run_with_large_stack("run_math500_litex_all_large_stack", run_math500_litex_all_impl);
+        run_with_large_stack(
+            "run_math500_litex_all_large_stack",
+            run_math500_litex_all_impl,
+        );
     }
 
     fn run_math500_litex_simple_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let jsonl_path = manifest_dir.join("test-litex").join("math500-simple.jsonl");
+        let completed_dir = manifest_dir
+            .join("MATH-500-litex")
+            .join("math-500")
+            .join("finished");
         assert!(
-            jsonl_path.is_file(),
-            "test-litex/math500-simple.jsonl must exist at {:?}",
-            jsonl_path
+            completed_dir.is_dir(),
+            "MATH-500-litex/math-500/finished must exist at {:?}",
+            completed_dir
         );
-        run_math500_litex_jsonl_file(&jsonl_path);
+        run_math500_litex_lit_dir(&completed_dir);
     }
 
     fn run_math500_litex_all_impl() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let test_litex_dir = manifest_dir.join("test-litex");
+        let lit_dir = manifest_dir
+            .join("MATH-500-litex")
+            .join("math-500")
+            .join("unfinished");
         assert!(
-            test_litex_dir.is_dir(),
-            "test-litex directory must exist at {:?}",
-            test_litex_dir
+            lit_dir.is_dir(),
+            "MATH-500-litex/math-500/unfinished must exist at {:?}",
+            lit_dir
         );
-
-        let mut jsonl_paths: Vec<PathBuf> = Vec::new();
-        let read_directory = fs::read_dir(&test_litex_dir)
-            .unwrap_or_else(|read_error| panic!("failed to read {:?}: {}", test_litex_dir, read_error));
-        for directory_entry_result in read_directory {
-            let directory_entry =
-                directory_entry_result.unwrap_or_else(|read_error| panic!("failed to read directory entry: {}", read_error));
-            let path = directory_entry.path();
-            if path.extension().is_some_and(|ext| ext == "jsonl") {
-                jsonl_paths.push(path);
-            }
-        }
-        jsonl_paths.sort();
-        assert!(
-            !jsonl_paths.is_empty(),
-            "test-litex must contain at least one .jsonl file"
-        );
-
-        for jsonl_path in jsonl_paths.iter() {
-            run_math500_litex_jsonl_file(jsonl_path.as_path());
-        }
+        run_math500_litex_lit_dir(&lit_dir);
     }
 
-    fn run_math500_litex_jsonl_file(jsonl_path: &Path) {
-        let jsonl_path_str = match jsonl_path.to_str() {
-            Some(path_string) => path_string.to_string(),
-            None => panic!("{:?} must be valid UTF-8", jsonl_path),
-        };
-        let jsonl_content = match fs::read_to_string(jsonl_path) {
-            Ok(content) => content,
-            Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
-        };
+    fn run_math500_litex_lit_dir(base_dir: &Path) {
+        fn collect_lit_files(dir: &Path, out: &mut Vec<PathBuf>) {
+            let read_directory = fs::read_dir(dir)
+                .unwrap_or_else(|read_error| panic!("failed to read {:?}: {}", dir, read_error));
+            for directory_entry_result in read_directory {
+                let directory_entry = directory_entry_result.unwrap_or_else(|read_error| {
+                    panic!("failed to read directory entry: {}", read_error)
+                });
+                let path = directory_entry.path();
+                let file_type = directory_entry
+                    .file_type()
+                    .unwrap_or_else(|file_type_error| {
+                        panic!(
+                            "failed to read file type for {:?}: {}",
+                            path, file_type_error
+                        )
+                    });
+                if file_type.is_dir() {
+                    collect_lit_files(path.as_path(), out);
+                } else if path.extension().is_some_and(|ext| ext == "lit") {
+                    out.push(path);
+                }
+            }
+        }
+
+        let mut lit_paths: Vec<PathBuf> = Vec::new();
+        collect_lit_files(base_dir, &mut lit_paths);
+        lit_paths.sort();
+
+        assert!(
+            !lit_paths.is_empty(),
+            "{:?} must contain at least one .lit file",
+            base_dir
+        );
+
+        let base_dir_str = base_dir.to_string_lossy().to_string();
 
         let builtin_start = Instant::now();
         let mut runtime = Runtime::new_with_builtin_code();
         let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
-        runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+        runtime.new_file_path_new_env_new_name_scope(base_dir_str.as_str());
 
         let run_wall_start = Instant::now();
         let mut total_count: usize = 0;
         let mut failed_labels: Vec<String> = Vec::new();
         let mut total_solution_duration_ms: f64 = 0.0;
 
-        for (line_index, line) in jsonl_content.lines().enumerate() {
-            if line.trim().is_empty() {
-                continue;
-            }
+        for lit_path in lit_paths.iter() {
             if total_count > 0 {
                 runtime.clear_current_env_and_parse_name_scope();
-                runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
             }
 
-            let unique_id =
-                jsonl_string_field(line, "unique_id").unwrap_or_else(|_| {
-                    format!("line {}", line_index + 1)
-                });
-            let litex_code = jsonl_string_field(line, "litex_code").unwrap_or_else(|error_message| {
-                panic!(
-                    "failed to parse litex_code in {:?} line {} ({}): {}",
-                    jsonl_path,
-                    line_index + 1,
-                    unique_id,
-                    error_message
-                )
+            let lit_path_str = lit_path.to_string_lossy().to_string();
+            runtime.set_current_user_lit_file_path(lit_path_str.as_str());
+
+            let relative_label = match lit_path.strip_prefix(base_dir) {
+                Ok(relative_path) => relative_path.to_string_lossy().to_string(),
+                Err(_) => lit_path_str.clone(),
+            };
+
+            let litex_code = fs::read_to_string(lit_path).unwrap_or_else(|read_error| {
+                panic!("failed to read {:?}: {}", lit_path, read_error)
             });
-            let normalized_source = remove_windows_carriage_return(litex_code.as_str());
+            let litex_code = litex_code.trim();
+            if litex_code.is_empty() {
+                println!("--- [SKIP] empty .lit file: {} ---", relative_label);
+                continue;
+            }
+
+            let normalized_source = remove_windows_carriage_return(litex_code);
 
             let start_time_for_one_solution = Instant::now();
             let (stmt_results, runtime_error) =
@@ -1083,13 +1123,10 @@ $q(1)
 
             total_count += 1;
             if !run_succeeded {
-                let label = format!("{}:{}", line_index + 1, unique_id);
+                let label = relative_label.clone();
                 println!(
-                    "=== [FAILED] math500-litex simple at jsonl line {} ({:.2} ms): {} ===\n{}\n",
-                    line_index + 1,
-                    duration_ms,
-                    unique_id,
-                    run_output
+                    "=== [FAILED] math500-litex simple at .lit file {} ({:.2} ms) ===\n{}\n",
+                    relative_label, duration_ms, run_output
                 );
                 failed_labels.push(label);
             }

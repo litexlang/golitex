@@ -229,4 +229,8 @@ know:
         =>:
             $even_power_bound_by_nonpositive_rhs(x, y, k)
 
+
+let pi R:
+    pi > 0
+        
 "#;

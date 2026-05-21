@@ -1,3 +1,17 @@
-have fn f(x R: x != 2) R = (3 * x - 2) / (x - 2)
+run_file trigonometry
 
-f(-2) + f(-1) + f(0) = 2 + 5 / 3 + 1 = 14 / 3
+prop polar_coordinate(rect cart(R, R), polar cart(R, R)):
+    polar[1] > 0
+    0 <= polar[2]
+    polar[2] < 2 * pi
+    rect[1] = polar[1] * cos(polar[2])
+    rect[2] = polar[1] * sin(polar[2])
+
+3 > 0
+0 <= pi / 2
+pi / 2 < pi < 2 * pi
+
+0 = 3 * cos(pi / 2)
+3 = 3 * sin(pi / 2)
+
+$polar_coordinate((0, 3), (3, pi / 2))

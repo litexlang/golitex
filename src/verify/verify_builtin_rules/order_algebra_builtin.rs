@@ -1222,6 +1222,31 @@ impl Runtime {
             }
         }
 
+        // Dividing a positive quantity by a factor greater than one makes it smaller.
+        // Example: from `a > 0` and `b > 1`, prove `a / b < a`.
+        if let Obj::Div(div) = &f.left {
+            if div.left.as_ref().to_string() == f.right.to_string() {
+                let g_pos = LessFact::new(z.clone(), f.right.clone(), lf.clone()).into();
+                let g_denom_gt_one =
+                    LessFact::new(one.clone(), div.right.as_ref().clone(), lf.clone()).into();
+                let r_pos = self.verify_order_subgoal(g_pos)?;
+                if !r_pos.is_true() {
+                    return Ok(None);
+                }
+                let r_denom_gt_one = self.verify_order_subgoal(g_denom_gt_one)?;
+                if !r_denom_gt_one.is_true() {
+                    return Ok(None);
+                }
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a / b < a from 0 < a and 1 < b".to_string(),
+                        vec![r_pos, r_denom_gt_one],
+                    ),
+                )));
+            }
+        }
+
         if f.right.to_string() == z.to_string() {
             if let Obj::Mul(m) = &f.left {
                 if let Some(r) = self.try_mul_lt_zero_by_signs(

@@ -8,6 +8,12 @@ forall a, b R_pos:
     =>:
         b < a * b
 
+forall a, b R:
+    a > 0
+    b > 1
+    =>:
+        a / b < a
+
 forall a, b, k R:
     0 <= k
     a <= b
