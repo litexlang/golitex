@@ -10,7 +10,15 @@ pub fn run_source_code_in_file(entry_file_path: &str) -> String {
         Ok(content) => content,
         Err(read_error) => panic!("Could not read file {:?}: {}", entry_file_path, read_error),
     };
-    run_source_code_with_output(&source_code, entry_file_path).1
+    run_source_code_with_output(&source_code, entry_file_path, false).1
+}
+
+pub fn run_source_code_in_file_for_cli(entry_file_path: &str, hide_file_paths: bool) -> String {
+    let source_code = match fs::read_to_string(entry_file_path) {
+        Ok(content) => content,
+        Err(read_error) => panic!("Could not read file {:?}: {}", entry_file_path, read_error),
+    };
+    run_source_code_with_output(&source_code, entry_file_path, hide_file_paths).1
 }
 
 pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) {
@@ -23,13 +31,18 @@ pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) 
             );
         }
     };
-    run_source_code_with_output(&source_code, entry_file_path)
+    run_source_code_with_output(&source_code, entry_file_path, false)
 }
 
-fn run_source_code_with_output(source_code: &str, entry_label: &str) -> (bool, String) {
+fn run_source_code_with_output(
+    source_code: &str,
+    entry_label: &str,
+    hide_file_paths: bool,
+) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new_with_builtin_code();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
+    runtime.module_manager.hide_file_paths_in_output = hide_file_paths;
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true)
 }

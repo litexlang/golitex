@@ -6,6 +6,11 @@ Try all snippets in browser: https://litexlang.com/doc/Litex_vs_Lean
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Litex_vs_Lean.md
 
+Related docs:
+
+- [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations)
+- [Research Positioning](https://litexlang.com/doc/Research_Positioning)
+
 _You can check out any time you like. But you can never leave._
 
 _— Hotel California_

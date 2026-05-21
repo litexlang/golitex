@@ -341,6 +341,62 @@ a = b
     }
 
     #[test]
+    fn hidden_file_path_output_omits_source_fields() {
+        let source_code = "x = 1";
+        let path = "/private/tmp/litex-hidden-source-test.lit";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path);
+        runtime.module_manager.hide_file_paths_in_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(!run_output.contains("\"source\""));
+        assert!(!run_output.contains(path));
+        assert!(run_output.contains("\"line\": 1"));
+    }
+
+    #[test]
+    fn show_file_path_output_keeps_source_fields() {
+        let source_code = "x = 1";
+        let path = "/private/tmp/litex-show-source-test.lit";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path);
+        runtime.module_manager.hide_file_paths_in_output = false;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains("\"source\""));
+        assert!(run_output.contains(path));
+    }
+
+    #[test]
+    fn hidden_file_path_run_file_output_omits_run_file_path() {
+        let run_file_path = std::env::temp_dir().join("litex-hidden-run-file-test.lit");
+        fs::write(&run_file_path, "1 = 1\n").unwrap();
+        let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+        let source_code = format!("run_file \"{}\"", run_file_path_string);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+        runtime.module_manager.hide_file_paths_in_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        let _ = fs::remove_file(&run_file_path);
+        assert!(run_succeeded, "run_file failed:\n{}", run_output);
+        assert!(run_output.contains("\"stmt\": \"run_file\""));
+        assert!(!run_output.contains(run_file_path_string.as_str()));
+        assert!(!run_output.contains("\"source\""));
+    }
+
+    #[test]
     fn citation_verified_by_type_reflects_cited_stmt_kind() {
         let source_code = r#"
 abstract_prop p(x)
@@ -782,6 +838,122 @@ $q(1)
     #[test]
     fn run_all() {
         run_with_large_stack("run_all_large_stack", run_all_impl);
+    }
+
+    // Local workflow helper: run math500 temporary snippets without touching golitex/examples.
+    //
+    // This test is intentionally non-failing when the sibling repo doesn't exist, so CI won't care.
+    // It is meant for local iteration while authoring snippets under ../MATH-500-litex/tmp/.
+    #[test]
+    fn run_math500_tmp() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let local_tmp_path = manifest_dir.join("tmp").join("math500_work.lit");
+        let sibling_tmp_path = match manifest_dir.parent() {
+            Some(parent) => parent
+                .join("MATH-500-litex")
+                .join("tmp")
+                .join("math500_work.lit"),
+            None => PathBuf::new(),
+        };
+
+        let math500_tmp_path = if local_tmp_path.is_file() {
+            local_tmp_path
+        } else if sibling_tmp_path.is_file() {
+            sibling_tmp_path
+        } else {
+            println!("--- run_math500_tmp: skip (missing file) ---");
+            println!("  checked: {}", local_tmp_path.display());
+            if !sibling_tmp_path.as_os_str().is_empty() {
+                println!("  checked: {}", sibling_tmp_path.display());
+            }
+            return;
+        };
+        println!("--- run_math500_tmp: using {} ---", math500_tmp_path.display());
+
+        let source_code = match fs::read_to_string(&math500_tmp_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", math500_tmp_path, read_error),
+        };
+
+        #[derive(Clone)]
+        struct Snippet {
+            label: String,
+            source: String,
+        }
+
+        // Split by "# test/..." markers so we can clear env between problems, while keeping one
+        // Runtime alive (like run_examples does).
+        let mut snippets: Vec<Snippet> = Vec::new();
+        let mut current_lines: Vec<String> = Vec::new();
+        let mut current_label: Option<String> = None;
+
+        for line in source_code.lines() {
+            if line.starts_with("# test/") {
+                if let Some(label) = current_label.take() {
+                    let body = current_lines.join("\n");
+                    if !body.trim().is_empty() {
+                        snippets.push(Snippet { label, source: body });
+                    }
+                }
+                current_lines.clear();
+                current_label = Some(line.trim().to_string());
+            }
+            if current_label.is_some() {
+                current_lines.push(line.to_string());
+            }
+        }
+        if let Some(label) = current_label.take() {
+            let body = current_lines.join("\n");
+            if !body.trim().is_empty() {
+                snippets.push(Snippet { label, source: body });
+            }
+        }
+        if snippets.is_empty() {
+            // Fallback: run whole file as one snippet.
+            snippets.push(Snippet {
+                label: "math500_work.lit (whole file)".to_string(),
+                source: source_code,
+            });
+        }
+
+        let path_for_runtime = match math500_tmp_path.to_str() {
+            Some(path_string) => path_string,
+            None => panic!("{:?} must be valid UTF-8", math500_tmp_path),
+        };
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path_for_runtime);
+
+        let mut durations_ms: Vec<(String, f64)> = Vec::new();
+        for (snippet_index, snippet) in snippets.iter().enumerate() {
+            if snippet_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(path_for_runtime);
+            }
+
+            let normalized_source = remove_windows_carriage_return(snippet.source.as_str());
+            let start_time = Instant::now();
+            let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            durations_ms.push((snippet.label.clone(), duration_ms));
+
+            if !run_succeeded {
+                print_slowest_run_labels("math500 snippets before failure", durations_ms.as_slice());
+                panic!(
+                    "math500 snippet FAILED:\n{}\n>>> FAILED snippet: {}\n",
+                    run_output, snippet.label
+                );
+            }
+        }
+
+        print_slowest_run_labels("math500 snippets", durations_ms.as_slice());
+        for (label, duration_ms) in durations_ms.iter() {
+            println!("  OK  {:.2} ms  {}", duration_ms, label);
+        }
     }
 
     fn run_all_impl() {
