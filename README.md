@@ -30,7 +30,7 @@ Litex is an open-source formal language for writing mathematical proofs that *lo
 
 The central idea is: **users write facts; Litex grows a verified context**. Litex code introduces objects, states facts, checks them, stores successful ones, and reuses them later.
 
-Litex is designed around ordinary mathematical writing: objects such as numbers, sets, and functions; facts such as `x = 2` or `x $in R`; and statements that grow a proof step by step. 
+Litex is designed around ordinary mathematical writing: objects such as numbers, sets, and functions; facts such as `x = 2` or `x $in R`; and statements that grow a proof step by step.
 
 It emphasizes a set-theoretic surface, proof scripts as verifiable facts, a growing context, and proof output that explains why each fact was accepted.
 
@@ -110,8 +110,7 @@ The output looks like
   "verified_by": {
     "type": "cite forall fact",
     "cite_source": {
-      "line": 4,
-      "source": "entry"
+      "line": 4
     },
     "cited_stmt": "forall x human:\n    $mortal(~1x)"
   },
@@ -148,6 +147,16 @@ This is the point Litex is trying to make especially strong: Litex gives agents 
 ## Starting Points
 
 Litex is aiming at a specific target: not making formal proof look clever, but making ordinary mathematical reasoning precise enough to check without changing its shape. Welcome to explore Litex by yourself.
+
+For different readers:
+
+1. [Soundness and Limitations](https://litexlang.com/doc/Soundness_and_Limitations): for readers who care about the trusted base, `know`, builtin rules, and current limitations.
+2. [Research Positioning](https://litexlang.com/doc/Research_Positioning): for proof assistant researchers and formal mathematics readers.
+3. [AI Agent Workflow](https://litexlang.com/doc/AI_Agent_Workflow): for AI and formal math work using verifier feedback.
+4. [Benchmarks and Case Studies](https://litexlang.com/doc/Benchmarks_and_Case_Studies): for reproducible examples and future evaluation.
+5. [AI for Science](https://litexlang.com/doc/AI_for_Science): for local verification of scientific and applied mathematical derivations.
+6. [Litex 中文战略一页纸](https://litexlang.com/doc/Strategic_One_Page_CN): for Chinese strategic and project discussions.
+7. [Outreach Guide](https://litexlang.com/doc/Outreach_Guide): for contributors writing emails, posts, and audience-specific pitches.
 
 Resources on the official website:
 

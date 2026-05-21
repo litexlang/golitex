@@ -2281,8 +2281,7 @@ x = 0 or x > 0
     {
       "type": "cite or fact",
       "cite_source": {
-        "line": 2,
-        "source": "entry"
+        "line": 2
       },
       "cited_stmt": "a = 0 or a > 0",
       "verify_what": "x = 0 or x > 0"
