@@ -1,4 +1,0 @@
-forall a, b Z:
-    b - a >= 0
-    =>:
-        b - a $in N

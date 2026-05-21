@@ -50,7 +50,7 @@ prove:
             $a_lt_c(0, 100, t)
             0 < t
 
-# --- Fact::ForallFactWithIff — last block `=>:`, then `<=>:` ---
+# --- Fact::ForallFactWithIff — required `=>:` left side, then `<=>:` ---
 prove:
     forall x, y R:
         =>:

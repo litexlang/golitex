@@ -8,9 +8,11 @@ use std::process;
 pub const MAIN_DOT_LIT: &str = "main.lit";
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+const SHOW_FILE_PATH_FLAG: &str = "-show-file-path";
 
 pub fn run_cli() {
-    let args: Vec<String> = env::args().skip(1).collect();
+    let mut args: Vec<String> = env::args().skip(1).collect();
+    let show_file_path = remove_flag(&mut args, SHOW_FILE_PATH_FLAG);
     let mut index: usize = 0;
 
     if !args.is_empty() {
@@ -39,6 +41,7 @@ pub fn run_cli() {
                 };
                 let mut runtime = Runtime::new_with_builtin_code();
                 runtime.new_file_path_new_env_new_name_scope("-e");
+                runtime.module_manager.hide_file_paths_in_output = !show_file_path;
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
                 let output =
@@ -56,7 +59,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                main_flag_file(file_path.as_str());
+                main_flag_file(file_path.as_str(), show_file_path);
                 return;
             }
             "-r" => {
@@ -77,7 +80,7 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                 };
-                main_flag_file(joined_string.as_str());
+                main_flag_file(joined_string.as_str(), show_file_path);
                 return;
             }
             "-latex" => {
@@ -221,7 +224,13 @@ pub fn run_cli() {
         }
     }
 
-    run_repl(VERSION);
+    run_repl_with_show_file_path(VERSION, show_file_path);
+}
+
+fn remove_flag(args: &mut Vec<String>, flag_name: &str) -> bool {
+    let before_len = args.len();
+    args.retain(|arg| arg != flag_name);
+    args.len() != before_len
 }
 
 /// `index` must point at the first token after the flag; reads one value and advances past it.
@@ -262,7 +271,7 @@ fn remove_windows_carriage_return(path_or_code: &str) -> String {
     path_or_code.replace('\r', "")
 }
 
-fn main_flag_file(file_flag: &str) {
+fn main_flag_file(file_flag: &str, show_file_path: bool) {
     let path = remove_windows_carriage_return(file_flag);
 
     let abs_file_path: PathBuf = if Path::new(path.as_str()).is_absolute() {
@@ -292,7 +301,7 @@ fn main_flag_file(file_flag: &str) {
         }
     };
 
-    let output = run_source_code_in_file(path_string.as_str());
+    let output = run_source_code_in_file_for_cli(path_string.as_str(), !show_file_path);
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
 }
 
@@ -373,6 +382,7 @@ litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <repo> : compile the given repository to LaTeX
 litex -help : show the help message
 litex -version : show the version
+litex -show-file-path : include file paths in JSON output
 litex -fmt : format the given code
 litex -install <module> : install the given module
 litex -uninstall <module> : uninstall the given module
