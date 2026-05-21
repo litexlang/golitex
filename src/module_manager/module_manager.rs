@@ -20,6 +20,7 @@ pub struct ModuleManager {
     pub entry_path: String,
     /// Same `Rc` as the user entry slot in `run_file_paths` when set (file path, `repl`, `-e`, ...).
     pub display_entry_rc: Option<Rc<str>>,
+    pub hide_file_paths_in_output: bool,
     pub imported_module_environments: HashMap<String, Box<ImportedModuleEnvironment>>,
 }
 
@@ -34,6 +35,7 @@ impl ModuleManager {
             current_file_index: FILE_INDEX_FOR_BUILTIN,
             entry_path: initial_path.to_string(),
             display_entry_rc: None,
+            hide_file_paths_in_output: false,
             imported_module_environments: HashMap::new(),
         }
     }
