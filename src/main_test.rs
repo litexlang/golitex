@@ -565,48 +565,63 @@ $q(1)
             "The-Mechanics-of-Litex-Proof must contain markdown files"
         );
 
-        let snippets = litex_snippets_from_markdown_files(&manifest_dir, &md_paths);
+        let mut snippets_by_file: Vec<Vec<(String, String, String)>> = Vec::new();
+        let mut total_snippet_count: usize = 0;
+        for md_path in md_paths.iter() {
+            let snippets = litex_snippets_from_markdown_files(&manifest_dir, &[md_path.clone()]);
+            total_snippet_count += snippets.len();
+            snippets_by_file.push(snippets);
+        }
         assert!(
-            !snippets.is_empty(),
+            total_snippet_count > 0,
             "The-Mechanics-of-Litex-Proof markdown files must contain ```litex``` blocks"
         );
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
 
         let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
         let wall_start = Instant::now();
-        for (snippet_index, (label, source_code, md_path_for_run_file)) in
-            snippets.iter().enumerate()
-        {
-            if snippet_index > 0 {
+        let mut file_count_with_snippets: usize = 0;
+        for snippets in snippets_by_file.iter() {
+            if snippets.is_empty() {
+                continue;
+            }
+
+            if file_count_with_snippets == 0 {
+                runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
+            } else {
                 runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(snippets[0].2.as_str());
+            }
+            file_count_with_snippets += 1;
+
+            for (label, source_code, md_path_for_run_file) in snippets.iter() {
                 runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+
+                let normalized_source = remove_windows_carriage_return(source_code);
+                let start_snippet = Instant::now();
+                let (stmt_results, runtime_error) =
+                    run_source_code(normalized_source.as_str(), &mut runtime);
+                let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                if !run_succeeded {
+                    panic!(
+                        "The-Mechanics-of-Litex-Proof markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
+                        run_output, label
+                    );
+                }
+
+                snippet_durations_ms.push((label.clone(), duration_ms));
             }
-
-            let normalized_source = remove_windows_carriage_return(source_code);
-            let start_snippet = Instant::now();
-            let (stmt_results, runtime_error) =
-                run_source_code(normalized_source.as_str(), &mut runtime);
-            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
-
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-            if !run_succeeded {
-                panic!(
-                    "The-Mechanics-of-Litex-Proof markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                    run_output, label
-                );
-            }
-
-            snippet_durations_ms.push((label.clone(), duration_ms));
         }
 
         println!(
             "--- The-Mechanics-of-Litex-Proof markdown: {} ```litex``` block(s) in {} markdown file(s), all OK ({:.2} ms wall) ---",
-            snippets.len(),
-            md_paths.len(),
+            total_snippet_count,
+            file_count_with_snippets,
             wall_start.elapsed().as_secs_f64() * 1000.0
         );
         for (label, duration_ms) in snippet_durations_ms.iter() {
@@ -724,6 +739,11 @@ $q(1)
 
     fn run_all_impl() {
         run_examples_impl();
+        run_the_mechanics_markdown_files_impl();
+    }
+
+    #[test]
+    fn run_the_mechanics_of_litex_proof() {
         run_the_mechanics_markdown_files_impl();
     }
 
@@ -1142,6 +1162,122 @@ $q(1)
         run_with_large_stack(
             "run_metamathqa_litex_solutions_large_stack",
             run_metamathqa_litex_solutions_impl,
+        );
+    }
+
+    #[test]
+    fn run_minif2f_litex_completed() {
+        run_with_large_stack(
+            "run_minif2f_litex_completed_large_stack",
+            run_minif2f_litex_completed_impl,
+        );
+    }
+
+    fn run_minif2f_litex_completed_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_path = manifest_dir
+            .parent()
+            .unwrap_or(manifest_dir.as_path())
+            .join("MiniF2F-litex")
+            .join("litex_completed.jsonl");
+        assert!(
+            jsonl_path.is_file(),
+            "MiniF2F-litex/litex_completed.jsonl must exist at {:?}",
+            jsonl_path
+        );
+
+        let jsonl_path_str = match jsonl_path.to_str() {
+            Some(path_string) => path_string.to_string(),
+            None => panic!("{:?} must be valid UTF-8", jsonl_path),
+        };
+        let jsonl_content = match fs::read_to_string(&jsonl_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
+        };
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+        runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+
+        let run_wall_start = Instant::now();
+        let mut total_count: usize = 0;
+        let mut failed_labels: Vec<String> = Vec::new();
+        let mut total_solution_duration_ms: f64 = 0.0;
+
+        for (line_index, line) in jsonl_content.lines().enumerate() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            if total_count > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
+            }
+
+            let name = jsonl_string_field(line, "name").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse name in {:?} line {}: {}",
+                    jsonl_path,
+                    line_index + 1,
+                    error_message
+                )
+            });
+            let litex_code =
+                jsonl_string_field(line, "litex_code").unwrap_or_else(|error_message| {
+                    panic!(
+                        "failed to parse litex_code in {:?} line {} ({}): {}",
+                        jsonl_path,
+                        line_index + 1,
+                        name,
+                        error_message
+                    )
+                });
+
+            let normalized_source = remove_windows_carriage_return(litex_code.as_str());
+            let start_time_for_one_solution = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
+            total_solution_duration_ms += duration_ms;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            total_count += 1;
+            if !run_succeeded {
+                let label = format!("{}:{}", line_index + 1, name);
+                println!(
+                    "=== [FAILED] MiniF2F-litex at jsonl line {} ({:.2} ms): {} ===\n{}\n",
+                    line_index + 1,
+                    duration_ms,
+                    name,
+                    run_output
+                );
+                failed_labels.push(label);
+            }
+        }
+
+        let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
+        println!("--- MiniF2F-litex timing (summary) ---");
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  completed snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+            total_count, total_solution_duration_ms, run_wall_ms
+        );
+
+        if failed_labels.is_empty() {
+            println!("--- MiniF2F-litex: all completed snippets OK ---");
+            return;
+        }
+
+        println!("--- MiniF2F-litex failed names ---");
+        for label in failed_labels.iter() {
+            println!("{}", label);
+        }
+        panic!(
+            "MiniF2F-litex completed snippet run failed for {} of {} item(s)",
+            failed_labels.len(),
+            total_count
         );
     }
 
