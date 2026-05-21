@@ -394,7 +394,7 @@ impl Runtime {
 
             for param_name in param_def.params.iter() {
                 let arg = args_as_obj[arg_index].clone();
-                let verify_result = self
+                let mut verify_result = self
                     .verify_obj_satisfies_param_type(arg.clone(), &param_type, verify_state)
                     .map_err(|verify_error| {
                         RuntimeError::from(WellDefinedRuntimeError(
@@ -407,6 +407,16 @@ impl Runtime {
                             ),
                         ))
                     })?;
+                if verify_result.is_unknown() {
+                    let resolved_arg = self.resolve_obj(&arg);
+                    if resolved_arg.to_string() != arg.to_string() {
+                        verify_result = self.verify_obj_satisfies_param_type(
+                            resolved_arg,
+                            &param_type,
+                            verify_state,
+                        )?;
+                    }
+                }
                 if verify_result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(

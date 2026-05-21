@@ -145,24 +145,20 @@ impl Runtime {
                     ),
                 ));
             }
-            let strict_fact: Fact = LessFact::new(
+            let strict_atomic: AtomicFact = LessFact::new(
                 less_equal_fact.left.clone(),
                 less_equal_fact.right.clone(),
                 less_equal_fact.line_file.clone(),
             )
             .into();
-            let strict_key = strict_fact.to_string();
-            let (cache_ok, _) = self.cache_known_facts_contains(&strict_key);
-            if cache_ok {
+            let strict_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
+            if strict_result.is_true() {
                 return Ok(StmtResult::FactualStmtSuccess(
-                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         less_equal_fact.clone().into(),
-                        VerifiedByResult::cited_fact(
-                            less_equal_fact.clone().into(),
-                            strict_fact,
-                            None,
-                        ),
-                        Vec::new(),
+                        "less_equal_fact_from_known_strict_order".to_string(),
+                        vec![strict_result],
                     ),
                 ));
             }
@@ -188,6 +184,25 @@ impl Runtime {
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_from_known_equality".to_string(),
                         vec![equal_result],
+                    ),
+                ));
+            }
+
+            // Strict order implies weak order. Example: from `pi > 0`, prove `pi >= 0`.
+            let strict_atomic: AtomicFact = GreaterFact::new(
+                greater_equal_fact.left.clone(),
+                greater_equal_fact.right.clone(),
+                greater_equal_fact.line_file.clone(),
+            )
+            .into();
+            let strict_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
+            if strict_result.is_true() {
+                return Ok(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        greater_equal_fact.clone().into(),
+                        "greater_equal_fact_from_known_strict_order".to_string(),
+                        vec![strict_result],
                     ),
                 ));
             }
