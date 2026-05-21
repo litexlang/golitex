@@ -1,0 +1,279 @@
+# Temporary Litex scratchpad for MATH-500 items.
+# This file is copied to ../MATH-500-litex/tmp/ for running dataset-style checks.
+
+# MATH-500 progress batch 3
+
+# test/prealgebra/1558.json
+claim:
+    prove:
+        forall distance R:
+            distance = 5 / 4
+            =>:
+                distance = 1.25
+    distance = 5 / 4 = 1.25
+
+# test/geometry/178.json
+claim:
+    prove:
+        forall sin_a, cos_a, tan_a R:
+            cos_a != 0
+            sin_a = 2 * cos_a
+            tan_a = sin_a / cos_a
+            =>:
+                tan_a = 2
+    tan_a = sin_a / cos_a = (2 * cos_a) / cos_a = 2
+
+# test/geometry/627.json
+claim:
+    prove:
+        forall x, y R:
+            x = 6 + 7 - 5
+            y = 8 + 4 - 3
+            =>:
+                x + y = 17
+    x + y = (6 + 7 - 5) + (8 + 4 - 3) = 17
+
+# test/geometry/967.json
+claim:
+    prove:
+        forall angle R:
+            angle = 360 / 5
+            =>:
+                angle = 72
+    angle = 360 / 5 = 72
+
+# test/geometry/802.json
+claim:
+    prove:
+        forall area R:
+            area = 6 * 4 / 2
+            =>:
+                area = 12
+    area = 6 * 4 / 2 = 12
+
+# test/geometry/106.json
+claim:
+    prove:
+        forall perimeter R:
+            perimeter = 8 + 8 + 15
+            =>:
+                perimeter = 31
+    perimeter = 8 + 8 + 15 = 31
+
+# test/prealgebra/153.json
+claim:
+    prove:
+        forall result R:
+            result = 7 / 9 - 4 / 9 + 2 / 9
+            =>:
+                result = 5 / 9
+    result = 7 / 9 - 4 / 9 + 2 / 9 = 5 / 9
+
+# test/number_theory/516.json
+claim:
+    prove:
+        forall value, a, b, c, d R:
+            value = 1 * 2 ^ 10 + 1 * 2 ^ 8 + 1 * 2 ^ 6 + 1 * 2 ^ 3 + 1 * 2 ^ 2 + 1 * 2
+            a = 2
+            b = 5
+            c = 1
+            d = 6
+            =>:
+                value = a * 8 ^ 3 + b * 8 ^ 2 + c * 8 + d
+    value = 1 * 2 ^ 10 + 1 * 2 ^ 8 + 1 * 2 ^ 6 + 1 * 2 ^ 3 + 1 * 2 ^ 2 + 1 * 2 = 1358
+    a * 8 ^ 3 + b * 8 ^ 2 + c * 8 + d = 2 * 8 ^ 3 + 5 * 8 ^ 2 + 1 * 8 + 6 = 1358
+
+# test/number_theory/847.json
+claim:
+    prove:
+        forall value, a, b, c, d R:
+            value = 555
+            a = 4
+            b = 2
+            c = 1
+            d = 0
+            =>:
+                value = a * 5 ^ 3 + b * 5 ^ 2 + c * 5 + d
+    value = 555
+    a * 5 ^ 3 + b * 5 ^ 2 + c * 5 + d = 4 * 5 ^ 3 + 2 * 5 ^ 2 + 1 * 5 + 0 = 555
+
+# test/number_theory/1257.json
+claim:
+    prove:
+        forall quotient, a, b, c R:
+            quotient = (4 * 5 ^ 2 + 1 * 5 + 3) / 2
+            a = 2
+            b = 0
+            c = 4
+            =>:
+                quotient = a * 5 ^ 2 + b * 5 + c
+    quotient = (4 * 5 ^ 2 + 1 * 5 + 3) / 2 = 54
+    a * 5 ^ 2 + b * 5 + c = 2 * 5 ^ 2 + 0 * 5 + 4 = 54
+
+# test/number_theory/598.json
+claim:
+    prove:
+        forall decimal_value R:
+            decimal_value = 21 / 312500
+            =>:
+                decimal_value = 0.0000672
+    decimal_value = 21 / 312500 = 0.0000672
+
+# test/intermediate_algebra/232.json
+claim:
+    prove:
+        forall point_count R:
+            point_count = 11 + 2 * (9 + 9 + 9 + 7 + 1)
+            =>:
+                point_count = 81
+    point_count = 11 + 2 * (9 + 9 + 9 + 7 + 1) = 81
+
+# test/geometry/283.json
+claim:
+    prove:
+        forall area, numer R:
+            numer = (0 * 0 + 0 * 0 + 4 * 2 + (8 / 3) * 3) - (3 * 0 + 0 * 4 + 0 * (8 / 3) + 2 * 0)
+            area = numer / 2
+            =>:
+                area = 8
+    numer = (0 * 0 + 0 * 0 + 4 * 2 + (8 / 3) * 3) - (3 * 0 + 0 * 4 + 0 * (8 / 3) + 2 * 0) = 16
+    area = numer / 2 = 16 / 2 = 8
+
+# test/prealgebra/1622.json
+claim:
+    prove:
+        forall tri_perim, side, hex_perim R:
+            tri_perim = 21
+            side = tri_perim / 3
+            hex_perim = 6 * side
+            =>:
+                hex_perim = 42
+    tri_perim = 21
+    side = tri_perim / 3 = 21 / 3 = 7
+    hex_perim = 6 * side = 6 * 7 = 42
+
+# test/counting_and_probability/230.json
+claim:
+    prove:
+        forall total, favorable, prob R:
+            total = 9 * 8 * 7 / 6
+            favorable = 8
+            prob = favorable / total
+            =>:
+                prob = 2 / 21
+    total = 9 * 8 * 7 / 6 = 84
+    favorable = 8
+    prob = favorable / total = 8 / 84 = 2 / 21
+
+# test/geometry/172.json
+claim:
+    prove:
+        forall area_abc, area_bce, ratio, area_eng R:
+            area_abc = 144
+            area_bce = area_abc / 2
+            ratio = 1 / 3
+            area_eng = area_bce * ratio * ratio
+            =>:
+                area_eng = 8
+    area_abc = 144
+    area_bce = area_abc / 2 = 144 / 2 = 72
+    ratio = 1 / 3
+    area_eng = area_bce * ratio * ratio = 72 * (1 / 3) * (1 / 3) = 8
+
+# test/geometry/434.json
+claim:
+    prove:
+        forall x R:
+            x = (180 - 124) / 2
+            =>:
+                x = 28
+    x = (180 - 124) / 2 = 28
+
+# test/prealgebra/930.json
+claim:
+    prove:
+        forall hex_side, hex_perim, oct_side R:
+            hex_side = 16
+            hex_perim = 6 * hex_side
+            oct_side = hex_perim / 8
+            =>:
+                oct_side = 12
+    hex_side = 16
+    hex_perim = 6 * hex_side = 6 * 16 = 96
+    oct_side = hex_perim / 8 = 96 / 8 = 12
+
+# test/number_theory/864.json
+claim:
+    prove:
+        forall value, a, b R:
+            value = 6 * 7
+            a = 5
+            b = 2
+            =>:
+                value = a * 8 + b
+    value = 6 * 7 = 42
+    a * 8 + b = 5 * 8 + 2 = 42
+
+# test/number_theory/46.json
+claim:
+    prove:
+        forall value, a, b R:
+            value = (5 * 9 + 8) - (1 * 9 + 8)
+            a = 4
+            b = 0
+            =>:
+                value = a * 9 + b
+    value = (5 * 9 + 8) - (1 * 9 + 8) = 36
+    a * 9 + b = 4 * 9 + 0 = 36
+
+# test/geometry/456.json
+claim:
+    prove:
+        forall r R:
+            r = 3
+            =>:
+                r = 3
+    r = 3
+
+# test/geometry/248.json
+claim:
+    prove:
+        forall h R:
+            h = 45 / 9
+            =>:
+                h = 5
+    h = 45 / 9 = 5
+
+# test/algebra/892.json
+claim:
+    prove:
+        forall a R:
+            a = 2
+            =>:
+                a = 2
+    a = 2
+
+# test/prealgebra/1113.json
+claim:
+    prove:
+        forall prod_value, result R:
+            prod_value = 10 * 15 * 24
+            result = 60
+            =>:
+                result ^ 2 = prod_value
+    prod_value = 10 * 15 * 24 = 3600
+    result = 60
+    result ^ 2 = 60 ^ 2 = 3600
+
+# test/geometry/221.json
+claim:
+    prove:
+        forall qm, lhs, rhs R:
+            qm = 30
+            lhs = qm ^ 2
+            rhs = 34 ^ 2 - 16 ^ 2
+            =>:
+                lhs = rhs
+    qm = 30
+    lhs = qm ^ 2 = 30 ^ 2 = 900
+    rhs = 34 ^ 2 - 16 ^ 2 = 34 * 34 - 16 * 16 = 1156 - 256 = 900

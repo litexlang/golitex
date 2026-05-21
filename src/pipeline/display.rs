@@ -1,7 +1,6 @@
 use crate::common::json_value::{
     json_one_level_indent, json_string_literal, line_file_line_json_fragment,
-    line_file_line_json_value, line_file_source_json_fragment, line_file_source_json_value,
-    render_json_value, JsonValue,
+    line_file_line_json_value, line_file_source_json_value, render_json_value, JsonValue,
 };
 use crate::prelude::*;
 use std::rc::Rc;
@@ -48,6 +47,10 @@ fn finalize_display_text_with_optional_strip(text: String, strip_free_param_tags
     } else {
         text
     }
+}
+
+fn should_hide_file_paths(runtime: &Runtime) -> bool {
+    runtime.module_manager.hide_file_paths_in_output
 }
 
 pub fn display_stmt_exec_result_json(
@@ -250,14 +253,15 @@ fn verified_by_citation_object(
     msg: &str,
     verify_what: Option<&Fact>,
 ) -> JsonValue {
-    let source_value = citation_source_json_value(citation_line_file, &runtime.module_manager);
-    let cite_source = JsonValue::Object(vec![
-        (
-            "line".to_string(),
-            line_file_line_json_value(citation_line_file),
-        ),
-        (JSON_KEY_SOURCE.to_string(), source_value),
-    ]);
+    let mut cite_source_fields = vec![(
+        "line".to_string(),
+        line_file_line_json_value(citation_line_file),
+    )];
+    if !should_hide_file_paths(runtime) {
+        let source_value = citation_source_json_value(citation_line_file, &runtime.module_manager);
+        cite_source_fields.push((JSON_KEY_SOURCE.to_string(), source_value));
+    }
+    let cite_source = JsonValue::Object(cite_source_fields);
     let mut fields = vec![
         (
             "type".to_string(),
@@ -288,7 +292,7 @@ fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
 
 fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
-    let stmt_display_string = user_visible_stmt_or_msg_text(&x.stmt.to_string());
+    let stmt_display_string = stmt_text_for_json(runtime, &x.stmt);
     let stmt_text = match &x.stmt {
         Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
         _ => stmt_display_string,
@@ -432,8 +436,17 @@ fn json_array_field_line(indent_inner: &str, json_key: &str, json_elements: &[St
     }
 }
 
-fn stmt_json_field_lines(indent_inner: &str, stmt: &Stmt) -> Vec<String> {
-    let stmt_display_string = user_visible_stmt_or_msg_text(&stmt.to_string());
+fn stmt_text_for_json(runtime: &Runtime, stmt: &Stmt) -> String {
+    if should_hide_file_paths(runtime) {
+        if let Stmt::RunFileStmt(_) = stmt {
+            return "run_file".to_string();
+        }
+    }
+    user_visible_stmt_or_msg_text(&stmt.to_string())
+}
+
+fn stmt_json_field_lines(runtime: &Runtime, indent_inner: &str, stmt: &Stmt) -> Vec<String> {
+    let stmt_display_string = stmt_text_for_json(runtime, stmt);
     let wrapped_stmt_display_string = match stmt {
         Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
         _ => stmt_display_string,
@@ -455,13 +468,14 @@ fn stmt_json_field_lines(indent_inner: &str, stmt: &Stmt) -> Vec<String> {
 }
 
 fn push_optional_statement_json_field_lines(
+    runtime: &Runtime,
     field_lines: &mut Vec<String>,
     indent_inner: &str,
     statement: &Option<Stmt>,
 ) {
     match statement {
         Some(stmt) => {
-            let stmt_lines = stmt_json_field_lines(indent_inner, stmt);
+            let stmt_lines = stmt_json_field_lines(runtime, indent_inner, stmt);
             for stmt_line in stmt_lines {
                 field_lines.push(stmt_line);
             }
@@ -518,12 +532,17 @@ fn build_display_error_json_object(
         JSON_KEY_LINE,
         line_file_line_json_fragment(&line_file)
     ));
-    field_lines.push(format!(
-        "{}\"{}\": {}",
-        indent_inner,
-        JSON_KEY_SOURCE,
-        line_file_source_json_fragment(&line_file)
-    ));
+    if !should_hide_file_paths(runtime) {
+        let source_json = if is_default_line_file(&line_file) {
+            "null".to_string()
+        } else {
+            json_string_literal(line_file.1.as_ref())
+        };
+        field_lines.push(format!(
+            "{}\"{}\": {}",
+            indent_inner, JSON_KEY_SOURCE, source_json
+        ));
+    }
 
     match error {
         RuntimeError::DefineParamsError(e) => {
@@ -550,6 +569,7 @@ fn build_display_error_json_object(
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
+                runtime,
                 &mut field_lines,
                 indent_inner.as_str(),
                 &e.statement,
@@ -563,6 +583,7 @@ fn build_display_error_json_object(
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
+                runtime,
                 &mut field_lines,
                 indent_inner.as_str(),
                 &e.statement,
@@ -576,6 +597,7 @@ fn build_display_error_json_object(
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
+                runtime,
                 &mut field_lines,
                 indent_inner.as_str(),
                 &e.statement,
@@ -597,7 +619,7 @@ fn build_display_error_json_object(
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             if let Some(stmt) = &e.statement {
-                let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), stmt);
+                let stmt_lines = stmt_json_field_lines(runtime, indent_inner.as_str(), stmt);
                 for stmt_line in stmt_lines {
                     field_lines.push(stmt_line);
                 }
@@ -626,6 +648,7 @@ fn build_display_error_json_object(
             ));
             let well_defined_stmt = e.statement.as_ref().or(statement_context).cloned();
             push_optional_statement_json_field_lines(
+                runtime,
                 &mut field_lines,
                 indent_inner.as_str(),
                 &well_defined_stmt,
@@ -639,6 +662,7 @@ fn build_display_error_json_object(
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
+                runtime,
                 &mut field_lines,
                 indent_inner.as_str(),
                 &e.statement,
@@ -652,6 +676,7 @@ fn build_display_error_json_object(
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
+                runtime,
                 &mut field_lines,
                 indent_inner.as_str(),
                 &e.statement,
@@ -673,6 +698,7 @@ fn build_display_error_json_object(
                 json_string_literal(&user_visible_stmt_or_msg_text(&e.msg))
             ));
             push_optional_statement_json_field_lines(
+                runtime,
                 &mut field_lines,
                 indent_inner.as_str(),
                 &e.statement,

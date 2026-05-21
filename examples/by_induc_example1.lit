@@ -1,8 +1,7 @@
 claim:
     prove:
         forall n N:
-            =>:
-                2 ^ n >= n + 1
+            2 ^ n >= n + 1
     by induc n from 0:
         prove:
             2 ^ n >= n + 1
