@@ -1,3 +1,7 @@
+// cargo test run_examples -- --nocapture
+// cargo test run_the_mechanics_markdown_files -- --nocapture
+// cargo test run_all -- --nocapture
+
 #[cfg(test)]
 mod lit_file_runner_tests {
     use std::fs;
@@ -868,7 +872,10 @@ $q(1)
             }
             return;
         };
-        println!("--- run_math500_tmp: using {} ---", math500_tmp_path.display());
+        println!(
+            "--- run_math500_tmp: using {} ---",
+            math500_tmp_path.display()
+        );
 
         let source_code = match fs::read_to_string(&math500_tmp_path) {
             Ok(content) => content,
@@ -892,7 +899,10 @@ $q(1)
                 if let Some(label) = current_label.take() {
                     let body = current_lines.join("\n");
                     if !body.trim().is_empty() {
-                        snippets.push(Snippet { label, source: body });
+                        snippets.push(Snippet {
+                            label,
+                            source: body,
+                        });
                     }
                 }
                 current_lines.clear();
@@ -905,7 +915,10 @@ $q(1)
         if let Some(label) = current_label.take() {
             let body = current_lines.join("\n");
             if !body.trim().is_empty() {
-                snippets.push(Snippet { label, source: body });
+                snippets.push(Snippet {
+                    label,
+                    source: body,
+                });
             }
         }
         if snippets.is_empty() {
@@ -933,7 +946,8 @@ $q(1)
 
             let normalized_source = remove_windows_carriage_return(snippet.source.as_str());
             let start_time = Instant::now();
-            let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
             let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
 
             let (run_succeeded, run_output) =
@@ -942,7 +956,10 @@ $q(1)
             durations_ms.push((snippet.label.clone(), duration_ms));
 
             if !run_succeeded {
-                print_slowest_run_labels("math500 snippets before failure", durations_ms.as_slice());
+                print_slowest_run_labels(
+                    "math500 snippets before failure",
+                    durations_ms.as_slice(),
+                );
                 panic!(
                     "math500 snippet FAILED:\n{}\n>>> FAILED snippet: {}\n",
                     run_output, snippet.label
