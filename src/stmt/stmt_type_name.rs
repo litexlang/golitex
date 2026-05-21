@@ -42,6 +42,12 @@ impl RunFileStmt {
     }
 }
 
+impl RunFileInStd {
+    pub fn stmt_type_name(&self) -> String {
+        "RunFileInStd".to_string()
+    }
+}
+
 impl ImportRelativePathStmt {
     pub fn stmt_type_name(&self) -> String {
         "ImportRelativePathStmt".to_string()
