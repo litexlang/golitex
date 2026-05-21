@@ -596,7 +596,7 @@ Proofs are checked as a growing sequence of mathematical facts, and many common
 relationships are builtin. In this setting, a short feedback loop is a design
 signal: the checker is doing the work that the proof script actually asks for,
 without requiring the user to pass through a heavier proof-programming layer.
-*For example, in a local run, all more than 240 runnable examples from The Mechanics of Litex Proof checked in about 7.5 seconds.*
+*For example, in a local run, more than 240 runnable examples from The Mechanics of Litex Proof checked in about 13 seconds.*
 
 ### Message Output Explains Each Step
 

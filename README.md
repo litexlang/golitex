@@ -68,7 +68,7 @@ This shows the intended feel: Litex states the desired facts directly, while the
 Litex is not trying to be a faster Lean. It chooses a different proof
 interface: for textbook-style mathematics, the user writes a sequence of
 checkable facts, and the checker uses context plus builtin relationships to
-keep the feedback loop short. *In a local run, all runnable more than 240 examples from The Mechanics of Litex Proof checked in about 7.5 seconds.*
+keep the feedback loop short. *In a local run, more than 240 runnable examples from The Mechanics of Litex Proof checked in about 13 seconds.*
 
 ## Why It Feels Simple
 
@@ -141,7 +141,7 @@ undeclared name, a function argument outside its domain, or `1 / 0`.
 
 Litex is designed so that modern coding agents can formalize textbook-style mathematics by iterating against verifier feedback. An agent can sketch a proof in ordinary mathematical language, translate it into Litex step by step, run the checker, read why each fact failed or succeeded, and refine the argument until every step is local and concrete.
 
-A concrete example is the final example in [Chapter 8](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Chapter_8_Functions), which proves that there is a bijection from `N^2` to `N` using Cauchy pairs. Codex formalized this example in Litex by reading the Manual and project documentation, running Litex, inspecting the verifier output, and iterating on the proof about three times. It does not rely on external mathematical facts, and was produced from Litex's own feedback loop rather than from hand-written hints about the proof.
+A concrete example is the final example in [Chapter 8](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Chapter_8_Functions), which proves that there is a bijection from `N^2` to `N` using Cantor pairing. Codex formalized this example in Litex by reading the Litex manual and verifier output, then iteratively refining the proof until it became fully checkable, without relying on an external mathematical library. This is mainly evidence that the Litex proof style exposes a useful feedback loop, not a claim that the theorem itself is difficult for mature proof assistants.
 
 This is the point Litex is trying to make especially strong: Litex gives agents a direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof. Litex is still early, but this feedback loop is a practical way to discover which background facts and theorem-library entries a proof actually needs.
 
