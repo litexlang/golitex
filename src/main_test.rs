@@ -973,6 +973,152 @@ $q(1)
         }
     }
 
+    #[test]
+    fn run_math500_litex_simple() {
+        run_with_large_stack(
+            "run_math500_litex_simple_large_stack",
+            run_math500_litex_simple_impl,
+        );
+    }
+
+    #[test]
+    fn run_math500_litex_all() {
+        run_with_large_stack("run_math500_litex_all_large_stack", run_math500_litex_all_impl);
+    }
+
+    fn run_math500_litex_simple_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_path = manifest_dir.join("test-litex").join("math500-simple.jsonl");
+        assert!(
+            jsonl_path.is_file(),
+            "test-litex/math500-simple.jsonl must exist at {:?}",
+            jsonl_path
+        );
+        run_math500_litex_jsonl_file(&jsonl_path);
+    }
+
+    fn run_math500_litex_all_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let test_litex_dir = manifest_dir.join("test-litex");
+        assert!(
+            test_litex_dir.is_dir(),
+            "test-litex directory must exist at {:?}",
+            test_litex_dir
+        );
+
+        let mut jsonl_paths: Vec<PathBuf> = Vec::new();
+        let read_directory = fs::read_dir(&test_litex_dir)
+            .unwrap_or_else(|read_error| panic!("failed to read {:?}: {}", test_litex_dir, read_error));
+        for directory_entry_result in read_directory {
+            let directory_entry =
+                directory_entry_result.unwrap_or_else(|read_error| panic!("failed to read directory entry: {}", read_error));
+            let path = directory_entry.path();
+            if path.extension().is_some_and(|ext| ext == "jsonl") {
+                jsonl_paths.push(path);
+            }
+        }
+        jsonl_paths.sort();
+        assert!(
+            !jsonl_paths.is_empty(),
+            "test-litex must contain at least one .jsonl file"
+        );
+
+        for jsonl_path in jsonl_paths.iter() {
+            run_math500_litex_jsonl_file(jsonl_path.as_path());
+        }
+    }
+
+    fn run_math500_litex_jsonl_file(jsonl_path: &Path) {
+        let jsonl_path_str = match jsonl_path.to_str() {
+            Some(path_string) => path_string.to_string(),
+            None => panic!("{:?} must be valid UTF-8", jsonl_path),
+        };
+        let jsonl_content = match fs::read_to_string(jsonl_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
+        };
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+        runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+
+        let run_wall_start = Instant::now();
+        let mut total_count: usize = 0;
+        let mut failed_labels: Vec<String> = Vec::new();
+        let mut total_solution_duration_ms: f64 = 0.0;
+
+        for (line_index, line) in jsonl_content.lines().enumerate() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            if total_count > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
+            }
+
+            let unique_id =
+                jsonl_string_field(line, "unique_id").unwrap_or_else(|_| {
+                    format!("line {}", line_index + 1)
+                });
+            let litex_code = jsonl_string_field(line, "litex_code").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse litex_code in {:?} line {} ({}): {}",
+                    jsonl_path,
+                    line_index + 1,
+                    unique_id,
+                    error_message
+                )
+            });
+            let normalized_source = remove_windows_carriage_return(litex_code.as_str());
+
+            let start_time_for_one_solution = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
+            total_solution_duration_ms += duration_ms;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            total_count += 1;
+            if !run_succeeded {
+                let label = format!("{}:{}", line_index + 1, unique_id);
+                println!(
+                    "=== [FAILED] math500-litex simple at jsonl line {} ({:.2} ms): {} ===\n{}\n",
+                    line_index + 1,
+                    duration_ms,
+                    unique_id,
+                    run_output
+                );
+                failed_labels.push(label);
+            }
+        }
+
+        let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
+        println!("--- math500-litex simple timing (summary) ---");
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+            total_count, total_solution_duration_ms, run_wall_ms
+        );
+
+        if failed_labels.is_empty() {
+            println!("--- math500-litex simple: all snippets OK ---");
+            return;
+        }
+
+        println!("--- math500-litex simple failed unique_id ---");
+        for label in failed_labels.iter() {
+            println!("{}", label);
+        }
+        panic!(
+            "math500-litex simple failed for {} of {} item(s)",
+            failed_labels.len(),
+            total_count
+        );
+    }
+
     fn run_all_impl() {
         run_examples_impl();
         run_the_mechanics_markdown_files_impl();
