@@ -135,6 +135,11 @@ handle. They can. The interesting signal is different: Litex lets the proof be
 written as a growing sequence of mathematical facts, with local verifier
 feedback after each step.
 
+Litex is not trying to be a faster Lean. It chooses a different proof
+interface: for textbook-style mathematics, the user writes a sequence of
+checkable facts, and the checker uses context plus builtin relationships to
+keep the feedback loop short. *In a local run, more than 240 runnable examples from The Mechanics of Litex Proof checked in about 13 seconds.
+
 ## Feedback Wanted
 
 Litex especially needs feedback on:
