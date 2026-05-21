@@ -1,0 +1,247 @@
+# Temporary proof skeleton for:
+# <r, f | r^8 = f^2 = r f r f = 1> is isomorphic to D8.
+# Here D8 means the symmetry group of the regular octagon, so it has 16 elements.
+
+prop injective_fn(S, T set, phi fn(x S) T):
+    forall x1, x2 S:
+        phi(x1) = phi(x2)
+        =>:
+            x1 = x2
+
+prop surjective_fn(S, T set, phi fn(x S) T):
+    forall y T:
+        exist x S st {y = phi(x)}
+
+prop bijective_fn(S, T set, phi fn(x S) T):
+    $injective_fn(S, T, phi)
+    $surjective_fn(S, T, phi)
+
+abstract_prop group_homomorphism(G, H, phi)
+
+prop group_isomorphism(G, H set, phi fn(x G) H):
+    $group_homomorphism(G, H, phi)
+    $bijective_fn(G, H, phi)
+
+prop isomorphic_group(G, H set):
+    exist phi fn(x G) H st {$group_isomorphism(G, H, phi)}
+
+abstract_prop generated_by_r_and_f(G, r, f)
+abstract_prop relator_r8_is_identity(G, r)
+abstract_prop relator_f2_is_identity(G, f)
+abstract_prop relator_rfrf_is_identity(G, r, f)
+
+prop presentation_r8_f2_rfrf(G set, r, f G):
+    $generated_by_r_and_f(G, r, f)
+    $relator_r8_is_identity(G, r)
+    $relator_f2_is_identity(G, f)
+    $relator_rfrf_is_identity(G, r, f)
+
+abstract_prop regular_octagon_rotation_order_8(D, rho)
+abstract_prop regular_octagon_reflection_order_2(D, sigma)
+abstract_prop regular_octagon_flip_relation(D, rho, sigma)
+abstract_prop regular_octagon_generated_by_rotation_and_reflection(D, rho, sigma)
+abstract_prop octagon_rotation_family_has_8_members(D, rho)
+abstract_prop octagon_reflection_family_has_8_members(D, rho, sigma)
+abstract_prop octagon_rotation_and_reflection_families_cover(D, rho, sigma)
+abstract_prop octagon_rotation_and_reflection_families_disjoint(D, rho, sigma)
+
+prop regular_octagon_has_16_symmetries(D set, rho, sigma D):
+    $octagon_rotation_family_has_8_members(D, rho)
+    $octagon_reflection_family_has_8_members(D, rho, sigma)
+    $octagon_rotation_and_reflection_families_cover(D, rho, sigma)
+    $octagon_rotation_and_reflection_families_disjoint(D, rho, sigma)
+
+prop regular_octagon_dihedral_group(D set, rho, sigma D):
+    $regular_octagon_rotation_order_8(D, rho)
+    $regular_octagon_reflection_order_2(D, sigma)
+    $regular_octagon_flip_relation(D, rho, sigma)
+    $regular_octagon_generated_by_rotation_and_reflection(D, rho, sigma)
+    $regular_octagon_has_16_symmetries(D, rho, sigma)
+
+abstract_prop generator_map(G, D, r, f, rho, sigma, phi)
+abstract_prop has_at_most_16_elements(G)
+abstract_prop has_exactly_16_elements(G)
+abstract_prop target_relators_match_presentation(G, D, r, f, rho, sigma)
+
+prop target_satisfies_presentation_relators(D set, rho, sigma D):
+    $regular_octagon_rotation_order_8(D, rho)
+    $regular_octagon_reflection_order_2(D, sigma)
+    $regular_octagon_flip_relation(D, rho, sigma)
+
+prop presentation_universal_map(G, D set, r, f G, rho, sigma D):
+    exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}
+
+abstract_prop fr_rewrites_to_inverse_rotation_then_f(G, r, f)
+abstract_prop word_has_all_reflections_on_right(G, r, f)
+abstract_prop adjacent_reflections_cancel(G, f)
+abstract_prop every_generator_word_reduces_to_normal_form(G, r, f)
+abstract_prop written_as_r_power(G, r, x)
+abstract_prop written_as_r_power_times_f(G, r, f, x)
+abstract_prop exponent_reduced_mod_8(G, r)
+abstract_prop element_uses_one_of_16_dihedral_slots(G, r, f, x)
+
+prop can_move_reflection_to_the_right(G set, r, f G):
+    $fr_rewrites_to_inverse_rotation_then_f(G, r, f)
+
+prop presentation_word_reduction(G set, r, f G):
+    $word_has_all_reflections_on_right(G, r, f)
+    $adjacent_reflections_cancel(G, f)
+    $every_generator_word_reduces_to_normal_form(G, r, f)
+
+prop dihedral_normal_form(G set, r, f, x G):
+    $written_as_r_power(G, r, x) or $written_as_r_power_times_f(G, r, f, x)
+
+prop every_element_has_dihedral_normal_form(G set, r, f G):
+    forall x G:
+        $dihedral_normal_form(G, r, f, x)
+
+prop each_normal_form_uses_one_of_16_slots(G set, r, f G):
+    forall x G:
+        $dihedral_normal_form(G, r, f, x)
+        =>:
+            $element_uses_one_of_16_dihedral_slots(G, r, f, x)
+
+prop normal_forms_have_at_most_16_slots(G set, r, f G):
+    $exponent_reduced_mod_8(G, r)
+    $each_normal_form_uses_one_of_16_slots(G, r, f)
+
+prop presentation_reflection_swap_rule(G set, r, f G):
+    $can_move_reflection_to_the_right(G, r, f)
+
+prop presentation_normal_form_cover(G set, r, f G):
+    $every_element_has_dihedral_normal_form(G, r, f)
+
+prop presentation_normal_form_slot_bound(G set, r, f G):
+    $normal_forms_have_at_most_16_slots(G, r, f)
+
+abstract_prop normal_form_cover_uses_16_slot_map(G, r, f)
+abstract_prop slot_map_bounds_cardinality_by_16(G, r, f)
+
+prop presentation_normal_form_bound(G set, r, f G):
+    $presentation_normal_form_cover(G, r, f)
+    $presentation_normal_form_slot_bound(G, r, f)
+    $normal_form_cover_uses_16_slot_map(G, r, f)
+    $slot_map_bounds_cardinality_by_16(G, r, f)
+    $has_at_most_16_elements(G)
+
+prop regular_octagon_d8_cardinality(D set, rho, sigma D):
+    $regular_octagon_has_16_symmetries(D, rho, sigma)
+    $has_exactly_16_elements(D)
+
+abstract_prop image_contains_rho_and_sigma(G, D, r, f, rho, sigma, phi)
+abstract_prop image_contains_all_rho_sigma_words(G, D, rho, sigma, phi)
+abstract_prop image_equals_target_group(G, D, phi)
+
+prop presentation_map_surjective(G, D set, r, f G, rho, sigma D, phi fn(x G) D):
+    $group_homomorphism(G, D, phi)
+    $regular_octagon_generated_by_rotation_and_reflection(D, rho, sigma)
+    $generator_map(G, D, r, f, rho, sigma, phi)
+    $image_equals_target_group(G, D, phi)
+    $surjective_fn(G, D, phi)
+
+abstract_prop finite_cardinality_comparison_for_phi(G, D, phi)
+abstract_prop surjective_same_size_map_is_injective(G, D, phi)
+
+prop finite_surjective_map_bijective(G, D set, r, f G, rho, sigma D, phi fn(x G) D):
+    $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
+    $presentation_normal_form_bound(G, r, f)
+    $regular_octagon_d8_cardinality(D, rho, sigma)
+    $finite_cardinality_comparison_for_phi(G, D, phi)
+    $surjective_same_size_map_is_injective(G, D, phi)
+    $bijective_fn(G, D, phi)
+
+# Presentation universal property: if the target elements satisfy the relators,
+# there is a homomorphism sending r to rho and f to sigma.
+know forall G, D set, r, f G, rho, sigma D:
+    $presentation_r8_f2_rfrf(G, r, f)
+    $regular_octagon_dihedral_group(D, rho, sigma)
+    =>:
+        exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}
+
+# From r f r f = 1 one gets f r = r^(-1) f. This is the rewrite rule
+# used to move every reflection letter to the right.
+know forall G set, r, f G:
+    $presentation_r8_f2_rfrf(G, r, f)
+    =>:
+        $presentation_reflection_swap_rule(G, r, f)
+
+# Repeatedly applying the swap rule and then f^2 = 1 reduces every word to
+# either r^i or r^i f.
+know forall G set, r, f G:
+    $presentation_r8_f2_rfrf(G, r, f)
+    $presentation_reflection_swap_rule(G, r, f)
+    =>:
+        $presentation_normal_form_cover(G, r, f)
+
+# Since r^8 = 1, the exponent i may be chosen from {0,...,7}. There are eight
+# rotation forms r^i and eight reflection forms r^i f.
+know forall G set, r, f G:
+    $presentation_r8_f2_rfrf(G, r, f)
+    =>:
+        $presentation_normal_form_slot_bound(G, r, f)
+
+# If every element has one of those normal forms, and those normal forms occupy
+# at most sixteen slots, then the presented group has at most sixteen elements.
+know forall G set, r, f G:
+    $presentation_normal_form_cover(G, r, f)
+    $presentation_normal_form_slot_bound(G, r, f)
+    =>:
+        $presentation_normal_form_bound(G, r, f)
+
+claim:
+    prove:
+        forall G set, r, f G:
+            $presentation_r8_f2_rfrf(G, r, f)
+            =>:
+                $presentation_normal_form_bound(G, r, f)
+    $presentation_reflection_swap_rule(G, r, f)
+    $presentation_normal_form_cover(G, r, f)
+    $presentation_normal_form_slot_bound(G, r, f)
+    $presentation_normal_form_bound(G, r, f)
+
+# The regular-octagon dihedral group has exactly eight rotations and eight reflections.
+know forall D set, rho, sigma D:
+    $regular_octagon_dihedral_group(D, rho, sigma)
+    =>:
+        $regular_octagon_d8_cardinality(D, rho, sigma)
+
+# Since rho and sigma generate D8, the homomorphism produced by the presentation
+# is surjective.
+know forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
+    $regular_octagon_dihedral_group(D, rho, sigma)
+    $generator_map(G, D, r, f, rho, sigma, phi)
+    =>:
+        $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
+
+# A surjection from a set with at most 16 elements onto a 16-element set is bijective.
+know forall G, D set, r, f G, rho, sigma D, phi fn(x G) D:
+    $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
+    $presentation_normal_form_bound(G, r, f)
+    $regular_octagon_d8_cardinality(D, rho, sigma)
+    =>:
+        $finite_surjective_map_bijective(G, D, r, f, rho, sigma, phi)
+
+claim:
+    prove:
+        forall G, D set, r, f G, rho, sigma D:
+            $presentation_r8_f2_rfrf(G, r, f)
+            $regular_octagon_dihedral_group(D, rho, sigma)
+            =>:
+                $isomorphic_group(G, D)
+
+    have by exist phi fn(x G) D st {$group_homomorphism(G, D, phi), phi(r) = rho, phi(f) = sigma, $generator_map(G, D, r, f, rho, sigma, phi)}: phi
+
+    $group_homomorphism(G, D, phi)
+    phi(r) = rho
+    phi(f) = sigma
+    $generator_map(G, D, r, f, rho, sigma, phi)
+    $presentation_normal_form_bound(G, r, f)
+    $regular_octagon_d8_cardinality(D, rho, sigma)
+    $presentation_map_surjective(G, D, r, f, rho, sigma, phi)
+    $surjective_fn(G, D, phi)
+    $finite_surjective_map_bijective(G, D, r, f, rho, sigma, phi)
+    $bijective_fn(G, D, phi)
+    $group_isomorphism(G, D, phi)
+
+    witness exist psi fn(x G) D st {$group_isomorphism(G, D, psi)} from phi:
+        $group_isomorphism(G, D, phi)

@@ -243,6 +243,7 @@ Basic behavior:
 | `-e <code>` | Run a Litex source string. |
 | `-f <file>` | Run a file. The path may be relative to the current working directory or absolute. |
 | `-r <repo>` | Same as running `<repo>/main.lit`. Place `main.lit` at the repo root. |
+| `-show-file-path` | Include file paths in JSON output. By default, Litex hides them for stable output. |
 | `-latex` | Enter LaTeX-related mode. |
 | `-latex -f <file>` | Compile a file to LaTeX, when available. |
 | `-latex -e <code>` | Compile a source string to LaTeX, when available. |
@@ -262,6 +263,8 @@ Hint: if your Litex code contains spaces, newlines, or shell-sensitive character
 ## Command output format
 
 For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex prints one JSON object for each executed statement.
+By default, Litex does not print file paths in JSON output. Use `-show-file-path`
+when you need full paths for debugging.
 
 If the whole run succeeds:
 
@@ -278,7 +281,6 @@ Example success output looks like this. The exact output may differ by version:
   "result": "success",
   "type": "AtomicFact",
   "line": 1,
-  "source": "~/tmp.lit",
   "stmt": "1 + 1 = 2",
   "infer_facts": [],
   "inside_results": []
@@ -301,13 +303,11 @@ Example error output looks like this. The exact output may differ by version:
   "error_type": "VerifyError",
   "result": "error",
   "line": 1,
-  "source": "~/tmp.lit",
   "message": "1 = 0",
   "previous_error": {
     "error_type": "UnknownError",
     "result": "error",
     "line": 1,
-    "source": "~/tmp.lit",
     "message": "1 = 0",
     "previous_error": null
   }

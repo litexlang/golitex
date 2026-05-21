@@ -13,7 +13,8 @@ impl Runtime {
         }
 
         if !verify_state.well_defined_already_verified {
-            if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
+            let well_defined_state = verify_state.without_known_forall_for_equality();
+            if let Err(e) = self.verify_atomic_fact_well_defined(fact, &well_defined_state) {
                 return Err({
                     VerifyRuntimeError(RuntimeErrorStruct::new(
                         Some(Fact::from(fact.clone()).into_stmt()),

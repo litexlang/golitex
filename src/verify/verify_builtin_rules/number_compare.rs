@@ -131,6 +131,20 @@ impl Runtime {
                     ),
                 ));
             }
+            let equal_result = self.verify_objs_are_equal_known_only(
+                &less_equal_fact.left,
+                &less_equal_fact.right,
+                less_equal_fact.line_file.clone(),
+            );
+            if equal_result.is_true() {
+                return Ok(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        less_equal_fact.clone().into(),
+                        "less_equal_fact_from_known_equality".to_string(),
+                        vec![equal_result],
+                    ),
+                ));
+            }
             let strict_fact: Fact = LessFact::new(
                 less_equal_fact.left.clone(),
                 less_equal_fact.right.clone(),
@@ -160,6 +174,20 @@ impl Runtime {
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_equal".to_string(),
                         Vec::new(),
+                    ),
+                ));
+            }
+            let equal_result = self.verify_objs_are_equal_known_only(
+                &greater_equal_fact.left,
+                &greater_equal_fact.right,
+                greater_equal_fact.line_file.clone(),
+            );
+            if equal_result.is_true() {
+                return Ok(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        greater_equal_fact.clone().into(),
+                        "greater_equal_fact_from_known_equality".to_string(),
+                        vec![equal_result],
                     ),
                 ));
             }

@@ -1,3 +1,7 @@
+// cargo test run_examples -- --nocapture
+// cargo test run_the_mechanics_markdown_files -- --nocapture
+// cargo test run_all -- --nocapture
+
 #[cfg(test)]
 mod lit_file_runner_tests {
     use std::fs;
@@ -297,6 +301,106 @@ forall a set:
     }
 
     #[test]
+    fn known_equality_implies_weak_order() {
+        let source_code = r#"
+have a, b R
+know a = b
+a <= b
+a >= b
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("known_equality_implies_weak_order");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known_equality_implies_weak_order failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn weak_order_does_not_recursively_prove_equality() {
+        let source_code = r#"
+have a, b R
+know a <= b
+a = b
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime
+            .new_file_path_new_env_new_name_scope("weak_order_does_not_recursively_prove_equality");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "recursive equality/order proof should fail, but succeeded:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn hidden_file_path_output_omits_source_fields() {
+        let source_code = "x = 1";
+        let path = "/private/tmp/litex-hidden-source-test.lit";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path);
+        runtime.module_manager.hide_file_paths_in_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(!run_output.contains("\"source\""));
+        assert!(!run_output.contains(path));
+        assert!(run_output.contains("\"line\": 1"));
+    }
+
+    #[test]
+    fn show_file_path_output_keeps_source_fields() {
+        let source_code = "x = 1";
+        let path = "/private/tmp/litex-show-source-test.lit";
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path);
+        runtime.module_manager.hide_file_paths_in_output = false;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded);
+        assert!(run_output.contains("\"source\""));
+        assert!(run_output.contains(path));
+    }
+
+    #[test]
+    fn hidden_file_path_run_file_output_omits_run_file_path() {
+        let run_file_path = std::env::temp_dir().join("litex-hidden-run-file-test.lit");
+        fs::write(&run_file_path, "1 = 1\n").unwrap();
+        let run_file_path_string = run_file_path.to_string_lossy().into_owned();
+        let source_code = format!("run_file \"{}\"", run_file_path_string);
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("repl");
+        runtime.module_manager.hide_file_paths_in_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code.as_str(), &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        let _ = fs::remove_file(&run_file_path);
+        assert!(run_succeeded, "run_file failed:\n{}", run_output);
+        assert!(run_output.contains("\"stmt\": \"run_file\""));
+        assert!(!run_output.contains(run_file_path_string.as_str()));
+        assert!(!run_output.contains("\"source\""));
+    }
+
+    #[test]
     fn citation_verified_by_type_reflects_cited_stmt_kind() {
         let source_code = r#"
 abstract_prop p(x)
@@ -335,7 +439,7 @@ $q(1)
     }
 
     fn run_file_from_path_impl() {
-        let path: String = "./examples/chapter_6_induction.lit".to_string();
+        let path: String = "./examples/strong_induc.lit".to_string();
         let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
         assert!(
             file_path.is_absolute(),
@@ -521,53 +625,115 @@ $q(1)
             "The-Mechanics-of-Litex-Proof must contain markdown files"
         );
 
-        let snippets = litex_snippets_from_markdown_files(&manifest_dir, &md_paths);
+        let mut snippets_by_file: Vec<Vec<(String, String, String)>> = Vec::new();
+        let mut total_snippet_count: usize = 0;
+        for md_path in md_paths.iter() {
+            let snippets = litex_snippets_from_markdown_files(&manifest_dir, &[md_path.clone()]);
+            total_snippet_count += snippets.len();
+            snippets_by_file.push(snippets);
+        }
         assert!(
-            !snippets.is_empty(),
+            total_snippet_count > 0,
             "The-Mechanics-of-Litex-Proof markdown files must contain ```litex``` blocks"
         );
 
         let mut runtime = Runtime::new_with_builtin_code();
-        runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
 
         let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
+        let mut failed_labels: Vec<String> = Vec::new();
         let wall_start = Instant::now();
-        for (snippet_index, (label, source_code, md_path_for_run_file)) in
-            snippets.iter().enumerate()
-        {
-            if snippet_index > 0 {
-                runtime.clear_current_env_and_parse_name_scope();
-                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+        let mut file_count_with_snippets: usize = 0;
+        let mut snippet_count_run: usize = 0;
+        for snippets in snippets_by_file.iter() {
+            if snippets.is_empty() {
+                continue;
             }
 
-            let normalized_source = remove_windows_carriage_return(source_code);
-            let start_snippet = Instant::now();
-            let (stmt_results, runtime_error) =
-                run_source_code(normalized_source.as_str(), &mut runtime);
-            let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+            file_count_with_snippets += 1;
 
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            for (label, source_code, md_path_for_run_file) in snippets.iter() {
+                if snippet_count_run == 0 {
+                    runtime.new_file_path_new_env_new_name_scope(md_path_for_run_file.as_str());
+                } else {
+                    runtime.clear_current_env_and_parse_name_scope();
+                    runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+                }
+                snippet_count_run += 1;
 
-            if !run_succeeded {
-                panic!(
-                    "The-Mechanics-of-Litex-Proof markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                    run_output, label
-                );
+                let normalized_source = remove_windows_carriage_return(source_code);
+                let start_snippet = Instant::now();
+                let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    run_source_code(normalized_source.as_str(), &mut runtime)
+                }));
+                let (stmt_results, runtime_error) = match run_result {
+                    Ok(result) => result,
+                    Err(panic_payload) => {
+                        let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+                        let panic_message =
+                            if let Some(message) = panic_payload.downcast_ref::<&str>() {
+                                message.to_string()
+                            } else if let Some(message) = panic_payload.downcast_ref::<String>() {
+                                message.clone()
+                            } else {
+                                "non-string panic payload".to_string()
+                            };
+                        println!(
+                            "=== [PANICKED] The-Mechanics-of-Litex-Proof markdown snippet ({:.2} ms) ===\n{}\n>>> PANICKED snippet (open .md here): {}\n",
+                            duration_ms, panic_message, label
+                        );
+                        failed_labels.push(label.clone());
+                        break;
+                    }
+                };
+                let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                if !run_succeeded {
+                    let status_label = if run_output.contains("\"error_type\": \"UnknownError\"") {
+                        "UNKNOWN"
+                    } else {
+                        "FAILED"
+                    };
+                    println!(
+                        "=== [{}] The-Mechanics-of-Litex-Proof markdown snippet ({:.2} ms) ===\n{}\n>>> {} snippet (open .md here): {}\n",
+                        status_label, duration_ms, run_output, status_label, label
+                    );
+                    failed_labels.push(label.clone());
+                    break;
+                }
+                snippet_durations_ms.push((label.clone(), duration_ms));
             }
-
-            snippet_durations_ms.push((label.clone(), duration_ms));
         }
 
+        let status_text = if failed_labels.is_empty() {
+            "all OK"
+        } else {
+            "completed with failures"
+        };
         println!(
-            "--- The-Mechanics-of-Litex-Proof markdown: {} ```litex``` block(s) in {} markdown file(s), all OK ({:.2} ms wall) ---",
-            snippets.len(),
-            md_paths.len(),
+            "--- The-Mechanics-of-Litex-Proof markdown: {} ```litex``` block(s) in {} markdown file(s), {} ({:.2} ms wall) ---",
+            total_snippet_count,
+            file_count_with_snippets,
+            status_text,
             wall_start.elapsed().as_secs_f64() * 1000.0
         );
         for (label, duration_ms) in snippet_durations_ms.iter() {
             println!("  OK  {:.2} ms  {}", duration_ms, label);
         }
+
+        if !failed_labels.is_empty() {
+            println!("--- The-Mechanics-of-Litex-Proof markdown failed snippets ---");
+            for label in failed_labels.iter() {
+                println!("{}", label);
+            }
+        }
+        assert!(
+            failed_labels.is_empty(),
+            "The-Mechanics-of-Litex-Proof markdown has {} failing snippet(s); see output above",
+            failed_labels.len()
+        );
     }
 
     /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
@@ -671,6 +837,157 @@ $q(1)
     #[test]
     fn run_examples() {
         run_with_large_stack("run_examples_large_stack", run_examples_impl);
+    }
+
+    #[test]
+    fn run_all() {
+        run_with_large_stack("run_all_large_stack", run_all_impl);
+    }
+
+    // Local workflow helper: run math500 temporary snippets without touching golitex/examples.
+    //
+    // This test is intentionally non-failing when the sibling repo doesn't exist, so CI won't care.
+    // It is meant for local iteration while authoring snippets under ../MATH-500-litex/tmp/.
+    #[test]
+    fn run_math500_tmp() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let local_tmp_path = manifest_dir.join("tmp").join("math500_work.lit");
+        let sibling_tmp_path = match manifest_dir.parent() {
+            Some(parent) => parent
+                .join("MATH-500-litex")
+                .join("tmp")
+                .join("math500_work.lit"),
+            None => PathBuf::new(),
+        };
+
+        let math500_tmp_path = if local_tmp_path.is_file() {
+            local_tmp_path
+        } else if sibling_tmp_path.is_file() {
+            sibling_tmp_path
+        } else {
+            println!("--- run_math500_tmp: skip (missing file) ---");
+            println!("  checked: {}", local_tmp_path.display());
+            if !sibling_tmp_path.as_os_str().is_empty() {
+                println!("  checked: {}", sibling_tmp_path.display());
+            }
+            return;
+        };
+        println!(
+            "--- run_math500_tmp: using {} ---",
+            math500_tmp_path.display()
+        );
+
+        let source_code = match fs::read_to_string(&math500_tmp_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", math500_tmp_path, read_error),
+        };
+
+        #[derive(Clone)]
+        struct Snippet {
+            label: String,
+            source: String,
+        }
+
+        // Split by "# test/..." markers so we can clear env between problems, while keeping one
+        // Runtime alive (like run_examples does).
+        let mut snippets: Vec<Snippet> = Vec::new();
+        let mut current_lines: Vec<String> = Vec::new();
+        let mut current_label: Option<String> = None;
+
+        for line in source_code.lines() {
+            if line.starts_with("# test/") {
+                if let Some(label) = current_label.take() {
+                    let body = current_lines.join("\n");
+                    if !body.trim().is_empty() {
+                        snippets.push(Snippet {
+                            label,
+                            source: body,
+                        });
+                    }
+                }
+                current_lines.clear();
+                current_label = Some(line.trim().to_string());
+            }
+            if current_label.is_some() {
+                current_lines.push(line.to_string());
+            }
+        }
+        if let Some(label) = current_label.take() {
+            let body = current_lines.join("\n");
+            if !body.trim().is_empty() {
+                snippets.push(Snippet {
+                    label,
+                    source: body,
+                });
+            }
+        }
+        if snippets.is_empty() {
+            // Fallback: run whole file as one snippet.
+            snippets.push(Snippet {
+                label: "math500_work.lit (whole file)".to_string(),
+                source: source_code,
+            });
+        }
+
+        let path_for_runtime = match math500_tmp_path.to_str() {
+            Some(path_string) => path_string,
+            None => panic!("{:?} must be valid UTF-8", math500_tmp_path),
+        };
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(path_for_runtime);
+
+        let mut durations_ms: Vec<(String, f64)> = Vec::new();
+        for (snippet_index, snippet) in snippets.iter().enumerate() {
+            if snippet_index > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(path_for_runtime);
+            }
+
+            let normalized_source = remove_windows_carriage_return(snippet.source.as_str());
+            let start_time = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            durations_ms.push((snippet.label.clone(), duration_ms));
+
+            if !run_succeeded {
+                print_slowest_run_labels(
+                    "math500 snippets before failure",
+                    durations_ms.as_slice(),
+                );
+                panic!(
+                    "math500 snippet FAILED:\n{}\n>>> FAILED snippet: {}\n",
+                    run_output, snippet.label
+                );
+            }
+        }
+
+        print_slowest_run_labels("math500 snippets", durations_ms.as_slice());
+        for (label, duration_ms) in durations_ms.iter() {
+            println!("  OK  {:.2} ms  {}", duration_ms, label);
+        }
+    }
+
+    fn run_all_impl() {
+        run_examples_impl();
+        run_the_mechanics_markdown_files_impl();
+    }
+
+    #[test]
+    fn run_the_mechanics_of_litex_proof() {
+        run_with_large_stack(
+            "run_the_mechanics_of_litex_proof_large_stack",
+            run_the_mechanics_of_litex_proof_impl,
+        );
+    }
+
+    fn run_the_mechanics_of_litex_proof_impl() {
+        run_the_mechanics_markdown_files_impl();
     }
 
     fn run_examples_impl() {
@@ -941,11 +1258,13 @@ $q(1)
         ];
 
         for jsonl_path in jsonl_paths.iter() {
-            assert!(
-                jsonl_path.is_file(),
-                "gsm8k jsonl file must exist at {:?}",
-                jsonl_path
-            );
+            if !jsonl_path.is_file() {
+                println!(
+                    "--- gsm8k jsonl file missing at {:?}; skip gsm8k solutions ---",
+                    jsonl_path
+                );
+                return;
+            }
         }
 
         let builtin_start = Instant::now();
@@ -1088,6 +1407,122 @@ $q(1)
         run_with_large_stack(
             "run_metamathqa_litex_solutions_large_stack",
             run_metamathqa_litex_solutions_impl,
+        );
+    }
+
+    #[test]
+    fn run_minif2f_litex_completed() {
+        run_with_large_stack(
+            "run_minif2f_litex_completed_large_stack",
+            run_minif2f_litex_completed_impl,
+        );
+    }
+
+    fn run_minif2f_litex_completed_impl() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let jsonl_path = manifest_dir
+            .parent()
+            .unwrap_or(manifest_dir.as_path())
+            .join("MiniF2F-litex")
+            .join("litex_completed.jsonl");
+        assert!(
+            jsonl_path.is_file(),
+            "MiniF2F-litex/litex_completed.jsonl must exist at {:?}",
+            jsonl_path
+        );
+
+        let jsonl_path_str = match jsonl_path.to_str() {
+            Some(path_string) => path_string.to_string(),
+            None => panic!("{:?} must be valid UTF-8", jsonl_path),
+        };
+        let jsonl_content = match fs::read_to_string(&jsonl_path) {
+            Ok(content) => content,
+            Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
+        };
+
+        let builtin_start = Instant::now();
+        let mut runtime = Runtime::new_with_builtin_code();
+        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+        runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+
+        let run_wall_start = Instant::now();
+        let mut total_count: usize = 0;
+        let mut failed_labels: Vec<String> = Vec::new();
+        let mut total_solution_duration_ms: f64 = 0.0;
+
+        for (line_index, line) in jsonl_content.lines().enumerate() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            if total_count > 0 {
+                runtime.clear_current_env_and_parse_name_scope();
+                runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
+            }
+
+            let name = jsonl_string_field(line, "name").unwrap_or_else(|error_message| {
+                panic!(
+                    "failed to parse name in {:?} line {}: {}",
+                    jsonl_path,
+                    line_index + 1,
+                    error_message
+                )
+            });
+            let litex_code =
+                jsonl_string_field(line, "litex_code").unwrap_or_else(|error_message| {
+                    panic!(
+                        "failed to parse litex_code in {:?} line {} ({}): {}",
+                        jsonl_path,
+                        line_index + 1,
+                        name,
+                        error_message
+                    )
+                });
+
+            let normalized_source = remove_windows_carriage_return(litex_code.as_str());
+            let start_time_for_one_solution = Instant::now();
+            let (stmt_results, runtime_error) =
+                run_source_code(normalized_source.as_str(), &mut runtime);
+            let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
+            total_solution_duration_ms += duration_ms;
+
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            total_count += 1;
+            if !run_succeeded {
+                let label = format!("{}:{}", line_index + 1, name);
+                println!(
+                    "=== [FAILED] MiniF2F-litex at jsonl line {} ({:.2} ms): {} ===\n{}\n",
+                    line_index + 1,
+                    duration_ms,
+                    name,
+                    run_output
+                );
+                failed_labels.push(label);
+            }
+        }
+
+        let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
+        println!("--- MiniF2F-litex timing (summary) ---");
+        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  completed snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
+            total_count, total_solution_duration_ms, run_wall_ms
+        );
+
+        if failed_labels.is_empty() {
+            println!("--- MiniF2F-litex: all completed snippets OK ---");
+            return;
+        }
+
+        println!("--- MiniF2F-litex failed names ---");
+        for label in failed_labels.iter() {
+            println!("{}", label);
+        }
+        panic!(
+            "MiniF2F-litex completed snippet run failed for {} of {} item(s)",
+            failed_labels.len(),
+            total_count
         );
     }
 

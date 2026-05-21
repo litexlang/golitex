@@ -239,7 +239,7 @@ impl Runtime {
         Ok(None)
     }
 
-    // Instantiate family `equal_to` on one or both sides, then full `verify_objs_are_equal` on the expanded pair.
+    // Instantiate family `equal_to` on one or both sides, then require known-only equality on the expanded pair.
     pub(crate) fn try_verify_objs_equal_by_expanding_family(
         &mut self,
         left: &Obj,
@@ -252,7 +252,12 @@ impl Runtime {
                 self.instantiate_family_member_set(fl),
                 self.instantiate_family_member_set(fr),
             ) {
-                let r = self.verify_objs_are_equal(&el, &er, line_file.clone(), verify_state)?;
+                let r = self.verify_objs_are_equal_in_equality_builtin(
+                    &el,
+                    &er,
+                    line_file.clone(),
+                    verify_state,
+                )?;
                 if r.is_true() {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         left,
@@ -265,8 +270,12 @@ impl Runtime {
         }
         if let Obj::FamilyObj(f) = left {
             if let Ok(expanded) = self.instantiate_family_member_set(f) {
-                let r =
-                    self.verify_objs_are_equal(&expanded, right, line_file.clone(), verify_state)?;
+                let r = self.verify_objs_are_equal_in_equality_builtin(
+                    &expanded,
+                    right,
+                    line_file.clone(),
+                    verify_state,
+                )?;
                 if r.is_true() {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         left,
@@ -279,8 +288,12 @@ impl Runtime {
         }
         if let Obj::FamilyObj(f) = right {
             if let Ok(expanded) = self.instantiate_family_member_set(f) {
-                let r =
-                    self.verify_objs_are_equal(left, &expanded, line_file.clone(), verify_state)?;
+                let r = self.verify_objs_are_equal_in_equality_builtin(
+                    left,
+                    &expanded,
+                    line_file.clone(),
+                    verify_state,
+                )?;
                 if r.is_true() {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         left,
@@ -333,7 +346,8 @@ impl Runtime {
             return Ok(None);
         };
 
-        let inner = self.verify_objs_are_equal(x, y, line_file.clone(), verify_state)?;
+        let inner =
+            self.verify_objs_are_equal_in_equality_builtin(x, y, line_file.clone(), verify_state)?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -385,7 +399,12 @@ impl Runtime {
         } else {
             right
         };
-        let inner = self.verify_objs_are_equal(base, zero_side, line_file.clone(), verify_state)?;
+        let inner = self.verify_objs_are_equal_in_equality_builtin(
+            base,
+            zero_side,
+            line_file.clone(),
+            verify_state,
+        )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -480,7 +499,12 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(pow.base.as_ref(), other, line_file.clone(), verify_state)?
+            .verify_objs_are_equal_in_equality_builtin(
+                pow.base.as_ref(),
+                other,
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
@@ -590,17 +614,27 @@ impl Runtime {
                 return Ok(false);
             }
             return Ok(self
-                .verify_objs_are_equal(base, factor, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(
+                    base,
+                    factor,
+                    line_file.clone(),
+                    verify_state,
+                )?
                 .is_true());
         };
         if !self
-            .verify_objs_are_equal(base, pow.base.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal_in_equality_builtin(
+                base,
+                pow.base.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(false);
         }
         Ok(self
-            .verify_objs_are_equal(
+            .verify_objs_are_equal_in_equality_builtin(
                 exponent,
                 pow.exponent.as_ref(),
                 line_file.clone(),
@@ -724,7 +758,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         Ok(self
-            .verify_objs_are_equal(left, right, line_file, verify_state)?
+            .verify_objs_are_equal_in_equality_builtin(left, right, line_file, verify_state)?
             .is_true())
     }
 
@@ -844,14 +878,14 @@ impl Runtime {
         };
 
         if let Obj::Pow(p) = log.arg.as_ref() {
-            let base_ok = self.verify_objs_are_equal(
+            let base_ok = self.verify_objs_are_equal_in_equality_builtin(
                 p.base.as_ref(),
                 log.base.as_ref(),
                 line_file.clone(),
                 verify_state,
             )?;
             if base_ok.is_true() {
-                let exp_ok = self.verify_objs_are_equal(
+                let exp_ok = self.verify_objs_are_equal_in_equality_builtin(
                     p.exponent.as_ref(),
                     other,
                     line_file.clone(),
@@ -889,8 +923,12 @@ impl Runtime {
         };
         let inner_log: Obj = Log::new((*p.base).clone(), (*log.arg).clone()).into();
         let expected: Obj = Div::new(inner_log, (*p.exponent).clone()).into();
-        let inner =
-            self.verify_objs_are_equal(other, &expected, line_file.clone(), verify_state)?;
+        let inner = self.verify_objs_are_equal_in_equality_builtin(
+            other,
+            &expected,
+            line_file.clone(),
+            verify_state,
+        )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -922,8 +960,12 @@ impl Runtime {
         let expected1: Obj = Mul::new((*p.exponent).clone(), inner_log.clone()).into();
         let expected2: Obj = Mul::new(inner_log, (*p.exponent).clone()).into();
         for expected in [expected1, expected2] {
-            let inner =
-                self.verify_objs_are_equal(other, &expected, line_file.clone(), verify_state)?;
+            let inner = self.verify_objs_are_equal_in_equality_builtin(
+                other,
+                &expected,
+                line_file.clone(),
+                verify_state,
+            )?;
             if inner.is_true() {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     left,
@@ -957,8 +999,12 @@ impl Runtime {
         let expected1: Obj = Add::new(l1.clone(), l2.clone()).into();
         let expected2: Obj = Add::new(l2, l1).into();
         for expected in [expected1, expected2] {
-            let inner =
-                self.verify_objs_are_equal(other, &expected, line_file.clone(), verify_state)?;
+            let inner = self.verify_objs_are_equal_in_equality_builtin(
+                other,
+                &expected,
+                line_file.clone(),
+                verify_state,
+            )?;
             if inner.is_true() {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     left,
@@ -990,8 +1036,12 @@ impl Runtime {
         let l1: Obj = Log::new((*log.base).clone(), (*d.left).clone()).into();
         let l2: Obj = Log::new((*log.base).clone(), (*d.right).clone()).into();
         let expected = Sub::new(l1, l2).into();
-        let inner =
-            self.verify_objs_are_equal(other, &expected, line_file.clone(), verify_state)?;
+        let inner = self.verify_objs_are_equal_in_equality_builtin(
+            other,
+            &expected,
+            line_file.clone(),
+            verify_state,
+        )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -1048,7 +1098,7 @@ impl Runtime {
             _ => return Ok(None),
         };
         let pow_obj: Obj = Pow::new((*log.base).clone(), other.clone()).into();
-        let inner = self.verify_objs_are_equal(
+        let inner = self.verify_objs_are_equal_in_equality_builtin(
             &pow_obj,
             log.arg.as_ref(),
             line_file.clone(),
@@ -1092,7 +1142,7 @@ impl Runtime {
 
         let mut require_eq = |a: &Obj, b: &Obj| -> Result<bool, RuntimeError> {
             Ok(self
-                .verify_objs_are_equal(a, b, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(a, b, line_file.clone(), verify_state)?
                 .is_true())
         };
         if !require_eq(sum_m.start.as_ref(), sum_a.start.as_ref())? {
@@ -1239,13 +1289,18 @@ impl Runtime {
         let one: Obj = Number::new("1".to_string()).into();
         let gap = Add::new((*s1.end).clone(), one).into();
         if !self
-            .verify_objs_are_equal(&gap, s2.start.as_ref(), line_file.clone(), verify_state)?
+            .verify_objs_are_equal_in_equality_builtin(
+                &gap,
+                s2.start.as_ref(),
+                line_file.clone(),
+                verify_state,
+            )?
             .is_true()
         {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(
+            .verify_objs_are_equal_in_equality_builtin(
                 s1.start.as_ref(),
                 s3.start.as_ref(),
                 line_file.clone(),
@@ -1256,7 +1311,7 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(
+            .verify_objs_are_equal_in_equality_builtin(
                 s2.end.as_ref(),
                 s3.end.as_ref(),
                 line_file.clone(),
@@ -1267,7 +1322,7 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(
+            .verify_objs_are_equal_in_equality_builtin(
                 s1.func.as_ref(),
                 s2.func.as_ref(),
                 line_file.clone(),
@@ -1278,7 +1333,7 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal(
+            .verify_objs_are_equal_in_equality_builtin(
                 s1.func.as_ref(),
                 s3.func.as_ref(),
                 line_file.clone(),
@@ -1310,7 +1365,7 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     sum.start.as_ref(),
                     sum.end.as_ref(),
                     line_file.clone(),
@@ -1326,7 +1381,12 @@ impl Runtime {
                 continue;
             };
             if self
-                .verify_objs_are_equal(&expected, other, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(
+                    &expected,
+                    other,
+                    line_file.clone(),
+                    verify_state,
+                )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -1354,7 +1414,7 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     product.start.as_ref(),
                     product.end.as_ref(),
                     line_file.clone(),
@@ -1372,7 +1432,12 @@ impl Runtime {
                 continue;
             };
             if self
-                .verify_objs_are_equal(&expected, other, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(
+                    &expected,
+                    other,
+                    line_file.clone(),
+                    verify_state,
+                )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -1413,7 +1478,7 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         s_full.start.as_ref(),
                         s_pre.start.as_ref(),
                         line_file.clone(),
@@ -1425,7 +1490,7 @@ impl Runtime {
                 }
                 let end_pre_plus_one: Obj = Add::new((*s_pre.end).clone(), one.clone()).into();
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         s_full.end.as_ref(),
                         &end_pre_plus_one,
                         line_file.clone(),
@@ -1436,7 +1501,7 @@ impl Runtime {
                     continue;
                 }
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         s_full.func.as_ref(),
                         s_pre.func.as_ref(),
                         line_file.clone(),
@@ -1454,7 +1519,12 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal(&expected_tail, tail, line_file.clone(), verify_state)?
+                    .verify_objs_are_equal_in_equality_builtin(
+                        &expected_tail,
+                        tail,
+                        line_file.clone(),
+                        verify_state,
+                    )?
                     .is_true()
                 {
                     continue;
@@ -1497,7 +1567,7 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         p_full.start.as_ref(),
                         p_pre.start.as_ref(),
                         line_file.clone(),
@@ -1509,7 +1579,7 @@ impl Runtime {
                 }
                 let end_pre_plus_one: Obj = Add::new((*p_pre.end).clone(), one.clone()).into();
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         p_full.end.as_ref(),
                         &end_pre_plus_one,
                         line_file.clone(),
@@ -1520,7 +1590,7 @@ impl Runtime {
                     continue;
                 }
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         p_full.func.as_ref(),
                         p_pre.func.as_ref(),
                         line_file.clone(),
@@ -1538,7 +1608,12 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal(&expected_tail, tail, line_file.clone(), verify_state)?
+                    .verify_objs_are_equal_in_equality_builtin(
+                        &expected_tail,
+                        tail,
+                        line_file.clone(),
+                        verify_state,
+                    )?
                     .is_true()
                 {
                     continue;
@@ -1613,7 +1688,7 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     s_full.start.as_ref(),
                     sums[0].start.as_ref(),
                     line_file.clone(),
@@ -1624,7 +1699,7 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     s_full.end.as_ref(),
                     sums[sums.len() - 1].end.as_ref(),
                     line_file.clone(),
@@ -1638,7 +1713,7 @@ impl Runtime {
             for i in 0..sums.len().saturating_sub(1) {
                 let gap = Add::new((*sums[i].end).clone(), one.clone()).into();
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         &gap,
                         sums[i + 1].start.as_ref(),
                         line_file.clone(),
@@ -1656,7 +1731,7 @@ impl Runtime {
             let mut func_ok = true;
             for s in &sums {
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         s_full.func.as_ref(),
                         s.func.as_ref(),
                         line_file.clone(),
@@ -1718,7 +1793,7 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     p_full.start.as_ref(),
                     products[0].start.as_ref(),
                     line_file.clone(),
@@ -1729,7 +1804,7 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     p_full.end.as_ref(),
                     products[products.len() - 1].end.as_ref(),
                     line_file.clone(),
@@ -1743,7 +1818,7 @@ impl Runtime {
             for i in 0..products.len().saturating_sub(1) {
                 let gap = Add::new((*products[i].end).clone(), one.clone()).into();
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         &gap,
                         products[i + 1].start.as_ref(),
                         line_file.clone(),
@@ -1761,7 +1836,7 @@ impl Runtime {
             let mut func_ok = true;
             for p in &products {
                 if !self
-                    .verify_objs_are_equal(
+                    .verify_objs_are_equal_in_equality_builtin(
                         p_full.func.as_ref(),
                         p.func.as_ref(),
                         line_file.clone(),
@@ -1805,7 +1880,12 @@ impl Runtime {
             let k: Obj = Sub::new((*r_sum.start).clone(), (*l_sum.start).clone()).into();
             let k_end = Sub::new((*r_sum.end).clone(), (*l_sum.end).clone()).into();
             if !self
-                .verify_objs_are_equal(&k, &k_end, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(
+                    &k,
+                    &k_end,
+                    line_file.clone(),
+                    verify_state,
+                )?
                 .is_true()
             {
                 continue;
@@ -1893,10 +1973,20 @@ impl Runtime {
             let m1: Obj = Mul::new(count.clone(), c.clone()).into();
             let m2: Obj = Mul::new(c, count).into();
             if self
-                .verify_objs_are_equal(other, &m1, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(
+                    other,
+                    &m1,
+                    line_file.clone(),
+                    verify_state,
+                )?
                 .is_true()
                 || self
-                    .verify_objs_are_equal(other, &m2, line_file.clone(), verify_state)?
+                    .verify_objs_are_equal_in_equality_builtin(
+                        other,
+                        &m2,
+                        line_file.clone(),
+                        verify_state,
+                    )?
                     .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -1932,7 +2022,7 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     outer.right.as_ref(),
                     inner.right.as_ref(),
                     line_file.clone(),
@@ -1943,7 +2033,7 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     outer.right.as_ref(),
                     simple.right.as_ref(),
                     line_file.clone(),
@@ -1954,7 +2044,7 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     inner.left.as_ref(),
                     simple.left.as_ref(),
                     line_file.clone(),
@@ -1974,8 +2064,7 @@ impl Runtime {
         Ok(None)
     }
 
-    // a % m = (b % m) % m reduces to a % m = b % m (same m); recurses via verify_objs_are_equal so
-    // mod congruence can apply after * / % left-association yields an extra outer % m.
+    // a % m = (b % m) % m reduces to a % m = b % m (same m); the inner equality must be known-only.
     pub(crate) fn try_verify_mod_peel_nested_same_modulus(
         &mut self,
         left: &Obj,
@@ -1987,7 +2076,7 @@ impl Runtime {
             return Ok(None);
         };
         if !self
-            .verify_objs_are_equal(
+            .verify_objs_are_equal_in_equality_builtin(
                 lm.right.as_ref(),
                 rm.right.as_ref(),
                 line_file.clone(),
@@ -2001,7 +2090,7 @@ impl Runtime {
 
         if let Obj::Mod(r_inner) = rm.left.as_ref() {
             if self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     r_inner.right.as_ref(),
                     modulus,
                     line_file.clone(),
@@ -2012,14 +2101,19 @@ impl Runtime {
                 let lhs: Obj = Mod::new((*lm.left).clone(), (*lm.right).clone()).into();
                 let rhs: Obj = Mod::new((*r_inner.left).clone(), (*lm.right).clone()).into();
                 if self
-                    .verify_objs_are_equal(&lhs, &rhs, line_file.clone(), verify_state)?
+                    .verify_objs_are_equal_in_equality_builtin(
+                        &lhs,
+                        &rhs,
+                        line_file.clone(),
+                        verify_state,
+                    )?
                     .is_true()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         left,
                         right,
                         line_file,
-                        "equality: mod — peel outer nested % m to reuse residue equality (full verify_objs_are_equal)",
+                        "equality: mod — peel outer nested % m to reuse known residue equality",
                     )));
                 }
             }
@@ -2027,7 +2121,7 @@ impl Runtime {
 
         if let Obj::Mod(l_inner) = lm.left.as_ref() {
             if self
-                .verify_objs_are_equal(
+                .verify_objs_are_equal_in_equality_builtin(
                     l_inner.right.as_ref(),
                     modulus,
                     line_file.clone(),
@@ -2038,14 +2132,19 @@ impl Runtime {
                 let lhs: Obj = Mod::new((*l_inner.left).clone(), (*lm.right).clone()).into();
                 let rhs: Obj = Mod::new((*rm.left).clone(), (*lm.right).clone()).into();
                 if self
-                    .verify_objs_are_equal(&lhs, &rhs, line_file.clone(), verify_state)?
+                    .verify_objs_are_equal_in_equality_builtin(
+                        &lhs,
+                        &rhs,
+                        line_file.clone(),
+                        verify_state,
+                    )?
                     .is_true()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         left,
                         right,
                         line_file,
-                        "equality: mod — peel outer nested % m to reuse residue equality (full verify_objs_are_equal)",
+                        "equality: mod — peel outer nested % m to reuse known residue equality",
                     )));
                 }
             }
@@ -2069,7 +2168,7 @@ impl Runtime {
             return Ok(None);
         };
         if !self
-            .verify_objs_are_equal(
+            .verify_objs_are_equal_in_equality_builtin(
                 lm.right.as_ref(),
                 rm.right.as_ref(),
                 line_file.clone(),
@@ -2083,7 +2182,7 @@ impl Runtime {
             let l: Obj = Mod::new(a.clone(), (*lm.right).clone()).into();
             let r: Obj = Mod::new(b.clone(), (*rm.right).clone()).into();
             Ok(self
-                .verify_objs_are_equal(&l, &r, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(&l, &r, line_file.clone(), verify_state)?
                 .is_true())
         };
         let ok = match (lm.left.as_ref(), rm.left.as_ref()) {

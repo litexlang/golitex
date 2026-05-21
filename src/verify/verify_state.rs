@@ -1,6 +1,7 @@
 pub struct VerifyState {
     pub round: u8,
     pub well_defined_already_verified: bool,
+    pub equality_can_use_known_forall: bool,
 }
 
 impl VerifyState {
@@ -8,6 +9,7 @@ impl VerifyState {
         VerifyState {
             round,
             well_defined_already_verified,
+            equality_can_use_known_forall: true,
         }
     }
 
@@ -16,11 +18,19 @@ impl VerifyState {
     }
 
     pub fn new_state_with_round_increased(&self) -> Self {
-        return Self::new(self.round + 1, self.well_defined_already_verified);
+        return Self {
+            round: self.round + 1,
+            well_defined_already_verified: self.well_defined_already_verified,
+            equality_can_use_known_forall: self.equality_can_use_known_forall,
+        };
     }
 
     pub fn make_state_with_req_ok_set_to_true(&self) -> Self {
-        return Self::new(self.round, true);
+        return Self {
+            round: self.round,
+            well_defined_already_verified: true,
+            equality_can_use_known_forall: self.equality_can_use_known_forall,
+        };
     }
 
     pub fn is_round_0(&self) -> bool {
@@ -28,10 +38,22 @@ impl VerifyState {
     }
 
     pub fn make_final_round_state(&self) -> Self {
-        return Self::new(2, self.well_defined_already_verified);
+        return Self {
+            round: 2,
+            well_defined_already_verified: self.well_defined_already_verified,
+            equality_can_use_known_forall: self.equality_can_use_known_forall,
+        };
     }
 
     pub fn new_with_final_round(well_defined_already_verified: bool) -> Self {
         return Self::new(2, well_defined_already_verified);
+    }
+
+    pub fn without_known_forall_for_equality(&self) -> Self {
+        return Self {
+            round: self.round,
+            well_defined_already_verified: self.well_defined_already_verified,
+            equality_can_use_known_forall: false,
+        };
     }
 }
