@@ -1,8 +1,8 @@
 [package]
 name = "litex-lang"
-version = "0.9.86-beta"
+version = "0.9.87-beta"
 edition = "2021"
-description = "A simple formal proof language and verifier, learnable in 2 hours"
+description = "The Formal Way to Write Math as It Looks"
 license = "Apache-2.0"
 repository = "https://github.com/litexlang/golitex"
 homepage = "https://litexlang.com"
