@@ -166,7 +166,7 @@ Binary operations on expressions; `%` is integer remainder when both sides are c
 2 ^ 3 = 8
 ```
 
-Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases. Positive integer powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N_pos`, then `a^k $in N_pos`.
+Litex also stores common function-space facts for these operator objects. For example, `+ $in fn(a, b R) R`, `/ $in fn(a R, b R: b != 0) R`, and `% $in fn(a Z, b Z: b != 0) Z` are available as known facts. Division also has builtin algebra rules: from `a / b = c` and `b != 0`, Litex can prove `a = c * b` and `a = b * c`; from `a = b * c` with a nonzero divisor, it can prove the corresponding quotient equality. For well-definedness, a known fact such as `a != b` is also enough to prove `a - b != 0`, so a divisor like `x - 2` can be justified by the domain condition `x != 2`. Exponentiation is stored as one function-space fact with an `or` domain condition covering the standard well-defined cases. Positive integer powers preserve `Z`, `N`, and `N_pos`: for example, if `a $in N_pos` and `k $in N_pos`, then `a^k $in N_pos`.
 
 #### `abs`, `log`, `max`, `min`
 
