@@ -379,7 +379,7 @@ $q(1)
     }
 
     fn run_file_from_path_impl() {
-        let path: String = "./examples/chapter_6_induction.lit".to_string();
+        let path: String = "./examples/strong_induc.lit".to_string();
         let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
         assert!(
             file_path.is_absolute(),
@@ -580,6 +580,7 @@ $q(1)
         let mut runtime = Runtime::new_with_builtin_code();
 
         let mut snippet_durations_ms: Vec<(String, f64)> = Vec::new();
+        let mut failed_labels: Vec<String> = Vec::new();
         let wall_start = Instant::now();
         let mut file_count_with_snippets: usize = 0;
         for snippets in snippets_by_file.iter() {
@@ -600,33 +601,78 @@ $q(1)
 
                 let normalized_source = remove_windows_carriage_return(source_code);
                 let start_snippet = Instant::now();
-                let (stmt_results, runtime_error) =
-                    run_source_code(normalized_source.as_str(), &mut runtime);
+                let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    run_source_code(normalized_source.as_str(), &mut runtime)
+                }));
+                let (stmt_results, runtime_error) = match run_result {
+                    Ok(result) => result,
+                    Err(panic_payload) => {
+                        let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
+                        let panic_message =
+                            if let Some(message) = panic_payload.downcast_ref::<&str>() {
+                                message.to_string()
+                            } else if let Some(message) = panic_payload.downcast_ref::<String>() {
+                                message.clone()
+                            } else {
+                                "non-string panic payload".to_string()
+                            };
+                        println!(
+                            "=== [PANICKED] The-Mechanics-of-Litex-Proof markdown snippet ({:.2} ms) ===\n{}\n>>> PANICKED snippet (open .md here): {}\n",
+                            duration_ms, panic_message, label
+                        );
+                        failed_labels.push(label.clone());
+                        break;
+                    }
+                };
                 let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
 
                 let (run_succeeded, run_output) =
                     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
                 if !run_succeeded {
-                    panic!(
-                        "The-Mechanics-of-Litex-Proof markdown litex snippet FAILED:\n{}\n>>> FAILED snippet (open .md here): {}\n",
-                        run_output, label
+                    let status_label = if run_output.contains("\"error_type\": \"UnknownError\"") {
+                        "UNKNOWN"
+                    } else {
+                        "FAILED"
+                    };
+                    println!(
+                        "=== [{}] The-Mechanics-of-Litex-Proof markdown snippet ({:.2} ms) ===\n{}\n>>> {} snippet (open .md here): {}\n",
+                        status_label, duration_ms, run_output, status_label, label
                     );
+                    failed_labels.push(label.clone());
+                    break;
                 }
-
                 snippet_durations_ms.push((label.clone(), duration_ms));
             }
         }
 
+        let status_text = if failed_labels.is_empty() {
+            "all OK"
+        } else {
+            "completed with failures"
+        };
         println!(
-            "--- The-Mechanics-of-Litex-Proof markdown: {} ```litex``` block(s) in {} markdown file(s), all OK ({:.2} ms wall) ---",
+            "--- The-Mechanics-of-Litex-Proof markdown: {} ```litex``` block(s) in {} markdown file(s), {} ({:.2} ms wall) ---",
             total_snippet_count,
             file_count_with_snippets,
+            status_text,
             wall_start.elapsed().as_secs_f64() * 1000.0
         );
         for (label, duration_ms) in snippet_durations_ms.iter() {
             println!("  OK  {:.2} ms  {}", duration_ms, label);
         }
+
+        if !failed_labels.is_empty() {
+            println!("--- The-Mechanics-of-Litex-Proof markdown failed snippets ---");
+            for label in failed_labels.iter() {
+                println!("{}", label);
+            }
+        }
+        assert!(
+            failed_labels.is_empty(),
+            "The-Mechanics-of-Litex-Proof markdown has {} failing snippet(s); see output above",
+            failed_labels.len()
+        );
     }
 
     /// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
@@ -744,6 +790,13 @@ $q(1)
 
     #[test]
     fn run_the_mechanics_of_litex_proof() {
+        run_with_large_stack(
+            "run_the_mechanics_of_litex_proof_large_stack",
+            run_the_mechanics_of_litex_proof_impl,
+        );
+    }
+
+    fn run_the_mechanics_of_litex_proof_impl() {
         run_the_mechanics_markdown_files_impl();
     }
 
@@ -1015,11 +1068,13 @@ $q(1)
         ];
 
         for jsonl_path in jsonl_paths.iter() {
-            assert!(
-                jsonl_path.is_file(),
-                "gsm8k jsonl file must exist at {:?}",
-                jsonl_path
-            );
+            if !jsonl_path.is_file() {
+                println!(
+                    "--- gsm8k jsonl file missing at {:?}; skip gsm8k solutions ---",
+                    jsonl_path
+                );
+                return;
+            }
         }
 
         let builtin_start = Instant::now();

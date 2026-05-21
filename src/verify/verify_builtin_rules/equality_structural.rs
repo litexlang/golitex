@@ -181,6 +181,8 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        let verify_state = verify_state.without_known_forall_for_equality();
+        let verify_state = &verify_state;
         let known_result = self.verify_objs_are_equal_known_only(left, right, line_file.clone());
         if known_result.is_true() {
             return Ok(known_result);
@@ -213,15 +215,6 @@ impl Runtime {
                 line_file,
                 "equality builtin: same shape with equal arguments",
             ));
-        }
-        if verify_state.is_round_0() {
-            let next_verify_state = verify_state.new_state_with_round_increased();
-            let fact: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
-            let forall_result =
-                self.verify_atomic_fact_with_known_forall(&fact, &next_verify_state)?;
-            if forall_result.is_true() {
-                return Ok(forall_result);
-            }
         }
         Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
     }

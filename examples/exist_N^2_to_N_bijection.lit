@@ -46,6 +46,7 @@ have fn tri as set:
 claim:
     prove:
         tri(0) = 0
+    2 * tri(0) = 0 * (0 + 1)
     tri(0) = (2 * tri(0)) / 2 = (0 * (0 + 1)) / 2 = 0
 
 claim:
@@ -53,6 +54,7 @@ claim:
         forall n N:
             tri(n + 1) = tri(n) + n + 1
     2 * tri(n + 1) = (n + 1) * ((n + 1) + 1) = (n + 1) * (n + 2)
+    2 * tri(n) = n * (n + 1)
     2 * (tri(n) + n + 1) = 2 * tri(n) + 2 * n + 2 = n * (n + 1) + 2 * n + 2 = (n + 1) * (n + 2)
     tri(n + 1) = (2 * tri(n + 1)) / 2 = ((n + 1) * (n + 2)) / 2 = (2 * (tri(n) + n + 1)) / 2 = tri(n) + n + 1
 

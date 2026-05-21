@@ -6,7 +6,7 @@
 
 # Litex: The Formal Way to Write Math as It Looks
 
-*by Jiachen Shen and The Litex Team, version 0.9.81-beta*
+*by Jiachen Shen and The Litex Team, version 0.9.86-beta*
 
 [![Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
@@ -63,17 +63,14 @@ example (x : ℝ) (h : x = 2) : x + 1 = 3 ∧ x ^ 2 = 4 := by
   </tr>
 </table>
 
-This shows the intended feel: Litex states the desired facts directly, while the checker handles routine rewriting, arithmetic, and reuse of known facts. *Reading Litex code is a pleasant experience, because you can understand it without any prior study.*
+This shows the intended feel: Litex states the desired facts directly, while the checker handles routine rewriting, arithmetic, and reuse of known facts. Litex code is intended to be readable before learning tactic names or library conventions.
+
+Litex is not trying to be a faster Lean. It chooses a different proof
+interface: for textbook-style mathematics, the user writes a sequence of
+checkable facts, and the checker uses context plus builtin relationships to
+keep the feedback loop short. *In a local run, all runnable more than 240 examples from The Mechanics of Litex Proof checked in about 7.5 seconds.*
 
 ## Why It Feels Simple
-
-_To understand is to see connections._
-
-_– Ludwig Wittgenstein_
-
-_One must be able to say at all times instead of points, straight lines, and planes—tables, chairs, and beer mugs._
-
-_– David Hilbert_
 
 Litex feels simple because routine mathematical structure lives in the checker, not in user proof scripts.
 
@@ -82,7 +79,7 @@ Litex feels simple because routine mathematical structure lives in the checker, 
 3. **Basic mathematics is built in.** Litex knows small links between equality, order, membership, functions, sets, tuples, and arithmetic.
 4. **Statement shapes guide matching.** Litex matches known facts and `forall` facts by shape, then substitutes the matching objects.
 
-> As Hardy said, "A mathematician, like a painter or poet, is a maker of patterns.", Litex expects you to recognize familiar proof patterns (equality chains, membership, subsets, witnesses, contradiction, finite case splits). The checker matches those shapes to facts and routine consequences—more like following a textbook argument than memorizing tactic or library names for each line.
+Litex expects you to recognize familiar proof patterns: equality chains, membership claims, subsets, witnesses, contradiction, finite case splits, and induction. The checker matches those shapes to facts and routine consequences, more like following a textbook argument than memorizing tactic or library names for each line.
 
 In this sense, Litex aims to be **the language where mathematics verifies itself**.
 
@@ -130,25 +127,25 @@ The useful part is not only that the line succeeds. The output says
 to provide: you can see whether a fact closed by a builtin rule, a known fact,
 a known `forall`, or an inferred consequence.
 
-> Another special design of Litex is that much of its surface vocabulary is primitive. Forms such as `R`, `N`, `$in`, `fn`, `{}`, and finite sets are not first unfolded into user-visible foundations; their meaning comes from the web of builtin rules, known facts, and inference rules connected to them.
+Every factual statement has exactly one of three outcomes: **true**,
+**unknown**, or **error**. `true` means Litex found a proof path, such as a
+builtin rule, a known fact, or a known `forall` fact. `unknown` means the
+statement is meaningful, but Litex did not find enough verified information to
+prove it. `error` means the line cannot be checked as a valid fact, often
+because the syntax is wrong or some object is not well-defined, such as an
+undeclared name, a function argument outside its domain, or `1 / 0`.
+
+> Another special design of Litex is that much of its surface vocabulary is primitive. Forms such as `R`, `N`, `$in`, `fn`, `{}`, and finite sets are not first unfolded into user-visible foundations; their meaning comes from the web of builtin rules, known facts, and inference rules connected to them. The keyword `abstract_prop` aligns with the idea that sometimes you want to use a predicate symbol without defining it yet.
 
 ## AI Agents Can Work With Litex
 
-_The only way to get artificial intelligence to work is to do the computation in a way similar to the human brain._
-
-_– Jeff Hinton_
-
 Litex is designed so that modern coding agents can formalize textbook-style mathematics by iterating against verifier feedback. An agent can sketch a proof in ordinary mathematical language, translate it into Litex step by step, run the checker, read why each fact failed or succeeded, and refine the argument until every step is local and concrete.
 
-A concrete example is the final example in [Here](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Chapter_8_Functions), which proves that there is a bijection from `N^2` to `N` using Cauchy pairs. Codex formalized this example in Litex by reading the Manual and project documentation, running Litex, inspecting the verifier output, and iterating on the proof about three times. It does not rely on external mathematical facts, and was produced from Litex's own feedback loop rather than from hand-written hints about the proof.
+A concrete example is the final example in [Chapter 8](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Chapter_8_Functions), which proves that there is a bijection from `N^2` to `N` using Cauchy pairs. Codex formalized this example in Litex by reading the Manual and project documentation, running Litex, inspecting the verifier output, and iterating on the proof about three times. It does not rely on external mathematical facts, and was produced from Litex's own feedback loop rather than from hand-written hints about the proof.
 
-This is the point Litex is trying to make especially strong: Litex gives agents a very direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof. Litex is still early, but this feedback loop suggests that filling in basic standard libraries and theorem collections may be fast: agents can add missing facts exactly where proofs ask for them.
+This is the point Litex is trying to make especially strong: Litex gives agents a direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof. Litex is still early, but this feedback loop is a practical way to discover which background facts and theorem-library entries a proof actually needs.
 
 ## Starting Points
-
-_Learn the rules like a pro, so you can break them like an artist._
-
-_– Pablo Picasso_
 
 Litex is aiming at a specific target: not making formal proof look clever, but making ordinary mathematical reasoning precise enough to check without changing its shape. Welcome to explore Litex by yourself.
 
@@ -182,4 +179,4 @@ _- 樊振东在巴黎奥运会后接受采访时说_
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 
-Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Zeyu Zheng, Siqi Guo, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Xiuyuan Lu, and Yunwen Guo for their support and advice. I am sure this list will keep growing.
+Hi, I’m Jiachen Shen, creator of Litex. I am deeply grateful to Wei Lin, Siqi Sun, Peng Sun, Siqi Guo, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Xiuyuan Lu, and Yunwen Guo for their support and advice. I am sure this list will keep growing.

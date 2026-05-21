@@ -16,6 +16,8 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        let verify_state = verify_state.without_known_forall_for_equality();
+        let verify_state = &verify_state;
         if self
             .verify_obj_well_defined_from_cache_if_known(obj)
             .is_some()

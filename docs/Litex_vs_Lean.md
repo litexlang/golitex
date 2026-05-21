@@ -126,6 +126,13 @@ The main Litex model is:
 5. **The proof process** checks each fact using well-definedness, builtin rules, known facts, and known `forall` facts.
 6. **The builtin mathematical background** contains many small relationships among basic mathematical concepts.
 
+Every factual statement has exactly one of three Litex outcomes: **true**,
+**unknown**, or **error**. `true` means the checker found a proof path, such as
+a builtin rule, a known fact, or a known `forall` fact. `unknown` means the fact
+is meaningful but no available route proved it. `error` means Litex cannot
+check the line as a valid fact, usually because of syntax or well-definedness:
+an undeclared object, a function argument outside its domain, or `1 / 0`.
+
 This is the best way to compare Litex and Lean. The difference is not one isolated syntax trick. It is a different boundary between surface language, checker behavior, and proof-engine instruction. Lean gives the user access to a powerful general proof environment; Litex asks the user to write mathematical facts and lets context growth, matching, substitution, and explainable provenance do more routine work.
 
 ---
@@ -562,7 +569,34 @@ When Litex checks a fact, the usual loop is:
 3. Try matching known facts.
 4. Try matching known `forall` facts.
 
+The output status is always one of three cases. If a route succeeds, the fact is
+`true`. If the objects are meaningful but no route succeeds, the fact is
+`unknown`. If the syntax or well-definedness check fails, the result is
+`error`; typical examples are an undeclared object, applying a function outside
+its domain, or writing `1 / 0`.
+
 In Lean, the user often chooses the step explicitly: rewrite with this hypothesis, simplify this definition, apply this theorem, run this tactic. This gives very fine control and scales to deep formal developments. Litex chooses a different default for ordinary mathematics: many routine proof paths are tried by the checker.
+
+## Speed Is A Design Signal, Not Just An Optimization
+
+Lean's generality is a real strength. It supports proof terms, elaboration,
+typeclass search, tactic programming, large library imports, and highly
+composable theorem engineering. Those mechanisms matter for large formal
+developments.
+
+But for textbook-style proofs, they are often machinery for a different goal.
+The user-facing task is usually not to program a proof object in a general proof
+environment. It is to check whether the next ordinary mathematical fact follows
+from the current assumptions, previous facts, definitions, and routine
+relationships.
+
+This is why speed matters as more than an implementation detail. Litex is not
+trying to make Lean's pipeline faster; it changes the default proof interface.
+Proofs are checked as a growing sequence of mathematical facts, and many common
+relationships are builtin. In this setting, a short feedback loop is a design
+signal: the checker is doing the work that the proof script actually asks for,
+without requiring the user to pass through a heavier proof-programming layer.
+*For example, in a local run, all more than 240 runnable examples from The Mechanics of Litex Proof checked in about 7.5 seconds.*
 
 ### Message Output Explains Each Step
 
