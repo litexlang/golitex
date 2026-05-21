@@ -14,7 +14,8 @@ impl Runtime {
         }
 
         if !verify_state.well_defined_already_verified {
-            if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
+            let well_defined_state = verify_state.without_known_forall_for_equality();
+            if let Err(e) = self.verify_and_fact_well_defined(and_fact, &well_defined_state) {
                 return Err(RuntimeError::from(VerifyRuntimeError(
                     RuntimeErrorStruct::new(
                         Some(Fact::from(and_fact.clone()).into_stmt()),
@@ -60,7 +61,8 @@ impl Runtime {
         }
 
         if !verify_state.well_defined_already_verified {
-            if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
+            let well_defined_state = verify_state.without_known_forall_for_equality();
+            if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, &well_defined_state) {
                 return Err(RuntimeError::from(VerifyRuntimeError(
                     RuntimeErrorStruct::new(
                         Some(Fact::from(chain_fact.clone()).into_stmt()),

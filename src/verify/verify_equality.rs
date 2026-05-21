@@ -56,7 +56,7 @@ impl Runtime {
             );
         }
 
-        if verify_state.is_round_0() {
+        if verify_state.is_round_0() && verify_state.equality_can_use_known_forall {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
             result = self.verify_atomic_fact_with_known_forall(
                 &EqualFact::new(left.clone(), right.clone(), line_file.clone()).into(),

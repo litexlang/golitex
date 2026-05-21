@@ -452,14 +452,15 @@ _— René Descartes_
 
 A **factual statement** is a Litex statement that claims a mathematical fact. It may be as small as `1 = 1`, or as structured as a `forall`, `exist`, `or`, or chain of inequalities.
 
-The result of checking a factual statement is either **true** or **unknown**.
+The result of checking any factual statement has exactly one of three statuses: **true**, **unknown**, or **error**.
 
-- **true** means Litex has verified the fact from the current context, definitions, and builtin rules.
-- **unknown** means Litex does not have enough verified information to close the goal. The fact may be false, or it may simply need more intermediate facts.
+- **true** means Litex found a proof path, such as a builtin rule, a known fact, or a known `forall` fact.
+- **unknown** means the statement is meaningful, but Litex did not find enough verified information to close the goal. The fact may be false, or it may simply need more intermediate facts.
+- **error** means Litex cannot check the line as a valid fact. The syntax may be wrong, or some object may not be well-defined, such as an undeclared name, a function argument outside its domain, or `1 / 0`.
 
 Once a factual statement is verified, it becomes a **known fact** in the current context and can be reused by later statements.
 
-> Hint: `unknown` is usually a request for a smaller step. Try stating the missing equality, membership, domain condition, or previous lemma explicitly.
+> Hint: `unknown` is usually a request for a smaller step. Try stating the missing equality, membership, domain condition, or previous lemma explicitly. `error` is different: first fix the syntax or make every object well-defined.
 
 This page is about **facts themselves**. For the larger list of Litex statement forms such as `prop`, `have`, `claim`, `prove`, `know`, and `witness`, see [Builtin statements](https://litexlang.com/doc/Manual#statements).
 
@@ -481,6 +482,10 @@ Litex asks:
 2. What shape is this fact?
 3. Can the fact be proved from what is already known?
 4. If the fact is compound, can its smaller parts be checked?
+
+If the syntax or well-definedness check fails, the result is `error`. If the
+fact is meaningful but no proof route succeeds, the result is `unknown`. If a
+route succeeds, the result is `true`.
 
 For example:
 
@@ -1803,6 +1808,11 @@ Most verification in Litex follows the same loop:
 3. Try matching known facts.
 4. Try matching known `forall` facts.
 
+If the fact is not syntactically valid or contains an object that is not
+well-defined, Litex reports `error`. If the fact is well-defined but none of the
+proof routes closes it, Litex reports `unknown`. If one route closes it, Litex
+reports `true`.
+
 The exact details depend on the shape of the fact, but this loop is the main mental model.
 
 #### A builtin rule proves it
@@ -2033,7 +2043,7 @@ The practical lesson is simple: the more similar your goal looks to a known fact
 
 `forall` is the foundation for proving facts beyond builtin rules. A known `forall` fact is like knowing infinitely many facts at once: once Litex finds objects that satisfy the parameter conditions, it can substitute those objects into the `forall` conclusion and obtain the corresponding concrete fact. Builtin rules give Litex a fixed base of mathematical reasoning; `forall` lets users keep generating new facts from their own definitions and theorems.
 
-> The result of a factual statement is either **true** or **unknown**. `unknown` does not mean the statement is false. It means these verification routes did not find enough information. Usually the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, a nonzero denominator, or a lemma that should be stated before the current line.
+> The result of a factual statement is exactly one of **true**, **unknown**, or **error**. `unknown` does not mean the statement is false. It means these verification routes did not find enough information. Usually the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, a nonzero denominator, or a lemma that should be stated before the current line. `error` means the statement could not be checked as a valid fact, often because of syntax or well-definedness, such as an undeclared object, a function argument outside its domain, or `1 / 0`.
 
 ---
 
@@ -3613,7 +3623,7 @@ For a non-equality atomic predicate fact such as `$p(a)` or `$p(a, b)`, the veri
 flowchart TD
     atomicGoal["Non-equality atomic predicate fact"]
     wellDefined["Step 1: Check every object makes sense"]
-    notWellDefined["unknown: some object is not justified"]
+    notWellDefined["error: some object is not well-defined"]
     builtinRules["Step 2: Try builtin math rules"]
     builtinSuccess["true: verified by builtin rule"]
     knownFacts["Step 3: Try known facts"]
@@ -3655,4 +3665,4 @@ flowchart TD
     storeFact --> inferMore
 ```
 
-If one route works, the fact becomes part of the context. Predicate post-processing covers special properties the user has registered, such as a reflexive, transitive, symmetric, or antisymmetric user-defined prop. If none works, `unknown` usually means the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, or a lemma that makes the goal easier to match.
+If one route works, the fact becomes part of the context. Predicate post-processing covers special properties the user has registered, such as a reflexive, transitive, symmetric, or antisymmetric user-defined prop. If the syntax or well-definedness check fails, the result is `error`. If all proof routes fail, `unknown` usually means the proof needs a smaller intermediate fact: an equality, a membership fact, a domain condition, or a lemma that makes the goal easier to match.
