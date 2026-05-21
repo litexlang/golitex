@@ -117,8 +117,7 @@ prove:
     claim:
         prove:
             forall a, n Z:
-                =>:
-                    $mod_eq(a, a, n)
+                $mod_eq(a, a, n)
         witness exist k Z st {a - a = n * k} from 0:
             a - a = n * 0
 

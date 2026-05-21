@@ -1,22 +1,54 @@
-# Litex Local Code Style
+# Litex Local Instructions
 
 Always apply these rules when working in this repository.
 
-1. Write simple code, not clever code.
+## General Engineering Style
 
-2. Use English for comments and documentation. Comments should be concise and to the point.
+1. Read the nearby code before editing. Follow the existing data model, naming, and control flow unless the user asks for a redesign.
 
-3. Do not write too many comments. If comments are needed, they should explain what the code is doing, not act as placeholders for code.
+2. Write simple code, not clever code. Avoid fancy Rust syntax when a direct expression is clearer.
 
-4. You may write functions, but never break the existing data structures.
+3. Keep changes scoped to the request. Do not rewrite unrelated code or clean up unrelated files.
 
-5. Use `.into()` to convert between types instead of directly wrapping a struct with an enum variant such as `Enum::Variant(value)`.
+4. Use English for comments and documentation. Comments should be concise and explain the purpose of non-obvious logic.
 
-6. Do not write static functions inside a struct when the struct is not needed. Use a pure free function instead.
+5. Do not add many comments. If the code is simple, make the code clear instead of adding comments.
 
-7. Do not write too many functions. If a piece of code is simple and only called once, write it inside the function that calls it.
+6. Do not break existing data structures. Add adapters or helpers only when they preserve the current shape of the system.
 
-8. When writing Litex code, do not write an empty implication body for a `forall`. Write:
+## Rust Kernel And Codebase Rules
+
+1. Use `use crate::prelude::*;` for repository imports. Import only `std` items directly.
+
+2. Use `.into()` to convert between types instead of directly wrapping a struct with an enum variant such as `Enum::Variant(value)`.
+
+3. Do not write code in `mod.rs`; `mod.rs` is only for module definitions.
+
+4. Use a static `new` function to create a new instance of a struct instead of using the struct literal constructor directly.
+
+5. Do not write static functions inside a struct when the struct is not needed. Use a free function instead.
+
+6. Do not write too many functions. If a piece of code is simple and only called once, write it inside the function that calls it.
+
+7. Write shared helper functions in a `helper.rs` file, not at the head of a file.
+
+8. Do not write new helper functions at the beginning of a file. Put them near the end of the file. The beginning of a file should contain major functions or struct definitions.
+
+9. When implementing a builtin rule, write comments about what mathematical property the rule is for, and include an example.
+
+10. When implementing an infer rule, write comments about the condition under which the rule is applied and what new fact is inferred. Include an example.
+
+## Litex Language And Proof Style
+
+1. Litex examples should expose a tight verifier feedback loop: write a small proof, run it, read the exact verifier output, and make the next smallest correction until the proof is checkable.
+
+2. Do not rely on external mathematical libraries when writing Litex examples unless the user explicitly asks for that. Prefer proof steps that the current Litex verifier can check directly.
+
+3. Make documentation and Mechanics of Litex Proof `litex` fenced blocks self-contained. A snippet should not depend on a previous snippet sharing the same environment. If a block is illustrative only, mark it with `<!-- litex:skip-test -->`.
+
+4. Any time the user asks for code that makes some Litex code verifiable, write the Litex code in `examples/tmp.lit` and test it, so the user can run it directly.
+
+5. When writing ordinary Litex `forall` facts, do not write an empty implication body. Write:
 
 ```litex
 forall x R:
@@ -31,28 +63,42 @@ forall x R:
         ...
 ```
 
-9. Any time the user asks for code that makes some Litex code verifiable, write the Litex code in `examples/tmp.lit` and test it, so the user can run it directly.
+The current `forall ... <=>:` syntax is an exception: if there are no shared hypotheses, keep the required `=>:` block for the left side of the iff.
 
-10. Any time you enhance a feature, check whether the documentation needs to be updated. If it does, update it in the same change.
+6. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
 
-11. When implementing a builtin rule, write comments about what mathematical property the rule is for, and include an example.
+7. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
 
-12. When implementing an infer rule, write comments about the condition under which the rule is applied and what new fact is inferred. Include an example.
+8. Do not use `know` to hide a proof obligation in an example. Use `know` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
 
-13. Do not write code in `mod.rs`; `mod.rs` is only for module definitions.
+## Testing And Verification
 
-14. Use `use crate::prelude::*;` to import repository modules instead of importing each module individually.
+1. After changing Rust kernel logic, parser logic, verifier behavior, builtin rules, infer rules, syntax, examples, or documentation snippets, run the smallest relevant test first, then the broader relevant test.
 
-15. Always use `use crate::prelude::*;` for repository imports, except for `std` imports.
+2. Run `cargo test run_examples` after changing `examples/*.lit`, README/docs snippets, or Litex syntax used by examples.
 
-16. Do not use fancy Rust syntax.
+3. Run `cargo test run_the_mechanics_markdown_files` after changing `The-Mechanics-of-Litex-Proof` snippets or the markdown snippet runner.
 
-17. Write shared helper functions in a `helper.rs` file, not at the head of a file. The head of a file should only be used for important things such as major functions or struct definitions.
+4. Run `cargo test run_all` when a change can affect examples and Mechanics snippets together.
 
-18. Use a static `new` function to create a new instance of a struct instead of using the struct literal constructor directly.
+5. If a verifier failure occurs, report the exact file, snippet label, or line shown by the test output before changing code.
 
-19. Do not write new helper functions at the beginning of a file. Put them near the end of the file. The beginning of a file should only contain major functions or struct definitions.
+## Documentation Rules
 
-20. If you change Litex syntax or semantics, update the documentation at the same time.
+1. Any time you enhance a feature, check whether the documentation needs to be updated. If it does, update it in the same change.
 
-21. If a feature is new, put it into the preview feature section of the documentation.
+2. If you change Litex syntax or semantics, update the documentation at the same time.
+
+3. If a feature is new, put it into the preview feature section of the documentation.
+
+4. Documentation claims about the verifier should be modest and evidence-based. It is fine to say a proof demonstrates a useful feedback loop; do not imply the theorem is difficult for mature proof assistants unless that is the point being argued.
+
+## Anti-Patterns
+
+1. Do not make markdown examples pass only because prior snippets polluted the environment.
+
+2. Do not add broad abstractions before a repeated pattern is clear.
+
+3. Do not hide proof gaps by weakening examples or skipping tests unless the block is intentionally illustrative.
+
+4. Do not change generated, temporary, or user-edited files unless the task requires it.
