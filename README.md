@@ -71,6 +71,10 @@ _To understand is to see connections._
 
 _– Ludwig Wittgenstein_
 
+_One must be able to say at all times instead of points, straight lines, and planes—tables, chairs, and beer mugs._
+
+_– David Hilbert_
+
 Litex feels simple because routine mathematical structure lives in the checker, not in user proof scripts.
 
 1. **Facts are proof steps.** A script mostly states mathematical facts in reading order.
@@ -94,47 +98,39 @@ know forall x human:
 $mortal(Socrates)
 ```
 
-The user does not say "apply the theorem with `x = Socrates`." Litex matches `$mortal(Socrates)` with the known `forall`, sees that `Socrates` belongs to `human`, and verifies the conclusion.
+Litex matches `$mortal(Socrates)` with the known `forall`, sees that `Socrates` belongs to `human`, and verifies the conclusion.
 
 This is why `forall` is central: a known `forall` theorem acts like infinitely many concrete facts, ready to use when arguments and assumptions match.
 
-## Proofs Explain Themselves
+The output looks like
 
-_Make things as simple as possible, but no simpler._
-
-_– Albert Einstein_
-
-Not only does Litex aim to be **the language where mathematics verifies itself**, but it also tells you how it was proved.
-
-```litex
-abstract_prop p(x)
-know forall x R:
-    $p(x)
-$p(2)
-```
-
-The output looks like:
-
-```json
+```text
 {
   "result": "success",
   "type": "AtomicFact",
-  "line": 4,
-  "stmt": "$p(2)",
-  "verified_by":   {
+  "line": 7,
+  "stmt": "$mortal(Socrates)",
+  "verified_by": {
     "type": "cite forall fact",
     "cite_source": {
-      "line": 2,
+      "line": 4,
       "source": "entry"
     },
-    "cited_stmt": "forall x R:\n    $p(x)"
+    "cited_stmt": "forall x human:\n    $mortal(~1x)"
   },
   "infer_facts": [],
   "inside_results": []
 }
 ```
 
-This says `$p(2)` was proved by reusing the known `forall`: Litex matched `x` with `2`, substituted into `$p(x)`, and closed the goal. You can see whether a fact closed by a builtin rule, a known fact, a known `forall`, or an inferred consequence.
+The useful part is not only that the line succeeds. The output says
+`$mortal(Socrates)` was proved by reusing the known `forall`: Litex matched
+`x` with `Socrates`, checked the required membership fact, substituted into
+`$mortal(x)`, and closed the goal. This is the explanatory surface Litex tries
+to provide: you can see whether a fact closed by a builtin rule, a known fact,
+a known `forall`, or an inferred consequence.
+
+> Another special design of Litex is that much of its surface vocabulary is primitive. Forms such as `R`, `N`, `$in`, `fn`, `{}`, and finite sets are not first unfolded into user-visible foundations; their meaning comes from the web of builtin rules, known facts, and inference rules connected to them.
 
 ## AI Agents Can Work With Litex
 
@@ -144,9 +140,9 @@ _– Jeff Hinton_
 
 Litex is designed so that modern coding agents can formalize textbook-style mathematics by iterating against verifier feedback. An agent can sketch a proof in ordinary mathematical language, translate it into Litex step by step, run the checker, read why each fact failed or succeeded, and refine the argument until every step is local and concrete.
 
-A concrete example is the final example in [Here](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Chapter_8_Functions), which proves that there is a bijection from `N^2` to `N` using Cauchy pairs. Codex formalized this example in Litex by reading the Manual and project documentation, running Litex, inspecting the verifier output, and iterating on the proof about three times. The final proof is explicit step by step, does not rely on external mathematical facts, and was produced from Litex's own feedback loop rather than from hand-written hints about the proof.
+A concrete example is the final example in [Here](https://litexlang.com/doc/The_Mechanics_of_Litex_Proof/Chapter_8_Functions), which proves that there is a bijection from `N^2` to `N` using Cauchy pairs. Codex formalized this example in Litex by reading the Manual and project documentation, running Litex, inspecting the verifier output, and iterating on the proof about three times. It does not rely on external mathematical facts, and was produced from Litex's own feedback loop rather than from hand-written hints about the proof.
 
-This is the point Litex is trying to make especially strong: the theorem itself can be expressed in mature proof assistants such as Lean, but Litex gives agents a very direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof.
+This is the point Litex is trying to make especially strong: Litex gives agents a very direct debugging surface. The agent states the next mathematical fact, runs the checker, reads the local success or failure, and continues in the same language as the proof. Litex is still early, but this feedback loop suggests that filling in basic standard libraries and theorem collections may be fast: agents can add missing facts exactly where proofs ask for them.
 
 ## Starting Points
 
