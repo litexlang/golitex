@@ -583,21 +583,22 @@ $q(1)
         let mut failed_labels: Vec<String> = Vec::new();
         let wall_start = Instant::now();
         let mut file_count_with_snippets: usize = 0;
+        let mut snippet_count_run: usize = 0;
         for snippets in snippets_by_file.iter() {
             if snippets.is_empty() {
                 continue;
             }
 
-            if file_count_with_snippets == 0 {
-                runtime.new_file_path_new_env_new_name_scope(snippets[0].2.as_str());
-            } else {
-                runtime.clear_current_env_and_parse_name_scope();
-                runtime.set_current_user_lit_file_path(snippets[0].2.as_str());
-            }
             file_count_with_snippets += 1;
 
             for (label, source_code, md_path_for_run_file) in snippets.iter() {
-                runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+                if snippet_count_run == 0 {
+                    runtime.new_file_path_new_env_new_name_scope(md_path_for_run_file.as_str());
+                } else {
+                    runtime.clear_current_env_and_parse_name_scope();
+                    runtime.set_current_user_lit_file_path(md_path_for_run_file.as_str());
+                }
+                snippet_count_run += 1;
 
                 let normalized_source = remove_windows_carriage_return(source_code);
                 let start_snippet = Instant::now();
