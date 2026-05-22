@@ -57,19 +57,19 @@ pub struct DefFamilyStmt {
 /// `have fn` `{ … }` piece: parameter names match binders in dom/ret; build stored `Obj::FnSet` with [`Runtime::fn_set_from_fn_set_clause`].
 #[derive(Clone)]
 pub struct FnSetClause {
-    pub params_def_with_set: Vec<ParamGroupWithSet>,
+    pub params_def_with_set: ParamDefWithSet,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Obj,
 }
 
 impl FnSetClause {
     pub fn new(
-        params_def_with_set: Vec<ParamGroupWithSet>,
+        params_def_with_set: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Self {
         FnSetClause {
-            params_def_with_set,
+            params_def_with_set: params_def_with_set.into(),
             dom_facts,
             ret_set,
         }

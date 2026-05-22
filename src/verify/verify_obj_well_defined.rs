@@ -299,12 +299,12 @@ impl Runtime {
     fn verify_fn_obj_well_defined_against_fn_like_space(
         &mut self,
         args: &Vec<Box<Obj>>,
-        params_def_with_set: &Vec<ParamGroupWithSet>,
+        params_def_with_set: &ParamDefWithSet,
         dom_facts: &Vec<OrAndChainAtomicFact>,
         param_binding: ParamObjType,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let param_count = ParamGroupWithSet::number_of_params(params_def_with_set);
+        let param_count = params_def_with_set.number_of_params();
         if args.len() != param_count {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
@@ -331,10 +331,8 @@ impl Runtime {
             verify_state,
         )?;
 
-        let param_to_arg_map = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
-            params_def_with_set,
-            &args_as_obj,
-        );
+        let param_to_arg_map =
+            params_def_with_set.param_defs_and_args_to_param_to_arg_map(&args_as_obj);
         for dom_fact in dom_facts.iter() {
             let instantiated_dom_fact = self
                 .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, param_binding, None)
@@ -374,23 +372,24 @@ impl Runtime {
 
     fn verify_args_satisfy_fn_param_groups(
         &mut self,
-        params_def_with_set: &Vec<ParamGroupWithSet>,
+        params_def_with_set: &ParamDefWithSet,
         args_as_obj: &Vec<Obj>,
         param_binding: ParamObjType,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         let mut arg_index: usize = 0;
-        for param_def in params_def_with_set.iter() {
-            let param_type = if arg_index != 0 {
-                ParamType::Obj(self.inst_obj(
-                    param_def.set_obj(),
-                    &param_to_arg_map,
-                    param_binding,
-                )?)
-            } else {
-                ParamType::Obj(param_def.set_obj().clone())
-            };
+        for (group_index, param_def) in params_def_with_set.groups.iter().enumerate() {
+            let param_type =
+                if !params_def_with_set.param_set_cited_param_indices[group_index].is_empty() {
+                    ParamType::Obj(self.inst_obj(
+                        param_def.set_obj(),
+                        &param_to_arg_map,
+                        param_binding,
+                    )?)
+                } else {
+                    ParamType::Obj(param_def.set_obj().clone())
+                };
 
             for param_name in param_def.params.iter() {
                 let arg = args_as_obj[arg_index].clone();
@@ -671,7 +670,8 @@ impl Runtime {
         Ok(())
     }
 
-    // Real pow domain (well-defined check): base>0 and exp in R; or base=0, exp in R and exp>0
+    // Real pow domain (well-defined check): base>=0 and exp in R with exp>0
+    // (e.g. x^(1/2) under x>=0); base>0 and exp in R; or base=0, exp in R and exp>0
     // (so 0^0 and 0^(non-positive) are out); or exp in Z and base != 0 (integer powers, x^0=1);
     // or exp in N_pos (positive integer), any base (e.g. 0^3, (h+i)^2 without proving base != 0).
     // Negative base with non-integer real exp stays out. Uses Z + base!=0 instead of exp mod 2 so
@@ -685,6 +685,35 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
 
         let zero_obj: Obj = Number::new("0".to_string()).into();
+
+        let nonnegative_base_and_positive_real_exponent =
+            AndChainAtomicFact::AndFact(AndFact::new(
+                vec![
+                    LessEqualFact::new(zero_obj.clone(), (*pow.base).clone(), default_line_file())
+                        .into(),
+                    InFact::new(
+                        (*pow.exponent).clone(),
+                        StandardSet::R.into(),
+                        default_line_file(),
+                    )
+                    .into(),
+                    GreaterFact::new(
+                        (*pow.exponent).clone(),
+                        zero_obj.clone(),
+                        default_line_file(),
+                    )
+                    .into(),
+                ],
+                default_line_file(),
+            ));
+
+        let result = self.verify_and_chain_atomic_fact(
+            &nonnegative_base_and_positive_real_exponent,
+            verify_state,
+        )?;
+        if result.is_true() {
+            return Ok(());
+        }
 
         let positive_base_and_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
@@ -756,6 +785,7 @@ impl Runtime {
 
         let pow_domain_or_fact = OrFact::new(
             vec![
+                nonnegative_base_and_positive_real_exponent,
                 positive_base_and_real_exponent,
                 zero_base_and_positive_real_exponent,
                 nonzero_base_integer_exponent,

@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 /// Turn a [`FnSet`] (parser-level function-space type) into a [`FnSetClause`]-shaped bundle.
 pub(crate) fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
@@ -12,20 +13,31 @@ pub(crate) fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
 /// Forall parameters, `dom` [`Fact`]s, and curried `(...)(...)` argument layers (one vec per paren
 /// group), matching [`HaveFnEqualStmt`]'s `forall` for that signature.
 pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
+    runtime: &Runtime,
     clause: &FnSetClause,
-) -> (ParamDefWithType, Vec<Fact>, Vec<Vec<String>>) {
+) -> Result<(ParamDefWithType, Vec<Fact>, Vec<Vec<String>>), RuntimeError> {
     let mut type_groups: Vec<ParamGroupWithParamType> = Vec::new();
     let mut dom_facts: Vec<Fact> = Vec::new();
     let mut layers: Vec<Vec<String>> = Vec::new();
+    let mut fn_set_param_to_forall_param: HashMap<String, Obj> = HashMap::new();
 
-    for pg in clause.params_def_with_set.iter() {
-        type_groups.push(ParamGroupWithParamType::new(
-            pg.params.clone(),
-            param_group_with_set_to_param_type(pg),
-        ));
-    }
+    append_fn_set_param_groups_as_forall_param_type_groups(
+        runtime,
+        &clause.params_def_with_set,
+        &mut fn_set_param_to_forall_param,
+        &mut type_groups,
+    )?;
     for d in clause.dom_facts.iter() {
-        dom_facts.push(d.clone().into());
+        dom_facts.push(
+            runtime
+                .inst_or_and_chain_atomic_fact(
+                    d,
+                    &fn_set_param_to_forall_param,
+                    ParamObjType::FnSet,
+                    None,
+                )?
+                .into(),
+        );
     }
     layers.push(ParamGroupWithSet::collect_param_names(
         &clause.params_def_with_set,
@@ -33,15 +45,24 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
 
     let mut ret_set = clause.ret_set.clone();
     while let Obj::FnSet(inner) = ret_set {
-        for pg in inner.body.params_def_with_set.iter() {
-            type_groups.push(ParamGroupWithParamType::new(
-                pg.params.clone(),
-                param_group_with_set_to_param_type(pg),
-            ));
-        }
+        append_fn_set_param_groups_as_forall_param_type_groups(
+            runtime,
+            &inner.body.params_def_with_set,
+            &mut fn_set_param_to_forall_param,
+            &mut type_groups,
+        )?;
 
         for d in inner.body.dom_facts.iter() {
-            dom_facts.push(d.clone().into());
+            dom_facts.push(
+                runtime
+                    .inst_or_and_chain_atomic_fact(
+                        d,
+                        &fn_set_param_to_forall_param,
+                        ParamObjType::FnSet,
+                        None,
+                    )?
+                    .into(),
+            );
         }
 
         let layer_names: Vec<String> = inner
@@ -53,10 +74,14 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
             .collect();
         layers.push(layer_names);
 
-        ret_set = (*inner.body.ret_set).clone();
+        ret_set = runtime.inst_obj(
+            inner.body.ret_set.as_ref(),
+            &fn_set_param_to_forall_param,
+            ParamObjType::FnSet,
+        )?;
     }
 
-    (ParamDefWithType::new(type_groups), dom_facts, layers)
+    Ok((ParamDefWithType::new(type_groups), dom_facts, layers))
 }
 
 pub(crate) fn build_curried_function_obj_from_layers_with_binding(
@@ -166,18 +191,63 @@ pub(crate) fn build_curried_function_obj_from_layers(
     )
 }
 
-pub(crate) fn param_defs_with_type_from_have_fn_clause(clause: &FnSetClause) -> ParamDefWithType {
+pub(crate) fn forall_param_defs_dom_and_map_from_have_fn_clause(
+    runtime: &Runtime,
+    clause: &FnSetClause,
+) -> Result<(ParamDefWithType, Vec<Fact>, HashMap<String, Obj>), RuntimeError> {
     let mut groups: Vec<ParamGroupWithParamType> =
         Vec::with_capacity(clause.params_def_with_set.len());
-    for param_def_with_set in clause.params_def_with_set.iter() {
-        groups.push(ParamGroupWithParamType::new(
-            param_def_with_set.params.clone(),
-            param_group_with_set_to_param_type(param_def_with_set),
-        ));
+    let mut fn_set_param_to_forall_param: HashMap<String, Obj> = HashMap::new();
+    append_fn_set_param_groups_as_forall_param_type_groups(
+        runtime,
+        &clause.params_def_with_set,
+        &mut fn_set_param_to_forall_param,
+        &mut groups,
+    )?;
+
+    let mut dom_facts = Vec::with_capacity(clause.dom_facts.len());
+    for dom_fact in clause.dom_facts.iter() {
+        dom_facts.push(
+            runtime
+                .inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    &fn_set_param_to_forall_param,
+                    ParamObjType::FnSet,
+                    None,
+                )?
+                .into(),
+        );
     }
-    ParamDefWithType::new(groups)
+
+    Ok((
+        ParamDefWithType::new(groups),
+        dom_facts,
+        fn_set_param_to_forall_param,
+    ))
 }
 
-fn param_group_with_set_to_param_type(param_def: &ParamGroupWithSet) -> ParamType {
-    ParamType::Obj(param_def.set_obj().clone())
+fn append_fn_set_param_groups_as_forall_param_type_groups(
+    runtime: &Runtime,
+    params_def_with_set: &ParamDefWithSet,
+    fn_set_param_to_forall_param: &mut HashMap<String, Obj>,
+    groups: &mut Vec<ParamGroupWithParamType>,
+) -> Result<(), RuntimeError> {
+    for param_def_with_set in params_def_with_set.iter() {
+        let param_set = runtime.inst_obj(
+            param_def_with_set.set_obj(),
+            fn_set_param_to_forall_param,
+            ParamObjType::FnSet,
+        )?;
+        groups.push(ParamGroupWithParamType::new(
+            param_def_with_set.params.clone(),
+            ParamType::Obj(param_set),
+        ));
+        for param_name in param_def_with_set.params.iter() {
+            fn_set_param_to_forall_param.insert(
+                param_name.clone(),
+                obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
+            );
+        }
+    }
+    Ok(())
 }
