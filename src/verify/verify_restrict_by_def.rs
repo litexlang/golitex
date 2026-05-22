@@ -14,6 +14,7 @@
 //     forall a Q, b Q: x < y, x < 0: f(a, b) $in Z
 
 use crate::prelude::*;
+use std::collections::HashMap;
 struct RestrictProofFlow {
     // The whole restrict_fn_in(...) fact to be proved.
     restrict_fact: RestrictFact,
@@ -97,7 +98,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let forall_params = self.restrict_build_forall_params_from_rhs(&rhs_fn_set.body);
+        let forall_params = self.restrict_build_forall_params_from_rhs(&rhs_fn_set.body)?;
         let forall_dom_facts = self.restrict_build_forall_dom_facts_from_rhs(&rhs_fn_set.body);
 
         let fn_head = match FnObjHead::given_an_atom_return_a_fn_obj_head(restrict_fact.obj.clone())
@@ -260,16 +261,30 @@ impl Runtime {
         out
     }
 
-    fn restrict_build_forall_params_from_rhs(&self, rhs_body: &FnSetBody) -> ParamDefWithType {
+    fn restrict_build_forall_params_from_rhs(
+        &self,
+        rhs_body: &FnSetBody,
+    ) -> Result<ParamDefWithType, RuntimeError> {
         let mut groups: Vec<ParamGroupWithParamType> = Vec::new();
+        let mut param_to_forall_obj: HashMap<String, Obj> = HashMap::new();
         for param_def_with_set in &rhs_body.params_def_with_set {
-            let param_type = ParamType::Obj(param_def_with_set.set_obj().clone());
+            let param_type = ParamType::Obj(self.inst_obj(
+                param_def_with_set.set_obj(),
+                &param_to_forall_obj,
+                ParamObjType::FnSet,
+            )?);
             groups.push(ParamGroupWithParamType::new(
                 param_def_with_set.params.clone(),
                 param_type,
             ));
+            for param_name in param_def_with_set.params.iter() {
+                param_to_forall_obj.insert(
+                    param_name.clone(),
+                    obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
+                );
+            }
         }
-        ParamDefWithType::new(groups)
+        Ok(ParamDefWithType::new(groups))
     }
 
     fn restrict_build_forall_dom_facts_from_rhs(&self, rhs_body: &FnSetBody) -> Vec<Fact> {

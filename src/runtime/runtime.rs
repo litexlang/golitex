@@ -266,10 +266,6 @@ impl Runtime {
         return self.get_abstract_prop_definition_by_name(name).is_some();
     }
 
-    pub fn is_name_used_for_family(&self, name: &str) -> bool {
-        return self.get_family_definition_by_name(name).is_some();
-    }
-
     pub fn is_name_used_for_algo(&self, name: &str) -> bool {
         return self.get_algo_definition_by_name(name).is_some();
     }
@@ -459,7 +455,7 @@ impl Runtime {
 impl Runtime {
     pub fn new_fn_set(
         &self,
-        params_and_their_sets: Vec<ParamGroupWithSet>,
+        params_and_their_sets: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Result<FnSet, RuntimeError> {
@@ -479,7 +475,7 @@ impl Runtime {
 
     pub fn new_anonymous_fn(
         &self,
-        params_and_their_sets: Vec<ParamGroupWithSet>,
+        params_and_their_sets: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
         equal_to: Obj,

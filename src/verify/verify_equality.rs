@@ -28,6 +28,11 @@ impl Runtime {
             return Ok(result);
         }
 
+        result = self.verify_objs_are_equal_known_only(left, right, line_file.clone());
+        if result.is_true() {
+            return Ok(result);
+        }
+
         result = self.verify_equality_with_known_equalities(
             left,
             right,

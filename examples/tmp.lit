@@ -1,0 +1,20 @@
+floor(3 / 2) $in Z
+ceil(3 / 2) $in Z
+
+forall x R:
+    floor(x) <= x
+    x < floor(x) + 1
+    ceil(x) - 1 < x
+    x <= ceil(x)
+
+forall x R, y Z:
+    0 <= x - y
+    x - y < 1
+    =>:
+        y = floor(x)
+
+forall x R, y Z:
+    0 <= y - x
+    y - x < 1
+    =>:
+        y = ceil(x)

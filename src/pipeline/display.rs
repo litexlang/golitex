@@ -198,7 +198,6 @@ fn citation_type_for_stmt(stmt: &Stmt) -> String {
         Stmt::DefPropStmt(_) => "cite prop def".to_string(),
         Stmt::DefAbstractPropStmt(_) => "cite abstract prop def".to_string(),
         Stmt::DefLetStmt(_) => "cite let def".to_string(),
-        Stmt::DefFamilyStmt(_) => "cite family def".to_string(),
         Stmt::DefAlgoStmt(_) => "cite algo def".to_string(),
         Stmt::DefStructStmt(_) => "cite struct def".to_string(),
         _ => format!("cite {} stmt", stmt_type_label_for_citation(stmt)),

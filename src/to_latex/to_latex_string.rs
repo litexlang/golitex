@@ -146,6 +146,12 @@ impl Abs {
     }
 }
 
+impl Sqrt {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\sqrt{{{}}}", self.arg.to_latex_string())
+    }
+}
+
 impl Add {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -267,15 +273,6 @@ impl ByExtensionStmt {
         format!(
             "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
             rows.join(" \\\\\n")
-        )
-    }
-}
-
-impl ByFamilyAsSetStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By family as set}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
-            self.family_obj.to_latex_string()
         )
     }
 }
@@ -586,25 +583,6 @@ impl DefAlgoStmt {
     }
 }
 
-impl DefFamilyStmt {
-    pub fn to_latex_string(&self) -> String {
-        let dom = self
-            .dom_facts
-            .iter()
-            .map(|f| f.to_latex_string())
-            .collect::<Vec<_>>()
-            .join(r", ");
-        format!(
-            r"\operatorname{{{}}}\, {}\left( {} : {} \right) = {}",
-            FAMILY,
-            latex_local_ident(&self.name),
-            self.params_def_with_type.to_latex_string(),
-            dom,
-            self.equal_to.to_latex_string()
-        )
-    }
-}
-
 impl DefLetStmt {
     pub fn to_latex_string(&self) -> String {
         match self.facts.len() {
@@ -760,19 +738,6 @@ impl ExistOrAndChainAtomicFact {
     }
 }
 
-impl FamilyObj {
-    pub fn to_latex_string(&self) -> String {
-        let head = self.name.to_latex_string();
-        let args = self
-            .params
-            .iter()
-            .map(|o| o.to_latex_string())
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(r"\operatorname{{{}}}\left( {}\right)", head, args)
-    }
-}
-
 impl FiniteSeqListObj {
     pub fn to_latex_string(&self) -> String {
         let inner = self
@@ -810,6 +775,7 @@ impl FnObj {
             FnObjHead::FiniteSeqListObj(v) => v.to_latex_string(),
             FnObjHead::Induc(p) => latex_local_ident(&p.name),
             FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
+            FnObjHead::InstantiatedTemplateObj(t) => latex_texttt_escape(&t.to_string()),
         };
         let mut s = head;
         for group in self.body.iter() {
@@ -1043,7 +1009,8 @@ impl HaveFnEqualStmt {
             self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
             self.equal_to_anonymous_fn.body.dom_facts.clone(),
             (*self.equal_to_anonymous_fn.body.ret_set).clone(),
-        );
+        )
+        .expect("anonymous function signature was already validated");
         format!(
             r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} {}",
             latex_local_ident(&self.name),
@@ -1677,6 +1644,16 @@ impl RunFileStmt {
     }
 }
 
+impl RunFileInStd {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\ \texttt{{{}}}",
+            RUN_FILE,
+            latex_texttt_escape(&self.file_path)
+        )
+    }
+}
+
 impl SeqSet {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1986,6 +1963,7 @@ impl Obj {
             Obj::Mod(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
+            Obj::Sqrt(x) => x.to_latex_string(),
             Obj::Log(x) => x.to_latex_string(),
             Obj::Max(x) => x.to_latex_string(),
             Obj::Min(x) => x.to_latex_string(),
@@ -2016,9 +1994,9 @@ impl Obj {
             Obj::Choose(x) => x.to_latex_string(),
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
-            Obj::FamilyObj(x) => x.to_latex_string(),
             Obj::StructObj(x) => latex_texttt_escape(&x.to_string()),
             Obj::ObjAsStructInstanceWithFieldAccess(x) => latex_texttt_escape(&x.to_string()),
+            Obj::InstantiatedTemplateObj(x) => latex_texttt_escape(&x.to_string()),
             Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
             Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
@@ -2052,7 +2030,6 @@ impl Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(x) => x.to_latex_string(),
             Stmt::HaveFnByInducStmt(x) => x.to_latex_string(),
             Stmt::HaveFnByForallExistUniqueStmt(x) => x.to_latex_string(),
-            Stmt::DefFamilyStmt(x) => x.to_latex_string(),
             Stmt::DefAlgoStmt(x) => x.to_latex_string(),
             Stmt::ClaimStmt(x) => x.to_latex_string(),
             Stmt::KnowStmt(x) => x.to_latex_string(),
@@ -2061,6 +2038,7 @@ impl Stmt {
             Stmt::DoNothingStmt(x) => x.to_latex_string(),
             Stmt::ClearStmt(x) => x.to_latex_string(),
             Stmt::RunFileStmt(x) => x.to_latex_string(),
+            Stmt::RunFileInStd(x) => x.to_latex_string(),
             Stmt::EvalStmt(x) => x.to_latex_string(),
             Stmt::EvalByStmt(x) => x.to_latex_string(),
             Stmt::WitnessExistFact(x) => x.to_latex_string(),
@@ -2072,7 +2050,6 @@ impl Stmt {
             Stmt::ByForStmt(x) => x.to_latex_string(),
             Stmt::ByExtensionStmt(x) => x.to_latex_string(),
             Stmt::ByFnAsSetStmt(x) => x.to_latex_string(),
-            Stmt::ByFamilyAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByTupleAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),
@@ -2081,6 +2058,7 @@ impl Stmt {
             Stmt::ByReflexivePropStmt(x) => x.to_latex_string(),
             Stmt::ByAntisymmetricPropStmt(x) => x.to_latex_string(),
             Stmt::DefStructStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::DefTemplateStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }
 }

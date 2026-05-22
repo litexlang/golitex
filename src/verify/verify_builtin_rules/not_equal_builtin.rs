@@ -55,6 +55,12 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_sub_not_equal_zero_from_operand_not_equal(not_equal_fact)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_not_equal_zero_from_n_and_one_le(not_equal_fact, verify_state)?
         {
             return Ok(verified_result);
@@ -191,6 +197,59 @@ impl Runtime {
                 ));
             }
         }
+        Ok(None)
+    }
+
+    // Difference nonzero rule: if `a != b` is known, then `a - b != 0`.
+    // Example: from `x != 2`, prove `x - 2 != 0`.
+    fn try_verify_sub_not_equal_zero_from_operand_not_equal(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let sub = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (Obj::Sub(sub), right)
+                if self.obj_represents_zero_for_not_equal_builtin_rules(right) =>
+            {
+                sub
+            }
+            (left, Obj::Sub(sub)) if self.obj_represents_zero_for_not_equal_builtin_rules(left) => {
+                sub
+            }
+            _ => return Ok(None),
+        };
+
+        let candidates: [AtomicFact; 2] = [
+            NotEqualFact::new(
+                sub.left.as_ref().clone(),
+                sub.right.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into(),
+            NotEqualFact::new(
+                sub.right.as_ref().clone(),
+                sub.left.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into(),
+        ];
+
+        for candidate in candidates {
+            let sub_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            if sub_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "sub_not_equal_zero_from_operand_not_equal".to_string(),
+                        vec![sub_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
         Ok(None)
     }
 

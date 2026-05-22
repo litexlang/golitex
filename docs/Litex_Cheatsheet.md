@@ -294,22 +294,6 @@ have p &Point = (1, 2)
 &Point{(1, 2)}.y = 2
 ```
 
----
-
-### `family` — parametric type family
-
-**Meaning.** A type constructor: for fixed parameters, the right-hand side names a definite set (e.g. a function space).
-
-**Syntax.** `family` *name* `(` *parameters* `)` `=` *object*.
-
-**Example.** (Name `mat_grid` is illustrative; `matrix` is reserved.)
-
-```litex
-family mat_grid(s set, m N_pos, n N_pos) = fn(i closed_range(1, m), j closed_range(1, n)) s
-```
-
----
-
 ### `algo` — executable algorithm
 
 **Meaning.** A computational definition used with **`eval`**: branch on parameters with `case` … and returns.
@@ -876,30 +860,6 @@ by fn set as set: f $in fn(x1 R, y1 Q: x1 > y1, x1 > 2) Z
 f(100,99) = f(100,99)
 ```
 
----
-
-### `by family as set`
-
-**Meaning.** Use an instantiated **family** (syntax `\` *name* `(` *args* `)`; `family` is only the definition keyword).
-
-**Syntax.** `by family as set` `:` *object*.
-
-**Example.**
-
-```litex
-family self_seq(s set) = fn(x N_pos) s
-
-forall a \self_seq(R):
-    a $in fn(y N_pos)R
-    a(1) = a(1)
-
-family p(a set) = fn(x a) a
-
-by family as set: \p(R)
-```
-
----
-
 ### `by struct`
 
 **Meaning.** Removed preview syntax.
@@ -1020,7 +980,6 @@ prove:
 | `prop` | Define predicate |
 | `abstract_prop` | Declare predicate |
 | `struct` | Define structure type |
-| `family` | Define type family |
 | `algo` | Define algorithm for `eval` |
 | `have` | Introduce parameters, values, functions, or witnesses from `exist` |
 | `let` | Local parameters / constraints (optional block) |
@@ -1029,7 +988,7 @@ prove:
 | `prove` | Nested proof block |
 | `witness` | Witness for `exist` or nonempty set |
 | `exist` / `exist!` | Existential facts (latter needs uniqueness in context; see **Existential with uniqueness**) |
-| `by` | Proof tactic (`cases`, `contra`, `enumerate finite_set`, `enumerate` *range* `:`, `induc`, `for`, `extension`, `fn`, `fn set`, `family`, `finite_seq`, `seq`, `matrix`, `struct`, `tuple`) |
+| `by` | Proof tactic (`cases`, `contra`, `enumerate finite_set`, `enumerate` *range* `:`, `induc`, `for`, `extension`, `fn`, `fn set`, `finite_seq`, `seq`, `matrix`, `struct`, `tuple`) |
 | `eval` | Run algorithm |
 | `import` | Import module/file |
 | `run_file` | Run a file |

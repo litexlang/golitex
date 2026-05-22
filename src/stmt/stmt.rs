@@ -13,8 +13,8 @@ pub enum Stmt {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
+    DefTemplateStmt(DefTemplateStmt),
     DefLetStmt(DefLetStmt),
-    DefFamilyStmt(DefFamilyStmt),
     DefAlgoStmt(DefAlgoStmt),
     ClaimStmt(ClaimStmt),
     KnowStmt(KnowStmt),
@@ -23,6 +23,7 @@ pub enum Stmt {
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
     RunFileStmt(RunFileStmt),
+    RunFileInStd(RunFileInStd),
     EvalStmt(EvalStmt),
     WitnessExistFact(WitnessExistFact),
     WitnessNonemptySet(WitnessNonemptySet),
@@ -33,7 +34,6 @@ pub enum Stmt {
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),
     ByFnAsSetStmt(ByFnAsSetStmt),
-    ByFamilyAsSetStmt(ByFamilyAsSetStmt),
     ByTupleAsSetStmt(ByTupleAsSetStmt),
     ByFnSetAsSetStmt(ByFnSetAsSetStmt),
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
@@ -43,6 +43,27 @@ pub enum Stmt {
     ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     DefStructStmt(DefStructStmt),
     EvalByStmt(EvalByStmt),
+}
+
+#[derive(Clone)]
+pub struct RunFileInStd {
+    pub file_path: String,
+    pub line_file: LineFile,
+}
+
+impl RunFileInStd {
+    pub fn new(file_path: String, line_file: LineFile) -> Self {
+        RunFileInStd {
+            file_path,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for RunFileInStd {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", RUN_FILE, self.file_path)
+    }
 }
 
 #[derive(Clone)]
@@ -172,7 +193,7 @@ impl fmt::Display for Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
-            Stmt::DefFamilyStmt(x) => write!(f, "{}", x),
+            Stmt::DefTemplateStmt(x) => write!(f, "{}", x),
             Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
             Stmt::ClaimStmt(x) => write!(f, "{}", x),
             Stmt::KnowStmt(x) => write!(f, "{}", x),
@@ -181,6 +202,7 @@ impl fmt::Display for Stmt {
             Stmt::DoNothingStmt(x) => write!(f, "{}", x),
             Stmt::ClearStmt(x) => write!(f, "{}", x),
             Stmt::RunFileStmt(x) => write!(f, "{}", x),
+            Stmt::RunFileInStd(x) => write!(f, "{}", x),
             Stmt::EvalStmt(x) => write!(f, "{}", x),
             Stmt::EvalByStmt(x) => write!(f, "{}", x),
             Stmt::WitnessExistFact(x) => write!(f, "{}", x),
@@ -192,7 +214,6 @@ impl fmt::Display for Stmt {
             Stmt::ByForStmt(x) => write!(f, "{}", x),
             Stmt::ByExtensionStmt(x) => write!(f, "{}", x),
             Stmt::ByFnAsSetStmt(x) => write!(f, "{}", x),
-            Stmt::ByFamilyAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByTupleAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByFnSetAsSetStmt(x) => write!(f, "{}", x),
             Stmt::ByClosedRangeAsCasesStmt(x) => write!(f, "{}", x),
@@ -219,7 +240,7 @@ impl Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
-            Stmt::DefFamilyStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefTemplateStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClaimStmt(stmt) => stmt.line_file.clone(),
             Stmt::KnowStmt(stmt) => stmt.line_file.clone(),
@@ -228,6 +249,7 @@ impl Stmt {
             Stmt::DoNothingStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClearStmt(stmt) => stmt.line_file.clone(),
             Stmt::RunFileStmt(stmt) => stmt.line_file.clone(),
+            Stmt::RunFileInStd(stmt) => stmt.line_file.clone(),
             Stmt::EvalStmt(stmt) => stmt.line_file.clone(),
             Stmt::EvalByStmt(stmt) => stmt.line_file.clone(),
             Stmt::WitnessExistFact(stmt) => stmt.line_file.clone(),
@@ -239,7 +261,6 @@ impl Stmt {
             Stmt::ByForStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByExtensionStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnAsSetStmt(stmt) => stmt.line_file.clone(),
-            Stmt::ByFamilyAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByTupleAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.line_file.clone(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.line_file.clone(),
@@ -264,7 +285,7 @@ impl Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefFamilyStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefTemplateStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
             Stmt::KnowStmt(stmt) => stmt.stmt_type_name(),
@@ -273,6 +294,7 @@ impl Stmt {
             Stmt::DoNothingStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClearStmt(stmt) => stmt.stmt_type_name(),
             Stmt::RunFileStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::RunFileInStd(stmt) => stmt.stmt_type_name(),
             Stmt::EvalStmt(stmt) => stmt.stmt_type_name(),
             Stmt::EvalByStmt(stmt) => stmt.stmt_type_name(),
             Stmt::WitnessExistFact(stmt) => stmt.stmt_type_name(),
@@ -284,7 +306,6 @@ impl Stmt {
             Stmt::ByForStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByExtensionStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnAsSetStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ByFamilyAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByTupleAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByFnSetAsSetStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ByClosedRangeAsCasesStmt(stmt) => stmt.stmt_type_name(),
@@ -363,9 +384,9 @@ impl From<HaveFnByForallExistUniqueStmt> for Stmt {
     }
 }
 
-impl From<DefFamilyStmt> for Stmt {
-    fn from(v: DefFamilyStmt) -> Self {
-        Stmt::DefFamilyStmt(v)
+impl From<DefTemplateStmt> for Stmt {
+    fn from(v: DefTemplateStmt) -> Self {
+        Stmt::DefTemplateStmt(v)
     }
 }
 
@@ -414,6 +435,12 @@ impl From<ClearStmt> for Stmt {
 impl From<RunFileStmt> for Stmt {
     fn from(v: RunFileStmt) -> Self {
         Stmt::RunFileStmt(v)
+    }
+}
+
+impl From<RunFileInStd> for Stmt {
+    fn from(v: RunFileInStd) -> Self {
+        Stmt::RunFileInStd(v)
     }
 }
 
@@ -480,12 +507,6 @@ impl From<ByExtensionStmt> for Stmt {
 impl From<ByFnAsSetStmt> for Stmt {
     fn from(v: ByFnAsSetStmt) -> Self {
         Stmt::ByFnAsSetStmt(v)
-    }
-}
-
-impl From<ByFamilyAsSetStmt> for Stmt {
-    fn from(v: ByFamilyAsSetStmt) -> Self {
-        Stmt::ByFamilyAsSetStmt(v)
     }
 }
 

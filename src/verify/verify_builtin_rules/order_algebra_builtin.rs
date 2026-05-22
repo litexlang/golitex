@@ -35,11 +35,11 @@ impl Runtime {
         Ok(result)
     }
 
-    fn literal_zero_obj() -> Obj {
+    pub(crate) fn literal_zero_obj() -> Obj {
         Obj::Number(Number::new("0".to_string()))
     }
 
-    fn literal_one_obj() -> Obj {
+    pub(crate) fn literal_one_obj() -> Obj {
         Obj::Number(Number::new("1".to_string()))
     }
 
@@ -1217,6 +1217,31 @@ impl Runtime {
                         atomic_fact.clone().into(),
                         "a - n < a for n > 0".to_string(),
                         Vec::new(),
+                    ),
+                )));
+            }
+        }
+
+        // Dividing a positive quantity by a factor greater than one makes it smaller.
+        // Example: from `a > 0` and `b > 1`, prove `a / b < a`.
+        if let Obj::Div(div) = &f.left {
+            if div.left.as_ref().to_string() == f.right.to_string() {
+                let g_pos = LessFact::new(z.clone(), f.right.clone(), lf.clone()).into();
+                let g_denom_gt_one =
+                    LessFact::new(one.clone(), div.right.as_ref().clone(), lf.clone()).into();
+                let r_pos = self.verify_order_subgoal(g_pos)?;
+                if !r_pos.is_true() {
+                    return Ok(None);
+                }
+                let r_denom_gt_one = self.verify_order_subgoal(g_denom_gt_one)?;
+                if !r_denom_gt_one.is_true() {
+                    return Ok(None);
+                }
+                return Ok(Some(StmtResult::FactualStmtSuccess(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a / b < a from 0 < a and 1 < b".to_string(),
+                        vec![r_pos, r_denom_gt_one],
                     ),
                 )));
             }

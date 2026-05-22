@@ -78,6 +78,11 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::Sqrt(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::Log(obj) => check_two_objs(&obj.base, &obj.arg, free_param_type, params_already_used),
         Obj::Max(obj) => {
             check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
@@ -239,16 +244,6 @@ fn check_obj_has_no_duplicate_free_parameter(
         Obj::ObjAtIndex(obj) => {
             check_two_objs(&obj.obj, &obj.index, free_param_type, params_already_used)
         }
-        Obj::FamilyObj(obj) => {
-            for param in obj.params.iter() {
-                check_obj_has_no_duplicate_free_parameter(
-                    param,
-                    free_param_type,
-                    params_already_used,
-                )?;
-            }
-            Ok(())
-        }
         Obj::StructObj(obj) => {
             for param in obj.params.iter() {
                 check_obj_has_no_duplicate_free_parameter(
@@ -272,6 +267,16 @@ fn check_obj_has_no_duplicate_free_parameter(
                 free_param_type,
                 params_already_used,
             )
+        }
+        Obj::InstantiatedTemplateObj(obj) => {
+            for arg in obj.args.iter() {
+                check_obj_has_no_duplicate_free_parameter(
+                    arg,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            Ok(())
         }
         Obj::MatrixSet(obj) => {
             check_obj_has_no_duplicate_free_parameter(

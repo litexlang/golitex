@@ -42,6 +42,7 @@ impl Runtime {
             }
             Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map, param_obj_type),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map, param_obj_type),
+            Obj::Sqrt(inner) => self.inst_sqrt(inner, param_to_arg_map, param_obj_type),
             Obj::Log(inner) => self.inst_log(inner, param_to_arg_map, param_obj_type),
             Obj::Max(inner) => self.inst_max(inner, param_to_arg_map, param_obj_type),
             Obj::Min(inner) => self.inst_min(inner, param_to_arg_map, param_obj_type),
@@ -90,13 +91,6 @@ impl Runtime {
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
             }
-            Obj::FamilyObj(family) => {
-                let mut params = Vec::with_capacity(family.params.len());
-                for p in family.params.iter() {
-                    params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
-                }
-                Ok(FamilyObj::new(family.name.clone(), params).into())
-            }
             Obj::StructObj(struct_obj) => {
                 let mut params = Vec::with_capacity(struct_obj.params.len());
                 for p in struct_obj.params.iter() {
@@ -117,6 +111,13 @@ impl Runtime {
                     field_access.field_name.clone(),
                 )
                 .into())
+            }
+            Obj::InstantiatedTemplateObj(template_obj) => {
+                let mut args = Vec::with_capacity(template_obj.args.len());
+                for arg in template_obj.args.iter() {
+                    args.push(self.inst_obj(arg, param_to_arg_map, param_obj_type)?);
+                }
+                Ok(InstantiatedTemplateObj::new(template_obj.template_name.clone(), args).into())
             }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall {
@@ -261,6 +262,7 @@ impl Runtime {
                 )));
             }
             Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
+            Obj::InstantiatedTemplateObj(t) => FnObjHead::InstantiatedTemplateObj(t),
             Obj::FnObj(x) => {
                 let merged_body_original = merged_body.clone();
                 merged_body = vec![];
@@ -420,6 +422,15 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         Ok(Abs::new(self.inst_obj(&abs.arg, param_to_arg_map, param_obj_type)?).into())
+    }
+
+    pub fn inst_sqrt(
+        &self,
+        sqrt: &Sqrt,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Sqrt::new(self.inst_obj(&sqrt.arg, param_to_arg_map, param_obj_type)?).into())
     }
 
     pub fn inst_log(
@@ -904,11 +915,11 @@ impl Runtime {
 
     pub fn inst_param_def_with_set_one_by_one(
         &self,
-        param_defs: &Vec<ParamGroupWithSet>,
+        param_defs: &ParamDefWithSet,
         args: &Vec<Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Vec<Obj>, RuntimeError> {
-        let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
+        let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
             return Err(
                 InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
@@ -922,13 +933,14 @@ impl Runtime {
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
-        let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
-        for param_def in param_defs.iter() {
-            let instantiated_param_set = if arg_index != 0 {
-                self.inst_obj(param_def.set_obj(), &param_to_arg_map, param_obj_type)?
-            } else {
-                param_def.set_obj().clone()
-            };
+        let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.groups.len());
+        for (group_index, param_def) in param_defs.groups.iter().enumerate() {
+            let instantiated_param_set =
+                if !param_defs.param_set_cited_param_indices[group_index].is_empty() {
+                    self.inst_obj(param_def.set_obj(), &param_to_arg_map, param_obj_type)?
+                } else {
+                    param_def.set_obj().clone()
+                };
             instantiated_param_sets.push(instantiated_param_set);
 
             for param_name in param_def.params.iter() {
@@ -961,8 +973,8 @@ impl Runtime {
         let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
         let mut new_types: Vec<ParamType> = Vec::with_capacity(total_param_count);
-        for param_def in param_defs.groups.iter() {
-            let new_type = if arg_index != 0 {
+        for (group_index, param_def) in param_defs.groups.iter().enumerate() {
+            let new_type = if !param_defs.param_type_cited_param_indices[group_index].is_empty() {
                 self.inst_param_type(&param_def.param_type, &param_arg_map, param_obj_type)?
             } else {
                 param_def.param_type.clone()
