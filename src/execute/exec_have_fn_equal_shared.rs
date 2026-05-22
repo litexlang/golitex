@@ -8,6 +8,7 @@ pub(crate) fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
         fs.body.dom_facts.clone(),
         (*fs.body.ret_set).clone(),
     )
+    .expect("fn set signature was already validated")
 }
 
 /// Forall parameters, `dom` [`Fact`]s, and curried `(...)(...)` argument layers (one vec per paren

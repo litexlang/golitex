@@ -115,7 +115,7 @@ claim:
         impossible diagonal_index(u) = diagonal_index(v)
     u[1] = v[1]
 
-have fn cauchy_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
+have fn cantor_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
 
 # On one diagonal, the offset determines the position.
 claim:
@@ -131,15 +131,15 @@ claim:
 claim:
     prove:
         forall t1, t2 cart(N, N):
-            cauchy_pair(t1) = cauchy_pair(t2)
+            cantor_pair(t1) = cantor_pair(t2)
             =>:
                 t1 = t2
     have u cart(N, N) = (t1[1] + t1[2], t1[2])
     have v cart(N, N) = (t2[1] + t2[2], t2[2])
     u[2] = t1[2] <= t1[1] + t1[2] = u[1]
     v[2] = t2[2] <= t2[1] + t2[2] = v[1]
-    diagonal_index(u) = tri(t1[1] + t1[2]) + t1[2] = cauchy_pair(t1)
-    diagonal_index(v) = tri(t2[1] + t2[2]) + t2[2] = cauchy_pair(t2)
+    diagonal_index(u) = tri(t1[1] + t1[2]) + t1[2] = cantor_pair(t1)
+    diagonal_index(v) = tri(t2[1] + t2[2]) + t2[2] = cantor_pair(t2)
     u[1] = v[1]
     u[2] = v[2]
     t1[2] = u[2] = v[2] = t2[2]
@@ -195,18 +195,18 @@ by induc n from 0:
 claim:
     prove:
         forall n N:
-            exist t cart(N, N) st {n = cauchy_pair(t)}
+            exist t cart(N, N) st {n = cantor_pair(t)}
     have by exist s N st {$triangular_interval(n, s)}: s
     have b N = n - tri(s)
     n - tri(s) <= s
     have a N = s - b
     a + b = (s - b) + b = s
     have p cart(N, N) = (a, b)
-    cauchy_pair(p) = tri(p[1] + p[2]) + p[2] = tri(a + b) + b = tri(s) + b = tri(s) + (n - tri(s)) = n
-    witness exist t cart(N, N) st {n = cauchy_pair(t)} from p:
-        n = cauchy_pair(p)
+    cantor_pair(p) = tri(p[1] + p[2]) + p[2] = tri(a + b) + b = tri(s) + b = tri(s) + (n - tri(s)) = n
+    witness exist t cart(N, N) st {n = cantor_pair(t)} from p:
+        n = cantor_pair(p)
 
 claim:
     prove:
         $exist_bijection(cart(N, N), N)
-    witness exist f fn(x cart(N, N)) N st {$bijective_fn(cart(N, N), N, f)} from cauchy_pair
+    witness exist f fn(x cart(N, N)) N st {$bijective_fn(cart(N, N), N, f)} from cantor_pair

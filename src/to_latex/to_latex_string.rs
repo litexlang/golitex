@@ -1043,7 +1043,8 @@ impl HaveFnEqualStmt {
             self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
             self.equal_to_anonymous_fn.body.dom_facts.clone(),
             (*self.equal_to_anonymous_fn.body.ret_set).clone(),
-        );
+        )
+        .expect("anonymous function signature was already validated");
         format!(
             r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} {}",
             latex_local_ident(&self.name),

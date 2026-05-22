@@ -227,8 +227,14 @@ have s set = { z N : z > 5 }
 
 A **function space** is written `fn(x S) T`; an anonymous function value can be written with a `'R(x){...}`-style head and applied directly. Function application must include at least one argument, so `f()` is not valid syntax. The parameter domains and return type are ordinary set objects, such as `R` or `Point`; struct view objects are preview syntax and are not valid inside a `fn` signature.
 
+Later parameter domains may depend on earlier parameters. The return set is not dependent on the function parameters, so a signature such as `fn(n N_pos) closed_range(1, n)` is rejected.
+
 ```litex
 have g set = fn(x R) R
+```
+
+```litex
+have h fn(n N_pos, x closed_range(1, n)) R
 ```
 
 ```litex
