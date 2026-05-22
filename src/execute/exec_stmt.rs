@@ -17,6 +17,7 @@ impl Runtime {
             Stmt::HaveFnByForallExistUniqueStmt(d) => {
                 self.exec_have_fn_by_forall_exist_unique_stmt(d)
             }
+            Stmt::DefTemplateStmt(d) => self.exec_def_template_stmt(d),
             Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d),
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt),
             Stmt::Fact(fact) => self.exec_fact(fact),

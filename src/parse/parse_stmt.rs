@@ -26,6 +26,7 @@ impl Runtime {
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
+            TEMPLATE => self.parse_def_template_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
             STRONG_INDUC => self.parse_strong_induc_stmt(tb),
             BY => self.parse_by_prefixed_stmt(tb),

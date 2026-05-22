@@ -13,6 +13,7 @@ pub enum Stmt {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
+    DefTemplateStmt(DefTemplateStmt),
     DefLetStmt(DefLetStmt),
     DefAlgoStmt(DefAlgoStmt),
     ClaimStmt(ClaimStmt),
@@ -192,6 +193,7 @@ impl fmt::Display for Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
             Stmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
+            Stmt::DefTemplateStmt(x) => write!(f, "{}", x),
             Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
             Stmt::ClaimStmt(x) => write!(f, "{}", x),
             Stmt::KnowStmt(x) => write!(f, "{}", x),
@@ -238,6 +240,7 @@ impl Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
             Stmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
+            Stmt::DefTemplateStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
             Stmt::ClaimStmt(stmt) => stmt.line_file.clone(),
             Stmt::KnowStmt(stmt) => stmt.line_file.clone(),
@@ -282,6 +285,7 @@ impl Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
             Stmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::DefTemplateStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ClaimStmt(stmt) => stmt.stmt_type_name(),
             Stmt::KnowStmt(stmt) => stmt.stmt_type_name(),
@@ -377,6 +381,12 @@ impl From<HaveFnByInducStmt> for Stmt {
 impl From<HaveFnByForallExistUniqueStmt> for Stmt {
     fn from(v: HaveFnByForallExistUniqueStmt) -> Self {
         Stmt::HaveFnByForallExistUniqueStmt(v)
+    }
+}
+
+impl From<DefTemplateStmt> for Stmt {
+    fn from(v: DefTemplateStmt) -> Self {
+        Stmt::DefTemplateStmt(v)
     }
 }
 

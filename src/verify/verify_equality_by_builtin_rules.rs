@@ -119,6 +119,9 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                     .iter()
                     .any(|p| obj_expr_mentions_bare_id(p, id))
         }
+        Obj::InstantiatedTemplateObj(t) => {
+            t.args.iter().any(|arg| obj_expr_mentions_bare_id(arg, id))
+        }
         Obj::FiniteSeqSet(fs) => {
             obj_expr_mentions_bare_id(fs.set.as_ref(), id)
                 || obj_expr_mentions_bare_id(fs.n.as_ref(), id)
