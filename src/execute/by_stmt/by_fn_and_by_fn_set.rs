@@ -19,6 +19,12 @@ impl Runtime {
                 vec![],
             ));
         }
+        let shape_needs_dependent_tuple_facts =
+            fn_body.params_def_with_set.has_dependent_param_set()
+                || !fn_body
+                    .params_def_with_set
+                    .cited_param_indices_in_obj_from_params(fn_body.ret_set.as_ref())
+                    .is_empty();
 
         let mut generated_forall_names = self
             .generate_random_unused_names(param_names.len() + 2)
@@ -26,64 +32,28 @@ impl Runtime {
         let forall_element_name = generated_forall_names.next().unwrap();
         let forall_z_name = generated_forall_names.next().unwrap();
         let generated_forall_param_names: Vec<String> = generated_forall_names.collect();
-        let mut original_param_to_forall_obj: HashMap<String, Obj> =
-            HashMap::with_capacity(param_names.len());
-        let mut forall_param_defs_with_type: Vec<ParamGroupWithParamType> =
-            Vec::with_capacity(fn_body.params_def_with_set.len());
-        let mut flat_index: usize = 0;
-        for param_def_with_set in fn_body.params_def_with_set.iter() {
-            let next_flat_index = flat_index + param_def_with_set.params.len();
-            let generated_names_for_current_group =
-                generated_forall_param_names[flat_index..next_flat_index].to_vec();
-            let instantiated_type = ParamType::Obj(
-                self.inst_obj(
-                    param_def_with_set.set_obj(),
-                    &original_param_to_forall_obj,
-                    ParamObjType::FnSet,
-                )
-                .map_err(|inst_error| {
-                    short_exec_error(
-                        stmt_exec.clone(),
-                        format!("{}: failed to instantiate generated parameter set", context),
-                        Some(inst_error),
-                        vec![],
-                    )
-                })?,
-            );
-            forall_param_defs_with_type.push(ParamGroupWithParamType::new(
-                generated_names_for_current_group.clone(),
-                instantiated_type,
-            ));
-            for (original_name, generated_name) in param_def_with_set
-                .params
-                .iter()
-                .zip(generated_names_for_current_group.iter())
-            {
-                original_param_to_forall_obj.insert(
-                    original_name.clone(),
-                    obj_for_bound_param_in_scope(generated_name.clone(), ParamObjType::FnSet),
-                );
-            }
-            flat_index = next_flat_index;
-        }
-        // Exist body binds the same generated names as `Exist` params (~3), not FnSet (~5).
-        let original_param_to_exist_inner: HashMap<String, Obj> = original_param_to_forall_obj
-            .iter()
-            .filter_map(|(orig, obj)| {
-                if let Obj::Atom(AtomObj::FnSet(p)) = obj {
-                    Some((
-                        orig.clone(),
-                        obj_for_bound_param_in_scope(p.name.clone(), ParamObjType::Exist),
-                    ))
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let (forall_shape_param_defs_with_type, original_param_to_forall_shape_obj) = self
+            .generated_param_defs_with_type_for_fn_body(
+                fn_body,
+                &generated_forall_param_names,
+                ParamObjType::FnSet,
+                stmt_exec,
+                context,
+                "generated",
+            )?;
+        let (exist_inner_param_defs_with_type, original_param_to_exist_inner) = self
+            .generated_param_defs_with_type_for_fn_body(
+                fn_body,
+                &generated_forall_param_names,
+                ParamObjType::Exist,
+                stmt_exec,
+                context,
+                "generated exist",
+            )?;
         let forall_ret_set = self
             .inst_obj(
                 fn_body.ret_set.as_ref(),
-                &original_param_to_forall_obj,
+                &original_param_to_forall_shape_obj,
                 ParamObjType::FnSet,
             )
             .map_err(|inst_error| {
@@ -105,39 +75,54 @@ impl Runtime {
             .collect();
         let forall_element_obj: Obj =
             obj_for_bound_param_in_scope(forall_element_name.clone(), ParamObjType::Forall);
-        let mut forall_element_cart_factors: Vec<Obj> = Vec::with_capacity(param_names.len() + 1);
-        for param_def_with_type in forall_param_defs_with_type.iter() {
-            match &param_def_with_type.param_type {
-                ParamType::Obj(obj) => {
-                    for _ in param_def_with_type.params.iter() {
-                        forall_element_cart_factors.push(obj.clone());
+        let mut forall_shape_then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        if shape_needs_dependent_tuple_facts {
+            forall_shape_then_facts.push(
+                AtomicFact::from(IsTupleFact::new(
+                    forall_element_obj.clone(),
+                    line_file.clone(),
+                ))
+                .into(),
+            );
+        } else {
+            let mut forall_element_cart_factors: Vec<Obj> =
+                Vec::with_capacity(param_names.len() + 1);
+            for param_def_with_type in forall_shape_param_defs_with_type.iter() {
+                match &param_def_with_type.param_type {
+                    ParamType::Obj(obj) => {
+                        for _ in param_def_with_type.params.iter() {
+                            forall_element_cart_factors.push(obj.clone());
+                        }
                     }
+                    _ => unreachable!(),
                 }
-                _ => unreachable!(),
             }
-        }
-        forall_element_cart_factors.push(forall_ret_set.clone());
-        let forall_element_cart_set = Cart::new(forall_element_cart_factors).into();
-        let forall_shape = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![forall_element_name.clone()],
-                ParamType::Obj(function.clone()),
-            )]),
-            vec![],
-            vec![
+            forall_element_cart_factors.push(forall_ret_set.clone());
+            let forall_element_cart_set = Cart::new(forall_element_cart_factors).into();
+            forall_shape_then_facts.push(
                 InFact::new(
                     forall_element_obj.clone(),
                     forall_element_cart_set,
                     line_file.clone(),
                 )
                 .into(),
-                EqualFact::new(
-                    TupleDim::new(forall_element_obj.clone()).into(),
-                    Number::new((param_names.len() + 1).to_string()).into(),
-                    line_file.clone(),
-                )
-                .into(),
-            ],
+            );
+        }
+        forall_shape_then_facts.push(
+            EqualFact::new(
+                TupleDim::new(forall_element_obj.clone()).into(),
+                Number::new((param_names.len() + 1).to_string()).into(),
+                line_file.clone(),
+            )
+            .into(),
+        );
+        let forall_shape = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![forall_element_name.clone()],
+                ParamType::Obj(function.clone()),
+            )]),
+            vec![],
+            forall_shape_then_facts,
             line_file.clone(),
         )?
         .into();
@@ -153,7 +138,7 @@ impl Runtime {
             vec![],
             vec![ExistFactEnum::ExistFact(ExistFactBody::new(
                 ParamDefWithType::new({
-                    let mut exist_param_defs = forall_param_defs_with_type;
+                    let mut exist_param_defs = exist_inner_param_defs_with_type;
                     exist_param_defs.push(ParamGroupWithParamType::new(
                         vec![forall_z_name],
                         ParamType::Obj(forall_ret_set),
@@ -203,64 +188,19 @@ impl Runtime {
         let exist_element_name = generated_exist_names.next().unwrap();
         let exist_z_name = generated_exist_names.next().unwrap();
         let generated_exist_param_names: Vec<String> = generated_exist_names.collect();
-        let mut original_param_to_exist_obj: HashMap<String, Obj> =
-            HashMap::with_capacity(param_names.len());
-        let mut exist_param_defs_with_type: Vec<ParamGroupWithParamType> =
-            Vec::with_capacity(fn_body.params_def_with_set.len());
-        let mut exist_flat_index: usize = 0;
-        for param_def_with_set in fn_body.params_def_with_set.iter() {
-            let next_flat_index = exist_flat_index + param_def_with_set.params.len();
-            let generated_names_for_current_group =
-                generated_exist_param_names[exist_flat_index..next_flat_index].to_vec();
-            let instantiated_type = ParamType::Obj(
-                self.inst_obj(
-                    param_def_with_set.set_obj(),
-                    &original_param_to_exist_obj,
-                    ParamObjType::FnSet,
-                )
-                .map_err(|inst_error| {
-                    short_exec_error(
-                        stmt_exec.clone(),
-                        format!("{}: failed to instantiate witness parameter set", context),
-                        Some(inst_error),
-                        vec![],
-                    )
-                })?,
-            );
-            exist_param_defs_with_type.push(ParamGroupWithParamType::new(
-                generated_names_for_current_group.clone(),
-                instantiated_type,
-            ));
-            for (original_name, generated_name) in param_def_with_set
-                .params
-                .iter()
-                .zip(generated_names_for_current_group.iter())
-            {
-                original_param_to_exist_obj.insert(
-                    original_name.clone(),
-                    obj_for_bound_param_in_scope(generated_name.clone(), ParamObjType::FnSet),
-                );
-            }
-            exist_flat_index = next_flat_index;
-        }
-        // Outer `forall_exist` quantifies fn parameters as Forall (~1), not FnSet (~5).
-        let original_param_to_forall_witness: HashMap<String, Obj> = original_param_to_exist_obj
-            .iter()
-            .filter_map(|(orig, obj)| {
-                if let Obj::Atom(AtomObj::FnSet(p)) = obj {
-                    Some((
-                        orig.clone(),
-                        obj_for_bound_param_in_scope(p.name.clone(), ParamObjType::Forall),
-                    ))
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let (exist_param_defs_with_type, original_param_to_forall_witness) = self
+            .generated_param_defs_with_type_for_fn_body(
+                fn_body,
+                &generated_exist_param_names,
+                ParamObjType::Forall,
+                stmt_exec,
+                context,
+                "witness forall",
+            )?;
         let exist_ret_set = self
             .inst_obj(
                 fn_body.ret_set.as_ref(),
-                &original_param_to_exist_obj,
+                &original_param_to_forall_witness,
                 ParamObjType::FnSet,
             )
             .map_err(|inst_error| {
@@ -334,31 +274,55 @@ impl Runtime {
             obj_for_bound_param_in_scope(unique_x1_name.clone(), ParamObjType::Forall);
         let unique_x2_obj: Obj =
             obj_for_bound_param_in_scope(unique_x2_name.clone(), ParamObjType::Forall);
-        let mut unique_element_cart_factors: Vec<Obj> = Vec::with_capacity(param_names.len() + 1);
-        for param_def_with_set in fn_body.params_def_with_set.iter() {
-            for _ in param_def_with_set.params.iter() {
-                unique_element_cart_factors.push(param_def_with_set.set_obj().clone());
-            }
-        }
-        unique_element_cart_factors.push(fn_body.ret_set.as_ref().clone());
-        let unique_element_cart_set: Obj = Cart::new(unique_element_cart_factors).into();
         let mut unique_dom_facts: Vec<Fact> = Vec::with_capacity(param_names.len() + 2);
-        unique_dom_facts.push(
-            InFact::new(
-                unique_x1_obj.clone(),
-                unique_element_cart_set.clone(),
-                line_file.clone(),
-            )
-            .into(),
-        );
-        unique_dom_facts.push(
-            InFact::new(
-                unique_x2_obj.clone(),
-                unique_element_cart_set.clone(),
-                line_file.clone(),
-            )
-            .into(),
-        );
+        if shape_needs_dependent_tuple_facts {
+            unique_dom_facts
+                .push(IsTupleFact::new(unique_x1_obj.clone(), line_file.clone()).into());
+            unique_dom_facts
+                .push(IsTupleFact::new(unique_x2_obj.clone(), line_file.clone()).into());
+            unique_dom_facts.push(
+                EqualFact::new(
+                    TupleDim::new(unique_x1_obj.clone()).into(),
+                    Number::new((param_names.len() + 1).to_string()).into(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+            unique_dom_facts.push(
+                EqualFact::new(
+                    TupleDim::new(unique_x2_obj.clone()).into(),
+                    Number::new((param_names.len() + 1).to_string()).into(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+        } else {
+            let mut unique_element_cart_factors: Vec<Obj> =
+                Vec::with_capacity(param_names.len() + 1);
+            for param_def_with_set in fn_body.params_def_with_set.iter() {
+                for _ in param_def_with_set.params.iter() {
+                    unique_element_cart_factors.push(param_def_with_set.set_obj().clone());
+                }
+            }
+            unique_element_cart_factors.push(fn_body.ret_set.as_ref().clone());
+            let unique_element_cart_set: Obj = Cart::new(unique_element_cart_factors).into();
+            unique_dom_facts.push(
+                InFact::new(
+                    unique_x1_obj.clone(),
+                    unique_element_cart_set.clone(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+            unique_dom_facts.push(
+                InFact::new(
+                    unique_x2_obj.clone(),
+                    unique_element_cart_set.clone(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+        }
         for index in 1..=param_names.len() {
             unique_dom_facts.push(
                 EqualFact::new(
@@ -383,6 +347,75 @@ impl Runtime {
         .into();
 
         Ok((forall_shape, forall_in, forall_exist, forall_unique))
+    }
+
+    fn generated_param_defs_with_type_for_fn_body(
+        &self,
+        fn_body: &FnSetBody,
+        generated_param_names: &[String],
+        generated_binding: ParamObjType,
+        stmt_exec: &Stmt,
+        context: &str,
+        label: &str,
+    ) -> Result<(Vec<ParamGroupWithParamType>, HashMap<String, Obj>), RuntimeError> {
+        let param_count = fn_body.params_def_with_set.number_of_params();
+        if generated_param_names.len() != param_count {
+            return Err(short_exec_error(
+                stmt_exec.clone(),
+                format!(
+                    "{}: generated {} parameter count mismatch (expected {}, got {})",
+                    context,
+                    label,
+                    param_count,
+                    generated_param_names.len()
+                ),
+                None,
+                vec![],
+            ));
+        }
+
+        let mut original_param_to_generated_obj: HashMap<String, Obj> =
+            HashMap::with_capacity(param_count);
+        let mut groups: Vec<ParamGroupWithParamType> =
+            Vec::with_capacity(fn_body.params_def_with_set.len());
+        let mut flat_index: usize = 0;
+        for param_def_with_set in fn_body.params_def_with_set.iter() {
+            let next_flat_index = flat_index + param_def_with_set.params.len();
+            let generated_names_for_current_group =
+                generated_param_names[flat_index..next_flat_index].to_vec();
+            let instantiated_type = ParamType::Obj(
+                self.inst_obj(
+                    param_def_with_set.set_obj(),
+                    &original_param_to_generated_obj,
+                    ParamObjType::FnSet,
+                )
+                .map_err(|inst_error| {
+                    short_exec_error(
+                        stmt_exec.clone(),
+                        format!("{}: failed to instantiate {} parameter set", context, label),
+                        Some(inst_error),
+                        vec![],
+                    )
+                })?,
+            );
+            groups.push(ParamGroupWithParamType::new(
+                generated_names_for_current_group.clone(),
+                instantiated_type,
+            ));
+            for (original_name, generated_name) in param_def_with_set
+                .params
+                .iter()
+                .zip(generated_names_for_current_group.iter())
+            {
+                original_param_to_generated_obj.insert(
+                    original_name.clone(),
+                    obj_for_bound_param_in_scope(generated_name.clone(), generated_binding),
+                );
+            }
+            flat_index = next_flat_index;
+        }
+
+        Ok((groups, original_param_to_generated_obj))
     }
 
     // `by fn as set` stores the characterization facts in the main environment.

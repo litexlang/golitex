@@ -904,11 +904,11 @@ impl Runtime {
 
     pub fn inst_param_def_with_set_one_by_one(
         &self,
-        param_defs: &Vec<ParamGroupWithSet>,
+        param_defs: &ParamDefWithSet,
         args: &Vec<Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Vec<Obj>, RuntimeError> {
-        let total_param_count = ParamGroupWithSet::number_of_params(param_defs);
+        let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
             return Err(
                 InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
@@ -922,13 +922,14 @@ impl Runtime {
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
-        let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
-        for param_def in param_defs.iter() {
-            let instantiated_param_set = if arg_index != 0 {
-                self.inst_obj(param_def.set_obj(), &param_to_arg_map, param_obj_type)?
-            } else {
-                param_def.set_obj().clone()
-            };
+        let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.groups.len());
+        for (group_index, param_def) in param_defs.groups.iter().enumerate() {
+            let instantiated_param_set =
+                if !param_defs.param_set_cited_param_indices[group_index].is_empty() {
+                    self.inst_obj(param_def.set_obj(), &param_to_arg_map, param_obj_type)?
+                } else {
+                    param_def.set_obj().clone()
+                };
             instantiated_param_sets.push(instantiated_param_set);
 
             for param_name in param_def.params.iter() {
@@ -961,8 +962,8 @@ impl Runtime {
         let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
         let mut new_types: Vec<ParamType> = Vec::with_capacity(total_param_count);
-        for param_def in param_defs.groups.iter() {
-            let new_type = if arg_index != 0 {
+        for (group_index, param_def) in param_defs.groups.iter().enumerate() {
+            let new_type = if !param_defs.param_type_cited_param_indices[group_index].is_empty() {
                 self.inst_param_type(&param_def.param_type, &param_arg_map, param_obj_type)?
             } else {
                 param_def.param_type.clone()

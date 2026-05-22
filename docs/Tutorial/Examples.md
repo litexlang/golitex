@@ -47,8 +47,10 @@ This is the first example that feels like Litex:
 ## Example 4: Store a Fact With `know`
 
 ```litex
-know 2 < 3
-2 < 3
+abstract_prop some_property(x)
+have a R = 2
+know $some_property(a)
+$some_property(2)
 ```
 
 `know` stores the fact in the context.  
@@ -154,9 +156,33 @@ This is a good model for many beginner scripts:
 
 ## Example 12: What an `unknown` Usually Feels Like
 
-```litex
+```text
 have x R
 x + 1 = 3
+```
+
+The output looks like this:
+
+```text
+{
+  "error_type": "VerifyError",
+  "result": "error",
+  "line": 2,
+  "message": "verification failed",
+  "type": "AtomicFact",
+  "stmt": "x + 1 = 3",
+  "previous_error":
+  {
+    "error_type": "UnknownError",
+    "result": "error",
+    "line": 2,
+    "message": "",
+    "type": "AtomicFact",
+    "stmt": "x + 1 = 3",
+    "previous_error": null
+  }
+}
+
 ```
 
 Here Litex usually cannot prove the second line, because `x` has been introduced but not fixed.
@@ -168,8 +194,7 @@ This is a useful lesson:
 ## Example 13: Fix the Missing Assumption
 
 ```litex
-have x R
-know x = 2
+have x R = 2
 x + 1 = 3
 ```
 

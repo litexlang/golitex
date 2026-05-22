@@ -101,7 +101,7 @@ impl Runtime {
 
         let clause = fn_set_to_fn_set_clause(&left_t);
         let (param_def, dom_facts, layers) =
-            forall_binders_dom_and_curried_layers_from_fn_set_clause(&clause);
+            forall_binders_dom_and_curried_layers_from_fn_set_clause(self, &clause)?;
         let left_ap = match build_curried_fn_value_apply_for_fn_eq(&f.left, &layers) {
             Some(o) => o,
             None => return Ok(StmtUnknown::new().into()),

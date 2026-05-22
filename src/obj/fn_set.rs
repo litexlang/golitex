@@ -4,19 +4,19 @@ use crate::prelude::*;
 
 #[derive(Clone)]
 pub struct FnSetBody {
-    pub params_def_with_set: Vec<ParamGroupWithSet>,
+    pub params_def_with_set: ParamDefWithSet,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Box<Obj>,
 }
 
 impl FnSetBody {
     pub fn new(
-        params_def_with_set: Vec<ParamGroupWithSet>,
+        params_def_with_set: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Self {
         Self {
-            params_def_with_set,
+            params_def_with_set: params_def_with_set.into(),
             dom_facts,
             ret_set: Box::new(ret_set),
         }
@@ -40,7 +40,7 @@ pub struct FnSet {
 
 impl FnSet {
     pub fn new(
-        params_and_their_sets: Vec<ParamGroupWithSet>,
+        params_and_their_sets: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Result<Self, RuntimeError> {
@@ -71,7 +71,7 @@ pub struct AnonymousFn {
 
 impl AnonymousFn {
     pub fn new(
-        params_and_their_sets: Vec<ParamGroupWithSet>,
+        params_and_their_sets: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
         equal_to: Obj,
@@ -93,7 +93,7 @@ pub enum FnSetSpace {
 }
 
 impl FnSetSpace {
-    pub fn params(&self) -> &Vec<ParamGroupWithSet> {
+    pub fn params(&self) -> &ParamDefWithSet {
         match self {
             FnSetSpace::Set(f) => &f.body.params_def_with_set,
             FnSetSpace::Anon(a) => &a.body.params_def_with_set,
