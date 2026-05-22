@@ -1054,7 +1054,7 @@ impl Obj {
                     dom_facts,
                     ret_set,
                 } = body;
-                let params_def_with_set = params_def_with_set
+                let params_def_with_set: Vec<ParamGroupWithSet> = params_def_with_set
                     .into_iter()
                     .map(|pg| {
                         let params = pg
@@ -1084,7 +1084,7 @@ impl Obj {
                     dom_facts,
                     ret_set,
                 } = body;
-                let params_def_with_set = params_def_with_set
+                let params_def_with_set: Vec<ParamGroupWithSet> = params_def_with_set
                     .into_iter()
                     .map(|pg| {
                         let params = pg

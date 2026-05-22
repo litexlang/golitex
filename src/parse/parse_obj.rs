@@ -278,17 +278,16 @@ impl Runtime {
                         current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                     }
 
-                    this.parsing_free_param_collection.begin_scope(
-                        ParamObjType::FnSet,
-                        &current_params,
-                        tb.line_file.clone(),
-                    )?;
-
                     let param_group = if tb.current_token_is_equal_to(COLON) {
                         ParamGroupWithSet::new(current_params, StandardSet::R.into())
                     } else {
                         ParamGroupWithSet::new(current_params, this.parse_obj(tb)?)
                     };
+                    this.parsing_free_param_collection.begin_scope(
+                        ParamObjType::FnSet,
+                        &param_group.params,
+                        tb.line_file.clone(),
+                    )?;
 
                     params_def_with_set.push(param_group);
 
@@ -375,13 +374,12 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
+                let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
                 this.parsing_free_param_collection.begin_scope(
                     ParamObjType::FnSet,
-                    &current_params,
+                    &param_group.params,
                     tb.line_file.clone(),
                 )?;
-
-                let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
 
                 params_def_with_set.push(param_group);
 
@@ -451,6 +449,11 @@ impl Runtime {
                 }
 
                 let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
+                this.parsing_free_param_collection.begin_scope(
+                    ParamObjType::FnSet,
+                    &param_group.params,
+                    tb.line_file.clone(),
+                )?;
 
                 params_def_with_set.push(param_group);
 
@@ -472,11 +475,6 @@ impl Runtime {
             }
 
             let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
-            this.parsing_free_param_collection.begin_scope(
-                ParamObjType::FnSet,
-                &all_fn_names,
-                tb.line_file.clone(),
-            )?;
 
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {

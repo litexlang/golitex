@@ -459,7 +459,7 @@ impl Runtime {
 impl Runtime {
     pub fn new_fn_set(
         &self,
-        params_and_their_sets: Vec<ParamGroupWithSet>,
+        params_and_their_sets: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
     ) -> Result<FnSet, RuntimeError> {
@@ -479,7 +479,7 @@ impl Runtime {
 
     pub fn new_anonymous_fn(
         &self,
-        params_and_their_sets: Vec<ParamGroupWithSet>,
+        params_and_their_sets: impl Into<ParamDefWithSet>,
         dom_facts: Vec<OrAndChainAtomicFact>,
         ret_set: Obj,
         equal_to: Obj,

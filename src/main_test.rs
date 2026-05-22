@@ -301,6 +301,27 @@ forall a set:
     }
 
     #[test]
+    fn dependent_fn_param_set_uses_previous_arg() {
+        let source_code = r#"
+have f fn(n N_pos, x closed_range(1, n)) R
+f(3, 2) = f(3, 2)
+by fn as set: f
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("dependent_fn_param_set_uses_previous_arg");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "dependent_fn_param_set_uses_previous_arg failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn known_equality_implies_weak_order() {
         let source_code = r#"
 have a, b R
@@ -318,6 +339,27 @@ a >= b
         assert!(
             run_succeeded,
             "known_equality_implies_weak_order failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
+    fn pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined() {
+        let source_code = r#"
+have fn sqrt(x R: x >= 0) R = x^(1/2)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope(
+            "pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined failed:\n{}",
             run_output
         );
     }
