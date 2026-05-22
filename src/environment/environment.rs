@@ -10,6 +10,7 @@ pub struct Environment {
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
     pub defined_structs: HashMap<StructName, DefStructStmt>,
+    pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
 
     pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
 
@@ -57,6 +58,7 @@ impl Environment {
         abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
         algorithms: HashMap<AlgoName, DefAlgoStmt>,
         structs: HashMap<StructName, DefStructStmt>,
+        templates: HashMap<TemplateName, DefTemplateStmt>,
         known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
@@ -103,6 +105,7 @@ impl Environment {
             defined_abstract_props: abstract_props,
             defined_algorithms: algorithms,
             defined_structs: structs,
+            defined_templates: templates,
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -136,6 +139,7 @@ impl fmt::Display for Environment {
         write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "    structs: {:?}\n", self.defined_structs.len())?;
+        write!(f, "    templates: {:?}\n", self.defined_templates.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
         write!(
             f,
@@ -673,6 +677,7 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

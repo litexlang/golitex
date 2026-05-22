@@ -1,7 +1,7 @@
 pub use crate::builtin_code::builtin_code;
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, IdentifierName, ObjString,
-    OrFactKey, PropName, StructName,
+    OrFactKey, PropName, StructName, TemplateName,
 };
 pub use crate::environment::{Environment, KnownFnInfo, KnownForallFactParamsAndDom};
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
@@ -102,6 +102,7 @@ pub use crate::obj::FnSetSpace;
 pub use crate::obj::ForallFreeParamObj;
 pub use crate::obj::Identifier;
 pub use crate::obj::IdentifierWithMod;
+pub use crate::obj::InstantiatedTemplateObj;
 pub use crate::obj::Intersect;
 pub use crate::obj::ListSet;
 pub use crate::obj::Log;
@@ -186,6 +187,7 @@ pub use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
 pub use crate::stmt::definition_stmt::DefLetStmt;
 pub use crate::stmt::definition_stmt::DefPropStmt;
+pub use crate::stmt::definition_stmt::DefTemplateStmt;
 pub use crate::stmt::definition_stmt::FnSetClause;
 pub use crate::stmt::definition_stmt::HaveByExistStmt;
 pub use crate::stmt::definition_stmt::HaveFnByForallExistUniqueStmt;
@@ -196,6 +198,7 @@ pub use crate::stmt::definition_stmt::HaveFnEqualCaseByCaseStmt;
 pub use crate::stmt::definition_stmt::HaveFnEqualStmt;
 pub use crate::stmt::definition_stmt::HaveObjEqualStmt;
 pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
+pub use crate::stmt::definition_stmt::TemplateDefEnum;
 pub use crate::stmt::eval_stmt::EvalStmt;
 pub use crate::stmt::know_stmt::KnowStmt;
 pub use crate::stmt::parameter_def::FiniteSet;
@@ -376,6 +379,8 @@ pub use crate::common::keywords::SUM;
 pub use crate::common::keywords::SUPERSET;
 pub use crate::common::keywords::SURJECTIVE;
 pub use crate::common::keywords::SYMMETRIC_PROP;
+pub use crate::common::keywords::TEMPLATE;
+pub use crate::common::keywords::TEMPLATE_INSTANCE_PREFIX;
 pub use crate::common::keywords::TRANSITIVE_PROP;
 pub use crate::common::keywords::TUPLE;
 pub use crate::common::keywords::TUPLE_DIM;

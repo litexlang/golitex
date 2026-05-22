@@ -58,4 +58,19 @@ impl Runtime {
 
         None
     }
+
+    pub fn get_template_definition_by_name(&self, template_name: &str) -> Option<&DefTemplateStmt> {
+        let parts = template_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            unimplemented!();
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_templates.get(template_name) {
+                return Some(definition);
+            }
+        }
+
+        None
+    }
 }

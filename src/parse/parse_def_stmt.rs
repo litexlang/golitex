@@ -1,6 +1,136 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn parse_def_template_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(TEMPLATE)?;
+        let template_name = tb.advance()?;
+        is_valid_litex_name(&template_name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+            ))
+        })?;
+
+        let stmt_result = self.run_in_local_parsing_time_name_scope(|this| {
+            tb.skip_token(LESS)?;
+            let close_index = tb
+                .header
+                .iter()
+                .enumerate()
+                .skip(tb.parse_index)
+                .rev()
+                .find(|(_, token)| token.as_str() == GREATER)
+                .map(|(index, _)| index)
+                .ok_or_else(|| {
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "template header expects `>`".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    ))
+                })?;
+            let mut header_block = TokenBlock::new(
+                tb.header[tb.parse_index..close_index].to_vec(),
+                Vec::new(),
+                tb.line_file.clone(),
+            );
+            let mut groups: Vec<ParamGroupWithParamType> = Vec::new();
+            loop {
+                if header_block.current_token_is_equal_to(COLON)
+                    || header_block.exceed_end_of_head()
+                {
+                    break;
+                }
+                groups.push(this.parse_param_def_with_param_type_and_skip_comma(
+                    &mut header_block,
+                    ParamObjType::DefHeader,
+                )?);
+            }
+            let template_arg_def = ParamDefWithType::new(groups);
+            let template_arg_names = template_arg_def.collect_param_names();
+
+            let mut template_arg_dom = Vec::new();
+            if header_block.current_token_is_equal_to(COLON) {
+                header_block.skip_token(COLON)?;
+                loop {
+                    template_arg_dom.push(this.parse_or_and_chain_atomic_fact(&mut header_block)?);
+                    if header_block.current_token_is_equal_to(COMMA) {
+                        header_block.skip_token(COMMA)?;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            if !header_block.exceed_end_of_head() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "unexpected token in template header".to_string(),
+                        header_block.line_file.clone(),
+                    ),
+                )));
+            }
+            tb.parse_index = close_index + 1;
+            tb.skip_token(COLON)?;
+            if !tb.exceed_end_of_head() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "unexpected token after template header".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            if tb.body.len() != 1 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "template definition expects exactly one body statement".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+
+            let template_def_stmt = this.parse_template_body_stmt(&mut tb.body[0])?;
+            match template_def_stmt.defined_name() {
+                Some(name) if name == template_name => {}
+                Some(name) => {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!(
+                                "template body defines `{}`, but template name is `{}`",
+                                name, template_name
+                            ),
+                            tb.body[0].line_file.clone(),
+                        ),
+                    )));
+                }
+                None => {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "template body must define exactly one object or function".to_string(),
+                            tb.body[0].line_file.clone(),
+                        ),
+                    )));
+                }
+            }
+
+            this.parsing_free_param_collection
+                .end_scope(ParamObjType::DefHeader, &template_arg_names);
+
+            Ok(DefTemplateStmt::new(
+                template_name.clone(),
+                template_arg_def,
+                template_arg_dom,
+                template_def_stmt,
+                tb.line_file.clone(),
+            ))
+        });
+
+        let stmt = stmt_result?;
+        self.insert_parsed_name_into_top_parsing_time_name_scope(
+            &stmt.template_name,
+            tb.line_file.clone(),
+        )?;
+        Ok(stmt.into())
+    }
+
     pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
@@ -852,5 +982,33 @@ impl Runtime {
         let name = tb.advance()?;
         self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
         Ok(name)
+    }
+
+    fn parse_template_body_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<TemplateDefEnum, RuntimeError> {
+        let stmt = self.parse_stmt(tb)?;
+        match stmt {
+            Stmt::HaveObjInNonemptySetStmt(stmt) => {
+                Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt))
+            }
+            Stmt::HaveObjEqualStmt(stmt) => Ok(TemplateDefEnum::HaveObjEqualStmt(stmt)),
+            Stmt::HaveByExistStmt(stmt) => Ok(TemplateDefEnum::HaveByExistStmt(stmt)),
+            Stmt::HaveFnEqualStmt(stmt) => Ok(TemplateDefEnum::HaveFnEqualStmt(stmt)),
+            Stmt::HaveFnEqualCaseByCaseStmt(stmt) => {
+                Ok(TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt))
+            }
+            Stmt::HaveFnByInducStmt(stmt) => Ok(TemplateDefEnum::HaveFnByInducStmt(stmt)),
+            Stmt::HaveFnByForallExistUniqueStmt(stmt) => {
+                Ok(TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt))
+            }
+            _ => Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "template body only supports `have` definition statements".to_string(),
+                    tb.line_file.clone(),
+                ),
+            ))),
+        }
     }
 }

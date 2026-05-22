@@ -55,6 +55,7 @@ pub enum Obj {
     MatrixPow(MatrixPow),
     StructObj(StructObj),
     ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
+    InstantiatedTemplateObj(InstantiatedTemplateObj),
 }
 
 #[derive(Clone)]
@@ -79,6 +80,12 @@ pub struct ObjAsStructInstanceWithFieldAccess {
     pub struct_obj: Box<StructObj>,
     pub obj: Box<Obj>,
     pub field_name: String,
+}
+
+#[derive(Clone)]
+pub struct InstantiatedTemplateObj {
+    pub template_name: String,
+    pub args: Vec<Obj>,
 }
 
 impl NameWithOrWithoutMod {
@@ -110,6 +117,15 @@ impl ObjAsStructInstanceWithFieldAccess {
             struct_obj: Box::new(struct_obj),
             obj: Box::new(obj),
             field_name,
+        }
+    }
+}
+
+impl InstantiatedTemplateObj {
+    pub fn new(template_name: String, args: Vec<Obj>) -> Self {
+        InstantiatedTemplateObj {
+            template_name,
+            args,
         }
     }
 }
@@ -913,6 +929,7 @@ impl Obj {
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
             Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
+            Obj::InstantiatedTemplateObj(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1230,6 +1247,14 @@ impl Obj {
                 )
                 .into()
             }
+            Obj::InstantiatedTemplateObj(t) => InstantiatedTemplateObj::new(
+                t.template_name,
+                t.args
+                    .into_iter()
+                    .map(|o| Obj::replace_bound_identifier(o, from, to))
+                    .collect(),
+            )
+            .into(),
         }
     }
 }
@@ -1351,6 +1376,13 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             DefAlgoFreeParamObj::new(name).into()
         }
+        FnObjHead::InstantiatedTemplateObj(t) => {
+            let replaced = Obj::replace_bound_identifier(t.into(), from, to);
+            let Obj::InstantiatedTemplateObj(new_t) = replaced else {
+                unreachable!()
+            };
+            FnObjHead::InstantiatedTemplateObj(new_t)
+        }
     }
 }
 
@@ -1377,6 +1409,20 @@ impl fmt::Display for StructObj {
             )?;
         }
         Ok(())
+    }
+}
+
+impl fmt::Display for InstantiatedTemplateObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}{}{}{}",
+            TEMPLATE_INSTANCE_PREFIX,
+            self.template_name,
+            LEFT_CURLY_BRACE,
+            vec_to_string_join_by_comma(&self.args),
+            RIGHT_CURLY_BRACE
+        )
     }
 }
 
@@ -2122,6 +2168,12 @@ impl From<StructObj> for Obj {
 impl From<ObjAsStructInstanceWithFieldAccess> for Obj {
     fn from(s: ObjAsStructInstanceWithFieldAccess) -> Self {
         Obj::ObjAsStructInstanceWithFieldAccess(s)
+    }
+}
+
+impl From<InstantiatedTemplateObj> for Obj {
+    fn from(t: InstantiatedTemplateObj) -> Self {
+        Obj::InstantiatedTemplateObj(t)
     }
 }
 

@@ -459,6 +459,10 @@ impl Runtime {
                     .any(|obj| Self::obj_depends_on_given_exist_param(obj, names))
                     || Self::obj_depends_on_given_exist_param(x.obj.as_ref(), names)
             }
+            Obj::InstantiatedTemplateObj(x) => x
+                .args
+                .iter()
+                .any(|obj| Self::obj_depends_on_given_exist_param(obj, names)),
             Obj::SetBuilder(x) => {
                 Self::obj_depends_on_given_exist_param(x.param_set.as_ref(), names)
                     || x.facts.iter().any(|fact| {

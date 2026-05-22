@@ -268,6 +268,16 @@ fn check_obj_has_no_duplicate_free_parameter(
                 params_already_used,
             )
         }
+        Obj::InstantiatedTemplateObj(obj) => {
+            for arg in obj.args.iter() {
+                check_obj_has_no_duplicate_free_parameter(
+                    arg,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            Ok(())
+        }
         Obj::MatrixSet(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.set,
