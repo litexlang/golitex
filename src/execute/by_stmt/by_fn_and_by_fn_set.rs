@@ -20,11 +20,7 @@ impl Runtime {
             ));
         }
         let shape_needs_dependent_tuple_facts =
-            fn_body.params_def_with_set.has_dependent_param_set()
-                || !fn_body
-                    .params_def_with_set
-                    .cited_param_indices_in_obj_from_params(fn_body.ret_set.as_ref())
-                    .is_empty();
+            fn_body.params_def_with_set.has_dependent_param_set();
 
         let mut generated_forall_names = self
             .generate_random_unused_names(param_names.len() + 2)

@@ -150,7 +150,7 @@ impl Runtime {
         }
 
         Ok(HaveFnByForallExistUniqueShape {
-            fn_set_clause: FnSetClause::new(params_def_with_set, dom_facts, ret_set),
+            fn_set_clause: FnSetClause::new(params_def_with_set, dom_facts, ret_set)?,
             witness_name,
             exist_body_facts: exist_body.facts.clone(),
         })

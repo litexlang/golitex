@@ -322,6 +322,30 @@ by fn as set: f
     }
 
     #[test]
+    fn fn_return_set_cannot_depend_on_params() {
+        let source_code = r#"
+have f fn(n N_pos) closed_range(1, n)
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("fn_return_set_cannot_depend_on_params");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "dependent return set should fail, but succeeded:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("function return set cannot depend on function parameters [n]"),
+            "dependent return set failure had unexpected output:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn known_equality_implies_weak_order() {
         let source_code = r#"
 have a, b R
