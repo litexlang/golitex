@@ -3,8 +3,28 @@ pub const BUILTIN_ENV_CODE_FOR_COMMON_FUNCTIONS: &str = r#"
 
 let max_of_finite_set fn(s power_set(R): $is_finite_set(s)) R
 let min_of_finite_set fn(s power_set(R): $is_finite_set(s)) R
+let floor fn(x R) Z
+let ceil fn(x R) Z
 
 know:
+    forall x R:
+        floor(x) <= x
+        x < floor(x) + 1
+        ceil(x) - 1 < x
+        x <= ceil(x)
+
+    forall x R, y Z:
+        0 <= x - y
+        x - y < 1
+        =>:
+            y = floor(x)
+
+    forall x R, y Z:
+        0 <= y - x
+        y - x < 1
+        =>:
+            y = ceil(x)
+
     forall s power_set(R), item s:
         $is_finite_set(s)
         =>:
