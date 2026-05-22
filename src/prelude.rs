@@ -1,7 +1,7 @@
 pub use crate::builtin_code::builtin_code;
 pub use crate::common::name_types::{
-    AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, FamilyName,
-    IdentifierName, ObjString, OrFactKey, PropName, StructName,
+    AbstractPropName, AlgoName, AtomicFactKey, ExistFactKey, FactString, IdentifierName, ObjString,
+    OrFactKey, PropName, StructName,
 };
 pub use crate::environment::{Environment, KnownFnInfo, KnownForallFactParamsAndDom};
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
@@ -91,7 +91,6 @@ pub use crate::obj::DefAlgoFreeParamObj;
 pub use crate::obj::DefHeaderFreeParamObj;
 pub use crate::obj::Div;
 pub use crate::obj::ExistFreeParamObj;
-pub use crate::obj::FamilyObj;
 pub use crate::obj::FiniteSeqListObj;
 pub use crate::obj::FiniteSeqSet;
 pub use crate::obj::FnObj;
@@ -133,6 +132,7 @@ pub use crate::obj::SetBuilder;
 pub use crate::obj::SetBuilderFreeParamObj;
 pub use crate::obj::SetDiff;
 pub use crate::obj::SetMinus;
+pub use crate::obj::Sqrt;
 pub use crate::obj::StandardSet;
 pub use crate::obj::StructObj;
 pub use crate::obj::Sub;
@@ -168,7 +168,6 @@ pub use crate::stmt::by_stmt::ByCasesStmt;
 pub use crate::stmt::by_stmt::ByContraStmt;
 pub use crate::stmt::by_stmt::ByEnumerateFiniteSetStmt;
 pub use crate::stmt::by_stmt::ByExtensionStmt;
-pub use crate::stmt::by_stmt::ByFamilyAsSetStmt;
 pub use crate::stmt::by_stmt::ByFnAsSetStmt;
 pub use crate::stmt::by_stmt::ByFnSetAsSetStmt;
 pub use crate::stmt::by_stmt::ByForExpansion;
@@ -185,7 +184,6 @@ pub use crate::stmt::define_algorithm_stmt::AlgoReturn;
 pub use crate::stmt::define_algorithm_stmt::AlgoReturnOrAlgoCase;
 pub use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
-pub use crate::stmt::definition_stmt::DefFamilyStmt;
 pub use crate::stmt::definition_stmt::DefLetStmt;
 pub use crate::stmt::definition_stmt::DefPropStmt;
 pub use crate::stmt::definition_stmt::FnSetClause;
@@ -290,8 +288,6 @@ pub use crate::common::keywords::EXIST;
 pub use crate::common::keywords::EXIST_BANG;
 pub use crate::common::keywords::EXTENSION;
 pub use crate::common::keywords::FACT_PREFIX;
-pub use crate::common::keywords::FAMILY;
-pub use crate::common::keywords::FAMILY_OBJ_PREFIX;
 pub use crate::common::keywords::FINITE_SEQ;
 pub use crate::common::keywords::FINITE_SET;
 pub use crate::common::keywords::FN_EQ;
@@ -368,6 +364,7 @@ pub use crate::common::keywords::SEQ;
 pub use crate::common::keywords::SET;
 pub use crate::common::keywords::SET_DIFF;
 pub use crate::common::keywords::SET_MINUS;
+pub use crate::common::keywords::SQRT;
 pub use crate::common::keywords::ST;
 pub use crate::common::keywords::STRONG_INDUC;
 pub use crate::common::keywords::STRUCT;

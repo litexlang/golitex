@@ -21,10 +21,10 @@ pub use free_param_obj::{
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div,
-    FamilyObj, FiniteSeqListObj, FiniteSeqSet, FnObj, Intersect, ListSet, Log, MatrixAdd,
-    MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul,
+    FiniteSeqListObj, FiniteSeqSet, FnObj, Intersect, ListSet, Log, MatrixAdd, MatrixListObj,
+    MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul,
     NameWithOrWithoutMod, Number, Obj, ObjAsStructInstanceWithFieldAccess, ObjAtIndex, Pow,
-    PowerSet, Product, Proj, Range, SeqSet, SetBuilder, SetDiff, SetMinus, StructObj, Sub, Sum,
-    Tuple, TupleDim, Union,
+    PowerSet, Product, Proj, Range, SeqSet, SetBuilder, SetDiff, SetMinus, Sqrt, StructObj, Sub,
+    Sum, Tuple, TupleDim, Union,
 };
 pub use standard_set::StandardSet;

@@ -2,8 +2,6 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 pub const FACT_PREFIX: &str = "$";
-// Family use (member type): `\name(arg1, ...)`; `family` is only the definition keyword.
-pub const FAMILY_OBJ_PREFIX: &str = "\\";
 pub const STRUCT_VIEW_PREFIX: &str = "&";
 pub const DOT_AKA_FIELD_ACCESS_SIGN: &str = ".";
 /// Infix closed integer interval: `lo ... hi` (same AST as `closed_range(lo, hi)`).
@@ -130,6 +128,7 @@ pub const WITNESS: &str = "witness";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const ABS: &str = "abs";
+pub const SQRT: &str = "sqrt";
 pub const LOG: &str = "log";
 pub const MAX: &str = "max";
 pub const MIN: &str = "min";
@@ -141,7 +140,6 @@ pub const R_NEG: &str = "R_neg";
 pub const Q_NZ: &str = "Q_nz";
 pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
-pub const FAMILY: &str = "family";
 pub const STRUCT: &str = "struct";
 pub const RESTRICT_FN_IN: &str = "restrict_fn_in";
 pub const STRATEGY: &str = "strategy";
@@ -158,7 +156,6 @@ pub const BIJECTIVE: &str = "bijective";
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let symbols = [
-        FAMILY_OBJ_PREFIX,
         STRUCT_VIEW_PREFIX,
         EQUIVALENT_SIGN,
         NOT_EQUAL,
@@ -279,6 +276,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE,
         ALGO,
         ABS,
+        SQRT,
         LOG,
         MAX,
         MIN,
@@ -290,7 +288,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         Q_NZ,
         Z_NZ,
         R_NZ,
-        FAMILY,
         STRUCT,
         RESTRICT_FN_IN,
         STRATEGY,

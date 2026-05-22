@@ -45,15 +45,6 @@ impl DefAbstractPropStmt {
     }
 }
 
-#[derive(Clone)]
-pub struct DefFamilyStmt {
-    pub name: String,
-    pub params_def_with_type: ParamDefWithType,
-    pub dom_facts: Vec<OrAndChainAtomicFact>,
-    pub equal_to: Obj,
-    pub line_file: LineFile,
-}
-
 /// `have fn` `{ ... }` piece. Parameter sets may depend on earlier parameters; `ret_set` must not
 /// cite these parameters.
 #[derive(Clone)]
@@ -551,41 +542,5 @@ impl HaveFnByInducStmt {
             }
         }
         Ok(())
-    }
-}
-
-impl DefFamilyStmt {
-    pub fn new(
-        name: String,
-        params_def_with_type: ParamDefWithType,
-        dom_facts: Vec<OrAndChainAtomicFact>,
-        equal_to: Obj,
-        line_file: LineFile,
-    ) -> Self {
-        DefFamilyStmt {
-            name,
-            params_def_with_type,
-            dom_facts,
-            equal_to,
-            line_file,
-        }
-    }
-}
-
-impl fmt::Display for DefFamilyStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}{}{} {} {}{} {} {}",
-            FAMILY,
-            self.name,
-            LEFT_BRACE,
-            self.params_def_with_type.to_string(),
-            COLON,
-            vec_to_string_join_by_comma(&self.dom_facts),
-            RIGHT_BRACE,
-            EQUAL,
-            self.equal_to
-        )
     }
 }

@@ -17,7 +17,6 @@ impl Runtime {
             Stmt::HaveFnByForallExistUniqueStmt(d) => {
                 self.exec_have_fn_by_forall_exist_unique_stmt(d)
             }
-            Stmt::DefFamilyStmt(d) => self.exec_def_family_stmt(d),
             Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d),
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt),
             Stmt::Fact(fact) => self.exec_fact(fact),
@@ -39,7 +38,6 @@ impl Runtime {
             Stmt::ByForStmt(s) => self.exec_by_for_stmt(s),
             Stmt::ByExtensionStmt(s) => self.exec_by_extension_stmt(s),
             Stmt::ByFnAsSetStmt(s) => self.exec_by_fn_stmt(s),
-            Stmt::ByFamilyAsSetStmt(s) => self.exec_by_family_stmt(s),
             Stmt::ByTupleAsSetStmt(s) => self.exec_by_tuple_stmt(s),
             Stmt::ByFnSetAsSetStmt(s) => self.exec_by_fn_set_stmt(s),
             Stmt::ByClosedRangeAsCasesStmt(s) => self.exec_by_closed_range_as_cases_stmt(s),

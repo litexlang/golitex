@@ -389,6 +389,36 @@ have fn sqrt(x R: x >= 0) R = x^(1/2)
     }
 
     #[test]
+    fn sqrt_core_builtin_rules() {
+        let source_code = r#"
+sqrt(0) = 0
+sqrt(1) = 1
+
+forall x R:
+    x >= 0
+    =>:
+        (sqrt(x))^2 = x
+
+forall x R:
+    x > 0
+    =>:
+        sqrt(x) > 0
+"#;
+
+        let mut runtime = Runtime::new_with_builtin_code();
+        runtime.new_file_path_new_env_new_name_scope("sqrt_core_builtin_rules");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "sqrt_core_builtin_rules failed:\n{}",
+            run_output
+        );
+    }
+
+    #[test]
     fn weak_order_does_not_recursively_prove_equality() {
         let source_code = r#"
 have a, b R

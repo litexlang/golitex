@@ -719,81 +719,6 @@ impl Runtime {
         Ok(HaveByExistStmt::new(equal_tos, true_fact, tb.line_file.clone()).into())
     }
 
-    /// Parses `{ params [: dom_facts] }` for `family`. Leaves a **Def** free-param scope open for the
-    /// caller to parse `= obj` and then call `end_scope`.
-    fn parse_braced_params_and_optional_dom_facts(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<(ParamDefWithType, Vec<OrAndChainAtomicFact>), RuntimeError> {
-        tb.skip_token(LEFT_BRACE)?;
-        let params_def_with_type =
-            self.parse_def_param_type_groups_until_colon_or_right_brace(tb)?;
-        let scope_names = params_def_with_type.collect_param_names();
-        let dom_facts = if tb.current_token_is_equal_to(COLON) {
-            tb.skip_token(COLON)?;
-            let mut facts = vec![];
-            let dom_result = loop {
-                if tb.current()? == RIGHT_BRACE {
-                    break Ok(facts);
-                }
-                match self.parse_or_and_chain_atomic_fact(tb) {
-                    Ok(f) => facts.push(f),
-                    Err(e) => {
-                        self.parsing_free_param_collection
-                            .end_scope(ParamObjType::DefHeader, &scope_names);
-                        break Err(e);
-                    }
-                }
-                if tb.current_token_is_equal_to(COMMA) {
-                    tb.skip_token(COMMA)?;
-                }
-            };
-            dom_result?
-        } else {
-            vec![]
-        };
-        if let Err(e) = tb.skip_token(RIGHT_BRACE) {
-            self.parsing_free_param_collection
-                .end_scope(ParamObjType::DefHeader, &scope_names);
-            return Err(e);
-        }
-        Ok((params_def_with_type, dom_facts))
-    }
-
-    pub fn parse_def_family_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(FAMILY)?;
-        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-
-        self.run_in_local_parsing_time_name_scope(move |this| {
-            let (params_def_with_type, dom_facts) =
-                this.parse_braced_params_and_optional_dom_facts(tb)?;
-            let family_def_scope_names = params_def_with_type.collect_param_names();
-            let stmt_result = (|| -> Result<Stmt, RuntimeError> {
-                if !tb.current_token_is_equal_to(EQUAL) {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "family definition expects `=` after `}`".to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    )));
-                }
-                tb.skip_token(EQUAL)?;
-                let equal_to = this.parse_obj(tb)?;
-                Ok(DefFamilyStmt::new(
-                    name,
-                    params_def_with_type,
-                    dom_facts,
-                    equal_to,
-                    tb.line_file.clone(),
-                )
-                .into())
-            })();
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::DefHeader, &family_def_scope_names);
-            stmt_result
-        })
-    }
-
     pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
@@ -901,23 +826,6 @@ impl Runtime {
         let names = param_defs.collect_param_names();
         self.register_collected_param_names_for_def_parse(&names, tb.line_file.clone())?;
         Ok(param_defs)
-    }
-
-    /// After `{` is consumed: param-type groups until `:` or `}` (family header); registers names.
-    fn parse_def_param_type_groups_until_colon_or_right_brace(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithType, RuntimeError> {
-        let mut groups = vec![];
-        while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
-            groups.push(
-                self.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::DefHeader)?,
-            );
-        }
-        let params_def_with_type = ParamDefWithType::new(groups);
-        let param_names = params_def_with_type.collect_param_names();
-        self.register_collected_param_names_for_def_parse(&param_names, tb.line_file.clone())?;
-        Ok(params_def_with_type)
     }
 
     pub fn insert_parsed_name_into_top_parsing_time_name_scope(

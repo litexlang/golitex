@@ -266,10 +266,6 @@ impl Runtime {
         return self.get_abstract_prop_definition_by_name(name).is_some();
     }
 
-    pub fn is_name_used_for_family(&self, name: &str) -> bool {
-        return self.get_family_definition_by_name(name).is_some();
-    }
-
     pub fn is_name_used_for_algo(&self, name: &str) -> bool {
         return self.get_algo_definition_by_name(name).is_some();
     }

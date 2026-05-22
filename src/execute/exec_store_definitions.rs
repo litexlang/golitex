@@ -55,15 +55,4 @@ impl Runtime {
         env.defined_identifiers.insert(name.to_string(), kind);
         Ok(())
     }
-
-    pub fn store_def_family(
-        &mut self,
-        def_family_stmt: &DefFamilyStmt,
-    ) -> Result<(), RuntimeError> {
-        let name = def_family_stmt.name.clone();
-        self.top_level_env()
-            .defined_families
-            .insert(name, def_family_stmt.clone());
-        Ok(())
-    }
 }

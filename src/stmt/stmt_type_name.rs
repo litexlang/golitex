@@ -141,12 +141,6 @@ impl ByFnSetAsSetStmt {
     }
 }
 
-impl ByFamilyAsSetStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByFamilyAsSetStmt".to_string()
-    }
-}
-
 impl ByTupleAsSetStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByTupleAsSetStmt".to_string()
@@ -240,11 +234,5 @@ impl HaveFnByInducStmt {
 impl HaveFnByForallExistUniqueStmt {
     pub fn stmt_type_name(&self) -> String {
         "HaveFnByForallExistUniqueStmt".to_string()
-    }
-}
-
-impl DefFamilyStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "DefFamilyStmt".to_string()
     }
 }

@@ -146,6 +146,12 @@ impl Abs {
     }
 }
 
+impl Sqrt {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\sqrt{{{}}}", self.arg.to_latex_string())
+    }
+}
+
 impl Add {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -267,15 +273,6 @@ impl ByExtensionStmt {
         format!(
             "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
             rows.join(" \\\\\n")
-        )
-    }
-}
-
-impl ByFamilyAsSetStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            "\\begin{{aligned}}\n\\text{{\\textbf{{By family as set}}:}} & \\text{{Use the set-theoretic definition of }} {}\\text{{; obtain the corresponding set characterization.}}\n\\end{{aligned}}",
-            self.family_obj.to_latex_string()
         )
     }
 }
@@ -586,25 +583,6 @@ impl DefAlgoStmt {
     }
 }
 
-impl DefFamilyStmt {
-    pub fn to_latex_string(&self) -> String {
-        let dom = self
-            .dom_facts
-            .iter()
-            .map(|f| f.to_latex_string())
-            .collect::<Vec<_>>()
-            .join(r", ");
-        format!(
-            r"\operatorname{{{}}}\, {}\left( {} : {} \right) = {}",
-            FAMILY,
-            latex_local_ident(&self.name),
-            self.params_def_with_type.to_latex_string(),
-            dom,
-            self.equal_to.to_latex_string()
-        )
-    }
-}
-
 impl DefLetStmt {
     pub fn to_latex_string(&self) -> String {
         match self.facts.len() {
@@ -757,19 +735,6 @@ impl ExistOrAndChainAtomicFact {
             ExistOrAndChainAtomicFact::OrFact(x) => x.to_latex_string(),
             ExistOrAndChainAtomicFact::ExistFact(x) => x.to_latex_string(),
         }
-    }
-}
-
-impl FamilyObj {
-    pub fn to_latex_string(&self) -> String {
-        let head = self.name.to_latex_string();
-        let args = self
-            .params
-            .iter()
-            .map(|o| o.to_latex_string())
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(r"\operatorname{{{}}}\left( {}\right)", head, args)
     }
 }
 
@@ -1997,6 +1962,7 @@ impl Obj {
             Obj::Mod(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
+            Obj::Sqrt(x) => x.to_latex_string(),
             Obj::Log(x) => x.to_latex_string(),
             Obj::Max(x) => x.to_latex_string(),
             Obj::Min(x) => x.to_latex_string(),
@@ -2027,7 +1993,6 @@ impl Obj {
             Obj::Choose(x) => x.to_latex_string(),
             Obj::ObjAtIndex(x) => x.to_latex_string(),
             Obj::StandardSet(x) => x.to_latex_string(),
-            Obj::FamilyObj(x) => x.to_latex_string(),
             Obj::StructObj(x) => latex_texttt_escape(&x.to_string()),
             Obj::ObjAsStructInstanceWithFieldAccess(x) => latex_texttt_escape(&x.to_string()),
             Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
@@ -2063,7 +2028,6 @@ impl Stmt {
             Stmt::HaveFnEqualCaseByCaseStmt(x) => x.to_latex_string(),
             Stmt::HaveFnByInducStmt(x) => x.to_latex_string(),
             Stmt::HaveFnByForallExistUniqueStmt(x) => x.to_latex_string(),
-            Stmt::DefFamilyStmt(x) => x.to_latex_string(),
             Stmt::DefAlgoStmt(x) => x.to_latex_string(),
             Stmt::ClaimStmt(x) => x.to_latex_string(),
             Stmt::KnowStmt(x) => x.to_latex_string(),
@@ -2084,7 +2048,6 @@ impl Stmt {
             Stmt::ByForStmt(x) => x.to_latex_string(),
             Stmt::ByExtensionStmt(x) => x.to_latex_string(),
             Stmt::ByFnAsSetStmt(x) => x.to_latex_string(),
-            Stmt::ByFamilyAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByTupleAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByFnSetAsSetStmt(x) => x.to_latex_string(),
             Stmt::ByClosedRangeAsCasesStmt(x) => x.to_latex_string(),

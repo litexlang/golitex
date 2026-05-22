@@ -41,6 +41,7 @@ impl Runtime {
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
             Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
             Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
+            Obj::Sqrt(sqrt) => self.verify_sqrt_well_defined(sqrt, verify_state),
             Obj::Log(log) => self.verify_log_well_defined(log, verify_state),
             Obj::Max(max) => self.verify_max_well_defined(max, verify_state),
             Obj::Min(min) => self.verify_min_well_defined(min, verify_state),
@@ -96,9 +97,6 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNz) => self.verify_q_nz_well_defined(),
             Obj::StandardSet(StandardSet::ZNz) => self.verify_z_nz_well_defined(),
             Obj::StandardSet(StandardSet::RNz) => self.verify_r_nz_well_defined(),
-            Obj::FamilyObj(family) => {
-                self.verify_param_type_family_well_defined(family, verify_state)
-            }
             Obj::StructObj(struct_obj) => {
                 self.verify_struct_obj_well_defined(struct_obj, verify_state)
             }
@@ -439,6 +437,9 @@ impl Runtime {
         if let Obj::Abs(a) = obj {
             return self.require_obj_in_r(&a.arg, verify_state);
         }
+        if let Obj::Sqrt(s) = obj {
+            return self.verify_sqrt_well_defined(s, verify_state);
+        }
         if let Obj::Max(m) = obj {
             self.require_obj_in_r(&m.left, verify_state)?;
             return self.require_obj_in_r(&m.right, verify_state);
@@ -606,6 +607,28 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&abs.arg, verify_state)?;
         self.require_obj_in_r(&abs.arg, verify_state)?;
+        Ok(())
+    }
+
+    fn verify_sqrt_well_defined(
+        &mut self,
+        sqrt: &Sqrt,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&sqrt.arg, verify_state)?;
+        self.require_obj_in_r(&sqrt.arg, verify_state)?;
+        let zero: Obj = Number::new("0".to_string()).into();
+        let nonnegative: AtomicFact =
+            LessEqualFact::new(zero, (*sqrt.arg).clone(), default_line_file()).into();
+        let result = self.verify_atomic_fact(&nonnegative, verify_state)?;
+        if result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "sqrt: argument must be >= 0".to_string(),
+                    default_line_file(),
+                ),
+            )));
+        }
         Ok(())
     }
 
@@ -2542,137 +2565,7 @@ impl Runtime {
             ParamType::Set(_) => Ok(()),
             ParamType::NonemptySet(_) => Ok(()),
             ParamType::FiniteSet(_) => Ok(()),
-            ParamType::Obj(obj) => match obj {
-                Obj::FamilyObj(family) => {
-                    self.verify_param_type_family_well_defined(family, verify_state)
-                }
-                _ => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
-            },
+            ParamType::Obj(obj) => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
         }
-    }
-
-    fn verify_param_type_family_well_defined(
-        &mut self,
-        family_param_type: &FamilyObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        let family_name = family_param_type.name.to_string();
-        let def = match self.get_cloned_family_definition_by_name(&family_name) {
-            Some(d) => d,
-            None => {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "family `{}` is not defined",
-                        family_name
-                    )),
-                )));
-            }
-        };
-
-        let expected_count = def.params_def_with_type.number_of_params();
-        if family_param_type.params.len() != expected_count {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "family `{}` expects {} parameter(s), got {}",
-                    family_name,
-                    expected_count,
-                    family_param_type.params.len()
-                )),
-            )));
-        }
-
-        for arg in family_param_type.params.iter() {
-            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
-        }
-
-        let args_param_types = self
-            .verify_args_satisfy_param_def_flat_types(
-                &def.params_def_with_type,
-                &family_param_type.params,
-                verify_state,
-                ParamObjType::DefHeader,
-            )
-            .map_err(|runtime_error| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_cause(
-                        format!(
-                            "failed to verify family `{}` arguments satisfy parameter types",
-                            family_name
-                        ),
-                        runtime_error,
-                    ),
-                ))
-            })?;
-        if args_param_types.is_unknown() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "failed to verify family `{}` arguments satisfy parameter types",
-                    family_name
-                )),
-            )));
-        }
-
-        let param_to_arg_map = def
-            .params_def_with_type
-            .param_defs_and_args_to_param_to_arg_map(family_param_type.params.as_slice());
-
-        for dom_fact in def.dom_facts.iter() {
-            let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(
-                    dom_fact,
-                    &param_to_arg_map,
-                    ParamObjType::DefHeader,
-                    None,
-                )
-                .map_err(|e| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "failed to instantiate family `{}` domain fact: {}",
-                                family_name, e
-                            ),
-                            e,
-                        ),
-                    ))
-                })?;
-            let verify_result = self
-                .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
-                .map_err(|verify_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "failed to verify family `{}` domain fact:\n{}",
-                                family_name, instantiated_dom_fact
-                            ),
-                            verify_error,
-                        ),
-                    ))
-                })?;
-            if verify_result.is_unknown() {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "failed to verify family `{}` domain fact:\n{}",
-                        family_name, instantiated_dom_fact
-                    )),
-                )));
-            }
-        }
-
-        let instantiated_equal_to = self
-            .inst_obj(&def.equal_to, &param_to_arg_map, ParamObjType::DefHeader)
-            .map_err(|e| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_cause(
-                        format!(
-                            "failed to instantiate family `{}` member set: {}",
-                            family_name, e
-                        ),
-                        e,
-                    ),
-                ))
-            })?;
-        self.verify_obj_well_defined_and_store_cache(&instantiated_equal_to, verify_state)?;
-
-        Ok(())
     }
 }

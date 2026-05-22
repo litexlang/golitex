@@ -645,16 +645,19 @@ impl Runtime {
         if tok == STRUCT_VIEW_PREFIX {
             return self.parse_struct_view_obj(tb);
         }
-        if tok == FAMILY_OBJ_PREFIX {
-            let family = self.parse_family_obj(tb)?;
-            return Ok(Obj::FamilyObj(family));
-        }
         if tok == ABS {
             tb.skip()?;
             tb.skip_token(LEFT_BRACE)?;
             let arg = self.parse_obj(tb)?;
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Abs::new(arg).into());
+        }
+        if tok == SQRT {
+            tb.skip()?;
+            tb.skip_token(LEFT_BRACE)?;
+            let arg = self.parse_obj(tb)?;
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(Sqrt::new(arg).into());
         }
         if tok == MAX {
             tb.skip()?;
@@ -1539,13 +1542,6 @@ impl Runtime {
 
     pub fn parse_predicate(&mut self, tb: &mut TokenBlock) -> Result<AtomicName, RuntimeError> {
         self.parse_atomic_name(tb)
-    }
-
-    pub fn parse_family_obj(&mut self, tb: &mut TokenBlock) -> Result<FamilyObj, RuntimeError> {
-        tb.skip_token(FAMILY_OBJ_PREFIX)?;
-        let name = self.parse_atomic_name(tb)?;
-        let params = self.parse_braced_objs(tb)?;
-        Ok(FamilyObj::new(name, params))
     }
 
     pub fn parse_struct_view_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
