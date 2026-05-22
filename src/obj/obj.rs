@@ -15,6 +15,7 @@ pub enum Obj {
     Mod(Mod),
     Pow(Pow),
     Abs(Abs),
+    Sqrt(Sqrt),
     Log(Log),
     Max(Max),
     Min(Min),
@@ -45,7 +46,6 @@ pub enum Obj {
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
-    FamilyObj(FamilyObj),
     MatrixSet(MatrixSet),
     MatrixListObj(MatrixListObj),
     MatrixAdd(MatrixAdd),
@@ -55,6 +55,11 @@ pub enum Obj {
     MatrixPow(MatrixPow),
     StructObj(StructObj),
     ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
+}
+
+#[derive(Clone)]
+pub struct Sqrt {
+    pub arg: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -163,33 +168,6 @@ pub struct MatrixSet {
 #[derive(Clone)]
 pub struct MatrixListObj {
     pub rows: Vec<Vec<Box<Obj>>>,
-}
-
-#[derive(Clone)]
-pub struct FamilyObj {
-    pub name: AtomicName,
-    pub params: Vec<Obj>,
-}
-
-impl FamilyObj {
-    pub fn new(name: AtomicName, params: Vec<Obj>) -> Self {
-        FamilyObj { name, params }
-    }
-}
-
-impl fmt::Display for FamilyObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}({})",
-            display_family_obj_head(&self.name),
-            vec_to_string_join_by_comma(&self.params)
-        )
-    }
-}
-
-fn display_family_obj_head(name: &AtomicName) -> String {
-    format!("{}{}", FAMILY_OBJ_PREFIX, name)
 }
 
 #[derive(Clone)]
@@ -470,6 +448,12 @@ impl Pow {
 impl Abs {
     pub fn new(arg: Obj) -> Self {
         Abs { arg: Box::new(arg) }
+    }
+}
+
+impl Sqrt {
+    pub fn new(arg: Obj) -> Self {
+        Sqrt { arg: Box::new(arg) }
     }
 }
 
@@ -778,6 +762,7 @@ fn precedence(o: &Obj) -> u8 {
         | Obj::MatrixScalarMul(_) => 2,
         Obj::Pow(_)
         | Obj::Abs(_)
+        | Obj::Sqrt(_)
         | Obj::Log(_)
         | Obj::MatrixAdd(_)
         | Obj::MatrixSub(_)
@@ -868,6 +853,11 @@ impl Obj {
                 a.arg.fmt_with_precedence(f, 0)?;
                 write!(f, "{}", RIGHT_BRACE)?;
             }
+            Obj::Sqrt(s) => {
+                write!(f, "{} {}", SQRT, LEFT_BRACE)?;
+                s.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
             Obj::Log(l) => {
                 write!(f, "{} {}", LOG, LEFT_BRACE)?;
                 l.base.fmt_with_precedence(f, 0)?;
@@ -921,7 +911,6 @@ impl Obj {
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
-            Obj::FamilyObj(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
             Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
         }
@@ -983,6 +972,7 @@ impl Obj {
             )
             .into(),
             Obj::Abs(x) => Abs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Sqrt(x) => Sqrt::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
             Obj::Log(x) => Log::new(
                 Obj::replace_bound_identifier(*x.base, from, to),
                 Obj::replace_bound_identifier(*x.arg, from, to),
@@ -1216,14 +1206,6 @@ impl Obj {
             )
             .into(),
             Obj::StandardSet(s) => s.into(),
-            Obj::FamilyObj(f) => FamilyObj::new(
-                f.name,
-                f.params
-                    .into_iter()
-                    .map(|o| Obj::replace_bound_identifier(o, from, to))
-                    .collect(),
-            )
-            .into(),
             Obj::StructObj(s) => StructObj::new(
                 s.name,
                 s.params
@@ -1703,6 +1685,12 @@ impl fmt::Display for Abs {
     }
 }
 
+impl fmt::Display for Sqrt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{}{}", SQRT, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
 impl fmt::Display for Log {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -1939,6 +1927,12 @@ impl From<Abs> for Obj {
     }
 }
 
+impl From<Sqrt> for Obj {
+    fn from(s: Sqrt) -> Self {
+        Obj::Sqrt(s)
+    }
+}
+
 impl From<Log> for Obj {
     fn from(l: Log) -> Self {
         Obj::Log(l)
@@ -2116,12 +2110,6 @@ impl From<ObjAtIndex> for Obj {
 impl From<IdentifierWithMod> for Obj {
     fn from(m: IdentifierWithMod) -> Self {
         Obj::Atom(AtomObj::IdentifierWithMod(m))
-    }
-}
-
-impl From<FamilyObj> for Obj {
-    fn from(f: FamilyObj) -> Self {
-        Obj::FamilyObj(f)
     }
 }
 

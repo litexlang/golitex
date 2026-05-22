@@ -10,9 +10,6 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         match param_type {
             ParamType::Obj(obj) => match obj {
-                Obj::FamilyObj(family_ty) => {
-                    self.define_parameter_by_binding_family(name, family_ty, binding_kind)
-                }
                 Obj::FiniteSeqSet(fs) => {
                     let fn_set = self.finite_seq_set_to_fn_set(fs, default_line_file());
                     let type_fact = InFact::new(
@@ -59,15 +56,6 @@ impl Runtime {
                 self.define_parameter_by_binding_finite_set(name, finite_set, binding_kind)
             }
         }
-    }
-
-    fn define_parameter_by_binding_family(
-        &mut self,
-        name: &str,
-        family_ty: &FamilyObj,
-        binding_kind: ParamObjType,
-    ) -> Result<InferResult, RuntimeError> {
-        self.infer_membership_in_family_for_param_binding(name, family_ty, binding_kind)
     }
 
     fn define_parameter_by_binding_obj(

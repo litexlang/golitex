@@ -163,24 +163,9 @@ impl Runtime {
 
             match &fact_param_def.param_type {
                 ParamType::Obj(ref obj) => match &other_param_def.param_type {
-                    ParamType::Obj(other_obj) => match (obj, other_obj) {
-                        (Obj::FamilyObj(family), Obj::FamilyObj(other_family)) => {
-                            if family.name.to_string() != other_family.name.to_string() {
-                                return Ok(None);
-                            }
-                            if family.params.len() != other_family.params.len() {
-                                return Ok(None);
-                            }
-                            for (param, other_param) in
-                                family.params.iter().zip(other_family.params.iter())
-                            {
-                                matched_args.push((param.clone(), other_param.clone()));
-                            }
-                        }
-                        _ => {
-                            matched_args.push((obj.clone(), other_obj.clone()));
-                        }
-                    },
+                    ParamType::Obj(other_obj) => {
+                        matched_args.push((obj.clone(), other_obj.clone()))
+                    }
                     _ => return Ok(None),
                 },
                 ParamType::Set(_) => match &other_param_def.param_type {

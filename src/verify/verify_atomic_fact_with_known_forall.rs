@@ -326,6 +326,7 @@ impl Runtime {
             Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
             Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
+            Obj::Sqrt(ref a) => self.match_arg_when_left_is_sqrt(a.arg.as_ref(), given_arg),
             Obj::Log(ref a) => self.match_arg_when_left_is_log(&a.base, &a.arg, given_arg),
             Obj::Max(ref a) => self.match_arg_when_left_is_max(&a.left, &a.right, given_arg),
             Obj::Min(ref a) => self.match_arg_when_left_is_min(&a.left, &a.right, given_arg),
@@ -423,15 +424,6 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNz) => self.match_arg_when_left_is_q_nz(given_arg),
             Obj::StandardSet(StandardSet::ZNz) => self.match_arg_when_left_is_z_nz(given_arg),
             Obj::StandardSet(StandardSet::RNz) => self.match_arg_when_left_is_r_nz(given_arg),
-            Obj::FamilyObj(known) => match given_arg {
-                Obj::FamilyObj(given) => {
-                    if known.name.to_string() != given.name.to_string() {
-                        return Ok(None);
-                    }
-                    self.match_arg_vec_then_merge(&known.params, &given.params)
-                }
-                _ => Ok(None),
-            },
             Obj::StructObj(known) => match given_arg {
                 Obj::StructObj(given) => {
                     if known.name.to_string() != given.name.to_string() {
@@ -847,6 +839,19 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::Abs(ref g) => {
+                self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_arg, &g.arg)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_sqrt(
+        &mut self,
+        left_arg: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::Sqrt(ref g) => {
                 self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_arg, &g.arg)
             }
             _ => Ok(None),

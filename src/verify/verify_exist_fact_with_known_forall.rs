@@ -421,6 +421,7 @@ impl Runtime {
                 Self::obj_pair_depends_on_given_exist_param(x.obj.as_ref(), x.index.as_ref(), names)
             }
             Obj::Abs(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Sqrt(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Cup(x) => Self::obj_depends_on_given_exist_param(x.left.as_ref(), names),
             Obj::Cap(x) => Self::obj_depends_on_given_exist_param(x.left.as_ref(), names),
             Obj::PowerSet(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
@@ -447,10 +448,6 @@ impl Runtime {
                 row.iter()
                     .any(|obj| Self::obj_depends_on_given_exist_param(obj.as_ref(), names))
             }),
-            Obj::FamilyObj(x) => x
-                .params
-                .iter()
-                .any(|obj| Self::obj_depends_on_given_exist_param(obj, names)),
             Obj::StructObj(x) => x
                 .params
                 .iter()

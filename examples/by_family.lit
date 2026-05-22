@@ -1,9 +1,0 @@
-family self_seq(s set) = fn(x N_pos) s
-
-forall a \self_seq(R):
-    a $in fn(y N_pos)R
-    a(1) = a(1)
-
-family p(a set) = fn(x a) a
-
-by family as set: \p(R)

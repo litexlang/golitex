@@ -623,6 +623,12 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::Sqrt(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::Log(x) => collect_cited_param_indices_from_two_objs(
             &x.base,
             &x.arg,
@@ -875,16 +881,6 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
-        Obj::FamilyObj(x) => {
-            for arg in x.params.iter() {
-                collect_cited_param_indices_from_obj(
-                    arg,
-                    previous_param_indices,
-                    shadowed_names,
-                    out,
-                );
-            }
-        }
         Obj::MatrixSet(x) => {
             collect_cited_param_indices_from_obj(
                 &x.set,

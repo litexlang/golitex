@@ -83,6 +83,10 @@ impl Runtime {
                 Obj::Abs(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Sqrt(a) => match right {
+                Obj::Sqrt(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Log(a) => match right {
                 Obj::Log(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -257,10 +261,6 @@ impl Runtime {
             },
             Obj::StandardSet(StandardSet::RNz) => match right {
                 Obj::StandardSet(StandardSet::RNz) => true,
-                _ => false,
-            },
-            Obj::FamilyObj(a) => match right {
-                Obj::FamilyObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::StructObj(a) => match right {

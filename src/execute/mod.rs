@@ -7,7 +7,6 @@ mod exec_def_struct_stmt;
 mod exec_define_params_with_set;
 mod exec_eval_stmt;
 mod exec_fact_stmt;
-mod exec_family_def;
 mod exec_have_exist_obj_stmt;
 mod exec_have_fn_by_forall_exist_unique;
 mod exec_have_fn_by_induc;

@@ -6,4 +6,3 @@ know forall x R:
 
 have by exist y R st {y > 0}: a
 
-have fn sqrt(x R: x >= 0) R = x^(1/2)

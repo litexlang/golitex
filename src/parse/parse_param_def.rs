@@ -47,9 +47,6 @@ impl Runtime {
             NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
             FINITE_SET => self.parse_param_type_finite_set(tb),
             SET => self.parse_param_type_set(tb),
-            s if s == FAMILY_OBJ_PREFIX => self
-                .parse_family_obj(tb)
-                .map(|f| ParamType::Obj(Obj::FamilyObj(f))),
             _ => self.parse_param_type_obj(tb),
         }
     }

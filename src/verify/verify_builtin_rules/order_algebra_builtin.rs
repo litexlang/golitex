@@ -35,11 +35,11 @@ impl Runtime {
         Ok(result)
     }
 
-    fn literal_zero_obj() -> Obj {
+    pub(crate) fn literal_zero_obj() -> Obj {
         Obj::Number(Number::new("0".to_string()))
     }
 
-    fn literal_one_obj() -> Obj {
+    pub(crate) fn literal_one_obj() -> Obj {
         Obj::Number(Number::new("1".to_string()))
     }
 
